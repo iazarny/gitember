@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity"
+            minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0"
+            prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.HistoryViewController">
+    <children>
+        <VBox layoutX="395.0" layoutY="102.0" prefHeight="768.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0"
+              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <AnchorPane prefHeight="30.0" prefWidth="1024.0">
+                    <children>
+                        <ToolBar layoutX="30.0" layoutY="14.0" prefHeight="200.0" prefWidth="1024.0"
+                                 AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                 AnchorPane.topAnchor="0.0">
+                            <items>
+                                <Button mnemonicParsing="false" text="Button"/>
+                            </items>
+                        </ToolBar>
+                    </children>
+                </AnchorPane>
+                <AnchorPane prefHeight="725.0" prefWidth="1024.0">
+                    <children>
+                        <TableView editable="false"
+                                fx:id="historyTableView"
+                                layoutX="333.0" layoutY="152.0" prefHeight="724.0" prefWidth="1024.0"
+                                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                AnchorPane.topAnchor="0.0">
+                            <columns>
+                                <TableColumn fx:id="actionTableColumn" minWidth="75.0" prefWidth="-1.0" text="Action"/>
+                                <TableColumn fx:id="dateTableColumn" minWidth="200.0" prefWidth="-1.0" text="Date"/>
+                                <TableColumn fx:id="messageTableColumn" minWidth="400.0" prefWidth="-1.0"
+                                             text="Message"/>
+                                <TableColumn fx:id="authorTableColumn" minWidth="200.0" prefWidth="-1.0" text="Author"/>
+                                <TableColumn fx:id="revisionTableColumn" minWidth="100.0" prefWidth="-1.0"
+                                             text="Revision"/>
+                            </columns>
+                        </TableView>
+                    </children>
+                </AnchorPane>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

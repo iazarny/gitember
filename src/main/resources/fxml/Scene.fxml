@@ -10,12 +10,11 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
+<BorderPane minHeight="864" minWidth="1152" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
    <left>
-      <Accordion BorderPane.alignment="CENTER">
+      <Accordion prefHeight="478.0" prefWidth="260.0" BorderPane.alignment="CENTER">
         <panes>
           <TitledPane animated="false" text="Workspace">
             <content>
@@ -27,17 +26,28 @@
           </TitledPane>
           <TitledPane animated="false" text="Branches">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" style="-fx-background-color: cyan;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children></AnchorPane>
             </content>
           </TitledPane>
           <TitledPane animated="false" text="Tags">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                  <children>
+                      <ListView fx:id="tagList" prefHeight="353.0" prefWidth="200.0" style="-fx-background-color: cyan;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  </children>
+              </AnchorPane>
             </content>
           </TitledPane>
           <TitledPane animated="false" text="Remotes">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                  <children>
+                      <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" style="-fx-background-color: cyan;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  </children>
+              </AnchorPane>
             </content>
           </TitledPane>
         </panes>
@@ -58,15 +68,12 @@
             </MenuBar>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button mnemonicParsing="false" text="Button" />
+                <Button fx:id="fillDataBtn" mnemonicParsing="false" onAction="#fillDataHandler" text="FillData" />
               </items>
             </ToolBar>
          </children>
       </VBox>
    </top>
-   <center>
-      <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: blue;" BorderPane.alignment="CENTER" />
-   </center>
    <bottom>
       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
@@ -74,4 +81,7 @@
         </items>
       </ToolBar>
    </bottom>
+   <center>
+      <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </center>
 </BorderPane>

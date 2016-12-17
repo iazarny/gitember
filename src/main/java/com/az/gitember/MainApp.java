@@ -5,6 +5,7 @@ import static javafx.application.Application.launch;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 
@@ -17,8 +18,10 @@ public class MainApp extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
         
-        stage.setTitle("JavaFX and Maven");
+        stage.setTitle("Gitember");
         stage.setScene(scene);
+        stage.getIcons().add(
+                new Image(MainApp.class.getResourceAsStream( "/icon/GE-icon.png" )));
         stage.show();
     }
 

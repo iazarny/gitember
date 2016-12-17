@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<SplitPane dividerPositions="0.6009280742459396" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="864.0" prefWidth="822.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.BranchViewController">
+    <items>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="407.0" prefWidth="820.0">
+            <children>
+                <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <columns>
+                        <TableColumn fx:id="laneTableColumn" prefWidth="200.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
+                        <TableColumn fx:id="messageTableColumn" prefWidth="400.00" text="Message" />
+                        <TableColumn fx:id="authorTableColumn" prefWidth="250.00" text="Author" />
+                        <TableColumn fx:id="dateTableColumn" prefWidth="200.00" text="Date" />
+                    </columns>
+
+                </TableView>
+            </children>
+        </AnchorPane>
+        <AnchorPane fx:id="hostCommitViewPanel" maxHeight="500.0" minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="820.0">
+            <children>
+
+            </children>
+        </AnchorPane>
+    </items>
+</SplitPane>
