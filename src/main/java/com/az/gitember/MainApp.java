@@ -14,6 +14,12 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application {
 
+    private static Stage mainStage = null;
+
+    public static Stage getMainStage() {
+        return mainStage;
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
@@ -21,10 +27,13 @@ public class MainApp extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().add(Const.DEFAULT_CSS);
 
+        mainStage = stage;
+
         stage.setTitle("Gitember");
         stage.setScene(scene);
         stage.getIcons().add(new Image(MainApp.class.getResourceAsStream(Const.ICON)));
         stage.show();
+
     }
 
     /**

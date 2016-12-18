@@ -5,6 +5,8 @@ package com.az.gitember.misc;
  */
 public interface Const {
 
+    String GIT_FOLDER = ".git";
+
     String TEMP_FILE_PREFIX = "gitember";
 
     String DIFF_EXTENSION = "diff";

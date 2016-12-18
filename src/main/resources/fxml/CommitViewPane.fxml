@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.SeparatorMenuItem?>
 <AnchorPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
             AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.CommitViewController">
@@ -64,13 +65,17 @@
                             <contextMenu>
                                 <ContextMenu fx:id="scmItemContextMenu">
                                     <items>
+                                        <MenuItem fx:id="historyMenuItem" mnemonicParsing="false"
+                                                  onAction="#historyMenuItemClickHandler" text="Show history"/>
+                                        <SeparatorMenuItem mnemonicParsing="false"/>
+
                                         <MenuItem fx:id="openFileMenuItem" mnemonicParsing="false"
                                                   onAction="#openItemMenuItemClickHandler" text="Open"/>
 
                                         <MenuItem fx:id="openDiffMenuItem" mnemonicParsing="false"
                                                   text="Show raw diff"
                                                   onAction="#openDiffItemMenuItemClickHandler"/>
-
+                                        <SeparatorMenuItem mnemonicParsing="false"/>
                                         <MenuItem fx:id="diffWithPrevVersionMenuItem" mnemonicParsing="false"
                                                   text="Difference with previous version"
                                                   onAction="#openDiffWithPreviosVersionMenuItemClickHandler"/>
@@ -79,8 +84,6 @@
                                                   text="Difference with current version"/>
                                         <MenuItem fx:id="diffWithDiskVersionMenuItem" mnemonicParsing="false"
                                                   text="Difference with file on disk"/>
-                                        <MenuItem fx:id="historyMenuItem" mnemonicParsing="false"
-                                                  onAction="#historyMenuItemClickHandler" text="Show history"/>
                                     </items>
                                 </ContextMenu>
                             </contextMenu>

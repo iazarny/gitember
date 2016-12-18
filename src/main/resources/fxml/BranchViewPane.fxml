@@ -5,9 +5,10 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<SplitPane dividerPositions="0.6009280742459396" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="864.0" prefWidth="822.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.BranchViewController">
+<SplitPane dividerPositions="0.6009280742459396" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+           minWidth="-Infinity" orientation="VERTICAL" prefHeight="-1" prefWidth="822.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.BranchViewController">
     <items>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="407.0" prefWidth="820.0">
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="820.0" >
             <children>
                 <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
@@ -20,7 +21,7 @@
                 </TableView>
             </children>
         </AnchorPane>
-        <AnchorPane fx:id="hostCommitViewPanel" maxHeight="500.0" minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="820.0">
+        <AnchorPane fx:id="hostCommitViewPanel" maxHeight="500.0" minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="820.0">
             <children>
 
             </children>
