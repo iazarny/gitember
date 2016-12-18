@@ -1,5 +1,6 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.ui.DerivedScrollEventType;
 import com.az.gitember.ui.DiffLineNumberFactory;
@@ -461,7 +462,7 @@ public class DiffViewController extends BaseFileViewController {
 
 
         Scene scene = new Scene(gridPanel, 1024, 768);
-        scene.getStylesheets().add(this.getClass().getResource("/styles/keywords.css").toExternalForm());
+        scene.getStylesheets().add(this.getClass().getResource(Const.KEYWORDS_CSS).toExternalForm());
 
         final Stage stage = new Stage();
         stage.setScene(scene);

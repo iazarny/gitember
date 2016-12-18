@@ -1,5 +1,6 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.HighlightProvider;
 import com.az.gitember.ui.DiffLineNumberFactory;
 import javafx.fxml.Initializable;
@@ -47,13 +48,12 @@ public class FileViewController extends BaseFileViewController {
 
 
         fillCodeArea(codeArea, fileName);
-        //  need to wait for https://github.com/TomasMikula/RichTextFX/pull/398
-        //  and https://github.com/TomasMikula/RichTextFX/issues/289
-        //codeArea.setParagraphStyle(10, new ArrayList<String>() {{  add("-rtfx-background-color: coral");  add("-fx-background-color: coral");  }} );
+        codeArea.moveTo(0);
+        codeArea.selectRange(0, 0);
 
 
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane(codeArea)), 1024, 768);
-        scene.getStylesheets().add(this.getClass().getResource("/styles/keywords.css").toExternalForm());
+        scene.getStylesheets().add(this.getClass().getResource(Const.KEYWORDS_CSS).toExternalForm());
 
         final Stage stage = new Stage();
         stage.setScene(scene);

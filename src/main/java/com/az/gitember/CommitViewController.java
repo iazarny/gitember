@@ -1,6 +1,5 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.GitemberUtil;
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
@@ -19,12 +18,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.eclipse.jgit.revplot.PlotCommit;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.io.*;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -66,8 +66,6 @@ public class CommitViewController implements Initializable {
     private ContextMenu scmItemContextMenu;
 
     private GitRepositoryService repositoryService;
-
-
     private ScmRevisionInformation plotCommit;
     private String treeName;
     private List<ScmItem> changedFiles;
@@ -96,15 +94,9 @@ public class CommitViewController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        fileTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(c.getValue().getAttribute().getName())
-        );
+        fileTableColumn.setCellValueFactory( c -> StringConstant.valueOf(c.getValue().getAttribute().getName()) );
         fileTableColumn.setContextMenu(scmItemContextMenu);
-        actionTableColumn.setCellValueFactory(
-                c -> {
-                    return new ActionCellValueFactory(c, null);
-                }
-        );
+        actionTableColumn.setCellValueFactory(c -> new ActionCellValueFactory(c, null));
     }
 
     public void setRepositoryService(final GitRepositoryService repositoryService) {
@@ -129,119 +121,54 @@ public class CommitViewController implements Initializable {
 
     }
 
+    private void openFile() {
+        final String revisionFullName = plotCommit.getRevisionFullName();
+        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+        final String fileName = scmItem.getAttribute().getName();
+        try {
+            final FileViewController fileViewController = new FileViewController();
+            fileViewController.openFile(
+                    repositoryService.saveFile(treeName, revisionFullName, fileName),
+                    fileName);
+        } catch (Exception e) {       //todo error dialog
+            e.printStackTrace();
+        }
+
+    }
+
+
     public void openDiffWithPreviosVersionMenuItemClickHandler(ActionEvent actionEvent) {
 
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
-        final String fileNameExtension = GitemberUtil.getExtension(fileName);
-
         try {
-
-            File tempNew = File.createTempFile(
-                    "gitember",
-                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-            File tempOld = File.createTempFile(
-                    "gitember",
-                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-            try (OutputStream outputStreamNew = new FileOutputStream(tempNew);
-                 OutputStream outputStreamOld = new FileOutputStream(tempOld); ) {
-                String oldParent = "NA";
-                for (String parent : plotCommit.getParents()) {
-                    try {
-                        repositoryService.saveFile(
-                                treeName, parent, fileName, outputStreamOld);
-                        oldParent = parent;
-                    } catch (IllegalStateException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                repositoryService.saveFile(
-                        treeName, plotCommit.getRevisionFullName(), fileName, outputStreamNew);
-                final File diffFile = getDiffFile(fileName, plotCommit.getRevisionFullName());
-
-                final DiffViewController fileViewController = new DiffViewController();
-                fileViewController.openFile(
-                        tempOld.getAbsolutePath(), oldParent,
-                        tempNew.getAbsolutePath(), plotCommit.getRevisionFullName(),
-                        diffFile.getAbsolutePath());
-            }
+            final String parentREvision = plotCommit.getParents().get(0); //todo determinate parent right
+            final String oldFile = repositoryService.saveFile(treeName, parentREvision, fileName);
+            final String newFile = repositoryService.saveFile(treeName, plotCommit.getRevisionFullName(), fileName);
+            final String diffFile = repositoryService.saveDiff(treeName, plotCommit.getRevisionFullName(), fileName);
+            final DiffViewController fileViewController = new DiffViewController();
+            fileViewController.openFile(
+                    oldFile, parentREvision,
+                    newFile, plotCommit.getRevisionFullName(),
+                    diffFile);
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();
         }
     }
 
-    private void openFile() {
-        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final String fileName = scmItem.getAttribute().getName();
-        final String fileNameExtension = GitemberUtil.getExtension(fileName);
-
-        try {
-
-            File temp = File.createTempFile(
-                    "gitember",
-                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-            try (OutputStream outputStream = new FileOutputStream(temp)) {
-                repositoryService.saveFile(
-                        treeName, plotCommit.getRevisionFullName(), fileName, outputStream);
-
-                /*if (GitemberUtil.isBinaryFile(temp)) {
-                    if (Desktop.isDesktopSupported()) {
-                        new Thread(() -> {
-                            try {
-                                Desktop.getDesktop().browse(temp.toURI()); //TODO bad idea, need to rethink
-                            } catch (IOException e) {
-                                e.printStackTrace(); //TODO error dialog
-
-                            }
-                        }).start();
-                    }
-                } else {*/
-                final FileViewController fileViewController = new FileViewController();
-                fileViewController.openFile(temp.getAbsolutePath(), fileName);
-                //}
-            }
-        } catch (Exception e) {       //todo error dialog
-            e.printStackTrace();
-        }
-    }
 
 
     public void openDiffItemMenuItemClickHandler(ActionEvent actionEvent) {
-
-
         try {
-
             final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
             final String fileName = scmItem.getAttribute().getName();
             final String revisionName = plotCommit.getRevisionFullName();
-            final File temp = getDiffFile(fileName, revisionName);
-
+            final String path = repositoryService.saveDiff(treeName, revisionName, fileName);
             final FileViewController fileViewController = new FileViewController();
-            fileViewController.openFile(temp.getAbsolutePath(), fileName);
-
+            fileViewController.openFile(path, fileName);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
-
-
-    }
-
-    private File getDiffFile(String fileName, String revisionName) throws Exception {
-        final String fileNameExtension = "diff";
-
-        final File temp = File.createTempFile(
-                "gitember",
-                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-
-        try (OutputStream outputStream = new FileOutputStream(temp)) {
-            repositoryService.saveDiff(treeName, revisionName, fileName, outputStream);
-
-        }
-        return temp;
     }
 
     public void historyMenuItemClickHandler(ActionEvent actionEvent) {

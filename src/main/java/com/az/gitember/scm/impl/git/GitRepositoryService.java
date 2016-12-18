@@ -17,10 +17,14 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
@@ -28,6 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
+ * TODO extract inteface
  */
 public class GitRepositoryService {
 
@@ -54,13 +59,9 @@ public class GitRepositoryService {
             return branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
-                    .map(r -> {
-                                return new ScmBranch(
-                                        r.getName().substring(prefix.length()),
-                                        r.getName()
-                                );
-                            }
-                    )
+                    .map(r -> new ScmBranch(
+                            r.getName().substring(prefix.length()),
+                            r.getName()))
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
         }
@@ -146,7 +147,7 @@ public class GitRepositoryService {
         info.setAuthorName(revCommit.getAuthorIdent().getName());
         info.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
         info.setParents(
-                Arrays.stream(revCommit.getParents()).map( p -> p.getName()).collect(Collectors.toList())
+                Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
         );
         if (revCommit instanceof PlotCommit) {
             ArrayList<String> refs = new ArrayList<>();
@@ -201,9 +202,10 @@ public class GitRepositoryService {
     }
 
     /**
+     * Get list of files in given revision.
      * @param revCommit
      * @param filePath  optional value to filter list of changed files
-     * @return
+     * @return list of files in given revision
      * @throws IOException
      */
     private ArrayList<ScmItem> getScmItems(RevCommit revCommit, String filePath) throws IOException {
@@ -215,7 +217,7 @@ public class GitRepositoryService {
                         revCommit.getParentCount() > 0 ? rw.parseCommit(revCommit.getParent(0).getId()).getTree() : null,
                         revCommit.getTree());
                 diffs.stream()
-                        .map(diff -> adaptDiffEntry(diff))
+                        .map(this::adaptDiffEntry)
                         .collect(Collectors.toCollection(() -> rez));
             }
             rw.dispose();
@@ -270,17 +272,69 @@ public class GitRepositoryService {
     }
 
 
+
+    public String saveDiff(String treeName, String oldRevision, String newRevision, String fileName) throws Exception {
+
+        final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX, Const.DIFF_EXTENSION);
+
+        AbstractTreeIterator oldTreeParser = prepareTreeParser(repository, oldRevision);
+        AbstractTreeIterator newTreeParser = prepareTreeParser(repository, newRevision);
+
+        try (Git git = new Git(repository); OutputStream outputStream = new FileOutputStream(temp)) {
+            List<DiffEntry> diff = git.diff().
+                    setOldTree(oldTreeParser).
+                    setNewTree(newTreeParser).
+                    setPathFilter(PathFilter.create(fileName)).
+                    call();
+            for (DiffEntry entry : diff) {
+                //System.out.println("Entry: " + entry + ", from: " + entry.getOldId() + ", to: " + entry.getNewId());
+                try (DiffFormatter formatter = new DiffFormatter(outputStream)) {
+                    formatter.setRepository(repository);
+                    formatter.format(entry);
+                }
+            }
+        }
+
+        return temp.getAbsolutePath();
+
+
+    }
+
+    private AbstractTreeIterator prepareTreeParser(Repository repository, String objectId) throws IOException {
+        // from the commit we can build the tree which allows us to construct the TreeParser
+        //noinspection Duplicates
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(ObjectId.fromString(objectId));
+            RevTree tree = walk.parseTree(commit.getTree().getId());
+
+            CanonicalTreeParser oldTreeParser = new CanonicalTreeParser();
+            try (ObjectReader oldReader = repository.newObjectReader()) {
+                oldTreeParser.reset(oldReader, tree.getId());
+            }
+
+            walk.dispose();
+
+            return oldTreeParser;
+        }
+    }
+
+
     /**
      * Save given fileName at tree/revision into output stream.
      *
      * @param treeName     tree name
      * @param revisionName revision name
-     * @param fileName     file name
-     * @param outputStream stream to save
+     * @param fileName     file name in repository
+     * @return absolute path to saved diff file
      */
-    public void saveDiff(String treeName, String revisionName, String fileName, OutputStream outputStream) throws Exception {
+    public String saveDiff(String treeName, String revisionName,
+                         String fileName) throws Exception {
 
-        try (Git git = new Git(repository); RevWalk rw = new RevWalk(repository)) {
+        final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX, Const.DIFF_EXTENSION);
+
+        try (Git git = new Git(repository);
+             RevWalk rw = new RevWalk(repository);
+             OutputStream outputStream = new FileOutputStream(temp)) {
 
             final LogCommand cmd = git.log()
                     .add(repository.resolve(treeName))
@@ -302,12 +356,11 @@ public class GitRepositoryService {
                     formatter.format(diffEntry);
                 }
 
-
             }
             rw.dispose();
 
-
         }
+        return temp.getAbsolutePath();
 
     }
 
@@ -318,16 +371,23 @@ public class GitRepositoryService {
      * @param treeName     tree name
      * @param revisionName revision name
      * @param fileName     file name
-     * @param outputStream stream to save
+     * @return absolute path to saved file
      */
-    public void saveFile(String treeName, String revisionName, String fileName, OutputStream outputStream) throws IOException {
+    public String saveFile(String treeName, String revisionName,
+                         String fileName) throws IOException {
 
         final ObjectId lastCommitId = repository.resolve(revisionName);
-        try (RevWalk revWalk = new RevWalk(repository)) {
+        final String fileNameExtension = GitemberUtil.getExtension(fileName);
+        final File temp = File.createTempFile(
+                Const.TEMP_FILE_PREFIX,
+                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+
+        try (RevWalk revWalk = new RevWalk(repository);
+             OutputStream outputStream = new FileOutputStream(temp)) {
+
             RevCommit commit = revWalk.parseCommit(lastCommitId);
             // and using commit's tree find the path
             RevTree tree = commit.getTree();
-            System.out.println("Having tree: " + tree);
 
             // now try to find a specific file
             try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -349,6 +409,6 @@ public class GitRepositoryService {
             revWalk.dispose();
         }
 
-
+        return temp.getAbsolutePath();
     }
 }

@@ -1,7 +1,10 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import javafx.application.Application;
+
 import static javafx.application.Application.launch;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -14,14 +17,13 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
-        
+
         Scene scene = new Scene(root);
-        scene.getStylesheets().add("/styles/Styles.css");
-        
+        scene.getStylesheets().add(Const.DEFAULT_CSS);
+
         stage.setTitle("Gitember");
         stage.setScene(scene);
-        stage.getIcons().add(
-                new Image(MainApp.class.getResourceAsStream( "/icon/GE-icon.png" )));
+        stage.getIcons().add(new Image(MainApp.class.getResourceAsStream(Const.ICON)));
         stage.show();
     }
 

@@ -31,8 +31,7 @@ public class BaseFileViewController {
                         "UTF-8"
                 )
         );
-        //area.moveTo(0);
-        //area.selectRange(0, 0);
+
     }
 
 }
