@@ -2,6 +2,8 @@
 
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
@@ -10,26 +12,54 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.effect.MotionBlur?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane minHeight="864" minWidth="1152" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.az.gitember.FXMLController">
+<BorderPane minHeight="864" minWidth="1152" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
     <left>
-        <Accordion prefHeight="478.0" prefWidth="260.0" BorderPane.alignment="CENTER">
+        <Accordion prefHeight="478.0" prefWidth="260.0" BorderPane.alignment="CENTER" expandedPane="$workSpaceTitlePane">
             <panes>
-                <TitledPane animated="false" text="Workspace">
+                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace" >
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <ListView prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: green;"
-                                          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-                            </children>
+                     <children>
+                        <VBox layoutX="79.0" prefHeight="617.0" prefWidth="258.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <HBox>
+                                  <children>
+                                      <Hyperlink text="Working copy" />
+                                      <Pane HBox.hgrow="ALWAYS" />
+                                      <Label text="" />
+                                  </children>
+                              </HBox>
+                              <HBox>
+                                  <children>
+                                      <Hyperlink text="History" />
+                                      <Pane HBox.hgrow="ALWAYS" />
+                                      <Label text="" />
+                                  </children>
+                              </HBox>
+                              <HBox>
+                                  <children>
+                                      <Hyperlink text="Stashes" />
+                                      <Pane HBox.hgrow="ALWAYS" />
+                                      <Label text="" />
+                                  </children>
+                              </HBox>
+                               <HBox>
+                                   <children>
+                                       <Hyperlink text="Settings" />
+                                       <Pane HBox.hgrow="ALWAYS" />
+                                       <Label text="" />
+                                   </children>
+                               </HBox>
+                           </children>
+                        </VBox>
+                     </children>
                         </AnchorPane>
                     </content>
                 </TitledPane>
@@ -37,10 +67,7 @@
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                             <children>
-                                <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked"
-                                          prefHeight="353.0" prefWidth="200.0" style="-fx-background-color: cyan;"
-                                          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                                <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
                     </content>
@@ -49,10 +76,7 @@
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                             <children>
-                                <ListView fx:id="tagList" prefHeight="353.0" prefWidth="200.0"
-                                          style="-fx-background-color: cyan;" AnchorPane.bottomAnchor="0.0"
-                                          AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                                          AnchorPane.topAnchor="0.0"/>
+                                <ListView fx:id="tagList" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
                     </content>
@@ -61,15 +85,13 @@
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                             <children>
-                                <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked"
-                                          prefHeight="353.0" prefWidth="200.0" style="-fx-background-color: cyan;"
-                                          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                                <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
                     </content>
                 </TitledPane>
             </panes>
+
         </Accordion>
     </left>
     <top>
@@ -79,38 +101,35 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem onAction="#openHandler" text="Open ..." accelerator="Shortcut+O"/>
-                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..." />
+                                <SeparatorMenuItem mnemonicParsing="false" />
                                 <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Recent ">
                                     <items>
-                                        <MenuItem mnemonicParsing="false" text="Action 1"/>
+                                        <MenuItem mnemonicParsing="false" text="Action 1" />
                                     </items>
                                 </Menu>
-                                <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem text="Clone"/>
-                                <MenuItem disable="true" text="Fetch"/>
-                                <MenuItem disable="true" text="Pull"/>
-                                <MenuItem disable="true" text="Push"/>
-                                <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#exitActionHandler" text="Exit"/>
+                                <SeparatorMenuItem mnemonicParsing="false" />
+                                <MenuItem text="Clone" />
+                                <MenuItem disable="true" text="Fetch" />
+                                <MenuItem disable="true" text="Pull" />
+                                <MenuItem disable="true" text="Push" />
+                                <SeparatorMenuItem mnemonicParsing="false" />
+                                <MenuItem onAction="#exitActionHandler" text="Exit" />
                             </items>
                         </Menu>
                     </menus>
                 </MenuBar>
                 <ToolBar prefHeight="40.0" prefWidth="200.0">
                     <items>
-                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open"/>
-                        <Separator/>
-                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone"/>
-                        <Separator/>
-                        <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler"
-                                text="Fetch"/>
-                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
-                                text="Pull"/>
-                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler"
-                                text="Push"/>
-                        <Pane HBox.hgrow="ALWAYS"/>
-                        <Button mnemonicParsing="false" onAction="#exitHandler" text="Exit"/>
+                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open" />
+                        <Separator />
+                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone" />
+                        <Separator />
+                        <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch" />
+                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull" />
+                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push" />
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#exitHandler" text="Exit" />
                     </items>
                 </ToolBar>
             </children>
@@ -119,11 +138,11 @@
     <bottom>
         <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <items>
-                <Button mnemonicParsing="false" text="Button"/>
+                <Button mnemonicParsing="false" text="Button" />
             </items>
         </ToolBar>
     </bottom>
     <center>
-        <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER"/>
+        <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
     </center>
 </BorderPane>

@@ -20,10 +20,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 
@@ -51,6 +48,9 @@ public class FXMLController implements Initializable {
 
     @FXML
     public Menu openRecentMenuItem;
+
+    @FXML
+    public TitledPane workSpaceTitlePane;
 
     @FXML
     private ListView localBranchesList;

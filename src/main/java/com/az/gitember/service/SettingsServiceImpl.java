@@ -7,10 +7,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Created by Igor_Azarny on 18 Dec 2016.
@@ -83,6 +80,7 @@ public class SettingsServiceImpl {
                 );
             }
         }
+        Collections.sort(pairs, (o1, o2) -> o1.getFirst().compareTo(o2.getFirst()));
         return pairs;
     }
 }
