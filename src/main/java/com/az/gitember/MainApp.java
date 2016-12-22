@@ -15,25 +15,40 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
 
     private static Stage mainStage = null;
+    private static String currentRepositoryPath;
 
     public static Stage getMainStage() {
         return mainStage;
     }
 
+    public static void setCurrentRepositoryPath(String currentRepositoryPath) {
+        MainApp.currentRepositoryPath = currentRepositoryPath;
+    }
+
+    public static String getCurrentRepositoryPath() {
+        return currentRepositoryPath;
+    }
+
+    public static String getCurrentRepositoryPathWOGit() {
+        return currentRepositoryPath.substring(0, currentRepositoryPath.indexOf(Const.GIT_FOLDER) - 1);
+    }
+
+
+    public static void  setTitle(String title) {
+        mainStage.setTitle(title);
+    }
+
+
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
-
         Scene scene = new Scene(root);
         scene.getStylesheets().add(Const.DEFAULT_CSS);
-
         mainStage = stage;
-
-        stage.setTitle("Gitember");
+        setTitle(Const.TITLE);
         stage.setScene(scene);
         stage.getIcons().add(new Image(MainApp.class.getResourceAsStream(Const.ICON)));
         stage.show();
-
     }
 
     /**

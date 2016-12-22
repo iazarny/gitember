@@ -81,9 +81,11 @@
                                                   onAction="#openDiffWithPreviosVersionMenuItemClickHandler"/>
 
                                         <MenuItem fx:id="diffWithCurrentVersionMenuItem" mnemonicParsing="false"
-                                                  text="Difference with current version"/>
+                                                  text="Difference with latest version"
+                                                  onAction="#openDiffWithLatestVersionMenuItemClickHandler"/>
                                         <MenuItem fx:id="diffWithDiskVersionMenuItem" mnemonicParsing="false"
-                                                  text="Difference with file on disk"/>
+                                                  text="Difference with file on disk"
+                                                  onAction="#openDiffWithFileOnDiskMenuItemClickHandler"/>
                                     </items>
                                 </ContextMenu>
                             </contextMenu>

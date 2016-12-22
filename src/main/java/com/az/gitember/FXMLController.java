@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
@@ -63,7 +64,7 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane hostPanel;
 
-    private GitRepositoryService repositoryService;
+    private GitRepositoryService repositoryService; //todo (?) move to main app
 
     private SettingsServiceImpl settingsService = new SettingsServiceImpl();
 
@@ -86,11 +87,13 @@ public class FXMLController implements Initializable {
     }
 
     private void openRepository(String absPath) throws Exception {
+        MainApp.setCurrentRepositoryPath(absPath);
         repositoryService = new GitRepositoryService(absPath);
         localBranchesList.setItems(FXCollections.observableList(repositoryService.getLocalBranches()));
         remoteBranchesList.setItems(FXCollections.observableList(repositoryService.getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(repositoryService.getTags()));
         settingsService.saveRepository(absPath);
+        MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit());
     }
 
     @FXML

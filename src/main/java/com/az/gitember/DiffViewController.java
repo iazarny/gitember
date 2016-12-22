@@ -14,6 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -30,15 +31,13 @@ import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.util.FxTimer;
 import org.reactfx.value.Var;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by Igor_Azarny on 1- Dec- 2016.
@@ -47,7 +46,7 @@ public class DiffViewController extends BaseFileViewController {
 
 
     private final static int NO_DIFF = -1;
-    private final static int DELAY = 100;
+    private final static int DELAY = 30;
 
     private GridPane gridPanel;
 
@@ -88,7 +87,7 @@ public class DiffViewController extends BaseFileViewController {
         oldCodeArea.setEditable(false);
         oldCodeArea.setParagraphGraphicFactory(DiffLineNumberFactory.get(oldCodeArea, oldLinesToHighlight));
         oldLabel = new Label();
-        oldVSPane = new VirtualizedScrollPane<>(oldCodeArea);
+        oldVSPane = new VirtualizedScrollPane<>(oldCodeArea, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER);
         StackPane oldStackPane = new StackPane(oldVSPane);
 
         scrollPane = new Pane();
@@ -123,15 +122,19 @@ public class DiffViewController extends BaseFileViewController {
         buttonNext = new Button("Next");
         buttonPrev = new Button("Prev");
 
-        gridPanel.add(oldLabel, 0, 0);
-        gridPanel.add(newLabel, 2, 0);
+        gridPanel.add(new HBox(new Label("Revision:  "), oldLabel), 0, 0);
+
+        gridPanel.add(new HBox(new Label("Revision:  "), newLabel), 2, 0);
 
         gridPanel.add(scrollPane, 1, 1);
         gridPanel.add(oldStackPane, 0, 1);
         gridPanel.add(newStackPane, 2, 1);
 
-        gridPanel.add(new HBox(buttonPrev, buttonNext), 1, 0);
-
+        Region leftr = new Region();
+        Region leftl = new Region();
+        HBox.setHgrow(leftr,  Priority.ALWAYS);
+        HBox.setHgrow(leftl,  Priority.ALWAYS);
+        gridPanel.add(new HBox(leftl, buttonPrev, buttonNext, leftr), 1, 0);
 
         Field field = FieldUtils.getField(oldCodeArea.getClass(), "virtualFlow", true);
         try {
@@ -160,7 +163,7 @@ public class DiffViewController extends BaseFileViewController {
         );*/
         oldVSPane.addEventFilter(ScrollEvent.SCROLL, e -> {
             newVSPane.fireEvent(secScrollEvt);
-            paintChanges(e.getDeltaY(), 0);
+            //paintChanges(e.getDeltaY(), 0);
             FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );
         });
         oldVSPane.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> { newVSPane.fireEvent(secScrollEvt); paintChanges(0, 0); } );
@@ -182,7 +185,7 @@ public class DiffViewController extends BaseFileViewController {
 
         newVSPane.addEventFilter(ScrollEvent.SCROLL, e -> {
             oldVSPane.fireEvent(secScrollEvt);
-            paintChanges(0, e.getDeltaY());
+            //paintChanges(0, e.getDeltaY());
             FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) ); });
         newVSPane.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> { oldVSPane.fireEvent(secScrollEvt);  paintChanges(0, 0);});
         newVSPane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> { oldVSPane.fireEvent(secScrollEvt);  paintChanges(0, 0);});
@@ -290,6 +293,12 @@ public class DiffViewController extends BaseFileViewController {
 
     }
 
+    /**
+     * Calculate difference between new and old text.
+     *
+     * @return list of pairs, where each item has pair
+     * of begin and end position of items, which are different.
+     */
     private List<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> calculateParagraphDifference() {
         final List<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> paragraphDiffList = new ArrayList<>();
         for (Delta<String> delta : patch.getDeltas()) {
@@ -326,29 +335,14 @@ public class DiffViewController extends BaseFileViewController {
             if (revPos > revBottomPos) {
                 revBottomPos = revPos;
             }
-
-
             paragraphDiffList.add(
                     new Pair<>(
                             new Pair<>(origPos, origBottomPos - origPos),
                             new Pair<>(revPos, revBottomPos - revPos)
                     )
             );
-
-
             oldLinesToHighlight.add(new Pair<>(origPos, origBottomPos));
             newLinesToHighlight.add(new Pair<>(revPos, revBottomPos));
-
-
-            for (int i = origPos; i < origBottomPos; i++) {
-                ((StyledTextArea) oldCodeArea).setParagraphStyle(i, Collections.singleton("diff"));
-            }
-
-            for (int i = revPos; i < revBottomPos; i++) {
-                ((StyledTextArea) newCodeArea).setParagraphStyle(i, Collections.singleton("diff"));
-            }
-
-
         }
         return paragraphDiffList;
     }
@@ -361,7 +355,7 @@ public class DiffViewController extends BaseFileViewController {
                                    Color color) {
 
 
-        int x1 = -2;
+        int x1 = -1;
         int y1 = (int) (oldCodeFirstVisibleParagraphY + oldParagraphHeight * (oldLine - oldCodeFirstParagraphVisible));
 
         int x2 = (int) paintAreaWidth + 1;
@@ -439,7 +433,10 @@ public class DiffViewController extends BaseFileViewController {
         return paragraphBeginPoints;
     }
 
-    public void openFile(String oldFileName, String oldRevision, String newFileName, String newRevision, String diffFileName) throws IOException {
+    public void openFile(String title, String oldFileName, String oldRevision, String newFileName,
+                         String newRevision, Patch<String> pathc) throws IOException {
+
+        this.patch = pathc;
 
         oldLabel.setText(oldRevision);
         newLabel.setText(newRevision);
@@ -447,9 +444,9 @@ public class DiffViewController extends BaseFileViewController {
         fillCodeArea(oldCodeArea, oldFileName);
         fillCodeArea(newCodeArea, newFileName);
 
-        patch = DiffUtils.parseUnifiedDiff(Files.readAllLines(Paths.get(diffFileName)));
-
         paragraphDiffList = calculateParagraphDifference();
+
+        highlightParagraphDifference();
 
         Optional<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> p = paragraphDiffList
                 .stream().findFirst();
@@ -466,12 +463,38 @@ public class DiffViewController extends BaseFileViewController {
 
         final Stage stage = new Stage();
         stage.setScene(scene);
-        stage.setTitle(oldRevision + " -> " + newRevision);
+        stage.setTitle(title);
         stage.show();
 
         FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );
 
         eventSubscription();
+
+    }
+
+    private void highlightParagraphDifference() {
+        Collection styleClass = Collections.singleton("diff");
+        for (Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> ppair : paragraphDiffList) {
+            for (int i = ppair.getFirst().getFirst(); i< ppair.getFirst().getFirst() + ppair.getFirst().getSecond(); i++) {
+                if(i < oldCodeArea.getParagraphs().size()) {
+                    ((StyledTextArea) oldCodeArea).setParagraphStyle(i, styleClass);
+                }
+            }
+            for (int i = ppair.getSecond().getFirst(); i< ppair.getSecond().getFirst() + ppair.getSecond().getSecond(); i++) {
+                if(i < newCodeArea.getParagraphs().size()) {
+                    ((StyledTextArea) newCodeArea).setParagraphStyle(i, styleClass);
+                }
+            }
+
+        }
+    }
+
+
+    public void openFile(String title, String oldFileName, String oldRevision, String newFileName,
+                         String newRevision, String diffFileName) throws IOException {
+
+        openFile(title, oldFileName, oldRevision, newFileName, newRevision,
+                DiffUtils.parseUnifiedDiff(Files.readAllLines(Paths.get(diffFileName))));
 
     }
 }

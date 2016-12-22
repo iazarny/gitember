@@ -78,9 +78,6 @@ public class HistoryViewController implements Initializable {
 
 
         historyTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-
-            System.out.println("\n\n old " + oldSelection + " new " + newSelection);
-
             if (newSelection != null) {
                 if (historyTableView.getSelectionModel().getSelectedItems().size() == 1) {
                     // click on some other item, not additional
@@ -96,12 +93,6 @@ public class HistoryViewController implements Initializable {
             showDiffMenuItem.setDisable(selectedItems.size() < 2);
             openFileMenuItem.setDisable(selectedItems.size() != 1);
 
-
-            selectedItems.stream().forEach(
-                    o -> {
-                        System.out.println(o.getShortMessage());
-                    }
-            );
         });
 
 
@@ -141,38 +132,23 @@ public class HistoryViewController implements Initializable {
                 oldRevision = selectedItems.get(1);
                 newRevision = selectedItems.get(0);
             }
-            final String oldFile = repositoryService.saveFile(treeName, oldRevision.getRevisionFullName(), fileName);
-            final String newFile = repositoryService.saveFile(treeName, newRevision.getRevisionFullName(), fileName);
-            final String diffFile = repositoryService.saveDiff(treeName, oldRevision.getRevisionFullName(), newRevision.getRevisionFullName(), fileName);
+
+
+            final String oldRevisionName = oldRevision.getRevisionFullName();
+            final String newRevisionName = newRevision.getRevisionFullName();
+
+            //todo copy past from commit controller # openDiffWithLatestVersionMenuItemClickHandler
+            final String oldFile = repositoryService.saveFile(treeName, oldRevisionName, fileName);
+            final String newFile = repositoryService.saveFile(treeName, newRevisionName, fileName);
+            final String diffFile = repositoryService.saveDiff(treeName,oldRevisionName , newRevisionName, fileName);
             final DiffViewController fileViewController = new DiffViewController();
             fileViewController.openFile(
-                    oldFile, oldRevision.getRevisionFullName(),
-                    newFile, newRevision.getRevisionFullName(),
+                    new File(fileName).getName(),
+                    oldFile, oldRevisionName,
+                    newFile, newRevisionName,
                     diffFile);
 
         }
-
-
-
-/*
-* public void openDiffWithPreviosVersionMenuItemClickHandler(ActionEvent actionEvent) {
-
-        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final String fileName = scmItem.getAttribute().getName();
-        try {
-            final String parentREvision = plotCommit.getParents().get(0); //todo determinate parent right
-            final String oldFile = repositoryService.saveFile(treeName, parentREvision, fileName);
-            final String newFile = repositoryService.saveFile(treeName, plotCommit.getRevisionFullName(), fileName);
-            final String diffFile = repositoryService.saveDiff(treeName, plotCommit.getRevisionFullName(), fileName);
-            final DiffViewController fileViewController = new DiffViewController();
-            fileViewController.openFile(
-                    oldFile, parentREvision,
-                    newFile, plotCommit.getRevisionFullName(),
-                    diffFile);
-        } catch (Exception e) {       //todo error dialog
-            e.printStackTrace();
-        }
-    }*/
 
     }
 

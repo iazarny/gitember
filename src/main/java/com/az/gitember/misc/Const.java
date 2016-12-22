@@ -9,6 +9,8 @@ public interface Const {
 
     String TEMP_FILE_PREFIX = "gitember";
 
+    String TITLE = "Gitember ";
+
     String DIFF_EXTENSION = "diff";
 
     String ICON = "/icon/GE-icon.png";

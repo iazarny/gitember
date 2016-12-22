@@ -25,36 +25,18 @@ public class FileViewController extends BaseFileViewController {
     private CodeArea codeArea;
 
     public FileViewController() {
-
         super();
         codeArea = new CodeArea();
-
-        /*IntFunction<Node> numberFactory = DiffLineNumberFactory.get(codeArea);
-        //IntFunction<Node> arrowFactory = new ArrowFactory(codeArea);
-        IntFunction<Node> graphicFactory = line -> {
-            HBox hbox = new HBox(
-                    numberFactory.apply(line)
-                    //arrowFactory.apply(line)
-            );
-            hbox.setAlignment(Pos.CENTER_LEFT);
-            hbox.toFront();
-            return hbox;
-        };*/
         codeArea.setParagraphGraphicFactory(DiffLineNumberFactory.get(codeArea, Collections.EMPTY_LIST));
         codeArea.setEditable(false);
     }
 
     public void openFile(String fileName, String displayTitle) throws IOException {
-
-
         fillCodeArea(codeArea, fileName);
         codeArea.moveTo(0);
         codeArea.selectRange(0, 0);
-
-
         Scene scene = new Scene(new StackPane(new VirtualizedScrollPane(codeArea)), 1024, 768);
         scene.getStylesheets().add(this.getClass().getResource(Const.KEYWORDS_CSS).toExternalForm());
-
         final Stage stage = new Stage();
         stage.setScene(scene);
         stage.setTitle(displayTitle);

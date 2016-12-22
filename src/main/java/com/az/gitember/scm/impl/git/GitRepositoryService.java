@@ -94,7 +94,6 @@ public class GitRepositoryService {
     }
 
 
-
     //all files in revision
     /*RevTree tree = revCommit.getTree();
     try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -116,6 +115,21 @@ public class GitRepositoryService {
      * @throws Exception
      */
     public List<ScmRevisionInformation> getFileHistory(final String treeName, final String fileName) throws Exception {
+        return getFileHistory(treeName, fileName, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Get list of revision, where given file was changed
+     *
+     * @param treeName tree name
+     * @param fileName given fileName
+     * @param limit    limit for history items
+     * @return list of revisions where file was changed.
+     * @throws Exception
+     */
+    public List<ScmRevisionInformation> getFileHistory(final String treeName,
+                                                       final String fileName,
+                                                       final int limit) throws Exception {
         final ArrayList<ScmRevisionInformation> rez = new ArrayList<>();
         try (Git git = new Git(repository)) {
             final LogCommand cmd = git.log()
@@ -126,6 +140,9 @@ public class GitRepositoryService {
             for (RevCommit revCommit : revCommits) {
                 final ScmRevisionInformation info = adapt(revCommit, fileName);
                 rez.add(info);
+                if (rez.size() >= limit) {
+                    break;
+                }
             }
         }
         return rez;
@@ -133,9 +150,8 @@ public class GitRepositoryService {
 
 
     /**
-     *
      * @param revCommit
-     * @param fileName optional file filter
+     * @param fileName  optional file filter
      * @return instance of {@link ScmRevisionInformation}
      */
     public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName) throws IOException {
@@ -151,9 +167,9 @@ public class GitRepositoryService {
         );
         if (revCommit instanceof PlotCommit) {
             ArrayList<String> refs = new ArrayList<>();
-            for (int i =0 ; i < ((PlotCommit)revCommit).getRefCount(); i++) {
+            for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
                 refs.add(
-                        ((PlotCommit)revCommit).getRef(i).getName()
+                        ((PlotCommit) revCommit).getRef(i).getName()
                 );
             }
             info.setRef(refs);
@@ -182,7 +198,6 @@ public class GitRepositoryService {
     }
 
 
-
     /**
      * Get list of  revisions for given cmd
      *
@@ -203,6 +218,7 @@ public class GitRepositoryService {
 
     /**
      * Get list of files in given revision.
+     *
      * @param revCommit
      * @param filePath  optional value to filter list of changed files
      * @return list of files in given revision
@@ -226,9 +242,9 @@ public class GitRepositoryService {
     }
 
 
-
     /**
      * Get diff formatter.
+     *
      * @param filePath optional filter for diff
      * @return diff formater
      */
@@ -270,7 +286,6 @@ public class GitRepositoryService {
             return plotCommitList;
         }
     }
-
 
 
     public String saveDiff(String treeName, String oldRevision, String newRevision, String fileName) throws Exception {
@@ -328,7 +343,7 @@ public class GitRepositoryService {
      * @return absolute path to saved diff file
      */
     public String saveDiff(String treeName, String revisionName,
-                         String fileName) throws Exception {
+                           String fileName) throws Exception {
 
         final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX, Const.DIFF_EXTENSION);
 
@@ -374,7 +389,7 @@ public class GitRepositoryService {
      * @return absolute path to saved file
      */
     public String saveFile(String treeName, String revisionName,
-                         String fileName) throws IOException {
+                           String fileName) throws IOException {
 
         final ObjectId lastCommitId = repository.resolve(revisionName);
         final String fileNameExtension = GitemberUtil.getExtension(fileName);
