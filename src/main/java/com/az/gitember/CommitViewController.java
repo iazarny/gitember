@@ -70,7 +70,6 @@ public class CommitViewController implements Initializable {
     @FXML
     private ContextMenu scmItemContextMenu;
 
-    private GitRepositoryService repositoryService;
     private ScmRevisionInformation plotCommit;
     private String treeName;
     private List<ScmItem> changedFiles;
@@ -104,14 +103,11 @@ public class CommitViewController implements Initializable {
         actionTableColumn.setCellValueFactory(c -> new ActionCellValueFactory(c, null));
     }
 
-    public void setRepositoryService(final GitRepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
-    }
 
     public void fillData(final String treeName, ScmRevisionInformation plotCommit) throws Exception {
         this.treeName = treeName;
         this.plotCommit = plotCommit;
-        this.changedFiles = repositoryService.getChangedFiles(treeName, plotCommit.getRevisionFullName());
+        this.changedFiles = MainApp.getRepositoryService().getChangedFiles(treeName, plotCommit.getRevisionFullName());
     }
 
     public void openItemTableViewDoubleClickedHandler(MouseEvent event) {
@@ -133,7 +129,7 @@ public class CommitViewController implements Initializable {
         try {
             final FileViewController fileViewController = new FileViewController();
             fileViewController.openFile(
-                    repositoryService.saveFile(treeName, revisionFullName, fileName),
+                    MainApp.getRepositoryService().saveFile(treeName, revisionFullName, fileName),
                     fileName);
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();
@@ -146,7 +142,7 @@ public class CommitViewController implements Initializable {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
         final String revisionName = plotCommit.getRevisionFullName();
-        final String path = repositoryService.saveDiff(treeName, revisionName, fileName);
+        final String path = MainApp.getRepositoryService().saveDiff(treeName, revisionName, fileName);
         final FileViewController fileViewController = new FileViewController();
         fileViewController.openFile(path, fileName);
     }
@@ -156,9 +152,9 @@ public class CommitViewController implements Initializable {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
         final String parentREvision = plotCommit.getParents().get(0); //todo determinate parent right
-        final String oldFile = repositoryService.saveFile(treeName, parentREvision, fileName);
-        final String newFile = repositoryService.saveFile(treeName, plotCommit.getRevisionFullName(), fileName);
-        final String diffFile = repositoryService.saveDiff(treeName, plotCommit.getRevisionFullName(), fileName);
+        final String oldFile = MainApp.getRepositoryService().saveFile(treeName, parentREvision, fileName);
+        final String newFile = MainApp.getRepositoryService().saveFile(treeName, plotCommit.getRevisionFullName(), fileName);
+        final String diffFile = MainApp.getRepositoryService().saveDiff(treeName, plotCommit.getRevisionFullName(), fileName);
         final DiffViewController fileViewController = new DiffViewController();
         fileViewController.openFile(
                 new File(fileName).getName(),
@@ -171,7 +167,7 @@ public class CommitViewController implements Initializable {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
         final String oldRevisionName = plotCommit.getRevisionFullName();
-        final String oldFile = repositoryService.saveFile(treeName, oldRevisionName, fileName);
+        final String oldFile = MainApp.getRepositoryService().saveFile(treeName, oldRevisionName, fileName);
 
         final String newFile = MainApp.getCurrentRepositoryPathWOGit() + File.separator + fileName;
 
@@ -195,14 +191,14 @@ public class CommitViewController implements Initializable {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
         final String oldRevisionName = plotCommit.getRevisionFullName();
-        final String oldFile = repositoryService.saveFile(treeName, oldRevisionName, fileName);
+        final String oldFile = MainApp.getRepositoryService().saveFile(treeName, oldRevisionName, fileName);
 
-        final ScmRevisionInformation lastCommit = repositoryService.getFileHistory(treeName, fileName, 1).get(0);
+        final ScmRevisionInformation lastCommit = MainApp.getRepositoryService().getFileHistory(treeName, fileName, 1).get(0);
 
         final String newRevisionName = lastCommit.getRevisionFullName();
 
-        final String newFile = repositoryService.saveFile(treeName, newRevisionName, fileName);
-        final String diffFile = repositoryService.saveDiff(treeName, oldRevisionName, newRevisionName, fileName);
+        final String newFile = MainApp.getRepositoryService().saveFile(treeName, newRevisionName, fileName);
+        final String diffFile = MainApp.getRepositoryService().saveDiff(treeName, oldRevisionName, newRevisionName, fileName);
         final DiffViewController fileViewController = new DiffViewController();
         fileViewController.openFile(
                 new File(fileName).getName(),
@@ -221,7 +217,6 @@ public class CommitViewController implements Initializable {
             final HistoryViewController historyViewController = fxmlLoader.getController();
             historyViewController.setFileName(fileName);
             historyViewController.setTreeName(treeName);
-            historyViewController.setRepositoryService(repositoryService);
             historyViewController.openHistory();
 
 

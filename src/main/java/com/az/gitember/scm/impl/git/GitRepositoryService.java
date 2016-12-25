@@ -4,6 +4,7 @@ import com.az.gitember.misc.*;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -74,7 +75,7 @@ public class GitRepositoryService {
                     .stream()
                     .map(Ref::getName)
                     .sorted()
-                    .map(r -> new ScmBranch(r, null)) //todo null instead of attribute
+                    .map(r -> new ScmBranch(r, null))
                     .collect(Collectors.toList());
         }
     }
@@ -425,5 +426,94 @@ public class GitRepositoryService {
         }
 
         return temp.getAbsolutePath();
+    }
+
+    /**
+     * Get statuses
+     *
+     * @return
+     */
+    public List<ScmItem> getStatuses() throws Exception {
+
+        Map<String, List<String>> statusMap = new HashMap<>();
+        try (Git git = new Git(repository)) {
+            Status status = git.status().call();
+
+            status.getConflicting().forEach(item -> enrichStatus(statusMap, item, ScmItemStatus.CONFLICT));
+            status.getAdded().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.ADDED));
+            status.getAdded().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.CHANGED));
+            status.getMissing().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.MISSED));
+            status.getModified().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.MODIFIED));
+            status.getRemoved().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.REMOVED));
+            status.getUncommittedChanges().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.UNCOMMITED));
+            status.getUntracked().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.UNTRACKED));
+            status.getUntrackedFolders().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.UNTRACKED_FOLDER));
+
+            //TODO
+            /* Map<String, StageState> conflictingStageState = status.getConflictingStageState();
+                for(Map.Entry<String, StageState> entry : conflictingStageState.entrySet()) {
+                    System.out.println("ConflictingState: " + entry);
+                }*/
+
+
+        }
+
+
+        List<ScmItem> scmItems = new ArrayList<>(statusMap.size());
+        statusMap.forEach((s, strings) -> {
+            scmItems.add(
+                    new ScmItem(s, new ScmItemAttribute(strings))
+            );
+        } );
+
+
+        scmItems.sort((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()));
+
+        return scmItems;
+
+    }
+
+    private void enrichStatus(Map<String, List<String>> rez, String item, String itemStatus) {
+        List<String> list = rez.getOrDefault(item, new ArrayList<>());
+        list.add(itemStatus);
+        rez.put(item, list);
+    }
+
+
+    /**
+     * Add file to stage before commit.
+     * @param fileName
+     * @throws Exception
+     */
+    public void addFileToCommitStage(String fileName) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(fileName).call();
+        }
+    }
+
+    public void removeToCommitStage(String fileName) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.rm().addFilepattern(fileName).call();
+        }
+    }
+
+    public void commit(String message) throws Exception {
+        try (Git git = new Git(repository)) {
+            git
+                    .commit()
+                    .setMessage(message)
+                    .setAuthor("Igor Azarny", "iazarny@yahoo.com")
+                    .call();
+        }
+
+    }
+
+    //TODO
+    public void removeFileFromCommitStage(String fileName) throws Exception {
+
+        try (Git git = new Git(repository)) {
+            git.reset().addPath(fileName);
+        }
+
     }
 }

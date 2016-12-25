@@ -2,16 +2,20 @@ package com.az.gitember;
 
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmItemStatus;
+import com.az.gitember.ui.TextAreaInputDialog;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.CheckBoxTableCell;
 
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -41,7 +45,8 @@ public class WorkingCopyController  implements Initializable {
                c -> {
                    boolean staged =
                            c.getValue().getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
-                           || c.getValue().getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED);
+                           || c.getValue().getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)
+                           || c.getValue().getAttribute().getStatus().contains(ScmItemStatus.REMOVED);
                    return new ReadOnlyBooleanWrapper(!staged);
                }
         );
@@ -63,20 +68,35 @@ public class WorkingCopyController  implements Initializable {
             if (cell.getTableColumn() == this.selectTableColumn) {
                 ScmItem item = (ScmItem)workingCopyTableView.getSelectionModel().getSelectedItem();
                 if(item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
-                        || item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED) ){
-                    //System.out.println("remove " + item.getShortName());
-                    //item.getAttribute().getStatus().remove(ScmItemStatus.ADDED);
-                    //System.out.println("add " + item.getShortName());
+                        || item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)
+                        || item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED) ){
 
-                    MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                    if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
+                        MainApp.getRepositoryService().removeToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.REMOVED);
+                    } else {
+                        MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
+                        item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
+                    }
 
-                    item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
-                    item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
 
 
                 }
                 workingCopyTableView.refresh();
             }
+            //TODO V2 unstage changes
+        }
+    }
+
+    public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
+        TextAreaInputDialog dialog = new TextAreaInputDialog("");
+        dialog.setTitle("Commit message");
+        dialog.setHeaderText("Provide commit message");
+        dialog.setContentText("Message:");
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            MainApp.getRepositoryService().commit(result.get());
         }
     }
 }

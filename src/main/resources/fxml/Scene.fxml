@@ -10,20 +10,20 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.effect.MotionBlur?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane minHeight="864" minWidth="1152" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
+<BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
     <left>
-        <Accordion prefHeight="478.0" prefWidth="260.0" BorderPane.alignment="CENTER" expandedPane="$workSpaceTitlePane">
+        <Accordion prefHeight="478.0" prefWidth="260.0" BorderPane.alignment="CENTER">
             <panes>
-                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace" >
+                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace">
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -31,7 +31,7 @@
                            <children>
                               <HBox>
                                   <children>
-                                      <Hyperlink text="Working copy" />
+                                      <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy" />
                                       <Pane HBox.hgrow="ALWAYS" />
                                       <Label text="" />
                                   </children>
@@ -129,19 +129,13 @@
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull" />
                         <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push" />
                         <Pane HBox.hgrow="ALWAYS" />
+                  <TextField />
                         <Button mnemonicParsing="false" onAction="#exitHandler" text="Exit" />
                     </items>
                 </ToolBar>
             </children>
         </VBox>
     </top>
-    <bottom>
-        <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-            <items>
-                <Button mnemonicParsing="false" text="Button" />
-            </items>
-        </ToolBar>
-    </bottom>
     <center>
         <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
     </center>
