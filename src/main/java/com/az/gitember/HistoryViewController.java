@@ -61,7 +61,6 @@ public class HistoryViewController implements Initializable {
     public MenuItem openFileMenuItem;
 
 
-    private GitRepositoryService repositoryService;
     private String fileName;
     private String treeName;
     private LinkedList<ScmRevisionInformation> selectedItems = new LinkedList<>();
@@ -98,9 +97,6 @@ public class HistoryViewController implements Initializable {
 
     }
 
-    public void setRepositoryService(GitRepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
-    }
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
@@ -113,7 +109,7 @@ public class HistoryViewController implements Initializable {
     public void openHistory() throws Exception {
         historyTableView.setItems(
                 FXCollections.observableArrayList(
-                        repositoryService.getFileHistory(treeName, fileName)
+                        MainApp.getRepositoryService().getFileHistory(treeName, fileName)
                 )
         );
     }
@@ -138,9 +134,9 @@ public class HistoryViewController implements Initializable {
             final String newRevisionName = newRevision.getRevisionFullName();
 
             //todo copy past from commit controller # openDiffWithLatestVersionMenuItemClickHandler
-            final String oldFile = repositoryService.saveFile(treeName, oldRevisionName, fileName);
-            final String newFile = repositoryService.saveFile(treeName, newRevisionName, fileName);
-            final String diffFile = repositoryService.saveDiff(treeName,oldRevisionName , newRevisionName, fileName);
+            final String oldFile = MainApp.getRepositoryService().saveFile(treeName, oldRevisionName, fileName);
+            final String newFile = MainApp.getRepositoryService().saveFile(treeName, newRevisionName, fileName);
+            final String diffFile = MainApp.getRepositoryService().saveDiff(treeName,oldRevisionName , newRevisionName, fileName);
             final DiffViewController fileViewController = new DiffViewController();
             fileViewController.openFile(
                     new File(fileName).getName(),
@@ -158,7 +154,7 @@ public class HistoryViewController implements Initializable {
         try {
             final FileViewController fileViewController = new FileViewController();
             fileViewController.openFile(
-                    repositoryService.saveFile(treeName, revisionFullName, fileName),
+                    MainApp.getRepositoryService().saveFile(treeName, revisionFullName, fileName),
                     fileName);
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();
