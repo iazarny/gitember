@@ -573,4 +573,13 @@ public class GitRepositoryService {
     }
 
 
+    public void remoteRepositoryPull() throws GitAPIException {
+
+        try(Git git = new Git(repository)) {
+            git.pull().call();
+        }
+
+    }
+
+
 }

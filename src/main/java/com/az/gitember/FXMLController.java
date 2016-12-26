@@ -23,6 +23,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -76,8 +77,8 @@ public class FXMLController implements Initializable {
                 directoryChooser.showDialog(MainApp.getMainStage());
         if(selectedDirectory != null){
             String absPath = selectedDirectory.getAbsolutePath();
-            if (!absPath.endsWith(".git")) {
-                absPath += File.separator + ".git";
+            if (!absPath.endsWith(Const.GIT_FOLDER)) {
+                absPath += File.separator + Const.GIT_FOLDER;
             }
             openRepository(absPath);
             openWorkingCopyHandler(actionEvent);
@@ -92,6 +93,7 @@ public class FXMLController implements Initializable {
         remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
         settingsService.saveRepository(absPath);
+        this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit());
     }
 
@@ -162,7 +164,9 @@ public class FXMLController implements Initializable {
     public void fetchHandler(ActionEvent actionEvent) {
     }
 
-    public void pullHandler(ActionEvent actionEvent) {
+    public void pullHandler(ActionEvent actionEvent) throws GitAPIException {
+
+        MainApp.getRepositoryService().remoteRepositoryPull();
     }
 
     public void pushHandler(ActionEvent actionEvent) {
