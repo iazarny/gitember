@@ -12,6 +12,7 @@ import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
 import com.az.gitember.ui.ScmItemCellFactory;
+import com.az.gitember.ui.TextAreaInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -94,6 +95,8 @@ public class FXMLController implements Initializable {
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
         settingsService.saveRepository(absPath);
         this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
+        this.fetchBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
+        this.pushBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit());
     }
 
@@ -162,15 +165,45 @@ public class FXMLController implements Initializable {
     }
 
     public void fetchHandler(ActionEvent actionEvent) {
+        String text;
+        try {
+            text = MainApp.getRepositoryService().remoteRepositoryFetch();
+        } catch (Exception e) {
+            text = e.getMessage();
+        }
+        showResult(text);
     }
 
-    public void pullHandler(ActionEvent actionEvent) throws GitAPIException {
-
-        MainApp.getRepositoryService().remoteRepositoryPull();
+    public void pullHandler(ActionEvent actionEvent)  {
+        String text;
+        try {
+            text = MainApp.getRepositoryService().remoteRepositoryPull();
+        } catch (Exception e) {
+            text = e.getMessage();
+        }
+        showResult(text);
     }
 
     public void pushHandler(ActionEvent actionEvent) {
+        String text;
+        try {
+            text = MainApp.getRepositoryService().remoteRepositoryPush();
+        } catch (Exception e) {
+            text = e.getMessage();
+        }
+        showResult(text);
     }
+
+    private void showResult(String text) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setWidth(600); //TODO width
+        alert.setTitle("Pull result");
+        alert.setHeaderText("Result of pull operation");
+        alert.setContentText(text);
+        alert.showAndWait();
+    }
+
+
 
     public void exitHandler(ActionEvent actionEvent) {
         Platform.exit();

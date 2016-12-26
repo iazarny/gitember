@@ -2,23 +2,24 @@ package com.az.gitember;
 
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmItemStatus;
-import com.az.gitember.ui.ActionCellValueFactory;
+import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
-import com.az.gitember.ui.TextAreaInputDialog;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 /**
  * Created by Igor_Azarny on 23.12.2016.
@@ -30,6 +31,8 @@ public class WorkingCopyController implements Initializable {
     public TableColumn<ScmItem, FontIcon> statusTableColumn;
     public TableColumn<ScmItem, Boolean> selectTableColumn;
     public TableColumn<ScmItem, String> itemTableColumn;
+    public Button stashBtn;
+    public Button commitBtn;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -117,7 +120,7 @@ public class WorkingCopyController implements Initializable {
     }
 
     public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
-        TextAreaInputDialog dialog = new TextAreaInputDialog(
+        CommitDialog dialog = new CommitDialog(
                 "TODO history of commit messasge",
                 MainApp.getRepositoryService().getUserName(),
                 MainApp.getRepositoryService().getUserEmail()
@@ -136,5 +139,11 @@ public class WorkingCopyController implements Initializable {
 
     public void refreshBtnHandler(ActionEvent actionEvent) throws Exception {
         open();
+    }
+
+    public void stashBtnHandler(ActionEvent actionEvent) throws Exception {
+        MainApp.getRepositoryService().stash();
+        open();
+
     }
 }

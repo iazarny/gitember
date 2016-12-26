@@ -1,10 +1,8 @@
 package com.az.gitember.scm.impl.git;
 
 import com.az.gitember.misc.*;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.LogCommand;
-import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -18,6 +16,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -573,13 +574,53 @@ public class GitRepositoryService {
     }
 
 
-    public void remoteRepositoryPull() throws GitAPIException {
+    public String  remoteRepositoryPull() throws Exception {
 
         try(Git git = new Git(repository)) {
-            git.pull().call();
+            PullResult pullRez =  git.pull().call();
+            return pullRez.toString();
+        } catch (CheckoutConflictException conflictException) {
+            return conflictException.getMessage();
+        }
+
+    }
+
+    public String  remoteRepositoryFetch() throws Exception {
+
+        try(Git git = new Git(repository)) {
+            FetchResult pullRez =  git.fetch().call();
+            return pullRez.getMessages();
+        } catch (CheckoutConflictException conflictException) {
+            return conflictException.getMessage();
         }
 
     }
 
 
+    public void stash() throws Exception {
+
+        try(Git git = new Git(repository)) {
+            git.stashCreate().call();
+        }
+
+    }
+
+    public String remoteRepositoryPush()  throws Exception {
+        try(Git git = new Git(repository)) {
+            RefSpec refSpec = new RefSpec("refs/heads/master:refs/remotes/origin/master"); //TODO not only master
+            Iterable<PushResult> pushResults =  git.push().setRefSpecs(refSpec).call();
+            StringBuilder stringBuilder = new StringBuilder();
+            pushResults.forEach(
+                    pushResult -> {
+                        String rezInfo = "";
+                        stringBuilder.append(  rezInfo  )  ;
+                    }
+            );
+
+            return stringBuilder.toString();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+
+    }
 }
