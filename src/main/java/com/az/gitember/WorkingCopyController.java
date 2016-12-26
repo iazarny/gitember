@@ -2,6 +2,8 @@ package com.az.gitember;
 
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmItemStatus;
+import com.az.gitember.ui.ActionCellValueFactory;
+import com.az.gitember.ui.StatusCellValueFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -9,14 +11,14 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /**
  * Created by Igor_Azarny on 23.12.2016.
@@ -25,7 +27,7 @@ public class WorkingCopyController implements Initializable {
 
 
     public TableView workingCopyTableView;
-    public TableColumn<ScmItem, String> statusTableColumn;
+    public TableColumn<ScmItem, FontIcon> statusTableColumn;
     public TableColumn<ScmItem, Boolean> selectTableColumn;
     public TableColumn<ScmItem, String> itemTableColumn;
 
@@ -37,14 +39,36 @@ public class WorkingCopyController implements Initializable {
         );
 
         statusTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(c.getValue().getAttribute().getStatus().stream().collect(Collectors.joining(" ")))
-        );
+                c -> new StatusCellValueFactory(c.getValue().getAttribute().getStatus())
+        ); //TODO add tooltip
 
         selectTableColumn.setCellValueFactory(
                 c -> new ReadOnlyBooleanWrapper(!isUnstaged(c.getValue()))
         );
 
         selectTableColumn.setCellFactory(p -> new CheckBoxTableCell<ScmItem, Boolean>());
+
+        workingCopyTableView.setRowFactory(
+                tr -> {
+                    return new TableRow<ScmItem>() {
+                        @Override
+                        protected void updateItem(ScmItem item, boolean empty) {
+                            super.updateItem(item, empty);
+                            super.updateItem(item, empty) ;
+                            if (item == null) {
+                                setStyle("");
+                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
+                                //todo styles
+                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
+                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
+                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+
+                            }
+                        }
+                    };
+                }
+        );
 
     }
 

@@ -40,7 +40,11 @@ public class SettingsServiceImpl {
 
         Properties properties = read();
 
-        return properties.getProperty(properties.getProperty(KEY_LAST_PROJECT));
+        if (properties.getProperty(KEY_LAST_PROJECT) != null) {
+            return properties.getProperty(properties.getProperty(KEY_LAST_PROJECT));
+        }
+
+        return null;
 
     }
 

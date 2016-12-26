@@ -1,31 +1,18 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.Const;
-import com.az.gitember.misc.GitemberUtil;
-import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmRevisionInformation;
-import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URL;
-import java.util.ArrayDeque;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.ResourceBundle;
 
 /**
