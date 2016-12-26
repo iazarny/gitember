@@ -103,18 +103,25 @@
                             <items>
                                 <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..." />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Recent ">
+                                <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Open recent">
                                     <items>
                                         <MenuItem mnemonicParsing="false" text="Action 1" />
                                     </items>
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem text="Clone" />
+                                <MenuItem text="Create" onAction="#createRepositoryHandler"/>
                                 <MenuItem disable="true" text="Fetch" />
                                 <MenuItem disable="true" text="Pull" />
                                 <MenuItem disable="true" text="Push" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem onAction="#exitActionHandler" text="Exit" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem text="Check for update ..." />
+                                <MenuItem text="About" />
                             </items>
                         </Menu>
                     </menus>

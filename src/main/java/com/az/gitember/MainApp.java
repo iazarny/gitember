@@ -2,6 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
+import com.az.gitember.service.GitemberServiceImpl;
 import javafx.application.Application;
 
 import static javafx.application.Application.launch;
@@ -17,7 +18,8 @@ public class MainApp extends Application {
 
     private static Stage mainStage = null;
     private static String currentRepositoryPath;
-    private static GitRepositoryService repositoryService;
+    private static GitRepositoryService repositoryService = new GitRepositoryService();
+    private static GitemberServiceImpl gitemberService;
 
     public static Stage getMainStage() {
         return mainStage;
@@ -41,6 +43,14 @@ public class MainApp extends Application {
 
     public static void setRepositoryService(GitRepositoryService repositoryService) {
         MainApp.repositoryService = repositoryService;
+    }
+
+    public static GitemberServiceImpl getGitemberService() {
+        return gitemberService;
+    }
+
+    public static void setGitemberService(GitemberServiceImpl gitemberService) {
+        MainApp.gitemberService = gitemberService;
     }
 
     public static void  setTitle(String title) {

@@ -80,11 +80,12 @@ public class FXMLController implements Initializable {
                 absPath += File.separator + ".git";
             }
             openRepository(absPath);
+            openWorkingCopyHandler(actionEvent);
         }
 
     }
 
-    private void openRepository(String absPath) throws Exception {
+    public void openRepository(String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
         MainApp.setRepositoryService(new GitRepositoryService(absPath));
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
@@ -118,6 +119,7 @@ public class FXMLController implements Initializable {
                                 event -> {
                                     try {
                                         openRepository(o.getSecond());
+                                        openWorkingCopyHandler(null);
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
@@ -139,28 +141,18 @@ public class FXMLController implements Initializable {
     }
 
     @FXML
-    public void branchesListMouseClicked(Event event) {
-
+    public void branchesListMouseClicked(Event event) throws Exception {
         ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
 
-        try {
-            final FXMLLoader fxmlLoader = new FXMLLoader();
-            try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
-                final Parent branchView = fxmlLoader.load(is);
-                final BranchViewController branchViewController = fxmlLoader.getController();
-
-                branchViewController.setTreeName(scmBranch.getFullName());
-                branchViewController.open();
-
-                hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                hostPanel.getChildren().add(branchView);
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
+            final Parent branchView = fxmlLoader.load(is);
+            final BranchViewController branchViewController = fxmlLoader.getController();
+            branchViewController.setTreeName(scmBranch.getFullName());
+            branchViewController.open();
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(branchView);
         }
-
 
     }
 
@@ -180,23 +172,34 @@ public class FXMLController implements Initializable {
         Platform.exit();
     }
 
-    public void openWorkingCopyHandler(ActionEvent actionEvent) {
-        try {
-            final FXMLLoader fxmlLoader = new FXMLLoader();
-            try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
-                final Parent workCopyView = fxmlLoader.load(is);
-                final WorkingCopyController workingCopyController = fxmlLoader.getController();
-                workingCopyController.open();
+    public void openWorkingCopyHandler(ActionEvent actionEvent) throws Exception {
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
+            final Parent workCopyView = fxmlLoader.load(is);
+            final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.open();
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(workCopyView);
+        }
 
+    }
 
+    /**
+     * Create new git repository.
+     *
+     * @param actionEvent
+     */
+    public void createRepositoryHandler(ActionEvent actionEvent)  throws Exception {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setInitialDirectory(new File(settingsService.getUserHomeFolder()));
+        final File selectedDirectory =
+                directoryChooser.showDialog(MainApp.getMainStage());
+        if(selectedDirectory != null){
+            String absPath = selectedDirectory.getAbsolutePath();
+            MainApp.getRepositoryService().createRepository(absPath);
 
-                hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                hostPanel.getChildren().add(workCopyView);
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            openRepository(absPath + File.separator + Const.GIT_FOLDER);
+            openWorkingCopyHandler(null);
         }
 
     }

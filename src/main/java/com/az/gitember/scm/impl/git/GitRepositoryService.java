@@ -28,6 +28,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,8 @@ public class GitRepositoryService {
 
     private final Repository repository;
 
+    private final StoredConfig config;
+
     /**
      * Construct service, which work with git
      *
@@ -50,6 +55,35 @@ public class GitRepositoryService {
     public GitRepositoryService(final String gitFolder) throws IOException {
         this.gitFolder = gitFolder;
         this.repository = GitUtil.openRepository(gitFolder);
+        this.config = repository.getConfig();
+    }
+
+    public GitRepositoryService() {
+        gitFolder = null;
+        repository = null;
+        config = null;
+    }
+
+    public void setUserName(String userName) throws IOException {
+        config.setString("user", null, "name", userName);
+        config.save();
+    }
+
+    public void setUserEmail(String userEmail) throws IOException {
+        config.setString("user", null, "email", userEmail);
+        config.save();
+    }
+
+    public String getUserName() {
+        return config.getString("user", null, "name");
+    }
+
+    public String getUserEmail() {
+        return  config.getString("user", null, "email");
+    }
+
+    public String getRemoteUrl() {
+        return config.getString("remote", "origin", "url");
     }
 
 
@@ -161,8 +195,8 @@ public class GitRepositoryService {
         info.setFullMessage(revCommit.getFullMessage());
         info.setRevisionFullName(revCommit.getName());
         info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-        info.setAuthorName(revCommit.getAuthorIdent().getName());
-        info.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
+        info.setAuthorName(revCommit.getCommitterIdent().getName());
+        info.setAuthorEmail(revCommit.getCommitterIdent().getEmailAddress());
         info.setParents(
                 Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
         );
@@ -491,12 +525,6 @@ public class GitRepositoryService {
         }
     }
 
-    public void removeToCommitStage(String fileName) throws Exception {
-        try (Git git = new Git(repository)) {
-            git.rm().addFilepattern(fileName).call();
-        }
-    }
-
     public void commit(String message) throws Exception {
         try (Git git = new Git(repository)) {
             git
@@ -504,6 +532,12 @@ public class GitRepositoryService {
                     .setMessage(message)
                     .setAuthor("Igor Azarny", "iazarny@yahoo.com")
                     .call();
+        }
+    }
+
+    public void removeMissedFile(String fileName) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.rm().addFilepattern(fileName).call();
         }
 
     }
@@ -516,4 +550,27 @@ public class GitRepositoryService {
         }
 
     }
+
+    /**
+     * Create new git repository.
+     * @param absPath path to repository.
+     */
+    public void createRepository(final String absPath) throws Exception {
+        String readmeInitialContent = "# " + (new File(absPath)).getName();
+        try (Git git = Git.init()
+                .setDirectory(new File(absPath))
+                .call()) {
+            Files.write(
+                    Paths.get(absPath + File.separator + "README.md"),
+                    readmeInitialContent.getBytes(),
+                    StandardOpenOption.CREATE);
+            Files.write(
+                    Paths.get(absPath + File.separator + ".gitignore"),
+                    readmeInitialContent.getBytes(),
+                    StandardOpenOption.CREATE);
+        }
+
+    }
+
+
 }

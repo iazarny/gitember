@@ -11,7 +11,6 @@ import javafx.event.Event;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.CheckBoxTableCell;
 
 import java.net.URL;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Igor_Azarny on 23.12.2016.
  */
-public class WorkingCopyController  implements Initializable {
+public class WorkingCopyController implements Initializable {
 
 
     public TableView workingCopyTableView;
@@ -38,21 +37,21 @@ public class WorkingCopyController  implements Initializable {
         );
 
         statusTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(c.getValue().getAttribute().getStatus().stream().collect(Collectors.joining(" "))  )
+                c -> StringConstant.valueOf(c.getValue().getAttribute().getStatus().stream().collect(Collectors.joining(" ")))
         );
 
         selectTableColumn.setCellValueFactory(
-               c -> {
-                   boolean staged =
-                           c.getValue().getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
-                           || c.getValue().getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)
-                           || c.getValue().getAttribute().getStatus().contains(ScmItemStatus.REMOVED);
-                   return new ReadOnlyBooleanWrapper(!staged);
-               }
+                c -> new ReadOnlyBooleanWrapper(!isUnstaged(c.getValue()))
         );
 
         selectTableColumn.setCellFactory(p -> new CheckBoxTableCell<ScmItem, Boolean>());
 
+    }
+
+    private boolean isUnstaged(ScmItem scmItem) {
+        return scmItem.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
+                || scmItem.getAttribute().getStatus().contains(ScmItemStatus.MISSED)
+                || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED);
     }
 
     public void open() throws Exception {
@@ -66,20 +65,24 @@ public class WorkingCopyController  implements Initializable {
         if (event.getTarget() instanceof CheckBoxTableCell) {
             CheckBoxTableCell cell = (CheckBoxTableCell) event.getTarget();
             if (cell.getTableColumn() == this.selectTableColumn) {
-                ScmItem item = (ScmItem)workingCopyTableView.getSelectionModel().getSelectedItem();
-                if(item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
-                        || item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)
-                        || item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED) ){
+                ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+                if (isUnstaged(item)) {
 
-                    if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
-                        MainApp.getRepositoryService().removeToCommitStage(item.getShortName());
-                        item.getAttribute().getStatus().remove(ScmItemStatus.REMOVED);
+                    if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+
+                        MainApp.getRepositoryService().removeMissedFile(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
+                    } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+                        MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
                     } else {
                         MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
-                        item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
                     }
-
 
 
                 }
@@ -90,13 +93,24 @@ public class WorkingCopyController  implements Initializable {
     }
 
     public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
-        TextAreaInputDialog dialog = new TextAreaInputDialog("");
+        TextAreaInputDialog dialog = new TextAreaInputDialog(
+                "TODO history of commit messasge",
+                MainApp.getRepositoryService().getUserName(),
+                MainApp.getRepositoryService().getUserEmail()
+        );
         dialog.setTitle("Commit message");
         dialog.setHeaderText("Provide commit message");
         dialog.setContentText("Message:");
         Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()){
+        if (result.isPresent()) {
+            MainApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
+            MainApp.getRepositoryService().setUserName(dialog.getUserName());
             MainApp.getRepositoryService().commit(result.get());
+            open();
         }
+    }
+
+    public void refreshBtnHandler(ActionEvent actionEvent) throws Exception {
+        open();
     }
 }

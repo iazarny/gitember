@@ -126,7 +126,7 @@ public class BranchViewController implements Initializable {
         );
 
         authorTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(c.getValue().getAuthorIdent().getName())
+                c -> StringConstant.valueOf(c.getValue().getCommitterIdent().getName())
         );
         messageTableColumn.setCellValueFactory(
                 c -> StringConstant.valueOf(c.getValue().getShortMessage())
