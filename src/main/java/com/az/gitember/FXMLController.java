@@ -64,8 +64,6 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane hostPanel;
 
-    private GitRepositoryService repositoryService; //todo (?) move to main app
-
     private SettingsServiceImpl settingsService = new SettingsServiceImpl();
 
     @FXML
@@ -82,16 +80,17 @@ public class FXMLController implements Initializable {
                 absPath += File.separator + ".git";
             }
             openRepository(absPath);
+            openWorkingCopyHandler(actionEvent);
         }
 
     }
 
-    private void openRepository(String absPath) throws Exception {
+    public void openRepository(String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
-        repositoryService = new GitRepositoryService(absPath);
-        localBranchesList.setItems(FXCollections.observableList(repositoryService.getLocalBranches()));
-        remoteBranchesList.setItems(FXCollections.observableList(repositoryService.getRemoteBranches()));
-        tagList.setItems(FXCollections.observableList(repositoryService.getTags()));
+        MainApp.setRepositoryService(new GitRepositoryService(absPath));
+        localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+        remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
+        tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
         settingsService.saveRepository(absPath);
         MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit());
     }
@@ -120,6 +119,7 @@ public class FXMLController implements Initializable {
                                 event -> {
                                     try {
                                         openRepository(o.getSecond());
+                                        openWorkingCopyHandler(null);
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
@@ -141,31 +141,18 @@ public class FXMLController implements Initializable {
     }
 
     @FXML
-    public void branchesListMouseClicked(Event event) {
-
+    public void branchesListMouseClicked(Event event) throws Exception {
         ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
 
-        try {
-            final FXMLLoader fxmlLoader = new FXMLLoader();
-            try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
-                final Parent branchView = fxmlLoader.load(is);
-                final BranchViewController branchViewController = fxmlLoader.getController();
-
-                branchViewController.setTreeName(scmBranch.getFullName());
-                branchViewController.setRepositoryService(repositoryService);
-                branchViewController.open();
-
-
-
-                hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                hostPanel.getChildren().add(branchView);
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
+            final Parent branchView = fxmlLoader.load(is);
+            final BranchViewController branchViewController = fxmlLoader.getController();
+            branchViewController.setTreeName(scmBranch.getFullName());
+            branchViewController.open();
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(branchView);
         }
-
 
     }
 
@@ -183,5 +170,37 @@ public class FXMLController implements Initializable {
 
     public void exitHandler(ActionEvent actionEvent) {
         Platform.exit();
+    }
+
+    public void openWorkingCopyHandler(ActionEvent actionEvent) throws Exception {
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
+            final Parent workCopyView = fxmlLoader.load(is);
+            final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.open();
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(workCopyView);
+        }
+
+    }
+
+    /**
+     * Create new git repository.
+     *
+     * @param actionEvent
+     */
+    public void createRepositoryHandler(ActionEvent actionEvent)  throws Exception {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setInitialDirectory(new File(settingsService.getUserHomeFolder()));
+        final File selectedDirectory =
+                directoryChooser.showDialog(MainApp.getMainStage());
+        if(selectedDirectory != null){
+            String absPath = selectedDirectory.getAbsolutePath();
+            MainApp.getRepositoryService().createRepository(absPath);
+
+            openRepository(absPath + File.separator + Const.GIT_FOLDER);
+            openWorkingCopyHandler(null);
+        }
+
     }
 }

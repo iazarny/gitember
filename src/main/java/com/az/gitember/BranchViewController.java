@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
  */
 public class BranchViewController implements Initializable {
 
-    private static final int HEIGH = 50;
+    private static final int HEIGH = 30;
 
     @FXML
     private TableColumn<PlotCommit, Canvas> laneTableColumn;
@@ -49,8 +49,6 @@ public class BranchViewController implements Initializable {
 
     @FXML
     private AnchorPane hostCommitViewPanel;
-
-    private GitRepositoryService repositoryService;
 
     private PlotCommitRenderer plotCommitRenderer = new PlotCommitRenderer();
 
@@ -82,10 +80,9 @@ public class BranchViewController implements Initializable {
                             hostCommitViewPanel.getChildren().removeAll(hostCommitViewPanel.getChildren());
                             hostCommitViewPanel.getChildren().add(commitView);
 
-                            commitViewController.setRepositoryService(repositoryService);
                             commitViewController.fillData(
                                     treeName,
-                                    repositoryService.adapt(newValue, null)
+                                    MainApp.getRepositoryService().adapt(newValue, null)
                             );
 
                             commitViewController.showPlotCommit();
@@ -129,7 +126,7 @@ public class BranchViewController implements Initializable {
         );
 
         authorTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(c.getValue().getAuthorIdent().getName())
+                c -> StringConstant.valueOf(c.getValue().getCommitterIdent().getName())
         );
         messageTableColumn.setCellValueFactory(
                 c -> StringConstant.valueOf(c.getValue().getShortMessage())
@@ -141,16 +138,13 @@ public class BranchViewController implements Initializable {
 
 
     public void open() throws Exception {
-        this.plotCommits = repositoryService.getCommitsByTree(this.treeName);
+        this.plotCommits = MainApp.getRepositoryService().getCommitsByTree(this.treeName);
         commitsTableView.setItems(FXCollections.observableArrayList(plotCommits));
         plotWidth = calculateLineColumnWidth(plotCommits);
         laneTableColumn.setPrefWidth(plotWidth);
 
     }
 
-    public void setRepositoryService(GitRepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
-    }
 
     private int calculateLineColumnWidth(PlotCommitList<PlotLane> plotCommits) {
         return 36 + 12 * plotCommits.stream().mapToInt(p -> p.getLane().getPosition()).max().orElse(0);

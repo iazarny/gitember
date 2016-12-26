@@ -1,5 +1,7 @@
 package com.az.gitember.misc;
 
+import java.util.List;
+
 /**
  *
  * Item attribute.
@@ -10,6 +12,14 @@ public class ScmItemAttribute {
 
     private String name;
     private String oldName;
+    private List<String> status;
+
+    public ScmItemAttribute(List<String> status) {
+        this.status = status;
+    }
+
+    public ScmItemAttribute() {
+    }
 
     public String getName() {
         return name;
@@ -25,6 +35,14 @@ public class ScmItemAttribute {
 
     public String getOldName() {
         return oldName;
+    }
+
+    public List<String> getStatus() {
+        return status;
+    }
+
+    public void setStatus(List<String> status) {
+        this.status = status;
     }
 
     @Override

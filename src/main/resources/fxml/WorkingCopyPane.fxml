@@ -1,21 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 
-<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="820.0" >
-<children>
-    <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0"
-               AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <columns>
-            <TableColumn fx:id="laneTableColumn" prefWidth="200.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
-            <TableColumn fx:id="messageTableColumn" prefWidth="400.00" text="Message" />
-            <TableColumn fx:id="authorTableColumn" prefWidth="250.00" text="Author" />
-            <TableColumn fx:id="dateTableColumn" prefWidth="200.00" text="Date" />
-        </columns>
+<?import javafx.scene.layout.Pane?>
+<SplitPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+           orientation="VERTICAL" prefHeight="-1" prefWidth="800.0"
+           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+           AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.WorkingCopyController">
+    <items>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="800.0"  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <VBox prefHeight="300.0" prefWidth="540.0"  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <children>
+                        <ToolBar prefHeight="40.0" prefWidth="200.0">
+                            <items>
+                                <Button mnemonicParsing="false" text="Commit"  fx:id="commitBtn" onAction="#commitBtnHandler"/>
+                                <Pane HBox.hgrow="ALWAYS" />
+                                <Button mnemonicParsing="false" text="Refresh"  fx:id="refreshBtn" onAction="#refreshBtnHandler"/>
+                            </items>
+                        </ToolBar>
+                        <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToCommitEventHandler" prefHeight="514.0"
+                                   prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="selectTableColumn" prefWidth="30.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
+                                <TableColumn fx:id="statusTableColumn" prefWidth="60.00" text="" />
+                                <TableColumn fx:id="itemTableColumn" prefWidth="800.00" text="File" />
+                            </columns>
 
-    </TableView>
-</children>
-</AnchorPane>
+                        </TableView>
+                    </children>
+                </VBox>
+            </children>
+        </AnchorPane>
+
+    </items>
+</SplitPane>

@@ -16,9 +16,7 @@ public class SettingsServiceImpl {
 
     final static String  PROP_FOLDER = ".gitember";
     final static String  PROP_FILE_NAME = "gitember.properties";
-
     final static String  KEY_LAST_PROJECT = "lastProject";
-
     final static String  SYSTEM_PROP_USER_HOME = "user.home";
 
     public void saveRepository(String absPath) throws IOException {
@@ -63,6 +61,10 @@ public class SettingsServiceImpl {
             prop.load(is);
         } catch (IOException e) {}
         return prop;
+    }
+
+    public String getUserHomeFolder() {
+        return System.getProperty(SYSTEM_PROP_USER_HOME);
     }
 
     private String getAbsolutePathToPropertyFile() throws IOException {
