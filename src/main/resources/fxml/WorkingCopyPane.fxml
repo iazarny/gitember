@@ -10,6 +10,8 @@
 <?import javafx.scene.layout.HBox?>
 
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.MenuItem?>
 <SplitPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
            orientation="VERTICAL" prefHeight="-1" prefWidth="800.0"
            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
@@ -30,9 +32,23 @@
                                    prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="selectTableColumn" prefWidth="30.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
-                                <TableColumn fx:id="statusTableColumn" prefWidth="60.00" text="" />
+                                <TableColumn fx:id="statusTableColumn" style="-fx-font-size: 150%; "  prefWidth="60.00" text="" />
                                 <TableColumn fx:id="itemTableColumn" prefWidth="800.00" text="File" />
                             </columns>
+
+                            <contextMenu>
+                                <ContextMenu fx:id="scmItemContextMenu">
+                                    <items>
+                                        <MenuItem fx:id="addFileMenuItem" disable="true" mnemonicParsing="false" text="Add to commit" />
+
+                                        <MenuItem fx:id="openFileMenuItem" disable="true" mnemonicParsing="false" text="Open" />
+
+                                        <MenuItem fx:id="showDiffMenuItem" disable="true" mnemonicParsing="false" text="Revert" />
+
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+
 
                         </TableView>
                     </children>
