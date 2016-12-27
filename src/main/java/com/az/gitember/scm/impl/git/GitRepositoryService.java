@@ -613,9 +613,13 @@ public class GitRepositoryService {
     }
 
     public String remoteRepositoryPush(String userName, String password)  throws Exception {
+
+        http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
+
         try(Git git = new Git(repository)) {
             RefSpec refSpec = new RefSpec("refs/heads/master:refs/remotes/origin/master"); //TODO not only master
             PushCommand cmd = git.push().setRefSpecs(refSpec);
+            cmd.setRemote( "origin" );
             if (userName != null) {
                 cmd.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
