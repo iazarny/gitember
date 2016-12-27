@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.scm.impl.git.GitConst;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
+import com.az.gitember.ui.LoginDialog;
 import com.az.gitember.ui.ScmItemCellFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
 import javafx.application.Platform;
@@ -25,6 +28,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -97,7 +101,8 @@ public class FXMLController implements Initializable {
         this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.fetchBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.pushBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
-        MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit());
+        String head = MainApp.getRepositoryService().getHead();
+        MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
     }
 
     @FXML
@@ -185,9 +190,13 @@ public class FXMLController implements Initializable {
     }
 
     public void pushHandler(ActionEvent actionEvent) {
-        String text;
+        String text ="";
         try {
-            text = MainApp.getRepositoryService().remoteRepositoryPush();
+            LoginDialog loginDialog = new LoginDialog();
+            Optional<Pair<String, String>> result = loginDialog.showAndWait();
+            if (result.isPresent()) {
+                text = MainApp.getRepositoryService().remoteRepositoryPush(result.get().getFirst(), result.get().getSecond());
+            }
         } catch (Exception e) {
             text = e.getMessage();
         }

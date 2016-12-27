@@ -19,6 +19,7 @@ import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -115,6 +116,12 @@ public class GitRepositoryService {
         }
     }
 
+
+    public String getHead()  throws Exception {
+        final Ref head = repository.exactRef(GitConst.HEAD);
+        return head.getTarget().getName();
+
+    }
 
     public List<ScmBranch> getLocalBranches() throws Exception {
         final Ref head = repository.exactRef(GitConst.HEAD);
@@ -605,10 +612,16 @@ public class GitRepositoryService {
 
     }
 
-    public String remoteRepositoryPush()  throws Exception {
+    public String remoteRepositoryPush(String userName, String password)  throws Exception {
         try(Git git = new Git(repository)) {
             RefSpec refSpec = new RefSpec("refs/heads/master:refs/remotes/origin/master"); //TODO not only master
-            Iterable<PushResult> pushResults =  git.push().setRefSpecs(refSpec).call();
+            PushCommand cmd = git.push().setRefSpecs(refSpec);
+            if (userName != null) {
+                cmd.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(userName, password)
+                );
+            }
+            Iterable<PushResult> pushResults =  cmd.call();
             StringBuilder stringBuilder = new StringBuilder();
             pushResults.forEach(
                     pushResult -> {
@@ -616,7 +629,6 @@ public class GitRepositoryService {
                         stringBuilder.append(  rezInfo  )  ;
                     }
             );
-
             return stringBuilder.toString();
         } catch (Exception e) {
             return e.getMessage();
