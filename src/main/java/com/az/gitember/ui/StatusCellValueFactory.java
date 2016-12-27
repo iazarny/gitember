@@ -29,6 +29,7 @@ public class StatusCellValueFactory implements ObservableValue<FontIcon> {
         icons.put(ScmItemStatus.MISSED, () -> new FontIcon(FontAwesome.MINUS_SQUARE_O));
         icons.put(ScmItemStatus.MODIFIED, () -> new FontIcon(FontAwesome.EDIT));
         icons.put(ScmItemStatus.ADDED, () -> new FontIcon(FontAwesome.PLUS_SQUARE_O));
+        icons.put(ScmItemStatus.UNCOMMITED, () -> new FontIcon(FontAwesome.CHECK_SQUARE_O));
     }
 
     private static Callable<FontIcon> fontIconUnknown = () -> new FontIcon(FontAwesome.QUESTION);
@@ -56,7 +57,11 @@ public class StatusCellValueFactory implements ObservableValue<FontIcon> {
                 || s.equals(ScmItemStatus.MISSED)
                 || s.equals(ScmItemStatus.ADDED)
                 || s.equals(ScmItemStatus.UNTRACKED)
-        ).findFirst().orElse(null);
+        ).findFirst().orElse(
+                statuses.stream().filter(s -> s.equals(ScmItemStatus.UNCOMMITED)).findFirst().orElse(null)
+        );
+
+
 
         try {
             return icons.getOrDefault(st,
