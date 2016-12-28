@@ -1,3 +1,9 @@
 .button {
     -fx-font-weight: bold;
 }
+
+.list-cell:filled:hover {
+    -fx-cell-hover-color: #0093ff;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
