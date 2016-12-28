@@ -699,7 +699,7 @@ public class GitRepositoryService {
         try(Git git = new Git(repository)) {
 
             git.merge().include(repository.exactRef(from))
-                    .setMessage("aasdasd as as as as sa as merge message ")
+                    .setMessage(message)
                     .call();
         }
 
