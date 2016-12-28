@@ -12,28 +12,36 @@ import javafx.scene.layout.GridPane;
  */
 public class LoginDialog extends Dialog<Pair<String, String>> {
 
-    public LoginDialog() {
+    public LoginDialog(String title, String header, String login, String pwd) {
+
         super();
-        this.setTitle("Login");
-        this.setHeaderText("Please, provide login and password");
+        this.setTitle(title);
+        this.setHeaderText(header);
         //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString()));
 
         ButtonType loginButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
 
         GridPane grid = new GridPane();
+        //grid.setGridLinesVisible(true);
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.setPadding(new Insets(20, 10, 10, 20));
 
         TextField username = new TextField();
         username.setPromptText("Username");
+        if (login != null) {
+            username.setText(login);
+        }
         PasswordField password = new PasswordField();
         password.setPromptText("Password");
+        if (pwd!=null) {
+            password.setText(pwd);
+        }
 
-        grid.add(new Label("Username:"), 0, 0);
+        grid.add(new Label("Username : "), 0, 0);
         grid.add(username, 1, 0);
-        grid.add(new Label("Password:"), 0, 1);
+        grid.add(new Label("Password : "), 0, 1);
         grid.add(password, 1, 1);
 
         Node loginButton = this.getDialogPane().lookupButton(loginButtonType);
@@ -54,5 +62,9 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
             return null;
         });
 
+    }
+
+    public LoginDialog(String title, String header) {
+        this(title, header, null, null);
     }
 }
