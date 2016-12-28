@@ -93,6 +93,11 @@ public class GitRepositoryService {
                                         final String prefix) throws Exception {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
+
+            for (Ref ref : branchLst) {
+                System.out.println("Local branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
+            }
+
             return branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
@@ -125,9 +130,13 @@ public class GitRepositoryService {
 
     public List<ScmBranch> getLocalBranches() throws Exception {
         final Ref head = repository.exactRef(GitConst.HEAD);
+
         final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, GitConst.HEAD_PREFIX);
         scmItems.forEach(
-                i -> i.setHead(head.getTarget().getName().equals(i.getFullName()))
+                i -> {
+                    System.out.println("Local branches " + head.getTarget().getName() + " " + i.getFullName());
+                    i.setHead(head.getTarget().getName().equals(i.getFullName()));
+                }
         );
         return scmItems;
     }
@@ -646,4 +655,60 @@ public class GitRepositoryService {
         }
 
     }
+
+    public void createLocalBranch(String parent, String name) throws Exception {
+        try(Git git = new Git(repository)) {
+            git.branchCreate()
+                    .setStartPoint(parent)
+                    .setName(name)
+                    .call();
+        }
+
+    }
+
+    public void checkoutLocalBranch(String name) throws Exception {
+        try(Git git = new Git(repository)) {
+            git.checkout().setCreateBranch(false).setName(name)
+                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM).call();
+              /*
+ * 		.
+ * 		.setStartPoint(&quot;origin/stable&quot;).call();*/
+
+        }
+
+    }
+
+
+    public void deleteLocalBranch(String name) throws Exception {
+        try(Git git = new Git(repository)) {
+            git.branchDelete()
+                    .setBranchNames(name)
+                    .setForce(true)
+                    .call();
+        }
+
+    }
+
+    /**
+     * Merge two branches. The "to" must be checkouted.
+     * @param from
+     * @param message merge message
+     * @throws Exception
+     */
+    public void mergeLocalBranch(String from, String message) throws Exception {
+        try(Git git = new Git(repository)) {
+
+            git.merge().include(repository.exactRef(from))
+                    .setMessage("aasdasd as as as as sa as merge message ")
+                    .call();
+        }
+
+
+    }
+
+
+
+
+
+
 }

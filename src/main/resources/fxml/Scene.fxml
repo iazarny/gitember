@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -67,7 +68,17 @@
                     <content>
                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                             <children>
-                                <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <contextMenu>
+                              <ContextMenu>
+                                <items>
+                                  <MenuItem mnemonicParsing="false" text="Checkout" onAction="#localBranchCheckoutHandler"/>
+                                  <MenuItem mnemonicParsing="false" text="Create branch ..."  onAction="#localBranchCreateHandler"/>
+                                  <MenuItem mnemonicParsing="false" text="Merge ..."  onAction="#localBranchMergeHandler"/>
+                                  <MenuItem mnemonicParsing="false" text="Delete ..."  onAction="#localBranchDeleteHandler"/>
+                                </items>
+                              </ContextMenu>
+                           </contextMenu></ListView>
                             </children>
                         </AnchorPane>
                     </content>
@@ -110,7 +121,7 @@
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem text="Clone" />
-                                <MenuItem text="Create" onAction="#createRepositoryHandler"/>
+                                <MenuItem onAction="#createRepositoryHandler" text="Create" />
                                 <MenuItem disable="true" text="Fetch" />
                                 <MenuItem disable="true" text="Pull" />
                                 <MenuItem disable="true" text="Push" />

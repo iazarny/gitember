@@ -13,6 +13,7 @@ import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitConst;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
+import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.LoginDialog;
 import com.az.gitember.ui.ScmItemCellFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
@@ -27,6 +28,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
+import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
@@ -95,7 +97,9 @@ public class FXMLController implements Initializable {
     public void openRepository(String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
         MainApp.setRepositoryService(new GitRepositoryService(absPath));
+
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+
         remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
         settingsService.saveRepository(absPath);
@@ -268,6 +272,99 @@ public class FXMLController implements Initializable {
 
             openRepository(absPath + File.separator + Const.GIT_FOLDER);
             openWorkingCopyHandler(null);
+        }
+
+    }
+
+
+//--------------------------------------------------------------------------------------------------------------------
+
+    public void localBranchCheckoutHandler(ActionEvent actionEvent) throws Exception {
+
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        MainApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
+        localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+        localBranchesList.setCellFactory(new ScmItemCellFactory());
+        localBranchesList.refresh();
+
+
+        String head = MainApp.getRepositoryService().getHead();
+        MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
+
+
+    }
+
+    public void localBranchCreateHandler(ActionEvent actionEvent) throws Exception {
+
+        TextInputDialog dialog = new TextInputDialog("");
+        dialog.setTitle("New branch");
+        dialog.setHeaderText("Create new branch");
+        dialog.setContentText("Please enter new branch name:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+            MainApp.getRepositoryService().createLocalBranch(
+                    scmBranch.getFullName(),
+                    result.get()
+            );
+
+            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+            localBranchesList.setCellFactory(new ScmItemCellFactory());
+            localBranchesList.refresh();
+        }
+
+
+    }
+
+    public void localBranchMergeHandler(ActionEvent actionEvent) throws Exception {
+
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
+        TextAreaInputDialog dialog = new TextAreaInputDialog(
+                "Merge " + scmBranch.getFullName() + " to " + MainApp.getRepositoryService().getHead()
+        );
+
+        dialog.setTitle("Merge message");
+        dialog.setHeaderText("Provide merge message");
+        dialog.setContentText("Message:");
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            MainApp.getRepositoryService().mergeLocalBranch(
+                    scmBranch.getFullName(),
+                    result.get()
+            );
+
+            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+            localBranchesList.setCellFactory(new ScmItemCellFactory());
+            localBranchesList.refresh();
+
+        }
+
+
+    }
+
+    public void localBranchDeleteHandler(ActionEvent actionEvent) throws Exception {
+
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Delete branch " + scmBranch.getShortName());
+        alert.setContentText("Do you really want to delete " + scmBranch.getShortName() + " branch ?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK){
+            try {
+                MainApp.getRepositoryService().deleteLocalBranch(
+                        scmBranch.getFullName()
+                );
+                localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+                localBranchesList.setCellFactory(new ScmItemCellFactory());
+                localBranchesList.refresh();
+            } catch (CannotDeleteCurrentBranchException e) {
+                showResult(e.getMessage(), Alert.AlertType.ERROR);
+            }
         }
 
     }
