@@ -8,6 +8,7 @@ public class ScmBranch extends Pair<String, String> {
     private boolean head;
 
     private String objectIdName;
+    private String remoteName;
 
     public ScmBranch(String shortName, String fullName) {
         super(shortName, fullName);
@@ -42,8 +43,21 @@ public class ScmBranch extends Pair<String, String> {
         this.objectIdName = objectIdName;
     }
 
+    public void setRemoteName(String remoteName) {
+        this.remoteName = remoteName;
+    }
+
+    public String getRemoteName() {
+        return remoteName;
+    }
+
     @Override
     public String toString() {
-        return super.toString();
+        return "ScmBranch{" +
+                super.toString() +
+                "head=" + head +
+                ", objectIdName='" + objectIdName + '\'' +
+                ", remoteName='" + remoteName + '\'' +
+                '}';
     }
 }

@@ -202,9 +202,15 @@ public class FXMLController implements Initializable {
         boolean ok = false;
         String login = null, pwd = null, text = "";
         LoginDialog loginDialog = null;
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
         while (!ok) {
             try {
-                text = MainApp.getRepositoryService().remoteRepositoryPush("","", login, pwd);
+                text = MainApp.getRepositoryService().remoteRepositoryPush(
+                        scmBranch.getFullName(),
+                        scmBranch.getRemoteName() == null ? scmBranch.getShortName() : scmBranch.getRemoteName(),
+                        login,
+                        pwd);
                 ok = true;
                 showResult(text, Alert.AlertType.INFORMATION);
             } catch (TransportException e) {

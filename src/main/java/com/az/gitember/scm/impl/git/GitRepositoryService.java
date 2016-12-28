@@ -100,7 +100,7 @@ public class GitRepositoryService {
             }
             System.out.println();
 
-            return branchLst
+            List<ScmBranch> rez = branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
                     .map(r -> new ScmBranch(
@@ -109,6 +109,20 @@ public class GitRepositoryService {
                             r.getObjectId().getName()))
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
+
+            if (GitConst.HEAD_PREFIX.equals(prefix)) {
+                for (ScmBranch item : rez) {
+                    for (Ref ref : branchLst) {
+                        if (item.getObjectIdName().endsWith(ref.getObjectId().getName())
+                                && !item.getFullName().equals(ref.getName())
+                                && !ref.isSymbolic()) {
+                            item.setRemoteName(ref.getName());
+                        }
+                    }
+
+                }
+            }
+            return rez;
         }
     }
 
@@ -641,7 +655,8 @@ public class GitRepositoryService {
         http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
 
         try(Git git = new Git(repository)) {
-            RefSpec refSpec = new RefSpec("master:master"); //TODO not only master
+            // git push origin remotepush:r-remotepush
+            RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
             PushCommand cmd = git.push().setRefSpecs(refSpec);
             cmd.setRemote( "origin" );
             if (userName != null) {
