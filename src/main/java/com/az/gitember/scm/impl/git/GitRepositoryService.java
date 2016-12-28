@@ -94,16 +94,19 @@ public class GitRepositoryService {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
 
+            System.out.println();
             for (Ref ref : branchLst) {
-                System.out.println("Local branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
+                System.out.println("Branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
             }
+            System.out.println();
 
             return branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
                     .map(r -> new ScmBranch(
                             r.getName().substring(prefix.length()),
-                            r.getName()))
+                            r.getName(),
+                            r.getObjectId().getName()))
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
         }
@@ -624,12 +627,15 @@ public class GitRepositoryService {
     /**
      * Push to remote directory.
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
-     * @param userName
-     * @param password
+     * @param localBranch local branch name
+     * @param remoteBranch remote branch name
+     * @param userName optional login name
+     * @param password optional password
      * @return
      * @throws Exception
      */
-    public String remoteRepositoryPush(String userName, String password)  throws Exception {
+    public String remoteRepositoryPush(String localBranch, String remoteBranch,
+                                       String userName, String password)  throws Exception {
 
 
         http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit

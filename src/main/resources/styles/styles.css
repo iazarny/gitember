@@ -3,7 +3,17 @@
 }
 
 .list-cell:filled:hover {
-    -fx-cell-hover-color: #0093ff;
-    -fx-text-fill: white;
+
     -fx-cursor: hand;
+    -fx-underline: true;
+}
+
+.list-cell:even {
+    /*-fx-background-color: blue;
+    -fx-text-fill: black;*/
+}
+
+.list-cell:odd {
+    /*-fx-background-color: blue;
+    -fx-text-fill: black;*/
 }

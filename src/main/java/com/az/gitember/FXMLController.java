@@ -204,7 +204,7 @@ public class FXMLController implements Initializable {
         LoginDialog loginDialog = null;
         while (!ok) {
             try {
-                text = MainApp.getRepositoryService().remoteRepositoryPush(login, pwd);
+                text = MainApp.getRepositoryService().remoteRepositoryPush("","", login, pwd);
                 ok = true;
                 showResult(text, Alert.AlertType.INFORMATION);
             } catch (TransportException e) {

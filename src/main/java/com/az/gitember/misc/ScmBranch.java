@@ -7,8 +7,15 @@ public class ScmBranch extends Pair<String, String> {
 
     private boolean head;
 
+    private String objectIdName;
+
     public ScmBranch(String shortName, String fullName) {
         super(shortName, fullName);
+    }
+
+    public ScmBranch(String shortName, String fullName, String objectIdName) {
+        super(shortName, fullName);
+        this.objectIdName = objectIdName;
     }
 
     public String getShortName() {
@@ -25,6 +32,14 @@ public class ScmBranch extends Pair<String, String> {
 
     public void setHead(boolean head) {
         this.head = head;
+    }
+
+    public String getObjectIdName() {
+        return objectIdName;
+    }
+
+    public void setObjectIdName(String objectIdName) {
+        this.objectIdName = objectIdName;
     }
 
     @Override
