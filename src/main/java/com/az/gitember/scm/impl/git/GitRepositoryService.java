@@ -612,12 +612,21 @@ public class GitRepositoryService {
 
     }
 
+    /**
+     * Push to remote directory.
+     * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
+     * @param userName
+     * @param password
+     * @return
+     * @throws Exception
+     */
     public String remoteRepositoryPush(String userName, String password)  throws Exception {
+
 
         http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
 
         try(Git git = new Git(repository)) {
-            RefSpec refSpec = new RefSpec("refs/heads/master:refs/remotes/origin/master"); //TODO not only master
+            RefSpec refSpec = new RefSpec("master:master"); //TODO not only master
             PushCommand cmd = git.push().setRefSpecs(refSpec);
             cmd.setRemote( "origin" );
             if (userName != null) {
@@ -634,8 +643,6 @@ public class GitRepositoryService {
                     }
             );
             return stringBuilder.toString();
-        } catch (Exception e) {
-            return e.getMessage();
         }
 
     }

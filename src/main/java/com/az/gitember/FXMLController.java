@@ -28,6 +28,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 
 /**
@@ -80,7 +81,7 @@ public class FXMLController implements Initializable {
         }
         File selectedDirectory =
                 directoryChooser.showDialog(MainApp.getMainStage());
-        if(selectedDirectory != null){
+        if (selectedDirectory != null) {
             String absPath = selectedDirectory.getAbsolutePath();
             if (!absPath.endsWith(Const.GIT_FOLDER)) {
                 absPath += File.separator + Const.GIT_FOLDER;
@@ -173,45 +174,66 @@ public class FXMLController implements Initializable {
         String text;
         try {
             text = MainApp.getRepositoryService().remoteRepositoryFetch();
+            showResult(text, Alert.AlertType.INFORMATION);
         } catch (Exception e) {
             text = e.getMessage();
+            showResult(text, Alert.AlertType.ERROR);
         }
-        showResult(text);
+
     }
 
-    public void pullHandler(ActionEvent actionEvent)  {
+    public void pullHandler(ActionEvent actionEvent) {
         String text;
         try {
             text = MainApp.getRepositoryService().remoteRepositoryPull();
+            showResult(text, Alert.AlertType.INFORMATION);
         } catch (Exception e) {
             text = e.getMessage();
+            showResult(text, Alert.AlertType.ERROR);
         }
-        showResult(text);
     }
 
     public void pushHandler(ActionEvent actionEvent) {
-        String text ="";
-        try {
-            LoginDialog loginDialog = new LoginDialog();
-            Optional<Pair<String, String>> result = loginDialog.showAndWait();
-            if (result.isPresent()) {
-                text = MainApp.getRepositoryService().remoteRepositoryPush(result.get().getFirst(), result.get().getSecond());
+
+        boolean ok = false;
+        String login = null, pwd = null, text = "";
+        LoginDialog loginDialog = null;
+        while (!ok) {
+            try {
+                text = MainApp.getRepositoryService().remoteRepositoryPush(login, pwd);
+                ok = true;
+                showResult(text, Alert.AlertType.INFORMATION);
+            } catch (TransportException e) {
+                e.printStackTrace();
+                if (e.getMessage().contains("Authentication is required")) {
+                    loginDialog = new LoginDialog("Login", "Please, provide login and password");
+                } else if (e.getMessage().contains("not authorized")) {
+                    loginDialog = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd);
+                }
+                Optional<Pair<String, String>> result = loginDialog.showAndWait();
+                if (result.isPresent()) {
+                    login = result.get().getFirst();
+                    pwd = result.get().getSecond();
+                    continue;
+                } else {
+                    ok = true;
+                    text = "Aborted";
+                }
+            } catch (Exception e) {
+                ok = true;
+                showResult(text, Alert.AlertType.ERROR);
             }
-        } catch (Exception e) {
-            text = e.getMessage();
         }
-        showResult(text);
     }
 
-    private void showResult(String text) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    private void showResult(String text, Alert.AlertType alertTypet) {
+        Alert alert = new Alert(alertTypet);
         alert.setWidth(600); //TODO width
-        alert.setTitle("Pull result");
-        alert.setHeaderText("Result of pull operation");
+        alert.setTitle("Operation result");
+        //alert.setHeaderText("Result of pull operation");
         alert.setContentText(text);
         alert.showAndWait();
     }
-
 
 
     public void exitHandler(ActionEvent actionEvent) {
@@ -235,12 +257,12 @@ public class FXMLController implements Initializable {
      *
      * @param actionEvent
      */
-    public void createRepositoryHandler(ActionEvent actionEvent)  throws Exception {
+    public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setInitialDirectory(new File(settingsService.getUserHomeFolder()));
         final File selectedDirectory =
                 directoryChooser.showDialog(MainApp.getMainStage());
-        if(selectedDirectory != null){
+        if (selectedDirectory != null) {
             String absPath = selectedDirectory.getAbsolutePath();
             MainApp.getRepositoryService().createRepository(absPath);
 
