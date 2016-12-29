@@ -207,8 +207,10 @@ public class FXMLController implements Initializable {
         while (!ok) {
             try {
                 text = MainApp.getRepositoryService().remoteRepositoryPush(
-                        scmBranch.getFullName(),
-                        scmBranch.getRemoteName() == null ? scmBranch.getShortName() : scmBranch.getRemoteName(),
+                        scmBranch.getShortName(),
+                        scmBranch.getShortName(),
+                        //scmBranch.getFullName(),
+                        //scmBranch.getRemoteName() == null ? scmBranch.getShortName() : scmBranch.getRemoteName(),
                         login,
                         pwd);
                 ok = true;

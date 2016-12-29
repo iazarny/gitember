@@ -656,8 +656,7 @@ public class GitRepositoryService {
                                        String userName, String password) throws Exception {
 
 
-        http:
-//stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
+        http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
 
         try (Git git = new Git(repository)) {
             // git push origin remotepush:r-remotepush
