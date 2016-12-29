@@ -262,7 +262,7 @@ public class FXMLController implements Initializable {
         alert.setContentText("Do you really want to push all branches ?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            pushToRemoteRepository("refs/heads/*", "refs/remotes/origin/*", false);
+            pushToRemoteRepository("+refs/heads/*", "refs/heads/*", false);
         }
     }
 
@@ -276,15 +276,19 @@ public class FXMLController implements Initializable {
     public void localBranchPushHandler(ActionEvent actionEvent) throws Exception {
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
         if (scmBranch.getRemoteName() == null) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Branch name");
-            alert.setHeaderText("Remote branch will be created");
-            alert.setContentText("Local branch " + scmBranch.getShortName()
-                    + " will be pushed to remote repository as " + scmBranch.getShortName());
-            alert.showAndWait();
-            scmBranch.setRemoteName(scmBranch.getShortName());
+            TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
+            dialog.setTitle("Branch name");
+            dialog.setHeaderText("Remote branch will be created");
+            dialog.setContentText("Please enter new remote branch name:");
+
+            Optional<String> dialogResult = dialog.showAndWait();
+            if (dialogResult.isPresent()) {
+                scmBranch.setRemoteName(dialogResult.get());
+                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+            }
+        } else {
+            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
         }
-        pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
     }
 
     private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
