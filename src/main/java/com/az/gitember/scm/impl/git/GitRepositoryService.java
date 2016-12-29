@@ -81,7 +81,7 @@ public class GitRepositoryService {
     }
 
     public String getUserEmail() {
-        return  config.getString("user", null, "email");
+        return config.getString("user", null, "email");
     }
 
     public String getRemoteUrl() {
@@ -93,19 +93,28 @@ public class GitRepositoryService {
                                         final String prefix) throws Exception {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
-
-            for (Ref ref : branchLst) {
-                System.out.println("Local branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
-            }
-
-            return branchLst
+            List<ScmBranch> rez = branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
                     .map(r -> new ScmBranch(
                             r.getName().substring(prefix.length()),
-                            r.getName()))
+                            r.getName(),
+                            r.getObjectId().getName()))
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
+
+            // Just check is local branch has remote part
+            if (GitConst.HEAD_PREFIX.equals(prefix)) {
+                for (ScmBranch item : rez) {
+                    branchLst.stream().filter(ref -> ref.getName().startsWith(GitConst.REMOTE_PREFIX)
+                            && item.getShortName().endsWith(ref.getName().substring(GitConst.REMOTE_PREFIX.length()))
+                            && !item.getFullName().equals(ref.getName())
+                            && !ref.isSymbolic()).forEach(ref -> {
+                        item.setRemoteName(item.getShortName());
+                    });
+                }
+            }
+            return rez;
         }
     }
 
@@ -122,7 +131,7 @@ public class GitRepositoryService {
     }
 
 
-    public String getHead()  throws Exception {
+    public String getHead() throws Exception {
         final Ref head = repository.exactRef(GitConst.HEAD);
         return head.getTarget().getName();
 
@@ -515,7 +524,7 @@ public class GitRepositoryService {
             scmItems.add(
                     new ScmItem(s, new ScmItemAttribute(strings))
             );
-        } );
+        });
 
 
         scmItems.sort((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()));
@@ -533,6 +542,7 @@ public class GitRepositoryService {
 
     /**
      * Add file to stage before commit.
+     *
      * @param fileName
      * @throws Exception
      */
@@ -570,6 +580,7 @@ public class GitRepositoryService {
 
     /**
      * Create new git repository.
+     *
      * @param absPath path to repository.
      */
     public void createRepository(final String absPath) throws Exception {
@@ -590,10 +601,10 @@ public class GitRepositoryService {
     }
 
 
-    public String  remoteRepositoryPull() throws Exception {
+    public String remoteRepositoryPull() throws Exception {
 
-        try(Git git = new Git(repository)) {
-            PullResult pullRez =  git.pull().call();
+        try (Git git = new Git(repository)) {
+            PullResult pullRez = git.pull().call();
             return pullRez.toString();
         } catch (CheckoutConflictException conflictException) {
             return conflictException.getMessage();
@@ -601,10 +612,10 @@ public class GitRepositoryService {
 
     }
 
-    public String  remoteRepositoryFetch() throws Exception {
+    public String remoteRepositoryFetch() throws Exception {
 
-        try(Git git = new Git(repository)) {
-            FetchResult pullRez =  git.fetch().call();
+        try (Git git = new Git(repository)) {
+            FetchResult pullRez = git.fetch().call();
             return pullRez.getMessages();
         } catch (CheckoutConflictException conflictException) {
             return conflictException.getMessage();
@@ -615,7 +626,7 @@ public class GitRepositoryService {
 
     public void stash() throws Exception {
 
-        try(Git git = new Git(repository)) {
+        try (Git git = new Git(repository)) {
             git.stashCreate().call();
         }
 
@@ -624,31 +635,41 @@ public class GitRepositoryService {
     /**
      * Push to remote directory.
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
-     * @param userName
-     * @param password
+     *
+     * @param localBranch  local branch name
+     * @param remoteBranch remote branch name
+     * @param userName     optional login name
+     * @param password     optional password
      * @return
      * @throws Exception
      */
-    public String remoteRepositoryPush(String userName, String password)  throws Exception {
+    public String remoteRepositoryPush(String localBranch, String remoteBranch,
+                                       String userName, String password,
+                                       boolean setOrigin) throws Exception {
 
 
         http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
 
-        try(Git git = new Git(repository)) {
-            RefSpec refSpec = new RefSpec("master:master"); //TODO not only master
+        try (Git git = new Git(repository)) {
+            // git push origin remotepush:r-remotepush
+            RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
             PushCommand cmd = git.push().setRefSpecs(refSpec);
-            cmd.setRemote( "origin" );
+
+            if (setOrigin) {
+                cmd.setRemote("origin");
+            }
+
             if (userName != null) {
                 cmd.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
                 );
             }
-            Iterable<PushResult> pushResults =  cmd.call();
+            Iterable<PushResult> pushResults = cmd.call();
             StringBuilder stringBuilder = new StringBuilder();
             pushResults.forEach(
                     pushResult -> {
                         String rezInfo = "";
-                        stringBuilder.append(  rezInfo  )  ;
+                        stringBuilder.append(rezInfo);
                     }
             );
             return stringBuilder.toString();
@@ -657,7 +678,7 @@ public class GitRepositoryService {
     }
 
     public void createLocalBranch(String parent, String name) throws Exception {
-        try(Git git = new Git(repository)) {
+        try (Git git = new Git(repository)) {
             git.branchCreate()
                     .setStartPoint(parent)
                     .setName(name)
@@ -667,7 +688,7 @@ public class GitRepositoryService {
     }
 
     public void checkoutLocalBranch(String name) throws Exception {
-        try(Git git = new Git(repository)) {
+        try (Git git = new Git(repository)) {
             git.checkout().setCreateBranch(false).setName(name)
                     .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM).call();
               /*
@@ -680,7 +701,7 @@ public class GitRepositoryService {
 
 
     public void deleteLocalBranch(String name) throws Exception {
-        try(Git git = new Git(repository)) {
+        try (Git git = new Git(repository)) {
             git.branchDelete()
                     .setBranchNames(name)
                     .setForce(true)
@@ -691,12 +712,13 @@ public class GitRepositoryService {
 
     /**
      * Merge two branches. The "to" must be checkouted.
+     *
      * @param from
      * @param message merge message
      * @throws Exception
      */
     public void mergeLocalBranch(String from, String message) throws Exception {
-        try(Git git = new Git(repository)) {
+        try (Git git = new Git(repository)) {
 
             git.merge().include(repository.exactRef(from))
                     .setMessage(message)
@@ -705,10 +727,6 @@ public class GitRepositoryService {
 
 
     }
-
-
-
-
 
 
 }

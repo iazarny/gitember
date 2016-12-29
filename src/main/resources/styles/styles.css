@@ -1,3 +1,19 @@
 .button {
     -fx-font-weight: bold;
 }
+
+.list-cell:filled:hover {
+
+    -fx-cursor: hand;
+    -fx-underline: true;
+}
+
+.list-cell:even {
+    /*-fx-background-color: blue;
+    -fx-text-fill: black;*/
+}
+
+.list-cell:odd {
+    /*-fx-background-color: blue;
+    -fx-text-fill: black;*/
+}

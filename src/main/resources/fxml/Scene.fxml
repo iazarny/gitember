@@ -70,12 +70,15 @@
                             <children>
                                 <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <contextMenu>
-                              <ContextMenu>
+                              <ContextMenu fx:id="localBranchListItemContextMenu">
                                 <items>
                                   <MenuItem mnemonicParsing="false" text="Checkout" onAction="#localBranchCheckoutHandler"/>
                                   <MenuItem mnemonicParsing="false" text="Create branch ..."  onAction="#localBranchCreateHandler"/>
                                   <MenuItem mnemonicParsing="false" text="Merge ..."  onAction="#localBranchMergeHandler"/>
+                                    <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false" text="Push ..."  onAction="#localBranchPushHandler"/>
+                                    <SeparatorMenuItem mnemonicParsing="false" />
                                   <MenuItem mnemonicParsing="false" text="Delete ..."  onAction="#localBranchDeleteHandler"/>
+
                                 </items>
                               </ContextMenu>
                            </contextMenu></ListView>
@@ -124,7 +127,7 @@
                                 <MenuItem onAction="#createRepositoryHandler" text="Create" />
                                 <MenuItem disable="true" text="Fetch" />
                                 <MenuItem disable="true" text="Pull" />
-                                <MenuItem disable="true" text="Push" />
+                                <MenuItem disable="true" text="Push all" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem onAction="#exitActionHandler" text="Exit" />
                             </items>
@@ -145,7 +148,7 @@
                         <Separator />
                         <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch" />
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull" />
-                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push" />
+                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push all" />
                         <Pane HBox.hgrow="ALWAYS" />
                   <TextField />
                         <Button mnemonicParsing="false" onAction="#exitHandler" text="Exit" />
