@@ -93,13 +93,6 @@ public class GitRepositoryService {
                                         final String prefix) throws Exception {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
-
-            System.out.println();
-            for (Ref ref : branchLst) {
-                System.out.println("Branch: " + ref + " " + ref.getName() + " " + ref.getObjectId().getName());
-            }
-            System.out.println();
-
             List<ScmBranch> rez = branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
@@ -110,17 +103,15 @@ public class GitRepositoryService {
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
 
+            // Just check is local branch has remote part
             if (GitConst.HEAD_PREFIX.equals(prefix)) {
                 for (ScmBranch item : rez) {
-                    for (Ref ref : branchLst) {
-                        if (ref.getName().startsWith(GitConst.REMOTE_PREFIX)
-                                && item.getShortName().endsWith(ref.getName().substring(GitConst.REMOTE_PREFIX.length()))
-                                && !item.getFullName().equals(ref.getName())
-                                && !ref.isSymbolic()) {
-                            item.setRemoteName(ref.getName());
-                        }
-                    }
-
+                    branchLst.stream().filter(ref -> ref.getName().startsWith(GitConst.REMOTE_PREFIX)
+                            && item.getShortName().endsWith(ref.getName().substring(GitConst.REMOTE_PREFIX.length()))
+                            && !item.getFullName().equals(ref.getName())
+                            && !ref.isSymbolic()).forEach(ref -> {
+                        item.setRemoteName(item.getShortName());
+                    });
                 }
             }
             return rez;
@@ -653,7 +644,8 @@ public class GitRepositoryService {
      * @throws Exception
      */
     public String remoteRepositoryPush(String localBranch, String remoteBranch,
-                                       String userName, String password) throws Exception {
+                                       String userName, String password,
+                                       boolean setOrigin) throws Exception {
 
 
         http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
@@ -662,7 +654,11 @@ public class GitRepositoryService {
             // git push origin remotepush:r-remotepush
             RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
             PushCommand cmd = git.push().setRefSpecs(refSpec);
-            cmd.setRemote("origin");
+
+            if (setOrigin) {
+                cmd.setRemote("origin");
+            }
+
             if (userName != null) {
                 cmd.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)

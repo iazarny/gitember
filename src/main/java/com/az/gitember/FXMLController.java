@@ -1,19 +1,10 @@
 package com.az.gitember;
 
-import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.ScmBranch;
-import com.az.gitember.scm.impl.git.GitConst;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
-import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.LoginDialog;
 import com.az.gitember.ui.ScmItemCellFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
@@ -29,9 +20,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.lib.Ref;
+
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -60,6 +55,12 @@ public class FXMLController implements Initializable {
 
     @FXML
     public TitledPane workSpaceTitlePane;
+
+    @FXML
+    public MenuItem pushToRemoteMenuItem;
+
+    @FXML
+    public ContextMenu localBranchListItemContextMenu;
 
     @FXML
     private ListView localBranchesList;
@@ -94,12 +95,11 @@ public class FXMLController implements Initializable {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void openRepository(String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
         MainApp.setRepositoryService(new GitRepositoryService(absPath));
-
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-
         remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
         settingsService.saveRepository(absPath);
@@ -117,8 +117,10 @@ public class FXMLController implements Initializable {
 
 
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(URL url, ResourceBundle rb) {
         final ScmItemCellFactory scmItemCellFactory = new ScmItemCellFactory();
+
         remoteBranchesList.setCellFactory(scmItemCellFactory);
         localBranchesList.setCellFactory(scmItemCellFactory);
         tagList.setCellFactory(scmItemCellFactory);
@@ -197,46 +199,6 @@ public class FXMLController implements Initializable {
         }
     }
 
-    public void pushHandler(ActionEvent actionEvent) {
-
-        boolean ok = false;
-        String login = null, pwd = null, text = "";
-        LoginDialog loginDialog = null;
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-
-        while (!ok) {
-            try {
-                text = MainApp.getRepositoryService().remoteRepositoryPush(
-                        scmBranch.getShortName(),
-                        scmBranch.getShortName(),
-                        //scmBranch.getFullName(),
-                        //scmBranch.getRemoteName() == null ? scmBranch.getShortName() : scmBranch.getRemoteName(),
-                        login,
-                        pwd);
-                ok = true;
-                showResult(text, Alert.AlertType.INFORMATION);
-            } catch (TransportException e) {
-                e.printStackTrace();
-                if (e.getMessage().contains("Authentication is required")) {
-                    loginDialog = new LoginDialog("Login", "Please, provide login and password");
-                } else if (e.getMessage().contains("not authorized")) {
-                    loginDialog = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd);
-                }
-                Optional<Pair<String, String>> result = loginDialog.showAndWait();
-                if (result.isPresent()) {
-                    login = result.get().getFirst();
-                    pwd = result.get().getSecond();
-                    continue;
-                } else {
-                    ok = true;
-                    text = "Aborted";
-                }
-            } catch (Exception e) {
-                ok = true;
-                showResult(text, Alert.AlertType.ERROR);
-            }
-        }
-    }
 
     private void showResult(String text, Alert.AlertType alertTypet) {
         Alert alert = new Alert(alertTypet);
@@ -267,7 +229,7 @@ public class FXMLController implements Initializable {
     /**
      * Create new git repository.
      *
-     * @param actionEvent
+     * @param actionEvent action event
      */
     public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -287,6 +249,78 @@ public class FXMLController implements Initializable {
 
 //--------------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Push all branches
+     *
+     * @param actionEvent
+     */
+    public void pushHandler(ActionEvent actionEvent) {
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Push all");
+        alert.setContentText("Do you really want to push all branches ?");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            pushToRemoteRepository("refs/heads/*", "refs/remotes/origin/*", false);
+        }
+    }
+
+
+    /**
+     * Push selected branch.
+     *
+     * @param actionEvent event
+     * @throws Exception
+     */
+    public void localBranchPushHandler(ActionEvent actionEvent) throws Exception {
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        if (scmBranch.getRemoteName() == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Branch name");
+            alert.setHeaderText("Remote branch will be created");
+            alert.setContentText("Local branch " + scmBranch.getShortName()
+                    + " will be pushed to remote repository as " + scmBranch.getShortName());
+            alert.showAndWait();
+            scmBranch.setRemoteName(scmBranch.getShortName());
+        }
+        pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+    }
+
+    private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
+        boolean ok = false;
+        String login = null, pwd = null, text = "";
+        LoginDialog loginDialog = null;
+        while (!ok) {
+            try {
+                text = MainApp.getRepositoryService().remoteRepositoryPush(
+                        localBranchName,remoteBranchName, login,  pwd, setOrigin);
+                ok = true;
+                showResult(text, Alert.AlertType.INFORMATION);
+            } catch (TransportException e) {
+                e.printStackTrace();
+                if (e.getMessage().contains("Authentication is required")) {
+                    loginDialog = new LoginDialog("Login", "Please, provide login and password");
+                } else if (e.getMessage().contains("not authorized")) {
+                    loginDialog = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd);
+                }
+                Optional<Pair<String, String>> dialogResult = loginDialog.showAndWait();
+                if (dialogResult.isPresent()) {
+                    login = dialogResult.get().getFirst();
+                    pwd = dialogResult.get().getSecond();
+                    continue;
+                } else {
+                    ok = true;
+                    text = "Aborted";
+                }
+            } catch (Exception e) {
+                ok = true;
+                showResult(text, Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public void localBranchCheckoutHandler(ActionEvent actionEvent) throws Exception {
 
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
@@ -302,6 +336,8 @@ public class FXMLController implements Initializable {
 
     }
 
+
+    @SuppressWarnings("unchecked")
     public void localBranchCreateHandler(ActionEvent actionEvent) throws Exception {
 
         TextInputDialog dialog = new TextInputDialog("");
@@ -309,12 +345,12 @@ public class FXMLController implements Initializable {
         dialog.setHeaderText("Create new branch");
         dialog.setContentText("Please enter new branch name:");
 
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()){
+        Optional<String> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
             ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
             MainApp.getRepositoryService().createLocalBranch(
                     scmBranch.getFullName(),
-                    result.get()
+                    dialogResult.get()
             );
 
             localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
@@ -325,6 +361,7 @@ public class FXMLController implements Initializable {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void localBranchMergeHandler(ActionEvent actionEvent) throws Exception {
 
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
@@ -336,11 +373,11 @@ public class FXMLController implements Initializable {
         dialog.setTitle("Merge message");
         dialog.setHeaderText("Provide merge message");
         dialog.setContentText("Message:");
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
+        Optional<String> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
             MainApp.getRepositoryService().mergeLocalBranch(
                     scmBranch.getFullName(),
-                    result.get()
+                    dialogResult.get()
             );
 
             localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
@@ -352,6 +389,7 @@ public class FXMLController implements Initializable {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void localBranchDeleteHandler(ActionEvent actionEvent) throws Exception {
 
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
@@ -361,8 +399,8 @@ public class FXMLController implements Initializable {
         alert.setHeaderText("Delete branch " + scmBranch.getShortName());
         alert.setContentText("Do you really want to delete " + scmBranch.getShortName() + " branch ?");
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == ButtonType.OK){
+        Optional<ButtonType> dialogResult = alert.showAndWait();
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
             try {
                 MainApp.getRepositoryService().deleteLocalBranch(
                         scmBranch.getFullName()
