@@ -75,7 +75,7 @@
                                   <MenuItem mnemonicParsing="false" text="Checkout" onAction="#localBranchCheckoutHandler"/>
                                   <MenuItem mnemonicParsing="false" text="Create branch ..."  onAction="#localBranchCreateHandler"/>
                                   <MenuItem mnemonicParsing="false" text="Merge ..."  onAction="#localBranchMergeHandler"/>
-                                    <MenuItem fx:id="pushToRemoteMenuItem" disable="true" mnemonicParsing="false" text="Push ..."  onAction="#localBranchPushHandler"/>
+                                    <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false" text="Push ..."  onAction="#localBranchPushHandler"/>
                                     <SeparatorMenuItem mnemonicParsing="false" />
                                   <MenuItem mnemonicParsing="false" text="Delete ..."  onAction="#localBranchDeleteHandler"/>
 
