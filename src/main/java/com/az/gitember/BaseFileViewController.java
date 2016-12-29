@@ -12,6 +12,8 @@ import java.nio.file.Files;
  */
 public class BaseFileViewController {
 
+
+
     protected void fillCodeArea(CodeArea area, String fileName) throws IOException {
         area.richChanges()
                 .filter(ch -> !ch.getInserted().equals(ch.getRemoved())) // XXX
