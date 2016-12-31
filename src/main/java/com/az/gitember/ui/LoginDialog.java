@@ -17,7 +17,7 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
         super();
         this.setTitle(title);
         this.setHeaderText(header);
-        //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString()));
+        //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString())); todo
 
         ButtonType loginButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);

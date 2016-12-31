@@ -5,6 +5,7 @@ import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
+import com.az.gitember.ui.CloneDialog;
 import com.az.gitember.ui.LoginDialog;
 import com.az.gitember.ui.ScmItemCellFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
@@ -18,6 +19,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -74,13 +76,13 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane hostPanel;
 
-    private SettingsServiceImpl settingsService = new SettingsServiceImpl();
+
 
     @FXML
     public void openHandler(ActionEvent actionEvent) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        if (settingsService.getLastProject() != null) {
-            directoryChooser.setInitialDirectory(new File(settingsService.getLastProject()));
+        if (MainApp.getSettingsService().getLastProject() != null) {
+            directoryChooser.setInitialDirectory(new File(MainApp.getSettingsService().getLastProject()));
         }
         File selectedDirectory =
                 directoryChooser.showDialog(MainApp.getMainStage());
@@ -102,7 +104,7 @@ public class FXMLController implements Initializable {
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
         remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
-        settingsService.saveRepository(absPath);
+        MainApp.getSettingsService().saveRepository(absPath);
         this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.fetchBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.pushBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
@@ -128,7 +130,7 @@ public class FXMLController implements Initializable {
         try {
 
             openRecentMenuItem.getItems().removeAll(openRecentMenuItem.getItems());
-            settingsService.getRecentProjects().stream().forEach(
+            MainApp.getSettingsService().getRecentProjects().stream().forEach(
                     o -> {
                         MenuItem mi = new MenuItem(o.getFirst());
                         mi.setUserData(o.getSecond());
@@ -174,6 +176,55 @@ public class FXMLController implements Initializable {
     }
 
     public void cloneHandler(ActionEvent actionEvent) {
+        String userName = null, password = null;
+        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
+        dialog.setContentText("Please provide remote repository URL:");
+        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+        LoginDialog loginDialog = null;
+        boolean ok = false;
+
+        if (dialogResult.isPresent()) {
+
+            while (!ok) {
+                try {
+
+                    String absolutePathToRepository = MainApp.getRepositoryService().cloneRepository(
+                            dialogResult.get().getFirst(),
+                            dialogResult.get().getSecond(),
+                            userName,
+                            password);
+                    ok = true;
+                    openRepository(absolutePathToRepository);
+                    showResult("Cloned into" + absolutePathToRepository, Alert.AlertType.INFORMATION);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (e.getMessage().contains("Authentication is required")) {
+                        loginDialog = new LoginDialog("Clone repository", "Please, provide login and password");
+                    } else if (e.getMessage().contains("not authorized")) {
+                        loginDialog = new LoginDialog("Clone repository", "Not authorized. Provide correct credentials",
+                                userName, password);
+                    } else {
+                        showResult(e.getMessage(), Alert.AlertType.ERROR);
+                        ok = true;
+                    }
+                    Optional<Pair<String, String>> loginDialogResult = loginDialog.showAndWait();
+                    if (loginDialogResult.isPresent()) {
+                        userName = dialogResult.get().getFirst();
+                        password = dialogResult.get().getSecond();
+                        continue;
+                    } else {
+                        ok = true;
+                        showResult("Abort " + e.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+            }
+
+        }
+
+
+
+
     }
 
     public void fetchHandler(ActionEvent actionEvent) {
@@ -233,7 +284,7 @@ public class FXMLController implements Initializable {
      */
     public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(settingsService.getUserHomeFolder()));
+        directoryChooser.setInitialDirectory(new File(MainApp.getSettingsService().getUserHomeFolder()));
         final File selectedDirectory =
                 directoryChooser.showDialog(MainApp.getMainStage());
         if (selectedDirectory != null) {

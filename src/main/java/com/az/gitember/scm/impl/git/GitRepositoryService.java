@@ -4,9 +4,12 @@ import com.az.gitember.misc.*;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -16,23 +19,23 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -633,6 +636,94 @@ public class GitRepositoryService {
     }
 
     /**
+     * Clone remote repostitory.
+     * @param reporitoryUrl repo url
+     * @param folder optional folder where store cloned repository
+     * @param userName optional user name
+     * @param password optional password
+     */
+    public String cloneRepository(String reporitoryUrl, String folder, String userName, String password) throws Exception {
+
+        CloneCommand cmd = Git.cloneRepository()
+                .setURI(reporitoryUrl)
+                .setDirectory(new File(folder));
+        if (userName != null) {
+            cmd.setCredentialsProvider(
+                    new UsernamePasswordCredentialsProvider(userName, password)
+            );
+        }
+        try (Git result = cmd.call()) {
+            return result.getRepository().getDirectory().getAbsolutePath();
+        }
+
+        /*URIish url = new URIish(reporitoryUrl);
+
+        InitCommand command = Git.init();
+        if (folder == null) {
+            folder = new File(url.getHumanishName()).getAbsolutePath();
+        }
+        command.setDirectory(new File(folder));*/
+
+
+        /*validateDirs(directory, gitDir, bare);
+        if (directory != null && directory.exists()
+                && directory.listFiles().length != 0)
+            throw new JGitInternalException(MessageFormat.format(
+                    JGitText.get().cloneNonEmptyDirectory, directory.getName()));
+        if (gitDir != null && gitDir.exists() && gitDir.listFiles().length != 0)
+            throw new JGitInternalException(MessageFormat.format(
+                    JGitText.get().cloneNonEmptyDirectory, gitDir.getName()));
+        if (directory != null)
+            command.setDirectory(directory);
+        if (gitDir != null)
+            command.setGitDir(gitDir);*/
+
+
+       /* Repository repo =  command.call().getRepository();
+
+
+        return "asasas";*/
+
+
+
+    }
+
+
+
+    /*private FetchResult fetch(Repository clonedRepo, URIish u)
+            throws URISyntaxException,
+            org.eclipse.jgit.api.errors.TransportException, IOException,
+            GitAPIException {
+        // create the remote config and save it
+        RemoteConfig config = new RemoteConfig(clonedRepo.getConfig(), Constants.DEFAULT_REMOTE_NAME);
+        config.addURI(u);
+
+        final String dst = (Constants.R_REMOTES
+                + config.getName() + "/") + "*"; //$NON-NLS-1$//$NON-NLS-2$
+        RefSpec refSpec = new RefSpec();
+        refSpec = refSpec.setForceUpdate(true);
+        refSpec = refSpec.setSourceDestination(Constants.R_HEADS + "*", dst); //$NON-NLS-1$
+
+        config.addFetchRefSpec(refSpec);
+        config.update(clonedRepo.getConfig());
+
+        clonedRepo.getConfig().save();
+
+        // run the fetch command
+        FetchCommand command = new FetchCommand(clonedRepo);
+        command.setRemote(Constants.DEFAULT_REMOTE_NAME);
+        command.setProgressMonitor(NullProgressMonitor.INSTANCE); //TODO
+        command.setTagOpt(TagOpt.FETCH_TAGS);
+        configure(command);
+
+        List<RefSpec> specs = calculateRefSpecs(dst);
+        command.setRefSpecs(specs);
+
+        return command.call();
+    }*/
+
+
+    /**
      * Push to remote directory.
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
      *
@@ -641,7 +732,7 @@ public class GitRepositoryService {
      * @param userName     optional login name
      * @param password     optional password
      * @return
-     * @throws Exception
+     * @throws Exception in case of error
      */
     public String remoteRepositoryPush(String localBranch, String remoteBranch,
                                        String userName, String password,
