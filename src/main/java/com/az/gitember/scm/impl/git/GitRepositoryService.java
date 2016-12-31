@@ -575,9 +575,9 @@ public class GitRepositoryService {
     //TODO
     public void removeFileFromCommitStage(String fileName) throws Exception {
 
-        try (Git git = new Git(repository)) {
+        /*try (Git git = new Git(repository)) {
             git.reset().addPath(fileName);
-        }
+        }*/
 
     }
 
@@ -653,7 +653,32 @@ public class GitRepositoryService {
             );
         }
         try (Git result = cmd.call()) {
+
             return result.getRepository().getDirectory().getAbsolutePath();
+        //} catch (Exception e) {
+        //    return "asdasd";
+
+
+        } catch (TransportException te) {
+            if (te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
+
+                Repository repository = GitUtil.openRepository(folder);
+                repository.getConfig().setBoolean("http", null, "sslVerify", false);
+                repository.getConfig().save();
+
+                Git git = new Git(repository);
+                git.fetch().call();
+
+                //sslVerify = rc.getBoolean("http", "sslVerify", true); //$NON-NLS-1$ //$NON-NLS-2$
+
+                return gitFolder;
+
+
+            } else {
+
+                throw te;
+
+            }
         }
 
         /*URIish url = new URIish(reporitoryUrl);
@@ -662,42 +687,11 @@ public class GitRepositoryService {
         if (folder == null) {
             folder = new File(url.getHumanishName()).getAbsolutePath();
         }
-        command.setDirectory(new File(folder));*/
+        command.setDirectory(new File(folder));
 
-
-        /*validateDirs(directory, gitDir, bare);
-        if (directory != null && directory.exists()
-                && directory.listFiles().length != 0)
-            throw new JGitInternalException(MessageFormat.format(
-                    JGitText.get().cloneNonEmptyDirectory, directory.getName()));
-        if (gitDir != null && gitDir.exists() && gitDir.listFiles().length != 0)
-            throw new JGitInternalException(MessageFormat.format(
-                    JGitText.get().cloneNonEmptyDirectory, gitDir.getName()));
-        if (directory != null)
-            command.setDirectory(directory);
-        if (gitDir != null)
-            command.setGitDir(gitDir);*/
-
-
-       /* Repository repo =  command.call().getRepository();
-
-
-        return "asasas";*/
-
-
-
-    }
-
-
-
-    /*private FetchResult fetch(Repository clonedRepo, URIish u)
-            throws URISyntaxException,
-            org.eclipse.jgit.api.errors.TransportException, IOException,
-            GitAPIException {
-        // create the remote config and save it
-        RemoteConfig config = new RemoteConfig(clonedRepo.getConfig(), Constants.DEFAULT_REMOTE_NAME);
-        config.addURI(u);
-
+        Repository repo =  command.call().getRepository();
+        RemoteConfig config = new RemoteConfig(repo.getConfig(), Constants.DEFAULT_REMOTE_NAME);
+        config.addURI(url);
         final String dst = (Constants.R_REMOTES
                 + config.getName() + "/") + "*"; //$NON-NLS-1$//$NON-NLS-2$
         RefSpec refSpec = new RefSpec();
@@ -705,23 +699,39 @@ public class GitRepositoryService {
         refSpec = refSpec.setSourceDestination(Constants.R_HEADS + "*", dst); //$NON-NLS-1$
 
         config.addFetchRefSpec(refSpec);
-        config.update(clonedRepo.getConfig());
+        config.update(repo.getConfig());
+        repo.getConfig().save();*/
 
-        clonedRepo.getConfig().save();
+
+
+
+
+
+
+    }
+
+
+
+/*    private FetchResult fetch(Repository clonedRepo, URIish u)
+            throws URISyntaxException,
+            org.eclipse.jgit.api.errors.TransportException, IOException,
+            GitAPIException {
+        // create the remote config and save it
+
+
 
         // run the fetch command
         FetchCommand command = new FetchCommand(clonedRepo);
         command.setRemote(Constants.DEFAULT_REMOTE_NAME);
         command.setProgressMonitor(NullProgressMonitor.INSTANCE); //TODO
         command.setTagOpt(TagOpt.FETCH_TAGS);
-        configure(command);
 
         List<RefSpec> specs = calculateRefSpecs(dst);
         command.setRefSpecs(specs);
 
         return command.call();
-    }*/
-
+    }
+*/
 
     /**
      * Push to remote directory.
