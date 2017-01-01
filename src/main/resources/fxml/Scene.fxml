@@ -27,98 +27,82 @@
             <panes>
                 <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                        <VBox layoutX="79.0"   AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                              AnchorPane.topAnchor="0.0">
                             <children>
-                                <VBox layoutX="79.0" prefHeight="617.0" prefWidth="258.0" AnchorPane.bottomAnchor="0.0"
-                                      AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                                      AnchorPane.topAnchor="0.0">
+                                <HBox>
                                     <children>
-                                        <HBox>
-                                            <children>
-                                                <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy"/>
-                                                <Pane HBox.hgrow="ALWAYS"/>
-                                                <Label text=""/>
-                                            </children>
-                                        </HBox>
-                                        <HBox>
-                                            <children>
-                                                <Hyperlink text="History"/>
-                                                <Pane HBox.hgrow="ALWAYS"/>
-                                                <Label text=""/>
-                                            </children>
-                                        </HBox>
-                                        <HBox>
-                                            <children>
-                                                <Hyperlink text="Stashes"/>
-                                                <Pane HBox.hgrow="ALWAYS"/>
-                                                <Label text=""/>
-                                            </children>
-                                        </HBox>
-                                        <HBox>
-                                            <children>
-                                                <Hyperlink text="Settings"/>
-                                                <Pane HBox.hgrow="ALWAYS"/>
-                                                <Label text=""/>
-                                            </children>
-                                        </HBox>
+                                        <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
                                     </children>
-                                </VBox>
+                                </HBox>
+                                <HBox>
+                                    <children>
+                                        <Hyperlink text="History"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
+                                    </children>
+                                </HBox>
+                                <HBox>
+                                    <children>
+                                        <Hyperlink text="Stashes"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
+                                    </children>
+                                </HBox>
+                                <HBox>
+                                    <children>
+                                        <Hyperlink text="Settings"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
+                                    </children>
+                                </HBox>
                             </children>
-                        </AnchorPane>
+                        </VBox>
                     </content>
                 </TitledPane>
                 <TitledPane animated="false" text="Branches">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked"
-                                          prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0"
-                                          AnchorPane.leftAnchor="0.0"
-                                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <contextMenu>
-                                        <ContextMenu fx:id="localBranchListItemContextMenu">
-                                            <items>
-                                                <MenuItem mnemonicParsing="false" text="Checkout"
-                                                          onAction="#localBranchCheckoutHandler"/>
-                                                <MenuItem mnemonicParsing="false" text="Create branch ..."
-                                                          onAction="#localBranchCreateHandler"/>
-                                                <MenuItem mnemonicParsing="false" text="Merge ..."
-                                                          onAction="#localBranchMergeHandler"/>
-                                                <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false"
-                                                          text="Push ..." onAction="#localBranchPushHandler"/>
-                                                <SeparatorMenuItem mnemonicParsing="false"/>
-                                                <MenuItem mnemonicParsing="false" text="Delete ..."
-                                                          onAction="#localBranchDeleteHandler"/>
+                        <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked"
+                                  AnchorPane.bottomAnchor="0.0"
+                                  AnchorPane.leftAnchor="0.0"
+                                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                            <contextMenu>
+                                <ContextMenu fx:id="localBranchListItemContextMenu">
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" text="Checkout"
+                                                  onAction="#localBranchCheckoutHandler"/>
+                                        <MenuItem mnemonicParsing="false" text="Create branch ..."
+                                                  onAction="#localBranchCreateHandler"/>
+                                        <MenuItem mnemonicParsing="false" text="Merge ..."
+                                                  onAction="#localBranchMergeHandler"/>
+                                        <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false"
+                                                  text="Push ..." onAction="#localBranchPushHandler"/>
+                                        <SeparatorMenuItem mnemonicParsing="false"/>
+                                        <MenuItem mnemonicParsing="false" text="Delete ..."
+                                                  onAction="#localBranchDeleteHandler"/>
 
-                                            </items>
-                                        </ContextMenu>
-                                    </contextMenu>
-                                </ListView>
-                            </children>
-                        </AnchorPane>
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                        </ListView>
                     </content>
                 </TitledPane>
                 <TitledPane animated="false" text="Tags">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <ListView fx:id="tagList" prefHeight="353.0" prefWidth="200.0"
-                                          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-                            </children>
-                        </AnchorPane>
+                        <ListView fx:id="tagList"
+                                  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
                     </content>
                 </TitledPane>
                 <TitledPane animated="false" text="Remotes">
                     <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked"
-                                          prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0"
-                                          AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                                          AnchorPane.topAnchor="0.0"/>
-                            </children>
-                        </AnchorPane>
+                        <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked"
+                                  prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0"
+                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                  AnchorPane.topAnchor="0.0"/>
                     </content>
                 </TitledPane>
             </panes>
