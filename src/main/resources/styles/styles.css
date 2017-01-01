@@ -6,19 +6,14 @@
 
     -fx-cursor: hand;
     -fx-underline: true;
+    -fx-text-fill: #00b6e6;
 }
 
 .list-cell:even {
-    -fx-background-color: -fx-background;
-    -fx-text-fill: #00b6e6;
-    -fx-underline: true;
 
 }
 
 .list-cell:odd {
-    -fx-background-color: -fx-background;
-    -fx-text-fill: #00b6e6;
-    -fx-underline: true;
 
 }
 
