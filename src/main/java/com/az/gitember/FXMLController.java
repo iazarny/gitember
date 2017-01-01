@@ -98,7 +98,7 @@ public class FXMLController implements Initializable {
     }
 
     @SuppressWarnings("unchecked")
-    public void openRepository(String absPath) throws Exception {
+    public void openRepository(final String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
         MainApp.setRepositoryService(new GitRepositoryService(absPath));
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
@@ -184,10 +184,8 @@ public class FXMLController implements Initializable {
         boolean ok = false;
 
         if (dialogResult.isPresent()) {
-
             while (!ok) {
                 try {
-
                     String absolutePathToRepository = MainApp.getRepositoryService().cloneRepository(
                             dialogResult.get().getFirst(),
                             dialogResult.get().getSecond(),
@@ -195,8 +193,7 @@ public class FXMLController implements Initializable {
                             password);
                     ok = true;
                     openRepository(absolutePathToRepository);
-                    showResult("Cloned into" + absolutePathToRepository, Alert.AlertType.INFORMATION);
-
+                    showResult("Cloned into " + absolutePathToRepository, Alert.AlertType.INFORMATION);
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (e.getMessage().contains("Authentication is required")) {

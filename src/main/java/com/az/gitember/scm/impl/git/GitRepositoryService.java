@@ -9,6 +9,10 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
@@ -88,7 +92,7 @@ public class GitRepositoryService {
     }
 
     public String getRemoteUrl() {
-        return config.getString("remote", "origin", "url");
+        return config.getString("remote", Constants.DEFAULT_REMOTE_NAME, "url");
     }
 
 
@@ -214,7 +218,9 @@ public class GitRepositoryService {
 
 
     /**
-     * @param revCommit
+     * Adapt given rev commit to <code>ScmRevisionInformation</code>
+     *
+     * @param revCommit given <code>RevCommit</code>
      * @param fileName  optional file filter
      * @return instance of {@link ScmRevisionInformation}
      */
@@ -575,9 +581,6 @@ public class GitRepositoryService {
     //TODO
     public void removeFileFromCommitStage(String fileName) throws Exception {
 
-        /*try (Git git = new Git(repository)) {
-            git.reset().addPath(fileName);
-        }*/
 
     }
 
@@ -636,15 +639,16 @@ public class GitRepositoryService {
     }
 
     /**
-     * Clone remote repostitory.
+     * Clone remote repository.
+     *
      * @param reporitoryUrl repo url
-     * @param folder optional folder where store cloned repository
-     * @param userName optional user name
-     * @param password optional password
+     * @param folder        optional folder where store cloned repository
+     * @param userName      optional user name
+     * @param password      optional password
      */
-    public String cloneRepository(String reporitoryUrl, String folder, String userName, String password) throws Exception {
-
-        CloneCommand cmd = Git.cloneRepository()
+    public String cloneRepository(String reporitoryUrl, String folder,
+                                  String userName, String password) throws Exception {
+        final CloneCommand cmd = Git.cloneRepository()
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(folder));
         if (userName != null) {
@@ -652,86 +656,139 @@ public class GitRepositoryService {
                     new UsernamePasswordCredentialsProvider(userName, password)
             );
         }
+
         try (Git result = cmd.call()) {
-
             return result.getRepository().getDirectory().getAbsolutePath();
-        //} catch (Exception e) {
-        //    return "asdasd";
-
-
+        }
+        /*try {
+            try (Git result = cmd.call()) {
+                return result.getRepository().getDirectory().getAbsolutePath();
+            }
         } catch (TransportException te) {
-            if (te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
+            if (te.getCause() != null && te.getCause().getCause() != null
+                    && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
+                try (Git git = Git.open(new File(folder))) {
+                    final StoredConfig config = git.getRepository().getConfig();
+                    config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "url", reporitoryUrl);
+                    config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "fetch", "+refs/heads*//*:refs/remotes/origin*//*");
+                    config.setBoolean("http", null, "sslVerify", false);
+                    config.save();
+                    final FetchCommand fetchCommand = git.fetch().setRemote(Constants.DEFAULT_REMOTE_NAME);
+                    if (userName != null) {
+                        fetchCommand.setCredentialsProvider(
+                                new UsernamePasswordCredentialsProvider(userName, password)
+                        );
+                    }
+                    FetchResult fetchResult = fetchCommand.call();
+                    checkout(git.getRepository(), fetchResult);
 
-                Repository repository = GitUtil.openRepository(folder);
-                repository.getConfig().setBoolean("http", null, "sslVerify", false);
-                repository.getConfig().save();
-
-                Git git = new Git(repository);
-                git.fetch().call();
-
-                //sslVerify = rc.getBoolean("http", "sslVerify", true); //$NON-NLS-1$ //$NON-NLS-2$
-
-                return gitFolder;
-
-
+                    return git.getRepository().getDirectory().getAbsolutePath();
+                }
             } else {
-
                 throw te;
+            }
+        }*/
 
+    }
+
+    private void checkout(Repository clonedRepo, FetchResult result)
+            throws MissingObjectException, IncorrectObjectTypeException,
+            IOException, GitAPIException {
+
+        String branch = Constants.HEAD;
+
+        Ref head = null;
+        if (branch.equals(Constants.HEAD)) {
+            Ref foundBranch = findBranchToCheckout(result);
+            if (foundBranch != null)
+                head = foundBranch;
+        }
+        if (head == null) {
+            head = result.getAdvertisedRef(branch);
+            if (head == null)
+                head = result.getAdvertisedRef(Constants.R_HEADS + branch);
+            if (head == null)
+                head = result.getAdvertisedRef(Constants.R_TAGS + branch);
+        }
+
+        if (head == null || head.getObjectId() == null)
+            return; // TODO throw exception?
+
+        if (head.getName().startsWith(Constants.R_HEADS)) {
+            final RefUpdate newHead = clonedRepo.updateRef(Constants.HEAD);
+            newHead.disableRefLog();
+            newHead.link(head.getName());
+            addMergeConfig(clonedRepo, head);
+        }
+
+        final RevCommit commit = parseCommit(clonedRepo, head);
+
+        boolean detached = !head.getName().startsWith(Constants.R_HEADS);
+        RefUpdate u = clonedRepo.updateRef(Constants.HEAD, detached);
+        u.setNewObjectId(commit.getId());
+        u.forceUpdate();
+
+        DirCache dc = clonedRepo.lockDirCache();
+        DirCacheCheckout co = new DirCacheCheckout(clonedRepo, dc,
+                commit.getTree());
+        co.checkout();
+    }
+
+    private void addMergeConfig(Repository clonedRepo, Ref head)
+            throws IOException {
+        String branchName = Repository.shortenRefName(head.getName());
+        clonedRepo.getConfig().setString(ConfigConstants.CONFIG_BRANCH_SECTION,
+                branchName, ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME);
+        clonedRepo.getConfig().setString(ConfigConstants.CONFIG_BRANCH_SECTION,
+                branchName, ConfigConstants.CONFIG_KEY_MERGE, head.getName());
+        String autosetupRebase = clonedRepo.getConfig().getString(
+                ConfigConstants.CONFIG_BRANCH_SECTION, null,
+                ConfigConstants.CONFIG_KEY_AUTOSETUPREBASE);
+        if (ConfigConstants.CONFIG_KEY_ALWAYS.equals(autosetupRebase)
+                || ConfigConstants.CONFIG_KEY_REMOTE.equals(autosetupRebase))
+            clonedRepo.getConfig().setEnum(
+                    ConfigConstants.CONFIG_BRANCH_SECTION, branchName,
+                    ConfigConstants.CONFIG_KEY_REBASE, BranchConfig.BranchRebaseMode.REBASE);
+        clonedRepo.getConfig().save();
+    }
+
+    private RevCommit parseCommit(final Repository clonedRepo, final Ref ref)
+            throws MissingObjectException, IncorrectObjectTypeException,
+            IOException {
+        final RevCommit commit;
+        try (final RevWalk rw = new RevWalk(clonedRepo)) {
+            commit = rw.parseCommit(ref.getObjectId());
+        }
+        return commit;
+    }
+
+    private Ref findBranchToCheckout(FetchResult result) {
+        final Ref idHEAD = result.getAdvertisedRef(Constants.HEAD);
+        ObjectId headId = idHEAD != null ? idHEAD.getObjectId() : null;
+        if (headId == null) {
+            return null;
+        }
+
+        Ref master = result.getAdvertisedRef(Constants.R_HEADS
+                + Constants.MASTER);
+        ObjectId objectId = master != null ? master.getObjectId() : null;
+        if (headId.equals(objectId)) {
+            return master;
+        }
+
+        Ref foundBranch = null;
+        for (final Ref r : result.getAdvertisedRefs()) {
+            final String n = r.getName();
+            if (!n.startsWith(Constants.R_HEADS))
+                continue;
+            if (headId.equals(r.getObjectId())) {
+                foundBranch = r;
+                break;
             }
         }
-
-        /*URIish url = new URIish(reporitoryUrl);
-
-        InitCommand command = Git.init();
-        if (folder == null) {
-            folder = new File(url.getHumanishName()).getAbsolutePath();
-        }
-        command.setDirectory(new File(folder));
-
-        Repository repo =  command.call().getRepository();
-        RemoteConfig config = new RemoteConfig(repo.getConfig(), Constants.DEFAULT_REMOTE_NAME);
-        config.addURI(url);
-        final String dst = (Constants.R_REMOTES
-                + config.getName() + "/") + "*"; //$NON-NLS-1$//$NON-NLS-2$
-        RefSpec refSpec = new RefSpec();
-        refSpec = refSpec.setForceUpdate(true);
-        refSpec = refSpec.setSourceDestination(Constants.R_HEADS + "*", dst); //$NON-NLS-1$
-
-        config.addFetchRefSpec(refSpec);
-        config.update(repo.getConfig());
-        repo.getConfig().save();*/
-
-
-
-
-
-
-
+        return foundBranch;
     }
 
-
-
-/*    private FetchResult fetch(Repository clonedRepo, URIish u)
-            throws URISyntaxException,
-            org.eclipse.jgit.api.errors.TransportException, IOException,
-            GitAPIException {
-        // create the remote config and save it
-
-
-
-        // run the fetch command
-        FetchCommand command = new FetchCommand(clonedRepo);
-        command.setRemote(Constants.DEFAULT_REMOTE_NAME);
-        command.setProgressMonitor(NullProgressMonitor.INSTANCE); //TODO
-        command.setTagOpt(TagOpt.FETCH_TAGS);
-
-        List<RefSpec> specs = calculateRefSpecs(dst);
-        command.setRefSpecs(specs);
-
-        return command.call();
-    }
-*/
 
     /**
      * Push to remote directory.
@@ -749,7 +806,8 @@ public class GitRepositoryService {
                                        boolean setOrigin) throws Exception {
 
 
-        http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
+        http:
+//stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
 
         try (Git git = new Git(repository)) {
             // git push origin remotepush:r-remotepush
@@ -757,7 +815,7 @@ public class GitRepositoryService {
             PushCommand cmd = git.push().setRefSpecs(refSpec);
 
             if (setOrigin) {
-                cmd.setRemote("origin");
+                cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);
             }
 
             if (userName != null) {
@@ -790,18 +848,17 @@ public class GitRepositoryService {
 
     public void checkoutLocalBranch(String name) throws Exception {
         try (Git git = new Git(repository)) {
-            git.checkout().setCreateBranch(false).setName(name)
-                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM).call();
-              /*
- * 		.
- * 		.setStartPoint(&quot;origin/stable&quot;).call();*/
-
+            git.checkout()
+                    .setCreateBranch(false)
+                    .setName(name)
+                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
+                    .call();
         }
 
     }
 
 
-    public void deleteLocalBranch(String name) throws Exception {
+    public void deleteLocalBranch(final String name) throws Exception {
         try (Git git = new Git(repository)) {
             git.branchDelete()
                     .setBranchNames(name)
@@ -814,19 +871,17 @@ public class GitRepositoryService {
     /**
      * Merge two branches. The "to" must be checkouted.
      *
-     * @param from
+     * @param from    branch name
      * @param message merge message
      * @throws Exception
      */
-    public void mergeLocalBranch(String from, String message) throws Exception {
+    public void mergeLocalBranch(final String from, final String message) throws Exception {
         try (Git git = new Git(repository)) {
-
-            git.merge().include(repository.exactRef(from))
+            git.merge()
+                    .include(repository.exactRef(from))
                     .setMessage(message)
                     .call();
         }
-
-
     }
 
 
