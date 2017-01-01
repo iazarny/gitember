@@ -207,8 +207,8 @@ public class FXMLController implements Initializable {
                     }
                     Optional<Pair<String, String>> loginDialogResult = loginDialog.showAndWait();
                     if (loginDialogResult.isPresent()) {
-                        userName = dialogResult.get().getFirst();
-                        password = dialogResult.get().getSecond();
+                        userName = loginDialogResult.get().getFirst();
+                        password = loginDialogResult.get().getSecond();
                         continue;
                     } else {
                         ok = true;

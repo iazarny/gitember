@@ -566,7 +566,6 @@ public class GitRepositoryService {
             git
                     .commit()
                     .setMessage(message)
-                    .setAuthor("Igor Azarny", "iazarny@yahoo.com")
                     .call();
         }
     }
@@ -651,44 +650,48 @@ public class GitRepositoryService {
         final CloneCommand cmd = Git.cloneRepository()
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(folder));
+
         if (userName != null) {
-            cmd.setCredentialsProvider(
+            /*cmd.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(userName, password)
-            );
+            );*/
+
+            return fetchRepository(reporitoryUrl, folder, userName, password);
         }
 
-        try (Git result = cmd.call()) {
-            return result.getRepository().getDirectory().getAbsolutePath();
-        }
-        /*try {
+        try {
             try (Git result = cmd.call()) {
                 return result.getRepository().getDirectory().getAbsolutePath();
             }
         } catch (TransportException te) {
             if (te.getCause() != null && te.getCause().getCause() != null
                     && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
-                try (Git git = Git.open(new File(folder))) {
-                    final StoredConfig config = git.getRepository().getConfig();
-                    config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "url", reporitoryUrl);
-                    config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "fetch", "+refs/heads*//*:refs/remotes/origin*//*");
-                    config.setBoolean("http", null, "sslVerify", false);
-                    config.save();
-                    final FetchCommand fetchCommand = git.fetch().setRemote(Constants.DEFAULT_REMOTE_NAME);
-                    if (userName != null) {
-                        fetchCommand.setCredentialsProvider(
-                                new UsernamePasswordCredentialsProvider(userName, password)
-                        );
-                    }
-                    FetchResult fetchResult = fetchCommand.call();
-                    checkout(git.getRepository(), fetchResult);
-
-                    return git.getRepository().getDirectory().getAbsolutePath();
-                }
+                return fetchRepository(reporitoryUrl, folder, userName, password);
             } else {
                 throw te;
             }
-        }*/
+        }
 
+    }
+
+    private String fetchRepository(String reporitoryUrl, String folder, String userName, String password) throws IOException, GitAPIException {
+        try (Git git = Git.open(new File(folder))) {
+            final StoredConfig config = git.getRepository().getConfig();
+            config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "url", reporitoryUrl);
+            config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "fetch", "+refs/heads/*:refs/remotes/origin/*");
+            config.setBoolean("http", null, "sslVerify", false);
+            config.save();
+            final FetchCommand fetchCommand = git.fetch().setRemote(Constants.DEFAULT_REMOTE_NAME);
+            if (userName != null) {
+                fetchCommand.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(userName, password)
+                );
+            }
+            FetchResult fetchResult = fetchCommand.call();
+            checkout(git.getRepository(), fetchResult);
+
+            return git.getRepository().getDirectory().getAbsolutePath();
+        }
     }
 
     private void checkout(Repository clonedRepo, FetchResult result)
