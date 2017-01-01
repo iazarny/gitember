@@ -9,11 +9,32 @@
 }
 
 .list-cell:even {
-    /*-fx-background-color: blue;
-    -fx-text-fill: black;*/
+    -fx-background-color: -fx-background;
+    -fx-text-fill: #00b6e6;
+    -fx-underline: true;
+
 }
 
 .list-cell:odd {
-    /*-fx-background-color: blue;
-    -fx-text-fill: black;*/
+    -fx-background-color: -fx-background;
+    -fx-text-fill: #00b6e6;
+    -fx-underline: true;
+
 }
+
+
+.list-cell:filled:selected {
+    -fx-background-color: -fx-background ;
+    -fx-background-insets: 0 ;
+
+    -fx-border-color: -fx-focus-color;
+    -fx-border-style: segments(0.166667em, 0.166667em);
+    -fx-border-width: 1px;
+}
+
+
+
+
+/*
+http://hg.openjdk.java.net/openjfx/8/master/rt/file/f89b7dc932af/modules/controls/src/main/resources/com/sun/javafx/scene/control/skin/modena/modena.css
+*/

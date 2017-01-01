@@ -73,7 +73,7 @@ public class MainApp extends Application {
         stage.setScene(scene);
         stage.getIcons().add(new Image(MainApp.class.getResourceAsStream(Const.ICON)));
 
-        setUserAgentStylesheet(STYLESHEET_CASPIAN);
+       // setUserAgentStylesheet(STYLESHEET_CASPIAN);
 
         stage.show();
     }

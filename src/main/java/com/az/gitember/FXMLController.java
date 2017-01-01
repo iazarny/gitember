@@ -196,8 +196,13 @@ public class FXMLController implements Initializable {
                     showResult("Cloned into " + absolutePathToRepository, Alert.AlertType.INFORMATION);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    userName = MainApp.getSettingsService().getLogin();
                     if (e.getMessage().contains("Authentication is required")) {
-                        loginDialog = new LoginDialog("Clone repository", "Please, provide login and password");
+                        loginDialog = new LoginDialog("Clone repository",
+                                "Please, provide login and password",
+                                userName,
+                                ""
+                        );
                     } else if (e.getMessage().contains("not authorized")) {
                         loginDialog = new LoginDialog("Clone repository", "Not authorized. Provide correct credentials",
                                 userName, password);
@@ -209,6 +214,7 @@ public class FXMLController implements Initializable {
                     if (loginDialogResult.isPresent()) {
                         userName = loginDialogResult.get().getFirst();
                         password = loginDialogResult.get().getSecond();
+                        MainApp.getSettingsService().saveLogin(userName);
                         continue;
                     } else {
                         ok = true;
@@ -351,8 +357,12 @@ public class FXMLController implements Initializable {
                 showResult(text, Alert.AlertType.INFORMATION);
             } catch (TransportException e) {
                 e.printStackTrace();
+                login = MainApp.getSettingsService().getLogin();
                 if (e.getMessage().contains("Authentication is required")) {
-                    loginDialog = new LoginDialog("Login", "Please, provide login and password");
+                    loginDialog = new LoginDialog("Login",
+                            "Please, provide login and password",
+                            login,
+                            "");
                 } else if (e.getMessage().contains("not authorized")) {
                     loginDialog = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd);
                 }
@@ -360,6 +370,7 @@ public class FXMLController implements Initializable {
                 if (dialogResult.isPresent()) {
                     login = dialogResult.get().getFirst();
                     pwd = dialogResult.get().getSecond();
+                    MainApp.getSettingsService().saveLogin(login);
                     continue;
                 } else {
                     ok = true;

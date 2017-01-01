@@ -17,9 +17,11 @@ public class SettingsServiceImpl {
     final static String  PROP_FOLDER = ".gitember";
     final static String  PROP_FILE_NAME = "gitember.properties";
     final static String  KEY_LAST_PROJECT = "lastProject";
+    final static String  KEY_HISTORY = "history";
+    final static String  KEY_LOGIN = "login";
     final static String  SYSTEM_PROP_USER_HOME = "user.home";
 
-    public void saveRepository(String absPath) throws IOException {
+    public void saveRepository(String absPath)  {
 
         String shortName =  new File(new File(absPath).getParent()).getName();
 
@@ -31,12 +33,23 @@ public class SettingsServiceImpl {
         save(properties);
     }
 
+
+    public String getLogin() {
+        return  read().getProperty(KEY_LOGIN);
+    }
+
+    public void saveLogin(String login) {
+        Properties properties = read();
+        properties.put(KEY_LOGIN, login);
+        save(properties);
+    }
+
     /**
      * Get absolute path to last project.
      *
      * @return path to last project or null if no last projects.
      */
-    public String getLastProject() throws IOException {
+    public String getLastProject()  {
 
         Properties properties = read();
 
@@ -48,14 +61,14 @@ public class SettingsServiceImpl {
 
     }
 
-    void save(Properties properties) throws IOException {
+    void save(Properties properties) {
         try(OutputStream os = new FileOutputStream(getAbsolutePathToPropertyFile())) {
             properties.store(os, "Gitember settings " + new Date());
-        }
+        } catch (IOException e) {}
     }
 
 
-    private Properties read() throws IOException {
+    private Properties read()  {
         Properties prop = new Properties();
         try (InputStream is = new FileInputStream(getAbsolutePathToPropertyFile())) {
             prop.load(is);

@@ -45,11 +45,12 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
         grid.add(password, 1, 1);
 
         Node loginButton = this.getDialogPane().lookupButton(loginButtonType);
-        loginButton.setDisable(true);
+        loginButton.setDisable(username.textProperty().isEmpty().get());
 
         username.textProperty().addListener((observable, oldValue, newValue) -> {
             loginButton.setDisable(newValue.trim().isEmpty());
         });
+
 
         this.getDialogPane().setContent(grid);
 
