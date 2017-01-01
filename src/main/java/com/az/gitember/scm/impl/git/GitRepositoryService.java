@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
  */
 public class GitRepositoryService {
 
-    private final String gitFolder;
+    Logger log = Logger.getLogger(GitRepositoryService.class.getName());
 
     private final Repository repository;
 
@@ -62,13 +63,11 @@ public class GitRepositoryService {
      * @throws IOException
      */
     public GitRepositoryService(final String gitFolder) throws IOException {
-        this.gitFolder = gitFolder;
         this.repository = GitUtil.openRepository(gitFolder);
         this.config = repository.getConfig();
     }
 
     public GitRepositoryService() {
-        gitFolder = null;
         repository = null;
         config = null;
     }

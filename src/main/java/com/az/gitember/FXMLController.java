@@ -101,13 +101,16 @@ public class FXMLController implements Initializable {
     public void openRepository(final String absPath) throws Exception {
         MainApp.setCurrentRepositoryPath(absPath);
         MainApp.setRepositoryService(new GitRepositoryService(absPath));
+        MainApp.getSettingsService().saveRepository(absPath);
+
         localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
         remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
         tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
-        MainApp.getSettingsService().saveRepository(absPath);
+
         this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.fetchBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
         this.pushBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
+
         String head = MainApp.getRepositoryService().getHead();
         MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
     }
@@ -201,8 +204,7 @@ public class FXMLController implements Initializable {
                         loginDialog = new LoginDialog("Clone repository",
                                 "Please, provide login and password",
                                 userName,
-                                ""
-                        );
+                                "");
                     } else if (e.getMessage().contains("not authorized")) {
                         loginDialog = new LoginDialog("Clone repository", "Not authorized. Provide correct credentials",
                                 userName, password);
@@ -224,10 +226,6 @@ public class FXMLController implements Initializable {
             }
 
         }
-
-
-
-
     }
 
     public void fetchHandler(ActionEvent actionEvent) {

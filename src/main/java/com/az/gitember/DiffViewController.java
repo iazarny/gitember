@@ -15,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -464,6 +465,7 @@ public class DiffViewController extends BaseFileViewController {
         final Stage stage = new Stage();
         stage.setScene(scene);
         stage.setTitle(title);
+        stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.show();
 
         FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );

@@ -1,5 +1,6 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
@@ -17,6 +18,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -224,6 +226,7 @@ public class CommitViewController implements Initializable {
             final Stage stage = new Stage();
             stage.setScene(scene);
             stage.setTitle(fileName);
+            stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
             stage.show();
 
 

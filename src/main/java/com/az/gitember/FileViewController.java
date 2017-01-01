@@ -7,6 +7,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
@@ -87,6 +88,7 @@ public class FileViewController extends BaseFileViewController {
         final Stage stage = new Stage();
         stage.setScene(scene);
         stage.setTitle(displayTitle);
+        stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.show();
     }
 

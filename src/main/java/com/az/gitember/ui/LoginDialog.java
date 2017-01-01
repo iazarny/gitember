@@ -1,10 +1,12 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 
 /**
@@ -23,7 +25,6 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
         this.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
 
         GridPane grid = new GridPane();
-        //grid.setGridLinesVisible(true);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 10, 10, 20));
