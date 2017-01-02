@@ -121,22 +121,47 @@
                                 <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false"
                                       text="Open recent">
                                     <items>
-                                        <MenuItem mnemonicParsing="false" text="Action 1"/>
                                     </items>
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="Open shell"/>
+                                <MenuItem text="Open terminal"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="Settings ..."/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem onAction="#exitActionHandler" text="Exit"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Repository">
+                            <items>
                                 <MenuItem text="Clone ..." onAction="#cloneHandler"/>
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <MenuItem text="Fetch" disable="true"/>
+                                <MenuItem text="Fetch all" disable="true"/>
                                 <MenuItem text="Pull" disable="true"/>
+                                <MenuItem text="Push" disable="true"/>
                                 <MenuItem text="Push all" disable="true"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#exitActionHandler" text="Exit"/>
+                                <MenuItem text="Crete statistic report ..."/>
+                            </items>
+                        </Menu>
+                        <Menu text="Working copy">
+                            <items>
+                                <MenuItem text="Checkout" disable="true"/>
+                                <MenuItem text="Merge" disable="true"/>
+                                <MenuItem text="Rebase" disable="true"/>
+                                <MenuItem text="Stash" disable="true"/>
+                                <MenuItem text="Apply stash" disable="true"/>
+                                <MenuItem text="Commit" disable="true"/>
+                                <MenuItem text="Reset version to ... " disable="true"/>
+
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem text="Check for update ..."/>
+                                <MenuItem text="Create bug report"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About"/>
                             </items>
                         </Menu>

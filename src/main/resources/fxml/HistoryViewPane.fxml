@@ -2,7 +2,9 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.HistoryViewController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0"
+            prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.HistoryViewController">
     <TableView fx:id="historyTableView" editable="false" layoutX="333.0" layoutY="152.0" prefHeight="724.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <columns>
@@ -16,12 +18,14 @@
         <contextMenu>
             <ContextMenu fx:id="scmItemContextMenu">
                 <items>
-                    <MenuItem fx:id="openFileMenuItem" disable="true" mnemonicParsing="false" onAction="#openItemMenuItemClickHandler" text="Open" />
-                    <MenuItem fx:id="showDiffMenuItem" disable="true" mnemonicParsing="false" onAction="#showDiffMenuItemClickHandler" text="Show diff" />
+                    <MenuItem fx:id="openFileMenuItem" disable="true" mnemonicParsing="false"
+                              onAction="#openItemMenuItemClickHandler" text="Open" />
+                    <MenuItem fx:id="showDiffMenuItem" disable="true" mnemonicParsing="false"
+                              onAction="#showDiffMenuItemClickHandler" text="Show diff" />
 
                 </items>
             </ContextMenu>
         </contextMenu>
 
     </TableView>
-</AnchorPane>
+</BorderPane>

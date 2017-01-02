@@ -59,7 +59,7 @@
                                    onMousePressed="#openItemTableViewDoubleClickedHandler">
                             <columns>
                                 <TableColumn fx:id="actionTableColumn" prefWidth="50.0" text=""
-                                             style="-fx-font-size: 150%"/>
+                                             style="-fx-font-size: 150%;  -fx-label-padding: 5px 0px 0px 10px"/>
                                 <TableColumn fx:id="fileTableColumn" prefWidth="840.00" text="File"/>
                             </columns>
                             <contextMenu>
