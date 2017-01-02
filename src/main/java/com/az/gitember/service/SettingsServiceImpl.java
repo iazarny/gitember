@@ -5,6 +5,7 @@ import com.az.gitember.misc.Pair;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -13,23 +14,25 @@ import java.util.*;
  */
 public class SettingsServiceImpl {
 
-    final static String  PROP_FOLDER = ".gitember";
-    final static String  PROP_FILE_NAME = "gitember.properties";
-    final static String  KEY_LAST_PROJECT = "lastProject";
-    final static String  KEY_HISTORY = "history";
-    final static String  KEY_LOGIN = "login";
-    final static String  SYSTEM_PROP_USER_HOME = "user.home";
+    final static String PROP_FOLDER = ".gitember";
+    final static String PROP_FILE_NAME = "gitember.properties";
+    final static String KEY_LAST_PROJECT = "lastProject";
+    final static String KEY_HISTORY = "history";
+    final static String KEY_LOGIN = "login";
+    final static String SYSTEM_PROP_USER_HOME = "user.home";
 
     /**
      * Get stored login name.
+     *
      * @return login name if was saved before
      */
     public String getLogin() {
-        return  read().getProperty(KEY_LOGIN);
+        return read().getProperty(KEY_LOGIN);
     }
 
     /**
      * Save given string as last use login name.
+     *
      * @param login given login name
      */
     public void saveLogin(final String login) {
@@ -43,7 +46,7 @@ public class SettingsServiceImpl {
      *
      * @return path to last project or null if no last projects.
      */
-    public String getLastProject()  {
+    public String getLastProject() {
 
         Properties properties = read();
 
@@ -57,29 +60,34 @@ public class SettingsServiceImpl {
 
     /**
      * Save properties.
+     *
      * @param properties given properties.
      */
     private void save(final Properties properties) {
-        try(OutputStream os = new FileOutputStream(getAbsolutePathToPropertyFile())) {
+        try (OutputStream os = new FileOutputStream(getAbsolutePathToPropertyFile())) {
             properties.store(os, "Gitember settings " + new Date());
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
     }
 
 
     /**
      * Read properties from disk.
+     *
      * @return
      */
-    private Properties read()  {
+    private Properties read() {
         Properties prop = new Properties();
         try (InputStream is = new FileInputStream(getAbsolutePathToPropertyFile())) {
             prop.load(is);
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
         return prop;
     }
 
     /**
      * Get home directory.
+     *
      * @return home directory.
      */
     public String getUserHomeFolder() {
@@ -88,6 +96,7 @@ public class SettingsServiceImpl {
 
     /**
      * Get absolute path path to property file with settings.
+     *
      * @return
      * @throws IOException
      */
@@ -99,32 +108,43 @@ public class SettingsServiceImpl {
 
     /**
      * Get list of opened repositories.
+     *
      * @return list of repo
      * @throws IOException
      */
     public List<Pair<String, String>> getRecentProjects() throws IOException {
-        List<Pair<String, String>>  pairs = new ArrayList<>();
+        List<Pair<String, String>> pairs = new ArrayList<>();
         Properties props = read();
-        for(Object key : props.keySet()) {
-            if ( ((String)props.get(key)).endsWith(Const.GIT_FOLDER)) {
-                pairs.add(
-                        new Pair<>(
-                                (String) key,
-                                (String) props.get(key)
-                        )
-                );
+        Set<String> keyToRemove = new HashSet<>();
+        for (Object key : props.keySet()) {
+            final String folder = ((String) props.get(key));
+            if (folder.endsWith(Const.GIT_FOLDER)) {
+                Path path = Paths.get(folder);
+                if (Files.exists(path)) {
+                    pairs.add(
+                            new Pair<>(
+                                    (String) key,
+                                    (String) props.get(key)
+                            )
+                    );
+                } else {
+                    keyToRemove.add(key.toString());
+                }
             }
         }
+        keyToRemove.stream().forEach(k -> props.remove(k));
+        save(props);
         Collections.sort(pairs, (o1, o2) -> o1.getFirst().compareTo(o2.getFirst()));
         return pairs;
     }
 
     /**
      * Save given repository as last open repo.
+     *
      * @param absPath given absolute path to repository
      */
-    public void saveRepository(final String absPath)  {
-        String shortName =  new File(new File(absPath).getParent()).getName();
+    public void saveRepository(final String absPath) {
+        String shortName = new File(new File(absPath).getParent()).getName();
         Properties properties = read();
         properties.put(shortName, absPath);
         properties.put(KEY_LAST_PROJECT, shortName);
