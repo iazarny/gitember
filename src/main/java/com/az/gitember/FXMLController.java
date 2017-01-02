@@ -2,6 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
+import com.az.gitember.misc.RemoteOperationValue;
 import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
@@ -29,6 +30,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Supplier;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -76,6 +78,9 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane hostPanel;
 
+    private String login = null;
+
+    private String pwd = null;
 
 
     @FXML
@@ -178,55 +183,7 @@ public class FXMLController implements Initializable {
 
     }
 
-    public void cloneHandler(ActionEvent actionEvent) {
-        String userName = null, password = null;
-        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
-        dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
-        LoginDialog loginDialog = null;
-        boolean ok = false;
 
-        if (dialogResult.isPresent()) {
-            while (!ok) {
-                try {
-                    String absolutePathToRepository = MainApp.getRepositoryService().cloneRepository(
-                            dialogResult.get().getFirst(),
-                            dialogResult.get().getSecond(),
-                            userName,
-                            password);
-                    ok = true;
-                    openRepository(absolutePathToRepository);
-                    showResult("Cloned into " + absolutePathToRepository, Alert.AlertType.INFORMATION);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    userName = MainApp.getSettingsService().getLogin();
-                    if (e.getMessage().contains("Authentication is required")) {
-                        loginDialog = new LoginDialog("Clone repository",
-                                "Please, provide login and password",
-                                userName,
-                                "");
-                    } else if (e.getMessage().contains("not authorized")) {
-                        loginDialog = new LoginDialog("Clone repository", "Not authorized. Provide correct credentials",
-                                userName, password);
-                    } else {
-                        showResult(e.getMessage(), Alert.AlertType.ERROR);
-                        ok = true;
-                    }
-                    Optional<Pair<String, String>> loginDialogResult = loginDialog.showAndWait();
-                    if (loginDialogResult.isPresent()) {
-                        userName = loginDialogResult.get().getFirst();
-                        password = loginDialogResult.get().getSecond();
-                        MainApp.getSettingsService().saveLogin(userName);
-                        continue;
-                    } else {
-                        ok = true;
-                        showResult("Abort " + e.getMessage(), Alert.AlertType.ERROR);
-                    }
-                }
-            }
-
-        }
-    }
 
     public void fetchHandler(ActionEvent actionEvent) {
         String text;
@@ -241,15 +198,127 @@ public class FXMLController implements Initializable {
     }
 
     public void pullHandler(ActionEvent actionEvent) {
-        String text;
-        try {
-            text = MainApp.getRepositoryService().remoteRepositoryPull();
-            showResult(text, Alert.AlertType.INFORMATION);
-        } catch (Exception e) {
-            text = e.getMessage();
-            showResult(text, Alert.AlertType.ERROR);
+        remoteRepositoryOperation(
+                () -> MainApp.getRepositoryService().remoteRepositoryPull(login, pwd)
+        );
+    }
+
+
+    public void cloneHandler(ActionEvent actionEvent) {
+        String userName = null, password = null;
+        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
+        dialog.setContentText("Please provide remote repository URL:");
+        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+        LoginDialog loginDialog = null;
+        boolean ok = false;
+
+        if (dialogResult.isPresent()) {
+
+
+            RemoteOperationValue res = remoteRepositoryOperation(
+                    () -> MainApp.getRepositoryService().cloneRepository(
+                            dialogResult.get().getFirst(),
+                            dialogResult.get().getSecond(),
+                            login,
+                            pwd
+                    )
+            );
+
+            //openRepository(absolutePathToRepository);
+            //showResult("Cloned into " + absolutePathToRepository, Alert.AlertType.INFORMATION);
+
+
+
         }
     }
+
+
+
+
+    private RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
+        boolean ok = false;
+        Optional<Pair<String, String>> dialogResult = null;
+        RemoteOperationValue operationValue = null;
+        while (!ok) {
+            operationValue = supplier.get();
+            switch (operationValue.getResult()) {
+                case OK: {
+                    ok = true;
+                    showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
+                    break;
+                }
+                case AUTH_REQUIRED: {
+                    login = MainApp.getSettingsService().getLogin();
+                    dialogResult = new LoginDialog("Login", "Please, provide login and password", login, null)
+                            .showAndWait();
+                    break;
+                }
+                case NOT_AUTHORIZED: {
+                    dialogResult = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
+                            .showAndWait();
+                    break;
+                }
+                case ERROR: {
+                    ok = true;
+                    showResult("ERROR. TODO get info", Alert.AlertType.INFORMATION);
+                    break;
+                }
+            }
+            if (dialogResult != null && dialogResult.isPresent()) {
+                login = dialogResult.get().getFirst();
+                pwd = dialogResult.get().getSecond();
+                MainApp.getSettingsService().saveLogin(login);
+                dialogResult = null;
+                continue;
+            } else {
+                ok = true;
+                showResult("Aborted", Alert.AlertType.ERROR);
+            }
+
+
+        }
+
+        return operationValue;
+
+    }
+
+    /*private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
+        boolean ok = false;
+        String login = null, pwd = null, text = "";
+        LoginDialog loginDialog = null;
+        while (!ok) {
+            try {
+                text = MainApp.getRepositoryService().remoteRepositoryPush(
+                        localBranchName,remoteBranchName, login,  pwd, setOrigin);
+                ok = true;
+                showResult(text, Alert.AlertType.INFORMATION);
+            } catch (TransportException e) {
+                e.printStackTrace();
+                login = MainApp.getSettingsService().getLogin();
+                if (e.getMessage().contains("Authentication is required")) {
+                    loginDialog = new LoginDialog("Login",
+                            "Please, provide login and password",
+                            login,
+                            "");
+                } else if (e.getMessage().contains("not authorized")) {
+                    loginDialog = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd);
+                }
+                Optional<Pair<String, String>> dialogResult = loginDialog.showAndWait();
+                if (dialogResult.isPresent()) {
+                    login = dialogResult.get().getFirst();
+                    pwd = dialogResult.get().getSecond();
+                    MainApp.getSettingsService().saveLogin(login);
+                    continue;
+                } else {
+                    ok = true;
+                    text = "Aborted";
+                }
+            } catch (Exception e) {
+                ok = true;
+                showResult(text, Alert.AlertType.ERROR);
+            }
+        }
+    }*/
 
 
     private void showResult(String text, Alert.AlertType alertTypet) {
@@ -350,7 +419,7 @@ public class FXMLController implements Initializable {
         while (!ok) {
             try {
                 text = MainApp.getRepositoryService().remoteRepositoryPush(
-                        localBranchName,remoteBranchName, login,  pwd, setOrigin);
+                        localBranchName, remoteBranchName, login, pwd, setOrigin);
                 ok = true;
                 showResult(text, Alert.AlertType.INFORMATION);
             } catch (TransportException e) {

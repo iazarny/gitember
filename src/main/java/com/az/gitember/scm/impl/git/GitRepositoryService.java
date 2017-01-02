@@ -576,7 +576,7 @@ public class GitRepositoryService {
 
     }
 
-    //TODO
+    //TODO unstage
     public void removeFileFromCommitStage(String fileName) throws Exception {
 
 
@@ -605,14 +605,80 @@ public class GitRepositoryService {
     }
 
 
-    public String remoteRepositoryPull() throws Exception {
-
+    /**
+     * Pull changes.
+     *
+     * @param userName optional user name if required
+     * @param password optional password
+     * @return
+     * @throws Exception
+     */
+    public RemoteOperationValue remoteRepositoryPull(final String userName, final String password) {
         try (Git git = new Git(repository)) {
-            PullResult pullRez = git.pull().call();
-            return pullRez.toString();
-        } catch (CheckoutConflictException conflictException) {
-            return conflictException.getMessage();
+            PullCommand pullCommand = git.pull();
+            if (userName != null) {
+                pullCommand.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(userName, password));
+            }
+            PullResult pullRez = pullCommand.call();
+            return new RemoteOperationValue(pullRez.toString());
+        } catch (Exception e) {
+            return processError(e);
         }
+    }
+
+
+    /**
+     * Clone remote repository.
+     *
+     * @param reporitoryUrl repo url
+     * @param folder        optional folder where store cloned repository
+     * @param userName      optional user name
+     * @param password      optional password
+     */
+    public RemoteOperationValue cloneRepository(String reporitoryUrl, String folder,
+                                  String userName, String password)  {
+        final CloneCommand cmd = Git.cloneRepository()
+                .setURI(reporitoryUrl)
+                .setDirectory(new File(folder));
+
+        if (userName != null) {
+            return fetchRepository(reporitoryUrl, folder, userName, password);
+        }
+
+        try {
+            try (Git result = cmd.call()) {
+                Object rez = result.getRepository().getDirectory().getAbsolutePath();
+                return new RemoteOperationValue(rez);
+
+            }
+        } catch (TransportException te) {
+            if (te.getCause() != null && te.getCause().getCause() != null
+                    && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
+                return fetchRepository(reporitoryUrl, folder, userName, password);
+            } else {
+                return processError(te);
+            }
+        } catch (Exception e) {
+            return processError(e);
+        }
+
+    }
+
+    private RemoteOperationValue processError(Exception e) {
+
+        if (e instanceof TransportException) {
+            if (e.getMessage().contains("Authentication is required")) {
+                return new RemoteOperationValue(RemoteOperationValue.Result.AUTH_REQUIRED, e.getMessage());
+            } else if (e.getMessage().contains("not authorized")) {
+                return new RemoteOperationValue(RemoteOperationValue.Result.NOT_AUTHORIZED, e.getMessage());
+            } else {
+                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
+            }
+        } else if (e instanceof GitAPIException) {
+            return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
+        }
+        return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
 
     }
 
@@ -636,44 +702,10 @@ public class GitRepositoryService {
 
     }
 
-    /**
-     * Clone remote repository.
-     *
-     * @param reporitoryUrl repo url
-     * @param folder        optional folder where store cloned repository
-     * @param userName      optional user name
-     * @param password      optional password
-     */
-    public String cloneRepository(String reporitoryUrl, String folder,
-                                  String userName, String password) throws Exception {
-        final CloneCommand cmd = Git.cloneRepository()
-                .setURI(reporitoryUrl)
-                .setDirectory(new File(folder));
 
-        if (userName != null) {
-            /*cmd.setCredentialsProvider(
-                    new UsernamePasswordCredentialsProvider(userName, password)
-            );*/
 
-            return fetchRepository(reporitoryUrl, folder, userName, password);
-        }
-
-        try {
-            try (Git result = cmd.call()) {
-                return result.getRepository().getDirectory().getAbsolutePath();
-            }
-        } catch (TransportException te) {
-            if (te.getCause() != null && te.getCause().getCause() != null
-                    && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
-                return fetchRepository(reporitoryUrl, folder, userName, password);
-            } else {
-                throw te;
-            }
-        }
-
-    }
-
-    private String fetchRepository(String reporitoryUrl, String folder, String userName, String password) throws IOException, GitAPIException {
+    private RemoteOperationValue fetchRepository(final String reporitoryUrl, final String folder,
+                                                 final String userName, final String password) {
         try (Git git = Git.open(new File(folder))) {
             final StoredConfig config = git.getRepository().getConfig();
             config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "url", reporitoryUrl);
@@ -689,7 +721,9 @@ public class GitRepositoryService {
             FetchResult fetchResult = fetchCommand.call();
             checkout(git.getRepository(), fetchResult);
 
-            return git.getRepository().getDirectory().getAbsolutePath();
+            return new RemoteOperationValue(git.getRepository().getDirectory().getAbsolutePath());
+        } catch (Exception e) {
+            return processError(e);
         }
     }
 
