@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -666,32 +667,27 @@ public class GitRepositoryService {
     }
 
     private RemoteOperationValue processError(Exception e) {
-
         if (e instanceof TransportException) {
             if (e.getMessage().contains("Authentication is required")) {
+                log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.AUTH_REQUIRED, e.getMessage());
             } else if (e.getMessage().contains("not authorized")) {
+                log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.NOT_AUTHORIZED, e.getMessage());
             } else {
+                log.log(Level.WARNING, "Unexpected transport issue", e);
                 return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
             }
         } else if (e instanceof GitAPIException) {
+            log.log(Level.WARNING, "GitAPIException", e);
             return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
         }
+        log.log(Level.WARNING, "Unexpected", e);
         return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
 
     }
 
-    public String remoteRepositoryFetch() throws Exception {
 
-        try (Git git = new Git(repository)) {
-            FetchResult pullRez = git.fetch().call();
-            return pullRez.getMessages();
-        } catch (CheckoutConflictException conflictException) {
-            return conflictException.getMessage();
-        }
-
-    }
 
 
     public void stash() throws Exception {
@@ -702,7 +698,25 @@ public class GitRepositoryService {
 
     }
 
+    public RemoteOperationValue remoteRepositoryFetch(final String userName, final String password)  {
 
+        try (Git git = new Git(repository)) {
+
+            final FetchCommand fetchCommand = git.fetch();
+            if (userName != null) {
+                fetchCommand.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(userName, password)
+                );
+            }
+            FetchResult fetchResult = fetchCommand.call();
+            return new RemoteOperationValue("TODO fetch result more human readable or parsable" + fetchResult.toString());
+        } catch (CheckoutConflictException conflictException) {
+            return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
+        } catch (GitAPIException e) {
+            return processError(e);
+        }
+
+    }
 
     private RemoteOperationValue fetchRepository(final String reporitoryUrl, final String folder,
                                                  final String userName, final String password) {
@@ -829,7 +843,8 @@ public class GitRepositoryService {
     /**
      * Push to remote directory.
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
-     *
+     * Additional info  http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
+     * git push origin remotepush:r-remotepush
      * @param localBranch  local branch name
      * @param remoteBranch remote branch name
      * @param userName     optional login name
@@ -837,16 +852,9 @@ public class GitRepositoryService {
      * @return
      * @throws Exception in case of error
      */
-    public String remoteRepositoryPush(String localBranch, String remoteBranch,
-                                       String userName, String password,
-                                       boolean setOrigin) throws Exception {
-
-
-        http:
-//stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
-
+    public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
+                                       String userName, String password,  boolean setOrigin)  {
         try (Git git = new Git(repository)) {
-            // git push origin remotepush:r-remotepush
             RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
             PushCommand cmd = git.push().setRefSpecs(refSpec);
 
@@ -867,7 +875,9 @@ public class GitRepositoryService {
                         stringBuilder.append(rezInfo);
                     }
             );
-            return stringBuilder.toString();
+            return new RemoteOperationValue(stringBuilder.toString());
+        } catch (Exception e) {
+            return processError(e);
         }
 
     }
