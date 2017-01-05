@@ -4,6 +4,7 @@ import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.RemoteOperationValue;
 import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.SettingsServiceImpl;
 import com.az.gitember.ui.CloneDialog;
@@ -12,6 +13,7 @@ import com.az.gitember.ui.ScmItemCellFactory;
 import com.az.gitember.ui.TextAreaInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -30,6 +32,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
 /**
@@ -65,6 +68,9 @@ public class FXMLController implements Initializable {
 
     @FXML
     public ContextMenu localBranchListItemContextMenu;
+
+    @FXML
+    public ProgressBar operationProgressBar;
 
     @FXML
     private ListView localBranchesList;
@@ -132,7 +138,6 @@ public class FXMLController implements Initializable {
     }
 
 
-
     @Override
     @SuppressWarnings("unchecked")
     public void initialize(URL url, ResourceBundle rb) {
@@ -190,47 +195,80 @@ public class FXMLController implements Initializable {
 
     }
 
+    public void cloneHandler(ActionEvent actionEvent) {
+        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
+        dialog.setContentText("Please provide remote repository URL:");
+        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+
+        if (dialogResult.isPresent()) {
+            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                @Override
+                protected RemoteOperationValue call() throws Exception {
+                    operationProgressBar.setVisible(true);
+                    RemoteOperationValue res = remoteRepositoryOperation(
+                            () -> MainApp.getRepositoryService().cloneRepository(
+                                    dialogResult.get().getFirst(), dialogResult.get().getSecond(), login, pwd,
+                                    new DefaultProgressMonitor(d -> updateProgress(d, 1.0))
+                            )
+                    );
+                    return res;
+                }
+            };
+            operationProgressBar.progressProperty().bind(longTask.progressProperty());
+
+            longTask.setOnSucceeded(val -> {
+                Platform.runLater(
+                        () -> {
+                            RemoteOperationValue rval = longTask.getValue();
+                            switch (rval.getResult()) {
+                                case OK: {
+                                    openRepository((String) rval.getValue());
+                                    showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
+                                    break;
+                                }
+                                case ERROR: {
+                                    showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
+                                    break;
+                                }
+                            }
+                            operationProgressBar.progressProperty().unbind();
+                            operationProgressBar.setVisible(false);
+                        }
+                );
+            });
+
+            new Thread(longTask).start();
+
+        }
+    }
+
+    private void updateProgressBar(Double val) {
+        operationProgressBar.setVisible(!(val == 0 || val == 1));
+        operationProgressBar.setProgress(val.floatValue());
+    }
 
     public void fetchHandler(ActionEvent actionEvent) {
         remoteRepositoryOperation(
-                () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd)
+                () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd,
+                        new DefaultProgressMonitor(integer -> updateProgressBar(integer)))
         );
     }
 
     public void pullHandler(ActionEvent actionEvent) {
         remoteRepositoryOperation(
-                () -> MainApp.getRepositoryService().remoteRepositoryPull(login, pwd)
+                () -> MainApp.getRepositoryService().remoteRepositoryPull(login, pwd,
+                        new DefaultProgressMonitor(integer -> updateProgressBar(integer)))
         );
-    }
-
-
-    public void cloneHandler(ActionEvent actionEvent) {
-        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
-        dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
-        if (dialogResult.isPresent()) {
-            RemoteOperationValue res = remoteRepositoryOperation(
-                    () -> MainApp.getRepositoryService().cloneRepository(
-                            dialogResult.get().getFirst(),
-                            dialogResult.get().getSecond(),
-                            login,
-                            pwd
-                    )
-            );
-            openRepository((String) res.getValue());
-        }
     }
 
     private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
 
         RemoteOperationValue res = remoteRepositoryOperation(
                 () -> MainApp.getRepositoryService()
-                        .remoteRepositoryPush(localBranchName, remoteBranchName, login, pwd, setOrigin));
+                        .remoteRepositoryPush(localBranchName, remoteBranchName, login, pwd,
+                                setOrigin, new DefaultProgressMonitor(integer -> updateProgressBar(integer))));
 
     }
-
-
-
 
 
     public void exitHandler(ActionEvent actionEvent) {
@@ -413,36 +451,55 @@ public class FXMLController implements Initializable {
 
     /**
      * Process remote operations with failback
+     *
      * @param supplier remote repository command.
      * @return RemoteOperationValue which shall be interpret by caller
      */
+    Optional<Pair<String, String>> dialogResult = null;
+    CountDownLatch latch = new CountDownLatch(1);
+
     private RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
         boolean ok = false;
-        Optional<Pair<String, String>> dialogResult = null;
         RemoteOperationValue operationValue = null;
+
+
         while (!ok) {
             operationValue = supplier.get();
             switch (operationValue.getResult()) {
-                case OK: {
-                    ok = true;
-                    showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
-                    break;
-                }
-                case ERROR: {
-                    ok = true;
-                    showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
-                    break;
-                }
                 case AUTH_REQUIRED: {
-                    login = MainApp.getSettingsService().getLogin();
-                    dialogResult = new LoginDialog("Login", "Please, provide login and password", login, null)
-                            .showAndWait();
+                    Platform.runLater(() -> {
+                        System.out.println("### AUTH_REQUIRED Dialog " + Thread.currentThread().getName());
+                        login = MainApp.getSettingsService().getLogin();
+                        dialogResult = new LoginDialog("Login", "Please, provide login and password", login, null)
+                                .showAndWait();
+                        latch.countDown();
+                    });
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("### AUTH_REQUIRED " + Thread.currentThread().getName());
                     break;
                 }
                 case NOT_AUTHORIZED: {
-                    dialogResult = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
-                            .showAndWait();
+                    Platform.runLater(() -> {
+                        System.out.println("### NOT_AUTHORIZED dialog" + Thread.currentThread().getName());
+                        dialogResult = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
+                                .showAndWait();
+                        latch.countDown();
+                    });
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("### NOT_AUTHORIZED " + Thread.currentThread().getName());
                     break;
+                }
+                default: {
+                    //ATM we have ERROR and OK, which shall be handled
+                    ok = true;
                 }
             }
             if (dialogResult != null && dialogResult.isPresent()) {

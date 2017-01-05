@@ -614,9 +614,10 @@ public class GitRepositoryService {
      * @return
      * @throws Exception
      */
-    public RemoteOperationValue remoteRepositoryPull(final String userName, final String password) {
+    public RemoteOperationValue remoteRepositoryPull(final String userName, final String password,
+                                                     final ProgressMonitor progressMonitor) {
         try (Git git = new Git(repository)) {
-            PullCommand pullCommand = git.pull();
+            PullCommand pullCommand = git.pull().setProgressMonitor(progressMonitor);
             if (userName != null) {
                 pullCommand.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password));
@@ -637,14 +638,16 @@ public class GitRepositoryService {
      * @param userName      optional user name
      * @param password      optional password
      */
-    public RemoteOperationValue cloneRepository(String reporitoryUrl, String folder,
-                                  String userName, String password)  {
+    public RemoteOperationValue cloneRepository(final String reporitoryUrl, final String folder,
+                                  final String userName, final String password, final ProgressMonitor progressMonitor)  {
         final CloneCommand cmd = Git.cloneRepository()
                 .setURI(reporitoryUrl)
-                .setDirectory(new File(folder));
+                .setDirectory(new File(folder))
+                .setProgressMonitor(progressMonitor);
+
 
         if (userName != null) {
-            return fetchRepository(reporitoryUrl, folder, userName, password);
+            return fetchRepository(reporitoryUrl, folder, userName, password, progressMonitor);
         }
 
         try {
@@ -656,7 +659,7 @@ public class GitRepositoryService {
         } catch (TransportException te) {
             if (te.getCause() != null && te.getCause().getCause() != null
                     && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
-                return fetchRepository(reporitoryUrl, folder, userName, password);
+                return fetchRepository(reporitoryUrl, folder, userName, password, progressMonitor);
             } else {
                 return processError(te);
             }
@@ -688,21 +691,12 @@ public class GitRepositoryService {
     }
 
 
-
-
-    public void stash() throws Exception {
-
-        try (Git git = new Git(repository)) {
-            git.stashCreate().call();
-        }
-
-    }
-
-    public RemoteOperationValue remoteRepositoryFetch(final String userName, final String password)  {
+    public RemoteOperationValue remoteRepositoryFetch(final String userName, final String password,
+                                                      final ProgressMonitor progressMonitor)  {
 
         try (Git git = new Git(repository)) {
 
-            final FetchCommand fetchCommand = git.fetch();
+            final FetchCommand fetchCommand = git.fetch().setProgressMonitor(progressMonitor);
             if (userName != null) {
                 fetchCommand.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
@@ -719,7 +713,8 @@ public class GitRepositoryService {
     }
 
     private RemoteOperationValue fetchRepository(final String reporitoryUrl, final String folder,
-                                                 final String userName, final String password) {
+                                                 final String userName, final String password,
+                                                 final ProgressMonitor progressMonitor) {
         try (Git git = Git.open(new File(folder))) {
             final StoredConfig config = git.getRepository().getConfig();
             config.setString("remote", Constants.DEFAULT_REMOTE_NAME, "url", reporitoryUrl);
@@ -727,6 +722,8 @@ public class GitRepositoryService {
             config.setBoolean("http", null, "sslVerify", false);
             config.save();
             final FetchCommand fetchCommand = git.fetch().setRemote(Constants.DEFAULT_REMOTE_NAME);
+            fetchCommand.setProgressMonitor(progressMonitor);
+
             if (userName != null) {
                 fetchCommand.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
@@ -740,6 +737,16 @@ public class GitRepositoryService {
             return processError(e);
         }
     }
+
+
+    public void stash() throws Exception {
+
+        try (Git git = new Git(repository)) {
+            git.stashCreate().call();
+        }
+
+    }
+
 
     private void checkout(Repository clonedRepo, FetchResult result)
             throws MissingObjectException, IncorrectObjectTypeException,
@@ -853,10 +860,11 @@ public class GitRepositoryService {
      * @throws Exception in case of error
      */
     public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
-                                       String userName, String password,  boolean setOrigin)  {
+                                       String userName, String password,  boolean setOrigin,
+                                                     final ProgressMonitor progressMonitor)  {
         try (Git git = new Git(repository)) {
             RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
-            PushCommand cmd = git.push().setRefSpecs(refSpec);
+            PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
 
             if (setOrigin) {
                 cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);

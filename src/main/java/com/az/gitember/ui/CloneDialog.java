@@ -12,6 +12,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * Created by Igor_Azarny on 29 - Dec - 2016.
@@ -38,9 +39,11 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
         TextField repositoryURL = new TextField();
         repositoryURL.setPromptText("URL");
         repositoryURL.setMinWidth(400);
+        repositoryURL.setText("https://127.0.0.1/root/test.git");
 
         TextField folder = new TextField();
         folder.setPromptText("Folder");
+        folder.setText("C:\\Users\\Igor_Azarny\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\" + UUID.randomUUID().toString());
         HBox.setHgrow(folder, Priority.ALWAYS);
 
         Button selectFolder = new Button("...");
