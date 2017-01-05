@@ -242,33 +242,72 @@ public class FXMLController implements Initializable {
         }
     }
 
-    private void updateProgressBar(Double val) {
-        operationProgressBar.setVisible(!(val == 0 || val == 1));
-        operationProgressBar.setProgress(val.floatValue());
-    }
-
     public void fetchHandler(ActionEvent actionEvent) {
-        remoteRepositoryOperation(
-                () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd,
-                        new DefaultProgressMonitor(integer -> updateProgressBar(integer)))
-        );
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                );
+            }
+        };
+        setDefaultSucceedHandler(longTask);
+        new Thread(longTask).start();
     }
 
     public void pullHandler(ActionEvent actionEvent) {
-        remoteRepositoryOperation(
-                () -> MainApp.getRepositoryService().remoteRepositoryPull(login, pwd,
-                        new DefaultProgressMonitor(integer -> updateProgressBar(integer)))
-        );
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> MainApp.getRepositoryService().remoteRepositoryPull(login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                );
+            }
+        };
+        setDefaultSucceedHandler(longTask);
+        new Thread(longTask).start();
     }
 
     private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
-
-        RemoteOperationValue res = remoteRepositoryOperation(
-                () -> MainApp.getRepositoryService()
-                        .remoteRepositoryPush(localBranchName, remoteBranchName, login, pwd,
-                                setOrigin, new DefaultProgressMonitor(integer -> updateProgressBar(integer))));
-
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> MainApp.getRepositoryService().remoteRepositoryPush(localBranchName, remoteBranchName, login, pwd, setOrigin, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                );
+            }
+        };
+        setDefaultSucceedHandler(longTask);
+        new Thread(longTask).start();
     }
+
+    private void setDefaultSucceedHandler(Task<RemoteOperationValue> longTask) {
+
+        operationProgressBar.progressProperty().bind(longTask.progressProperty());
+        operationProgressBar.setVisible(true);
+
+        longTask.setOnSucceeded(val -> {
+            Platform.runLater(
+                    () -> {
+                        RemoteOperationValue rval = longTask.getValue();
+                        switch (rval.getResult()) {
+                            case OK: {
+                                showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
+                                break;
+                            }
+                            case ERROR: {
+                                showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
+                                break;
+                            }
+                        }
+                        operationProgressBar.progressProperty().unbind();
+                        operationProgressBar.setVisible(false);
+                    }
+            );
+        });
+    }
+
+
 
 
     public void exitHandler(ActionEvent actionEvent) {
