@@ -692,6 +692,10 @@ public class FXMLController implements Initializable {
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
         scmBranch.getShortName();
         scmBranch.getRemoteName();
+
+        //http://stackoverflow.com/questions/16319807/determine-if-a-branch-is-remote-or-local-using-jgit
+        //http://stackoverflow.com/questions/12927163/jgit-checkout-a-remote-branch
+
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
