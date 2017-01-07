@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<DialogPane prefHeight="409.0" prefWidth="752.0" xmlns="http://javafx.com/javafx/8.0.65"
+
+            xmlns:fx="http://javafx.com/fxml/1">
+    <content>
+        <BorderPane prefHeight="200.0" prefWidth="200.0">
+            <center>
+                <TabPane prefHeight="200.0" prefWidth="200.0" side="LEFT" tabClosingPolicy="UNAVAILABLE"
+                         BorderPane.alignment="CENTER">
+                    <tabs>
+                        <Tab text="Gitember">
+                            <content>
+                                <GridPane>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="ALWAYS"/>
+                                    </rowConstraints>
+                                    <children>
+                                        <CheckBox fx:id="rememberPasswords" mnemonicParsing="false"
+                                                  text="Remember my credentials for repositories"
+                                                  GridPane.columnSpan="2"/>
+                                        <CheckBox fx:id="useProxy" mnemonicParsing="false" text="Use HTTP proxy" GridPane.columnSpan="2"
+                                                  GridPane.rowIndex="2"/>
+                                        <Label  text="Server :" GridPane.rowIndex="3"/>
+                                        <Label  text="Port :" GridPane.rowIndex="4"/>
+                                        <TextField fx:id="proxyServer" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                                        <TextField fx:id="proxyPort" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                        <CheckBox fx:id="useProxyAuth" mnemonicParsing="false" text="HTTP Proxy authentication"
+                                                  GridPane.columnSpan="2" GridPane.rowIndex="5"/>
+                                        <Label  text="Username :" GridPane.rowIndex="6"/>
+                                        <Label  text="Password :" GridPane.rowIndex="7"/>
+                                        <TextField fx:id="proxyUserName" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                                        <PasswordField fx:id="proxyPassword" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                                        <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
+                                    </padding>
+                                </GridPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Git general">
+                            <content>
+                                <GridPane>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints/>
+                                        <RowConstraints minHeight="10.0"  prefHeight="30.0"  vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="ALWAYS"/>
+                                        <RowConstraints/>
+                                    </rowConstraints>
+                                    <children>
+                                        <Label text="Username :" GridPane.rowIndex="0"/>
+                                        <Label text="EMail :" GridPane.rowIndex="1"/>
+                                        <TextField fx:id="authorName" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                        <TextField fx:id="authorEmail" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                        <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="2"/>
+                                        <CheckBox fx:id="overwriteAuthorWithCommiter" mnemonicParsing="false" text="Always overwrite author with committer"
+                                                  GridPane.columnSpan="1"
+                                                  GridPane.rowIndex="3"/>
+
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
+                                    </padding>
+                                </GridPane>
+
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </center>
+
+        </BorderPane>
+    </content>
+
+    <header>
+        <Label text="Settings">
+            <opaqueInsets>
+                <Insets/>
+            </opaqueInsets>
+        </Label>
+    </header>
+
+</DialogPane>

@@ -25,7 +25,7 @@
     <left>
         <Accordion prefWidth="260.0" BorderPane.alignment="CENTER">
             <panes>
-                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace">
+                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace" disable="true">
                     <content>
                         <VBox layoutX="79.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <children>
@@ -50,18 +50,11 @@
                                         <Label text="" />
                                     </children>
                                 </HBox>
-                                <HBox>
-                                    <children>
-                                        <Hyperlink text="Settings" />
-                                        <Pane HBox.hgrow="ALWAYS" />
-                                        <Label text="" />
-                                    </children>
-                                </HBox>
                             </children>
                         </VBox>
                     </content>
                 </TitledPane>
-                <TitledPane animated="false" text="Branches">
+                <TitledPane fx:id="branchesTitlePane" animated="false" text="Branches" disable="true">
                     <content>
                         <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <contextMenu>
@@ -80,12 +73,12 @@
                         </ListView>
                     </content>
                 </TitledPane>
-                <TitledPane animated="false" text="Tags">
+                <TitledPane fx:id="tagsTitlePane"  animated="false" text="Tags"  disable="true">
                     <content>
                         <ListView fx:id="tagList" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </content>
                 </TitledPane>
-                <TitledPane animated="false" text="Remotes">
+                <TitledPane fx:id="remotesTitlePane"  animated="false" text="Remotes"  disable="true">
                     <content>
                         <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </content>
@@ -102,48 +95,47 @@
                         <Menu mnemonicParsing="false" text="File">
                             <items>
                                 <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..." />
-                                <SeparatorMenuItem mnemonicParsing="false" />
                                 <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Open recent">
                                     <items>
                                     </items>
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="Open shell" />
-                                <MenuItem text="Open terminal" />
+                                <MenuItem text="GUI shell" onAction="#openShellActionHandler" />
+                                <MenuItem text="Terminal" onAction="#openGitTerminalActionHandler" fx:id="openGitTerminalMenuItem" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="Settings ..." />
+                                <MenuItem text="Settings ..." onAction="#settingsActionHandler" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem onAction="#exitActionHandler" text="Exit" />
+                                <MenuItem text="Exit" onAction="#exitActionHandler" />
                             </items>
                         </Menu>
                         <Menu text="Repository">
                             <items>
                                 <MenuItem onAction="#cloneHandler" text="Clone ..." />
                                 <MenuItem onAction="#createRepositoryHandler" text="Create ..." />
-                                <MenuItem disable="true" text="Fetch" />
-                                <MenuItem disable="true" text="Fetch all" />
-                                <MenuItem disable="true" text="Pull" />
-                                <MenuItem disable="true" text="Push" />
-                                <MenuItem disable="true" text="Push all" />
+                                <MenuItem fx:id="fetchMenuItem" disable="true" text="Fetch" />
+                                <MenuItem fx:id="fetchAllMenuItem" disable="true" text="Fetch all" onAction="#fetchHandlerAll"/>
+                                <MenuItem fx:id="pullMenuItem" disable="true" text="Pull" />
+                                <MenuItem fx:id="pushMenuItem" disable="true" text="Push" />
+                                <MenuItem fx:id="pushAllMenuItem" disable="true" text="Push all" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="Crete statistic report ..." />
+                                <MenuItem fx:id="statReportMenuItem" disable="true" text="Crete statistic report ..." />
                             </items>
                         </Menu>
                         <Menu text="Working copy">
                             <items>
-                                <MenuItem disable="true" text="Checkout" />
-                                <MenuItem disable="true" text="Merge" />
-                                <MenuItem disable="true" text="Rebase" />
-                                <MenuItem disable="true" text="Stash" />
-                                <MenuItem disable="true" text="Apply stash" />
-                                <MenuItem disable="true" text="Commit" />
-                                <MenuItem disable="true" text="Reset version to ... " />
+                                <MenuItem fx:id="checkoutMenuItem" disable="true" text="Checkout" />
+                                <MenuItem fx:id="mergeMenuItem" disable="true" text="Merge" />
+                                <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase" />
+                                <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..." />
+                                <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..." />
+                                <MenuItem fx:id="commitMenuItem" disable="true" text="Commit" />
+                                <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... " />
 
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem text="Check for update ..." />
+                                <MenuItem text="Check for update" />
                                 <MenuItem text="Create bug report" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem text="About" />

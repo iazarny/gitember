@@ -8,6 +8,8 @@ import javafx.application.Application;
 
 import static javafx.application.Application.launch;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -18,25 +20,32 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
 
     private static Stage mainStage = null;
-    private static String currentRepositoryPath;
+
+    public static StringProperty currentRepositoryPath = new SimpleStringProperty();
+    public static StringProperty remoteUrl = new SimpleStringProperty();
+
     private static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService;
+
+
 
     public static Stage getMainStage() {
         return mainStage;
     }
 
     public static void setCurrentRepositoryPath(String currentRepositoryPath) {
-        MainApp.currentRepositoryPath = currentRepositoryPath;
+        MainApp.currentRepositoryPath.setValue(currentRepositoryPath);
     }
 
-    public static String getCurrentRepositoryPath() {
-        return currentRepositoryPath;
-    }
 
     public static String getCurrentRepositoryPathWOGit() {
-        return currentRepositoryPath.substring(0, currentRepositoryPath.indexOf(Const.GIT_FOLDER) - 1);
+        if(currentRepositoryPath != null) {
+            return currentRepositoryPath.getValue().substring(
+                    0,
+                    currentRepositoryPath.getValue().indexOf(Const.GIT_FOLDER) - 1);
+        }
+        return null;
     }
 
     public static GitRepositoryService getRepositoryService() {
@@ -45,6 +54,7 @@ public class MainApp extends Application {
 
     public static void setRepositoryService(GitRepositoryService repositoryService) {
         MainApp.repositoryService = repositoryService;
+        MainApp.remoteUrl.setValue(repositoryService.getRemoteUrl());
     }
 
     public static GitemberServiceImpl getGitemberService() {

@@ -81,10 +81,14 @@ public class WorkingCopyController implements Initializable {
                 || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED);
     }
 
-    public void open() throws Exception {
-        workingCopyTableView.setItems(
-                FXCollections.observableArrayList(
-                        MainApp.getRepositoryService().getStatuses()));
+    public void open()  {
+        try {
+            workingCopyTableView.setItems(
+                    FXCollections.observableArrayList(
+                            MainApp.getRepositoryService().getStatuses()));
+        } catch (Exception e) {
+            e.printStackTrace(); //todo alert & log
+        }
     }
 
 

@@ -1,33 +1,42 @@
 package com.az.gitember.service;
 
-import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
+import com.az.gitember.misc.Settings;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  * Created by Igor_Azarny on 18 Dec 2016.
  */
 public class SettingsServiceImpl {
 
-    final static String PROP_FOLDER = ".gitember";
-    final static String PROP_FILE_NAME = "gitember.properties";
-    final static String KEY_LAST_PROJECT = "lastProject";
-    final static String KEY_HISTORY = "history";
-    final static String KEY_LOGIN = "login";
-    final static String SYSTEM_PROP_USER_HOME = "user.home";
+    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final static Logger log = Logger.getLogger(SettingsServiceImpl.class.getName());
+
+    private final static String PROP_FOLDER = ".gitember";
+    private final static String PROP_FILE_NAME = "gitember.json";
+    private final static String SYSTEM_PROP_USER_HOME = "user.home";
+    private final static String SYSTEM_PROP_OS_NAME = "os.name";
+
+    private final static String OS = System.getProperty(SYSTEM_PROP_OS_NAME).toLowerCase();
+
 
     /**
      * Get stored login name.
      *
      * @return login name if was saved before
      */
-    public String getLogin() {
-        return read().getProperty(KEY_LOGIN);
+    public String getLastLoginName() {
+        return read().getLastLoginName();
     }
 
     /**
@@ -35,11 +44,12 @@ public class SettingsServiceImpl {
      *
      * @param login given login name
      */
-    public void saveLogin(final String login) {
-        Properties properties = read();
-        properties.put(KEY_LOGIN, login);
-        save(properties);
+    public void saveLastLoginName(final String login) {
+        Settings settings = read();
+        settings.setLastLoginName(login);
+        save(settings);
     }
+
 
     /**
      * Get absolute path to last project.
@@ -47,43 +57,25 @@ public class SettingsServiceImpl {
      * @return path to last project or null if no last projects.
      */
     public String getLastProject() {
-
-        Properties properties = read();
-
-        if (properties.getProperty(KEY_LAST_PROJECT) != null) {
-            return properties.getProperty(properties.getProperty(KEY_LAST_PROJECT));
-        }
-
-        return null;
-
+        return read().getLastProject();
     }
 
     /**
-     * Save properties.
+     * Save given repository as last open repo.
      *
-     * @param properties given properties.
+     * @param absPath given absolute path to repository
      */
-    private void save(final Properties properties) {
-        try (OutputStream os = new FileOutputStream(getAbsolutePathToPropertyFile())) {
-            properties.store(os, "Gitember settings " + new Date());
-        } catch (IOException e) {
-        }
+    public void saveLastProject(final String absPath) {
+        Settings settings = read();
+        settings.setLastProject(absPath);
+        Set<String> proj = new HashSet<>(settings.getProjects());
+        proj.add(absPath);
+        settings.getProjects().clear();
+        settings.getProjects().addAll(proj);
+        save(settings);
     }
 
 
-    /**
-     * Read properties from disk.
-     *
-     * @return
-     */
-    private Properties read() {
-        Properties prop = new Properties();
-        try (InputStream is = new FileInputStream(getAbsolutePathToPropertyFile())) {
-            prop.load(is);
-        } catch (IOException e) {
-        }
-        return prop;
-    }
 
     /**
      * Get home directory.
@@ -110,44 +102,86 @@ public class SettingsServiceImpl {
      * Get list of opened repositories.
      *
      * @return list of repo
-     * @throws IOException
      */
-    public List<Pair<String, String>> getRecentProjects() throws IOException {
+    public List<Pair<String, String>> getRecentProjects() {
         List<Pair<String, String>> pairs = new ArrayList<>();
-        Properties props = read();
+        Settings props = read();
         Set<String> keyToRemove = new HashSet<>();
-        for (Object key : props.keySet()) {
-            final String folder = ((String) props.get(key));
-            if (folder.endsWith(Const.GIT_FOLDER)) {
-                Path path = Paths.get(folder);
-                if (Files.exists(path)) {
-                    pairs.add(
-                            new Pair<>(
-                                    (String) key,
-                                    (String) props.get(key)
-                            )
-                    );
-                } else {
-                    keyToRemove.add(key.toString());
-                }
+        for (String folder : props.getProjects()) {
+            Path path = Paths.get(folder);
+            if (Files.exists(path)) {
+                String shortName =  new File(new File(folder).getParent()).getName();
+                pairs.add(new Pair<>(shortName, folder));
+            } else {
+                keyToRemove.add(folder);
             }
         }
-        keyToRemove.stream().forEach(k -> props.remove(k));
+        keyToRemove.stream().forEach(k -> props.getProjects().remove(k));
         save(props);
         Collections.sort(pairs, (o1, o2) -> o1.getFirst().compareTo(o2.getFirst()));
         return pairs;
     }
 
-    /**
-     * Save given repository as last open repo.
-     *
-     * @param absPath given absolute path to repository
-     */
-    public void saveRepository(final String absPath) {
-        String shortName = new File(new File(absPath).getParent()).getName();
-        Properties properties = read();
-        properties.put(shortName, absPath);
-        properties.put(KEY_LAST_PROJECT, shortName);
-        save(properties);
+    public static boolean isWindows() {
+        return (OS.indexOf("win") >= 0);
     }
+
+    public static boolean isMac() {
+        return (OS.indexOf("mac") >= 0);
+    }
+
+    public static boolean isUnix() {
+        return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0);
+    }
+
+    public static boolean isSolaris() {
+        return (OS.indexOf("sunos") >= 0);
+    }
+
+    public static String getOS() {
+        if (isWindows()) {
+            return "win";
+        } else if (isMac()) {
+            return "osx";
+        } else if (isUnix()) {
+            return "uni";
+        } else if (isSolaris()) {
+            return "sol";
+        } else {
+            return "err";
+        }
+    }
+
+
+    /**
+     * Save properties.
+     *
+     * @param settings given properties.
+     */
+    public void save(final Settings settings) {
+        try {
+            objectMapper.writerFor(Settings.class).writeValue(
+                    new File(getAbsolutePathToPropertyFile()),
+                    settings
+            );
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Cannot save settings", e);
+        }
+    }
+
+
+    /**
+     * Read properties from disk.
+     *
+     * @return
+     */
+    public Settings read() {
+        try {
+            File file = new File(getAbsolutePathToPropertyFile());
+            return objectMapper.readValue(file, Settings.class);
+        } catch (IOException e) {
+            return new Settings();
+        }
+    }
+
 }

@@ -1,17 +1,11 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.Const;
-import com.az.gitember.misc.Pair;
-import com.az.gitember.misc.RemoteOperationValue;
-import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.misc.*;
 import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
-import com.az.gitember.service.SettingsServiceImpl;
-import com.az.gitember.ui.CloneDialog;
-import com.az.gitember.ui.LoginDialog;
-import com.az.gitember.ui.ScmItemCellFactory;
-import com.az.gitember.ui.TextAreaInputDialog;
+import com.az.gitember.ui.*;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -19,21 +13,30 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import org.apache.commons.lang3.ObjectUtils;
 import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
-import org.eclipse.jgit.api.errors.TransportException;
 
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -41,36 +44,43 @@ import java.util.function.Supplier;
 
 public class FXMLController implements Initializable {
 
+    private final Logger log = Logger.getLogger(FXMLController.class.getName());
 
-    @FXML
     public Button cloneBtn;
-
-    @FXML
     public Button fetchBtn;
-
-    @FXML
     public Button pullBtn;
-
-    @FXML
     public Button pushBtn;
-
-    @FXML
     public Button openBtn;
-
-    @FXML
     public Menu openRecentMenuItem;
 
-    @FXML
     public TitledPane workSpaceTitlePane;
+    public TitledPane branchesTitlePane;
+    public TitledPane tagsTitlePane;
+    public TitledPane remotesTitlePane;
 
-    @FXML
     public MenuItem pushToRemoteMenuItem;
 
-    @FXML
+    
     public ContextMenu localBranchListItemContextMenu;
 
-    @FXML
+    
     public ProgressBar operationProgressBar;
+
+    
+    public MenuItem openGitTerminalMenuItem;
+    public MenuItem fetchMenuItem;
+    public MenuItem fetchAllMenuItem;
+    public MenuItem pullMenuItem;
+    public MenuItem pushMenuItem;
+    public MenuItem pushAllMenuItem;
+    public MenuItem statReportMenuItem;
+    public MenuItem checkoutMenuItem;
+    public MenuItem mergeMenuItem;
+    public MenuItem rebaseMenuItem;
+    public MenuItem stashMenuItem;
+    public MenuItem applyStashMenuItem;
+    public MenuItem commitMenuItem;
+    public MenuItem resetVersionMenuItem;
 
     @FXML
     private ListView localBranchesList;
@@ -85,17 +95,18 @@ public class FXMLController implements Initializable {
     private AnchorPane hostPanel;
 
     private String login = null;
-
     private String pwd = null;
+    private Optional<Pair<String, String>> uiInputResultToService;
+    private CountDownLatch uiInputLatchToService;
 
 
-    @FXML
+    
     public void exitActionHandler(ActionEvent actionEvent) {
         Platform.exit();
     }
 
 
-    @FXML
+    
     public void openHandler(ActionEvent actionEvent) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         if (MainApp.getSettingsService().getLastProject() != null) {
@@ -119,15 +130,12 @@ public class FXMLController implements Initializable {
         try {
             MainApp.setCurrentRepositoryPath(absPath);
             MainApp.setRepositoryService(new GitRepositoryService(absPath));
-            MainApp.getSettingsService().saveRepository(absPath);
+            MainApp.getSettingsService().saveLastProject(absPath);
 
             localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
             remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
             tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
 
-            this.pullBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
-            this.fetchBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
-            this.pushBtn.setDisable(MainApp.getRepositoryService().getRemoteUrl() == null);
 
             String head = MainApp.getRepositoryService().getHead();
             MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
@@ -147,39 +155,79 @@ public class FXMLController implements Initializable {
         localBranchesList.setCellFactory(scmItemCellFactory);
         tagList.setCellFactory(scmItemCellFactory);
 
-        try {
+        openRecentMenuItem.getItems().removeAll(openRecentMenuItem.getItems());
+        MainApp.getSettingsService().getRecentProjects().stream().forEach(
+                o -> {
+                    MenuItem mi = new MenuItem(o.getFirst());
+                    mi.setUserData(o.getSecond());
+                    mi.setOnAction(
+                            event -> {
+                                MainApp.getMainStage().getScene().setCursor(Cursor.WAIT);
+                                Platform.runLater(() -> {
+                                    openRepository(o.getSecond());
+                                    openWorkingCopyHandler(null);
+                                    MainApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
 
-            openRecentMenuItem.getItems().removeAll(openRecentMenuItem.getItems());
-            MainApp.getSettingsService().getRecentProjects().stream().forEach(
-                    o -> {
-                        MenuItem mi = new MenuItem(o.getFirst());
-                        mi.setUserData(o.getSecond());
-                        mi.setOnAction(
-                                event -> {
-                                    try {
-                                        openRepository(o.getSecond());
-                                        openWorkingCopyHandler(null);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                        );
-                        openRecentMenuItem.getItems().add(mi);
-                    }
+                                });
+                            }
+                    );
+                    openRecentMenuItem.getItems().add(mi);
+                }
+        );
+        openRecentMenuItem.setDisable(
+                openRecentMenuItem.getItems().size() < 1
+        );
 
-            );
-            openRecentMenuItem.setDisable(
-                    openRecentMenuItem.getItems().size() < 1
-            );
+        openGitTerminalMenuItem.setVisible(
+                MainApp.getSettingsService().isWindows()
+        );
 
-        } catch (Exception e) {
 
-        }
+        MainApp.remoteUrl.addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean disableRemoteOps = newValue == null;
+                    pullBtn.setDisable(disableRemoteOps);
+                    fetchBtn.setDisable(disableRemoteOps);
+                    pushBtn.setDisable(disableRemoteOps);
+
+                    fetchMenuItem.setDisable(disableRemoteOps);
+                    fetchAllMenuItem.setDisable(disableRemoteOps);
+                    pullMenuItem.setDisable(disableRemoteOps);
+                    pushMenuItem.setDisable(disableRemoteOps);
+                    pushAllMenuItem.setDisable(disableRemoteOps);
+                    statReportMenuItem.setDisable(disableRemoteOps);
+
+                    remotesTitlePane.setDisable(disableRemoteOps);
+
+
+                }
+        );
+
+        MainApp.currentRepositoryPath.addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean disable = newValue == null;
+                    statReportMenuItem.setDisable(disable);
+                    checkoutMenuItem.setDisable(disable);
+                    mergeMenuItem.setDisable(disable);
+                    rebaseMenuItem.setDisable(disable);
+
+                    stashMenuItem.setDisable(disable);
+                    applyStashMenuItem.setDisable(disable);
+                    commitMenuItem.setDisable(disable);
+                    resetVersionMenuItem.setDisable(disable);
+
+                    branchesTitlePane.setDisable(disable);
+                    tagsTitlePane.setDisable(disable);
+                    workSpaceTitlePane.setDisable(disable);
+                }
+        );
+
+
 
 
     }
 
-    @FXML
+    
     public void branchesListMouseClicked(Event event) throws Exception {
         ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
 
@@ -195,65 +243,9 @@ public class FXMLController implements Initializable {
 
     }
 
-    public void cloneHandler(ActionEvent actionEvent) {
-        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
-        dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
 
-        if (dialogResult.isPresent()) {
-            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-                @Override
-                protected RemoteOperationValue call() throws Exception {
-                    operationProgressBar.setVisible(true);
-                    RemoteOperationValue res = remoteRepositoryOperation(
-                            () -> MainApp.getRepositoryService().cloneRepository(
-                                    dialogResult.get().getFirst(), dialogResult.get().getSecond(), login, pwd,
-                                    new DefaultProgressMonitor(d -> updateProgress(d, 1.0))
-                            )
-                    );
-                    return res;
-                }
-            };
-            operationProgressBar.progressProperty().bind(longTask.progressProperty());
 
-            longTask.setOnSucceeded(val -> {
-                Platform.runLater(
-                        () -> {
-                            RemoteOperationValue rval = longTask.getValue();
-                            switch (rval.getResult()) {
-                                case OK: {
-                                    openRepository((String) rval.getValue());
-                                    showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
-                                    break;
-                                }
-                                case ERROR: {
-                                    showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
-                                    break;
-                                }
-                            }
-                            operationProgressBar.progressProperty().unbind();
-                            operationProgressBar.setVisible(false);
-                        }
-                );
-            });
 
-            new Thread(longTask).start();
-
-        }
-    }
-
-    public void fetchHandler(ActionEvent actionEvent) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
-                );
-            }
-        };
-        setDefaultSucceedHandler(longTask);
-        new Thread(longTask).start();
-    }
 
     public void pullHandler(ActionEvent actionEvent) {
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
@@ -264,7 +256,7 @@ public class FXMLController implements Initializable {
                 );
             }
         };
-        setDefaultSucceedHandler(longTask);
+        prepareLongTask(longTask, null, null);
         new Thread(longTask).start();
     }
 
@@ -277,14 +269,18 @@ public class FXMLController implements Initializable {
                 );
             }
         };
-        setDefaultSucceedHandler(longTask);
+        prepareLongTask(longTask, null, null);
         new Thread(longTask).start();
     }
 
-    private void setDefaultSucceedHandler(Task<RemoteOperationValue> longTask) {
+    private void prepareLongTask(final Task<RemoteOperationValue> longTask,
+                                 final Consumer<RemoteOperationValue> onOk,
+                                 final Consumer<RemoteOperationValue> onError) {
+
 
         operationProgressBar.progressProperty().bind(longTask.progressProperty());
         operationProgressBar.setVisible(true);
+        MainApp.getMainStage().getScene().setCursor(Cursor.WAIT);
 
         longTask.setOnSucceeded(val -> {
             Platform.runLater(
@@ -292,10 +288,18 @@ public class FXMLController implements Initializable {
                         RemoteOperationValue rval = longTask.getValue();
                         switch (rval.getResult()) {
                             case OK: {
+                                if (onOk != null) {
+                                    onOk.accept(rval);
+                                }
+                                MainApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                                 showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
                                 break;
                             }
                             case ERROR: {
+                                if (onError != null) {
+                                    onError.accept(rval);
+                                }
+                                MainApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                                 showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
                                 break;
                             }
@@ -308,13 +312,11 @@ public class FXMLController implements Initializable {
     }
 
 
-
-
     public void exitHandler(ActionEvent actionEvent) {
         Platform.exit();
     }
 
-    public void openWorkingCopyHandler(ActionEvent actionEvent) throws Exception {
+    public void openWorkingCopyHandler(ActionEvent actionEvent) {
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
             final Parent workCopyView = fxmlLoader.load(is);
@@ -322,29 +324,13 @@ public class FXMLController implements Initializable {
             workingCopyController.open();
             hostPanel.getChildren().removeAll(hostPanel.getChildren());
             hostPanel.getChildren().add(workCopyView);
+        } catch (IOException ioe) {
+            log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
         }
 
     }
 
-    /**
-     * Create new git repository.
-     *
-     * @param actionEvent action event
-     */
-    public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(MainApp.getSettingsService().getUserHomeFolder()));
-        final File selectedDirectory =
-                directoryChooser.showDialog(MainApp.getMainStage());
-        if (selectedDirectory != null) {
-            String absPath = selectedDirectory.getAbsolutePath();
-            MainApp.getRepositoryService().createRepository(absPath);
 
-            openRepository(absPath + File.separator + Const.GIT_FOLDER);
-            openWorkingCopyHandler(null);
-        }
-
-    }
 
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -494,27 +480,26 @@ public class FXMLController implements Initializable {
      * @param supplier remote repository command.
      * @return RemoteOperationValue which shall be interpret by caller
      */
-    Optional<Pair<String, String>> dialogResult = null;
-    CountDownLatch latch = new CountDownLatch(1);
-
     private RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
         boolean ok = false;
         RemoteOperationValue operationValue = null;
 
 
         while (!ok) {
+            uiInputResultToService = null;
             operationValue = supplier.get();
             switch (operationValue.getResult()) {
                 case AUTH_REQUIRED: {
+                    uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
                         System.out.println("### AUTH_REQUIRED Dialog " + Thread.currentThread().getName());
-                        login = MainApp.getSettingsService().getLogin();
-                        dialogResult = new LoginDialog("Login", "Please, provide login and password", login, null)
+                        login = MainApp.getSettingsService().getLastLoginName();
+                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, null)
                                 .showAndWait();
-                        latch.countDown();
+                        uiInputLatchToService.countDown();
                     });
                     try {
-                        latch.await();
+                        uiInputLatchToService.await();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -522,14 +507,15 @@ public class FXMLController implements Initializable {
                     break;
                 }
                 case NOT_AUTHORIZED: {
+                    uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
                         System.out.println("### NOT_AUTHORIZED dialog" + Thread.currentThread().getName());
-                        dialogResult = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
+                        uiInputResultToService = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
                                 .showAndWait();
-                        latch.countDown();
+                        uiInputLatchToService.countDown();
                     });
                     try {
-                        latch.await();
+                        uiInputLatchToService.await();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -541,15 +527,15 @@ public class FXMLController implements Initializable {
                     ok = true;
                 }
             }
-            if (dialogResult != null && dialogResult.isPresent()) {
-                login = dialogResult.get().getFirst();
-                pwd = dialogResult.get().getSecond();
-                MainApp.getSettingsService().saveLogin(login);
+            if (uiInputResultToService != null && uiInputResultToService.isPresent()) {
+                login = uiInputResultToService.get().getFirst();
+                pwd = uiInputResultToService.get().getSecond();
+                MainApp.getSettingsService().saveLastLoginName(login);
                 continue;
             } else {
                 ok = true;
             }
-            dialogResult = null;
+            uiInputResultToService = null;
         }
 
         login = pwd = null;
@@ -568,4 +554,141 @@ public class FXMLController implements Initializable {
         alert.showAndWait();
     }
 
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //-----------------------------    Menu file handlers -----------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+
+    /**
+     * Open GUI shell in home or in repository folder, if it was opened.
+     *
+     * @param actionEvent
+     */
+    public void openShellActionHandler(ActionEvent actionEvent) {
+        if (Desktop.isDesktopSupported()) {
+            new Thread(() -> {
+                try {
+                    Desktop.getDesktop().browse(
+                            Paths.get(
+                                    ObjectUtils.defaultIfNull(
+                                            MainApp.getCurrentRepositoryPathWOGit(),
+                                            MainApp.getSettingsService().getUserHomeFolder()
+                                    )
+                            ).toUri()
+                    );
+                } catch (Exception e) {
+                    String msg = "Cannot open GUI shell";
+                    log.log(Level.WARNING, msg, e);
+                    showResult(msg, Alert.AlertType.ERROR);
+                }
+            }).start();
+        }
+
+    }
+
+    public void openGitTerminalActionHandler(ActionEvent actionEvent) {
+        try {
+            Runtime rt = Runtime.getRuntime();
+            Process process = rt.exec(
+                    new String[]{"cmd", "/c", "start"/*,  "\"C:\\Program Files\\Git\\bin\\sh.exe\" --login"*/},
+                    null,
+                    new File(
+                            ObjectUtils.defaultIfNull(
+                                    MainApp.getCurrentRepositoryPathWOGit(),
+                                    MainApp.getSettingsService().getUserHomeFolder()
+                            )
+                    )
+            );
+        } catch (Exception e) {
+            String msg = "Cannot open GIT terminal";
+            log.log(Level.WARNING, msg, e);
+            showResult(msg, Alert.AlertType.ERROR);
+        }
+    }
+
+    /**
+     * Open settings dialog .
+     *
+     * @param actionEvent
+     */
+    public void settingsActionHandler(ActionEvent actionEvent) {
+
+        Settings settings = MainApp.getSettingsService().read();
+        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
+        Optional<SettingsModel> model = settingsDialog.showAndWait();
+        if (model.isPresent()) {
+            MainApp.getSettingsService().save(model.get().createSettings());
+        }
+
+    }
+
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //-----------------------------    Repository menu handlers -----------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+
+    /**
+     * Clone and open remote repository.
+     * @param actionEvent
+     */
+    public void cloneHandler(ActionEvent actionEvent) {
+        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
+        dialog.setContentText("Please provide remote repository URL:");
+        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
+            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                @Override
+                protected RemoteOperationValue call() throws Exception {
+                    return remoteRepositoryOperation(
+                            () -> MainApp.getRepositoryService().cloneRepository(dialogResult.get().getFirst(), dialogResult.get().getSecond(), login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                    );
+                }
+            };
+            prepareLongTask(longTask,
+                    remoteOperationValue -> {
+                        openRepository((String) remoteOperationValue.getValue());
+                        openWorkingCopyHandler(null);
+                    }, null);
+            new Thread(longTask).start();
+        }
+    }
+
+    /**
+     * Create new git repository.
+     *
+     * @param actionEvent action event
+     */
+    public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setInitialDirectory(new File(MainApp.getSettingsService().getUserHomeFolder()));
+        final File selectedDirectory =
+                directoryChooser.showDialog(MainApp.getMainStage());
+        if (selectedDirectory != null) {
+            String absPath = selectedDirectory.getAbsolutePath();
+            MainApp.getRepositoryService().createRepository(absPath);
+
+            openRepository(absPath + File.separator + Const.GIT_FOLDER);
+            openWorkingCopyHandler(null);
+        }
+
+    }
+
+    public void fetchHandlerAll(ActionEvent actionEvent) {
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                );
+            }
+        };
+        prepareLongTask(longTask, null, null);
+        new Thread(longTask).start();
+    }
+
+    public void fetchHandler(ActionEvent actionEvent) {
+
+    }
 }

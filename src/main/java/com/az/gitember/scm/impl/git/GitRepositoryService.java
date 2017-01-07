@@ -599,7 +599,7 @@ public class GitRepositoryService {
                     StandardOpenOption.CREATE);
             Files.write(
                     Paths.get(absPath + File.separator + ".gitignore"),
-                    readmeInitialContent.getBytes(),
+                    "".getBytes(),
                     StandardOpenOption.CREATE);
         }
 
@@ -691,12 +691,17 @@ public class GitRepositoryService {
     }
 
 
-    public RemoteOperationValue remoteRepositoryFetch(final String userName, final String password,
+    public RemoteOperationValue remoteRepositoryFetch(/*final String branh,*/
+                                                      final String userName, final String password,
                                                       final ProgressMonitor progressMonitor)  {
 
         try (Git git = new Git(repository)) {
 
-            final FetchCommand fetchCommand = git.fetch().setProgressMonitor(progressMonitor);
+            final FetchCommand fetchCommand = git
+                    .fetch()
+                    .setCheckFetchedObjects(true)
+                    .setProgressMonitor(progressMonitor);
+            //git.fetch().setRefSpecs()
             if (userName != null) {
                 fetchCommand.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)

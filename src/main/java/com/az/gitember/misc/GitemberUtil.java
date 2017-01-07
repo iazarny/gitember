@@ -2,8 +2,7 @@ package com.az.gitember.misc;
 
 import com.sun.istack.internal.NotNull;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
@@ -45,6 +44,36 @@ public class GitemberUtil {
             return "";
         else
             return fileName.substring(dotInd+1).toLowerCase();
+    }
+
+    /**
+     * Create deep copy of object.
+     * @param orig original
+     * @return deep copy
+     */
+    public static Object deepClone(final Object orig) {
+        Object obj = null;
+        try {
+            // Write the object out to a byte array
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(orig);
+            out.flush();
+            out.close();
+
+            // Make an input stream from the byte array and read
+            // a copy of the object back in.
+            ObjectInputStream in = new ObjectInputStream(
+                    new ByteArrayInputStream(bos.toByteArray()));
+            obj = in.readObject();
+        }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
+        catch(ClassNotFoundException cnfe) {
+            cnfe.printStackTrace();
+        }
+        return obj;
     }
 
 
