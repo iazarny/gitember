@@ -691,7 +691,7 @@ public class GitRepositoryService {
     }
 
 
-    public RemoteOperationValue remoteRepositoryFetch(/*final String branh,*/
+    public RemoteOperationValue remoteRepositoryFetch(final String branch,
                                                       final String userName, final String password,
                                                       final ProgressMonitor progressMonitor)  {
 
@@ -701,6 +701,9 @@ public class GitRepositoryService {
                     .fetch()
                     .setCheckFetchedObjects(true)
                     .setProgressMonitor(progressMonitor);
+            if (branch != null) {
+
+            }
             //git.fetch().setRefSpecs()
             if (userName != null) {
                 fetchCommand.setCredentialsProvider(

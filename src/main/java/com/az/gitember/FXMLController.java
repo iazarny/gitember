@@ -680,7 +680,7 @@ public class FXMLController implements Initializable {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
-                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(null, login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
                 );
             }
         };
@@ -689,6 +689,21 @@ public class FXMLController implements Initializable {
     }
 
     public void fetchHandler(ActionEvent actionEvent) {
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        scmBranch.getShortName();
+        scmBranch.getRemoteName();
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(
+                                scmBranch.getShortName(), login, pwd,
+                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                );
+            }
+        };
+        prepareLongTask(longTask, null, null);
+        new Thread(longTask).start();
 
     }
 }
