@@ -21,11 +21,11 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
+<BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
     <left>
         <Accordion prefWidth="260.0" BorderPane.alignment="CENTER">
             <panes>
-                <TitledPane fx:id="workSpaceTitlePane" animated="true" text="Workspace" disable="true">
+                <TitledPane fx:id="workSpaceTitlePane" animated="true" disable="true" text="Workspace">
                     <content>
                         <VBox layoutX="79.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <children>
@@ -54,15 +54,20 @@
                         </VBox>
                     </content>
                 </TitledPane>
-                <TitledPane fx:id="branchesTitlePane" animated="false" text="Branches" disable="true">
+                <TitledPane fx:id="branchesTitlePane" animated="false" disable="true" text="Branches">
                     <content>
-                        <ListView fx:id="localBranchesList" onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <ListView fx:id="localBranchesList" onContextMenuRequested="#validateLocalBranchActions" onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <contextMenu>
                                 <ContextMenu fx:id="localBranchListItemContextMenu">
                                     <items>
                                         <MenuItem mnemonicParsing="false" onAction="#localBranchCheckoutHandler" text="Checkout" />
                                         <MenuItem mnemonicParsing="false" onAction="#localBranchCreateHandler" text="Create branch ..." />
                                         <MenuItem mnemonicParsing="false" onAction="#localBranchMergeHandler" text="Merge ..." />
+                                        <MenuItem fx:id="fetchContextMenuItem"
+                                                  mnemonicParsing="false"
+                                                  onAction="#fetchHandler"
+                                                  text="Fetch"
+                                        />
                                         <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false" onAction="#localBranchPushHandler" text="Push ..." />
                                         <SeparatorMenuItem mnemonicParsing="false" />
                                         <MenuItem mnemonicParsing="false" onAction="#localBranchDeleteHandler" text="Delete ..." />
@@ -73,17 +78,18 @@
                         </ListView>
                     </content>
                 </TitledPane>
-                <TitledPane fx:id="tagsTitlePane"  animated="false" text="Tags"  disable="true">
+                <TitledPane fx:id="tagsTitlePane" animated="false" disable="true" text="Tags">
                     <content>
                         <ListView fx:id="tagList" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </content>
                 </TitledPane>
-                <TitledPane fx:id="remotesTitlePane"  animated="false" text="Remotes"  disable="true">
+                <TitledPane fx:id="remotesTitlePane" animated="false" disable="true" text="Remotes">
                     <content>
                         <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </content>
                 </TitledPane>
             </panes>
+
 
         </Accordion>
     </left>
@@ -100,23 +106,24 @@
                                     </items>
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="GUI shell" onAction="#openShellActionHandler" />
-                                <MenuItem text="Terminal" onAction="#openGitTerminalActionHandler" fx:id="openGitTerminalMenuItem" />
+                                <MenuItem onAction="#openShellActionHandler" text="GUI shell" />
+                                <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="Settings ..." onAction="#settingsActionHandler" />
+                                <MenuItem onAction="#settingsActionHandler" text="Settings ..." />
                                 <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="Exit" onAction="#exitActionHandler" />
+                                <MenuItem onAction="#exitActionHandler" text="Exit" />
                             </items>
                         </Menu>
                         <Menu text="Repository">
                             <items>
                                 <MenuItem onAction="#cloneHandler" text="Clone ..." />
                                 <MenuItem onAction="#createRepositoryHandler" text="Create ..." />
-                                <MenuItem fx:id="fetchMenuItem" disable="true" text="Fetch" />
-                                <MenuItem fx:id="fetchAllMenuItem" disable="true" text="Fetch all" onAction="#fetchHandlerAll"/>
+                                <MenuItem fx:id="fetchMenuItem" disable="true" onAction="#fetchHandler" text="Fetch" />
+                                <MenuItem fx:id="fetchAllMenuItem" disable="true" onAction="#fetchHandlerAll" text="Fetch all" />
                                 <MenuItem fx:id="pullMenuItem" disable="true" text="Pull" />
+                                <MenuItem fx:id="pullAllMenuItem" disable="true" text="Pull all" />
+
                                 <MenuItem fx:id="pushMenuItem" disable="true" text="Push" />
-                                <MenuItem fx:id="pushAllMenuItem" disable="true" text="Push all" />
                                 <SeparatorMenuItem mnemonicParsing="false" />
                                 <MenuItem fx:id="statReportMenuItem" disable="true" text="Crete statistic report ..." />
                             </items>
@@ -149,8 +156,13 @@
                         <Separator />
                         <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone" />
                         <Separator />
+
                         <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch" />
+                        <Button fx:id="fetchBtnAll" disable="true" mnemonicParsing="false" onAction="#fetchHandlerAll" text="Fetch all" />
+
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull" />
+                        <Button fx:id="pullBtnAll" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull all" />
+
                         <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push all" />
                         <Pane HBox.hgrow="ALWAYS" />
                         <TextField />

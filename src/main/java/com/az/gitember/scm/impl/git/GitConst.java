@@ -7,9 +7,7 @@ public interface GitConst {
 
 
     String REMOTE_PREFIX = "refs/remotes/origin/";
+    // to have                           ^^^^^^ bad idea , but YAGNI
 
-    String HEAD_PREFIX = "refs/heads/";
-
-    String HEAD = "HEAD";
 
 }

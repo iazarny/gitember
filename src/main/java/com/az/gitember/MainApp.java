@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.Const;
+import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.GitemberServiceImpl;
 import com.az.gitember.service.SettingsServiceImpl;
@@ -8,6 +9,8 @@ import javafx.application.Application;
 
 import static javafx.application.Application.launch;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
@@ -23,12 +26,19 @@ public class MainApp extends Application {
 
     public static StringProperty currentRepositoryPath = new SimpleStringProperty();
     public static StringProperty remoteUrl = new SimpleStringProperty();
+    public static ObjectProperty<ScmBranch> workingBranch = new SimpleObjectProperty<ScmBranch>();
 
     private static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService;
 
 
+    public static void setWorkingBranch(ScmBranch workingBranch) throws Exception {
+        MainApp.workingBranch.setValue(workingBranch);
+        String head = getRepositoryService().getHead();
+        MainApp.setTitle(Const.TITLE + getCurrentRepositoryPathWOGit() + " " + head);
+
+    }
 
     public static Stage getMainStage() {
         return mainStage;
@@ -40,7 +50,7 @@ public class MainApp extends Application {
 
 
     public static String getCurrentRepositoryPathWOGit() {
-        if(currentRepositoryPath != null) {
+        if (currentRepositoryPath != null) {
             return currentRepositoryPath.getValue().substring(
                     0,
                     currentRepositoryPath.getValue().indexOf(Const.GIT_FOLDER) - 1);
@@ -65,7 +75,7 @@ public class MainApp extends Application {
         MainApp.gitemberService = gitemberService;
     }
 
-    public static void  setTitle(String title) {
+    public static void setTitle(String title) {
         mainStage.setTitle(title);
     }
 

@@ -5,7 +5,6 @@ import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -19,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.ObjectUtils;
@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
@@ -47,10 +49,17 @@ public class FXMLController implements Initializable {
     private final Logger log = Logger.getLogger(FXMLController.class.getName());
 
     public Button cloneBtn;
+
     public Button fetchBtn;
+    public Button fetchBtnAll;
+
     public Button pullBtn;
+    public Button pullBtnAll;
+
     public Button pushBtn;
+
     public Button openBtn;
+
     public Menu openRecentMenuItem;
 
     public TitledPane workSpaceTitlePane;
@@ -59,20 +68,21 @@ public class FXMLController implements Initializable {
     public TitledPane remotesTitlePane;
 
     public MenuItem pushToRemoteMenuItem;
+    public MenuItem fetchContextMenuItem;
 
-    
+
     public ContextMenu localBranchListItemContextMenu;
 
-    
+
     public ProgressBar operationProgressBar;
 
-    
+
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
     public MenuItem fetchAllMenuItem;
     public MenuItem pullMenuItem;
+    public MenuItem pullAllMenuItem;
     public MenuItem pushMenuItem;
-    public MenuItem pushAllMenuItem;
     public MenuItem statReportMenuItem;
     public MenuItem checkoutMenuItem;
     public MenuItem mergeMenuItem;
@@ -81,6 +91,7 @@ public class FXMLController implements Initializable {
     public MenuItem applyStashMenuItem;
     public MenuItem commitMenuItem;
     public MenuItem resetVersionMenuItem;
+
 
     @FXML
     private ListView localBranchesList;
@@ -100,13 +111,6 @@ public class FXMLController implements Initializable {
     private CountDownLatch uiInputLatchToService;
 
 
-    
-    public void exitActionHandler(ActionEvent actionEvent) {
-        Platform.exit();
-    }
-
-
-    
     public void openHandler(ActionEvent actionEvent) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         if (MainApp.getSettingsService().getLastProject() != null) {
@@ -132,17 +136,23 @@ public class FXMLController implements Initializable {
             MainApp.setRepositoryService(new GitRepositoryService(absPath));
             MainApp.getSettingsService().saveLastProject(absPath);
 
-            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-            remoteBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getRemoteBranches()));
-            tagList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getTags()));
+            List<ScmBranch> localBranches = MainApp.getRepositoryService().getLocalBranches();
+            setUpListView(localBranchesList, localBranches);
+            setUpListView(remoteBranchesList, MainApp.getRepositoryService().getRemoteBranches());
+            setUpListView(tagList, MainApp.getRepositoryService().getTags());
 
-
-            String head = MainApp.getRepositoryService().getHead();
-            MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
-
+            MainApp.setWorkingBranch(localBranches.stream().filter(ScmBranch::isHead).findFirst().get());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot open repository", e);
         }
+    }
+
+
+
+    private void setUpListView(ListView listView, List<ScmBranch> data) {
+        listView.setItems(FXCollections.observableList(data));
+        listView.setCellFactory(new ScmItemCellFactory());
+        listView.refresh();
     }
 
 
@@ -186,18 +196,25 @@ public class FXMLController implements Initializable {
         MainApp.remoteUrl.addListener(
                 (observable, oldValue, newValue) -> {
                     boolean disableRemoteOps = newValue == null;
-                    pullBtn.setDisable(disableRemoteOps);
+
                     fetchBtn.setDisable(disableRemoteOps);
+                    fetchBtnAll.setDisable(disableRemoteOps);
+
+                    pullBtn.setDisable(disableRemoteOps);
+                    pullBtnAll.setDisable(disableRemoteOps);
+
                     pushBtn.setDisable(disableRemoteOps);
 
                     fetchMenuItem.setDisable(disableRemoteOps);
                     fetchAllMenuItem.setDisable(disableRemoteOps);
                     pullMenuItem.setDisable(disableRemoteOps);
+                    pullAllMenuItem.setDisable(disableRemoteOps);
+
                     pushMenuItem.setDisable(disableRemoteOps);
-                    pushAllMenuItem.setDisable(disableRemoteOps);
                     statReportMenuItem.setDisable(disableRemoteOps);
 
                     remotesTitlePane.setDisable(disableRemoteOps);
+
 
 
                 }
@@ -222,29 +239,50 @@ public class FXMLController implements Initializable {
                 }
         );
 
-
+        MainApp.workingBranch.addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean trackingRemoteBranch = newValue.getRemoteName() != null;
+                    if (trackingRemoteBranch) {
+                        fetchMenuItem.setText("Fetch remote " + newValue.getRemoteName());
+                        fetchBtn.setTooltip(
+                                new Tooltip(
+                                        MessageFormat.format(
+                                                "Branch {0} tracking remote {1}",
+                                                newValue.getShortName(),
+                                                newValue.getRemoteName()
+                                        )
+                                )
+                        );
+                    } else {
+                        fetchMenuItem.setText("Fetch");
+                    }
+                    fetchMenuItem.setDisable(!trackingRemoteBranch);
+                    fetchBtn.setDisable(!trackingRemoteBranch);
+                    pullBtn.setDisable(!trackingRemoteBranch);
+                }
+        );
 
 
     }
 
-    
+
     public void branchesListMouseClicked(Event event) throws Exception {
         ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
+        if (scmBranch != null && ((MouseEvent)event).isPrimaryButtonDown()) {
+            final FXMLLoader fxmlLoader = new FXMLLoader();
+            try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
+                final Parent branchView = fxmlLoader.load(is);
+                final BranchViewController branchViewController = fxmlLoader.getController();
+                branchViewController.setTreeName(scmBranch.getFullName());
+                branchViewController.open();
+                hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                hostPanel.getChildren().add(branchView);
+            }
 
-        final FXMLLoader fxmlLoader = new FXMLLoader();
-        try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
-            final Parent branchView = fxmlLoader.load(is);
-            final BranchViewController branchViewController = fxmlLoader.getController();
-            branchViewController.setTreeName(scmBranch.getFullName());
-            branchViewController.open();
-            hostPanel.getChildren().removeAll(hostPanel.getChildren());
-            hostPanel.getChildren().add(branchView);
         }
 
+
     }
-
-
-
 
 
     public void pullHandler(ActionEvent actionEvent) {
@@ -331,8 +369,6 @@ public class FXMLController implements Initializable {
     }
 
 
-
-
 //--------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -353,125 +389,11 @@ public class FXMLController implements Initializable {
     }
 
 
-    /**
-     * Push selected branch.
-     *
-     * @param actionEvent event
-     * @throws Exception
-     */
-    public void localBranchPushHandler(ActionEvent actionEvent) throws Exception {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-        if (scmBranch.getRemoteName() == null) {
-            TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
-            dialog.setTitle("Branch name");
-            dialog.setHeaderText("Remote branch will be created");
-            dialog.setContentText("Please enter new remote branch name:");
-
-            Optional<String> dialogResult = dialog.showAndWait();
-            if (dialogResult.isPresent()) {
-                scmBranch.setRemoteName(dialogResult.get());
-                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
-            }
-        } else {
-            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
-        }
-    }
 
 
-    @SuppressWarnings("unchecked")
-    public void localBranchCheckoutHandler(ActionEvent actionEvent) throws Exception {
-
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-        MainApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
-        localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-        localBranchesList.setCellFactory(new ScmItemCellFactory());
-        localBranchesList.refresh();
 
 
-        String head = MainApp.getRepositoryService().getHead();
-        MainApp.setTitle(Const.TITLE + MainApp.getCurrentRepositoryPathWOGit() + " " + head);
 
-
-    }
-
-
-    @SuppressWarnings("unchecked")
-    public void localBranchCreateHandler(ActionEvent actionEvent) throws Exception {
-
-        TextInputDialog dialog = new TextInputDialog("");
-        dialog.setTitle("New branch");
-        dialog.setHeaderText("Create new branch");
-        dialog.setContentText("Please enter new branch name:");
-
-        Optional<String> dialogResult = dialog.showAndWait();
-        if (dialogResult.isPresent()) {
-            ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-            MainApp.getRepositoryService().createLocalBranch(
-                    scmBranch.getFullName(),
-                    dialogResult.get()
-            );
-
-            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-            localBranchesList.setCellFactory(new ScmItemCellFactory());
-            localBranchesList.refresh();
-        }
-
-
-    }
-
-    @SuppressWarnings("unchecked")
-    public void localBranchMergeHandler(ActionEvent actionEvent) throws Exception {
-
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-
-        TextAreaInputDialog dialog = new TextAreaInputDialog(
-                "Merge " + scmBranch.getFullName() + " to " + MainApp.getRepositoryService().getHead()
-        );
-
-        dialog.setTitle("Merge message");
-        dialog.setHeaderText("Provide merge message");
-        dialog.setContentText("Message:");
-        Optional<String> dialogResult = dialog.showAndWait();
-        if (dialogResult.isPresent()) {
-            MainApp.getRepositoryService().mergeLocalBranch(
-                    scmBranch.getFullName(),
-                    dialogResult.get()
-            );
-
-            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-            localBranchesList.setCellFactory(new ScmItemCellFactory());
-            localBranchesList.refresh();
-
-        }
-
-
-    }
-
-    @SuppressWarnings("unchecked")
-    public void localBranchDeleteHandler(ActionEvent actionEvent) throws Exception {
-
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText("Delete branch " + scmBranch.getShortName());
-        alert.setContentText("Do you really want to delete " + scmBranch.getShortName() + " branch ?");
-
-        Optional<ButtonType> dialogResult = alert.showAndWait();
-        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
-            try {
-                MainApp.getRepositoryService().deleteLocalBranch(
-                        scmBranch.getFullName()
-                );
-                localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
-                localBranchesList.setCellFactory(new ScmItemCellFactory());
-                localBranchesList.refresh();
-            } catch (CannotDeleteCurrentBranchException e) {
-                showResult(e.getMessage(), Alert.AlertType.ERROR);
-            }
-        }
-
-    }
 
 
     /**
@@ -554,6 +476,157 @@ public class FXMLController implements Initializable {
         alert.showAndWait();
     }
 
+
+
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //-----------------------------    Local branch context menu item handlers---------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+
+
+    @SuppressWarnings("unchecked")
+    public void localBranchCheckoutHandler(ActionEvent actionEvent) throws Exception {
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        MainApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
+        setUpListView(localBranchesList, MainApp.getRepositoryService().getLocalBranches());
+        MainApp.setWorkingBranch(scmBranch);
+    }
+
+
+
+    @SuppressWarnings("unchecked")
+    public void localBranchCreateHandler(ActionEvent actionEvent) throws Exception {
+
+        TextInputDialog dialog = new TextInputDialog("");
+        dialog.setTitle("New branch");
+        dialog.setHeaderText("Create new branch");
+        dialog.setContentText("Please enter new branch name:");
+
+        Optional<String> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
+            ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+            MainApp.getRepositoryService().createLocalBranch(
+                    scmBranch.getFullName(),
+                    dialogResult.get()
+            );
+
+            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+            localBranchesList.setCellFactory(new ScmItemCellFactory());
+            localBranchesList.refresh();
+        }
+
+
+    }
+
+
+    @SuppressWarnings("unchecked")
+    public void localBranchMergeHandler(ActionEvent actionEvent) throws Exception {
+
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
+        TextAreaInputDialog dialog = new TextAreaInputDialog(
+                "Merge " + scmBranch.getFullName() + " to " + MainApp.workingBranch.get().getShortName()
+        );
+
+        dialog.setTitle("Merge message");
+        dialog.setHeaderText("Provide merge message");
+        dialog.setContentText("Message:");
+        Optional<String> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
+            MainApp.getRepositoryService().mergeLocalBranch(
+                    scmBranch.getFullName(),
+                    dialogResult.get()
+            );
+
+            localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+            localBranchesList.setCellFactory(new ScmItemCellFactory());
+            localBranchesList.refresh();
+
+        }
+
+
+    }
+
+    /**
+     * Push selected branch.
+     *
+     * @param actionEvent event
+     * @throws Exception
+     */
+    public void localBranchPushHandler(ActionEvent actionEvent) throws Exception {
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        if (scmBranch.getRemoteName() == null) {
+            TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
+            dialog.setTitle("Branch name");
+            dialog.setHeaderText("Remote branch will be created");
+            dialog.setContentText("Please enter new remote branch name:");
+
+            Optional<String> dialogResult = dialog.showAndWait();
+            if (dialogResult.isPresent()) {
+                scmBranch.setRemoteName(dialogResult.get());
+                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+            }
+        } else {
+            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void localBranchDeleteHandler(ActionEvent actionEvent) throws Exception {
+
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Delete branch " + scmBranch.getShortName());
+        alert.setContentText("Do you really want to delete " + scmBranch.getShortName() + " branch ?");
+
+        Optional<ButtonType> dialogResult = alert.showAndWait();
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
+            try {
+                MainApp.getRepositoryService().deleteLocalBranch(
+                        scmBranch.getFullName()
+                );
+                localBranchesList.setItems(FXCollections.observableList(MainApp.getRepositoryService().getLocalBranches()));
+                localBranchesList.setCellFactory(new ScmItemCellFactory());
+                localBranchesList.refresh();
+            } catch (CannotDeleteCurrentBranchException e) {
+                showResult(e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+
+    }
+
+    /**
+     * Disable or enable remote operations if local branch not tracking remote branch
+     * @param event
+     */
+    public void validateLocalBranchActions(Event event) {
+        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+
+        if (scmBranch != null) {
+
+            boolean disableRemoteOp = scmBranch.getRemoteName() == null;
+            fetchContextMenuItem.setDisable(disableRemoteOp);
+
+            if (disableRemoteOp) {
+                fetchContextMenuItem.setText("Fetch");
+                pushToRemoteMenuItem.setText("Push ... ");
+            } else {
+                fetchContextMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
+                pushToRemoteMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
+            }
+
+        } else {
+
+            localBranchesList.setContextMenu(null);
+            event.consume();
+        }
+
+    }
+
+
     //---------------------------------------------------------------------------------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
     //-----------------------------    Menu file handlers -----------------------------------------------------------//
@@ -587,6 +660,11 @@ public class FXMLController implements Initializable {
 
     }
 
+    /**
+     * Open terminal in home or in repository folder, if it was opened.
+     *
+     * @param actionEvent
+     */
     public void openGitTerminalActionHandler(ActionEvent actionEvent) {
         try {
             Runtime rt = Runtime.getRuntime();
@@ -610,7 +688,7 @@ public class FXMLController implements Initializable {
     /**
      * Open settings dialog .
      *
-     * @param actionEvent
+     * @param actionEvent action event
      */
     public void settingsActionHandler(ActionEvent actionEvent) {
 
@@ -623,6 +701,15 @@ public class FXMLController implements Initializable {
 
     }
 
+    /**
+     * Close application.
+     *
+     * @param actionEvent action event
+     */
+    public void exitActionHandler(ActionEvent actionEvent) {
+        Platform.exit();
+    }
+
     //---------------------------------------------------------------------------------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
     //-----------------------------    Repository menu handlers -----------------------------------------------------------//
@@ -631,6 +718,7 @@ public class FXMLController implements Initializable {
 
     /**
      * Clone and open remote repository.
+     *
      * @param actionEvent
      */
     public void cloneHandler(ActionEvent actionEvent) {
@@ -680,7 +768,8 @@ public class FXMLController implements Initializable {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
-                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(null, login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                        () -> MainApp.getRepositoryService().remoteRepositoryFetch(
+                                null, login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
                 );
             }
         };
@@ -688,20 +777,19 @@ public class FXMLController implements Initializable {
         new Thread(longTask).start();
     }
 
+    /**
+     * Fetch particular branch, if it track some remote.
+     *
+     * @param actionEvent
+     */
     public void fetchHandler(ActionEvent actionEvent) {
         ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-        scmBranch.getShortName();
-        scmBranch.getRemoteName();
-
-        //http://stackoverflow.com/questions/16319807/determine-if-a-branch-is-remote-or-local-using-jgit
-        //http://stackoverflow.com/questions/12927163/jgit-checkout-a-remote-branch
-
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> MainApp.getRepositoryService().remoteRepositoryFetch(
-                                scmBranch.getShortName(), login, pwd,
+                                scmBranch.getRemoteName(), login, pwd,
                                 new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
                 );
             }
@@ -710,4 +798,5 @@ public class FXMLController implements Initializable {
         new Thread(longTask).start();
 
     }
+
 }

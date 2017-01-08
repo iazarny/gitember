@@ -111,18 +111,25 @@ public class GitRepositoryService {
                     .collect(Collectors.toList());
 
             // Just check is local branch has remote part
-            if (GitConst.HEAD_PREFIX.equals(prefix)) {
+            if (Constants.R_HEADS.equals(prefix)) {
                 Config cfg = repository.getConfig();
                 for (ScmBranch item : rez) {
-                    String mergeRef = cfg.getString("branch", item.getShortName() , "merge");
-                    System.out.println(">>>>>>>>>>>>> " + mergeRef);
+                    String remote = cfg.getString("branch", item.getShortName(), "remote" );
+                    if (remote != null) {
+                        String mergeRef = cfg.getString("branch", item.getShortName(), "merge");
+                        String shortRemoteName = mergeRef.substring(Constants.R_HEADS.length());
+                        log.log(Level.INFO, "Local branch " + item.getFullName()
+                                + " is set to track remote " + mergeRef
+                                + "(" + shortRemoteName + ")");
+                        item.setRemoteName(shortRemoteName);
+                    }
                 }
 
             }
 
             /*
             // Initial naive variant Just check is local branch has remote part
-            if (GitConst.HEAD_PREFIX.equals(prefix)) {
+            if (Constants.HEAD_PREFIX.equals(prefix)) {
                 for (ScmBranch item : rez) {
                     branchLst.stream().filter(ref -> ref.getName().startsWith(GitConst.REMOTE_PREFIX)
                             && item.getShortName().endsWith(ref.getName().substring(GitConst.REMOTE_PREFIX.length()))
@@ -136,7 +143,6 @@ public class GitRepositoryService {
             return rez;
 
         }
-
 
 
     }
@@ -155,15 +161,15 @@ public class GitRepositoryService {
 
 
     public String getHead() throws Exception {
-        final Ref head = repository.exactRef(GitConst.HEAD);
+        final Ref head = repository.exactRef(Constants.HEAD);
         return head.getTarget().getName();
 
     }
 
     public List<ScmBranch> getLocalBranches() throws Exception {
-        final Ref head = repository.exactRef(GitConst.HEAD);
+        final Ref head = repository.exactRef(Constants.HEAD);
 
-        final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, GitConst.HEAD_PREFIX);
+        final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS);
         scmItems.forEach(
                 i -> {
                     System.out.println("Local branches " + head.getTarget().getName() + " " + i.getFullName());
@@ -655,7 +661,7 @@ public class GitRepositoryService {
      * @param password      optional password
      */
     public RemoteOperationValue cloneRepository(final String reporitoryUrl, final String folder,
-                                  final String userName, final String password, final ProgressMonitor progressMonitor)  {
+                                                final String userName, final String password, final ProgressMonitor progressMonitor) {
         final CloneCommand cmd = Git.cloneRepository()
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(folder))
@@ -707,9 +713,22 @@ public class GitRepositoryService {
     }
 
 
-    public RemoteOperationValue remoteRepositoryFetch(final String branch,
+    /**
+     * Fetch all or particular branch.
+     *
+     * //http://stackoverflow.com/questions/16319807/determine-if-a-branch-is-remote-or-local-using-jgit
+     * //http://stackoverflow.com/questions/12927163/jgit-checkout-a-remote-branch
+     * @param shortRemoteBranch optional short name on remote repo, i.e. without ref/heads/ prefix, if not provided command will fetch all
+     * @param userName optional username
+     * @param password optional password
+     * @param progressMonitor optional progress
+     * @return result of operation
+     */
+    public RemoteOperationValue remoteRepositoryFetch(final String shortRemoteBranch,
                                                       final String userName, final String password,
-                                                      final ProgressMonitor progressMonitor)  {
+                                                      final ProgressMonitor progressMonitor) {
+        log.log(Level.INFO,
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
 
         try (Git git = new Git(repository)) {
 
@@ -717,17 +736,17 @@ public class GitRepositoryService {
                     .fetch()
                     .setCheckFetchedObjects(true)
                     .setProgressMonitor(progressMonitor);
-            if (branch != null) {
-
+            if (shortRemoteBranch != null) {
+                git.fetch().setRefSpecs(new RefSpec(Constants.R_HEADS + shortRemoteBranch));
             }
-            //git.fetch().setRefSpecs()
+
             if (userName != null) {
                 fetchCommand.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
                 );
             }
             FetchResult fetchResult = fetchCommand.call();
-            return new RemoteOperationValue("TODO fetch result more human readable or parsable" + fetchResult.toString());
+            return new RemoteOperationValue("TODO fetch result more human readable or " + fetchResult.toString());
         } catch (CheckoutConflictException conflictException) {
             return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
         } catch (GitAPIException e) {
@@ -876,6 +895,7 @@ public class GitRepositoryService {
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
      * Additional info  http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
      * git push origin remotepush:r-remotepush
+     *
      * @param localBranch  local branch name
      * @param remoteBranch remote branch name
      * @param userName     optional login name
@@ -884,8 +904,8 @@ public class GitRepositoryService {
      * @throws Exception in case of error
      */
     public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
-                                       String userName, String password,  boolean setOrigin,
-                                                     final ProgressMonitor progressMonitor)  {
+                                                     String userName, String password, boolean setOrigin,
+                                                     final ProgressMonitor progressMonitor) {
         try (Git git = new Git(repository)) {
             RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
             PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
