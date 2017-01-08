@@ -737,7 +737,7 @@ public class GitRepositoryService {
                     .setCheckFetchedObjects(true)
                     .setProgressMonitor(progressMonitor);
             if (shortRemoteBranch != null) {
-                git.fetch().setRefSpecs(new RefSpec(Constants.R_HEADS + shortRemoteBranch));
+                fetchCommand.setRefSpecs(new RefSpec(Constants.R_HEADS + shortRemoteBranch));
             }
 
             if (userName != null) {
@@ -928,6 +928,25 @@ public class GitRepositoryService {
                     }
             );
             return new RemoteOperationValue(stringBuilder.toString());
+        } catch (TransportException te) {
+            if (te.getCause() != null && te.getCause().getCause() != null
+                    && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
+                try (Git git = new Git(repository)) {
+                    log.log(Level.INFO, "Add ssl ignore to " + repository.getDirectory().getAbsolutePath());
+                    final StoredConfig config = git.getRepository().getConfig();
+                    config.setBoolean("http", null, "sslVerify", false);
+                    config.save();
+                    return remoteRepositoryPush(
+                            localBranch, remoteBranch,
+                            userName,password,
+                            setOrigin, progressMonitor
+                    );
+                } catch (IOException e) {
+                    return processError(e);
+                }
+            } else {
+                return processError(te);
+            }
         } catch (Exception e) {
             return processError(e);
         }

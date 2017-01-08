@@ -303,7 +303,9 @@ public class FXMLController implements Initializable {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
-                        () -> MainApp.getRepositoryService().remoteRepositoryPush(localBranchName, remoteBranchName, login, pwd, setOrigin, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                        () -> MainApp.getRepositoryService().remoteRepositoryPush(
+                                localBranchName, remoteBranchName, login, pwd, setOrigin,
+                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
                 );
             }
         };
