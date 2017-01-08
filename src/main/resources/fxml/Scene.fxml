@@ -57,24 +57,7 @@
                 <TitledPane fx:id="branchesTitlePane" animated="false" disable="true" text="Branches">
                     <content>
                         <ListView fx:id="localBranchesList" onContextMenuRequested="#validateLocalBranchActions" onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                            <contextMenu>
-                                <ContextMenu fx:id="localBranchListItemContextMenu">
-                                    <items>
-                                        <MenuItem mnemonicParsing="false" onAction="#localBranchCheckoutHandler" text="Checkout" />
-                                        <MenuItem mnemonicParsing="false" onAction="#localBranchCreateHandler" text="Create branch ..." />
-                                        <MenuItem mnemonicParsing="false" onAction="#localBranchMergeHandler" text="Merge ..." />
-                                        <MenuItem fx:id="fetchContextMenuItem"
-                                                  mnemonicParsing="false"
-                                                  onAction="#fetchHandler"
-                                                  text="Fetch"
-                                        />
-                                        <MenuItem fx:id="pushToRemoteMenuItem" mnemonicParsing="false" onAction="#localBranchPushHandler" text="Push ..." />
-                                        <SeparatorMenuItem mnemonicParsing="false" />
-                                        <MenuItem mnemonicParsing="false" onAction="#localBranchDeleteHandler" text="Delete ..." />
 
-                                    </items>
-                                </ContextMenu>
-                            </contextMenu>
                         </ListView>
                     </content>
                 </TitledPane>
@@ -89,8 +72,6 @@
                     </content>
                 </TitledPane>
             </panes>
-
-
         </Accordion>
     </left>
     <top>
@@ -166,7 +147,7 @@
                         <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push all" />
                         <Pane HBox.hgrow="ALWAYS" />
                         <TextField />
-                        <Button mnemonicParsing="false" onAction="#exitHandler" text="Exit" />
+                        <Button mnemonicParsing="false" onAction="#exitActionHandler" text="Exit" />
                     </items>
                 </ToolBar>
             </children>
