@@ -104,6 +104,24 @@ public class GitRepositoryService {
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
                     .map(r -> new ScmBranch(
+                            //r.getName().substring(prefix.length()),
+                            r.getName(),
+                            r.getName(),
+                            r.getObjectId().getName()))
+                    .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
+                    .collect(Collectors.toList());
+            return rez;
+
+        }
+
+
+
+        /*try (Git git = new Git(repository)) {
+            List<Ref> branchLst = git.branchList().setListMode(listMode).call();
+            List<ScmBranch> rez = branchLst
+                    .stream()
+                    .filter(r -> r.getName().startsWith(prefix))
+                    .map(r -> new ScmBranch(
                             r.getName().substring(prefix.length()),
                             r.getName(),
                             r.getObjectId().getName()))
@@ -122,7 +140,7 @@ public class GitRepositoryService {
                 }
             }
             return rez;
-        }
+        }*/
     }
 
     public List<ScmBranch> getTags() throws Exception {
