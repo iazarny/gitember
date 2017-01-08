@@ -104,24 +104,6 @@ public class GitRepositoryService {
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix))
                     .map(r -> new ScmBranch(
-                            //r.getName().substring(prefix.length()),
-                            r.getName(),
-                            r.getName(),
-                            r.getObjectId().getName()))
-                    .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
-                    .collect(Collectors.toList());
-            return rez;
-
-        }
-
-
-
-        /*try (Git git = new Git(repository)) {
-            List<Ref> branchLst = git.branchList().setListMode(listMode).call();
-            List<ScmBranch> rez = branchLst
-                    .stream()
-                    .filter(r -> r.getName().startsWith(prefix))
-                    .map(r -> new ScmBranch(
                             r.getName().substring(prefix.length()),
                             r.getName(),
                             r.getObjectId().getName()))
@@ -129,6 +111,17 @@ public class GitRepositoryService {
                     .collect(Collectors.toList());
 
             // Just check is local branch has remote part
+            if (GitConst.HEAD_PREFIX.equals(prefix)) {
+                Config cfg = repository.getConfig();
+                for (ScmBranch item : rez) {
+                    String mergeRef = cfg.getString("branch", item.getShortName() , "merge");
+                    System.out.println(">>>>>>>>>>>>> " + mergeRef);
+                }
+
+            }
+
+            /*
+            // Initial naive variant Just check is local branch has remote part
             if (GitConst.HEAD_PREFIX.equals(prefix)) {
                 for (ScmBranch item : rez) {
                     branchLst.stream().filter(ref -> ref.getName().startsWith(GitConst.REMOTE_PREFIX)
@@ -138,9 +131,14 @@ public class GitRepositoryService {
                         item.setRemoteName(item.getShortName());
                     });
                 }
-            }
+            }*/
+
             return rez;
-        }*/
+
+        }
+
+
+
     }
 
     public List<ScmBranch> getTags() throws Exception {
