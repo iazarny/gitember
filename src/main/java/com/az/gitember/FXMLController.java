@@ -268,7 +268,7 @@ public class FXMLController implements Initializable {
 
     public void branchesListMouseClicked(Event event) throws Exception {
         ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
-        if (scmBranch != null && ((MouseEvent)event).isPrimaryButtonDown()) {
+        if (scmBranch != null) {
             final FXMLLoader fxmlLoader = new FXMLLoader();
             try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
                 final Parent branchView = fxmlLoader.load(is);
