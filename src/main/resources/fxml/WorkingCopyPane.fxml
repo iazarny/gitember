@@ -13,6 +13,8 @@
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.BorderPane?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
             prefHeight="-1" prefWidth="600.0"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
@@ -21,10 +23,17 @@
     <top>
         <ToolBar prefHeight="40.0" prefWidth="200.0">
             <items>
-                <Button mnemonicParsing="false" text="Commit"  fx:id="commitBtn" onAction="#commitBtnHandler"/>
+                <Button mnemonicParsing="false" text="Stage all"  fx:id="stageAllBtn" onAction="#commitBtnHandler"/>
+                <Button mnemonicParsing="false" text="Commit ..."  fx:id="commitBtn" onAction="#commitBtnHandler"/>
                 <Button mnemonicParsing="false" text="Stash"  fx:id="stashBtn" onAction="#stashBtnHandler"/>
                 <Pane HBox.hgrow="ALWAYS" />
-                <Button mnemonicParsing="false" text="Refresh"  fx:id="refreshBtn" onAction="#refreshBtnHandler"/>
+                <Button mnemonicParsing="false"  fx:id="refreshBtn" onAction="#refreshBtnHandler">
+                    <graphic>
+                        <StackedFontIcon>
+                            <FontIcon iconLiteral="fa-refresh" StackedFontIcon.iconSize="0.5"/>
+                        </StackedFontIcon>
+                    </graphic>
+                </Button>
             </items>
         </ToolBar>
 

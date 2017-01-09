@@ -20,7 +20,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
     <left>
@@ -88,7 +90,14 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..."/>
+                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ...">
+                                    <graphic>
+                                        <StackedFontIcon>
+                                            <FontIcon iconLiteral="fa-folder-open" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+
+                                </MenuItem>
                                 <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false"
                                       text="Open recent">
                                     <items>
@@ -99,24 +108,64 @@
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
                                           text="Terminal"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#settingsActionHandler" text="Settings ..."/>
+                                <MenuItem onAction="#settingsActionHandler" text="Settings ...">
+                                    <graphic>
+                                        <StackedFontIcon>
+                                            <FontIcon iconLiteral="fa-cogs" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+                                </MenuItem>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem onAction="#exitActionHandler" text="Exit"/>
                             </items>
                         </Menu>
                         <Menu text="Repository">
                             <items>
-                                <MenuItem text="Clone ..." onAction="#cloneHandler" />
+                                <MenuItem text="Clone ..." onAction="#cloneHandler">
+                                    <graphic>
+                                        <StackedFontIcon>
+                                            <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+                                </MenuItem>
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
-                                <MenuItem text="Fetch" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
-                                <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem" disable="true"/>
-                                <MenuItem text="Pull" onAction="#pullHandler" fx:id="pullMenuItem" disable="true"/>
-                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"  disable="true"/>
+                                <MenuItem text="Fetch" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true">
+                                </MenuItem>
+                                <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem" disable="true">
+                                </MenuItem>
+                                <MenuItem text="Pull" onAction="#pullHandler" fx:id="pullMenuItem" disable="true">
+                                    <graphic>
+                                        <StackedFontIcon rotate="-45">
+                                            <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+
+                                </MenuItem>
+                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"  disable="true">
+                                    <graphic>
+                                        <StackedFontIcon rotate="-45">
+                                            <FontIcon iconLiteral="fa-reply-all" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+                                </MenuItem>
                                 <SeparatorMenuItem/>
-                                <MenuItem text="Push" fx:id="pushMenuItem" disable="true" />
+                                <MenuItem text="Push" fx:id="pushMenuItem" disable="true">
+                                    <graphic>
+                                        <StackedFontIcon rotate="-23">
+                                            <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+                                </MenuItem>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true" />
+                                <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true">
+                                    <graphic>
+                                        <StackedFontIcon>
+                                            <FontIcon iconLiteral="fa-pie-chart" StackedFontIcon.iconSize="0.5"/>
+                                        </StackedFontIcon>
+                                    </graphic>
+
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu text="Working copy">
@@ -143,22 +192,56 @@
                 </MenuBar>
                 <ToolBar prefHeight="40.0" prefWidth="200.0">
                     <items>
-                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open"/>
+                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
+                            <graphic>
+                                <StackedFontIcon>
+                                    <FontIcon iconLiteral="fa-folder-open" StackedFontIcon.iconSize="0.5"/>
+                                </StackedFontIcon>
+                            </graphic>
+                        </Button>
                         <Separator/>
-                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone"/>
+                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone">
+                            <graphic>
+                                <StackedFontIcon>
+                                    <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5"/>
+                                </StackedFontIcon>
+                            </graphic>
+                        </Button>
                         <Separator/>
 
                         <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler"
-                                text="Fetch"/>
+                                text="Fetch">
+
+                        </Button>
 
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
-                                text="Pull"/>
+                                text="Pull">
+                            <graphic>
+                                <StackedFontIcon rotate="-45">
+                                    <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
+                                </StackedFontIcon>
+                            </graphic>
+
+                        </Button>
 
                         <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler"
-                                text="Push"/>
+                                text="Push">
+                            <graphic>
+                                <StackedFontIcon rotate="-23">
+                                    <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
+                                </StackedFontIcon>
+                            </graphic>
+
+                        </Button>
                         <Pane HBox.hgrow="ALWAYS"/>
                         <TextField/>
-                        <Button mnemonicParsing="false" onAction="#exitActionHandler" text="Exit"/>
+                        <Button mnemonicParsing="false">
+                            <graphic>
+                                <StackedFontIcon>
+                                    <FontIcon iconLiteral="fa-search" StackedFontIcon.iconSize="0.5"/>
+                                </StackedFontIcon>
+                            </graphic>
+                        </Button>
                     </items>
                 </ToolBar>
             </children>
