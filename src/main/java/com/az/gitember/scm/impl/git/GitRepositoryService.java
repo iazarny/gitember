@@ -628,28 +628,7 @@ public class GitRepositoryService {
     }
 
 
-    /**
-     * Pull changes.
-     *
-     * @param userName optional user name if required
-     * @param password optional password
-     * @return
-     * @throws Exception
-     */
-    public RemoteOperationValue remoteRepositoryPull(final String userName, final String password,
-                                                     final ProgressMonitor progressMonitor) {
-        try (Git git = new Git(repository)) {
-            PullCommand pullCommand = git.pull().setProgressMonitor(progressMonitor);
-            if (userName != null) {
-                pullCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password));
-            }
-            PullResult pullRez = pullCommand.call();
-            return new RemoteOperationValue(pullRez.toString());
-        } catch (Exception e) {
-            return processError(e);
-        }
-    }
+
 
 
     /**
@@ -731,7 +710,6 @@ public class GitRepositoryService {
                 MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
 
         try (Git git = new Git(repository)) {
-
             final FetchCommand fetchCommand = git
                     .fetch()
                     .setCheckFetchedObjects(true)
@@ -753,6 +731,42 @@ public class GitRepositoryService {
             return processError(e);
         }
 
+    }
+
+    /**
+     * Pull changes.
+     *
+     * @param userName optional user name if required
+     * @param password optional password
+     * @return
+     * @throws Exception
+     */
+    public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
+                                                     final String userName, final String password,
+                                                     final ProgressMonitor progressMonitor) {
+        log.log(Level.INFO,
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
+
+        try (Git git = new Git(repository)) {
+            PullCommand pullCommand = git.pull()
+                    .setProgressMonitor(progressMonitor);
+
+            if (shortRemoteBranch != null) {
+                pullCommand.setRemoteBranchName(Constants.R_HEADS + shortRemoteBranch);
+            }
+
+            if (userName != null) {
+                pullCommand.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(userName, password));
+            }
+            PullResult pullRez = pullCommand.call();
+            return new RemoteOperationValue(pullRez.toString());
+        } catch (CheckoutConflictException conflictException) {
+            return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
+
+        } catch (Exception e) {
+            return processError(e);
+        }
     }
 
     private RemoteOperationValue fetchRepository(final String reporitoryUrl, final String folder,

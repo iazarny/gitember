@@ -1,6 +1,6 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.MainApp;
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -61,9 +61,9 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
         selectFolder.setOnAction(
                 event -> {
                     final DirectoryChooser directoryChooser = new DirectoryChooser();
-                    directoryChooser.setInitialDirectory(new File(MainApp.getSettingsService().getUserHomeFolder()));
+                    directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
                     final File selectedDirectory =
-                            directoryChooser.showDialog(MainApp.getMainStage());
+                            directoryChooser.showDialog(GitemberApp.getMainStage());
                     if (selectedDirectory != null) {
                         folder.setText(selectedDirectory.getAbsolutePath());
                     }

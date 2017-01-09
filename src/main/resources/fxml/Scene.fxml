@@ -21,33 +21,35 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
+<BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
     <left>
         <Accordion prefWidth="260.0" BorderPane.alignment="CENTER">
             <panes>
                 <TitledPane fx:id="workSpaceTitlePane" animated="true" disable="true" text="Workspace">
                     <content>
-                        <VBox layoutX="79.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <VBox layoutX="79.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <children>
                                 <HBox>
                                     <children>
-                                        <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy" />
-                                        <Pane HBox.hgrow="ALWAYS" />
-                                        <Label text="" />
+                                        <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
                                     </children>
                                 </HBox>
                                 <HBox>
                                     <children>
-                                        <Hyperlink text="History" />
-                                        <Pane HBox.hgrow="ALWAYS" />
-                                        <Label text="" />
+                                        <Hyperlink text="History"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
                                     </children>
                                 </HBox>
                                 <HBox>
                                     <children>
-                                        <Hyperlink text="Stashes" />
-                                        <Pane HBox.hgrow="ALWAYS" />
-                                        <Label text="" />
+                                        <Hyperlink text="Stashes"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text=""/>
                                     </children>
                                 </HBox>
                             </children>
@@ -56,19 +58,24 @@
                 </TitledPane>
                 <TitledPane fx:id="branchesTitlePane" animated="false" disable="true" text="Branches">
                     <content>
-                        <ListView fx:id="localBranchesList" onContextMenuRequested="#validateLocalBranchActions" onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <ListView fx:id="localBranchesList" onContextMenuRequested="#validateLocalBranchActions"
+                                  onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0"
+                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
                         </ListView>
                     </content>
                 </TitledPane>
                 <TitledPane fx:id="tagsTitlePane" animated="false" disable="true" text="Tags">
                     <content>
-                        <ListView fx:id="tagList" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <ListView fx:id="tagList" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
                     </content>
                 </TitledPane>
                 <TitledPane fx:id="remotesTitlePane" animated="false" disable="true" text="Remotes">
                     <content>
-                        <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked" prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked"
+                                  prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0"
+                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
                     </content>
                 </TitledPane>
             </panes>
@@ -81,86 +88,91 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..." />
-                                <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Open recent">
+                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ..."/>
+                                <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false"
+                                      text="Open recent">
                                     <items>
                                     </items>
                                 </Menu>
-                                <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem onAction="#openShellActionHandler" text="GUI shell" />
-                                <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal" />
-                                <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem onAction="#settingsActionHandler" text="Settings ..." />
-                                <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem onAction="#exitActionHandler" text="Exit" />
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem onAction="#openShellActionHandler" text="GUI shell"/>
+                                <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
+                                          text="Terminal"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem onAction="#settingsActionHandler" text="Settings ..."/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem onAction="#exitActionHandler" text="Exit"/>
                             </items>
                         </Menu>
                         <Menu text="Repository">
                             <items>
-                                <MenuItem onAction="#cloneHandler" text="Clone ..." />
-                                <MenuItem onAction="#createRepositoryHandler" text="Create ..." />
-                                <MenuItem fx:id="fetchMenuItem" disable="true" onAction="#fetchHandler" text="Fetch" />
-                                <MenuItem fx:id="fetchAllMenuItem" disable="true" onAction="#fetchHandlerAll" text="Fetch all" />
-                                <MenuItem fx:id="pullMenuItem" disable="true" text="Pull" />
-                                <MenuItem fx:id="pullAllMenuItem" disable="true" text="Pull all" />
-
-                                <MenuItem fx:id="pushMenuItem" disable="true" text="Push" />
-                                <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem fx:id="statReportMenuItem" disable="true" text="Crete statistic report ..." />
+                                <MenuItem text="Clone ..." onAction="#cloneHandler" />
+                                <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Fetch" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
+                                <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem" disable="true"/>
+                                <MenuItem text="Pull" onAction="#pullHandler" fx:id="pullMenuItem" disable="true"/>
+                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"  disable="true"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Push" fx:id="pushMenuItem" disable="true" />
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true" />
                             </items>
                         </Menu>
                         <Menu text="Working copy">
                             <items>
-                                <MenuItem fx:id="checkoutMenuItem" disable="true" text="Checkout" />
-                                <MenuItem fx:id="mergeMenuItem" disable="true" text="Merge" />
-                                <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase" />
-                                <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..." />
-                                <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..." />
-                                <MenuItem fx:id="commitMenuItem" disable="true" text="Commit" />
-                                <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... " />
+                                <MenuItem fx:id="checkoutMenuItem" disable="true" text="Checkout"/>
+                                <MenuItem fx:id="mergeMenuItem" disable="true" text="Merge"/>
+                                <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase"/>
+                                <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..."/>
+                                <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..."/>
+                                <MenuItem text="Commit" fx:id="commitMenuItem" disable="true" />
+                                <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... "/>
 
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem text="Check for update" />
-                                <MenuItem text="Create bug report" />
-                                <SeparatorMenuItem mnemonicParsing="false" />
-                                <MenuItem text="About" />
+                                <MenuItem text="Check for update"/>
+                                <MenuItem text="Create bug report"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="About"/>
                             </items>
                         </Menu>
                     </menus>
                 </MenuBar>
                 <ToolBar prefHeight="40.0" prefWidth="200.0">
                     <items>
-                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open" />
-                        <Separator />
-                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone" />
-                        <Separator />
+                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open"/>
+                        <Separator/>
+                        <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone"/>
+                        <Separator/>
 
-                        <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch" />
-                        <Button fx:id="fetchBtnAll" disable="true" mnemonicParsing="false" onAction="#fetchHandlerAll" text="Fetch all" />
+                        <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler"
+                                text="Fetch"/>
 
-                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull" />
-                        <Button fx:id="pullBtnAll" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull all" />
+                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
+                                text="Pull"/>
 
-                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push all" />
-                        <Pane HBox.hgrow="ALWAYS" />
-                        <TextField />
-                        <Button mnemonicParsing="false" onAction="#exitActionHandler" text="Exit" />
+                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler"
+                                text="Push"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <TextField/>
+                        <Button mnemonicParsing="false" onAction="#exitActionHandler" text="Exit"/>
                     </items>
                 </ToolBar>
             </children>
         </VBox>
     </top>
     <center>
-        <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+        <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER"/>
     </center>
     <bottom>
         <ToolBar>
-         <items>
-            <ProgressBar fx:id="operationProgressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0" visible="false" HBox.hgrow="ALWAYS" />
-         </items>
+            <items>
+                <ProgressBar fx:id="operationProgressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0"
+                             visible="false" HBox.hgrow="ALWAYS"/>
+            </items>
         </ToolBar>
     </bottom>
 </BorderPane>

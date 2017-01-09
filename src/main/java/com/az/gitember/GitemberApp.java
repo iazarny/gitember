@@ -20,7 +20,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 
-public class MainApp extends Application {
+public class GitemberApp extends Application {
 
     private static Stage mainStage = null;
 
@@ -34,9 +34,9 @@ public class MainApp extends Application {
 
 
     public static void setWorkingBranch(ScmBranch workingBranch) throws Exception {
-        MainApp.workingBranch.setValue(workingBranch);
+        GitemberApp.workingBranch.setValue(workingBranch);
         String head = getRepositoryService().getHead();
-        MainApp.setTitle(Const.TITLE + getCurrentRepositoryPathWOGit() + " " + head);
+        GitemberApp.setTitle(Const.TITLE + getCurrentRepositoryPathWOGit() + " " + head);
 
     }
 
@@ -45,7 +45,7 @@ public class MainApp extends Application {
     }
 
     public static void setCurrentRepositoryPath(String currentRepositoryPath) {
-        MainApp.currentRepositoryPath.setValue(currentRepositoryPath);
+        GitemberApp.currentRepositoryPath.setValue(currentRepositoryPath);
     }
 
 
@@ -63,8 +63,8 @@ public class MainApp extends Application {
     }
 
     public static void setRepositoryService(GitRepositoryService repositoryService) {
-        MainApp.repositoryService = repositoryService;
-        MainApp.remoteUrl.setValue(repositoryService.getRemoteUrl());
+        GitemberApp.repositoryService = repositoryService;
+        GitemberApp.remoteUrl.setValue(repositoryService.getRemoteUrl());
     }
 
     public static GitemberServiceImpl getGitemberService() {
@@ -72,7 +72,7 @@ public class MainApp extends Application {
     }
 
     public static void setGitemberService(GitemberServiceImpl gitemberService) {
-        MainApp.gitemberService = gitemberService;
+        GitemberApp.gitemberService = gitemberService;
     }
 
     public static void setTitle(String title) {
@@ -91,7 +91,7 @@ public class MainApp extends Application {
         mainStage = stage;
         setTitle(Const.TITLE);
         stage.setScene(scene);
-        stage.getIcons().add(new Image(MainApp.class.getResourceAsStream(Const.ICON)));
+        stage.getIcons().add(new Image(GitemberApp.class.getResourceAsStream(Const.ICON)));
         stage.show();
     }
 

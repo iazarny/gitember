@@ -1,7 +1,6 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.GitemberUtil;
-import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.PlotCommitRenderer;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.InvalidationListener;
@@ -82,7 +81,7 @@ public class BranchViewController implements Initializable {
 
                             commitViewController.fillData(
                                     treeName,
-                                    MainApp.getRepositoryService().adapt(newValue, null)
+                                    GitemberApp.getRepositoryService().adapt(newValue, null)
                             );
 
                             commitViewController.showPlotCommit();
@@ -138,7 +137,7 @@ public class BranchViewController implements Initializable {
 
 
     public void open() throws Exception {
-        this.plotCommits = MainApp.getRepositoryService().getCommitsByTree(this.treeName);
+        this.plotCommits = GitemberApp.getRepositoryService().getCommitsByTree(this.treeName);
         commitsTableView.setItems(FXCollections.observableArrayList(plotCommits));
         plotWidth = calculateLineColumnWidth(plotCommits);
         laneTableColumn.setPrefWidth(plotWidth);

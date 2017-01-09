@@ -85,7 +85,7 @@ public class WorkingCopyController implements Initializable {
         try {
             workingCopyTableView.setItems(
                     FXCollections.observableArrayList(
-                            MainApp.getRepositoryService().getStatuses()));
+                            GitemberApp.getRepositoryService().getStatuses()));
         } catch (Exception e) {
             e.printStackTrace(); //todo alert & log
         }
@@ -101,17 +101,17 @@ public class WorkingCopyController implements Initializable {
 
                     if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
 
-                        MainApp.getRepositoryService().removeMissedFile(item.getShortName());
+                        GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
                         item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
                     } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-                        MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
                         item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
                         item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
                         item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
                     } else {
-                        MainApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
                     }
 
@@ -126,17 +126,17 @@ public class WorkingCopyController implements Initializable {
     public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
         CommitDialog dialog = new CommitDialog(
                 "TODO history of commit messasge",
-                MainApp.getRepositoryService().getUserName(),
-                MainApp.getRepositoryService().getUserEmail()
+                GitemberApp.getRepositoryService().getUserName(),
+                GitemberApp.getRepositoryService().getUserEmail()
         );
         dialog.setTitle("Commit message");
         dialog.setHeaderText("Provide commit message");
         dialog.setContentText("Message:");
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
-            MainApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
-            MainApp.getRepositoryService().setUserName(dialog.getUserName());
-            MainApp.getRepositoryService().commit(result.get());
+            GitemberApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
+            GitemberApp.getRepositoryService().setUserName(dialog.getUserName());
+            GitemberApp.getRepositoryService().commit(result.get());
             open();
         }
     }
@@ -146,7 +146,7 @@ public class WorkingCopyController implements Initializable {
     }
 
     public void stashBtnHandler(ActionEvent actionEvent) throws Exception {
-        MainApp.getRepositoryService().stash();
+        GitemberApp.getRepositoryService().stash();
         open();
 
     }

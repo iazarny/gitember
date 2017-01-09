@@ -96,7 +96,7 @@ public class HistoryViewController implements Initializable {
     public void openHistory() throws Exception {
         historyTableView.setItems(
                 FXCollections.observableArrayList(
-                        MainApp.getRepositoryService().getFileHistory(treeName, fileName)
+                        GitemberApp.getRepositoryService().getFileHistory(treeName, fileName)
                 )
         );
     }
@@ -121,9 +121,9 @@ public class HistoryViewController implements Initializable {
             final String newRevisionName = newRevision.getRevisionFullName();
 
             //todo copy past from commit controller # openDiffWithLatestVersionMenuItemClickHandler
-            final String oldFile = MainApp.getRepositoryService().saveFile(treeName, oldRevisionName, fileName);
-            final String newFile = MainApp.getRepositoryService().saveFile(treeName, newRevisionName, fileName);
-            final String diffFile = MainApp.getRepositoryService().saveDiff(treeName,oldRevisionName , newRevisionName, fileName);
+            final String oldFile = GitemberApp.getRepositoryService().saveFile(treeName, oldRevisionName, fileName);
+            final String newFile = GitemberApp.getRepositoryService().saveFile(treeName, newRevisionName, fileName);
+            final String diffFile = GitemberApp.getRepositoryService().saveDiff(treeName,oldRevisionName , newRevisionName, fileName);
             final DiffViewController fileViewController = new DiffViewController();
             fileViewController.openFile(
                     new File(fileName).getName(),
@@ -141,7 +141,7 @@ public class HistoryViewController implements Initializable {
         try {
             final FileViewController fileViewController = new FileViewController();
             fileViewController.openFile(
-                    MainApp.getRepositoryService().saveFile(treeName, revisionFullName, fileName),
+                    GitemberApp.getRepositoryService().saveFile(treeName, revisionFullName, fileName),
                     fileName);
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();

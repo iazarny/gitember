@@ -11,7 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>com.az.gitember.MainApp</mainClass>
+        <mainClass>com.az.gitember.GitemberApp</mainClass>
     </properties>
 
     <organization>
@@ -108,6 +108,15 @@
                     <additionalClasspathElements>
                         <additionalClasspathElement>${java.home}/lib/jfxrt.jar</additionalClasspathElement>
                     </additionalClasspathElements>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.zenjava</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>8.7.0</version>
+                <configuration>
+                    <vendor>Gitember</vendor>
+                    <mainClass>com.az.gitember.GitemberApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
