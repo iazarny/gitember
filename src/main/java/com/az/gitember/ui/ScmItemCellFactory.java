@@ -1,54 +1,61 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.misc.ScmBranch;
-import com.az.gitember.misc.ScmItem;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TreeCell;
+import javafx.scene.control.TreeView;
 import javafx.util.Callback;
+
+import java.util.function.Consumer;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
  */
-public class ScmItemCellFactory implements Callback<ListView<ScmBranch>, ListCell> {
+public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
 
-    private  final ContextMenu contextMenu;
+    final ContextMenu contextMenu;
+    final Consumer<ScmBranch> validateContextMenu;
 
-    public ScmItemCellFactory(ContextMenu contextMenu) {
+
+    public ScmItemCellFactory(ContextMenu contextMenu, Consumer<ScmBranch> validateContextMenu) {
         this.contextMenu = contextMenu;
+        this.validateContextMenu = validateContextMenu;
     }
 
-    public static class ScmItemCell extends ListCell<ScmBranch> {
-
-        private  final ContextMenu contextMenu;
-
-        public ScmItemCell(ContextMenu contextMenu) {
-            super();
-            this.contextMenu = contextMenu;
-        }
+    public class ScmItemCell extends TreeCell<Object> {
 
         @Override
-        protected void updateItem(ScmBranch item, boolean empty) {
+        protected void updateItem(Object item, boolean empty) {
             super.updateItem(item, empty);
-            if (empty || item == null || item.getShortName() == null) {
+            if (empty || item == null) {
                 setText(null);
                 this.setContextMenu(null);
             } else {
-                setText(item.getShortName());
-                if (item.isHead()) {
-                    setText(item.getShortName());
-                    setStyle("-fx-font-weight: bold;");
+                if (item instanceof String) {
+                    setText(item.toString());
+                    //setGraphic(this.getGraphic()); todo graphics !!!!
+                } else if (item instanceof ScmBranch) {
+                    ScmBranch scmBranch = (ScmBranch) item;
+                    setText(scmBranch.getShortName());
+                    setContextMenu(contextMenu);
+                    setOnContextMenuRequested(e -> validateContextMenu.accept(scmBranch));
+
+
+                    if (scmBranch.isHead()) {
+                        setStyle("-fx-font-weight: bold;");
+                    } else {
+                        setStyle("");
+                    }
+                } else {
+                    setText(item.toString());
                 }
-                this.setContextMenu(contextMenu);
             }
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public ListCell call(final ListView param) {
-        ScmItemCell scmItemCell = new ScmItemCell(contextMenu);
-        return scmItemCell;
-    }
 
+    @Override
+    public TreeCell<Object> call(TreeView<Object> param) {
+        return new ScmItemCell();
+    }
 }

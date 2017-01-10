@@ -23,65 +23,40 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.control.TreeItem?>
 <BorderPane minHeight="600" minWidth="800" prefHeight="720.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.FXMLController">
-    <left>
-        <Accordion prefWidth="260.0" BorderPane.alignment="CENTER">
-            <panes>
-                <TitledPane fx:id="workSpaceTitlePane" animated="true" disable="true" text="Workspace">
-                    <content>
-                        <VBox layoutX="79.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                            <children>
-                                <HBox>
-                                    <children>
-                                        <Hyperlink onAction="#openWorkingCopyHandler" text="Working copy"/>
-                                        <Pane HBox.hgrow="ALWAYS"/>
-                                        <Label text=""/>
-                                    </children>
-                                </HBox>
-                                <HBox>
-                                    <children>
-                                        <Hyperlink text="History"/>
-                                        <Pane HBox.hgrow="ALWAYS"/>
-                                        <Label text=""/>
-                                    </children>
-                                </HBox>
-                                <HBox>
-                                    <children>
-                                        <Hyperlink text="Stashes"/>
-                                        <Pane HBox.hgrow="ALWAYS"/>
-                                        <Label text=""/>
-                                    </children>
-                                </HBox>
-                            </children>
-                        </VBox>
-                    </content>
-                </TitledPane>
-                <TitledPane fx:id="branchesTitlePane" animated="false" disable="true" text="Branches">
-                    <content>
-                        <ListView fx:id="localBranchesList" onContextMenuRequested="#validateLocalBranchActions"
-                                  onMouseClicked="#branchesListMouseClicked" AnchorPane.bottomAnchor="0.0"
-                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <left >
+        <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true">
+            <TreeItem value="dummy">
+                <children>
+                    <TreeItem fx:id="workSpaceTreeItem" value="Workspace">
+                        <children>
+                            <TreeItem fx:id="workingCopyTreeItem" value="Working copy" />
+                            <TreeItem fx:id="historyTreeItem" value="History"/>
+                            <TreeItem fx:id="stashesTreeItem" value="Stashes"/>
+                        </children>
+                        <graphic>
+                            <StackedFontIcon>
+                                <FontIcon iconLiteral="fa-folder-open" />
+                            </StackedFontIcon>
+                        </graphic>
+                    </TreeItem>
+                    <TreeItem fx:id="localBranchesTreeItem" value="Local branches">
 
-                        </ListView>
-                    </content>
-                </TitledPane>
-                <TitledPane fx:id="tagsTitlePane" animated="false" disable="true" text="Tags">
-                    <content>
-                        <ListView fx:id="tagList" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-                    </content>
-                </TitledPane>
-                <TitledPane fx:id="remotesTitlePane" animated="false" disable="true" text="Remotes">
-                    <content>
-                        <ListView fx:id="remoteBranchesList" onMouseClicked="#branchesListMouseClicked"
-                                  prefHeight="353.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0"
-                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-                    </content>
-                </TitledPane>
-            </panes>
-        </Accordion>
+                    </TreeItem>
+                    <TreeItem fx:id="tagsTreeItem" value="Tags">
+
+                    </TreeItem>
+                    <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
+
+                    </TreeItem>
+                </children>
+
+
+            </TreeItem>
+        </TreeView>
     </left>
     <top>
         <VBox>
@@ -132,7 +107,8 @@
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true">
                                 </MenuItem>
-                                <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem" disable="true">
+                                <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem"
+                                          disable="true">
                                 </MenuItem>
                                 <MenuItem text="Pull" onAction="#pullHandler" fx:id="pullMenuItem" disable="true">
                                     <graphic>
@@ -142,7 +118,8 @@
                                     </graphic>
 
                                 </MenuItem>
-                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"  disable="true">
+                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"
+                                          disable="true">
                                     <graphic>
                                         <StackedFontIcon rotate="-45">
                                             <FontIcon iconLiteral="fa-reply-all" StackedFontIcon.iconSize="0.5"/>
@@ -175,7 +152,7 @@
                                 <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase"/>
                                 <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..."/>
                                 <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..."/>
-                                <MenuItem text="Commit" fx:id="commitMenuItem" disable="true" />
+                                <MenuItem text="Commit" fx:id="commitMenuItem" disable="true"/>
                                 <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... "/>
 
                             </items>

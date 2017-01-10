@@ -5,19 +5,29 @@ package com.az.gitember.misc;
  */
 public class ScmBranch extends Pair<String, String> {
 
+    public enum BranchType {
+        LOCAL,
+        REMOTE,
+        TAG
+    }
+
     private boolean head;
 
-    private String objectIdName;
+    private BranchType branchType;
+
     private String remoteName;
 
+/*
     public ScmBranch(String shortName, String fullName) {
         super(shortName, fullName);
     }
+*/
 
-    public ScmBranch(String shortName, String fullName, String objectIdName) {
+    public ScmBranch(String shortName, String fullName, BranchType branchType) {
         super(shortName, fullName);
-        this.objectIdName = objectIdName;
+        this.branchType = branchType;
     }
+
 
     public String getShortName() {
         return super.getFirst();
@@ -35,14 +45,6 @@ public class ScmBranch extends Pair<String, String> {
         this.head = head;
     }
 
-    public String getObjectIdName() {
-        return objectIdName;
-    }
-
-    public void setObjectIdName(String objectIdName) {
-        this.objectIdName = objectIdName;
-    }
-
     public void setRemoteName(String remoteName) {
         this.remoteName = remoteName;
     }
@@ -56,7 +58,6 @@ public class ScmBranch extends Pair<String, String> {
         return "ScmBranch{" +
                 super.toString() +
                 "head=" + head +
-                ", objectIdName='" + objectIdName + '\'' +
                 ", remoteName='" + remoteName + '\'' +
                 '}';
     }

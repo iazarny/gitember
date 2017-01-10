@@ -97,7 +97,8 @@ public class GitRepositoryService {
 
 
     private List<ScmBranch> getBranches(final ListBranchCommand.ListMode listMode,
-                                        final String prefix) throws Exception {
+                                        final String prefix,
+                                        final ScmBranch.BranchType branchType) throws Exception {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
             List<ScmBranch> rez = branchLst
@@ -106,7 +107,8 @@ public class GitRepositoryService {
                     .map(r -> new ScmBranch(
                             r.getName().substring(prefix.length()),
                             r.getName(),
-                            r.getObjectId().getName()))
+                            branchType
+                            ))
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
 
@@ -154,7 +156,7 @@ public class GitRepositoryService {
                     .stream()
                     .map(Ref::getName)
                     .sorted()
-                    .map(r -> new ScmBranch(r, null))
+                    .map(r -> new ScmBranch(r, null, ScmBranch.BranchType.TAG))
                     .collect(Collectors.toList());
         }
     }
@@ -169,7 +171,7 @@ public class GitRepositoryService {
     public List<ScmBranch> getLocalBranches() throws Exception {
         final Ref head = repository.exactRef(Constants.HEAD);
 
-        final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS);
+        final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS, ScmBranch.BranchType.LOCAL);
         scmItems.forEach(
                 i -> {
                     System.out.println("Local branches " + head.getTarget().getName() + " " + i.getFullName());
@@ -180,7 +182,7 @@ public class GitRepositoryService {
     }
 
     public List<ScmBranch> getRemoteBranches() throws Exception {
-        return getBranches(ListBranchCommand.ListMode.REMOTE, GitConst.REMOTE_PREFIX);
+        return getBranches(ListBranchCommand.ListMode.REMOTE, GitConst.REMOTE_PREFIX, ScmBranch.BranchType.REMOTE);
     }
 
 

@@ -5,7 +5,6 @@ import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -30,9 +29,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -48,21 +46,12 @@ public class FXMLController implements Initializable {
     private final Logger log = Logger.getLogger(FXMLController.class.getName());
 
     public Button cloneBtn;
-
     public Button fetchBtn;
-
     public Button pullBtn;
-
     public Button pushBtn;
-
     public Button openBtn;
 
     public Menu openRecentMenuItem;
-
-    public TitledPane workSpaceTitlePane;
-    public TitledPane branchesTitlePane;
-    public TitledPane tagsTitlePane;
-    public TitledPane remotesTitlePane;
 
     public MenuItem pushToRemoteLocalBranchMenuItem;
     public MenuItem fetchLocalBranchMenuItem;
@@ -93,15 +82,14 @@ public class FXMLController implements Initializable {
     public MenuItem commitMenuItem;
     public MenuItem resetVersionMenuItem;
 
-
-    @FXML
-    private ListView localBranchesList;
-
-    @FXML
-    private ListView remoteBranchesList;
-
-    @FXML
-    private ListView tagList;
+    public TreeItem workingCopyTreeItem;
+    public TreeItem workSpaceTreeItem;
+    public TreeItem historyTreeItem;
+    public TreeItem stashesTreeItem;
+    public TreeItem localBranchesTreeItem;
+    public TreeItem tagsTreeItem;
+    public TreeItem remoteBranchesTreeItem;
+    public TreeView repoTreeView;
 
     @FXML
     private AnchorPane hostPanel;
@@ -110,6 +98,8 @@ public class FXMLController implements Initializable {
     private String pwd = null;
     private Optional<Pair<String, String>> uiInputResultToService;
     private CountDownLatch uiInputLatchToService;
+    private final Map<TreeItem, Consumer<Object>> treeItemClickHandlers =  new HashMap<>();
+
 
 
     @SuppressWarnings("unchecked")
@@ -120,23 +110,80 @@ public class FXMLController implements Initializable {
             GitemberApp.getSettingsService().saveLastProject(absPath);
 
             List<ScmBranch> localBranches = GitemberApp.getRepositoryService().getLocalBranches();
-            setUpListView(localBranchesList, localBranches, localBranchListItemContextMenu);
-            setUpListView(remoteBranchesList, GitemberApp.getRepositoryService().getRemoteBranches(), null);
-            setUpListView(tagList, GitemberApp.getRepositoryService().getTags(), null);
-
             GitemberApp.setWorkingBranch(localBranches.stream().filter(ScmBranch::isHead).findFirst().get());
+
+            repoTreeView.setCellFactory(
+                    new ScmItemCellFactory(localBranchListItemContextMenu, o->validateContextMenu(o))
+            );
+            repoTreeView.getSelectionModel()
+                    .selectedItemProperty()
+                    .addListener(
+                            (observable, oldValue, newValue) -> {
+                                treeItemClickHandlers.getOrDefault(newValue, o -> {}).accept(newValue);
+                            }
+                    );
+
+            Map<TreeItem, Consumer<Object>> m0 = setUpListView(localBranchesTreeItem, localBranches, localBranchListItemContextMenu);
+            Map<TreeItem, Consumer<Object>> m1 = setUpListView(remoteBranchesTreeItem, GitemberApp.getRepositoryService().getRemoteBranches(), null);
+            Map<TreeItem, Consumer<Object>> m2 = setUpListView(tagsTreeItem, GitemberApp.getRepositoryService().getTags(), null);
+
+            treeItemClickHandlers.put(workingCopyTreeItem, o -> openWorkingCopyHandler(null));
+            treeItemClickHandlers.put(historyTreeItem, o -> openBranchHistory(GitemberApp.workingBranch.get())); // <- todo incorrect here must be lazy call
+            treeItemClickHandlers.putAll(m0);
+            treeItemClickHandlers.putAll(m1);
+            treeItemClickHandlers.putAll(m2);
+
+            repoTreeView.setDisable(false);
+
+
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot open repository", e);
         }
     }
 
 
-    @SuppressWarnings("unchecked")
-    private void setUpListView(ListView listView, List<ScmBranch> data, ContextMenu contextMenu) {
-        listView.setItems(FXCollections.observableList(data));
-        listView.setCellFactory(new ScmItemCellFactory(contextMenu));
-        listView.refresh();
+    //TODO refactor this spagetti !!!!!!!!!!!!!!!!!!!!!!!!!!! Blya !
+    private Map<TreeItem, Consumer<Object>> setUpListView(TreeItem treeItem, List<ScmBranch> data, ContextMenu contextMenu) {
+
+        treeItem.getChildren().stream().forEach(
+                i ->
+                    treeItemClickHandlers.remove(i)
+
+        );
+
+        treeItem.getChildren().removeAll(treeItem.getChildren());
+
+        Map<TreeItem, Consumer<Object>> rez = new HashMap<>();
+        data.stream().forEach(
+                branch -> {
+                    TreeItem<ScmBranch> child = new TreeItem<>(branch);
+                    treeItem.getChildren().add(child);
+                    rez.put(child, o -> openBranchHistory(branch));
+                }
+        );
+
+        return rez;
     }
+
+    /**
+     * Disable or enable remote operations if local branch not tracking remote branch.
+     *
+     * @param scmBranch branch
+     */
+    public void validateContextMenu(final ScmBranch scmBranch) {
+        if (scmBranch != null) {
+            boolean disableRemoteOp = scmBranch.getRemoteName() == null;
+            fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
+            if (disableRemoteOp) {
+                fetchLocalBranchMenuItem.setText("Fetch");
+                pushToRemoteLocalBranchMenuItem.setText("Push ... ");
+            } else {
+                fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
+                pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
+            }
+        }
+    }
+
 
 
     @Override
@@ -147,9 +194,9 @@ public class FXMLController implements Initializable {
 
         createOpenRecentMenu();
 
-        remoteBranchesList.setCellFactory(new ScmItemCellFactory(null));
+        /*remoteBranchesList.setCellFactory(new ScmItemCellFactory(null)); !!!!!!!!!!!!
         localBranchesList.setCellFactory(new ScmItemCellFactory(localBranchListItemContextMenu));
-        tagList.setCellFactory(new ScmItemCellFactory(null));
+        tagList.setCellFactory(new ScmItemCellFactory(null));*/
 
         openGitTerminalMenuItem.setVisible(GitemberApp.getSettingsService().isWindows());
 
@@ -163,7 +210,6 @@ public class FXMLController implements Initializable {
                     pullAllMenuItem.setDisable(disableRemoteOps);
                     pushMenuItem.setDisable(disableRemoteOps);
                     statReportMenuItem.setDisable(disableRemoteOps);
-                    remotesTitlePane.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
                 }
@@ -182,9 +228,6 @@ public class FXMLController implements Initializable {
                     commitMenuItem.setDisable(disable);
                     resetVersionMenuItem.setDisable(disable);
 
-                    branchesTitlePane.setDisable(disable);
-                    tagsTitlePane.setDisable(disable);
-                    workSpaceTitlePane.setDisable(disable);
                 }
         );
 
@@ -194,9 +237,9 @@ public class FXMLController implements Initializable {
                     if (trackingRemoteBranch) {
                         String localBranch = GitemberApp.workingBranch.get().getShortName();
                         String remoteBranch = newValue.getRemoteName();
-                        fetchMenuItem.setText("Fetch remote " + remoteBranch + " to " + localBranch );
-                        pullMenuItem.setText("Pull remote " + remoteBranch + " to " + localBranch );
-                        pushMenuItem.setText("Push " + localBranch + " remote to " + remoteBranch );
+                        fetchMenuItem.setText("Fetch remote " + remoteBranch + " to " + localBranch);
+                        pullMenuItem.setText("Pull remote " + remoteBranch + " to " + localBranch);
+                        pushMenuItem.setText("Push " + localBranch + " remote to " + remoteBranch);
 
                         Tooltip tt = new Tooltip(
                                 MessageFormat.format(
@@ -282,23 +325,22 @@ public class FXMLController implements Initializable {
         return localBranchListItemContextMenu;
     }
 
-    @SuppressWarnings("unchecked")
-    public void branchesListMouseClicked(Event event) throws Exception {
-        ScmBranch scmBranch = ((ListView<ScmBranch>) event.getSource()).getSelectionModel().getSelectedItem();
-        if (scmBranch != null) {
-            final FXMLLoader fxmlLoader = new FXMLLoader();
-            try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
-                final Parent branchView = fxmlLoader.load(is);
-                final BranchViewController branchViewController = fxmlLoader.getController();
-                branchViewController.setTreeName(scmBranch.getFullName());
-                branchViewController.open();
-                hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                hostPanel.getChildren().add(branchView);
+    public void openBranchHistory(final ScmBranch scmBranch) {
+        try {
+            if (scmBranch != null) {
+                final FXMLLoader fxmlLoader = new FXMLLoader();
+                try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
+                    final Parent branchView = fxmlLoader.load(is);
+                    final BranchViewController branchViewController = fxmlLoader.getController();
+                    branchViewController.setTreeName(scmBranch.getFullName());
+                    branchViewController.open();
+                    hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                    hostPanel.getChildren().add(branchView);
+                }
             }
-
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot open branch view", e);
         }
-
-
     }
 
 
@@ -354,8 +396,7 @@ public class FXMLController implements Initializable {
     }
 
 
-    @SuppressWarnings("unused")
-    public void openWorkingCopyHandler(ActionEvent actionEvent) {
+    public void openWorkingCopyHandler(Object param) {
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
             final Parent workCopyView = fxmlLoader.load(is);
@@ -463,18 +504,26 @@ public class FXMLController implements Initializable {
 
     @SuppressWarnings("unchecked")
     public void localBranchCheckoutHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
         try {
             GitemberApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
-            setUpListView(localBranchesList,
+            /*setUpListView(localBranchesList,  !!!!!
                     GitemberApp.getRepositoryService().getLocalBranches(),
                     localBranchListItemContextMenu
-            );
+            );*/
             GitemberApp.setWorkingBranch(scmBranch);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot checkout branch " + scmBranch.getShortName(), e);
 
         }
+    }
+
+    private ScmBranch getScmBranch() {
+
+        TreeItem<ScmBranch> item = (TreeItem<ScmBranch>) repoTreeView.getSelectionModel().getSelectedItem();
+
+        return item.getValue();
+
     }
 
 
@@ -488,14 +537,17 @@ public class FXMLController implements Initializable {
         Optional<String> dialogResult = dialog.showAndWait();
 
         if (dialogResult.isPresent()) {
-            ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+            ScmBranch scmBranch = getScmBranch();
             try {
                 GitemberApp.getRepositoryService().createLocalBranch(
                         scmBranch.getFullName(),
                         dialogResult.get());
-                localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches()));
+
+                /*localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches())); !!!!
                 localBranchesList.setCellFactory(new ScmItemCellFactory(localBranchListItemContextMenu));
-                localBranchesList.refresh();
+                localBranchesList.refresh();*/
+                setUpListView(localBranchesTreeItem, GitemberApp.getRepositoryService().getLocalBranches(), localBranchListItemContextMenu);
+
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Cannot create new local branch " + scmBranch, e);
             }
@@ -508,7 +560,7 @@ public class FXMLController implements Initializable {
     @SuppressWarnings("unchecked")
     public void localBranchMergeHandler(ActionEvent actionEvent) {
 
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
 
         TextAreaInputDialog dialog = new TextAreaInputDialog(
                 "Merge " + scmBranch.getFullName() + " to " + GitemberApp.workingBranch.get().getShortName()
@@ -525,9 +577,10 @@ public class FXMLController implements Initializable {
                         dialogResult.get()
                 );
 
-                localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches()));
+                /*localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches())); !!!!
                 localBranchesList.setCellFactory(new ScmItemCellFactory(localBranchListItemContextMenu));
-                localBranchesList.refresh();
+                localBranchesList.refresh();*/
+                setUpListView(localBranchesTreeItem, GitemberApp.getRepositoryService().getLocalBranches(), localBranchListItemContextMenu);
 
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Cannot merge local branch " + scmBranch.getFullName()
@@ -546,7 +599,7 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void localBranchPushHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
         if (scmBranch.getRemoteName() == null) {
             TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
             dialog.setTitle("Branch name");
@@ -566,7 +619,7 @@ public class FXMLController implements Initializable {
     @SuppressWarnings("unchecked")
     public void localBranchDeleteHandler(ActionEvent actionEvent) {
 
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
 
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Please confirm");
@@ -577,9 +630,10 @@ public class FXMLController implements Initializable {
         if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
             try {
                 GitemberApp.getRepositoryService().deleteLocalBranch(scmBranch.getFullName());
-                localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches()));
+                /*localBranchesList.setItems(FXCollections.observableList(GitemberApp.getRepositoryService().getLocalBranches())); !!!!!
                 localBranchesList.setCellFactory(new ScmItemCellFactory(localBranchListItemContextMenu));
-                localBranchesList.refresh();
+                localBranchesList.refresh();*/
+                setUpListView(localBranchesTreeItem, GitemberApp.getRepositoryService().getLocalBranches(), localBranchListItemContextMenu);
             } catch (CannotDeleteCurrentBranchException e) {
                 showResult(e.getMessage(), Alert.AlertType.ERROR);
             } catch (Exception e) {
@@ -590,34 +644,6 @@ public class FXMLController implements Initializable {
 
     }
 
-    /**
-     * Disable or enable remote operations if local branch not tracking remote branch.
-     *
-     * @param event event
-     */
-    public void validateLocalBranchActions(Event event) {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
-
-        if (scmBranch != null) {
-
-            boolean disableRemoteOp = scmBranch.getRemoteName() == null;
-            fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
-
-            if (disableRemoteOp) {
-                fetchLocalBranchMenuItem.setText("Fetch");
-                pushToRemoteLocalBranchMenuItem.setText("Push ... ");
-            } else {
-                fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
-                pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
-            }
-
-        } else {
-
-            localBranchesList.setContextMenu(null);
-            event.consume();
-        }
-
-    }
 
 
     //---------------------------------------------------------------------------------------------------------------//
@@ -645,7 +671,7 @@ public class FXMLController implements Initializable {
                 absPath += File.separator + Const.GIT_FOLDER;
             }
             openRepository(absPath);
-            openWorkingCopyHandler(actionEvent);
+            openWorkingCopyHandler(null);
         }
 
         createOpenRecentMenu();
@@ -820,7 +846,7 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void fetchHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
@@ -838,7 +864,7 @@ public class FXMLController implements Initializable {
 
     @SuppressWarnings("unused")
     public void pullHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = (ScmBranch) localBranchesList.getSelectionModel().getSelectedItem();
+        ScmBranch scmBranch = getScmBranch();
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {

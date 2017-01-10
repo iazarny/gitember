@@ -57,7 +57,7 @@ public class WorkingCopyController implements Initializable {
                         @Override
                         protected void updateItem(ScmItem item, boolean empty) {
                             super.updateItem(item, empty);
-                            super.updateItem(item, empty) ;
+                            super.updateItem(item, empty);
                             if (item == null) {
                                 setStyle("");
                             } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
@@ -81,7 +81,7 @@ public class WorkingCopyController implements Initializable {
                 || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED);
     }
 
-    public void open()  {
+    public void open() {
         try {
             workingCopyTableView.setItems(
                     FXCollections.observableArrayList(
@@ -92,37 +92,69 @@ public class WorkingCopyController implements Initializable {
     }
 
 
-    public void addItemToCommitEventHandler(Event event) throws Exception {
+    public void addItemToCommitEventHandler(Event event) {
         if (event.getTarget() instanceof CheckBoxTableCell) {
             CheckBoxTableCell cell = (CheckBoxTableCell) event.getTarget();
             if (cell.getTableColumn() == this.selectTableColumn) {
                 ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
-                if (isUnstaged(item)) {
-
-                    if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
-
-                        GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
-                        item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
-                        item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
-                    } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
-                        item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
-                        item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
-                        item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
-                        item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
-                    } else {
-                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
-                        item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
-                    }
-
-
-                }
+                stageItem(item);
                 workingCopyTableView.refresh();
             }
             //TODO V2 unstage changes
         }
     }
 
+    private void stageItem(ScmItem item) {
+        try {
+            if (isUnstaged(item)) {
+
+                if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+
+                    GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
+                    item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
+                    item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
+                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+                    GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                    item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
+                    item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
+                    item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
+                    item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
+                } else {
+                    GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                    item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
+                }
+
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Stage all changes for commit.
+     *
+     * @param actionEvent
+     * @throws Exception
+     */
+    public void stageAllBtnHandler(ActionEvent actionEvent) {
+
+        workingCopyTableView.getItems().stream().forEach(
+                i -> {
+                    stageItem((ScmItem) i);
+                }
+        );
+
+    }
+
+
+    /**
+     * Commit all staged changes.
+     *
+     * @param actionEvent event
+     * @throws Exception
+     */
     public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
         CommitDialog dialog = new CommitDialog(
                 "TODO history of commit messasge",

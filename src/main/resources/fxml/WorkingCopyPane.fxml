@@ -23,7 +23,7 @@
     <top>
         <ToolBar prefHeight="40.0" prefWidth="200.0">
             <items>
-                <Button mnemonicParsing="false" text="Stage all"  fx:id="stageAllBtn" onAction="#commitBtnHandler"/>
+                <Button mnemonicParsing="false" text="Stage all"  fx:id="stageAllBtn" onAction="#stageAllBtnHandler"/>
                 <Button mnemonicParsing="false" text="Commit ..."  fx:id="commitBtn" onAction="#commitBtnHandler"/>
                 <Button mnemonicParsing="false" text="Stash"  fx:id="stashBtn" onAction="#stashBtnHandler"/>
                 <Pane HBox.hgrow="ALWAYS" />
