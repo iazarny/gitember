@@ -2,6 +2,7 @@ package com.az.gitember.service;
 
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.Settings;
+import com.az.gitember.misc.Triplet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -76,7 +77,6 @@ public class SettingsServiceImpl {
     }
 
 
-
     /**
      * Get home directory.
      *
@@ -110,7 +110,7 @@ public class SettingsServiceImpl {
         for (String folder : props.getProjects()) {
             Path path = Paths.get(folder);
             if (Files.exists(path)) {
-                String shortName =  new File(new File(folder).getParent()).getName();
+                String shortName = new File(new File(folder).getParent()).getName();
                 pairs.add(new Pair<>(shortName, folder));
             } else {
                 keyToRemove.add(folder);
@@ -184,4 +184,27 @@ public class SettingsServiceImpl {
         }
     }
 
+    public Triplet<String, String, String> getLoginAndPassword(String remoteUrl) {
+        return read().getLoginPassword()
+                .stream()
+                .filter(t -> remoteUrl.equals(t.getFirst()))
+                .findFirst().orElse(Triplet.of(null, null, null));
+    }
+
+    public void saveLoginAndPassword(String repoUrl, String login, String pwd) {
+        Settings settings = read();
+        Optional<Triplet<String, String, String>> tr = settings.getLoginPassword()
+                .stream()
+                .filter(t -> repoUrl.equals(t.getFirst()))
+                .findFirst();
+        if (tr.isPresent()) {
+            Triplet<String, String, String> t = tr.get();
+            t.setSecond(login);
+            t.setThird(pwd);
+        } else {
+            settings.getLoginPassword().add(Triplet.of(repoUrl, login, pwd));
+        }
+        save(settings);
+
+    }
 }

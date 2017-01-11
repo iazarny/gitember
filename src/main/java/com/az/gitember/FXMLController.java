@@ -175,7 +175,7 @@ public class FXMLController implements Initializable {
             boolean disableRemoteOp = scmBranch.getRemoteName() == null;
             fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
             if (disableRemoteOp) {
-                fetchLocalBranchMenuItem.setText("Fetch");
+                fetchLocalBranchMenuItem.setText("Fetch all");
                 pushToRemoteLocalBranchMenuItem.setText("Push ... ");
             } else {
                 fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
@@ -418,6 +418,7 @@ public class FXMLController implements Initializable {
     private RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
         boolean ok = false;
         RemoteOperationValue operationValue = null;
+        Settings settings = GitemberApp.getSettingsService().read();
 
 
         while (!ok) {
@@ -427,9 +428,18 @@ public class FXMLController implements Initializable {
                 case AUTH_REQUIRED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
-                        System.out.println("### AUTH_REQUIRED Dialog " + Thread.currentThread().getName());
-                        login = GitemberApp.getSettingsService().getLastLoginName();
-                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, null)
+                        if (settings.isRememberPasswords()) {
+                            Triplet<String,String, String> loginPwd = GitemberApp.getSettingsService()
+                                    .getLoginAndPassword(GitemberApp.remoteUrl.get());
+                            login = loginPwd.getSecond();
+                            pwd = loginPwd.getThird();
+
+                        } else {
+                            login = GitemberApp.getSettingsService().getLastLoginName();
+                            pwd = null;
+                        }
+
+                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, pwd)
                                 .showAndWait();
                         uiInputLatchToService.countDown();
                     });
@@ -438,13 +448,11 @@ public class FXMLController implements Initializable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("### AUTH_REQUIRED " + Thread.currentThread().getName());
                     break;
                 }
                 case NOT_AUTHORIZED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
-                        System.out.println("### NOT_AUTHORIZED dialog" + Thread.currentThread().getName());
                         uiInputResultToService = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
                                 .showAndWait();
                         uiInputLatchToService.countDown();
@@ -454,7 +462,6 @@ public class FXMLController implements Initializable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("### NOT_AUTHORIZED " + Thread.currentThread().getName());
                     break;
                 }
                 default: {
@@ -465,7 +472,11 @@ public class FXMLController implements Initializable {
             if (uiInputResultToService != null && uiInputResultToService.isPresent()) {
                 login = uiInputResultToService.get().getFirst();
                 pwd = uiInputResultToService.get().getSecond();
-                GitemberApp.getSettingsService().saveLastLoginName(login);
+                if (settings.isRememberPasswords()) {
+                    GitemberApp.getSettingsService().saveLoginAndPassword(GitemberApp.remoteUrl.get(), login, pwd);
+                } else {
+                    GitemberApp.getSettingsService().saveLastLoginName(login);
+                }
                 continue;
             } else {
                 ok = true;
@@ -754,6 +765,7 @@ public class FXMLController implements Initializable {
         dialog.setContentText("Please provide remote repository URL:");
         Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
+            GitemberApp.remoteUrl.setValue(dialogResult.get().getFirst());
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
                 @Override
                 protected RemoteOperationValue call() throws Exception {

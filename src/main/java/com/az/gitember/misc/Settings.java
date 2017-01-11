@@ -1,8 +1,12 @@
 package com.az.gitember.misc;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by Igor_Azarny on 07 -Jan -2017.
@@ -24,6 +28,8 @@ public class Settings implements Serializable {
     private String lastLoginName;
     private String lastProject;
     private ArrayList<String> projects = new ArrayList<>();
+    private ArrayList<Triplet<String, String, String>> loginPassword = new ArrayList<>();
+
 
     public ArrayList<String> getProjects() {
         return projects;
@@ -127,5 +133,13 @@ public class Settings implements Serializable {
 
     public void setProxyPassword(String proxyPassword) {
         this.proxyPassword = proxyPassword;
+    }
+
+    public ArrayList<Triplet<String, String, String>> getLoginPassword() {
+        return loginPassword;
+    }
+
+    public void setLoginPassword(ArrayList<Triplet<String, String, String>> loginPassword) {
+        this.loginPassword = loginPassword;
     }
 }

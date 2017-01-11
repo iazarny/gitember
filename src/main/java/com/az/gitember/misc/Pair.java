@@ -9,8 +9,8 @@ public class Pair<FIRST, SECOND> implements Serializable {
 
     private static final long serialVersionUID = 2016116L;
 
-    private final FIRST first;
-    private final SECOND second;
+    private FIRST first;
+    private SECOND second;
 
     public static Pair of(Object first, Object second) {
         return new Pair(first, second);
@@ -19,6 +19,9 @@ public class Pair<FIRST, SECOND> implements Serializable {
     public Pair(final FIRST first, final SECOND second) {
         this.first = first;
         this.second = second;
+    }
+
+    public Pair() {
     }
 
     public FIRST getFirst() {
@@ -36,23 +39,15 @@ public class Pair<FIRST, SECOND> implements Serializable {
 
         Pair<?, ?> pair = (Pair<?, ?>) o;
 
-        if (!first.equals(pair.first)) return false;
+        if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
         return second != null ? second.equals(pair.second) : pair.second == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = first.hashCode();
+        int result = first != null ? first.hashCode() : 0;
         result = 31 * result + (second != null ? second.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public String toString() {
-        return this.getClass().getName()
-                + "{ first: \"" + first + "\","
-                + "second: \"" + second + "\" }";
-    }
-
 }
