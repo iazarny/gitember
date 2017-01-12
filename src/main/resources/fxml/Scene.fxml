@@ -33,9 +33,30 @@
                 <children>
                     <TreeItem fx:id="workSpaceTreeItem" value="Workspace">
                         <children>
-                            <TreeItem fx:id="workingCopyTreeItem" value="Working copy" />
-                            <TreeItem fx:id="historyTreeItem" value="History"/>
-                            <TreeItem fx:id="stashesTreeItem" value="Stashes"/>
+                            <TreeItem fx:id="workingCopyTreeItem" value="Working copy">
+                                <graphic>
+                                    <StackedFontIcon>
+                                        <FontIcon iconLiteral="fa-folder-open-o" />
+                                    </StackedFontIcon>
+                                </graphic>
+
+                            </TreeItem>
+                            <TreeItem fx:id="historyTreeItem" value="History">
+                                <graphic>
+                                    <StackedFontIcon>
+                                        <FontIcon iconLiteral="fa-history" />
+                                    </StackedFontIcon>
+                                </graphic>
+
+                            </TreeItem>
+                            <TreeItem fx:id="stashesTreeItem" value="Stashes">
+                                <graphic>
+                                    <StackedFontIcon>
+                                        <FontIcon iconLiteral="fa-sticky-note-o" />
+                                    </StackedFontIcon>
+                                </graphic>
+
+                            </TreeItem>
                         </children>
                         <graphic>
                             <StackedFontIcon>
@@ -44,12 +65,28 @@
                         </graphic>
                     </TreeItem>
                     <TreeItem fx:id="localBranchesTreeItem" value="Local branches">
+                        <graphic>
+                            <StackedFontIcon>
+                                <FontIcon iconLiteral="fa-share-alt" />
+                            </StackedFontIcon>
+                        </graphic>
 
                     </TreeItem>
                     <TreeItem fx:id="tagsTreeItem" value="Tags">
 
+                        <graphic>
+                            <StackedFontIcon>
+                                <FontIcon iconLiteral="fa-tags" />
+                            </StackedFontIcon>
+                        </graphic>
+
                     </TreeItem>
                     <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
+                        <graphic>
+                            <StackedFontIcon>
+                                <FontIcon iconLiteral="fa-share-alt" />
+                            </StackedFontIcon>
+                        </graphic>
 
                     </TreeItem>
                 </children>
@@ -118,22 +155,17 @@
                                     </graphic>
 
                                 </MenuItem>
-                                <MenuItem text="Pull all" onAction="#pullHandler" fx:id="pullAllMenuItem"
-                                          disable="true">
-                                    <graphic>
-                                        <StackedFontIcon rotate="-45">
-                                            <FontIcon iconLiteral="fa-reply-all" StackedFontIcon.iconSize="0.5"/>
-                                        </StackedFontIcon>
-                                    </graphic>
-                                </MenuItem>
+                                <MenuItem text="Pull all" onAction="#pullAllHandler" fx:id="pullAllMenuItem"
+                                          disable="true"/>
                                 <SeparatorMenuItem/>
-                                <MenuItem text="Push" fx:id="pushMenuItem" disable="true">
+                                <MenuItem text="Push" fx:id="pushMenuItem" disable="true" onAction="#localBranchPushHandler">
                                     <graphic>
                                         <StackedFontIcon rotate="-23">
                                             <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
+                                <MenuItem text="Push all ..." fx:id="pushAllMenuItem" disable="true" onAction="#pushAllHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true">
                                     <graphic>
@@ -201,15 +233,15 @@
 
                         </Button>
 
-                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler"
+                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#localBranchPushHandler"
                                 text="Push">
                             <graphic>
                                 <StackedFontIcon rotate="-23">
                                     <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
                                 </StackedFontIcon>
                             </graphic>
-
                         </Button>
+
                         <Pane HBox.hgrow="ALWAYS"/>
                         <TextField/>
                         <Button mnemonicParsing="false">
@@ -228,10 +260,11 @@
         <AnchorPane fx:id="hostPanel" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER"/>
     </center>
     <bottom>
-        <ToolBar>
+        <ToolBar fx:id="progressBar" visible="false">
             <items>
+                <Label fx:id="operationName" visible="true" text="Operation" HBox.hgrow="ALWAYS" minWidth="150"/>
                 <ProgressBar fx:id="operationProgressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0"
-                             visible="false" HBox.hgrow="ALWAYS"/>
+                             visible="true" HBox.hgrow="ALWAYS"/>
             </items>
         </ToolBar>
     </bottom>

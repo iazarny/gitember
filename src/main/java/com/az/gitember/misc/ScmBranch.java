@@ -17,12 +17,6 @@ public class ScmBranch extends Pair<String, String> {
 
     private String remoteName;
 
-/*
-    public ScmBranch(String shortName, String fullName) {
-        super(shortName, fullName);
-    }
-*/
-
     public ScmBranch(String shortName, String fullName, BranchType branchType) {
         super(shortName, fullName);
         this.branchType = branchType;
@@ -53,11 +47,21 @@ public class ScmBranch extends Pair<String, String> {
         return remoteName;
     }
 
+    public BranchType getBranchType() {
+        return branchType;
+    }
+
+    public void setBranchType(BranchType branchType) {
+        this.branchType = branchType;
+    }
+
     @Override
     public String toString() {
         return "ScmBranch{" +
-                super.toString() +
+                "short=" + super.getFirst() +
+                "full=" + super.getSecond() +
                 "head=" + head +
+                ", branchType=" + branchType +
                 ", remoteName='" + remoteName + '\'' +
                 '}';
     }

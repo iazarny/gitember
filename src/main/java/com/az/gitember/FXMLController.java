@@ -14,6 +14,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.AnchorPane;
@@ -64,6 +65,8 @@ public class FXMLController implements Initializable {
 
 
     public ProgressBar operationProgressBar;
+    public Label operationName;
+    public ToolBar progressBar;
 
 
     public MenuItem openGitTerminalMenuItem;
@@ -72,6 +75,7 @@ public class FXMLController implements Initializable {
     public MenuItem pullMenuItem;
     public MenuItem pullAllMenuItem;
     public MenuItem pushMenuItem;
+    public MenuItem pushAllMenuItem;
     public MenuItem statReportMenuItem;
     public MenuItem checkoutMenuItem;
     public MenuItem mergeMenuItem;
@@ -89,6 +93,7 @@ public class FXMLController implements Initializable {
     public TreeItem tagsTreeItem;
     public TreeItem remoteBranchesTreeItem;
     public TreeView repoTreeView;
+
 
     @FXML
     private AnchorPane hostPanel;
@@ -114,7 +119,8 @@ public class FXMLController implements Initializable {
                     new ScmItemCellFactory(localBranchListItemContextMenu, this::validateContextMenu)
             );
             repoTreeView.getSelectionModel().selectedItemProperty().addListener(
-                    (ob, o, n) ->  treeItemClickHandlers.getOrDefault(n, z -> {}).accept(n)
+                    (ob, o, n) -> treeItemClickHandlers.getOrDefault(n, z -> {
+                    }).accept(n)
             );
 
             fillBranchTree(localBranches, localBranchesTreeItem);
@@ -148,6 +154,7 @@ public class FXMLController implements Initializable {
     /**
      * Replace with something like
      * data.stream().collect(Collectors.toMap( b -> new TreeItem<>(b),  (branch) -> openBranchHistory(branch) ));
+     *
      * @param data list of branches
      * @return map of tree item - handler
      */
@@ -175,12 +182,14 @@ public class FXMLController implements Initializable {
             boolean disableRemoteOp = scmBranch.getRemoteName() == null;
             fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
             if (disableRemoteOp) {
-                fetchLocalBranchMenuItem.setText("Fetch all");
-                pushToRemoteLocalBranchMenuItem.setText("Push ... ");
+
+                pushToRemoteLocalBranchMenuItem.setText("Push to ... ");
             } else {
                 fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
                 pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
             }
+
+            fetchLocalBranchMenuItem.setVisible(!disableRemoteOp);
         }
     }
 
@@ -204,6 +213,7 @@ public class FXMLController implements Initializable {
 
                     pullAllMenuItem.setDisable(disableRemoteOps);
                     pushMenuItem.setDisable(disableRemoteOps);
+                    pushAllMenuItem.setDisable(disableRemoteOps);
                     statReportMenuItem.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
@@ -339,14 +349,14 @@ public class FXMLController implements Initializable {
     }
 
 
-    private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin) {
+    private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin, boolean setTrackeRemote) {
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
-                                localBranchName, remoteBranchName, login, pwd, setOrigin,
-                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                                localBranchName, remoteBranchName, login, pwd, setOrigin, setTrackeRemote,
+                                new DefaultProgressMonitor((t, d) -> { updateTitle(t); updateProgress(d, 1.0);  }))
                 );
             }
         };
@@ -359,8 +369,9 @@ public class FXMLController implements Initializable {
                                  final Consumer<RemoteOperationValue> onError) {
 
 
+        progressBar.setVisible(true);
         operationProgressBar.progressProperty().bind(longTask.progressProperty());
-        operationProgressBar.setVisible(true);
+        operationName.textProperty().bind(longTask.titleProperty());
         GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
 
         longTask.setOnSucceeded(val -> Platform.runLater(
@@ -385,7 +396,8 @@ public class FXMLController implements Initializable {
                         }
                     }
                     operationProgressBar.progressProperty().unbind();
-                    operationProgressBar.setVisible(false);
+                    operationName.textProperty().unbind();
+                    progressBar.setVisible(false);
                 }
         ));
     }
@@ -429,7 +441,7 @@ public class FXMLController implements Initializable {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
                         if (settings.isRememberPasswords()) {
-                            Triplet<String,String, String> loginPwd = GitemberApp.getSettingsService()
+                            Triplet<String, String, String> loginPwd = GitemberApp.getSettingsService()
                                     .getLoginAndPassword(GitemberApp.remoteUrl.get());
                             login = loginPwd.getSecond();
                             pwd = loginPwd.getThird();
@@ -583,6 +595,7 @@ public class FXMLController implements Initializable {
 
     /**
      * Push selected branch.
+     * New remote branch will be created if it not tracked some remote branch.
      *
      * @param actionEvent event
      */
@@ -597,10 +610,15 @@ public class FXMLController implements Initializable {
             Optional<String> dialogResult = dialog.showAndWait();
             if (dialogResult.isPresent()) {
                 scmBranch.setRemoteName(dialogResult.get());
-                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true, true);
+                try {
+                    fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
+                } catch (Exception e) {
+                    log.log(Level.SEVERE, "Cannot load list of local branches after push " + scmBranch, e);
+                }
             }
         } else {
-            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true);
+            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true, false);
         }
     }
 
@@ -631,7 +649,7 @@ public class FXMLController implements Initializable {
 
     private ScmBranch getScmBranch() {
         TreeItem<ScmBranch> item = (TreeItem<ScmBranch>) repoTreeView.getSelectionModel().getSelectedItem();
-        return item.getValue();
+        return item == null ? null : item.getValue();
     }
 
 
@@ -775,7 +793,7 @@ public class FXMLController implements Initializable {
                                     dialogResult.get().getSecond(),
                                     login,
                                     pwd,
-                                    new DefaultProgressMonitor(d -> updateProgress(d, 1.0))
+                                    new DefaultProgressMonitor((t, d) -> { updateTitle(t); updateProgress(d, 1.0);  })
                             )
                     );
                 }
@@ -817,17 +835,7 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void fetchHandlerAll(ActionEvent actionEvent) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryFetch(
-                                null, login, pwd, new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
-                );
-            }
-        };
-        prepareLongTask(longTask, null, null);
-        new Thread(longTask).start();
+        fetch(null);
     }
 
     /**
@@ -836,32 +844,43 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void fetchHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = getScmBranch();
+        fetch(GitemberApp.workingBranch.get().getRemoteName());
+    }
+
+    private void fetch(final String branchName) {
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryFetch(
-                                scmBranch.getRemoteName(), login, pwd,
-                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                                branchName, login, pwd,
+                                new DefaultProgressMonitor((t, d) -> { updateTitle(t); updateProgress(d, 1.0);  }))
                 );
             }
         };
         prepareLongTask(longTask, null, null);
         new Thread(longTask).start();
-
     }
 
     @SuppressWarnings("unused")
     public void pullHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = getScmBranch();
+        String branchName = GitemberApp.workingBranch.get().getRemoteName();
+        pull(branchName);
+    }
+
+    @SuppressWarnings("unused")
+    public void pullAllHandler(ActionEvent actionEvent) {
+        pull(null);
+    }
+
+    private void pull(final String branchName) {
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryPull(
-                                scmBranch.getRemoteName(), login, pwd,
-                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
+                                branchName, login, pwd,
+                                new DefaultProgressMonitor((t, d) -> { updateTitle(t); updateProgress(d, 1.0);  }))
                 );
             }
         };
@@ -869,21 +888,6 @@ public class FXMLController implements Initializable {
         new Thread(longTask).start();
     }
 
-    @SuppressWarnings("unused")
-    public void pullHandlerAll(ActionEvent actionEvent) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryPull(
-                                null, login, pwd,
-                                new DefaultProgressMonitor(d -> updateProgress(d, 1.0)))
-                );
-            }
-        };
-        prepareLongTask(longTask, null, null);
-        new Thread(longTask).start();
-    }
 
     /**
      * Push all branches.
@@ -891,7 +895,7 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     @SuppressWarnings("unused")
-    public void pushHandler(ActionEvent actionEvent) {
+    public void pushAllHandler(ActionEvent actionEvent) {
 
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Please confirm");
@@ -899,7 +903,7 @@ public class FXMLController implements Initializable {
         alert.setContentText("Do you really want to push all branches ?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            pushToRemoteRepository("+refs/heads/*", "refs/heads/*", false);
+            pushToRemoteRepository("+refs/heads/*", "refs/heads/*", false, false);
         }
     }
 

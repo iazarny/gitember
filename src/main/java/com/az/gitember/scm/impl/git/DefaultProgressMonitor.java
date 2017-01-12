@@ -2,6 +2,7 @@ package com.az.gitember.scm.impl.git;
 
 import org.eclipse.jgit.lib.ProgressMonitor;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -9,25 +10,27 @@ import java.util.function.Consumer;
  */
 public class DefaultProgressMonitor implements ProgressMonitor {
 
-    private final Consumer<Double> percentageCompleteConsumer;
+    private final BiConsumer<String, Double> percentageCompleteConsumer;
 
     private int totalWork = Integer.MAX_VALUE;
     private int completed = 0;
+    private String title;
 
-    public DefaultProgressMonitor(Consumer<Double> percentageCompleteConsumer) {
+    public DefaultProgressMonitor(BiConsumer<String, Double> percentageCompleteConsumer) {
         this.percentageCompleteConsumer = percentageCompleteConsumer;
     }
 
     @Override
     public void start(int totalTasks) {
-        percentageCompleteConsumer.accept(0.0);
+        percentageCompleteConsumer.accept(title, 0.0);
 
     }
 
     @Override
     public void beginTask(String title, int totalWork) {
         setTotalWork(totalWork);
-        completed = 0;
+        this.completed = 0;
+        this.title = title;
 
     }
 
@@ -38,7 +41,7 @@ public class DefaultProgressMonitor implements ProgressMonitor {
 
     @Override
     public void endTask() {
-        percentageCompleteConsumer.accept(1.0);
+        percentageCompleteConsumer.accept(title, 1.0);
     }
 
     @Override
@@ -49,14 +52,14 @@ public class DefaultProgressMonitor implements ProgressMonitor {
     public void setTotalWork(int totalWork) {
         this.totalWork = totalWork;
         if (totalWork > 0) {
-            percentageCompleteConsumer.accept(1.0 * completed  / totalWork);
+            percentageCompleteConsumer.accept(title, 1.0 * completed  / totalWork);
         }
     }
 
     public void setCompleted(int completed) {
         this.completed += completed;
         if (totalWork > 0) {
-            percentageCompleteConsumer.accept(1.0 * this.completed / totalWork);
+            percentageCompleteConsumer.accept(title, 1.0 * this.completed / totalWork);
         }
     }
 }

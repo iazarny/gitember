@@ -1,10 +1,13 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.misc.ScmBranch;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
 import javafx.util.Callback;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.function.Consumer;
 
@@ -15,6 +18,7 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
 
     final ContextMenu contextMenu;
     final Consumer<ScmBranch> validateContextMenu;
+
 
 
     public ScmItemCellFactory(ContextMenu contextMenu, Consumer<ScmBranch> validateContextMenu) {
@@ -33,7 +37,7 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
             } else {
                 if (item instanceof String) {
                     setText(item.toString());
-                    //setGraphic(this.getGraphic()); todo graphics !!!!
+                    setGraphic(getTreeItem().getGraphic());
                 } else if (item instanceof ScmBranch) {
                     ScmBranch scmBranch = (ScmBranch) item;
                     setText(scmBranch.getShortName());
@@ -46,6 +50,14 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
                     } else {
                         setStyle("");
                     }
+                    if (scmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+                        setGraphic(new FontIcon(FontAwesome.CODE_FORK));
+                    } else if (scmBranch.getBranchType() == ScmBranch.BranchType.REMOTE) {
+                        setGraphic(new FontIcon(FontAwesome.CODE_FORK));
+                    } else if (scmBranch.getBranchType() == ScmBranch.BranchType.TAG) {
+                        setGraphic(new FontIcon(FontAwesome.TAG));
+                    }
+
                 } else {
                     setText(item.toString());
                 }
