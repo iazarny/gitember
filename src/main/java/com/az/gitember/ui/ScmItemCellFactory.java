@@ -33,11 +33,14 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
             super.updateItem(item, empty);
             if (empty || item == null) {
                 setText(null);
-                this.setContextMenu(null);
+                setContextMenu(null);
+                setGraphic(null);
+                setStyle("");
             } else {
                 if (item instanceof String) {
                     setText(item.toString());
                     setGraphic(getTreeItem().getGraphic());
+                    setStyle("");
                 } else if (item instanceof ScmBranch) {
                     ScmBranch scmBranch = (ScmBranch) item;
                     setText(scmBranch.getShortName());

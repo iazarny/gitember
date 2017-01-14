@@ -2,19 +2,16 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
+import com.az.gitember.ui.DerivedScrollEvent;
 import com.az.gitember.ui.DerivedScrollEventType;
 import com.az.gitember.ui.DiffLineNumberFactory;
-import com.az.gitember.ui.DerivedScrollEvent;
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
-import javafx.event.EventType;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -29,10 +26,11 @@ import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyledTextArea;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.reactfx.util.FxTimer;
 import org.reactfx.value.Var;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -120,12 +118,17 @@ public class DiffViewController extends BaseFileViewController {
         newlColumn.setPercentWidth(45);
         gridPanel.getColumnConstraints().add(newlColumn);
 
-        buttonNext = new Button("Next");
-        buttonPrev = new Button("Prev");
+        buttonNext = new Button();
+        buttonNext.setTooltip(new Tooltip("Next"));
+        buttonNext.setGraphic(new FontIcon(FontAwesome.FORWARD));
 
-        gridPanel.add(new HBox(new Label("Revision:  "), oldLabel), 0, 0);
+        buttonPrev = new Button();
+        buttonPrev.setTooltip(new Tooltip("Prev"));
+        buttonPrev.setGraphic(new FontIcon(FontAwesome.BACKWARD));
 
-        gridPanel.add(new HBox(new Label("Revision:  "), newLabel), 2, 0);
+        gridPanel.add(new ToolBar(new HBox(new Label("Revision:  "), oldLabel)), 0, 0);
+
+        gridPanel.add(new ToolBar(new HBox(new Label("Revision:  "), newLabel)), 2, 0);
 
         gridPanel.add(scrollPane, 1, 1);
         gridPanel.add(oldStackPane, 0, 1);

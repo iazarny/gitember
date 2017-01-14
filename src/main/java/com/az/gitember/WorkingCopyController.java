@@ -1,5 +1,6 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.GitemberUtil;
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmItemStatus;
 import com.az.gitember.ui.CommitDialog;
@@ -17,6 +18,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -82,7 +84,7 @@ public class WorkingCopyController implements Initializable {
     }
 
     public void open() {
-        try {
+        try { //todo cursor
             workingCopyTableView.setItems(
                     FXCollections.observableArrayList(
                             GitemberApp.getRepositoryService().getStatuses()));
@@ -92,7 +94,7 @@ public class WorkingCopyController implements Initializable {
     }
 
 
-    public void addItemToCommitEventHandler(Event event) {
+    public void addItemToStageEventHandler(Event event) {
         if (event.getTarget() instanceof CheckBoxTableCell) {
             CheckBoxTableCell cell = (CheckBoxTableCell) event.getTarget();
             if (cell.getTableColumn() == this.selectTableColumn) {
@@ -104,9 +106,35 @@ public class WorkingCopyController implements Initializable {
         }
     }
 
+    public void addItemToStageMiEventHandler(Event event) {
+        ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+        stageItem(item);
+        workingCopyTableView.refresh();
+    }
+
+
+    public void openEventHandler(ActionEvent actionEvent) {
+        try {
+            final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+            final FileViewController fileViewController = new FileViewController();
+            fileViewController.openFile(
+                    GitemberApp.getCurrentRepositoryPathWOGit() + File.separator + item.getShortName(),
+                    item.getShortName());
+        } catch (Exception e) {       //todo error dialog
+            e.printStackTrace();
+        }
+    }
+
+    public void revertEventHandler(ActionEvent actionEvent) {
+        final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+        GitemberApp.getRepositoryService().checkoutFile(item.getShortName());
+        open();
+    }
+
+
     private void stageItem(ScmItem item) {
         try {
-            if (isUnstaged(item)) {
+            if (item != null && isUnstaged(item)) {
 
                 if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
 

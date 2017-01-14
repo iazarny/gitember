@@ -99,7 +99,9 @@ public class GitRepositoryService {
     private List<ScmBranch> getBranches(final ListBranchCommand.ListMode listMode,
                                         final String prefix,
                                         final ScmBranch.BranchType branchType) throws Exception {
+
         try (Git git = new Git(repository)) {
+            String head = this.getHead();
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
             List<ScmBranch> rez = branchLst
                     .stream()
@@ -109,8 +111,12 @@ public class GitRepositoryService {
                             r.getName(),
                             branchType
                     ))
+                    .map(i -> {i.setHead(i.getFullName().equals(head)); return i;})
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
+
+
+
 
             // Just check is local branch has remote part
             if (Constants.R_HEADS.equals(prefix)) {
@@ -172,12 +178,6 @@ public class GitRepositoryService {
         final Ref head = repository.exactRef(Constants.HEAD);
 
         final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS, ScmBranch.BranchType.LOCAL);
-        scmItems.forEach(
-                i -> {
-                    System.out.println("Local branches " + head.getTarget().getName() + " " + i.getFullName());
-                    i.setHead(head.getTarget().getName().equals(i.getFullName()));
-                }
-        );
         return scmItems;
     }
 
@@ -1032,6 +1032,22 @@ public class GitRepositoryService {
                     .setMessage(message)
                     .call();
         }
+    }
+
+
+    public String getRepositoryAbsolutePath() {
+        return repository.getDirectory().getAbsolutePath();
+    }
+
+    public void checkoutFile(final String fileName) {
+        try (Git git = new Git(repository)) {
+            try {
+                git.checkout().addPath(fileName).call();
+            } catch (GitAPIException e) {
+                log.log(Level.WARNING, "Cannot checkout file " + fileName, e);
+            }
+        }
+
     }
 
 

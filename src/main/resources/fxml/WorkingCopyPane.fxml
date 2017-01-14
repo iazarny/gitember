@@ -38,29 +38,29 @@
         </ToolBar>
 
     </top>
-   <center>
-       <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToCommitEventHandler" prefHeight="514.0"
-                  prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
-           <columns>
-               <TableColumn fx:id="selectTableColumn" style="-fx-border-width: 0;  -fx-padding: 0px 0px 0px 10px;" prefWidth="40.0"  text="" />
-               <TableColumn fx:id="statusTableColumn" style="-fx-border-width: 0; -fx-font-size: 165%;  -fx-label-padding: 12px 0px 0px 5px;"  prefWidth="40.00" text="" />
-               <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;"   text="File" />
-           </columns>
+    <center>
+        <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0"
+                   prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="selectTableColumn" style="-fx-border-width: 0;  -fx-padding: 0px 0px 0px 10px;" prefWidth="40.0"  text="" />
+                <TableColumn fx:id="statusTableColumn" style="-fx-border-width: 0; -fx-font-size: 165%;  -fx-label-padding: 12px 0px 0px 5px;"  prefWidth="40.00" text="" />
+                <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;"   text="File" />
+            </columns>
 
-           <contextMenu>
-               <ContextMenu fx:id="scmItemContextMenu">
-                   <items>
-                       <MenuItem fx:id="addFileMenuItem" disable="true" mnemonicParsing="false" text="Add to commit" />
+            <contextMenu>
+                <ContextMenu fx:id="scmItemContextMenu">
+                    <items>
+                        <MenuItem fx:id="addFileMenuItem"  mnemonicParsing="false" text="Add to commit" onAction="#addItemToStageMiEventHandler"/>
 
-                       <MenuItem fx:id="openFileMenuItem" disable="true" mnemonicParsing="false" text="Open" />
+                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open" onAction="#openEventHandler"/>
 
-                       <MenuItem fx:id="showDiffMenuItem" disable="true" mnemonicParsing="false" text="Revert" />
+                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Revert" onAction="#revertEventHandler"/>
 
-                   </items>
-               </ContextMenu>
-           </contextMenu>
+                    </items>
+                </ContextMenu>
+            </contextMenu>
 
 
-       </TableView>
-   </center>
+        </TableView>
+    </center>
 </BorderPane>

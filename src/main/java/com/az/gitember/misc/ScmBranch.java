@@ -6,9 +6,19 @@ package com.az.gitember.misc;
 public class ScmBranch extends Pair<String, String> {
 
     public enum BranchType {
-        LOCAL,
-        REMOTE,
-        TAG
+        LOCAL("local branch"),
+        REMOTE("remote branch"),
+        TAG("tag");
+
+        String typeName;
+
+        BranchType(String typeName) {
+            this.typeName = typeName;
+        }
+
+        public String getTypeName() {
+            return typeName;
+        }
     }
 
     private boolean head;

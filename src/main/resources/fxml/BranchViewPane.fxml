@@ -13,9 +13,9 @@
                 <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
                         <TableColumn fx:id="laneTableColumn" prefWidth="200.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
-                        <TableColumn fx:id="messageTableColumn" prefWidth="400.00" text="Message" />
-                        <TableColumn fx:id="authorTableColumn" prefWidth="250.00" text="Author" />
-                        <TableColumn fx:id="dateTableColumn" prefWidth="200.00" text="Date" />
+                        <TableColumn fx:id="messageTableColumn"  text="Message" />
+                        <TableColumn fx:id="authorTableColumn"  text="Author" />
+                        <TableColumn fx:id="dateTableColumn"  text="Date" />
                     </columns>
 
                 </TableView>
