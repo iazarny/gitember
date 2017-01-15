@@ -52,10 +52,14 @@
                 <ContextMenu fx:id="scmItemContextMenu">
                     <items>
                         <MenuItem fx:id="addFileMenuItem"  mnemonicParsing="false" text="Add item to stage" onAction="#addItemToStageMiEventHandler"/>
-                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open item" onAction="#openEventHandler"/>
-                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Diff with same version fom repository" onAction="#diffEventHandler"/>
-                        <SeparatorMenuItem/>
                         <MenuItem fx:id="revertMenuItem" mnemonicParsing="false" text="Revert changes ..." onAction="#revertEventHandler"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open item" onAction="#openEventHandler"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Diff with the same version from repository" onAction="#diffEventHandler"/>
+
+                        <MenuItem fx:id="showHistoryMenuItem" mnemonicParsing="false" text="History of changes" onAction="#historyEventHandler"/>
+
 
                     </items>
                 </ContextMenu>

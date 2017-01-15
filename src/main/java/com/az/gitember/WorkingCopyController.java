@@ -1,9 +1,6 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.GitemberUtil;
-import com.az.gitember.misc.RemoteOperationValue;
-import com.az.gitember.misc.ScmItem;
-import com.az.gitember.misc.ScmItemStatus;
+import com.az.gitember.misc.*;
 import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
@@ -13,13 +10,17 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class WorkingCopyController implements Initializable {
 
-    private final Logger log = Logger.getLogger(FXMLController.class.getName());
+    private final static Logger log = Logger.getLogger(FXMLController.class.getName());
 
     public TableView workingCopyTableView;
     public TableColumn<ScmItem, FontIcon> statusTableColumn;
@@ -40,6 +41,7 @@ public class WorkingCopyController implements Initializable {
     public TableColumn<ScmItem, String> itemTableColumn;
     public Button stashBtn;
     public Button commitBtn;
+    private ScmBranch branch;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -82,7 +84,9 @@ public class WorkingCopyController implements Initializable {
 
     }
 
-    public void open(final String path) {
+    public void open(final ScmBranch branch, final String path) {
+
+        this.branch = branch;
 
         GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
 
@@ -149,8 +153,7 @@ public class WorkingCopyController implements Initializable {
     /**
      * Stage all changes for commit.
      *
-     * @param actionEvent
-     * @throws Exception
+     * @param actionEvent event
      */
     @SuppressWarnings({"unchecked", "unused"})
     public void stageAllBtnHandler(ActionEvent actionEvent) {
@@ -163,7 +166,7 @@ public class WorkingCopyController implements Initializable {
      * Commit all staged changes.
      *
      * @param actionEvent event
-     * @throws Exception
+     * @throws Exception in case of errors
      */
     @SuppressWarnings("unused")
     public void commitBtnHandler(ActionEvent actionEvent) throws Exception {
@@ -180,7 +183,7 @@ public class WorkingCopyController implements Initializable {
             GitemberApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
             GitemberApp.getRepositoryService().setUserName(dialog.getUserName());
             GitemberApp.getRepositoryService().commit(result.get());
-            open(null);
+            open(branch, null);
         }
     }
 
@@ -192,7 +195,7 @@ public class WorkingCopyController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void refreshBtnHandler(ActionEvent actionEvent) throws Exception {
-        open(null);
+        open(branch, null);
     }
 
     /**
@@ -204,7 +207,7 @@ public class WorkingCopyController implements Initializable {
     @SuppressWarnings("unused")
     public void stashBtnHandler(ActionEvent actionEvent) throws Exception {
         GitemberApp.getRepositoryService().stash();
-        open(null);
+        open(branch, null);
 
     }
 
@@ -265,7 +268,7 @@ public class WorkingCopyController implements Initializable {
             Optional<ButtonType> result = GitemberApp.showResult("Revert " + item.getShortName() + " changes ?", Alert.AlertType.CONFIRMATION);
             if (result.isPresent() && result.get() == ButtonType.OK) {
                 GitemberApp.getRepositoryService().checkoutFile(item.getShortName());
-                open(item.getShortName());
+                open(branch, item.getShortName());
             }
         }
     }
@@ -283,6 +286,28 @@ public class WorkingCopyController implements Initializable {
         }
 
     }
+
+
+    /**
+     * Open hisotry
+     * @param actionEvent event
+     */
+    @SuppressWarnings("unused")
+    public void historyEventHandler(ActionEvent actionEvent) {
+        final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+        if (item != null) {
+            try {
+                HistoryViewController.openHistoryWindow(item.getShortName(), branch.getFullName());
+            } catch (Exception e) {
+                log.log(Level.SEVERE, String.format("Cannot open history for %s %s", item.getShortName(), branch.getFullName()));
+            }
+
+        }
+
+
+
+    }
+
 
 
     private boolean isUnstaged(ScmItem scmItem) {
@@ -333,6 +358,25 @@ public class WorkingCopyController implements Initializable {
             e.printStackTrace();
         }
     }
+
+    @SuppressWarnings("unused")
+    public static Parent openWorkingCopyHandler(ScmBranch branch, Object param) {
+
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = WorkingCopyController.class.getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
+            final Parent workCopyView = fxmlLoader.load(is);
+            final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.open(branch, null);
+            return workCopyView;
+        } catch (IOException ioe) {
+            log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
+        }
+
+        return null;
+
+
+    }
+
 
 
 }

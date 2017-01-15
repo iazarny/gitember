@@ -8,7 +8,6 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -24,8 +23,6 @@ import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -43,7 +40,7 @@ import java.util.logging.Logger;
 
 public class FXMLController implements Initializable {
 
-    private final Logger log = Logger.getLogger(FXMLController.class.getName());
+    private final static Logger log = Logger.getLogger(FXMLController.class.getName());
 
     public Button cloneBtn;
     public Button fetchBtn;
@@ -60,15 +57,12 @@ public class FXMLController implements Initializable {
     public MenuItem mergeLocalBranchMenuItem;
     public MenuItem deleteLocalBranchMenuItem;
 
-
     public ContextMenu contextMenu;
     private List<MenuItemAvailbility> contextMenuItemVisibilityLTR;
-
 
     public ProgressBar operationProgressBar;
     public Label operationName;
     public ToolBar progressBar;
-
 
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
@@ -131,9 +125,20 @@ public class FXMLController implements Initializable {
 
             fillAllBranchTrees();
 
-            treeItemClickHandlers.put(workingCopyTreeItem, o -> openWorkingCopyHandler(null));
+            treeItemClickHandlers.put(workingCopyTreeItem, o -> {
+                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(getScmBranch(), null);
+                hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                hostPanel.getChildren().add(workCopyView);
+            });
 
-            treeItemClickHandlers.put(historyTreeItem, o -> openBranchHistory(GitemberApp.workingBranch.get())); // <- todo incorrect here must be lazy call
+            treeItemClickHandlers.put(historyTreeItem, o ->
+                    {
+                        Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get());
+                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                        hostPanel.getChildren().add(branchView);
+
+                    }
+            ); // <- todo incorrect here must be lazy call
 
             repoTreeView.setDisable(false);
 
@@ -169,7 +174,12 @@ public class FXMLController implements Initializable {
     private Map<TreeItem, Consumer<Object>> createTreeItemWithHandler(List<ScmBranch> data) {
         Map<TreeItem, Consumer<Object>> rez = new LinkedHashMap<>();
         data.stream().forEach(
-                branch -> rez.put(new TreeItem<>(branch), o -> openBranchHistory(branch))
+                branch -> rez.put(new TreeItem<>(branch), o -> {
+                            Parent branchView = BranchViewController.openBranchHistory(branch);
+                            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                            hostPanel.getChildren().add(branchView);
+                        }
+                )
         );
         return rez;
     }
@@ -270,12 +280,13 @@ public class FXMLController implements Initializable {
                     mi.setUserData(o.getSecond());
                     mi.setOnAction(
                             event -> {
-                                GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
-                                Platform.runLater(() -> {
-                                    openRepository(o.getSecond());
-                                    openWorkingCopyHandler(null);
-                                    GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                                });
+                                openRepository(o.getSecond());
+                                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(
+                                        GitemberApp.workingBranch.get(), null);
+                                hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                                hostPanel.getChildren().add(workCopyView);
+
+                                GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                             }
                     );
                     openRecentMenuItem.getItems().add(mi);
@@ -369,23 +380,7 @@ public class FXMLController implements Initializable {
         return contextMenu;
     }
 
-    public void openBranchHistory(final ScmBranch scmBranch) {
-        try {
-            if (scmBranch != null) {
-                final FXMLLoader fxmlLoader = new FXMLLoader();
-                try (InputStream is = getClass().getResource("/fxml/BranchViewPane.fxml").openStream()) {
-                    final Parent branchView = fxmlLoader.load(is);
-                    final BranchViewController branchViewController = fxmlLoader.getController();
-                    branchViewController.setTreeName(scmBranch.getFullName());
-                    branchViewController.open();
-                    hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                    hostPanel.getChildren().add(branchView);
-                }
-            }
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot open branch view", e);
-        }
-    }
+
 
 
     private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin, boolean setTrackeRemote) {
@@ -445,22 +440,6 @@ public class FXMLController implements Initializable {
     }
 
 
-    public void openWorkingCopyHandler(Object param) {
-
-        final FXMLLoader fxmlLoader = new FXMLLoader();
-        try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
-            final Parent workCopyView = fxmlLoader.load(is);
-            final WorkingCopyController workingCopyController = fxmlLoader.getController();
-            workingCopyController.open(null);
-            hostPanel.getChildren().removeAll(hostPanel.getChildren());
-            hostPanel.getChildren().add(workCopyView);
-        } catch (IOException ioe) {
-            log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
-        }
-
-
-
-    }
 
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -691,6 +670,7 @@ public class FXMLController implements Initializable {
 
     }
 
+    @SuppressWarnings("unchecked")
     private ScmBranch getScmBranch() {
         TreeItem<ScmBranch> item = (TreeItem<ScmBranch>) repoTreeView.getSelectionModel().getSelectedItem();
         return item == null ? null : item.getValue();
@@ -722,7 +702,9 @@ public class FXMLController implements Initializable {
                 absPath += File.separator + Const.GIT_FOLDER;
             }
             openRepository(absPath);
-            openWorkingCopyHandler(null);
+            Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(getScmBranch(), null);
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(workCopyView);
         }
 
         createOpenRecentMenu();
@@ -848,7 +830,9 @@ public class FXMLController implements Initializable {
             prepareLongTask(longTask,
                     remoteOperationValue -> {
                         openRepository((String) remoteOperationValue.getValue());
-                        openWorkingCopyHandler(null);
+                        Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(getScmBranch(), null);
+                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                        hostPanel.getChildren().add(workCopyView);
                     }, null);
             new Thread(longTask).start();
         }
@@ -870,7 +854,9 @@ public class FXMLController implements Initializable {
             GitemberApp.getRepositoryService().createRepository(absPath);
 
             openRepository(absPath + File.separator + Const.GIT_FOLDER);
-            openWorkingCopyHandler(null);
+            Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(getScmBranch(), null);
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(workCopyView);
         }
 
     }

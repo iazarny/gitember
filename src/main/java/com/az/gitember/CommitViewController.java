@@ -21,6 +21,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import org.eclipse.jgit.revplot.PlotCommit;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -164,6 +165,11 @@ public class CommitViewController implements Initializable {
                 diffFile);
     }
 
+    /**
+     * Show difference between disk and selected version.
+     * @param actionEvent event
+     * @throws Exception
+     */
     public void openDiffWithFileOnDiskMenuItemClickHandler(ActionEvent actionEvent) throws Exception {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
@@ -188,6 +194,12 @@ public class CommitViewController implements Initializable {
     }
 
 
+    /**
+     * Show difference
+     * @param actionEvent event
+     * @throws Exception
+     */
+    @SuppressWarnings("unused")
     public void openDiffWithLatestVersionMenuItemClickHandler(ActionEvent actionEvent) throws Exception {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         final String fileName = scmItem.getAttribute().getName();
@@ -209,29 +221,37 @@ public class CommitViewController implements Initializable {
 
     }
 
+    /**
+     * Handle open history command
+     * @param actionEvent event
+     * @throws Exception
+     */
+    @SuppressWarnings("unused")
     public void historyMenuItemClickHandler(ActionEvent actionEvent) throws Exception {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final String fileName = scmItem.getAttribute().getName();
-        final FXMLLoader fxmlLoader = new FXMLLoader();
-        try (InputStream is = getClass().getResource("/fxml/HistoryViewPane.fxml").openStream()) {
-            final Parent view = fxmlLoader.load(is);
-            final HistoryViewController historyViewController = fxmlLoader.getController();
-            historyViewController.setFileName(fileName);
-            historyViewController.setTreeName(treeName);
-            historyViewController.openHistory();
-
-
-            Scene scene = new Scene(view, 1024, 768);
-
-            final Stage stage = new Stage();
-            stage.setScene(scene);
-            stage.setTitle(fileName);
-            stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
-            stage.show();
-
-
-        }
+        HistoryViewController.openHistoryWindow(
+                scmItem.getAttribute().getName(),
+                treeName);
     }
+
+    public static Parent openCommitViewWindow(ScmRevisionInformation info, final String treeName) {
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = CommitViewController.class.getResource("/fxml/CommitViewPane.fxml").openStream()) {
+            final Parent commitView = fxmlLoader.load(is);
+            final CommitViewController commitViewController = fxmlLoader.getController();
+            commitViewController.fillData(
+                    treeName,
+                    info
+            );
+            commitViewController.showPlotCommit();
+            return commitView;
+        } catch (Exception e) {
+            e.printStackTrace(); //todo log
+        }
+        return null;
+    }
+
+
 
 
 }

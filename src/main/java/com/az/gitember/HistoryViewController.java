@@ -1,16 +1,23 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.ResourceBundle;
@@ -145,6 +152,29 @@ public class HistoryViewController implements Initializable {
                     fileName);
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();
+        }
+    }
+
+    public static Parent openHistoryWindow(final String fileName, final String treeName) throws Exception {
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = HistoryViewController.class.getResource("/fxml/HistoryViewPane.fxml").openStream()) {
+            final Parent view = fxmlLoader.load(is);
+            final HistoryViewController historyViewController = fxmlLoader.getController();
+            historyViewController.setFileName(fileName);
+            historyViewController.setTreeName(treeName);
+            historyViewController.openHistory();
+
+            final Scene scene = new Scene(view, 1024, 768);
+            final Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.setTitle(fileName);
+            stage.getIcons().add(new Image(HistoryViewController.class.getClass().getResourceAsStream(Const.ICON)));
+            stage.show();
+
+
+            return view;
+
+
         }
     }
 }

@@ -248,7 +248,7 @@ public class GitRepositoryService {
      * @param fileName  optional file filter
      * @return instance of {@link ScmRevisionInformation}
      */
-    public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName) throws IOException {
+    public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName)  {
         ScmRevisionInformation info = new ScmRevisionInformation();
         info.setShortMessage(revCommit.getShortMessage());
         info.setFullMessage(revCommit.getFullMessage());
@@ -313,22 +313,28 @@ public class GitRepositoryService {
     /**
      * Get list of files in given revision.
      *
-     * @param revCommit
+     * @param revCommit rev commit instance
      * @param filePath  optional value to filter list of changed files
      * @return list of files in given revision
      * @throws IOException
      */
-    private ArrayList<ScmItem> getScmItems(RevCommit revCommit, String filePath) throws IOException {
+    private ArrayList<ScmItem> getScmItems(RevCommit revCommit, String filePath) {
         try (RevWalk rw = new RevWalk(repository)) {
             ArrayList<ScmItem> rez = new ArrayList<>();
             if (revCommit != null) {
                 final DiffFormatter df = getDiffFormatter(filePath);
-                final List<DiffEntry> diffs = df.scan(
-                        revCommit.getParentCount() > 0 ? rw.parseCommit(revCommit.getParent(0).getId()).getTree() : null,
-                        revCommit.getTree());
-                diffs.stream()
-                        .map(this::adaptDiffEntry)
-                        .collect(Collectors.toCollection(() -> rez));
+                final List<DiffEntry> diffs;
+                try {
+                    diffs = df.scan(
+                            revCommit.getParentCount() > 0 ? rw.parseCommit(revCommit.getParent(0).getId()).getTree() : null,
+                            revCommit.getTree());
+                    diffs.stream()
+                            .map(this::adaptDiffEntry)
+                            .collect(Collectors.toCollection(() -> rez));
+
+                } catch (IOException e) {
+                    log.log(Level.SEVERE, "Cannot collect items from rev commit", e);
+                }
             }
             rw.dispose();
             return rez;

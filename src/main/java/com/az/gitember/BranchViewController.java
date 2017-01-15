@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.GitemberUtil;
+import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.ui.PlotCommitRenderer;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.InvalidationListener;
@@ -23,11 +24,15 @@ import org.eclipse.jgit.revplot.PlotLane;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
  */
 public class BranchViewController implements Initializable {
+
+    private final static Logger log = Logger.getLogger(BranchViewController.class.getName());
 
     private static final int HEIGH = 30;
 
@@ -58,7 +63,9 @@ public class BranchViewController implements Initializable {
     private PlotCommitList<PlotLane> plotCommits;
 
 
+
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(URL location, ResourceBundle resources) {
         commitsTableView.setFixedCellSize(HEIGH);
         commitsTableView
@@ -71,25 +78,13 @@ public class BranchViewController implements Initializable {
                                         final PlotCommit oldValue,
                                         final PlotCommit newValue) {
 
-                        final FXMLLoader fxmlLoader = new FXMLLoader();
-                        try (InputStream is = getClass().getResource("/fxml/CommitViewPane.fxml").openStream()) {
-                            final Parent commitView = fxmlLoader.load(is);
-                            final CommitViewController commitViewController = fxmlLoader.getController();
-
-                            hostCommitViewPanel.getChildren().removeAll(hostCommitViewPanel.getChildren());
-                            hostCommitViewPanel.getChildren().add(commitView);
-
-                            commitViewController.fillData(
-                                    treeName,
-                                    GitemberApp.getRepositoryService().adapt(newValue, null)
-                            );
-
-                            commitViewController.showPlotCommit();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        Parent commitView = CommitViewController.openCommitViewWindow(
+                                GitemberApp.getRepositoryService().adapt(newValue, null),
+                                treeName);
+                        hostCommitViewPanel.getChildren().removeAll(hostCommitViewPanel.getChildren());
+                        hostCommitViewPanel.getChildren().add(commitView);
                     }
+
                 });
 
         laneTableColumn.setCellValueFactory(
@@ -151,5 +146,26 @@ public class BranchViewController implements Initializable {
 
     public void setTreeName(final String treeName) {
         this.treeName = treeName;
+    }
+
+
+
+    public static Parent openBranchHistory(final ScmBranch scmBranch) {
+        try {
+            if (scmBranch != null) {
+                final FXMLLoader fxmlLoader = new FXMLLoader();
+                try (InputStream is = BranchViewController.class.getResource("/fxml/BranchViewPane.fxml").openStream()) {
+                    final Parent branchView = fxmlLoader.load(is);
+                    final BranchViewController branchViewController = fxmlLoader.getController();
+                    branchViewController.setTreeName(scmBranch.getFullName());
+                    branchViewController.open();
+                    return branchView;
+                }
+
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot open branch view", e);
+        }
+        return null;
     }
 }
