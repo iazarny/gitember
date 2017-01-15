@@ -262,7 +262,7 @@
     <bottom>
         <ToolBar fx:id="progressBar" visible="false">
             <items>
-                <Label fx:id="operationName" visible="true" text="Operation" HBox.hgrow="ALWAYS" minWidth="150"/>
+                <Label fx:id="operationName" visible="true" text="Operation" HBox.hgrow="ALWAYS" />
                 <ProgressBar fx:id="operationProgressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0"
                              visible="true" HBox.hgrow="ALWAYS"/>
             </items>
