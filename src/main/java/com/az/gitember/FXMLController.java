@@ -425,7 +425,7 @@ public class FXMLController implements Initializable {
                                 onOk.accept(rval);
                             }
                             GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
+                            GitemberApp.showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
                             break;
                         }
                         case ERROR: {
@@ -433,7 +433,7 @@ public class FXMLController implements Initializable {
                                 onError.accept(rval);
                             }
                             GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
+                            GitemberApp.showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
                             break;
                         }
                     }
@@ -447,27 +447,17 @@ public class FXMLController implements Initializable {
 
     public void openWorkingCopyHandler(Object param) {
 
-        GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+        try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
+            final Parent workCopyView = fxmlLoader.load(is);
+            final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.open(null);
+            hostPanel.getChildren().removeAll(hostPanel.getChildren());
+            hostPanel.getChildren().add(workCopyView);
+        } catch (IOException ioe) {
+            log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
+        }
 
-        Platform.runLater(
-                () ->
-                {
-                    final FXMLLoader fxmlLoader = new FXMLLoader();
-                    try (InputStream is = getClass().getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
-                        final Parent workCopyView = fxmlLoader.load(is);
-                        final WorkingCopyController workingCopyController = fxmlLoader.getController();
-                        workingCopyController.open();
-                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                        hostPanel.getChildren().add(workCopyView);
-                    } catch (IOException ioe) {
-                        log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
-                    } finally {
-                        GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-
-                    }
-
-                }
-        );
 
 
     }
@@ -555,16 +545,6 @@ public class FXMLController implements Initializable {
 
         return operationValue;
 
-    }
-
-
-    private void showResult(String text, Alert.AlertType alertTypet) {
-        Alert alert = new Alert(alertTypet);
-        alert.setWidth(600); //TODO width
-        alert.setTitle("Operation result");
-        //alert.setHeaderText("Result of pull operation");
-        alert.setContentText(text);
-        alert.showAndWait();
     }
 
 
@@ -702,7 +682,7 @@ public class FXMLController implements Initializable {
                 GitemberApp.getRepositoryService().deleteLocalBranch(scmBranch.getFullName());
                 fillAllBranchTrees();
             } catch (CannotDeleteCurrentBranchException e) {
-                showResult(e.getMessage(), Alert.AlertType.ERROR);
+                GitemberApp.showResult(e.getMessage(), Alert.AlertType.ERROR);
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Cannot delete local branch " + scmBranch.getFullName(), e);
 
@@ -769,7 +749,7 @@ public class FXMLController implements Initializable {
                 } catch (Exception e) {
                     String msg = "Cannot open GUI shell";
                     log.log(Level.WARNING, msg, e);
-                    showResult(msg, Alert.AlertType.ERROR);
+                    GitemberApp.showResult(msg, Alert.AlertType.ERROR);
                 }
             }).start();
         }
@@ -798,7 +778,7 @@ public class FXMLController implements Initializable {
         } catch (Exception e) {
             String msg = "Cannot open GIT terminal";
             log.log(Level.WARNING, msg, e);
-            showResult(msg, Alert.AlertType.ERROR);
+            GitemberApp.showResult(msg, Alert.AlertType.ERROR);
         }
     }
 

@@ -16,8 +16,12 @@ import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.util.Optional;
 
 
 public class GitemberApp extends Application {
@@ -93,6 +97,14 @@ public class GitemberApp extends Application {
         stage.setScene(scene);
         stage.getIcons().add(new Image(GitemberApp.class.getResourceAsStream(Const.ICON)));
         stage.show();
+    }
+
+    public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {
+        Alert alert = new Alert(alertTypet);
+        alert.setWidth(600);
+        alert.setTitle("Operation result");
+        alert.setContentText(text);
+        return alert.showAndWait();
     }
 
     /**

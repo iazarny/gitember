@@ -15,6 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
             prefHeight="-1" prefWidth="600.0"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
@@ -44,17 +45,17 @@
             <columns>
                 <TableColumn fx:id="selectTableColumn" style="-fx-border-width: 0;  -fx-padding: 0px 0px 0px 10px;" prefWidth="40.0"  text="" />
                 <TableColumn fx:id="statusTableColumn" style="-fx-border-width: 0; -fx-font-size: 165%;  -fx-label-padding: 12px 0px 0px 5px;"  prefWidth="40.00" text="" />
-                <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;"   text="File" />
+                <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;" text="File"  prefWidth="-1" minWidth="800"/>
             </columns>
 
             <contextMenu>
                 <ContextMenu fx:id="scmItemContextMenu">
                     <items>
-                        <MenuItem fx:id="addFileMenuItem"  mnemonicParsing="false" text="Add to commit" onAction="#addItemToStageMiEventHandler"/>
-
-                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open" onAction="#openEventHandler"/>
-
-                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Revert" onAction="#revertEventHandler"/>
+                        <MenuItem fx:id="addFileMenuItem"  mnemonicParsing="false" text="Add item to stage" onAction="#addItemToStageMiEventHandler"/>
+                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open item" onAction="#openEventHandler"/>
+                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Diff with same version fom repository" onAction="#diffEventHandler"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="revertMenuItem" mnemonicParsing="false" text="Revert changes ..." onAction="#revertEventHandler"/>
 
                     </items>
                 </ContextMenu>

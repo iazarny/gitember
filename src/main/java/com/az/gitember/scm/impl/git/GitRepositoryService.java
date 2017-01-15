@@ -526,11 +526,16 @@ public class GitRepositoryService {
      *
      * @return
      */
-    public List<ScmItem> getStatuses() throws Exception {
+    public List<ScmItem> getStatuses(final String path) throws Exception {
 
         Map<String, List<String>> statusMap = new HashMap<>();
         try (Git git = new Git(repository)) {
-            Status status = git.status().call();
+
+            StatusCommand statusCommand = git.status();
+            if (path != null) {
+                statusCommand.addPath(path);
+            }
+            Status status = statusCommand.call();
 
             status.getConflicting().forEach(item -> enrichStatus(statusMap, item, ScmItemStatus.CONFLICT));
             status.getAdded().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.ADDED));
