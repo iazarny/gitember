@@ -101,7 +101,7 @@ public class GitRepositoryService {
                                         final ScmBranch.BranchType branchType) throws Exception {
 
         try (Git git = new Git(repository)) {
-            String head = this.getHead();
+            String head = this.getHead().getFirst();
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
             List<ScmBranch> rez = branchLst
                     .stream()
@@ -168,9 +168,9 @@ public class GitRepositoryService {
     }
 
 
-    public String getHead() throws Exception {
+    public Pair<String, String> getHead() throws Exception {
         final Ref head = repository.exactRef(Constants.HEAD);
-        return head.getTarget().getName();
+        return new Pair<>(head.getTarget().getName(), head.getObjectId().getName());
 
     }
 
@@ -888,8 +888,7 @@ public class GitRepositoryService {
     }
 
     private RevCommit parseCommit(final Repository clonedRepo, final Ref ref)
-            throws MissingObjectException, IncorrectObjectTypeException,
-            IOException {
+            throws  IOException {
         final RevCommit commit;
         try (final RevWalk rw = new RevWalk(clonedRepo)) {
             commit = rw.parseCommit(ref.getObjectId());

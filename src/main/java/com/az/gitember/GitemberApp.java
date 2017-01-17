@@ -39,7 +39,7 @@ public class GitemberApp extends Application {
 
     public static void setWorkingBranch(ScmBranch workingBranch) throws Exception {
         GitemberApp.workingBranch.setValue(workingBranch);
-        String head = getRepositoryService().getHead();
+        String head = getRepositoryService().getHead().getFirst();
         GitemberApp.setTitle(Const.TITLE + getCurrentRepositoryPathWOGit() + " " + head);
 
     }

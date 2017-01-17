@@ -4,6 +4,8 @@ import com.az.gitember.misc.*;
 import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
+import difflib.DiffUtils;
+import difflib.Patch;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.FXCollections;
@@ -22,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -283,10 +287,30 @@ public class WorkingCopyController implements Initializable {
         final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
         if (item != null) {
 
+            try {
+                final String fileName = item.getShortName();
+                final Pair<String, String> head = GitemberApp.getRepositoryService().getHead();
+                final String oldFile = GitemberApp.getRepositoryService().saveFile(
+                        head.getFirst(),
+                        head.getSecond(), fileName);
+                final String newFile = GitemberApp.getCurrentRepositoryPathWOGit() + File.separator + fileName;
+
+                List<String> newFileLines = Files.readAllLines(Paths.get(newFile));
+                List<String> oldFileLines = Files.readAllLines(Paths.get(oldFile));
+                Patch<String> pathc = DiffUtils.diff(oldFileLines, newFileLines);
+
+                final DiffViewController fileViewController = new DiffViewController();
+                fileViewController.openFile(
+                        new File(fileName).getName(),
+                        oldFile, head.getSecond(),
+                        newFile, "On disk",
+                        pathc);
+
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Cannot get head", e);
+            }
         }
-
     }
-
 
     /**
      * Open hisotry
@@ -301,11 +325,7 @@ public class WorkingCopyController implements Initializable {
             } catch (Exception e) {
                 log.log(Level.SEVERE, String.format("Cannot open history for %s %s", item.getShortName(), branch.getFullName()));
             }
-
         }
-
-
-
     }
 
 
