@@ -94,4 +94,19 @@ public class ScmRevisionInformation {
     public void setAffectedItems(List<ScmItem> affectedItems) {
         this.affectedItems = affectedItems;
     }
+
+    @Override
+    public String toString() {
+        return "ScmRevisionInformation{" +
+                "revisionFullName='" + revisionFullName + '\'' +
+                ", authorName='" + authorName + '\'' +
+                ", authorEmail='" + authorEmail + '\'' +
+                ", shortMessage='" + shortMessage + '\'' +
+                ", fullMessage='" + fullMessage + '\'' +
+                ", date=" + date +
+                ", affectedItems=" + affectedItems +
+                ", ref=" + ref +
+                ", parents=" + parents +
+                '}';
+    }
 }

@@ -1,6 +1,8 @@
 package com.az.gitember.scm.impl.git;
 
 import com.az.gitember.misc.*;
+import com.az.gitember.scm.exception.GECheckoutConflictException;
+import com.az.gitember.scm.exception.GEScmAPIException;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -111,11 +113,12 @@ public class GitRepositoryService {
                             r.getName(),
                             branchType
                     ))
-                    .map(i -> {i.setHead(i.getFullName().equals(head)); return i;})
+                    .map(i -> {
+                        i.setHead(i.getFullName().equals(head));
+                        return i;
+                    })
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
                     .collect(Collectors.toList());
-
-
 
 
             // Just check is local branch has remote part
@@ -248,7 +251,7 @@ public class GitRepositoryService {
      * @param fileName  optional file filter
      * @return instance of {@link ScmRevisionInformation}
      */
-    public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName)  {
+    public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName) {
         ScmRevisionInformation info = new ScmRevisionInformation();
         info.setShortMessage(revCommit.getShortMessage());
         info.setFullMessage(revCommit.getFullMessage());
@@ -817,12 +820,35 @@ public class GitRepositoryService {
     }
 
 
-    public void stash() throws Exception {
-
+    /**
+     * Create stash
+     *
+     * @throws GEScmAPIException in case of error.
+     */
+    public void stash() throws GEScmAPIException {
         try (Git git = new Git(repository)) {
             git.stashCreate().call();
+        } catch (GitAPIException e) {
+            throw new GEScmAPIException(e.getMessage(), e.getCause());
         }
+    }
 
+    /**
+     * Get stash list.
+     *
+     * @return list of stashed changes
+     * @throws GEScmAPIException
+     */
+    public List<ScmRevisionInformation> getStashList() throws GEScmAPIException {
+        try (Git git = new Git(repository)) {
+            return git.stashList()
+                    .call()
+                    .stream()
+                    .map(revCommit -> adapt(revCommit, null))
+                    .collect(Collectors.toList());
+        } catch (GitAPIException e) {
+            throw new GEScmAPIException(e.getMessage(), e.getCause());
+        }
     }
 
 
@@ -888,7 +914,7 @@ public class GitRepositoryService {
     }
 
     private RevCommit parseCommit(final Repository clonedRepo, final Ref ref)
-            throws  IOException {
+            throws IOException {
         final RevCommit commit;
         try (final RevWalk rw = new RevWalk(clonedRepo)) {
             commit = rw.parseCommit(ref.getObjectId());
@@ -1013,6 +1039,10 @@ public class GitRepositoryService {
                     .setName(name)
                     .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
                     .call();
+        } catch (CheckoutConflictException e) {
+            throw new GECheckoutConflictException(e.getMessage(), e.getConflictingPaths());
+        } catch (Exception e) {
+            throw e;
         }
 
     }

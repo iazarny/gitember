@@ -82,8 +82,11 @@ public class CommitViewController implements Initializable {
         this.emailLabel.setText(scmRevisionInformation.getAuthorEmail());
         this.dateLbl.setText(scmRevisionInformation.getDate().toString());
         final StringJoiner stringJoiner = new StringJoiner(", ");
-        for (int i = 0; i < scmRevisionInformation.getRefCount(); i++) {
-            stringJoiner.add(scmRevisionInformation.getRef().get(i));
+        if (scmRevisionInformation.getRef() != null){
+            for (int i = 0; i < scmRevisionInformation.getRefCount(); i++) {
+                stringJoiner.add(scmRevisionInformation.getRef().get(i));
+            }
+
         }
         this.refsLbl.setText(stringJoiner.toString());
 
@@ -109,7 +112,8 @@ public class CommitViewController implements Initializable {
     public void fillData(final String treeName, ScmRevisionInformation plotCommit) throws Exception {
         this.treeName = treeName;
         this.scmRevisionInformation = plotCommit;
-        this.changedFiles = GitemberApp.getRepositoryService().getChangedFiles(treeName, plotCommit.getRevisionFullName());
+        this.changedFiles = plotCommit.getAffectedItems();
+                //GitemberApp.getRepositoryService().getChangedFiles(treeName, plotCommit.getRevisionFullName());
     }
 
     public void openItemTableViewDoubleClickedHandler(MouseEvent event) {

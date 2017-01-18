@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.*;
+import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
@@ -23,6 +24,8 @@ import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -33,6 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -126,7 +130,7 @@ public class FXMLController implements Initializable {
             fillAllBranchTrees();
 
             treeItemClickHandlers.put(workingCopyTreeItem, o -> {
-                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(getScmBranch(), null);
+                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(GitemberApp.workingBranch.get(), null);
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(workCopyView);
             });
@@ -138,9 +142,11 @@ public class FXMLController implements Initializable {
                         hostPanel.getChildren().add(branchView);
 
                     }
-            ); // <- todo incorrect here must be lazy call
-
+            );
             repoTreeView.setDisable(false);
+            workingCopyTreeItem.setExpanded(true);
+            workSpaceTreeItem.setExpanded(true);
+            repoTreeView.getSelectionModel().select(workingCopyTreeItem);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot open repository", e);
@@ -151,6 +157,23 @@ public class FXMLController implements Initializable {
         fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getRemoteBranches(), remoteBranchesTreeItem);
+
+        List<ScmRevisionInformation> stashInfo = GitemberApp.getRepositoryService().getStashList();
+        cleanUp(stashesTreeItem);
+        stashInfo.stream().forEach(
+                ri -> {
+                    TreeItem<String> stashTree = new TreeItem<>(ri.getShortMessage());
+                    stashesTreeItem.getChildren().add(stashTree);
+                    treeItemClickHandlers.put(stashTree, o -> {
+                        Parent commitView = CommitViewController.openCommitViewWindow(
+                                ri,
+                                GitemberApp.workingBranch.get().getFullName());
+                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                        hostPanel.getChildren().add(commitView);
+                    });
+                }
+        );
+
     }
 
     private void fillBranchTree(List<ScmBranch> branches, TreeItem<ScmBranch> treeItem) {
@@ -380,9 +403,6 @@ public class FXMLController implements Initializable {
         return contextMenu;
     }
 
-
-
-
     private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin, boolean setTrackeRemote) {
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
@@ -438,8 +458,6 @@ public class FXMLController implements Initializable {
                 }
         ));
     }
-
-
 
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -536,23 +554,59 @@ public class FXMLController implements Initializable {
 
     @SuppressWarnings("unchecked")
     public void localBranchCheckoutHandler(ActionEvent actionEvent) {
+
+        final ScmBranch scmBranch = getScmBranch();
         GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
-        ScmBranch scmBranch = getScmBranch();
-        Platform.runLater(
-                () -> {
-                    try {
-                        GitemberApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
-                        GitemberApp.setWorkingBranch(scmBranch);
-                        fillAllBranchTrees();
-                    } catch (Exception e) {
-                        log.log(Level.SEVERE, "Cannot checkout branch " + scmBranch.getShortName(), e);
-                    } finally {
-                        GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
 
-                    }
+        Task<Void> longTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                GitemberApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
+                return null;
+            }
+        };
 
+        longTask.setOnSucceeded(
+                s -> Platform.runLater(
+                        () -> {
+                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
+                            try {
+                                GitemberApp.setWorkingBranch(scmBranch);
+                                fillAllBranchTrees();
+                                GitemberApp.showResult("Branch " + scmBranch.getShortName() + " checked out", Alert.AlertType.INFORMATION);
+                            } catch (Exception e) {
+                                log.log(Level.WARNING, "Checkout failed" + scmBranch.getShortName(), e);
+                            }
+
+
+                        }
+                )
+        );
+
+        longTask.setOnFailed(
+                f -> {
+                    Platform.runLater(
+                            () -> {
+                                Throwable ex = f.getSource().getException();
+                                if (ex instanceof GECheckoutConflictException) {
+                                    GECheckoutConflictException e = (GECheckoutConflictException) ex;
+                                    String msg = String.format("Cannot checkout branch %s. List of conflicting files:\n%s",
+                                            scmBranch.getShortName(),
+                                            e.getConflicting().stream().collect(Collectors.joining("\n"))
+                                    );
+                                    log.log(Level.WARNING, msg, e);
+                                    GitemberApp.showResult(msg, Alert.AlertType.ERROR);
+                                } else if (ex instanceof Exception) {
+                                    Exception e = (Exception) ex;
+                                    log.log(Level.SEVERE, "Cannot checkout branch " + scmBranch.getShortName(), e);
+                                }
+                            }
+                    );
                 }
         );
+
+        new Thread(longTask).start();
+
     }
 
 
@@ -622,7 +676,7 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void localBranchPushHandler(ActionEvent actionEvent) {
-        ScmBranch scmBranch = getScmBranch();
+        ScmBranch scmBranch = GitemberApp.workingBranch.get();
         if (scmBranch.getRemoteName() == null) {
             TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
             dialog.setTitle("Branch name");
@@ -946,4 +1000,22 @@ public class FXMLController implements Initializable {
         }
     }
 
+
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //-----------------------------    Help menu handlers -----------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+
+    public void createBugReportHandler(ActionEvent actionEvent) {
+        String httpaddr = "https://github.com/iazarny/gitember/issues/new";
+        new Thread(() -> {
+            try {
+                Desktop.getDesktop().browse(URI.create(httpaddr));
+            } catch (IOException e) {
+                log.log(Level.WARNING, "Cannot open url " + httpaddr, e);
+
+            }
+        }).start();
+    }
 }

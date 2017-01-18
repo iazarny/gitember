@@ -144,12 +144,6 @@ public class BranchViewController implements Initializable {
         return 36 + 12 * plotCommits.stream().mapToInt(p -> p.getLane().getPosition()).max().orElse(0);
     }
 
-    public void setTreeName(final String treeName) {
-        this.treeName = treeName;
-    }
-
-
-
     public static Parent openBranchHistory(final ScmBranch scmBranch) {
         try {
             if (scmBranch != null) {
@@ -157,7 +151,7 @@ public class BranchViewController implements Initializable {
                 try (InputStream is = BranchViewController.class.getResource("/fxml/BranchViewPane.fxml").openStream()) {
                     final Parent branchView = fxmlLoader.load(is);
                     final BranchViewController branchViewController = fxmlLoader.getController();
-                    branchViewController.setTreeName(scmBranch.getFullName());
+                    branchViewController.treeName = scmBranch.getFullName();
                     branchViewController.open();
                     return branchView;
                 }
