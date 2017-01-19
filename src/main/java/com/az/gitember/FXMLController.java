@@ -2,6 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
+import com.az.gitember.scm.exception.GEScmAPIException;
 import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
@@ -61,7 +62,11 @@ public class FXMLController implements Initializable {
     public MenuItem mergeLocalBranchMenuItem;
     public MenuItem deleteLocalBranchMenuItem;
 
+    public MenuItem deleteStashCtxMenuItem;
+    public MenuItem applyStashCtxMenuItem;
+
     public ContextMenu contextMenu;
+
     private List<MenuItemAvailbility> contextMenuItemVisibilityLTR;
 
     public ProgressBar operationProgressBar;
@@ -102,6 +107,7 @@ public class FXMLController implements Initializable {
     private Optional<Pair<String, String>> uiInputResultToService;
     private CountDownLatch uiInputLatchToService;
     private final Map<TreeItem, Consumer<Object>> treeItemClickHandlers = new HashMap<>();
+    private List<ScmRevisionInformation> stashInfo;
 
 
     @SuppressWarnings("unchecked")
@@ -157,12 +163,16 @@ public class FXMLController implements Initializable {
         fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getRemoteBranches(), remoteBranchesTreeItem);
+        fillStashTree();
 
-        List<ScmRevisionInformation> stashInfo = GitemberApp.getRepositoryService().getStashList();
+    }
+
+    private void fillStashTree() throws GEScmAPIException {
+        stashInfo = GitemberApp.getRepositoryService().getStashList();
         cleanUp(stashesTreeItem);
         stashInfo.stream().forEach(
                 ri -> {
-                    TreeItem<String> stashTree = new TreeItem<>(ri.getShortMessage());
+                    TreeItem<ScmRevisionInformation> stashTree = new TreeItem<>(ri);
                     stashesTreeItem.getChildren().add(stashTree);
                     treeItemClickHandlers.put(stashTree, o -> {
                         Parent commitView = CommitViewController.openCommitViewWindow(
@@ -173,7 +183,6 @@ public class FXMLController implements Initializable {
                     });
                 }
         );
-
     }
 
     private void fillBranchTree(List<ScmBranch> branches, TreeItem<ScmBranch> treeItem) {
@@ -309,7 +318,6 @@ public class FXMLController implements Initializable {
                                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                                 hostPanel.getChildren().add(workCopyView);
 
-                                GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                             }
                     );
                     openRecentMenuItem.getItems().add(mi);
@@ -321,10 +329,12 @@ public class FXMLController implements Initializable {
     /**
      * Disable or enable remote operations if local branch not tracking remote branch.
      *
-     * @param scmBranch branch
+     * @param obj branch or revision information
      */
-    public void validateContextMenu(final ScmBranch scmBranch) {
-        if (scmBranch != null) {
+    public void validateContextMenu(final Object obj) {
+        if (obj instanceof ScmBranch) {
+
+            ScmBranch scmBranch = (ScmBranch) obj;
 
             contextMenuItemVisibilityLTR.stream().forEach(
                     i -> i.getMenuItem().setVisible(isMenuItemVisibleForScmBranch(i, scmBranch))
@@ -345,16 +355,31 @@ public class FXMLController implements Initializable {
             } else if (ScmBranch.BranchType.TAG.equals(scmBranch.getBranchType())) {
 
             }
+        } else if (obj instanceof ScmRevisionInformation) {
+
+            ScmRevisionInformation ri = (ScmRevisionInformation) obj;
+
+            contextMenuItemVisibilityLTR.stream().forEach(
+                    i -> i.getMenuItem().setVisible(isMenuItemVisibleForScmBranch(i, ri))
+            );
+
+
         }
     }
 
-    private boolean isMenuItemVisibleForScmBranch(MenuItemAvailbility i, ScmBranch scmBranch) {
-        if (ScmBranch.BranchType.LOCAL.equals(scmBranch.getBranchType())) {
-            return i.isLocalVisible();
-        } else if (ScmBranch.BranchType.TAG.equals(scmBranch.getBranchType())) {
-            return i.isTagVisible();
-        } else if (ScmBranch.BranchType.REMOTE.equals(scmBranch.getBranchType())) {
-            return i.isRemoteVisible();
+    private boolean isMenuItemVisibleForScmBranch(MenuItemAvailbility i, Object obj) {
+        if (obj instanceof ScmBranch) {
+            ScmBranch scmBranch = (ScmBranch) obj;
+            if (ScmBranch.BranchType.LOCAL.equals(scmBranch.getBranchType())) {
+                return i.isLocalVisible();
+            } else if (ScmBranch.BranchType.TAG.equals(scmBranch.getBranchType())) {
+                return i.isTagVisible();
+            } else if (ScmBranch.BranchType.REMOTE.equals(scmBranch.getBranchType())) {
+                return i.isRemoteVisible();
+            }
+
+        } else if (obj instanceof ScmRevisionInformation) {
+            return i.isStashVisible();
         }
         return false;
     }
@@ -380,23 +405,36 @@ public class FXMLController implements Initializable {
         deleteLocalBranchMenuItem = new MenuItem("Delete ...");
         deleteLocalBranchMenuItem.setOnAction(this::localBranchDeleteHandler);
 
+
+        applyStashCtxMenuItem = new MenuItem("Apply stash ...");
+        applyStashCtxMenuItem.setOnAction(this::applyStashHandler);
+
+
+        deleteStashCtxMenuItem = new MenuItem("Delete stash ...");
+        deleteStashCtxMenuItem.setOnAction(this::deleteStashHandler);
+
         contextMenu = new ContextMenu(
                 checkoutLocalBranchMenuItem,
                 createLocalBranchMenuItem,
                 mergeLocalBranchMenuItem,
                 fetchLocalBranchMenuItem,
                 pushToRemoteLocalBranchMenuItem,
+                applyStashCtxMenuItem,
                 new SeparatorMenuItem(),
+                deleteStashCtxMenuItem,
                 deleteLocalBranchMenuItem
         );
 
+
         contextMenuItemVisibilityLTR = new ArrayList<MenuItemAvailbility>() {{
-            add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, true));
-            add(new MenuItemAvailbility(createLocalBranchMenuItem, true, true, true));
-            add(new MenuItemAvailbility(mergeLocalBranchMenuItem, true, false, true));
-            add(new MenuItemAvailbility(fetchLocalBranchMenuItem, true, false, true));
-            add(new MenuItemAvailbility(pushToRemoteLocalBranchMenuItem, true, false, true));
-            add(new MenuItemAvailbility(deleteLocalBranchMenuItem, true, true, true));
+            add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, true, false));
+            add(new MenuItemAvailbility(createLocalBranchMenuItem, true, true, true, false));
+            add(new MenuItemAvailbility(mergeLocalBranchMenuItem, true, false, true, false));
+            add(new MenuItemAvailbility(fetchLocalBranchMenuItem, true, false, true, false));
+            add(new MenuItemAvailbility(pushToRemoteLocalBranchMenuItem, true, false, true, false));
+            add(new MenuItemAvailbility(deleteLocalBranchMenuItem, true, true, true, false));
+            add(new MenuItemAvailbility(deleteStashCtxMenuItem, false, false, false, true));
+            add(new MenuItemAvailbility(applyStashCtxMenuItem, false, false, false, true));
 
         }};
 
@@ -703,7 +741,6 @@ public class FXMLController implements Initializable {
 
         final ScmBranch scmBranch = getScmBranch();
 
-
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Please confirm");
         alert.setHeaderText(String.format("Delete %s %s", scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
@@ -724,9 +761,67 @@ public class FXMLController implements Initializable {
 
     }
 
+    /**
+     * Apply stash.
+     *
+     * @param actionEvent event
+     */
+    public void applyStashHandler(ActionEvent actionEvent) {
+
+        ScmRevisionInformation ri = getScmRevision();
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText(String.format("Apply stash", ri.getShortMessage()));
+        alert.setContentText(String.format("Do you really want to apply %s stash ?", ri.getShortMessage()));
+
+        Optional<ButtonType> dialogResult = alert.showAndWait();
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
+            try {
+                GitemberApp.getRepositoryService().applyStash(ri.getRevisionFullName());
+            } catch (GEScmAPIException e) {
+                log.log(Level.SEVERE, "Cannot apply stash " + ri, e);
+                GitemberApp.showResult("Cannot apply stash " + e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+
+    }
+
+    /**
+     * Delete stash.
+     *
+     * @param actionEvent event
+     */
+    public void deleteStashHandler(ActionEvent actionEvent) {
+        ScmRevisionInformation ri = getScmRevision();
+
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText(String.format("Delete stash", ri.getShortMessage()));
+        alert.setContentText(String.format("Do you really want to delete %s stash ?", ri.getShortMessage()));
+
+        Optional<ButtonType> dialogResult = alert.showAndWait();
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
+            try {
+                GitemberApp.getRepositoryService().deleteStash(stashInfo.indexOf(ri));
+                fillStashTree();
+            } catch (GEScmAPIException e) {
+                log.log(Level.SEVERE, "Cannot delete stash " + ri, e);
+                GitemberApp.showResult("Cannot delete stash " + e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+
+    }
+
     @SuppressWarnings("unchecked")
     private ScmBranch getScmBranch() {
         TreeItem<ScmBranch> item = (TreeItem<ScmBranch>) repoTreeView.getSelectionModel().getSelectedItem();
+        return item == null ? null : item.getValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ScmRevisionInformation getScmRevision() {
+        TreeItem<ScmRevisionInformation> item = (TreeItem<ScmRevisionInformation>) repoTreeView.getSelectionModel().getSelectedItem();
         return item == null ? null : item.getValue();
     }
 

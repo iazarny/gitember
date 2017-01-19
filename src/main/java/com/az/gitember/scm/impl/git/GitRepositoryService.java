@@ -851,6 +851,38 @@ public class GitRepositoryService {
         }
     }
 
+    /**
+     * Delete stash.
+     * @param stashRef stash reference id.
+     * @throws GEScmAPIException in case of errors.
+     */
+    public void deleteStash(int stashRef) throws GEScmAPIException {
+        try (Git git = new Git(repository)) {
+            git.stashDrop()
+                    .setStashRef(stashRef)
+                    .call();
+        } catch (GitAPIException e) {
+            throw new GEScmAPIException(e.getMessage(), e.getCause());
+        }
+    }
+
+    /**
+     * Apply stash.
+     * @param stashRef stash ref
+     * @throws GEScmAPIException in case of errors.
+     */
+    public void applyStash(String stashRef) throws GEScmAPIException {
+        try (Git git = new Git(repository)) {
+            git.stashApply()
+                    .setStashRef(stashRef)
+                    .call();
+        } catch (GitAPIException e) {
+            throw new GEScmAPIException(e.getMessage(), e.getCause());
+        }
+    }
+
+
+
 
     private void checkout(Repository clonedRepo, FetchResult result)
             throws MissingObjectException, IncorrectObjectTypeException,

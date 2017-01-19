@@ -45,6 +45,7 @@ public class WorkingCopyController implements Initializable {
     public TableColumn<ScmItem, String> itemTableColumn;
     public Button stashBtn;
     public Button commitBtn;
+    public ToolBar toolBar;
     private ScmBranch branch;
 
     @Override

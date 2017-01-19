@@ -1,7 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.misc.ScmBranch;
-import javafx.scene.Node;
+import com.az.gitember.misc.ScmRevisionInformation;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
@@ -17,11 +17,11 @@ import java.util.function.Consumer;
 public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
 
     final ContextMenu contextMenu;
-    final Consumer<ScmBranch> validateContextMenu;
+    final Consumer<Object> validateContextMenu;
 
 
 
-    public ScmItemCellFactory(ContextMenu contextMenu, Consumer<ScmBranch> validateContextMenu) {
+    public ScmItemCellFactory(ContextMenu contextMenu, Consumer<Object> validateContextMenu) {
         this.contextMenu = contextMenu;
         this.validateContextMenu = validateContextMenu;
     }
@@ -47,7 +47,6 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
                     setContextMenu(contextMenu);
                     setOnContextMenuRequested(e -> validateContextMenu.accept(scmBranch));
 
-
                     if (scmBranch.isHead()) {
                         setStyle("-fx-font-weight: bold;");
                     } else {
@@ -61,6 +60,11 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
                         setGraphic(new FontIcon(FontAwesome.TAG));
                     }
 
+                } else if (item instanceof ScmRevisionInformation) {
+                    ScmRevisionInformation ri = (ScmRevisionInformation) item;
+                    setText(ri.getShortMessage());
+                    setContextMenu(contextMenu);
+                    setOnContextMenuRequested(e -> validateContextMenu.accept(ri));
                 } else {
                     setText(item.toString());
                 }

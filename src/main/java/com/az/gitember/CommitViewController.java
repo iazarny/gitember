@@ -123,9 +123,7 @@ public class CommitViewController implements Initializable {
     }
 
     public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
-
         openFile();
-
     }
 
     private void openFile() {
@@ -140,7 +138,6 @@ public class CommitViewController implements Initializable {
         } catch (Exception e) {       //todo error dialog
             e.printStackTrace();
         }
-
     }
 
 

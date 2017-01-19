@@ -11,12 +11,16 @@ public class MenuItemAvailbility {
     private final boolean localVisible;
     private final boolean tagVisible;
     private final boolean remoteVisible;
+    private final boolean stashVisible;
 
-    public MenuItemAvailbility(MenuItem menuItem, boolean localVisible, boolean tagVisible, boolean remoteVisible) {
+    public MenuItemAvailbility(MenuItem menuItem,
+                               boolean localVisible, boolean tagVisible,
+                               boolean remoteVisible, boolean stashVisible) {
         this.menuItem = menuItem;
         this.localVisible = localVisible;
         this.tagVisible = tagVisible;
         this.remoteVisible = remoteVisible;
+        this.stashVisible = stashVisible;
     }
 
     public MenuItem getMenuItem() {
@@ -33,5 +37,9 @@ public class MenuItemAvailbility {
 
     public boolean isRemoteVisible() {
         return remoteVisible;
+    }
+
+    public boolean isStashVisible() {
+        return stashVisible;
     }
 }
