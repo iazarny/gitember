@@ -80,7 +80,7 @@ public class BranchViewController implements Initializable {
 
                         Parent commitView = CommitViewController.openCommitViewWindow(
                                 GitemberApp.getRepositoryService().adapt(newValue, null),
-                                treeName);
+                                treeName, null);
                         hostCommitViewPanel.getChildren().removeAll(hostCommitViewPanel.getChildren());
                         hostCommitViewPanel.getChildren().add(commitView);
                     }

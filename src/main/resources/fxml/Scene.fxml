@@ -98,7 +98,7 @@
     <top>
         <VBox>
             <children>
-                <MenuBar>
+                <MenuBar fx:id="mainMenuBar" >
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
@@ -177,18 +177,6 @@
                                 </MenuItem>
                             </items>
                         </Menu>
-                        <Menu text="Working copy">
-                            <items>
-                                <MenuItem fx:id="checkoutMenuItem" disable="true" text="Checkout"/>
-                                <MenuItem fx:id="mergeMenuItem" disable="true" text="Merge"/>
-                                <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase"/>
-                                <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..."/>
-                                <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..."/>
-                                <MenuItem fx:id="commitMenuItem" disable="true" text="Commit" />
-                                <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... "/>
-
-                            </items>
-                        </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem text="Check for update"/>
@@ -199,7 +187,7 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-                <ToolBar fx:id="toolBar" prefHeight="40.0" prefWidth="200.0">
+                <ToolBar fx:id="mainToolBar" prefHeight="40.0" prefWidth="200.0">
                     <items>
                         <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
                             <graphic>
@@ -220,7 +208,6 @@
 
                         <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler"
                                 text="Fetch">
-
                         </Button>
 
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
@@ -230,7 +217,6 @@
                                     <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
                                 </StackedFontIcon>
                             </graphic>
-
                         </Button>
 
                         <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#localBranchPushHandler"

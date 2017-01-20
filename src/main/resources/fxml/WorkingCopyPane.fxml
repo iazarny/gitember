@@ -2,30 +2,26 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
             prefHeight="-1" prefWidth="600.0"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
             AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.WorkingCopyController">
     <top>
-        <ToolBar fx:id="toolBar" prefHeight="40.0" prefWidth="200.0">
-            <items>
-                <Button mnemonicParsing="false" text="Stage all"  fx:id="stageAllBtn" onAction="#stageAllBtnHandler"/>
-                <Button mnemonicParsing="false" text="Commit ..."  fx:id="commitBtn" onAction="#commitBtnHandler"/>
-                <Button mnemonicParsing="false" text="Stash"  fx:id="stashBtn" onAction="#stashBtnHandler"/>
-                <Pane HBox.hgrow="ALWAYS" />
-                <Button mnemonicParsing="false"  fx:id="refreshBtn" onAction="#refreshBtnHandler">
-                    <graphic>
-                        <StackedFontIcon>
-                            <FontIcon iconLiteral="fa-refresh" StackedFontIcon.iconSize="0.5"/>
-                        </StackedFontIcon>
-                    </graphic>
-                </Button>
-            </items>
-        </ToolBar>
+        <MenuBar>
+            <Menu fx:id="workingCopyMenu" text="Working copy" id="MERGED">
+                <items>
+                    <MenuItem fx:id="checkoutMenuItem" disable="true" text="Checkout"/>
+                    <MenuItem fx:id="mergeMenuItem" disable="true" text="Merge"/>
+                    <MenuItem fx:id="rebaseMenuItem" disable="true" text="Rebase"/>
+                    <MenuItem fx:id="stashMenuItem" disable="true" text="Stash ..."/>
+                    <MenuItem fx:id="applyStashMenuItem" disable="true" text="Apply stash ..."/>
+                    <MenuItem fx:id="commitMenuItem" disable="true" text="Commit" />
+                    <MenuItem fx:id="resetVersionMenuItem" disable="true" text="Reset version to ... "/>
 
+                </items>
+            </Menu>
+        </MenuBar>
     </top>
     <center>
         <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0"

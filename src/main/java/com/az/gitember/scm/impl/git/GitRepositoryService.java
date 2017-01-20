@@ -1,5 +1,6 @@
 package com.az.gitember.scm.impl.git;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
@@ -75,14 +76,22 @@ public class GitRepositoryService {
         config = null;
     }
 
-    public void setUserName(String userName) throws IOException {
-        config.setString("user", null, "name", userName);
-        config.save();
+    public void setUserName(String userName) {
+        try {
+            config.setString("user", null, "name", userName);
+            config.save();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot save settings", e);
+        }
     }
 
-    public void setUserEmail(String userEmail) throws IOException {
-        config.setString("user", null, "email", userEmail);
-        config.save();
+    public void setUserEmail(String userEmail) {
+        try {
+            config.setString("user", null, "email", userEmail);
+            config.save();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot save settings", e);
+        }
     }
 
     public String getUserName() {
@@ -599,12 +608,14 @@ public class GitRepositoryService {
         }
     }
 
-    public void commit(String message) throws Exception {
+    public void commit(String message) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
             git
                     .commit()
                     .setMessage(message)
                     .call();
+        } catch (GitAPIException e) {
+            throw new GEScmAPIException("Cannot commit", e);
         }
     }
 
@@ -853,6 +864,7 @@ public class GitRepositoryService {
 
     /**
      * Delete stash.
+     *
      * @param stashRef stash reference id.
      * @throws GEScmAPIException in case of errors.
      */
@@ -868,6 +880,7 @@ public class GitRepositoryService {
 
     /**
      * Apply stash.
+     *
      * @param stashRef stash ref
      * @throws GEScmAPIException in case of errors.
      */
@@ -880,8 +893,6 @@ public class GitRepositoryService {
             throw new GEScmAPIException(e.getMessage(), e.getCause());
         }
     }
-
-
 
 
     private void checkout(Repository clonedRepo, FetchResult result)

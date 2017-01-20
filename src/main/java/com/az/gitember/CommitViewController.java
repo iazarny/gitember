@@ -14,10 +14,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
@@ -38,6 +35,12 @@ import java.util.stream.Collectors;
  * Created by Igor_Azarny on 03 - Dec - 2016
  */
 public class CommitViewController implements Initializable {
+
+    public final static String[] MENU_TO_REMOVE = new String [] {"Stash"};
+    public final static String[] BUTTONS_TO_REMOVE = new String [] {"Stage all", "Commit ...", "Move to stash", "Refresh"};
+
+    @FXML
+    public Menu stashMenu;
 
     @FXML
     private Label msgLbl;
@@ -235,7 +238,10 @@ public class CommitViewController implements Initializable {
                 treeName);
     }
 
-    public static Parent openCommitViewWindow(ScmRevisionInformation info, final String treeName) {
+    public static Parent openCommitViewWindow(final ScmRevisionInformation info,
+                                              final String treeName,
+                                              final MenuBar menuBar ) {
+
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = CommitViewController.class.getResource("/fxml/CommitViewPane.fxml").openStream()) {
             final Parent commitView = fxmlLoader.load(is);
@@ -245,6 +251,12 @@ public class CommitViewController implements Initializable {
                     info
             );
             commitViewController.showPlotCommit();
+
+            if (menuBar != null) {
+                menuBar.getMenus().add(2, commitViewController.stashMenu);
+            }
+
+
             return commitView;
         } catch (Exception e) {
             e.printStackTrace(); //todo log

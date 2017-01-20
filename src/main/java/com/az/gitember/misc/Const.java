@@ -18,4 +18,6 @@ public interface Const {
     String KEYWORDS_CSS = "/styles/keywords.css";
 
     String DEFAULT_CSS = "/styles/styles.css";
+
+    String MERGED = "MERGED";
 }

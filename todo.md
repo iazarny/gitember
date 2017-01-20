@@ -19,25 +19,9 @@ if (GitemberUtil.isBinaryFile(temp)) {
 ```
 
 
+-----------------------
+Proxy and proxy auth
+--------------------------------
+Rewrite author
+------------------------
 
-```
-
-
-
-            /*ORIGINAL DO NOT REMOVE Platform.runLater(
-                    () -> {
-                        RemoteOperationValue res = remoteRepositoryOperation(
-                                () -> MainApp.getRepositoryService().cloneRepository(
-                                        dialogResult.get().getFirst(),
-                                        dialogResult.get().getSecond(),
-                                        login,
-                                        pwd,
-                                        new DefaultProgressMonitor(d -> updateProgressBar(d))
-                                )
-                        );
-                        openRepository((String) res.getValue());
-                    }
-            );*/
-
-
-```
