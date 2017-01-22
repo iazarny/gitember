@@ -54,15 +54,16 @@ public class WorkingCopyController implements Initializable {
     public TableColumn<ScmItem, String> itemTableColumn;
     public Button stashBtn;
     public Button commitBtn;
-    private Button stageAllBtn;
-    private Button refreshBtn;
-    private Pane spacerPane;
-    private TextField searchText;
-    private Button searchButton;
-
+    public Button stageAllBtn;
+    public Button refreshBtn;
+    public Button searchButton;
+    public Pane spacerPane;
+    public TextField searchText;
     public Menu workingCopyMenu;
 
     private ScmBranch branch;
+
+    private Consumer<Object> onStashCreated;
 
 
     @Override
@@ -179,9 +180,7 @@ public class WorkingCopyController implements Initializable {
                 "Checkout",
                 "Please select branch to checkout",
                 s -> GitemberApp.getGitemberService().checkout(s));
-        //todo emit reload event to main controller to reread tree and set head
     }
-
 
 
     public void open(final ScmBranch branch, final String path) {
@@ -273,7 +272,6 @@ public class WorkingCopyController implements Initializable {
     }
 
 
-
     /**
      * Refresh changes from disk
      *
@@ -296,13 +294,11 @@ public class WorkingCopyController implements Initializable {
         try {
             GitemberApp.getRepositoryService().stash();
             open(branch, null);
-            //todo emit reload stash list to main app
+            onStashCreated.accept(null);
         } catch (GEScmAPIException e) {
             GitemberApp.showResult("Changes not moved to stash, because: " + e.getMessage(), Alert.AlertType.ERROR);
             log.log(Level.SEVERE, "Cannot move to stash", e);
-
         }
-
     }
 
 
@@ -329,6 +325,7 @@ public class WorkingCopyController implements Initializable {
 
     /**
      * Open file.
+     *
      * @param actionEvent event
      */
     @SuppressWarnings("unused")
@@ -470,12 +467,16 @@ public class WorkingCopyController implements Initializable {
     }
 
     @SuppressWarnings("unused")
-    public static Parent openWorkingCopyHandler(ScmBranch branch, MenuBar menuBar, ToolBar toolBar) {
+    public static Parent openWorkingCopyHandler(ScmBranch branch,
+                                                MenuBar menuBar,
+                                                ToolBar toolBar,
+                                                Consumer<Object> onStashCreated) {
 
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = WorkingCopyController.class.getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
             final Parent workCopyView = fxmlLoader.load(is);
             final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.onStashCreated = onStashCreated;
             workingCopyController.open(branch, null);
 
             menuBar.getMenus().add(2, workingCopyController.workingCopyMenu);

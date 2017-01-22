@@ -20,9 +20,9 @@
     <top>
         <MenuBar visible="false" maxHeight="1" maxWidth="1">
             <Menu fx:id="stashMenu" text="Stash" id="MERGED">
-                <MenuItem text="Apply stash ..."/>
+                <MenuItem text="Apply stash ..." onAction="#applyStashHandler"/>
                 <SeparatorMenuItem/>
-                <MenuItem text="Delete stash ..."/>
+                <MenuItem text="Delete stash ..." onAction="#deleteStashHandler"/>
             </Menu>
         </MenuBar>
         <GridPane hgap="1.0" prefHeight="141.0" prefWidth="840.0">

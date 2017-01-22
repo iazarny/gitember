@@ -33,6 +33,8 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -127,7 +129,11 @@ public class FXMLController implements Initializable {
 
             treeItemClickHandlers.put(workingCopyTreeItem, o -> {
                 undockSlaveItems();
-                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(GitemberApp.workingBranch.get(), mainMenuBar, mainToolBar);
+                Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(
+                        GitemberApp.workingBranch.get(),
+                        mainMenuBar,
+                        mainToolBar,
+                        st -> fillStashTree());
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(workCopyView);
             });
@@ -169,6 +175,19 @@ public class FXMLController implements Initializable {
         );
     }
 
+    private BlockingQueue<Object> msgQ = new ArrayBlockingQueue<Object>(10);
+
+    private void test() {
+
+        try {
+            msgQ.put("eeee");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
     private void fillStashTree() {
         stashInfo = GitemberApp.getRepositoryService().getStashList();
         cleanUp(stashesTreeItem);
@@ -180,8 +199,12 @@ public class FXMLController implements Initializable {
                         undockSlaveItems();
                         Parent commitView = CommitViewController.openCommitViewWindow(
                                 ri,
+                                stashInfo.indexOf(ri),
                                 GitemberApp.workingBranch.get().getFullName(),
-                                mainMenuBar);
+                                mainMenuBar,
+                                scmRevisionInformation -> {
+                                    this.fillStashTree();
+                                });
                         hostPanel.getChildren().removeAll(hostPanel.getChildren());
                         hostPanel.getChildren().add(commitView);
                     });
@@ -316,7 +339,11 @@ public class FXMLController implements Initializable {
                                 openRepository(o.getSecond());
                                 undockSlaveItems();
                                 Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(
-                                        GitemberApp.workingBranch.get(), mainMenuBar, mainToolBar);
+                                        GitemberApp.workingBranch.get(),
+                                        mainMenuBar,
+                                        mainToolBar,
+                                        st -> fillStashTree()
+                                );
                                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                                 hostPanel.getChildren().add(workCopyView);
 
@@ -704,6 +731,7 @@ public class FXMLController implements Initializable {
 
     /**
      * Push all branches.
+     *
      * @param actionEvent event
      */
     @SuppressWarnings("unused")

@@ -31,6 +31,12 @@ if (GitemberUtil.isBinaryFile(temp)) {
 
     }*/
 ```
+history
+---------------------
+https://gist.github.com/floralvikings/10290131
+
+
+
 repo usr with username
 -----------------------
 Proxy and proxy auth

@@ -1,6 +1,5 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
@@ -13,12 +12,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.Stage;
-import org.eclipse.jgit.revplot.PlotCommit;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -29,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -73,6 +69,8 @@ public class CommitViewController implements Initializable {
     private ContextMenu scmItemContextMenu;
 
     private ScmRevisionInformation scmRevisionInformation;
+    private int stashIndex;
+    private Consumer<ScmRevisionInformation> onStashDelete = null;
     private String treeName;
     private List<ScmItem> changedFiles;
 
@@ -109,10 +107,10 @@ public class CommitViewController implements Initializable {
     }
 
 
-    public void fillData(final String treeName, ScmRevisionInformation plotCommit) throws Exception {
+    public void fillData(final String treeName, ScmRevisionInformation revInfo) throws Exception {
         this.treeName = treeName;
-        this.scmRevisionInformation = plotCommit;
-        this.changedFiles = plotCommit.getAffectedItems();
+        this.scmRevisionInformation = revInfo;
+        this.changedFiles = revInfo.getAffectedItems();
                 //GitemberApp.getRepositoryService().getChangedFiles(treeName, plotCommit.getRevisionFullName());
     }
 
@@ -235,14 +233,45 @@ public class CommitViewController implements Initializable {
                 treeName);
     }
 
+    /**
+     * Apply stash.
+     * @param actionEvent
+     */
+    @SuppressWarnings("unused")
+    public void applyStashHandler(ActionEvent actionEvent) {
+        GitemberApp.getGitemberService().applyStash(scmRevisionInformation);
+    }
+
+    /**
+     * Delete stash
+     * @param actionEvent event
+     */
+    @SuppressWarnings("unused")
+    public void deleteStashHandler(ActionEvent actionEvent) {
+        if (GitemberApp.getGitemberService().deleteStash(
+                scmRevisionInformation,
+                stashIndex
+        )) {
+            if (onStashDelete != null) {
+                onStashDelete.accept(scmRevisionInformation);
+            }
+            GitemberApp.showResult("Deleted stash", Alert.AlertType.INFORMATION);
+        }
+
+    }
+
     public static Parent openCommitViewWindow(final ScmRevisionInformation info,
+                                              final int stashIndex,
                                               final String treeName,
-                                              final MenuBar menuBar ) {
+                                              final MenuBar menuBar,
+                                              final Consumer<ScmRevisionInformation> onStashDelete) {
 
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = CommitViewController.class.getResource("/fxml/CommitViewPane.fxml").openStream()) {
             final Parent commitView = fxmlLoader.load(is);
             final CommitViewController commitViewController = fxmlLoader.getController();
+            commitViewController.stashIndex = stashIndex;
+            commitViewController.onStashDelete = onStashDelete;
             commitViewController.fillData(
                     treeName,
                     info
@@ -252,15 +281,12 @@ public class CommitViewController implements Initializable {
             if (menuBar != null) {
                 menuBar.getMenus().add(2, commitViewController.stashMenu);
             }
-
-
             return commitView;
         } catch (Exception e) {
             e.printStackTrace(); //todo log
         }
         return null;
     }
-
 
 
 
