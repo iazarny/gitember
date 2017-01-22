@@ -18,9 +18,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Optional;
 
 
@@ -34,7 +41,7 @@ public class GitemberApp extends Application {
 
     private static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
-    private static GitemberServiceImpl gitemberService;
+    private static GitemberServiceImpl gitemberService = new GitemberServiceImpl();
 
 
     public static void setWorkingBranch(ScmBranch workingBranch) throws Exception {
@@ -75,10 +82,6 @@ public class GitemberApp extends Application {
         return gitemberService;
     }
 
-    public static void setGitemberService(GitemberServiceImpl gitemberService) {
-        GitemberApp.gitemberService = gitemberService;
-    }
-
     public static void setTitle(String title) {
         mainStage.setTitle(title);
     }
@@ -89,14 +92,29 @@ public class GitemberApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
-        Scene scene = new Scene(root);
-        scene.getStylesheets().add(Const.DEFAULT_CSS);
-        mainStage = stage;
-        setTitle(Const.TITLE);
-        stage.setScene(scene);
-        stage.getIcons().add(new Image(GitemberApp.class.getResourceAsStream(Const.ICON)));
-        stage.show();
+        final FXMLLoader fxmlLoader = new FXMLLoader();
+
+        try(InputStream is = WorkingCopyController.class.getResource("/fxml/Scene.fxml").openStream()) {
+            Parent root = fxmlLoader.load(is);
+            FXMLController controller = fxmlLoader.getController();
+            gitemberService.setProgressBar(controller.progressBar);
+            gitemberService.setOperationProgressBar(controller.operationProgressBar);
+            gitemberService.setOperationName(controller.operationName);
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(Const.DEFAULT_CSS);
+            mainStage = stage;
+            setTitle(Const.TITLE);
+            stage.setScene(scene);
+            stage.getIcons().add(new Image(GitemberApp.class.getResourceAsStream(Const.ICON)));
+            stage.show();
+
+        }
+
+        /*try (InputStream is = WorkingCopyController.class.getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
+            final Parent workCopyView = fxmlLoader.load(is);
+            final WorkingCopyController workingCopyController = fxmlLoader.getController();
+            workingCopyController.open(branch, null);
+*/
     }
 
     public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {
@@ -105,6 +123,39 @@ public class GitemberApp extends Application {
         alert.setTitle("Operation result");
         alert.setContentText(text);
         return alert.showAndWait();
+    }
+
+    public static void showException(String text, Throwable ex) {
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setWidth(600);
+        alert.setTitle("Operation result");
+        alert.setContentText(text);
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String exceptionText = sw.toString();
+
+        Label label = new Label("The exception stacktrace was:");
+
+        TextArea textArea = new TextArea(exceptionText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(label, 0, 0);
+        expContent.add(textArea, 0, 1);
+
+        // Set expandable Exception into the dialog pane.
+        alert.getDialogPane().setExpandableContent(expContent);
+
     }
 
     /**

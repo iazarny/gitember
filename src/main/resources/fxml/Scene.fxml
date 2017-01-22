@@ -230,15 +230,7 @@
                         <Separator/>
 
 
-                        <Pane HBox.hgrow="ALWAYS"/>
-                        <TextField/>
-                        <Button mnemonicParsing="false">
-                            <graphic>
-                                <StackedFontIcon>
-                                    <FontIcon iconLiteral="fa-search" StackedFontIcon.iconSize="0.5"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </Button>
+
                     </items>
                 </ToolBar>
             </children>

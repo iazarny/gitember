@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.*;
+import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
 import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
@@ -19,6 +20,10 @@ import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.text.Text;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -28,9 +33,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +56,9 @@ public class WorkingCopyController implements Initializable {
     public Button commitBtn;
     private Button stageAllBtn;
     private Button refreshBtn;
+    private Pane spacerPane;
+    private TextField searchText;
+    private Button searchButton;
 
     public Menu workingCopyMenu;
 
@@ -99,7 +109,7 @@ public class WorkingCopyController implements Initializable {
         stageAllBtn.setId(Const.MERGED);
 
         commitBtn = new Button("Commit ...");
-        commitBtn.setOnAction(this::commitBtnHandler);
+        commitBtn.setOnAction(this::commitHandler);
         commitBtn.setId(Const.MERGED);
 
         stashBtn = new Button("Move to stash");
@@ -113,14 +123,70 @@ public class WorkingCopyController implements Initializable {
                 new FontIcon(FontAwesome.REFRESH)
         );
 
+        spacerPane = new Pane();
+        HBox.setHgrow(spacerPane, Priority.ALWAYS);
+        spacerPane.setId(Const.MERGED);
+
+        searchText = new TextField();
+        searchText.setId(Const.MERGED);
+
+        searchButton = new Button();
+        searchButton.setId(Const.MERGED);
+        searchButton.setGraphic(
+                new FontIcon(FontAwesome.SEARCH)
+        );
+
+
+        workingCopyMenu = new Menu("Working copy");
+        workingCopyMenu.setId(Const.MERGED);
+
+        MenuItem mi = new MenuItem("Checkout ...");
+        mi.setOnAction(this::checkoutRevision);
+        workingCopyMenu.getItems().add(mi);
+
+        mi = new MenuItem("Merge ...");
+        mi.setOnAction(this::mergeBranch);
+        workingCopyMenu.getItems().add(mi);
+
+        mi = new MenuItem("Rebase");
+        workingCopyMenu.getItems().add(mi);
+
+        mi = new MenuItem("Commit ...");
+        mi.setOnAction(this::commitHandler);
+        workingCopyMenu.getItems().add(mi);
+
+        mi = new MenuItem("Reset version to ...");
+        workingCopyMenu.getItems().add(mi);
+
+
     }
 
+    private void mergeBranch(ActionEvent actionEvent) {
+        GitemberApp.getGitemberService().makeBranchOperation(
+                "Merge",
+                "Please select branch to merge with current",
+                s -> GitemberApp.getGitemberService().mergeToHead(s));
+    }
+
+    /**
+     * Show dialogs with revisions to checkout.
+     *
+     * @param actionEvent event
+     */
+    @SuppressWarnings("unused")
+    private void checkoutRevision(ActionEvent actionEvent) {
+        GitemberApp.getGitemberService().makeBranchOperation(
+                "Checkout",
+                "Please select branch to checkout",
+                s -> GitemberApp.getGitemberService().checkout(s));
+        //todo emit reload event to main controller to reread tree and set head
+    }
+
+
+
     public void open(final ScmBranch branch, final String path) {
-
         this.branch = branch;
-
         GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
-
         Task<List<ScmItem>> longTask = new Task<List<ScmItem>>() {
             @Override
             protected List<ScmItem> call() throws Exception {
@@ -200,29 +266,13 @@ public class WorkingCopyController implements Initializable {
      * @throws Exception in case of errors
      */
     @SuppressWarnings("unused")
-    public void commitBtnHandler(ActionEvent actionEvent) {
-        CommitDialog dialog = new CommitDialog(
-                "TODO history of commit messasge",
-                GitemberApp.getRepositoryService().getUserName(),
-                GitemberApp.getRepositoryService().getUserEmail()
-        );
-        dialog.setTitle("Commit message");
-        dialog.setHeaderText("Provide commit message");
-        dialog.setContentText("Message:");
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            try {
-                GitemberApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
-                GitemberApp.getRepositoryService().setUserName(dialog.getUserName());
-                GitemberApp.getRepositoryService().commit(result.get());
-                open(branch, null);
-            } catch (GEScmAPIException e) {
-                GitemberApp.showResult("Cannot commit, because: " + e.getMessage(), Alert.AlertType.ERROR);
-                log.log(Level.SEVERE, "Cannot commit", e);
-
-            }
+    public void commitHandler(ActionEvent actionEvent) {
+        if (GitemberApp.getGitemberService().commit(branch)) {
+            open(branch, null);
         }
     }
+
+
 
     /**
      * Refresh changes from disk
@@ -246,6 +296,7 @@ public class WorkingCopyController implements Initializable {
         try {
             GitemberApp.getRepositoryService().stash();
             open(branch, null);
+            //todo emit reload stash list to main app
         } catch (GEScmAPIException e) {
             GitemberApp.showResult("Changes not moved to stash, because: " + e.getMessage(), Alert.AlertType.ERROR);
             log.log(Level.SEVERE, "Cannot move to stash", e);
@@ -278,7 +329,6 @@ public class WorkingCopyController implements Initializable {
 
     /**
      * Open file.
-     *
      * @param actionEvent event
      */
     @SuppressWarnings("unused")
@@ -295,7 +345,6 @@ public class WorkingCopyController implements Initializable {
                 GitemberApp.showResult(msg, Alert.AlertType.WARNING);
                 log.log(Level.WARNING, msg, e);
             }
-
         }
     }
 
@@ -308,7 +357,9 @@ public class WorkingCopyController implements Initializable {
     public void revertEventHandler(ActionEvent actionEvent) {
         final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
         if (item != null) {
-            Optional<ButtonType> result = GitemberApp.showResult("Revert " + item.getShortName() + " changes ?", Alert.AlertType.CONFIRMATION);
+            Optional<ButtonType> result = GitemberApp.showResult(
+                    "Revert " + item.getShortName() + " changes ?",
+                    Alert.AlertType.CONFIRMATION);
             if (result.isPresent() && result.get() == ButtonType.OK) {
                 GitemberApp.getRepositoryService().checkoutFile(item.getShortName());
                 open(branch, item.getShortName());
@@ -414,7 +465,7 @@ public class WorkingCopyController implements Initializable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            GitemberApp.showException("Cannot add item " + item.getShortName() + " to stage", e);
         }
     }
 
@@ -429,14 +480,20 @@ public class WorkingCopyController implements Initializable {
 
             menuBar.getMenus().add(2, workingCopyController.workingCopyMenu);
 
-            toolBar.getItems().add(8, workingCopyController.refreshBtn);
-            toolBar.getItems().add(8, workingCopyController.stashBtn);
-            toolBar.getItems().add(8, workingCopyController.commitBtn);
-            toolBar.getItems().add(8, workingCopyController.stageAllBtn);
+
+            toolBar.getItems().add(workingCopyController.stageAllBtn);
+            toolBar.getItems().add(workingCopyController.commitBtn);
+            toolBar.getItems().add(workingCopyController.stashBtn);
+            toolBar.getItems().add(workingCopyController.refreshBtn);
+            toolBar.getItems().add(workingCopyController.spacerPane);
+            toolBar.getItems().add(workingCopyController.searchText);
+            toolBar.getItems().add(workingCopyController.searchButton);
+
 
             return workCopyView;
         } catch (IOException ioe) {
             log.log(Level.SEVERE, "Cannot open working copy view", ioe.getMessage());
+            GitemberApp.showException("Cannot open working copy view", ioe);
         }
 
         return null;

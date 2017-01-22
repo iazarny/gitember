@@ -26,10 +26,12 @@ public class ScmBranch extends Pair<String, String> {
     private BranchType branchType;
 
     private String remoteName;
+    private String sha;
 
-    public ScmBranch(String shortName, String fullName, BranchType branchType) {
+    public ScmBranch(String shortName, String fullName, BranchType branchType, String sha) {
         super(shortName, fullName);
         this.branchType = branchType;
+        this.sha = sha;
     }
 
 

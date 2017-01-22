@@ -1,17 +1,18 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.*;
-import com.az.gitember.scm.exception.GECheckoutConflictException;
-import com.az.gitember.scm.exception.GEScmAPIException;
-import com.az.gitember.scm.impl.git.DefaultProgressMonitor;
+import com.az.gitember.misc.Const;
+import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.misc.ScmRevisionInformation;
+import com.az.gitember.misc.Settings;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
-import com.az.gitember.ui.*;
+import com.az.gitember.ui.MenuItemAvailbility;
+import com.az.gitember.ui.ScmItemCellFactory;
+import com.az.gitember.ui.SettingsDialog;
+import com.az.gitember.ui.SettingsModel;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -22,7 +23,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.ObjectUtils;
-import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 
 import java.awt.*;
 import java.io.File;
@@ -33,12 +33,9 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -98,10 +95,7 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane hostPanel;
 
-    private String login = null;
-    private String pwd = null;
-    private Optional<Pair<String, String>> uiInputResultToService;
-    private CountDownLatch uiInputLatchToService;
+
     private final Map<TreeItem, Consumer<Object>> treeItemClickHandlers = new HashMap<>();
     private List<ScmRevisionInformation> stashInfo;
 
@@ -132,14 +126,14 @@ public class FXMLController implements Initializable {
             fillAllBranchTrees();
 
             treeItemClickHandlers.put(workingCopyTreeItem, o -> {
-                unmergeSlaveParts();
+                undockSlaveItems();
                 Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(GitemberApp.workingBranch.get(), mainMenuBar, mainToolBar);
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(workCopyView);
             });
 
             treeItemClickHandlers.put(historyTreeItem, o -> {
-                unmergeSlaveParts();
+                undockSlaveItems();
                 Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get());
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(branchView);
@@ -155,8 +149,8 @@ public class FXMLController implements Initializable {
         }
     }
 
-
-    private void fillAllBranchTrees() throws Exception {
+    @SuppressWarnings("unchecked")
+    private void fillAllBranchTrees() {
         fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
         fillBranchTree(GitemberApp.getRepositoryService().getRemoteBranches(), remoteBranchesTreeItem);
@@ -164,25 +158,6 @@ public class FXMLController implements Initializable {
 
     }
 
-    private void fillStashTree() throws GEScmAPIException {
-        stashInfo = GitemberApp.getRepositoryService().getStashList();
-        cleanUp(stashesTreeItem);
-        stashInfo.stream().forEach(
-                ri -> {
-                    TreeItem<ScmRevisionInformation> stashTree = new TreeItem<>(ri);
-                    stashesTreeItem.getChildren().add(stashTree);
-                    treeItemClickHandlers.put(stashTree, o -> {
-                        unmergeSlaveParts();
-                        Parent commitView = CommitViewController.openCommitViewWindow(
-                                ri,
-                                GitemberApp.workingBranch.get().getFullName(),
-                                mainMenuBar);
-                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
-                        hostPanel.getChildren().add(commitView);
-                    });
-                }
-        );
-    }
 
     private void fillBranchTree(List<ScmBranch> branches, TreeItem<ScmBranch> treeItem) {
         cleanUp(treeItem);
@@ -190,6 +165,26 @@ public class FXMLController implements Initializable {
                 (e) -> {
                     treeItem.getChildren().add(e.getKey());
                     treeItemClickHandlers.put(e.getKey(), e.getValue());
+                }
+        );
+    }
+
+    private void fillStashTree() {
+        stashInfo = GitemberApp.getRepositoryService().getStashList();
+        cleanUp(stashesTreeItem);
+        stashInfo.stream().forEach(
+                ri -> {
+                    TreeItem<ScmRevisionInformation> stashTree = new TreeItem<>(ri);
+                    stashesTreeItem.getChildren().add(stashTree);
+                    treeItemClickHandlers.put(stashTree, o -> {
+                        undockSlaveItems();
+                        Parent commitView = CommitViewController.openCommitViewWindow(
+                                ri,
+                                GitemberApp.workingBranch.get().getFullName(),
+                                mainMenuBar);
+                        hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                        hostPanel.getChildren().add(commitView);
+                    });
                 }
         );
     }
@@ -206,7 +201,7 @@ public class FXMLController implements Initializable {
         Map<TreeItem, Consumer<Object>> rez = new LinkedHashMap<>();
         data.stream().forEach(
                 branch -> rez.put(new TreeItem<>(branch), o -> {
-                            unmergeSlaveParts();
+                            undockSlaveItems();
                             Parent branchView = BranchViewController.openBranchHistory(branch);
                             hostPanel.getChildren().removeAll(hostPanel.getChildren());
                             hostPanel.getChildren().add(branchView);
@@ -259,35 +254,42 @@ public class FXMLController implements Initializable {
         GitemberApp.workingBranch.addListener(
                 (observable, oldValue, newValue) -> {
                     boolean trackingRemoteBranch = newValue.getRemoteName() != null;
-                    if (trackingRemoteBranch) {
-                        String localBranch = GitemberApp.workingBranch.get().getShortName();
-                        String remoteBranch = newValue.getRemoteName();
-                        fetchMenuItem.setText("Fetch remote " + remoteBranch + " to " + localBranch);
-                        pullMenuItem.setText("Pull remote " + remoteBranch + " to " + localBranch);
-                        pushMenuItem.setText("Push " + localBranch + " remote to " + remoteBranch);
 
-                        Tooltip tt = new Tooltip(
-                                MessageFormat.format(
-                                        "Branch {0} tracking remote {1}",
-                                        newValue.getShortName(),
-                                        newValue.getRemoteName()));
-                        fetchBtn.setTooltip(tt);
-                        pullBtn.setTooltip(tt);
-                        pushBtn.setTooltip(tt);
-                    } else {
-                        fetchMenuItem.setText("Fetch");
-                        pullMenuItem.setText("Pull");
-                        pushMenuItem.setText("Push");
+                    try {
+                        fillAllBranchTrees();
+                        if (trackingRemoteBranch) {
+                            String localBranch = GitemberApp.workingBranch.get().getShortName();
+                            String remoteBranch = newValue.getRemoteName();
+                            fetchMenuItem.setText("Fetch remote " + remoteBranch + " to " + localBranch);
+                            pullMenuItem.setText("Pull remote " + remoteBranch + " to " + localBranch);
+                            pushMenuItem.setText("Push " + localBranch + " remote to " + remoteBranch);
 
+                            Tooltip tt = new Tooltip(
+                                    MessageFormat.format(
+                                            "Branch {0} tracking remote {1}",
+                                            newValue.getShortName(),
+                                            newValue.getRemoteName()));
+                            fetchBtn.setTooltip(tt);
+                            pullBtn.setTooltip(tt);
+                            pushBtn.setTooltip(tt);
+                        } else {
+                            fetchMenuItem.setText("Fetch");
+                            pullMenuItem.setText("Pull");
+                            pushMenuItem.setText("Push");
+
+                        }
+
+                        fetchMenuItem.setDisable(!trackingRemoteBranch);
+                        pullMenuItem.setDisable(!trackingRemoteBranch);
+                        pushMenuItem.setDisable(!trackingRemoteBranch);
+
+                        fetchBtn.setDisable(!trackingRemoteBranch);
+                        pullBtn.setDisable(!trackingRemoteBranch);
+                        pushBtn.setDisable(!trackingRemoteBranch);
+                    } catch (Exception e) {
+                        GitemberApp.showException("Cannot reload list of branches", e);
                     }
 
-                    fetchMenuItem.setDisable(!trackingRemoteBranch);
-                    pullMenuItem.setDisable(!trackingRemoteBranch);
-                    pushMenuItem.setDisable(!trackingRemoteBranch);
-
-                    fetchBtn.setDisable(!trackingRemoteBranch);
-                    pullBtn.setDisable(!trackingRemoteBranch);
-                    pushBtn.setDisable(!trackingRemoteBranch);
 
                 }
         );
@@ -295,7 +297,10 @@ public class FXMLController implements Initializable {
 
     }
 
-    private void unmergeSlaveParts() {
+    /**
+     * Undock added items.
+     */
+    private void undockSlaveItems() {
         mainMenuBar.getMenus().removeIf(menu -> Const.MERGED.equals(menu.getId()));
         mainToolBar.getItems().removeIf(node -> Const.MERGED.equals(node.getId()));
     }
@@ -309,7 +314,7 @@ public class FXMLController implements Initializable {
                     mi.setOnAction(
                             event -> {
                                 openRepository(o.getSecond());
-                                unmergeSlaveParts();
+                                undockSlaveItems();
                                 Parent workCopyView = WorkingCopyController.openWorkingCopyHandler(
                                         GitemberApp.workingBranch.get(), mainMenuBar, mainToolBar);
                                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
@@ -438,147 +443,6 @@ public class FXMLController implements Initializable {
         return contextMenu;
     }
 
-    private void pushToRemoteRepository(String localBranchName, String remoteBranchName, boolean setOrigin, boolean setTrackeRemote) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
-                                localBranchName, remoteBranchName, login, pwd, setOrigin, setTrackeRemote,
-                                new DefaultProgressMonitor((t, d) -> {
-                                    updateTitle(t);
-                                    updateProgress(d, 1.0);
-                                }))
-                );
-            }
-        };
-        prepareLongTask(longTask, null, null);
-        new Thread(longTask).start();
-    }
-
-    private void prepareLongTask(final Task<RemoteOperationValue> longTask,
-                                 final Consumer<RemoteOperationValue> onOk,
-                                 final Consumer<RemoteOperationValue> onError) {
-
-
-        progressBar.setVisible(true);
-        operationProgressBar.progressProperty().bind(longTask.progressProperty());
-        operationName.textProperty().bind(longTask.titleProperty());
-        GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
-
-        longTask.setOnSucceeded(val -> Platform.runLater(
-                () -> {
-                    RemoteOperationValue rval = longTask.getValue();
-                    switch (rval.getResult()) {
-                        case OK: {
-                            if (onOk != null) {
-                                onOk.accept(rval);
-                            }
-                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
-                            break;
-                        }
-                        case ERROR: {
-                            if (onError != null) {
-                                onError.accept(rval);
-                            }
-                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
-                            break;
-                        }
-                    }
-                    operationProgressBar.progressProperty().unbind();
-                    operationName.textProperty().unbind();
-                    progressBar.setVisible(false);
-                }
-        ));
-    }
-
-
-//--------------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * Process remote operations with failback
-     *
-     * @param supplier remote repository command.
-     * @return RemoteOperationValue which shall be interpret by caller
-     */
-    private RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
-        boolean ok = false;
-        RemoteOperationValue operationValue = null;
-        Settings settings = GitemberApp.getSettingsService().read();
-
-
-        while (!ok) {
-            uiInputResultToService = null;
-            operationValue = supplier.get();
-            switch (operationValue.getResult()) {
-                case AUTH_REQUIRED: {
-                    uiInputLatchToService = new CountDownLatch(1);
-                    Platform.runLater(() -> {
-                        if (settings.isRememberPasswords()) {
-                            Triplet<String, String, String> loginPwd = GitemberApp.getSettingsService()
-                                    .getLoginAndPassword(GitemberApp.remoteUrl.get());
-                            login = loginPwd.getSecond();
-                            pwd = loginPwd.getThird();
-
-                        } else {
-                            login = GitemberApp.getSettingsService().getLastLoginName();
-                            pwd = null;
-                        }
-
-                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, pwd)
-                                .showAndWait();
-                        uiInputLatchToService.countDown();
-                    });
-                    try {
-                        uiInputLatchToService.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-                case NOT_AUTHORIZED: {
-                    uiInputLatchToService = new CountDownLatch(1);
-                    Platform.runLater(() -> {
-                        uiInputResultToService = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
-                                .showAndWait();
-                        uiInputLatchToService.countDown();
-                    });
-                    try {
-                        uiInputLatchToService.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-                default: {
-                    //ATM we have ERROR and OK, which shall be handled
-                    ok = true;
-                }
-            }
-            if (uiInputResultToService != null && uiInputResultToService.isPresent()) {
-                login = uiInputResultToService.get().getFirst();
-                pwd = uiInputResultToService.get().getSecond();
-                if (settings.isRememberPasswords()) {
-                    GitemberApp.getSettingsService().saveLoginAndPassword(GitemberApp.remoteUrl.get(), login, pwd);
-                } else {
-                    GitemberApp.getSettingsService().saveLastLoginName(login);
-                }
-                continue;
-            } else {
-                ok = true;
-            }
-            uiInputResultToService = null;
-        }
-
-        login = pwd = null;
-
-        return operationValue;
-
-    }
-
 
     //---------------------------------------------------------------------------------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
@@ -589,120 +453,25 @@ public class FXMLController implements Initializable {
 
     @SuppressWarnings("unchecked")
     public void localBranchCheckoutHandler(ActionEvent actionEvent) {
+        GitemberApp.getGitemberService().checkout(getScmBranch().getFullName());
+    }
 
+    @SuppressWarnings("unchecked")
+    public void localBranchMergeHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = getScmBranch();
-        GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
-
-        Task<Void> longTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                GitemberApp.getRepositoryService().checkoutLocalBranch(scmBranch.getFullName());
-                return null;
-            }
-        };
-
-        longTask.setOnSucceeded(
-                s -> Platform.runLater(
-                        () -> {
-                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            try {
-                                GitemberApp.setWorkingBranch(scmBranch);
-                                fillAllBranchTrees();
-                                GitemberApp.showResult("Branch " + scmBranch.getShortName() + " checked out", Alert.AlertType.INFORMATION);
-                            } catch (Exception e) {
-                                log.log(Level.WARNING, "Checkout failed" + scmBranch.getShortName(), e);
-                            }
-
-
-                        }
-                )
-        );
-
-        longTask.setOnFailed(
-                f -> {
-                    Platform.runLater(
-                            () -> {
-                                Throwable ex = f.getSource().getException();
-                                if (ex instanceof GECheckoutConflictException) {
-                                    GECheckoutConflictException e = (GECheckoutConflictException) ex;
-                                    String msg = String.format("Cannot checkout branch %s. List of conflicting files:\n%s",
-                                            scmBranch.getShortName(),
-                                            e.getConflicting().stream().collect(Collectors.joining("\n"))
-                                    );
-                                    log.log(Level.WARNING, msg, e);
-                                    GitemberApp.showResult(msg, Alert.AlertType.ERROR);
-                                } else if (ex instanceof Exception) {
-                                    Exception e = (Exception) ex;
-                                    log.log(Level.SEVERE, "Cannot checkout branch " + scmBranch.getShortName(), e);
-                                }
-                            }
-                    );
-                }
-        );
-
-        new Thread(longTask).start();
-
+        if (GitemberApp.getGitemberService().mergeToHead(scmBranch.getFullName())) {
+            fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
+        }
     }
 
 
     @SuppressWarnings("unchecked")
     public void localBranchCreateHandler(ActionEvent actionEvent) {
-        TextInputDialog dialog = new TextInputDialog("");
-        dialog.setTitle("New branch");
-        dialog.setHeaderText("Create new branch");
-        dialog.setContentText("Please enter new branch name:");
-
-        Optional<String> dialogResult = dialog.showAndWait();
-
-        if (dialogResult.isPresent()) {
-            ScmBranch scmBranch = getScmBranch();
-            try {
-                GitemberApp.getRepositoryService().createLocalBranch(
-                        scmBranch.getFullName(),
-                        dialogResult.get());
-                fillAllBranchTrees();
-
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "Cannot create new local branch " + scmBranch, e);
-            }
+        if (GitemberApp.getGitemberService().createNewBranchFrom(getScmBranch().getFullName())) {
+            fillAllBranchTrees();
         }
-
-
     }
 
-
-    @SuppressWarnings("unchecked")
-    public void localBranchMergeHandler(ActionEvent actionEvent) {
-
-        ScmBranch scmBranch = getScmBranch();
-
-        TextAreaInputDialog dialog = new TextAreaInputDialog(
-                "Merge " + scmBranch.getFullName() + " to " + GitemberApp.workingBranch.get().getShortName()
-        );
-
-        dialog.setTitle("Merge message");
-        dialog.setHeaderText("Provide merge message");
-        dialog.setContentText("Message:");
-        Optional<String> dialogResult = dialog.showAndWait();
-        if (dialogResult.isPresent()) {
-            try {
-                GitemberApp.getRepositoryService().mergeLocalBranch(
-                        scmBranch.getFullName(),
-                        dialogResult.get()
-                );
-
-                fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
-
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "Cannot merge local branch " + scmBranch.getFullName()
-                        + " to " + GitemberApp.workingBranch.get().getShortName(), e);
-
-            }
-
-        }
-
-
-    }
 
     /**
      * Push selected branch.
@@ -712,51 +481,19 @@ public class FXMLController implements Initializable {
      */
     public void localBranchPushHandler(ActionEvent actionEvent) {
         ScmBranch scmBranch = GitemberApp.workingBranch.get();
-        if (scmBranch.getRemoteName() == null) {
-            TextInputDialog dialog = new TextInputDialog(scmBranch.getShortName());
-            dialog.setTitle("Branch name");
-            dialog.setHeaderText("Remote branch will be created");
-            dialog.setContentText("Please enter new remote branch name:");
-
-            Optional<String> dialogResult = dialog.showAndWait();
-            if (dialogResult.isPresent()) {
-                scmBranch.setRemoteName(dialogResult.get());
-                pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true, true);
-                try {
-                    fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
-                } catch (Exception e) {
-                    log.log(Level.SEVERE, "Cannot load list of local branches after push " + scmBranch, e);
-                }
-            }
-        } else {
-            pushToRemoteRepository(scmBranch.getShortName(), scmBranch.getRemoteName(), true, false);
+        if (GitemberApp.getGitemberService().pushBranch(scmBranch)) {
+            fillBranchTree(GitemberApp.getRepositoryService().getLocalBranches(), localBranchesTreeItem);
         }
     }
+
 
     @SuppressWarnings("unchecked")
     public void localBranchDeleteHandler(ActionEvent actionEvent) {
-
-        final ScmBranch scmBranch = getScmBranch();
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText(String.format("Delete %s %s", scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
-        alert.setContentText(String.format("Do you really want to delete %s %s ?", scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
-
-        Optional<ButtonType> dialogResult = alert.showAndWait();
-        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
-            try {
-                GitemberApp.getRepositoryService().deleteLocalBranch(scmBranch.getFullName());
-                fillAllBranchTrees();
-            } catch (CannotDeleteCurrentBranchException e) {
-                GitemberApp.showResult(e.getMessage(), Alert.AlertType.ERROR);
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "Cannot delete local branch " + scmBranch.getFullName(), e);
-
-            }
+        if (GitemberApp.getGitemberService().deleteBranch(getScmBranch())) {
+            fillAllBranchTrees();
         }
-
     }
+
 
     /**
      * Apply stash.
@@ -764,24 +501,7 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void applyStashHandler(ActionEvent actionEvent) {
-
-        ScmRevisionInformation ri = getScmRevision();
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText(String.format("Apply stash", ri.getShortMessage()));
-        alert.setContentText(String.format("Do you really want to apply %s stash ?", ri.getShortMessage()));
-
-        Optional<ButtonType> dialogResult = alert.showAndWait();
-        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
-            try {
-                GitemberApp.getRepositoryService().applyStash(ri.getRevisionFullName());
-            } catch (GEScmAPIException e) {
-                log.log(Level.SEVERE, "Cannot apply stash " + ri, e);
-                GitemberApp.showResult("Cannot apply stash " + e.getMessage(), Alert.AlertType.ERROR);
-            }
-        }
-
+        GitemberApp.getGitemberService().applyStash(getScmRevision());
     }
 
     /**
@@ -791,23 +511,9 @@ public class FXMLController implements Initializable {
      */
     public void deleteStashHandler(ActionEvent actionEvent) {
         ScmRevisionInformation ri = getScmRevision();
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText(String.format("Delete stash", ri.getShortMessage()));
-        alert.setContentText(String.format("Do you really want to delete %s stash ?", ri.getShortMessage()));
-
-        Optional<ButtonType> dialogResult = alert.showAndWait();
-        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
-            try {
-                GitemberApp.getRepositoryService().deleteStash(stashInfo.indexOf(ri));
-                fillStashTree();
-            } catch (GEScmAPIException e) {
-                log.log(Level.SEVERE, "Cannot delete stash " + ri, e);
-                GitemberApp.showResult("Cannot delete stash " + e.getMessage(), Alert.AlertType.ERROR);
-            }
+        if (GitemberApp.getGitemberService().deleteStash(ri, stashInfo.indexOf(ri))) {
+            fillStashTree();
         }
-
     }
 
     @SuppressWarnings("unchecked")
@@ -847,11 +553,8 @@ public class FXMLController implements Initializable {
             if (!absPath.endsWith(Const.GIT_FOLDER)) {
                 absPath += File.separator + Const.GIT_FOLDER;
             }
-
             openRepository(absPath);
-            //selectWorkingCopy();
         }
-
         createOpenRecentMenu();
     }
 
@@ -916,14 +619,12 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void settingsActionHandler(ActionEvent actionEvent) {
-
         Settings settings = GitemberApp.getSettingsService().read();
         SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
             GitemberApp.getSettingsService().save(model.get().createSettings());
         }
-
     }
 
 
@@ -950,38 +651,13 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void cloneHandler(ActionEvent actionEvent) {
-        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
-        dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
-        if (dialogResult.isPresent()) {
-            GitemberApp.remoteUrl.setValue(dialogResult.get().getFirst());
-            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-                @Override
-                protected RemoteOperationValue call() throws Exception {
-                    return remoteRepositoryOperation(
-                            () -> GitemberApp.getRepositoryService().cloneRepository(
-                                    dialogResult.get().getFirst(),
-                                    dialogResult.get().getSecond(),
-                                    login,
-                                    pwd,
-                                    new DefaultProgressMonitor((t, d) -> {
-                                        updateTitle(t);
-                                        updateProgress(d, 1.0);
-                                    })
-                            )
-                    );
-                }
-            };
-            prepareLongTask(longTask,
-                    remoteOperationValue -> {
-
-                        String repoPath = (String) remoteOperationValue.getValue();
-
-                        openRepository(repoPath);
-                        //selectWorkingCopy();
-                    }, null);
-            new Thread(longTask).start();
-        }
+        GitemberApp.getGitemberService().cloneRepo(
+                remoteOperationValue -> {
+                    String repoPath = (String) remoteOperationValue.getValue();
+                    openRepository(repoPath);
+                },
+                null
+        );
     }
 
     /**
@@ -991,20 +667,9 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void createRepositoryHandler(ActionEvent actionEvent) throws Exception {
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
-        final File selectedDirectory =
-                directoryChooser.showDialog(GitemberApp.getMainStage());
-        if (selectedDirectory != null) {
-            String absPath = selectedDirectory.getAbsolutePath();
-            GitemberApp.getRepositoryService().createRepository(absPath);
-            String repoPath = absPath + File.separator + Const.GIT_FOLDER;
-
-            openRepository(repoPath);
-
-            //selectWorkingCopy();
-        }
-
+        GitemberApp.getGitemberService().createRepo(
+                path -> openRepository(path)
+        );
     }
 
     /**
@@ -1014,7 +679,7 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void fetchHandlerAll(ActionEvent actionEvent) {
-        fetch(null);
+        GitemberApp.getGitemberService().fetch(null);
     }
 
     /**
@@ -1023,73 +688,27 @@ public class FXMLController implements Initializable {
      * @param actionEvent event
      */
     public void fetchHandler(ActionEvent actionEvent) {
-        fetch(GitemberApp.workingBranch.get().getRemoteName());
-    }
-
-    private void fetch(final String branchName) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryFetch(
-                                branchName, login, pwd,
-                                new DefaultProgressMonitor((t, d) -> {
-                                    updateTitle(t);
-                                    updateProgress(d, 1.0);
-                                }))
-                );
-            }
-        };
-        prepareLongTask(longTask, null, null);
-        new Thread(longTask).start();
+        GitemberApp.getGitemberService().fetch(GitemberApp.workingBranch.get().getRemoteName());
     }
 
     @SuppressWarnings("unused")
     public void pullHandler(ActionEvent actionEvent) {
         String branchName = GitemberApp.workingBranch.get().getRemoteName();
-        pull(branchName);
+        GitemberApp.getGitemberService().pull(branchName);
     }
 
     @SuppressWarnings("unused")
     public void pullAllHandler(ActionEvent actionEvent) {
-        pull(null);
+        GitemberApp.getGitemberService().pull(null);
     }
-
-    private void pull(final String branchName) {
-        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
-            @Override
-            protected RemoteOperationValue call() throws Exception {
-                return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryPull(
-                                branchName, login, pwd,
-                                new DefaultProgressMonitor((t, d) -> {
-                                    updateTitle(t);
-                                    updateProgress(d, 1.0);
-                                }))
-                );
-            }
-        };
-        prepareLongTask(longTask, null, null);
-        new Thread(longTask).start();
-    }
-
 
     /**
      * Push all branches.
-     *
      * @param actionEvent event
      */
     @SuppressWarnings("unused")
     public void pushAllHandler(ActionEvent actionEvent) {
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText("Push all");
-        alert.setContentText("Do you really want to push all branches ?");
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            pushToRemoteRepository("+refs/heads/*", "refs/heads/*", false, false);
-        }
+        GitemberApp.getGitemberService().pushAll();
     }
 
 

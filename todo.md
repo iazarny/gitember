@@ -18,10 +18,35 @@ if (GitemberUtil.isBinaryFile(temp)) {
 }
 ```
 
+```
+ //all files in revision
+    /*RevTree tree = revCommit.getTree();
+    try (TreeWalk treeWalk = new TreeWalk(repository)) {
+        treeWalk.addTree(tree);
+        treeWalk.setRecursive(true);
 
+        while (treeWalk.next()) {
+            System.out.println(">>> found: " + treeWalk.getPathString());
+        }
+
+    }*/
+```
+repo usr with username
 -----------------------
 Proxy and proxy auth
 --------------------------------
 Rewrite author
 ------------------------
+SSh protocol support
+-------
+Compress db
+---------------------
+Depict result of operation
+--------------------
+Statistics
+-----------------------
+Search
+------
+Funcy about
+-----------
 

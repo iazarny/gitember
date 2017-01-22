@@ -1,13 +1,13 @@
 package com.az.gitember.scm.impl.git;
 
-import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.*;
+import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
 import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -16,7 +16,6 @@ import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -38,7 +37,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -106,24 +104,49 @@ public class GitRepositoryService {
         return config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, "url");
     }
 
+    public ScmBranch getScmBranchByName(String name) {
+        try (Git git = new Git(repository)) {
+            List<Ref> branchLst = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
+            Ref r = branchLst.stream()
+                    .filter(ref -> ref.getName().equals(name))
+                    .findFirst()
+                    .get();
+            if (r != null) {
+                return new ScmBranch(
+                        r.getName().substring(Constants.R_HEADS.length()),
+                        r.getName(),
+                        ScmBranch.BranchType.LOCAL,
+                        r.getObjectId().getName()
+                );
+            }
+        } catch (GitAPIException e) {
+            log.log(Level.SEVERE, "Cannot get list of branches", e);
+        }
+        return null;
+    }
 
     private List<ScmBranch> getBranches(final ListBranchCommand.ListMode listMode,
                                         final String prefix,
                                         final ScmBranch.BranchType branchType) throws Exception {
 
         try (Git git = new Git(repository)) {
-            String head = this.getHead().getFirst();
+            Pair<String, String> head = this.getHead();
+            String headName = head.getFirst();
+
             List<Ref> branchLst = git.branchList().setListMode(listMode).call();
+
             List<ScmBranch> rez = branchLst
                     .stream()
-                    .filter(r -> r.getName().startsWith(prefix))
+                    .filter(r -> r.getName().startsWith(prefix) || ("HEAD".equals(r.getName()) && Constants.R_HEADS.equals(prefix)))
                     .map(r -> new ScmBranch(
-                            r.getName().substring(prefix.length()),
+                            "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
                             r.getName(),
-                            branchType
+                            branchType,
+                            r.getObjectId().getName()
+
                     ))
                     .map(i -> {
-                        i.setHead(i.getFullName().equals(head));
+                        i.setHead(i.getFullName().equals(headName));
                         return i;
                     })
                     .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
@@ -146,69 +169,62 @@ public class GitRepositoryService {
                 }
 
             }
-
-            /*
-            // Initial naive variant Just check is local branch has remote part
-            if (Constants.HEAD_PREFIX.equals(prefix)) {
-                for (ScmBranch item : rez) {
-                    branchLst.stream().filter(ref -> ref.getName().startsWith(GitConst.REMOTE_PREFIX)
-                            && item.getShortName().endsWith(ref.getName().substring(GitConst.REMOTE_PREFIX.length()))
-                            && !item.getFullName().equals(ref.getName())
-                            && !ref.isSymbolic()).forEach(ref -> {
-                        item.setRemoteName(item.getShortName());
-                    });
-                }
-            }*/
-
             return rez;
-
         }
-
-
     }
 
-    public List<ScmBranch> getTags() throws Exception {
+    public List<ScmBranch> getTags() {
         try (Git git = new Git(repository)) {
             List<Ref> branchLst = git.tagList().call();
             return branchLst
                     .stream()
-                    .map(Ref::getName)
-                    .sorted()
-                    .map(r -> new ScmBranch(r, r, ScmBranch.BranchType.TAG))
+                    .map(r -> new ScmBranch(
+                            r.getName(),
+                            r.getName(),
+                            ScmBranch.BranchType.TAG,
+                            r.getObjectId().getName()))
                     .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot get tags", e);
         }
+        return Collections.emptyList();
     }
 
 
     public Pair<String, String> getHead() throws Exception {
         final Ref head = repository.exactRef(Constants.HEAD);
-        return new Pair<>(head.getTarget().getName(), head.getObjectId().getName());
+        return new Pair<>(
+                head.getTarget().getName(),
+                head.getObjectId() == null ? null : head.getObjectId().getName()
+        );
 
     }
 
-    public List<ScmBranch> getLocalBranches() throws Exception {
-        final Ref head = repository.exactRef(Constants.HEAD);
-
-        final List<ScmBranch> scmItems = getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS, ScmBranch.BranchType.LOCAL);
-        return scmItems;
-    }
-
-    public List<ScmBranch> getRemoteBranches() throws Exception {
-        return getBranches(ListBranchCommand.ListMode.REMOTE, GitConst.REMOTE_PREFIX, ScmBranch.BranchType.REMOTE);
-    }
-
-
-    //all files in revision
-    /*RevTree tree = revCommit.getTree();
-    try (TreeWalk treeWalk = new TreeWalk(repository)) {
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-
-        while (treeWalk.next()) {
-            System.out.println(">>> found: " + treeWalk.getPathString());
+    /**
+     * Get list of local branches.
+     *
+     * @return list of local branches.
+     */
+    public List<ScmBranch> getLocalBranches() {
+        try {
+            return getBranches(ListBranchCommand.ListMode.ALL, Constants.R_HEADS,
+                    ScmBranch.BranchType.LOCAL);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot get local branches", e);
         }
+        return Collections.emptyList();
+    }
 
-    }*/
+    public List<ScmBranch> getRemoteBranches() {
+        try {
+            return getBranches(ListBranchCommand.ListMode.REMOTE, GitConst.REMOTE_PREFIX,
+                    ScmBranch.BranchType.REMOTE);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot get tags", e);
+        }
+        return Collections.emptyList();
+    }
+
 
     /**
      * Get list of revision, where given file was changed
@@ -608,9 +624,9 @@ public class GitRepositoryService {
         }
     }
 
-    public void commit(String message) throws GEScmAPIException {
+    public RevCommit commit(String message) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
-            git
+            return git
                     .commit()
                     .setMessage(message)
                     .call();
@@ -642,6 +658,9 @@ public class GitRepositoryService {
         try (Git git = Git.init()
                 .setDirectory(new File(absPath))
                 .call()) {
+
+            git.commit().setMessage("Init").call();
+
             Files.write(
                     Paths.get(absPath + File.separator + "README.md"),
                     readmeInitialContent.getBytes(),
@@ -650,6 +669,7 @@ public class GitRepositoryService {
                     Paths.get(absPath + File.separator + ".gitignore"),
                     "".getBytes(),
                     StandardOpenOption.CREATE);
+
         }
 
     }
@@ -850,16 +870,17 @@ public class GitRepositoryService {
      * @return list of stashed changes
      * @throws GEScmAPIException
      */
-    public List<ScmRevisionInformation> getStashList() throws GEScmAPIException {
+    public List<ScmRevisionInformation> getStashList() {
         try (Git git = new Git(repository)) {
             return git.stashList()
                     .call()
                     .stream()
                     .map(revCommit -> adapt(revCommit, null))
                     .collect(Collectors.toList());
-        } catch (GitAPIException e) {
-            throw new GEScmAPIException(e.getMessage(), e.getCause());
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot get tags", e);
         }
+        return Collections.emptyList();
     }
 
     /**
@@ -1065,19 +1086,21 @@ public class GitRepositoryService {
 
     }
 
-    public void createLocalBranch(String parent, String name) throws Exception {
+    public Ref createLocalBranch(String parent, String name) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
-            git.branchCreate()
+            return git.branchCreate()
                     .setStartPoint(parent)
                     .setName(name)
                     .call();
+        } catch (Exception e) {
+            throw new GEScmAPIException("Cannot checkout", e);
         }
 
     }
 
-    public void checkoutLocalBranch(String name) throws Exception {
+    public Ref checkoutLocalBranch(String name) throws GECheckoutConflictException, GEScmAPIException {
         try (Git git = new Git(repository)) {
-            git.checkout()
+            return git.checkout()
                     .setCreateBranch(false)
                     .setName(name)
                     .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
@@ -1085,18 +1108,22 @@ public class GitRepositoryService {
         } catch (CheckoutConflictException e) {
             throw new GECheckoutConflictException(e.getMessage(), e.getConflictingPaths());
         } catch (Exception e) {
-            throw e;
+            throw new GEScmAPIException("Cannot checkout", e);
         }
 
     }
 
 
-    public void deleteLocalBranch(final String name) throws Exception {
+    public void deleteLocalBranch(final String name) throws GECannotDeleteCurrentBranchException, GEScmAPIException {
         try (Git git = new Git(repository)) {
             git.branchDelete()
                     .setBranchNames(name)
                     .setForce(true)
                     .call();
+        } catch (CannotDeleteCurrentBranchException e) {
+            throw new GECannotDeleteCurrentBranchException("Cannot delete current branch", e);
+        } catch (Exception e) {
+            throw new GEScmAPIException("Cannot delete branch ", e);
         }
 
     }
@@ -1108,9 +1135,9 @@ public class GitRepositoryService {
      * @param message merge message
      * @throws Exception
      */
-    public void mergeLocalBranch(final String from, final String message) throws Exception {
+    public MergeResult mergeLocalBranch(final String from, final String message) throws Exception {
         try (Git git = new Git(repository)) {
-            git.merge()
+            return git.merge()
                     .include(repository.exactRef(from))
                     .setMessage(message)
                     .call();

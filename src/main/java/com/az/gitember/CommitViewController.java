@@ -36,9 +36,6 @@ import java.util.stream.Collectors;
  */
 public class CommitViewController implements Initializable {
 
-    public final static String[] MENU_TO_REMOVE = new String [] {"Stash"};
-    public final static String[] BUTTONS_TO_REMOVE = new String [] {"Stage all", "Commit ...", "Move to stash", "Refresh"};
-
     @FXML
     public Menu stashMenu;
 
