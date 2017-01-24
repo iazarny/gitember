@@ -182,7 +182,7 @@
                                 <MenuItem text="Check for update"/>
                                 <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem text="About"/>
+                                <MenuItem text="About" onAction="#aboutHandler"/>
                             </items>
                         </Menu>
                     </menus>

@@ -149,16 +149,13 @@ public class WorkingCopyController implements Initializable {
         mi.setOnAction(this::mergeBranch);
         workingCopyMenu.getItems().add(mi);
 
-        mi = new MenuItem("Rebase");
+        mi = new MenuItem("Rebase ...");
+        mi.setOnAction(this::rebaseIntoWorkingCopy);
         workingCopyMenu.getItems().add(mi);
 
         mi = new MenuItem("Commit ...");
         mi.setOnAction(this::commitHandler);
         workingCopyMenu.getItems().add(mi);
-
-        mi = new MenuItem("Reset version to ...");
-        workingCopyMenu.getItems().add(mi);
-
 
     }
 
@@ -181,6 +178,20 @@ public class WorkingCopyController implements Initializable {
                 "Please select branch to checkout",
                 s -> GitemberApp.getGitemberService().checkout(s));
     }
+
+    /**
+     * Show dialogs with revisions to checkout.
+     *
+     * @param actionEvent event
+     */
+    @SuppressWarnings("unused")
+    private void rebaseIntoWorkingCopy(ActionEvent actionEvent) {
+        GitemberApp.getGitemberService().makeBranchOperation(
+                "Rebase",
+                "Please select branch to integrate into your working copy",
+                s -> GitemberApp.getGitemberService().rebase(s));
+    }
+
 
 
     public void open(final ScmBranch branch, final String path) {
@@ -222,11 +233,9 @@ public class WorkingCopyController implements Initializable {
                 () -> {
                     GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                     Throwable e = z.getSource().getException();
-                    GitemberApp.showResult("Cannot open working copy. " + e == null ? "" : e.getMessage(),
-                            Alert.AlertType.ERROR);
                     log.log(Level.SEVERE, "Cannot load item statuses from repository", e);
-                }
-                )
+                    GitemberApp.showException("Cannot open working copy. ", e);
+                })
         );
 
         Platform.runLater(

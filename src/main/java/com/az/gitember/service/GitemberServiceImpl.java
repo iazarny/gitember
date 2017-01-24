@@ -147,6 +147,14 @@ public class GitemberServiceImpl {
         new Thread(longTask).start();
     }
 
+    /**
+     * Rebase . Integrate changes from given branch  into working copy
+     * @param fullName of branch.
+     */
+    public void rebase(final String fullName) {
+
+    }
+
     public boolean commit(ScmBranch brnch) {
         CommitDialog dialog = new CommitDialog(
                 "TODO history of commit messasge",

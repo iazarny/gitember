@@ -5,10 +5,7 @@ import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.misc.Settings;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
-import com.az.gitember.ui.MenuItemAvailbility;
-import com.az.gitember.ui.ScmItemCellFactory;
-import com.az.gitember.ui.SettingsDialog;
-import com.az.gitember.ui.SettingsModel;
+import com.az.gitember.ui.*;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -756,5 +753,10 @@ public class FXMLController implements Initializable {
 
             }
         }).start();
+    }
+
+    public void aboutHandler(ActionEvent actionEvent) {
+        AboutDialog aboutDialog = new AboutDialog();
+        aboutDialog.showAndWait();
     }
 }
