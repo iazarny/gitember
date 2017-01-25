@@ -5,10 +5,7 @@ import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.CannotDeleteCurrentBranchException;
-import org.eclipse.jgit.api.errors.CheckoutConflictException;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -217,7 +214,9 @@ public class GitRepositoryService {
 
     public List<ScmBranch> getRemoteBranches() {
         try {
-            return getBranches(ListBranchCommand.ListMode.REMOTE, GitConst.REMOTE_PREFIX,
+            return getBranches(
+                    ListBranchCommand.ListMode.REMOTE,
+                    GitConst.REMOTE_PREFIX,
                     ScmBranch.BranchType.REMOTE);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get tags", e);
@@ -624,6 +623,55 @@ public class GitRepositoryService {
         }
     }
 
+
+    /**
+     * Rebase changes from given upstream into working copy.
+     * @param upstream
+     * @throws GEScmAPIException
+     */
+    public RemoteOperationValue rebase(final String upstream,
+                       final ProgressMonitor progressMonitor) {
+        try (Git git = new Git(repository)) {
+
+            RebaseCommand rebaseCommand = git
+                    .rebase()
+                    .setUpstream(upstream)
+                    .setProgressMonitor(progressMonitor);
+            RebaseResult rez = rebaseCommand.call();
+            StringBuilder rezInfo = new StringBuilder();
+            rezInfo.append("Status : ");
+            rezInfo.append(rez.getStatus());
+            if (rez.getConflicts() != null) {
+                rezInfo.append("\nConflicts : ");
+                rezInfo.append(rez.getConflicts().stream().collect(Collectors.joining(",\n")));
+            }
+            if (rez.getFailingPaths() != null){
+                rezInfo.append("\nFailing paths : ");
+                rezInfo.append(rez
+                        .getFailingPaths()
+                        .entrySet()
+                        .stream()
+                        .map(stringMergeFailureReasonEntry -> stringMergeFailureReasonEntry.getKey() + " " + stringMergeFailureReasonEntry.getValue())
+                        .collect(Collectors.joining(",\n")));
+            }
+            if (rez.getUncommittedChanges() != null) {
+                rezInfo.append("\nUncommitted changes : ");
+                rezInfo.append(rez.getUncommittedChanges().stream().collect(Collectors.joining(",\n")));
+            }
+
+            log.log(Level.INFO, "Rebase result " + rezInfo.toString());
+            return new RemoteOperationValue(RemoteOperationValue.Result.OK,
+                    rezInfo.toString()
+            );
+
+        } catch (GitAPIException e) {
+            log.log(Level.WARNING, "Rebase error", e);
+            return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
+        }
+
+
+    }
+
     public RevCommit commit(String message) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
             return git
@@ -631,7 +679,8 @@ public class GitRepositoryService {
                     .setMessage(message)
                     .call();
         } catch (GitAPIException e) {
-            throw new GEScmAPIException("Cannot commit", e);
+            log.log(Level.SEVERE, "Cannot commit" , e);
+            throw new GEScmAPIException(e.getMessage());
         }
     }
 

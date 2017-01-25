@@ -34,6 +34,8 @@ public class CommitDialog extends Dialog<String> {
     private final TextField userEmailTxt;
     private final String userEmailValue;
 
+    private boolean hideUser;
+
 
 
     /**************************************************************************
@@ -50,6 +52,7 @@ public class CommitDialog extends Dialog<String> {
         this("", "", "");
     }
 
+
     /**
      * Creates a new TextInputDialog with the default value entered into the
      * dialog {@link TextField}.
@@ -57,7 +60,18 @@ public class CommitDialog extends Dialog<String> {
     public CommitDialog(@NamedArg("defaultValue") String defaultValue,
                         @NamedArg("userNameValue") String userNameValue,
                         @NamedArg("userEmailValue") String userEmailValue) {
+        this(defaultValue, userNameValue, userEmailValue, false);
+    }
+        /**
+         * Creates a new TextInputDialog with the default value entered into the
+         * dialog {@link TextField}.
+         */
+    public CommitDialog(@NamedArg("defaultValue") String defaultValue,
+                        @NamedArg("userNameValue") String userNameValue,
+                        @NamedArg("userEmailValue") String userEmailValue,
+                        boolean hideUser) {
         final DialogPane dialogPane = getDialogPane();
+        this.hideUser = hideUser;
 
         // -- textfield
         this.textField = new TextArea(defaultValue);
@@ -146,11 +160,14 @@ public class CommitDialog extends Dialog<String> {
         grid.add(label, 0, 0);
         grid.add(textField, 1, 0);
 
-        grid.add(userNameLbl, 0, 1);
-        grid.add(userNameTxt, 1, 1);
+        if (!hideUser) {
+            grid.add(userNameLbl, 0, 1);
+            grid.add(userNameTxt, 1, 1);
 
-        grid.add(userEmailLbl, 0, 2);
-        grid.add(userEmailTxt, 1, 2);
+            grid.add(userEmailLbl, 0, 2);
+            grid.add(userEmailTxt, 1, 2);
+        }
+
 
         getDialogPane().setContent(grid);
 

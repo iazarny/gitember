@@ -153,7 +153,29 @@ public class GitemberServiceImpl {
      */
     public void rebase(final String fullName) {
 
+
+        Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+            @Override
+            protected RemoteOperationValue call() throws Exception {
+                return remoteRepositoryOperation(
+                        () -> GitemberApp.getRepositoryService().rebase(
+                                fullName,
+                                new DefaultProgressMonitor((t, d) -> {
+                                    updateTitle(t);
+                                    updateProgress(d, 1.0);
+                                }
+                                )
+                        )
+                );
+            }
+        };
+        prepareLongTask(longTask, null, null);
+        new Thread(longTask).start();
+
+
+
     }
+
 
     public boolean commit(ScmBranch brnch) {
         CommitDialog dialog = new CommitDialog(
