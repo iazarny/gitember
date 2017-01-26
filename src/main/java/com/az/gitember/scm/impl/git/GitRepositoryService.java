@@ -345,7 +345,7 @@ public class GitRepositoryService {
      * @return list of files in given revision
      * @throws IOException
      */
-    private ArrayList<ScmItem> getScmItems(RevCommit revCommit, String filePath) {
+    public ArrayList<ScmItem> getScmItems(RevCommit revCommit, String filePath) {
         try (RevWalk rw = new RevWalk(repository)) {
             ArrayList<ScmItem> rez = new ArrayList<>();
             if (revCommit != null) {
