@@ -638,38 +638,51 @@ public class GitRepositoryService {
                     .setUpstream(upstream)
                     .setProgressMonitor(progressMonitor);
             RebaseResult rez = rebaseCommand.call();
-            StringBuilder rezInfo = new StringBuilder();
-            rezInfo.append("Status : ");
-            rezInfo.append(rez.getStatus());
-            if (rez.getConflicts() != null) {
-                rezInfo.append("\nConflicts : ");
-                rezInfo.append(rez.getConflicts().stream().collect(Collectors.joining(",\n")));
-            }
-            if (rez.getFailingPaths() != null){
-                rezInfo.append("\nFailing paths : ");
-                rezInfo.append(rez
-                        .getFailingPaths()
-                        .entrySet()
-                        .stream()
-                        .map(stringMergeFailureReasonEntry -> stringMergeFailureReasonEntry.getKey() + " " + stringMergeFailureReasonEntry.getValue())
-                        .collect(Collectors.joining(",\n")));
-            }
-            if (rez.getUncommittedChanges() != null) {
-                rezInfo.append("\nUncommitted changes : ");
-                rezInfo.append(rez.getUncommittedChanges().stream().collect(Collectors.joining(",\n")));
-            }
 
-            log.log(Level.INFO, "Rebase result " + rezInfo.toString());
-            return new RemoteOperationValue(RemoteOperationValue.Result.OK,
-                    rezInfo.toString()
-            );
+            String rezExplanation = getRebaseResultExplanation(rez);
+            if (rez.getStatus().isSuccessful()) {
+                log.log(Level.INFO, "Rebase result " + rezExplanation);
+                return new RemoteOperationValue(RemoteOperationValue.Result.OK,  rezExplanation );
 
+            } else {
+                log.log(Level.INFO, "Rebase result was not successful, so revert changes " + rezExplanation);
+                rez = git
+                        .rebase()
+                        .setUpstream(upstream)
+                        .setProgressMonitor(progressMonitor)
+                        .setOperation(RebaseCommand.Operation.ABORT)
+                        .call();
+                rezExplanation = getRebaseResultExplanation(rez);
+                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR,  rezExplanation );
+            }
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Rebase error", e);
             return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
         }
+    }
 
-
+    private String getRebaseResultExplanation(RebaseResult rez) {
+        StringBuilder rezInfo = new StringBuilder();
+        rezInfo.append("Status : ");
+        rezInfo.append(rez.getStatus());
+        if (rez.getConflicts() != null) {
+            rezInfo.append("\nConflicts : ");
+            rezInfo.append(rez.getConflicts().stream().collect(Collectors.joining(",\n")));
+        }
+        if (rez.getFailingPaths() != null){
+            rezInfo.append("\nFailing paths : ");
+            rezInfo.append(rez
+                    .getFailingPaths()
+                    .entrySet()
+                    .stream()
+                    .map(stringMergeFailureReasonEntry -> stringMergeFailureReasonEntry.getKey() + " " + stringMergeFailureReasonEntry.getValue())
+                    .collect(Collectors.joining(",\n")));
+        }
+        if (rez.getUncommittedChanges() != null) {
+            rezInfo.append("\nUncommitted changes : ");
+            rezInfo.append(rez.getUncommittedChanges().stream().collect(Collectors.joining(",\n")));
+        }
+        return rezInfo.toString();
     }
 
     public RevCommit commit(String message) throws GEScmAPIException {
