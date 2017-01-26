@@ -167,6 +167,8 @@
                                 </MenuItem>
                                 <MenuItem text="Push all ..." fx:id="pushAllMenuItem" disable="true" onAction="#pushAllHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon>
