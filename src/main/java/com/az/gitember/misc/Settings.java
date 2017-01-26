@@ -27,9 +27,17 @@ public class Settings implements Serializable {
 
     private String lastLoginName;
     private String lastProject;
+    private ArrayList<String> commitMessages = new ArrayList<>();
     private ArrayList<String> projects = new ArrayList<>();
     private ArrayList<Triplet<String, String, String>> loginPassword = new ArrayList<>();
 
+    public ArrayList<String> getCommitMessages() {
+        return commitMessages;
+    }
+
+    public void setCommitMessages(ArrayList<String> commitMessages) {
+        this.commitMessages = commitMessages;
+    }
 
     public ArrayList<String> getProjects() {
         return projects;

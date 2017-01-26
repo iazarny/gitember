@@ -9,6 +9,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+
 /**
  * Created by Igor_Azarny on 25 Dec 2016.
  */
@@ -60,7 +64,7 @@ public class CommitDialog extends Dialog<String> {
     public CommitDialog(@NamedArg("defaultValue") String defaultValue,
                         @NamedArg("userNameValue") String userNameValue,
                         @NamedArg("userEmailValue") String userEmailValue) {
-        this(defaultValue, userNameValue, userEmailValue, false);
+        this(defaultValue, userNameValue, userEmailValue, false, Collections.emptyList());
     }
         /**
          * Creates a new TextInputDialog with the default value entered into the
@@ -69,17 +73,14 @@ public class CommitDialog extends Dialog<String> {
     public CommitDialog(@NamedArg("defaultValue") String defaultValue,
                         @NamedArg("userNameValue") String userNameValue,
                         @NamedArg("userEmailValue") String userEmailValue,
-                        boolean hideUser) {
+                        boolean hideUser,
+                        Collection<String> history) {
         final DialogPane dialogPane = getDialogPane();
         this.hideUser = hideUser;
 
         // -- textfield
         this.textField = new AutoCompleteTextArea(defaultValue);//new TextArea(defaultValue);
-        textField.getEntries().add("info"); //todo remove garbage
-        textField.getEntries().add("infopo");
-        textField.getEntries().add("infopdeqwf");
-        textField.getEntries().add("infokuku");
-        textField.getEntries().add("big");
+        textField.getEntries().addAll(history);
 
         this.textField.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(textField, Priority.ALWAYS);

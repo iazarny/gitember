@@ -28,6 +28,8 @@ public class SettingsServiceImpl {
     private final static String SYSTEM_PROP_USER_HOME = "user.home";
     private final static String SYSTEM_PROP_OS_NAME = "os.name";
 
+    private final int COMMIT_HISTORY_LIMIT = 50;
+
     private final static String OS = System.getProperty(SYSTEM_PROP_OS_NAME).toLowerCase();
 
 
@@ -160,6 +162,7 @@ public class SettingsServiceImpl {
      */
     public void save(final Settings settings) {
         try {
+            cleanupOldCommitMessages(settings);
             objectMapper.writerFor(Settings.class).writeValue(
                     new File(getAbsolutePathToPropertyFile()),
                     settings
@@ -167,6 +170,23 @@ public class SettingsServiceImpl {
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot save settings", e);
         }
+    }
+
+    private void cleanupOldCommitMessages(Settings settings) {
+
+        if (settings.getCommitMessages().size() > COMMIT_HISTORY_LIMIT) {
+
+            settings.setCommitMessages(
+                    new ArrayList<>(
+                            settings.getCommitMessages().subList(
+                                    settings.getCommitMessages().size() - COMMIT_HISTORY_LIMIT,
+                                    settings.getCommitMessages().size())
+                    )
+            );
+
+        }
+
+
     }
 
 

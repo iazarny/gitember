@@ -179,9 +179,12 @@ public class GitemberServiceImpl {
 
     public boolean commit(ScmBranch brnch) {
         CommitDialog dialog = new CommitDialog(
-                "TODO history of commit messasge",
+                "",
                 GitemberApp.getRepositoryService().getUserName(),
-                GitemberApp.getRepositoryService().getUserEmail()
+                GitemberApp.getRepositoryService().getUserEmail(),
+                false,
+                GitemberApp.getSettingsService().read().getCommitMessages()
+
         );
         dialog.setTitle("Commit message");
         dialog.setHeaderText("Provide commit message");
@@ -189,6 +192,11 @@ public class GitemberServiceImpl {
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
             try {
+                Settings settings = GitemberApp.getSettingsService().read();
+                String msg = result.get();
+                settings.getCommitMessages().add(msg);
+                GitemberApp.getSettingsService().save(settings);
+
                 GitemberApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
                 GitemberApp.getRepositoryService().setUserName(dialog.getUserName());
                 GitemberApp.getRepositoryService().commit(result.get());
