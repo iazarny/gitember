@@ -1223,4 +1223,18 @@ public class GitRepositoryService {
     }
 
 
+    public RemoteOperationValue compressDatabase(ProgressMonitor defaultProgressMonitor) {
+
+        try (Git git = new Git(repository)) {
+            try {
+                git.gc().setProgressMonitor(defaultProgressMonitor).call();
+                return new RemoteOperationValue("Garbage was removed");
+            } catch (GitAPIException e) {
+
+                log.log(Level.SEVERE, "Cannot clean up db", e);
+                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, "Error during cleanup. " + e.getMessage());
+            }
+        }
+
+    }
 }

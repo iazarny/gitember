@@ -149,6 +149,7 @@ public class GitemberServiceImpl {
 
     /**
      * Rebase . Integrate changes from given branch  into working copy
+     *
      * @param fullName of branch.
      */
     public void rebase(final String fullName) {
@@ -171,7 +172,6 @@ public class GitemberServiceImpl {
         };
         prepareLongTask(longTask, null, null);
         new Thread(longTask).start();
-
 
 
     }
@@ -270,7 +270,7 @@ public class GitemberServiceImpl {
                 GitemberApp.showResult(e.getMessage(), Alert.AlertType.ERROR);
             } catch (Exception e) {
                 String msg = "Cannot delete local branch " + scmBranch.getFullName();
-                log.log(Level.SEVERE, msg , e);
+                log.log(Level.SEVERE, msg, e);
                 GitemberApp.showException(msg, e);
             }
         }
@@ -501,7 +501,7 @@ public class GitemberServiceImpl {
     }
 
     public void cloneRepo(final Consumer<RemoteOperationValue> onOk,
-                             final Consumer<RemoteOperationValue> onError) {
+                          final Consumer<RemoteOperationValue> onError) {
         CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
         dialog.setContentText("Please provide remote repository URL:");
         Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
@@ -524,12 +524,12 @@ public class GitemberServiceImpl {
                     );
                 }
             };
-            prepareLongTask(longTask,onOk, onError);
+            prepareLongTask(longTask, onOk, onError);
             new Thread(longTask).start();
         }
     }
 
-    public void createRepo(final Consumer<String> onOk)  {
+    public void createRepo(final Consumer<String> onOk) {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
         final File selectedDirectory =
@@ -543,7 +543,7 @@ public class GitemberServiceImpl {
                 onOk.accept(repoPath);
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Cannot create repository", e);
-                GitemberApp.showException("Cannot create repository",e);
+                GitemberApp.showException("Cannot create repository", e);
             }
 
         }
@@ -576,5 +576,38 @@ public class GitemberServiceImpl {
                 }
             }
         }
+    }
+
+    public void compressDatabase() {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Cleanup database");
+        alert.setContentText("Do you really want to remove unused objects from database ? It may take some time.");
+
+        Optional<ButtonType> dialogResult = alert.showAndWait();
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
+
+
+            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                @Override
+                protected RemoteOperationValue call() throws Exception {
+                    return remoteRepositoryOperation(
+                            () -> GitemberApp.getRepositoryService().compressDatabase(
+                                    new DefaultProgressMonitor((t, d) -> {
+                                        updateTitle(t);
+                                        updateProgress(d, 1.0);
+                                    }
+                                    )
+                            )
+                    );
+                }
+            };
+            prepareLongTask(longTask, null, null);
+            new Thread(longTask).start();
+
+
+        }
+
     }
 }

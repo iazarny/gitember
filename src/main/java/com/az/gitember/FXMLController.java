@@ -79,6 +79,7 @@ public class FXMLController implements Initializable {
     public MenuItem pullAllMenuItem;
     public MenuItem pushMenuItem;
     public MenuItem pushAllMenuItem;
+    public MenuItem compressDataMenuItem;
     public MenuItem statReportMenuItem;
 
     public TreeItem workingCopyTreeItem;
@@ -258,6 +259,7 @@ public class FXMLController implements Initializable {
                     pullAllMenuItem.setDisable(disableRemoteOps);
                     pushMenuItem.setDisable(disableRemoteOps);
                     pushAllMenuItem.setDisable(disableRemoteOps);
+                    compressDataMenuItem.setDisable(disableRemoteOps);
                     statReportMenuItem.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
@@ -734,6 +736,18 @@ public class FXMLController implements Initializable {
     @SuppressWarnings("unused")
     public void pushAllHandler(ActionEvent actionEvent) {
         GitemberApp.getGitemberService().pushAll();
+    }
+
+    /**
+     * Remove unused garbage from database
+     *
+     * @param actionEvent event
+     */
+    @SuppressWarnings("unused")
+    public void compressDataHandler(ActionEvent actionEvent) {
+
+        GitemberApp.getGitemberService().compressDatabase();
+
     }
 
 

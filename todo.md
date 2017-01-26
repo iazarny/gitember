@@ -31,28 +31,22 @@ if (GitemberUtil.isBinaryFile(temp)) {
 
     }*/
 ```
-history
----------------------
-https://gist.github.com/floralvikings/10290131
+Done. history https://gist.github.com/floralvikings/10290131
 
 
-
-repo usr with username
------------------------
 Proxy and proxy auth
 --------------------------------
 Rewrite author
 ------------------------
-SSh protocol support
+SSh protocol support v2
 -------
-Compress db
----------------------
+Done. Compress db
+
 Depict result of operation
 --------------------
-Statistics
+Statistics v2
 -----------------------
 Search
 ------
-Funcy about
------------
+Done. Funcy about
 
