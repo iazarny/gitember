@@ -56,7 +56,7 @@ public class WorkingCopyController implements Initializable {
     public Button commitBtn;
     public Button stageAllBtn;
     public Button refreshBtn;
-    public Button searchButton;
+    //public Button searchButton;
     public Pane spacerPane;
     public TextField searchText;
     public Menu workingCopyMenu;
@@ -86,20 +86,39 @@ public class WorkingCopyController implements Initializable {
         workingCopyTableView.setRowFactory(
                 tr -> {
                     return new TableRow<ScmItem>() {
-                        @Override
-                        protected void updateItem(ScmItem item, boolean empty) {
-                            super.updateItem(item, empty);
-                            super.updateItem(item, empty);
-                            if (item == null) {
-                                setStyle("");
-                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
-                                //todo styles
+
+                        private String calculateStyle(final ScmItem scmItem) {
+                            if (scmItem != null
+                                    && WorkingCopyController.this.searchText.getText() != null
+                                    && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
+
+                                if (scmItem.getShortName().contains(WorkingCopyController.this.searchText.getText())) {
+                                    return "-fx-font-weight: bold;";
+                                }
+                                /*ScmItemAttribute attr = scmItem.getAttribute();
+                                if (attr != null) {
+
+                                }*/
+
+                            }
+                            return "";
+
+                            /*
+                            if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
+                                //-fx-font-weight: bold;
+                                setStyle(calculateStyle(item));
                             } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
                             } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
                             } else if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
                             } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
 
-                            }
+                            }*/
+                        }
+
+                        @Override
+                        protected void updateItem(ScmItem item, boolean empty) {
+                            super.updateItem(item, empty);
+                            setStyle(calculateStyle(item));
                         }
                     };
                 }
@@ -131,10 +150,21 @@ public class WorkingCopyController implements Initializable {
         searchText = new TextField();
         searchText.setId(Const.MERGED);
 
-        searchButton = new Button();
+        /*searchButton = new Button();
         searchButton.setId(Const.MERGED);
         searchButton.setGraphic(
                 new FontIcon(FontAwesome.SEARCH)
+        );
+        searchButton.setDisable(true);
+        searchButton.setOnAction(event -> {
+
+
+        });*/
+        searchText.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    //searchButton.setDisable(newValue == null || newValue.length() < 2);
+                    workingCopyTableView.refresh();
+                }
         );
 
 
@@ -156,6 +186,7 @@ public class WorkingCopyController implements Initializable {
         mi = new MenuItem("Commit ...");
         mi.setOnAction(this::commitHandler);
         workingCopyMenu.getItems().add(mi);
+
 
     }
 
@@ -191,7 +222,6 @@ public class WorkingCopyController implements Initializable {
                 "Please select branch to integrate into your working copy",
                 s -> GitemberApp.getGitemberService().rebase(s));
     }
-
 
 
     public void open(final ScmBranch branch, final String path) {
@@ -497,7 +527,7 @@ public class WorkingCopyController implements Initializable {
             toolBar.getItems().add(workingCopyController.refreshBtn);
             toolBar.getItems().add(workingCopyController.spacerPane);
             toolBar.getItems().add(workingCopyController.searchText);
-            toolBar.getItems().add(workingCopyController.searchButton);
+           // toolBar.getItems().add(workingCopyController.searchButton);
 
 
             return workCopyView;

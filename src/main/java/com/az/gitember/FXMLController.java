@@ -138,7 +138,7 @@ public class FXMLController implements Initializable {
 
             treeItemClickHandlers.put(historyTreeItem, o -> {
                 undockSlaveItems();
-                Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get());
+                Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar);
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(branchView);
             });
@@ -200,6 +200,7 @@ public class FXMLController implements Initializable {
                                 stashInfo.indexOf(ri),
                                 GitemberApp.workingBranch.get().getFullName(),
                                 mainMenuBar,
+                                mainToolBar,
                                 scmRevisionInformation -> {
                                     this.fillStashTree();
                                 });
@@ -223,7 +224,7 @@ public class FXMLController implements Initializable {
         data.stream().forEach(
                 branch -> rez.put(new TreeItem<>(branch), o -> {
                             undockSlaveItems();
-                            Parent branchView = BranchViewController.openBranchHistory(branch);
+                            Parent branchView = BranchViewController.openBranchHistory(branch, mainToolBar);
                             hostPanel.getChildren().removeAll(hostPanel.getChildren());
                             hostPanel.getChildren().add(branchView);
                         }

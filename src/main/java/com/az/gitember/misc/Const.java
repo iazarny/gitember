@@ -20,4 +20,6 @@ public interface Const {
     String DEFAULT_CSS = "/styles/styles.css";
 
     String MERGED = "MERGED";
+
+    int SEARCH_LIMIT_CHAR = 2;
 }

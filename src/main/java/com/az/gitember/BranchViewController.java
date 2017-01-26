@@ -1,7 +1,9 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.GitemberUtil;
 import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.misc.ScmItem;
 import com.az.gitember.ui.PlotCommitRenderer;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.InvalidationListener;
@@ -14,9 +16,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -54,6 +58,10 @@ public class BranchViewController implements Initializable {
     @FXML
     private AnchorPane hostCommitViewPanel;
 
+    private Pane spacerPane;
+
+    private TextField searchText;
+
     private PlotCommitRenderer plotCommitRenderer = new PlotCommitRenderer();
 
     private String treeName;
@@ -80,12 +88,47 @@ public class BranchViewController implements Initializable {
 
                         Parent commitView = CommitViewController.openCommitViewWindow(
                                 GitemberApp.getRepositoryService().adapt(newValue, null),
-                                -1, treeName, null, null);
+                                -1, treeName, null, null, null);
                         hostCommitViewPanel.getChildren().removeAll(hostCommitViewPanel.getChildren());
                         hostCommitViewPanel.getChildren().add(commitView);
                     }
 
                 });
+
+        commitsTableView.setRowFactory(
+                tr -> {
+                    return new TableRow<PlotCommit>() {
+
+                        private String calculateStyle(final PlotCommit scmItem) {
+                            String searchText = BranchViewController.this.searchText.getText();
+                            if (scmItem != null && searchText != null && searchText.length() > Const.SEARCH_LIMIT_CHAR) {
+//todo add user name failsafe
+
+
+                                if (scmItem.getShortMessage().contains(searchText)
+                                        || scmItem.getFullMessage().contains(searchText)
+                                        || scmItem.getName().contains(searchText)
+                                        || GitemberApp.getRepositoryService().getScmItems(scmItem, searchText).size() > 0) {
+                                    return "-fx-font-weight: bold;";
+                                }
+                                /*ScmItemAttribute attr = scmItem.getAttribute();
+                                if (attr != null) {
+
+                                }*/
+
+                            }
+                            return "";
+
+                        }
+
+                        @Override
+                        protected void updateItem(PlotCommit item, boolean empty) {
+                            super.updateItem(item, empty);
+                            setStyle(calculateStyle(item));
+                        }
+                    };
+                }
+        );
 
         laneTableColumn.setCellValueFactory(
 
@@ -128,6 +171,19 @@ public class BranchViewController implements Initializable {
         dateTableColumn.setCellValueFactory(
                 c -> StringConstant.valueOf(GitemberUtil.intToDate(c.getValue().getCommitTime()).toString())
         );
+
+        spacerPane = new Pane();
+        HBox.setHgrow(spacerPane, Priority.ALWAYS);
+        spacerPane.setId(Const.MERGED);
+
+        searchText = new TextField();
+        searchText.setId(Const.MERGED);
+
+        searchText.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    commitsTableView.refresh();
+                }
+        );
     }
 
 
@@ -144,7 +200,8 @@ public class BranchViewController implements Initializable {
         return 36 + 12 * plotCommits.stream().mapToInt(p -> p.getLane().getPosition()).max().orElse(0);
     }
 
-    public static Parent openBranchHistory(final ScmBranch scmBranch) {
+    public static Parent openBranchHistory(final ScmBranch scmBranch,
+                                           ToolBar toolBar) {
         try {
             if (scmBranch != null) {
                 final FXMLLoader fxmlLoader = new FXMLLoader();
@@ -152,6 +209,8 @@ public class BranchViewController implements Initializable {
                     final Parent branchView = fxmlLoader.load(is);
                     final BranchViewController branchViewController = fxmlLoader.getController();
                     branchViewController.treeName = scmBranch.getFullName();
+                    toolBar.getItems().add(branchViewController.spacerPane);
+                    toolBar.getItems().add(branchViewController.searchText);
                     branchViewController.open();
                     return branchView;
                 }

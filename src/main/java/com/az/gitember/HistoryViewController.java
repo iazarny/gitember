@@ -155,7 +155,8 @@ public class HistoryViewController implements Initializable {
         }
     }
 
-    public static Parent openHistoryWindow(final String fileName, final String treeName) throws Exception {
+    public static Parent openHistoryWindow(final String fileName,
+                                           final String treeName) throws Exception {
         final FXMLLoader fxmlLoader = new FXMLLoader();
         try (InputStream is = HistoryViewController.class.getResource("/fxml/HistoryViewPane.fxml").openStream()) {
             final Parent view = fxmlLoader.load(is);

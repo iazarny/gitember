@@ -1,6 +1,8 @@
 package com.az.gitember;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmItem;
+import com.az.gitember.misc.ScmItemAttribute;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
@@ -14,6 +16,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -73,6 +78,7 @@ public class CommitViewController implements Initializable {
     private Consumer<ScmRevisionInformation> onStashDelete = null;
     private String treeName;
     private List<ScmItem> changedFiles;
+    private TextField searchText = null;
 
     public void showPlotCommit() {
         this.msgLbl.setText(scmRevisionInformation.getFullMessage());
@@ -96,6 +102,33 @@ public class CommitViewController implements Initializable {
 
         changedFilesListView.setItems(
                 FXCollections.observableArrayList(changedFiles)
+        );
+
+        changedFilesListView.setRowFactory(
+                tr -> {
+                    return new TableRow<ScmItem>() {
+
+                        private String calculateStyle(final ScmItem scmItem) {
+                            if (scmItem != null
+                                    && CommitViewController.this.searchText != null
+                                    && CommitViewController.this.searchText.getText() != null
+                                    && CommitViewController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
+                                if (scmItem.getSecond().getName().contains(CommitViewController.this.searchText.getText())) {
+                                    return "-fx-font-weight: bold;";
+                                }
+
+                            }
+                            return "";
+
+                        }
+
+                        @Override
+                        protected void updateItem(ScmItem item, boolean empty) {
+                            super.updateItem(item, empty);
+                            setStyle(calculateStyle(item));
+                        }
+                    };
+                }
         );
     }
 
@@ -264,6 +297,7 @@ public class CommitViewController implements Initializable {
                                               final int stashIndex,
                                               final String treeName,
                                               final MenuBar menuBar,
+                                              final ToolBar mainToolBar,
                                               final Consumer<ScmRevisionInformation> onStashDelete) {
 
         final FXMLLoader fxmlLoader = new FXMLLoader();
@@ -281,6 +315,24 @@ public class CommitViewController implements Initializable {
             if (menuBar != null) {
                 menuBar.getMenus().add(2, commitViewController.stashMenu);
             }
+            if (mainToolBar!= null) {
+                Pane spacerPane = new Pane();
+                HBox.setHgrow(spacerPane, Priority.ALWAYS);
+                spacerPane.setId(Const.MERGED);
+
+                commitViewController.searchText = new TextField();
+                commitViewController.searchText.setId(Const.MERGED);
+                commitViewController.searchText.textProperty().addListener(
+                        (observable, oldValue, newValue) -> {
+                            commitViewController.changedFilesListView.refresh();
+                        }
+                );
+
+
+                mainToolBar.getItems().add(spacerPane);
+                mainToolBar.getItems().add(commitViewController.searchText);
+            }
+
             return commitView;
         } catch (Exception e) {
             e.printStackTrace(); //todo log
