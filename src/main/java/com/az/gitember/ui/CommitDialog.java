@@ -23,7 +23,7 @@ public class CommitDialog extends Dialog<String> {
 
     private final GridPane grid;
     private final Label label;
-    private final TextArea textField;
+    private final AutoCompleteTextArea textField;
     private final String defaultValue;
 
     private final Label userNameLbl;
@@ -74,7 +74,13 @@ public class CommitDialog extends Dialog<String> {
         this.hideUser = hideUser;
 
         // -- textfield
-        this.textField = new TextArea(defaultValue);
+        this.textField = new AutoCompleteTextArea(defaultValue);//new TextArea(defaultValue);
+        textField.getEntries().add("info"); //todo remove garbage
+        textField.getEntries().add("infopo");
+        textField.getEntries().add("infopdeqwf");
+        textField.getEntries().add("infokuku");
+        textField.getEntries().add("big");
+
         this.textField.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(textField, Priority.ALWAYS);
         GridPane.setFillWidth(textField, true);
