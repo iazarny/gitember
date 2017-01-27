@@ -113,7 +113,7 @@ public class CommitViewController implements Initializable {
                                     && CommitViewController.this.searchText != null
                                     && CommitViewController.this.searchText.getText() != null
                                     && CommitViewController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
-                                if (scmItem.getSecond().getName().contains(CommitViewController.this.searchText.getText())) {
+                                if (scmItem.getSecond().getName().toLowerCase().contains(CommitViewController.this.searchText.getText().toLowerCase())) {
                                     return "-fx-font-weight: bold;";
                                 }
 

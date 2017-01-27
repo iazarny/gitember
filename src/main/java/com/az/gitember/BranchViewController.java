@@ -21,6 +21,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -30,6 +31,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -71,7 +73,6 @@ public class BranchViewController implements Initializable {
     private PlotCommitList<PlotLane> plotCommits;
 
 
-
     @Override
     @SuppressWarnings("unchecked")
     public void initialize(URL location, ResourceBundle resources) {
@@ -102,23 +103,23 @@ public class BranchViewController implements Initializable {
                         private String calculateStyle(final PlotCommit scmItem) {
                             String searchText = BranchViewController.this.searchText.getText();
                             if (scmItem != null && searchText != null && searchText.length() > Const.SEARCH_LIMIT_CHAR) {
-//todo add user name failsafe
+                                searchText = searchText.toLowerCase();
 
-
-                                if (scmItem.getShortMessage().contains(searchText)
-                                        || scmItem.getFullMessage().contains(searchText)
-                                        || scmItem.getName().contains(searchText)
-                                        || GitemberApp.getRepositoryService().getScmItems(scmItem, searchText).size() > 0) {
+                                if (scmItem.getShortMessage().toLowerCase().contains(searchText)
+                                        || scmItem.getFullMessage().toLowerCase().contains(searchText)
+                                        || scmItem.getName().toLowerCase().contains(searchText)
+                                        || prersonIndentContains(scmItem.getCommitterIdent(), searchText)
+                                        || prersonIndentContains(scmItem.getAuthorIdent(), searchText)
+                                        || GitemberApp.getRepositoryService().getScmItems(scmItem, null)
+                                        .stream()
+                                        .map( s-> s.getAttribute().getName())
+                                        .collect(Collectors.joining(","))
+                                        .toLowerCase()
+                                        .contains(searchText)) {
                                     return "-fx-font-weight: bold;";
                                 }
-                                /*ScmItemAttribute attr = scmItem.getAttribute();
-                                if (attr != null) {
-
-                                }*/
-
                             }
                             return "";
-
                         }
 
                         @Override
@@ -184,6 +185,13 @@ public class BranchViewController implements Initializable {
                     commitsTableView.refresh();
                 }
         );
+    }
+
+    private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
+        return prersonIndent != null
+                && (prersonIndent.getEmailAddress() != null
+                && prersonIndent.getEmailAddress().toLowerCase().contains(searchString.toLowerCase()));
+
     }
 
 

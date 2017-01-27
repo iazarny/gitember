@@ -33,7 +33,8 @@ if (GitemberUtil.isBinaryFile(temp)) {
 ```
 Done. history https://gist.github.com/floralvikings/10290131
 
-
+Site
+----------------
 Proxy and proxy auth
 --------------------------------
 Rewrite author
@@ -46,7 +47,6 @@ Depict result of operation
 --------------------
 Statistics v2
 -----------------------
-Search
-------
+Done. Search
 Done. Funcy about
 

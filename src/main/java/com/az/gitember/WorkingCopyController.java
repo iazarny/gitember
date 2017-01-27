@@ -92,27 +92,28 @@ public class WorkingCopyController implements Initializable {
                                     && WorkingCopyController.this.searchText.getText() != null
                                     && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
 
-                                if (scmItem.getShortName().contains(WorkingCopyController.this.searchText.getText())) {
+                                if (scmItem.getShortName().toLowerCase().contains(WorkingCopyController.this.searchText.getText().toLowerCase())) {
                                     return "-fx-font-weight: bold;";
                                 }
                                 /*ScmItemAttribute attr = scmItem.getAttribute();
                                 if (attr != null) {
 
+                                }
+
+                                if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
+                                    //-fx-font-weight: bold;
+                                    setStyle(calculateStyle(item));
+                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
+                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
+                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+
                                 }*/
+
 
                             }
                             return "";
 
-                            /*
-                            if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
-                                //-fx-font-weight: bold;
-                                setStyle(calculateStyle(item));
-                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
-                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
-                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
-                            } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-
-                            }*/
                         }
 
                         @Override
@@ -527,7 +528,7 @@ public class WorkingCopyController implements Initializable {
             toolBar.getItems().add(workingCopyController.refreshBtn);
             toolBar.getItems().add(workingCopyController.spacerPane);
             toolBar.getItems().add(workingCopyController.searchText);
-           // toolBar.getItems().add(workingCopyController.searchButton);
+            // toolBar.getItems().add(workingCopyController.searchButton);
 
 
             return workCopyView;
