@@ -20,6 +20,8 @@ import org.eclipse.jgit.lib.Ref;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -199,7 +201,10 @@ public class GitemberServiceImpl {
 
                 GitemberApp.getRepositoryService().setUserEmail(dialog.getUserEmail());
                 GitemberApp.getRepositoryService().setUserName(dialog.getUserName());
-                GitemberApp.getRepositoryService().commit(result.get());
+
+                GitemberApp.getRepositoryService().commit(
+                        result.get(),
+                        settings.isOverwriteAuthorWithCommiter());
                 return true;
 
             } catch (GEScmAPIException e) {
@@ -510,11 +515,25 @@ public class GitemberServiceImpl {
 
     public void cloneRepo(final Consumer<RemoteOperationValue> onOk,
                           final Consumer<RemoteOperationValue> onError) {
-        CloneDialog dialog = new CloneDialog("Repository", "Remote repository URL"); // TODO history of repositories
+        final Settings settings = GitemberApp.getSettingsService().read();
+        final Set<String> urls = new TreeSet<>(settings.getGiturls());
+        CloneDialog dialog = new CloneDialog(
+                "Repository",
+                "Remote repository URL",
+                urls);
         dialog.setContentText("Please provide remote repository URL:");
         Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
-            GitemberApp.remoteUrl.setValue(dialogResult.get().getFirst());
+
+            String url = dialogResult.get().getFirst();
+            GitemberApp.remoteUrl.setValue(url);
+            urls.add(url);
+            settings.getGiturls().clear();
+            settings.getGiturls().addAll(urls);
+            GitemberApp.getSettingsService().save(settings);
+
+
+
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
                 @Override
                 protected RemoteOperationValue call() throws Exception {

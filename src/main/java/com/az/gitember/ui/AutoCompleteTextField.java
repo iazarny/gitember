@@ -1,26 +1,25 @@
 package com.az.gitember.ui;
 
-import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Thanks to https://gist.github.com/floralvikings for AutoComplete
- * Igor_Azarny on 28 - Jan -2017.
+ * This class is a TextField which implements an "autocomplete" functionality, based on a supplied list of entries.
+ * @author Caleb Brinkman
  */
-public class AutoCompleteTextArea extends TextArea {
-
+public class AutoCompleteTextField extends TextField  {
     /** The existing autocomplete entries. */
     private final SortedSet<String> entries = new TreeSet<>();
     private final ChangeListenerHistoryHint changeListenerHistoryHint;
 
 
-    public AutoCompleteTextArea() {
+    public AutoCompleteTextField() {
         this("");
     }
 
-    public AutoCompleteTextArea(String text) {
+    public AutoCompleteTextField(String text) {
         super(text);
 
         changeListenerHistoryHint = new ChangeListenerHistoryHint(this, entries);

@@ -3,6 +3,7 @@ package com.az.gitember;
 import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
+import com.az.gitember.ui.AutoCompleteTextField;
 import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
@@ -58,7 +59,7 @@ public class WorkingCopyController implements Initializable {
     public Button refreshBtn;
     //public Button searchButton;
     public Pane spacerPane;
-    public TextField searchText;
+    public AutoCompleteTextField searchText;
     public Menu workingCopyMenu;
 
     private ScmBranch branch;
@@ -148,23 +149,18 @@ public class WorkingCopyController implements Initializable {
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
         spacerPane.setId(Const.MERGED);
 
-        searchText = new TextField();
+        searchText = new AutoCompleteTextField();
         searchText.setId(Const.MERGED);
-
-        /*searchButton = new Button();
-        searchButton.setId(Const.MERGED);
-        searchButton.setGraphic(
-                new FontIcon(FontAwesome.SEARCH)
-        );
-        searchButton.setDisable(true);
-        searchButton.setOnAction(event -> {
-
-
-        });*/
+        searchText.getEntries().addAll(GitemberApp.entries);
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    //searchButton.setDisable(newValue == null || newValue.length() < 2);
                     workingCopyTableView.refresh();
+                    if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                        GitemberApp.entries.remove(oldValue);
+                        GitemberApp.entries.add(newValue);
+                    }
+
+
                 }
         );
 

@@ -29,7 +29,16 @@ public class Settings implements Serializable {
     private String lastProject;
     private ArrayList<String> commitMessages = new ArrayList<>();
     private ArrayList<String> projects = new ArrayList<>();
+    private ArrayList<String> giturls = new ArrayList<>();
     private ArrayList<Triplet<String, String, String>> loginPassword = new ArrayList<>();
+
+    public ArrayList<String> getGiturls() {
+        return giturls;
+    }
+
+    public void setGiturls(ArrayList<String> giturls) {
+        this.giturls = giturls;
+    }
 
     public ArrayList<String> getCommitMessages() {
         return commitMessages;

@@ -12,6 +12,8 @@ import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -19,7 +21,9 @@ import java.util.UUID;
  */
 public class CloneDialog extends Dialog<Pair<String, String>> {
 
-    public CloneDialog(String title, String header) {
+    public CloneDialog(final String title,
+                       final String header,
+                       final Collection<String> urlHistory) {
 
         super();
         this.setTitle(title);
@@ -36,14 +40,13 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 10, 10, 20));
 
-        TextField repositoryURL = new TextField();
+        AutoCompleteTextField repositoryURL = new AutoCompleteTextField();
         repositoryURL.setPromptText("URL");
         repositoryURL.setMinWidth(400);
-        repositoryURL.setText("https://127.0.0.1/root/test.git");
+        repositoryURL.getEntries().addAll(urlHistory);
 
         TextField folder = new TextField();
         folder.setPromptText("Folder");
-        folder.setText("C:\\Users\\Igor_Azarny\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\" + UUID.randomUUID().toString());
         HBox.setHgrow(folder, Priority.ALWAYS);
 
         Button selectFolder = new Button("...");

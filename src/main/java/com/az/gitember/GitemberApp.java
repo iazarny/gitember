@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 public class GitemberApp extends Application {
@@ -42,6 +44,8 @@ public class GitemberApp extends Application {
     private static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService = new GitemberServiceImpl();
+
+    public final static SortedSet<String> entries = new TreeSet<>();
 
 
     public static void setWorkingBranch(ScmBranch workingBranch) throws Exception {

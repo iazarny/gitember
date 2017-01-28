@@ -4,6 +4,7 @@ import com.az.gitember.misc.Const;
 import com.az.gitember.misc.GitemberUtil;
 import com.az.gitember.misc.ScmBranch;
 import com.az.gitember.misc.ScmItem;
+import com.az.gitember.ui.AutoCompleteTextField;
 import com.az.gitember.ui.PlotCommitRenderer;
 import com.sun.javafx.binding.StringConstant;
 import javafx.beans.InvalidationListener;
@@ -62,7 +63,7 @@ public class BranchViewController implements Initializable {
 
     private Pane spacerPane;
 
-    private TextField searchText;
+    private AutoCompleteTextField searchText;
 
     private PlotCommitRenderer plotCommitRenderer = new PlotCommitRenderer();
 
@@ -177,12 +178,16 @@ public class BranchViewController implements Initializable {
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
         spacerPane.setId(Const.MERGED);
 
-        searchText = new TextField();
+        searchText = new AutoCompleteTextField();
         searchText.setId(Const.MERGED);
-
+        searchText.getEntries().addAll(GitemberApp.entries);
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     commitsTableView.refresh();
+                    if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                        GitemberApp.entries.remove(oldValue);
+                        GitemberApp.entries.add(newValue);
+                    }
                 }
         );
     }

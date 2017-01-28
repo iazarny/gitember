@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.SortedSet;
 
 /**
- * Created by Igor_Azarny on 26.01.2017.
+ * Created by Igor_Azarny on 28 - Jan -2017.
  */
-public class ChangeListenerHitoryHint implements ChangeListener<String> {
+public class ChangeListenerHistoryHint implements ChangeListener<String> {
 
     private final SortedSet<String> entries;
     /**
@@ -27,7 +27,7 @@ public class ChangeListenerHitoryHint implements ChangeListener<String> {
 
     private final TextInputControl textInputControl;
 
-    public ChangeListenerHitoryHint(TextInputControl textInputControl, SortedSet<String> entries) {
+    public ChangeListenerHistoryHint(TextInputControl textInputControl, SortedSet<String> entries) {
         this.entries = entries;
         this.textInputControl = textInputControl;
 
@@ -56,8 +56,8 @@ public class ChangeListenerHitoryHint implements ChangeListener<String> {
                 if (!entriesPopup.isShowing()) {
                     // textInputControl.
                     entriesPopup.show(textInputControl, Side.BOTTOM,
-                            2*textInputControl.getFont().getSize(),
-                            -1 * textInputControl.getHeight() + 2*textInputControl.getFont().getSize());
+                            2 * textInputControl.getFont().getSize(),
+                            -1 * textInputControl.getHeight() + 2 * textInputControl.getFont().getSize());
 
                 }
             } else {

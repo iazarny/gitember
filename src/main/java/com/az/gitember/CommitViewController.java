@@ -5,6 +5,7 @@ import com.az.gitember.misc.ScmItem;
 import com.az.gitember.misc.ScmItemAttribute;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
+import com.az.gitember.ui.AutoCompleteTextField;
 import com.sun.javafx.binding.StringConstant;
 import difflib.DiffUtils;
 import difflib.Patch;
@@ -78,7 +79,7 @@ public class CommitViewController implements Initializable {
     private Consumer<ScmRevisionInformation> onStashDelete = null;
     private String treeName;
     private List<ScmItem> changedFiles;
-    private TextField searchText = null;
+    private AutoCompleteTextField searchText = null;
 
     public void showPlotCommit() {
         this.msgLbl.setText(scmRevisionInformation.getFullMessage());
@@ -320,11 +321,16 @@ public class CommitViewController implements Initializable {
                 HBox.setHgrow(spacerPane, Priority.ALWAYS);
                 spacerPane.setId(Const.MERGED);
 
-                commitViewController.searchText = new TextField();
+                commitViewController.searchText = new AutoCompleteTextField();
                 commitViewController.searchText.setId(Const.MERGED);
+                commitViewController.searchText.getEntries().addAll(GitemberApp.entries);
                 commitViewController.searchText.textProperty().addListener(
                         (observable, oldValue, newValue) -> {
                             commitViewController.changedFilesListView.refresh();
+                            if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                                GitemberApp.entries.remove(oldValue);
+                                GitemberApp.entries.add(newValue);
+                            }
                         }
                 );
 

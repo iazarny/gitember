@@ -685,12 +685,26 @@ public class GitRepositoryService {
         return rezInfo.toString();
     }
 
-    public RevCommit commit(String message) throws GEScmAPIException {
+    /**
+     * Commit changes.
+     * @param message commit message
+     * @param overwriteAuthorWithCommiter
+     * @return result.
+     * @throws GEScmAPIException
+     */
+    public RevCommit commit(final String message,
+                            final boolean overwriteAuthorWithCommiter) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
-            return git
+            final CommitCommand cmd = git
                     .commit()
-                    .setMessage(message)
-                    .call();
+                    .setMessage(message);
+
+            if (overwriteAuthorWithCommiter) {
+                cmd.setAuthor(cmd.getCommitter().getName(), cmd.getCommitter().getEmailAddress());
+            }
+
+
+            return cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit" , e);
             throw new GEScmAPIException(e.getMessage());
