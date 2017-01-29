@@ -18,7 +18,6 @@ Nothing in particular, but
 ### Current todo items
 
  * Site
- * Add history to search History https://gist.github.com/floralvikings/10290131
  * Show result of operations
  * Proxy support
  * Package for OSes and web start

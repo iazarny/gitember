@@ -159,6 +159,7 @@ public class GitemberApp extends Application {
 
         // Set expandable Exception into the dialog pane.
         alert.getDialogPane().setExpandableContent(expContent);
+        alert.showAndWait();
 
     }
 

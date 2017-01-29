@@ -15,7 +15,9 @@ import javafx.concurrent.Task;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -268,17 +270,38 @@ public class GitemberServiceImpl {
     }
 
 
-    public boolean deleteBranch(ScmBranch scmBranch) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText(String.format("Delete %s %s", scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
-        alert.setContentText(String.format("Do you really want to delete %s %s ?", scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
+    public void deleteRemoteBranch(ScmBranch scmBranch,
+                                   Consumer<RemoteOperationValue> operationRezConsumer,
+                                   Consumer<RemoteOperationValue> operationErrConsumer) {
 
-        Optional<ButtonType> dialogResult = alert.showAndWait();
+        Optional<ButtonType> dialogResult = getDeleteBranchConfirmDialogValue(scmBranch);
+        if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
+            String nameOnRemoteSide = Constants.R_HEADS + scmBranch.getShortName();
+            RefSpec refSpec = new RefSpec().setSource(null).setDestination(nameOnRemoteSide);
+            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                @Override
+                protected RemoteOperationValue call() throws Exception {
+                    return remoteRepositoryOperation(
+                            () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
+                                    login, pwd, false,
+                                    new DefaultProgressMonitor((t, d) -> {
+                                        updateTitle(t);
+                                        updateProgress(d, 1.0);
+                                    }), refSpec)
+                    );
+                }
+            };
+            prepareLongTask(longTask, operationRezConsumer, operationErrConsumer);
+            new Thread(longTask).start();
+        }
+    }
+
+    public void deleteLocalBranch(ScmBranch scmBranch) {
+
+        Optional<ButtonType> dialogResult = getDeleteBranchConfirmDialogValue(scmBranch);
         if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
             try {
                 GitemberApp.getRepositoryService().deleteLocalBranch(scmBranch.getFullName());
-                return true;
             } catch (GECannotDeleteCurrentBranchException e) {
                 GitemberApp.showResult(e.getMessage(), Alert.AlertType.ERROR);
             } catch (Exception e) {
@@ -287,11 +310,21 @@ public class GitemberServiceImpl {
                 GitemberApp.showException(msg, e);
             }
         }
-        return false;
+    }
+
+    private Optional<ButtonType> getDeleteBranchConfirmDialogValue(ScmBranch scmBranch) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText(String.format("Delete %s %s", scmBranch.getBranchType().getTypeName(),
+                scmBranch.getShortName()));
+        alert.setContentText(String.format("Do you really want to delete %s %s ?",
+                scmBranch.getBranchType().getTypeName(), scmBranch.getShortName()));
+
+        return alert.showAndWait();
     }
 
     public void applyStash(ScmRevisionInformation ri) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Please confirm");
         alert.setHeaderText(String.format("Apply stash", ri.getShortMessage()));
         alert.setContentText(String.format("Do you really want to apply %s stash ?", ri.getShortMessage()));
@@ -447,7 +480,7 @@ public class GitemberServiceImpl {
     }
 
     public boolean deleteStash(ScmRevisionInformation ri, int index) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Please confirm");
         alert.setHeaderText(String.format("Delete stash", ri.getShortMessage()));
         alert.setContentText(String.format("Do you really want to delete %s stash ?", ri.getShortMessage()));
@@ -503,7 +536,7 @@ public class GitemberServiceImpl {
     }
 
     public void pushAll() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Please confirm");
         alert.setHeaderText("Push all");
         alert.setContentText("Do you really want to push all branches ?");
@@ -531,7 +564,6 @@ public class GitemberServiceImpl {
             settings.getGiturls().clear();
             settings.getGiturls().addAll(urls);
             GitemberApp.getSettingsService().save(settings);
-
 
 
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {

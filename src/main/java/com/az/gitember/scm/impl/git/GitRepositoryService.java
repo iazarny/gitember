@@ -109,12 +109,14 @@ public class GitRepositoryService {
                     .findFirst()
                     .get();
             if (r != null) {
-                return new ScmBranch(
+                ScmBranch rez = new ScmBranch(
                         r.getName().substring(Constants.R_HEADS.length()),
                         r.getName(),
                         ScmBranch.BranchType.LOCAL,
                         r.getObjectId().getName()
                 );
+                checkIsTrackingRemoteBranch(git.getRepository().getConfig(), rez);
+                return rez;
             }
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot get list of branches", e);
@@ -154,19 +156,23 @@ public class GitRepositoryService {
             if (Constants.R_HEADS.equals(prefix)) {
                 Config cfg = repository.getConfig();
                 for (ScmBranch item : rez) {
-                    String remote = cfg.getString("branch", item.getShortName(), ConfigConstants.CONFIG_KEY_REMOTE);
-                    if (remote != null) {
-                        String mergeRef = cfg.getString("branch", item.getShortName(), "merge");
-                        String shortRemoteName = mergeRef.substring(Constants.R_HEADS.length());
-                        log.log(Level.INFO, "Local branch " + item.getFullName()
-                                + " is set to track remote " + mergeRef
-                                + "(" + shortRemoteName + ")");
-                        item.setRemoteName(shortRemoteName);
-                    }
+                    checkIsTrackingRemoteBranch(cfg, item);
                 }
 
             }
             return rez;
+        }
+    }
+
+    private void checkIsTrackingRemoteBranch(Config cfg, ScmBranch item) {
+        String remote = cfg.getString("branch", item.getShortName(), ConfigConstants.CONFIG_KEY_REMOTE);
+        if (remote != null) {
+            String mergeRef = cfg.getString("branch", item.getShortName(), "merge");
+            String shortRemoteName = mergeRef.substring(Constants.R_HEADS.length());
+            log.log(Level.INFO, "Local branch " + item.getFullName()
+                    + " is set to track remote " + mergeRef
+                    + "(" + shortRemoteName + ")");
+            item.setRemoteName(shortRemoteName);
         }
     }
 
@@ -626,11 +632,12 @@ public class GitRepositoryService {
 
     /**
      * Rebase changes from given upstream into working copy.
+     *
      * @param upstream
      * @throws GEScmAPIException
      */
     public RemoteOperationValue rebase(final String upstream,
-                       final ProgressMonitor progressMonitor) {
+                                       final ProgressMonitor progressMonitor) {
         try (Git git = new Git(repository)) {
 
             RebaseCommand rebaseCommand = git
@@ -642,7 +649,7 @@ public class GitRepositoryService {
             String rezExplanation = getRebaseResultExplanation(rez);
             if (rez.getStatus().isSuccessful()) {
                 log.log(Level.INFO, "Rebase result " + rezExplanation);
-                return new RemoteOperationValue(RemoteOperationValue.Result.OK,  rezExplanation );
+                return new RemoteOperationValue(RemoteOperationValue.Result.OK, rezExplanation);
 
             } else {
                 log.log(Level.INFO, "Rebase result was not successful, so revert changes " + rezExplanation);
@@ -653,7 +660,7 @@ public class GitRepositoryService {
                         .setOperation(RebaseCommand.Operation.ABORT)
                         .call();
                 rezExplanation = getRebaseResultExplanation(rez);
-                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR,  rezExplanation );
+                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, rezExplanation);
             }
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Rebase error", e);
@@ -669,7 +676,7 @@ public class GitRepositoryService {
             rezInfo.append("\nConflicts : ");
             rezInfo.append(rez.getConflicts().stream().collect(Collectors.joining(",\n")));
         }
-        if (rez.getFailingPaths() != null){
+        if (rez.getFailingPaths() != null) {
             rezInfo.append("\nFailing paths : ");
             rezInfo.append(rez
                     .getFailingPaths()
@@ -687,7 +694,8 @@ public class GitRepositoryService {
 
     /**
      * Commit changes.
-     * @param message commit message
+     *
+     * @param message                     commit message
      * @param overwriteAuthorWithCommiter
      * @return result.
      * @throws GEScmAPIException
@@ -706,7 +714,7 @@ public class GitRepositoryService {
 
             return cmd.call();
         } catch (GitAPIException e) {
-            log.log(Level.SEVERE, "Cannot commit" , e);
+            log.log(Level.SEVERE, "Cannot commit", e);
             throw new GEScmAPIException(e.getMessage());
         }
     }
@@ -1105,34 +1113,60 @@ public class GitRepositoryService {
      * @throws Exception in case of error
      */
     public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
-                                                     String userName, String password, boolean setOrigin, boolean setTrackRemote,
+                                                     String userName, String password,
+                                                     boolean setOrigin,
+                                                     boolean setTrackRemote,
                                                      final ProgressMonitor progressMonitor) {
-        try (Git git = new Git(repository)) {
-            RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
-            PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
 
+        RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
+
+        RemoteOperationValue val = remoteRepositoryPush(
+                userName, password, setOrigin,
+                progressMonitor, refSpec);
+
+        if (val.getResult() == RemoteOperationValue.Result.OK) {
+            try (Git git = new Git(repository)) {
+                if (setTrackRemote /*&& res is ok */) {
+                    final StoredConfig config = git.getRepository().getConfig();
+                    config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
+                            ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME);
+                    config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
+                            ConfigConstants.CONFIG_KEY_MERGE, Constants.R_HEADS + remoteBranch);
+                    config.save();
+                }
+
+            } catch (IOException e) {
+                log.log(Level.WARNING, "Cannot track remote branch",e);
+
+            }
+
+        }
+
+
+        return val;
+
+    }
+
+    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+                                                      boolean setOrigin,
+                                                      ProgressMonitor progressMonitor,
+                                                      RefSpec refSpec) {
+        try (Git git = new Git(repository)) {
+
+            PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
             if (setOrigin) {
                 cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);
             }
-
             if (userName != null) {
                 cmd.setCredentialsProvider(
                         new UsernamePasswordCredentialsProvider(userName, password)
                 );
             }
             Iterable<PushResult> pushResults = cmd.call();
-            if (setTrackRemote /*&& res is ok */) {
-                final StoredConfig config = git.getRepository().getConfig();
-                config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch, ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME);
-                config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch, ConfigConstants.CONFIG_KEY_MERGE, Constants.R_HEADS + remoteBranch);
-                config.save();
-            }
-
-
             StringBuilder stringBuilder = new StringBuilder();
             pushResults.forEach(
                     pushResult -> {
-                        String rezInfo = "";
+                        String rezInfo = "";//todo
                         stringBuilder.append(rezInfo);
                     }
             );
@@ -1146,9 +1180,9 @@ public class GitRepositoryService {
                     config.setBoolean("http", null, "sslVerify", false);
                     config.save();
                     return remoteRepositoryPush(
-                            localBranch, remoteBranch,
                             userName, password,
-                            setOrigin, setTrackRemote, progressMonitor
+                            setOrigin, progressMonitor,
+                            refSpec
                     );
                 } catch (IOException e) {
                     return processError(e);
@@ -1159,7 +1193,6 @@ public class GitRepositoryService {
         } catch (Exception e) {
             return processError(e);
         }
-
     }
 
     public Ref createLocalBranch(String parent, String name) throws GEScmAPIException {

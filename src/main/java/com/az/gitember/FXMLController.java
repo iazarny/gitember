@@ -260,7 +260,7 @@ public class FXMLController implements Initializable {
                     pullAllMenuItem.setDisable(disableRemoteOps);
                     pushMenuItem.setDisable(disableRemoteOps);
                     pushAllMenuItem.setDisable(disableRemoteOps);
-                    compressDataMenuItem.setDisable(disableRemoteOps);
+
                     statReportMenuItem.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
@@ -271,6 +271,7 @@ public class FXMLController implements Initializable {
                 (o, ov, nv) -> {
                     boolean disable = nv == null;
                     statReportMenuItem.setDisable(disable);
+                    compressDataMenuItem.setDisable(disable);
                 }
         );
 
@@ -432,7 +433,7 @@ public class FXMLController implements Initializable {
         pushToRemoteLocalBranchMenuItem.setOnAction(this::localBranchPushHandler);
 
         deleteLocalBranchMenuItem = new MenuItem("Delete ...");
-        deleteLocalBranchMenuItem.setOnAction(this::localBranchDeleteHandler);
+        deleteLocalBranchMenuItem.setOnAction(this::branchDeleteHandler);
 
 
         applyStashCtxMenuItem = new MenuItem("Apply stash ...");
@@ -515,8 +516,31 @@ public class FXMLController implements Initializable {
 
 
     @SuppressWarnings("unchecked")
-    public void localBranchDeleteHandler(ActionEvent actionEvent) {
-        if (GitemberApp.getGitemberService().deleteBranch(getScmBranch())) {
+    public void branchDeleteHandler(ActionEvent actionEvent) {
+        final ScmBranch scmBranch = getScmBranch();
+        if (scmBranch.getBranchType() == ScmBranch.BranchType.REMOTE) {
+            GitemberApp.getGitemberService().deleteRemoteBranch(
+                    getScmBranch(),
+                    remoteOperationValue -> {
+                        try {
+                            GitemberApp.getRepositoryService().deleteLocalBranch(scmBranch.getFullName());
+                        } catch (Exception e) {
+                            String msg = "Cannot delete remote branch "
+                                    + scmBranch.getFullName()
+                                    + " on local disk ";
+                            log.log(Level.SEVERE, msg, e);
+                            GitemberApp.showException(msg, e);
+                        }
+                        fillAllBranchTrees();
+                    },
+                    remoteOperationErr -> {
+                        GitemberApp.showResult("Cannot delete remote branch " + scmBranch.getFullName(),
+                                Alert.AlertType.ERROR);
+                        fillAllBranchTrees();
+                    }
+            );
+        } else {
+            GitemberApp.getGitemberService().deleteLocalBranch(scmBranch);
             fillAllBranchTrees();
         }
     }
