@@ -152,8 +152,6 @@ public class SettingsModel {
 
     public SettingsModel(Settings settings) {
         super();
-        this.setAuthorName(settings.getAuthorName());
-        this.setAuthorEmail(settings.getAuthorEmail());
         this.setOverwriteAuthorWithCommiter(settings.isOverwriteAuthorWithCommiter());
 
         this.setRememberPasswords(settings.isRememberPasswords());
@@ -168,8 +166,6 @@ public class SettingsModel {
     public Settings createSettings() {
         final Settings settings = new Settings();
 
-        settings.setAuthorName(this.getAuthorEmail());
-        settings.setAuthorEmail(this.getAuthorEmail());
         settings.setOverwriteAuthorWithCommiter(this.getOverwriteAuthorWithCommiter());
 
         settings.setRememberPasswords(this.getRememberPasswords());

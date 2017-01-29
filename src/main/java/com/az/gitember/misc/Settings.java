@@ -13,8 +13,6 @@ import java.util.HashMap;
  */
 public class Settings implements Serializable {
 
-    private String authorName;
-    private String authorEmail;
     private boolean overwriteAuthorWithCommiter;
 
     private boolean rememberPasswords;
@@ -70,22 +68,6 @@ public class Settings implements Serializable {
 
     public void setLastLoginName(String lastLoginName) {
         this.lastLoginName = lastLoginName;
-    }
-
-    public String getAuthorName() {
-        return authorName;
-    }
-
-    public void setAuthorName(String authorName) {
-        this.authorName = authorName;
-    }
-
-    public String getAuthorEmail() {
-        return authorEmail;
-    }
-
-    public void setAuthorEmail(String authorEmail) {
-        this.authorEmail = authorEmail;
     }
 
     public boolean isOverwriteAuthorWithCommiter() {

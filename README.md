@@ -19,7 +19,6 @@ Nothing in particular, but
 
  * Site
  * Show result of operations
- * Proxy support
  * Package for OSes and web start
 
 

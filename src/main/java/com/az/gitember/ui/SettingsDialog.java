@@ -23,8 +23,6 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
     public CheckBox useProxyAuth;
     public TextField proxyUserName;
     public PasswordField proxyPassword;
-    public TextField authorName;
-    public TextField authorEmail;
     public CheckBox overwriteAuthorWithCommiter;
 
     private SettingsModel settingsModel;
@@ -64,8 +62,6 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
         Bindings.bindBidirectional(proxyPassword.textProperty(), settingsModel.proxyPasswordProperty());
 
         Bindings.bindBidirectional(overwriteAuthorWithCommiter.selectedProperty(), settingsModel.overwriteAuthorWithCommiterProperty());
-        Bindings.bindBidirectional(authorName.textProperty(), settingsModel.authorNameProperty());
-        Bindings.bindBidirectional(authorEmail.textProperty(), settingsModel.authorEmailProperty());
 
     }
 

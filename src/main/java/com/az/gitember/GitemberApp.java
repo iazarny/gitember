@@ -2,6 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmBranch;
+import com.az.gitember.misc.Settings;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.GitemberServiceImpl;
 import com.az.gitember.service.SettingsServiceImpl;
@@ -94,6 +95,28 @@ public class GitemberApp extends Application {
         return settingsService;
     }
 
+
+    public static void applySettings(Settings newSettings) {
+        if (newSettings.isUseProxy()) {
+            System.setProperty(Const.SYSTEM_PROXY_HOST, newSettings.getProxyServer());
+            System.setProperty(Const.SYSTEM_PROXY_PORT, newSettings.getProxyPort());
+            if (newSettings.isUseProxyAuth()) {
+                System.setProperty(Const.SYSTEM_PROXY_USER, newSettings.getProxyUserName());
+                System.setProperty(Const.SYSTEM_PROXY_PASSWORD, newSettings.getProxyPassword());
+            } else {
+                System.clearProperty(Const.SYSTEM_PROXY_USER);
+                System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
+            }
+        } else {
+            System.clearProperty(Const.SYSTEM_PROXY_HOST);
+            System.clearProperty(Const.SYSTEM_PROXY_PORT);
+            System.clearProperty(Const.SYSTEM_PROXY_USER);
+            System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
+        }
+
+    }
+
+
     @Override
     public void start(Stage stage) throws Exception {
         final FXMLLoader fxmlLoader = new FXMLLoader();
@@ -104,6 +127,7 @@ public class GitemberApp extends Application {
             gitemberService.setProgressBar(controller.progressBar);
             gitemberService.setOperationProgressBar(controller.operationProgressBar);
             gitemberService.setOperationName(controller.operationName);
+            applySettings(getSettingsService().read());
             Scene scene = new Scene(root);
             scene.getStylesheets().add(Const.DEFAULT_CSS);
             mainStage = stage;
@@ -114,11 +138,6 @@ public class GitemberApp extends Application {
 
         }
 
-        /*try (InputStream is = WorkingCopyController.class.getResource("/fxml/WorkingCopyPane.fxml").openStream()) {
-            final Parent workCopyView = fxmlLoader.load(is);
-            final WorkingCopyController workingCopyController = fxmlLoader.getController();
-            workingCopyController.open(branch, null);
-*/
     }
 
     public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {

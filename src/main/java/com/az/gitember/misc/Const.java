@@ -22,4 +22,9 @@ public interface Const {
     String MERGED = "MERGED";
 
     int SEARCH_LIMIT_CHAR = 2;
+
+    String SYSTEM_PROXY_HOST = "http.proxyHost";
+    String SYSTEM_PROXY_PORT = "http.proxyPort";
+    String SYSTEM_PROXY_USER = "http.proxyUser";
+    String SYSTEM_PROXY_PASSWORD = "http.proxyPassword";
 }

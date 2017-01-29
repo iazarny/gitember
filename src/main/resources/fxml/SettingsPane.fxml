@@ -82,14 +82,9 @@
                                         <RowConstraints/>
                                     </rowConstraints>
                                     <children>
-                                        <Label text="Username :" GridPane.rowIndex="0"/>
-                                        <Label text="EMail :" GridPane.rowIndex="1"/>
-                                        <TextField fx:id="authorName" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                                        <TextField fx:id="authorEmail" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                        <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="2"/>
                                         <CheckBox fx:id="overwriteAuthorWithCommiter" mnemonicParsing="false" text="Always overwrite author with committer"
                                                   GridPane.columnSpan="1"
-                                                  GridPane.rowIndex="3"/>
+                                                  GridPane.rowIndex="1"/>
 
                                     </children>
                                     <padding>

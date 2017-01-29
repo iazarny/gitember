@@ -674,7 +674,9 @@ public class FXMLController implements Initializable {
         SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
-            GitemberApp.getSettingsService().save(model.get().createSettings());
+            Settings newSettings = model.get().createSettings();
+            GitemberApp.getSettingsService().save(newSettings);
+            GitemberApp.applySettings(newSettings);
         }
     }
 
