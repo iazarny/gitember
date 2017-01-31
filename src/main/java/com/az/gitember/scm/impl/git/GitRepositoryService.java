@@ -815,6 +815,9 @@ public class GitRepositoryService {
             } else if (e.getMessage().contains("not authorized")) {
                 log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.NOT_AUTHORIZED, e.getMessage());
+            } else if (e.getMessage().contains("remote end: unpack-objects")) {
+                log.log(Level.WARNING, "Unexpected transport issue. Check disk space on remote repository", e);
+                return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());
             } else {
                 log.log(Level.WARNING, "Unexpected transport issue", e);
                 return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, e.getMessage());

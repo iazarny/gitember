@@ -459,16 +459,18 @@ public class GitemberServiceImpl {
                             if (onOk != null) {
                                 onOk.accept(rval);
                             }
+                            String okInfo = rval.getValue().toString(); //todo rval value can be not an string.
                             GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult("OK. TODO get info", Alert.AlertType.INFORMATION);
+                            GitemberApp.showResult(okInfo, Alert.AlertType.INFORMATION);
                             break;
                         }
                         case ERROR: {
                             if (onError != null) {
                                 onError.accept(rval);
                             }
+                            String errInfo = rval.getValue().toString(); //todo rval value can be not an string.
                             GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult("ERROR. TODO get info", Alert.AlertType.ERROR);
+                            GitemberApp.showResult(errInfo, Alert.AlertType.ERROR);
                             break;
                         }
                     }
@@ -543,6 +545,8 @@ public class GitemberServiceImpl {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             GitemberApp.getGitemberService().pushToRemoteRepository("+refs/heads/*", "refs/heads/*", false, false);
+        } else {
+            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
         }
     }
 
