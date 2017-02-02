@@ -62,6 +62,20 @@ public class WorkingCopyController implements Initializable {
     public AutoCompleteTextField searchText;
     public Menu workingCopyMenu;
 
+    public ContextMenu scmItemContextMenu;
+    public MenuItem revertMenuItem;
+    public MenuItem addFileMenuItem;
+    public MenuItem openFileMenuItem;
+    public MenuItem showHistoryMenuItem;
+    public MenuItem showDiffMenuItem;
+
+    public MenuItem ыыы;
+
+
+
+
+
+
     private ScmBranch branch;
 
     private Consumer<Object> onStashCreated;

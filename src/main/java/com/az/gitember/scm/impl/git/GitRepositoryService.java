@@ -43,9 +43,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.eclipse.jgit.lib.IndexDiff.StageState.BOTH_DELETED;
+
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
- * TODO extract inteface
+ * TODO extract interface
  */
 public class GitRepositoryService {
 
@@ -568,6 +570,7 @@ public class GitRepositoryService {
     public List<ScmItem> getStatuses(final String path) throws Exception {
 
         Map<String, List<String>> statusMap = new HashMap<>();
+        List<ScmItem> scmItems = new ArrayList<>();
         try (Git git = new Git(repository)) {
 
             StatusCommand statusCommand = git.status();
@@ -575,6 +578,12 @@ public class GitRepositoryService {
                 statusCommand.addPath(path);
             }
             Status status = statusCommand.call();
+
+            Map<String, IndexDiff.StageState> conflictingStageState = status.getConflictingStageState();
+//            for(Map.Entry<String, IndexDiff.StageState> entry : conflictingStageState.entrySet()) {
+            //              System.out.println("ConflictingState: " + entry);
+            //        }
+
 
             status.getConflicting().forEach(item -> enrichStatus(statusMap, item, ScmItemStatus.CONFLICT));
             status.getAdded().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.ADDED));
@@ -586,28 +595,43 @@ public class GitRepositoryService {
             status.getUntracked().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.UNTRACKED));
             status.getUntrackedFolders().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.UNTRACKED_FOLDER));
 
-            //TODO
-            /* Map<String, StageState> conflictingStageState = status.getConflictingStageState();
-                for(Map.Entry<String, StageState> entry : conflictingStageState.entrySet()) {
-                    System.out.println("ConflictingState: " + entry);
-                }*/
 
+            statusMap.forEach((s, strings) -> {
+                scmItems.add(
+                        new ScmItem(s, new ScmItemAttribute(strings, getConflictSubStatus(s, conflictingStageState)))
+                );
+            });
 
         }
-
-
-        List<ScmItem> scmItems = new ArrayList<>(statusMap.size());
-        statusMap.forEach((s, strings) -> {
-            scmItems.add(
-                    new ScmItem(s, new ScmItemAttribute(strings))
-            );
-        });
 
 
         scmItems.sort((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()));
 
         return scmItems;
 
+    }
+
+    private String getConflictSubStatus(String key, Map<String, IndexDiff.StageState> conflictingStageState) {
+
+        return adaptConflictingState(conflictingStageState.get(key));
+    }
+
+    private String adaptConflictingState(IndexDiff.StageState stageState) {
+        if (stageState == null) {
+            return null;
+        }
+        switch (stageState) {
+
+            case BOTH_DELETED : return ScmItemStatus.CONFLICT_BOTH_DELETED;
+            case ADDED_BY_US : return ScmItemStatus.CONFLICT_ADDED_BY_US;
+            case DELETED_BY_THEM : return ScmItemStatus.CONFLICT_DELETED_BY_THEM;
+            case ADDED_BY_THEM : return ScmItemStatus.CONFLICT_ADDED_BY_THEM;
+            case DELETED_BY_US : return ScmItemStatus.CONFLICT_DELETED_BY_US;
+            case BOTH_ADDED : return ScmItemStatus.CONFLICT_BOTH_ADDED;
+            case BOTH_MODIFIED : return ScmItemStatus.CONFLICT_BOTH_MODIFIED;
+            default: return null;
+
+        }
     }
 
     private void enrichStatus(Map<String, List<String>> rez, String item, String itemStatus) {
@@ -1139,7 +1163,7 @@ public class GitRepositoryService {
                 }
 
             } catch (IOException e) {
-                log.log(Level.WARNING, "Cannot track remote branch",e);
+                log.log(Level.WARNING, "Cannot track remote branch", e);
 
             }
 
@@ -1151,9 +1175,9 @@ public class GitRepositoryService {
     }
 
     public RemoteOperationValue remoteRepositoryPush(String userName, String password,
-                                                      boolean setOrigin,
-                                                      ProgressMonitor progressMonitor,
-                                                      RefSpec refSpec) {
+                                                     boolean setOrigin,
+                                                     ProgressMonitor progressMonitor,
+                                                     RefSpec refSpec) {
         try (Git git = new Git(repository)) {
 
             PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);

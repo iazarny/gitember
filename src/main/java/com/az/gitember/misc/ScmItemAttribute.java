@@ -13,12 +13,22 @@ public class ScmItemAttribute {
     private String name;
     private String oldName;
     private List<String> status;
+    private String substatus;
 
-    public ScmItemAttribute(List<String> status) {
+    public ScmItemAttribute(List<String> status, String substatus) {
         this.status = status;
+        this.substatus = substatus;
     }
 
     public ScmItemAttribute() {
+    }
+
+    public String getSubstatus() {
+        return substatus;
+    }
+
+    public void setSubstatus(String substatus) {
+        this.substatus = substatus;
     }
 
     public String getName() {

@@ -6,7 +6,15 @@ package com.az.gitember.misc;
 public interface ScmItemStatus {
 
     String CONFLICT = "Conflict";
-    String CONFLICT_STAGE = "ConflictingState";
+    String CONFLICT_BOTH_DELETED = "Conflict"; //Exists in base, but neither in ours nor in theirs.
+    String CONFLICT_ADDED_BY_US = "Conflict"; //Only exists in ours.
+    String CONFLICT_DELETED_BY_THEM = "Conflict"; //Exists in base and ours, but no in theirs.
+    String CONFLICT_ADDED_BY_THEM = "Conflict"; // Only exists in theirs.
+    String CONFLICT_DELETED_BY_US = "Conflict"; // Exists in base and theirs, but not in ours.
+    String CONFLICT_BOTH_ADDED = "Conflict"; // Exists in ours and theirs, but not in base.
+    String CONFLICT_BOTH_MODIFIED = "Conflict"; //Exists in all stages, content conflict.
+
+
     String ADDED = "Added";
     String CHANGED =  "Changed";
     String MISSED = "Missed";
