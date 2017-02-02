@@ -573,17 +573,25 @@ public class WorkingCopyController implements Initializable {
 
                 } else if (item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT)) {
 
-                    // mark resolved
+                    // mark resolved. so nothing meaningful, just delete of add as it even.
                     if (ScmItemStatus.CONFLICT_DELETED_BY_THEM.equals(item.getAttribute().getSubstatus())
                             ||ScmItemStatus.CONFLICT_DELETED_BY_US.equals(item.getAttribute().getSubstatus())
                             ||ScmItemStatus.CONFLICT_BOTH_DELETED.equals(item.getAttribute().getSubstatus())
                             ) {
                         if (Files.exists(Paths.get(item.getShortName()))) {
-                            System.out.println("Add back");
+                            GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                            item.getAttribute().getStatus().remove(ScmItemStatus.CONFLICT);
+                            item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
+                            item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
                         } else {
-                            System.out.println("Delete nah");
+                            GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
+                            item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
+                            item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
                         }
-                    } else if (ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
+                    } else if (ScmItemStatus.CONFLICT_ADDED_BY_US.equals(item.getAttribute().getSubstatus())
+                            ||ScmItemStatus.CONFLICT_ADDED_BY_THEM.equals(item.getAttribute().getSubstatus())
+                            ||ScmItemStatus.CONFLICT_BOTH_ADDED.equals(item.getAttribute().getSubstatus())
+                            ||ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
                         GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.CONFLICT);
                         item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
