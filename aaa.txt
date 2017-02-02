@@ -1,4 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 line 1
+>>>>>>> refs/heads/m2
+=======
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwline 1
 >>>>>>> refs/heads/m2

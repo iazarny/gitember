@@ -19,19 +19,7 @@
                 <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;" text="File"  prefWidth="-1" minWidth="800"/>
             </columns>
 
-            <contextMenu>
-                <ContextMenu fx:id="scmItemContextMenu">
-                    <items>
-                        <MenuItem fx:id="revertMenuItem" mnemonicParsing="false" text="Revert changes ..." onAction="#revertEventHandler"/>
-                        <MenuItem fx:id="addFileMenuItem"  mnemonicParsing="false" text="Add item to stage" onAction="#addItemToStageMiEventHandler"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem fx:id="openFileMenuItem"  mnemonicParsing="false" text="Open item" onAction="#openEventHandler"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem fx:id="showHistoryMenuItem" mnemonicParsing="false" text="History of changes" onAction="#historyEventHandler"/>
-                        <MenuItem fx:id="showDiffMenuItem" mnemonicParsing="false" text="Diff with the same version from repository" onAction="#diffEventHandler"/>
-                    </items>
-                </ContextMenu>
-            </contextMenu>
+
 
 
         </TableView>
