@@ -584,7 +584,10 @@ public class WorkingCopyController implements Initializable {
                             System.out.println("Delete nah");
                         }
                     } else if (ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
-                        System.out.println("Add as is ");
+                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.CONFLICT);
+                        item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
                     }
 
                 }
