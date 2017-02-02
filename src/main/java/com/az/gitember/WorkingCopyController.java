@@ -69,11 +69,10 @@ public class WorkingCopyController implements Initializable {
     public MenuItem showHistoryMenuItem;
     public MenuItem showDiffMenuItem;
 
-    public MenuItem ыыы;
-
-
-
-
+    public SeparatorMenuItem conflictSeparator;
+    public MenuItem conflictResolveUsingMy;
+    public MenuItem conflictResolveUsingTheir;
+    public MenuItem conflictResolved;
 
 
     private ScmBranch branch;
@@ -135,6 +134,24 @@ public class WorkingCopyController implements Initializable {
                         protected void updateItem(ScmItem item, boolean empty) {
                             super.updateItem(item, empty);
                             setStyle(calculateStyle(item));
+                            if (!empty) {
+                                setContextMenu(scmItemContextMenu);
+                                setOnContextMenuRequested(event -> {
+                                    boolean isConflict = item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT);
+                                    conflictSeparator.setVisible(isConflict);
+                                    conflictResolveUsingMy.setVisible(isConflict);
+                                    conflictResolveUsingTheir.setVisible(isConflict);
+
+
+                                    conflictResolved.setVisible(isConflict);
+
+
+                                    addFileMenuItem.setVisible(!isConflict);
+                                    revertMenuItem.setVisible(!isConflict);
+
+
+                                });
+                            }
                         }
                     };
                 }
@@ -169,7 +186,7 @@ public class WorkingCopyController implements Initializable {
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     workingCopyTableView.refresh();
-                    if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
                         GitemberApp.entries.remove(oldValue);
                         GitemberApp.entries.add(newValue);
                     }
@@ -197,6 +214,48 @@ public class WorkingCopyController implements Initializable {
         mi = new MenuItem("Commit ...");
         mi.setOnAction(this::commitHandler);
         workingCopyMenu.getItems().add(mi);
+
+
+        //----------------- item context menu
+
+        revertMenuItem = new MenuItem("Revert changes ...");
+        revertMenuItem.setOnAction(this::revertEventHandler);
+
+        addFileMenuItem = new MenuItem("Add item to stage");
+        addFileMenuItem.setOnAction(this::addItemToStageMiEventHandler);
+
+
+        openFileMenuItem = new MenuItem("Open item");
+        openFileMenuItem.setOnAction(this::openEventHandler);
+
+        showHistoryMenuItem = new MenuItem("History of changes");
+        showHistoryMenuItem.setOnAction(this::historyEventHandler);
+
+        showDiffMenuItem = new MenuItem("Diff with the same version from repository");
+        showDiffMenuItem.setOnAction(this::diffEventHandler);
+
+
+        conflictSeparator = new SeparatorMenuItem();
+        conflictResolveUsingMy = new MenuItem("Resolve using my changes");
+        conflictResolveUsingTheir = new MenuItem("Resolve using their changes");
+
+        conflictResolved = new MenuItem("Mark resolved");
+        conflictResolved.setOnAction(this::addItemToStageMiEventHandler);
+
+
+        scmItemContextMenu = new ContextMenu(
+                conflictResolveUsingMy,
+                conflictResolveUsingTheir,
+                conflictResolved,
+                conflictSeparator,
+                revertMenuItem,
+                addFileMenuItem,
+                new SeparatorMenuItem(),
+                openFileMenuItem,
+                new SeparatorMenuItem(),
+                showHistoryMenuItem,
+                showDiffMenuItem
+        );
 
 
     }
@@ -495,20 +554,39 @@ public class WorkingCopyController implements Initializable {
 
     private void stageItem(ScmItem item) {
         try {
-            if (item != null && isUnstaged(item)) {
-                if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
-                    GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
-                    item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
-                    item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
-                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-                    GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
-                    item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
-                    item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
-                    item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
-                    item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
-                } else {
-                    GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
-                    item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
+            if (item != null) {
+                if (isUnstaged(item)) {
+                    if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+                        GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
+                    } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.UNTRACKED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.ADDED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.UNCOMMITED);
+                    } else {
+                        GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
+                    }
+
+                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT)) {
+
+                    // mark resolved
+                    if (ScmItemStatus.CONFLICT_DELETED_BY_THEM.equals(item.getAttribute().getSubstatus())
+                            ||ScmItemStatus.CONFLICT_DELETED_BY_US.equals(item.getAttribute().getSubstatus())
+                            ||ScmItemStatus.CONFLICT_BOTH_DELETED.equals(item.getAttribute().getSubstatus())
+                            ) {
+                        if (Files.exists(Paths.get(item.getShortName()))) {
+                            System.out.println("Add back");
+                        } else {
+                            System.out.println("Delete nah");
+                        }
+                    } else if (ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
+                        System.out.println("Add as is ");
+                    }
+
                 }
             }
         } catch (Exception e) {
