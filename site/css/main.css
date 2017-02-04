@@ -282,13 +282,13 @@ section {
 **************************/
 
 .service-icon {
-  border-radius: 4px;
+  border-radius: 8px;
   color: #fff;
   display: inline-block;
-  font-size: 36px;
-  height: 90px;
-  line-height: 90px;
-  width: 90px;  
+  font-size: 72px;
+  height: 180px;
+  line-height: 180px;
+  width: 180px;
   -webkit-transition: background-color 0.2s ease;
   transition: background-color 0.2s ease;
 }
