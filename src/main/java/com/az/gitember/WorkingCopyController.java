@@ -237,7 +237,10 @@ public class WorkingCopyController implements Initializable {
 
         conflictSeparator = new SeparatorMenuItem();
         conflictResolveUsingMy = new MenuItem("Resolve using my changes");
+        conflictResolveUsingMy.setOnAction(this::resolveUsingMyChanges);
+
         conflictResolveUsingTheir = new MenuItem("Resolve using their changes");
+        conflictResolveUsingTheir.setOnAction(this::resolveUsingTheirChanges);
 
         conflictResolved = new MenuItem("Mark resolved");
         conflictResolved.setOnAction(this::addItemToStageMiEventHandler);
@@ -472,6 +475,33 @@ public class WorkingCopyController implements Initializable {
             }
         }
     }
+
+    /**
+     * Resolve conflict using their changes.
+     * @param event event
+     */
+    public void resolveUsingTheirChanges(Event event) {
+        resolveConflict(Stage.THEIRS);
+
+    }
+
+    /**
+     * Resolve conflict using my changes.
+     * @param event event
+     */
+    public void resolveUsingMyChanges(Event event) {
+        resolveConflict(Stage.OURS);
+    }
+
+    private void resolveConflict(Stage stage) {
+        final ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+        if (item != null) {
+            GitemberApp.getRepositoryService().checkoutFile(item.getShortName(), stage);
+            GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
+            open(branch, item.getShortName());
+        }
+    }
+
 
     /**
      * Show different with last version from repository.

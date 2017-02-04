@@ -1,9 +1,11 @@
 package com.az.gitember.scm.impl.git;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
+import javafx.scene.control.Alert;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -13,6 +15,7 @@ import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.UnmergedPathException;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -622,14 +625,22 @@ public class GitRepositoryService {
         }
         switch (stageState) {
 
-            case BOTH_DELETED : return ScmItemStatus.CONFLICT_BOTH_DELETED;
-            case ADDED_BY_US : return ScmItemStatus.CONFLICT_ADDED_BY_US;
-            case DELETED_BY_THEM : return ScmItemStatus.CONFLICT_DELETED_BY_THEM;
-            case ADDED_BY_THEM : return ScmItemStatus.CONFLICT_ADDED_BY_THEM;
-            case DELETED_BY_US : return ScmItemStatus.CONFLICT_DELETED_BY_US;
-            case BOTH_ADDED : return ScmItemStatus.CONFLICT_BOTH_ADDED;
-            case BOTH_MODIFIED : return ScmItemStatus.CONFLICT_BOTH_MODIFIED;
-            default: return null;
+            case BOTH_DELETED:
+                return ScmItemStatus.CONFLICT_BOTH_DELETED;
+            case ADDED_BY_US:
+                return ScmItemStatus.CONFLICT_ADDED_BY_US;
+            case DELETED_BY_THEM:
+                return ScmItemStatus.CONFLICT_DELETED_BY_THEM;
+            case ADDED_BY_THEM:
+                return ScmItemStatus.CONFLICT_ADDED_BY_THEM;
+            case DELETED_BY_US:
+                return ScmItemStatus.CONFLICT_DELETED_BY_US;
+            case BOTH_ADDED:
+                return ScmItemStatus.CONFLICT_BOTH_ADDED;
+            case BOTH_MODIFIED:
+                return ScmItemStatus.CONFLICT_BOTH_MODIFIED;
+            default:
+                return null;
 
         }
     }
@@ -647,9 +658,11 @@ public class GitRepositoryService {
      * @param fileName
      * @throws Exception
      */
-    public void addFileToCommitStage(String fileName) throws Exception {
+    public void addFileToCommitStage(String fileName)  {
         try (Git git = new Git(repository)) {
             git.add().addFilepattern(fileName).call();
+        } catch (GitAPIException e) {
+            log.log(Level.WARNING, "Cannot add file to stage", e);
         }
     }
 
@@ -1285,15 +1298,36 @@ public class GitRepositoryService {
         return repository.getDirectory().getAbsolutePath();
     }
 
-    public void checkoutFile(final String fileName) {
+    public void checkoutFile(final String fileName, Stage stage) {
+
         try (Git git = new Git(repository)) {
             try {
-                git.checkout().addPath(fileName).call();
-            } catch (GitAPIException e) {
+                CheckoutCommand cmd = git.checkout().addPath(fileName);
+                if (stage != null) {
+                    cmd.setStage(adaptStage(stage));
+                }
+                cmd.call();
+            } catch (JGitInternalException | GitAPIException e) {
                 log.log(Level.WARNING, "Cannot checkout file " + fileName, e);
+                GitemberApp.showResult(e.getMessage(), Alert.AlertType.ERROR);
             }
         }
 
+
+    }
+
+    private CheckoutCommand.Stage adaptStage(Stage stage) {
+        if (stage == Stage.OURS) {
+            return CheckoutCommand.Stage.OURS;
+        } else if (stage == Stage.THEIRS) {
+            return CheckoutCommand.Stage.THEIRS;
+        }
+        return CheckoutCommand.Stage.BASE;
+    }
+
+    public void checkoutFile(final String fileName) {
+
+        checkoutFile(fileName, null);
     }
 
 
