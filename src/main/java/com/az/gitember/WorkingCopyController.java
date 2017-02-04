@@ -69,7 +69,6 @@ public class WorkingCopyController implements Initializable {
     public MenuItem showHistoryMenuItem;
     public MenuItem showDiffMenuItem;
 
-    public SeparatorMenuItem conflictSeparator;
     public MenuItem conflictResolveUsingMy;
     public MenuItem conflictResolveUsingTheir;
     public MenuItem conflictResolved;
@@ -138,18 +137,12 @@ public class WorkingCopyController implements Initializable {
                                 setContextMenu(scmItemContextMenu);
                                 setOnContextMenuRequested(event -> {
                                     boolean isConflict = item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT);
-                                    conflictSeparator.setVisible(isConflict);
                                     conflictResolveUsingMy.setVisible(isConflict);
                                     conflictResolveUsingTheir.setVisible(isConflict);
-
-
                                     conflictResolved.setVisible(isConflict);
-
-
                                     addFileMenuItem.setVisible(!isConflict);
                                     revertMenuItem.setVisible(!isConflict);
-
-
+                                    showDiffMenuItem.setVisible(!isConflict);
                                 });
                             }
                         }
@@ -235,7 +228,6 @@ public class WorkingCopyController implements Initializable {
         showDiffMenuItem.setOnAction(this::diffEventHandler);
 
 
-        conflictSeparator = new SeparatorMenuItem();
         conflictResolveUsingMy = new MenuItem("Resolve using my changes");
         conflictResolveUsingMy.setOnAction(this::resolveUsingMyChanges);
 
@@ -250,7 +242,6 @@ public class WorkingCopyController implements Initializable {
                 conflictResolveUsingMy,
                 conflictResolveUsingTheir,
                 conflictResolved,
-                conflictSeparator,
                 revertMenuItem,
                 addFileMenuItem,
                 new SeparatorMenuItem(),
