@@ -33,9 +33,10 @@
     <script src="vendor/jquery/jquery.js"></script>
 
     <!-- fotorama.css & fotorama.js. -->
-    <link  href="http://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet"> <!-- 3 KB -->
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
+    <!-- 3 KB -->
     <script src="http://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.js"></script>
-
+    <link rel="stylesheet" href="css/custom.css">    
 </head>
 
 <body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
@@ -84,12 +85,12 @@
                     <div class="col-md-8 col-md-offset-2">
                         <!--<h1 class="brand-heading">Gitember</h1>-->
                         <p>
-                        <img src="img/logo.png" alt="Gitember" style="border: 0px">
+                            <img src="img/logo.png" alt="Gitember" style="border: 0px">
                         </p>
                         <p class="intro-text">Cross platform graphical user interface for GIT.
                             <br>
                             <br>
-                            </p>
+                        </p>
                         <a href="#download" class="btn btn-circle page-scroll">
                             <i class="fa fa-angle-double-down animated"></i>
                         </a>
@@ -103,35 +104,31 @@
     <section id="download" class="content-section text-center">
         <div class="download-section">
             <div class="container">
-                <div class="col-lg-8 col-lg-offset-2">
+                <div class="col-lg-12">
                     <h2>Download Gitember</h2>
                     <p>Please select most suitable format</p>
 
                     <ul class="list-inline banner-social-buttons">
                         <li>
-                            <a href="gitember-1.0-1.0.msi"
-                               class="btn btn-default btn-lg">
+                            <a href="gitember-1.0-1.0.msi" class="btn btn-default btn-lg">
                                 <i class="fa fa-windows" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Windows Msi</span>
                             </a>
 
                         </li>
                         <li>
-                            <a href="gitember-1.0-1.0.msi"
-                               class="btn btn-default btn-lg">
+                            <a href="gitember-1.0-1.0.msi" class="btn btn-default btn-lg">
                                 <i class="fa fa-linux" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Linux deb</span>
                             </a>
 
                         </li>
                         <li>
-                            <a href="gitember-1.0-jfx.jar"
-                               class="btn btn-default btn-lg">
+                            <a href="gitember-1.0-jfx.jar" class="btn btn-default btn-lg">
                                 <i class="fa fa-coffee" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Fat jar</span>
                             </a>
 
                         </li>
                         <li>
-                            <a href="https://github.com/iazarny/gitember"
-                               class="btn btn-default btn-lg">
+                            <a href="https://github.com/iazarny/gitember" class="btn btn-default btn-lg">
                                 <i class="fa fa-github" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Source code</span>
                             </a>
 
@@ -145,8 +142,7 @@
 
     <section id="screen" class="container content-section text-center">
 
-        <div class="fotorama" data-nav="thumbs" data-transition="crossfade"
-             data-fit="cover" data-autoplay="4000">
+        <div class="fotorama" data-nav="thumbs" data-transition="crossfade" data-fit="contain" data-autoplay="4000" data-maxheight="80%">
             <img src="img/portfolio/1.jpg">
             <img src="img/portfolio/2.jpg">
             <img src="img/portfolio/3.jpg">
@@ -167,7 +163,8 @@
                 <h2>Contact</h2>
                 <p>Feel free to email me to provide some feedback.</p>
                 <p><a href="mailto:iazarny@yahoo.com">Igor Azarny</a></p>
-                <p>Or visit <a href="https://github.com/iazarny/gitember/issues">github</a> to ask for new feature or to create a bug</p>
+                <p>Or visit <a href="https://github.com/iazarny/gitember/issues">github</a> to ask for new feature or to create
+                    a bug</p>
             </div>
         </div>
     </section>
