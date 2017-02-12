@@ -27,6 +27,15 @@
     -fx-border-width: 1px;
 }
 
+.copyable-label, .copyable-label:focused {
+    -fx-background-color: red ;
+   /* -fx-background-color: transparent ;*/
+    -fx-background-insets: 0px ;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-padding: 0px;
+    -fx-pref-width: 350px;
+}
 
 
 

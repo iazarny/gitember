@@ -8,6 +8,8 @@ import com.az.gitember.ui.DiffLineNumberFactory;
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -57,7 +59,7 @@ public class DiffViewController extends BaseFileViewController {
 
     private VirtualizedScrollPane<CodeArea> oldVSPane;
     private CodeArea oldCodeArea;
-    private Label oldLabel;
+    private TextField oldLabel;
 
     private Pane scrollPane;
 
@@ -85,7 +87,18 @@ public class DiffViewController extends BaseFileViewController {
         oldCodeArea = new CodeArea();
         oldCodeArea.setEditable(false);
         oldCodeArea.setParagraphGraphicFactory(DiffLineNumberFactory.get(oldCodeArea, oldLinesToHighlight));
-        oldLabel = new Label();
+
+        oldLabel = new TextField();
+        oldLabel.setEditable(false);
+        oldLabel.getStyleClass().add("copyable-label");
+        oldLabel.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> ob, String o, String n) {
+                oldLabel.setPrefColumnCount(n.length() / 2);
+            }
+        });
+        //HBox.setHgrow(oldLabel, Priority.ALWAYS);
+
         oldVSPane = new VirtualizedScrollPane<>(oldCodeArea, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER);
         StackPane oldStackPane = new StackPane(oldVSPane);
 
@@ -464,6 +477,7 @@ public class DiffViewController extends BaseFileViewController {
 
         Scene scene = new Scene(gridPanel, 1024, 768);
         scene.getStylesheets().add(this.getClass().getResource(Const.KEYWORDS_CSS).toExternalForm());
+        scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
 
         final Stage stage = new Stage();
         stage.setScene(scene);
