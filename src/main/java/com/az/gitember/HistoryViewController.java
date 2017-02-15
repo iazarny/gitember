@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.Const;
+import com.az.gitember.misc.GitemberUtil;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
@@ -65,7 +66,7 @@ public class HistoryViewController implements Initializable {
         revisionTableColumn.setCellValueFactory(c -> StringConstant.valueOf(c.getValue().getRevisionFullName()));
         authorTableColumn.setCellValueFactory(c -> StringConstant.valueOf(c.getValue().getAuthorName()));
         messageTableColumn.setCellValueFactory(c -> StringConstant.valueOf(c.getValue().getFullMessage()));
-        dateTableColumn.setCellValueFactory(c -> StringConstant.valueOf(c.getValue().getDate().toString()));
+        dateTableColumn.setCellValueFactory(c -> StringConstant.valueOf(GitemberUtil.formatDate(c.getValue().getDate())));
         actionTableColumn.setCellValueFactory(c -> new ActionCellValueFactory(null, c));
         historyTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 

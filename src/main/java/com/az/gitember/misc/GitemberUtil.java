@@ -6,12 +6,19 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016.
  */
 public class GitemberUtil {
+
+    private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public static String formatDate(Date date) {
+        return simpleDateFormat.format(date);
+    }
 
     public static Date intToDate(int time) {
         return new Date(1000L * time);
