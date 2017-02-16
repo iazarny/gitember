@@ -6,9 +6,11 @@ import com.az.gitember.misc.ScmItemAttribute;
 import com.az.gitember.misc.ScmRevisionInformation;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.az.gitember.ui.AutoCompleteTextField;
+import com.az.gitember.ui.ShaTextField;
 import com.sun.javafx.binding.StringConstant;
 import difflib.DiffUtils;
 import difflib.Patch;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -42,25 +44,25 @@ public class CommitViewController implements Initializable {
     public Menu stashMenu;
 
     @FXML
-    private Label msgLbl;
+    private ShaTextField msgLbl;
 
     @FXML
-    private Label authorLbl;
+    private ShaTextField authorLbl;
 
     @FXML
-    private Label emailLabel;
+    private ShaTextField emailLabel;
 
     @FXML
-    private Label dateLbl;
+    private ShaTextField dateLbl;
 
     @FXML
-    private Label shaLbl;
+    private ShaTextField shaLbl;
 
     @FXML
-    private Label refsLbl;
+    private ShaTextField refsLbl;
 
     @FXML
-    private Label parentLbl;
+    private ShaTextField parentLbl;
 
     @FXML
     private TableView changedFilesListView;
@@ -91,8 +93,8 @@ public class CommitViewController implements Initializable {
             for (int i = 0; i < scmRevisionInformation.getRefCount(); i++) {
                 stringJoiner.add(scmRevisionInformation.getRef().get(i));
             }
-
         }
+
         this.refsLbl.setText(stringJoiner.toString());
 
         this.parentLbl.setText(

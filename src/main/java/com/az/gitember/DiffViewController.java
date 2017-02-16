@@ -5,6 +5,7 @@ import com.az.gitember.misc.Pair;
 import com.az.gitember.ui.DerivedScrollEvent;
 import com.az.gitember.ui.DerivedScrollEventType;
 import com.az.gitember.ui.DiffLineNumberFactory;
+import com.az.gitember.ui.ShaTextField;
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
@@ -65,7 +66,7 @@ public class DiffViewController extends BaseFileViewController {
 
     private VirtualizedScrollPane newVSPane;
     private CodeArea newCodeArea;
-    private Label newLabel;
+    private TextField newLabel;
 
     private VirtualFlow oldVirtualFlow;
     private VirtualFlow newVirtualFlow;
@@ -88,16 +89,7 @@ public class DiffViewController extends BaseFileViewController {
         oldCodeArea.setEditable(false);
         oldCodeArea.setParagraphGraphicFactory(DiffLineNumberFactory.get(oldCodeArea, oldLinesToHighlight));
 
-        oldLabel = new TextField();
-        oldLabel.setEditable(false);
-        oldLabel.getStyleClass().add("copyable-label");
-        oldLabel.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> ob, String o, String n) {
-                oldLabel.setPrefColumnCount(n.length() / 2);
-            }
-        });
-        //HBox.setHgrow(oldLabel, Priority.ALWAYS);
+        oldLabel = new ShaTextField();
 
         oldVSPane = new VirtualizedScrollPane<>(oldCodeArea, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER);
         StackPane oldStackPane = new StackPane(oldVSPane);
@@ -109,7 +101,7 @@ public class DiffViewController extends BaseFileViewController {
         newCodeArea = new CodeArea();
         newCodeArea.setEditable(false);
         newCodeArea.setParagraphGraphicFactory(DiffLineNumberFactory.get(newCodeArea, newLinesToHighlight));
-        newLabel = new Label();
+        newLabel = new ShaTextField();
         newVSPane = new VirtualizedScrollPane<>(newCodeArea);
         StackPane newStackPane = new StackPane(newVSPane);
 

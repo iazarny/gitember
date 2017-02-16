@@ -27,8 +27,8 @@
     -fx-border-width: 1px;
 }
 
-.copyable-label, .copyable-label:focused {
-    -fx-background-color: red ;
+.copy-label, .copy-label:focused {
+    -fx-background-color: transparent ;
    /* -fx-background-color: transparent ;*/
     -fx-background-insets: 0px ;
     -fx-border-style: none;

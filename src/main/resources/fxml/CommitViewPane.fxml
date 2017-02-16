@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Label?>
+<?import com.az.gitember.ui.ShaTextField?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TableColumn?>
@@ -45,14 +46,15 @@
                 <Label text="SHA:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                 <Label text="Refs:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                 <Label text="Parent:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                <Label fx:id="msgLbl" text="" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" />
-                <Label fx:id="authorLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Label fx:id="dateLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                <Label fx:id="shaLbl" alignment="CENTER_RIGHT" text="shaLbl" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                <Label fx:id="refsLbl" text="" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                <Label fx:id="parentLbl" text="" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+
+                <ShaTextField fx:id="msgLbl" text="" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" />
+                <ShaTextField fx:id="authorLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <ShaTextField fx:id="dateLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <ShaTextField fx:id="shaLbl" alignment="CENTER_RIGHT" text="shaLbl" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                <ShaTextField fx:id="refsLbl" alignment="CENTER_RIGHT"  text="" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                <ShaTextField fx:id="parentLbl" alignment="CENTER_RIGHT"  text="" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                 <Label text="Email:" GridPane.rowIndex="2" />
-                <Label fx:id="emailLabel" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <ShaTextField fx:id="emailLabel" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             </children>
          <BorderPane.margin>
             <Insets left="5.0" top="5.0" />
