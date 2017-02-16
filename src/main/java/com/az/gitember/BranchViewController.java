@@ -29,6 +29,7 @@ import org.eclipse.jgit.revplot.PlotLane;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -113,7 +114,7 @@ public class BranchViewController implements Initializable {
                                         || prersonIndentContains(scmItem.getAuthorIdent(), searchText)
                                         || GitemberApp.getRepositoryService().getScmItems(scmItem, null)
                                         .stream()
-                                        .map( s-> s.getAttribute().getName())
+                                        .map(s -> s.getAttribute().getName())
                                         .collect(Collectors.joining(","))
                                         .toLowerCase()
                                         .contains(searchText)) {
@@ -133,7 +134,6 @@ public class BranchViewController implements Initializable {
         );
 
         laneTableColumn.setCellValueFactory(
-
                 c -> {
                     return new ObservableValue<Canvas>() {
                         @Override
@@ -163,16 +163,25 @@ public class BranchViewController implements Initializable {
                     };
                 }
         );
+        laneTableColumn.setSortable(false);
 
         authorTableColumn.setCellValueFactory(
                 c -> StringConstant.valueOf(c.getValue().getCommitterIdent().getName())
         );
+        authorTableColumn.setSortable(false);
+
         messageTableColumn.setCellValueFactory(
                 c -> StringConstant.valueOf(c.getValue().getShortMessage())
         );
+        messageTableColumn.setSortable(false);
+
+
         dateTableColumn.setCellValueFactory(
-                c -> StringConstant.valueOf(GitemberUtil.intToDate(c.getValue().getCommitTime()).toString())
+                c -> StringConstant.valueOf(
+                        GitemberUtil.formatDate(GitemberUtil.intToDate(c.getValue().getCommitTime()))
+                )
         );
+        dateTableColumn.setSortable(false);
 
         spacerPane = new Pane();
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
@@ -184,7 +193,7 @@ public class BranchViewController implements Initializable {
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     commitsTableView.refresh();
-                    if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
                         GitemberApp.entries.remove(oldValue);
                         GitemberApp.entries.add(newValue);
                     }

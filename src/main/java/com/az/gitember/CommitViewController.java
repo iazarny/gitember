@@ -1,9 +1,6 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.Const;
-import com.az.gitember.misc.ScmItem;
-import com.az.gitember.misc.ScmItemAttribute;
-import com.az.gitember.misc.ScmRevisionInformation;
+import com.az.gitember.misc.*;
 import com.az.gitember.ui.ActionCellValueFactory;
 import com.az.gitember.ui.AutoCompleteTextField;
 import com.az.gitember.ui.ShaTextField;
@@ -87,7 +84,7 @@ public class CommitViewController implements Initializable {
         this.msgLbl.setText(scmRevisionInformation.getFullMessage());
         this.authorLbl.setText(scmRevisionInformation.getAuthorName());
         this.emailLabel.setText(scmRevisionInformation.getAuthorEmail());
-        this.dateLbl.setText(scmRevisionInformation.getDate().toString());
+        this.dateLbl.setText(GitemberUtil.formatDate(scmRevisionInformation.getDate()));
         final StringJoiner stringJoiner = new StringJoiner(", ");
         if (scmRevisionInformation.getRef() != null){
             for (int i = 0; i < scmRevisionInformation.getRefCount(); i++) {
