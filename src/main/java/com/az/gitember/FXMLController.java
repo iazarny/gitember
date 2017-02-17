@@ -688,6 +688,7 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void exitActionHandler(ActionEvent actionEvent) {
+        GitRepositoryService.cleanUpTempFiles();
         Platform.exit();
     }
 

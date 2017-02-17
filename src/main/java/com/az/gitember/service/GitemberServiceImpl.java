@@ -20,10 +20,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -48,6 +45,7 @@ public class GitemberServiceImpl {
     private ToolBar progressBar;
     private ProgressBar operationProgressBar;
     private Label operationName;
+
 
     public void setProgressBar(ToolBar progressBar) {
         this.progressBar = progressBar;
@@ -668,9 +666,6 @@ public class GitemberServiceImpl {
             };
             prepareLongTask(longTask, null, null);
             new Thread(longTask).start();
-
-
         }
-
     }
 }

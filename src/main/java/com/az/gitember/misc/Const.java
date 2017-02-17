@@ -27,4 +27,8 @@ public interface Const {
     String SYSTEM_PROXY_PORT = "http.proxyPort";
     String SYSTEM_PROXY_USER = "http.proxyUser";
     String SYSTEM_PROXY_PASSWORD = "http.proxyPassword";
+
+    String PROP_FOLDER = ".gitember";
+    String PROP_FILE_NAME = "gitember.json";
+
 }

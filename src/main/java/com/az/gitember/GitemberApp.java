@@ -7,9 +7,6 @@ import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.GitemberServiceImpl;
 import com.az.gitember.service.SettingsServiceImpl;
 import javafx.application.Application;
-
-import static javafx.application.Application.launch;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,14 +23,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.DateFormat;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.LogManager;
 
 
 public class GitemberApp extends Application {
@@ -123,7 +120,7 @@ public class GitemberApp extends Application {
     public void start(Stage stage) throws Exception {
         final FXMLLoader fxmlLoader = new FXMLLoader();
 
-        try(InputStream is = WorkingCopyController.class.getResource("/fxml/Scene.fxml").openStream()) {
+        try (InputStream is = WorkingCopyController.class.getResource("/fxml/Scene.fxml").openStream()) {
             Parent root = fxmlLoader.load(is);
             FXMLController controller = fxmlLoader.getController();
             gitemberService.setProgressBar(controller.progressBar);
@@ -137,6 +134,10 @@ public class GitemberApp extends Application {
             stage.setScene(scene);
             stage.getIcons().add(new Image(GitemberApp.class.getResourceAsStream(Const.ICON)));
             stage.show();
+
+            stage.setOnCloseRequest(
+                    e -> GitRepositoryService.cleanUpTempFiles()
+            );
 
         }
 
@@ -193,6 +194,13 @@ public class GitemberApp extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+
+        try {
+            LogManager.getLogManager().readConfiguration(GitemberApp.class.getResourceAsStream("/log.properties"));
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
         launch(args);
     }
 

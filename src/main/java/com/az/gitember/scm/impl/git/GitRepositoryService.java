@@ -15,7 +15,6 @@ import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.errors.UnmergedPathException;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -54,7 +53,9 @@ import static org.eclipse.jgit.lib.IndexDiff.StageState.BOTH_DELETED;
  */
 public class GitRepositoryService {
 
-    Logger log = Logger.getLogger(GitRepositoryService.class.getName());
+    private final static Logger log = Logger.getLogger(GitRepositoryService.class.getName());
+
+    private final static List<File> tempFiles = new ArrayList<>();
 
     private final Repository repository;
 
@@ -429,6 +430,7 @@ public class GitRepositoryService {
     public String saveDiff(String treeName, String oldRevision, String newRevision, String fileName) throws Exception {
 
         final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX, Const.DIFF_EXTENSION);
+        GitRepositoryService.deleteOnExit(temp);
 
         AbstractTreeIterator oldTreeParser = prepareTreeParser(repository, oldRevision);
         AbstractTreeIterator newTreeParser = prepareTreeParser(repository, newRevision);
@@ -484,6 +486,7 @@ public class GitRepositoryService {
                            String fileName) throws Exception {
 
         final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX, Const.DIFF_EXTENSION);
+        GitRepositoryService.deleteOnExit(temp);
 
         try (Git git = new Git(repository);
              RevWalk rw = new RevWalk(repository);
@@ -534,6 +537,7 @@ public class GitRepositoryService {
         final File temp = File.createTempFile(
                 Const.TEMP_FILE_PREFIX,
                 fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+        GitRepositoryService.deleteOnExit(temp);
 
         try (RevWalk revWalk = new RevWalk(repository);
              OutputStream outputStream = new FileOutputStream(temp)) {
@@ -1326,10 +1330,8 @@ public class GitRepositoryService {
     }
 
     public void checkoutFile(final String fileName) {
-
         checkoutFile(fileName, null);
     }
-
 
     public RemoteOperationValue compressDatabase(ProgressMonitor defaultProgressMonitor) {
 
@@ -1345,4 +1347,23 @@ public class GitRepositoryService {
         }
 
     }
+
+
+    public static void deleteOnExit(File file) {
+        tempFiles.add(file);
+        log.log(Level.FINE, "File " + file.getAbsolutePath() + " will be deleted on exit");
+    }
+
+    public static void cleanUpTempFiles() {
+        for (File file : tempFiles) {
+            if (file.exists()) {
+                if (file.delete()) {
+                    log.log(Level.FINE, "File " + file.getAbsolutePath() + " was deleted");
+                } else {
+                    log.log(Level.FINE, "File " + file.getAbsolutePath() + " was not deleted");
+                }
+            }
+        }
+    }
+
 }

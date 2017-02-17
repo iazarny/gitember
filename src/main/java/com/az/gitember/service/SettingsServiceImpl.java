@@ -1,5 +1,6 @@
 package com.az.gitember.service;
 
+import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.Settings;
 import com.az.gitember.misc.Triplet;
@@ -23,8 +24,6 @@ public class SettingsServiceImpl {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static Logger log = Logger.getLogger(SettingsServiceImpl.class.getName());
 
-    private final static String PROP_FOLDER = ".gitember";
-    private final static String PROP_FILE_NAME = "gitember.json";
     private final static String SYSTEM_PROP_USER_HOME = "user.home";
     private final static String SYSTEM_PROP_OS_NAME = "os.name";
 
@@ -96,8 +95,8 @@ public class SettingsServiceImpl {
      */
     private String getAbsolutePathToPropertyFile() throws IOException {
         return Files.createDirectories(
-                Paths.get(System.getProperty(SYSTEM_PROP_USER_HOME), PROP_FOLDER)
-        ).toFile().getAbsolutePath() + File.separator + PROP_FILE_NAME;
+                Paths.get(System.getProperty(SYSTEM_PROP_USER_HOME), Const.PROP_FOLDER)
+        ).toFile().getAbsolutePath() + File.separator + Const.PROP_FILE_NAME;
     }
 
     /**
