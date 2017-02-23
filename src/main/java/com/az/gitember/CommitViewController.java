@@ -326,7 +326,11 @@ public class CommitViewController implements Initializable {
                 commitViewController.searchText.textProperty().addListener(
                         (observable, oldValue, newValue) -> {
                             commitViewController.changedFilesListView.refresh();
-                            if (oldValue != null && newValue!= null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+                            if (oldValue != null
+                                    && newValue!= null
+                                    && newValue.length() > oldValue.length()
+                                    && newValue.contains(oldValue)) {
+
                                 GitemberApp.entries.remove(oldValue);
                                 GitemberApp.entries.add(newValue);
                             }

@@ -64,7 +64,7 @@
     <center>
         <TableView fx:id="changedFilesListView" onMousePressed="#openItemTableViewDoubleClickedHandler" prefWidth="840.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <columns>
-                <TableColumn fx:id="actionTableColumn" prefWidth="50.0" style="-fx-font-size: 150%;  -fx-label-padding: 5px 0px 0px 10px" text="" />
+                <TableColumn fx:id="actionTableColumn" prefWidth="40.0" style="-fx-font-size: 120%;  -fx-label-padding: 2px 0px 0px 5px" text="" />
                 <TableColumn fx:id="fileTableColumn" prefWidth="840.00" text="File" />
             </columns>
             <contextMenu>
@@ -78,7 +78,6 @@
                         <MenuItem fx:id="openDiffMenuItem" mnemonicParsing="false" onAction="#openDiffItemMenuItemClickHandler" text="Show raw diff" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem fx:id="diffWithPrevVersionMenuItem" mnemonicParsing="false" onAction="#openDiffWithPreviosVersionMenuItemClickHandler" text="Difference with previous version" />
-
                         <MenuItem fx:id="diffWithCurrentVersionMenuItem" mnemonicParsing="false" onAction="#openDiffWithLatestVersionMenuItemClickHandler" text="Difference with latest version" />
                         <MenuItem fx:id="diffWithDiskVersionMenuItem" mnemonicParsing="false" onAction="#openDiffWithFileOnDiskMenuItemClickHandler" text="Difference with file on disk" />
                     </items>

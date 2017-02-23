@@ -91,18 +91,20 @@ public class GitemberServiceImpl {
     }
 
 
+
     /**
      * Checkout given branch into working copy.
      *
      * @param fullName given branch.
+     * @param newLocalName optional , new local branch wil be created if given
      */
-    public void checkout(final String fullName) {
+    public void checkout(final String fullName, final String newLocalName) {
         GitemberApp.getMainStage().getScene().setCursor(Cursor.WAIT);
 
         Task<Void> longTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                Ref ref = GitemberApp.getRepositoryService().checkoutLocalBranch(fullName);
+                GitemberApp.getRepositoryService().checkoutLocalBranch(fullName, newLocalName);
                 return null;
             }
         };

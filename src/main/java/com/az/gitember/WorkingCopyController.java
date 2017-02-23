@@ -271,7 +271,7 @@ public class WorkingCopyController implements Initializable {
         GitemberApp.getGitemberService().makeBranchOperation(
                 "Checkout",
                 "Please select branch to checkout",
-                s -> GitemberApp.getGitemberService().checkout(s));
+                s -> GitemberApp.getGitemberService().checkout(s, null));
     }
 
     /**

@@ -662,7 +662,7 @@ public class GitRepositoryService {
      * @param fileName
      * @throws Exception
      */
-    public void addFileToCommitStage(String fileName)  {
+    public void addFileToCommitStage(String fileName) {
         try (Git git = new Git(repository)) {
             git.add().addFilepattern(fileName).call();
         } catch (GitAPIException e) {
@@ -1251,13 +1251,22 @@ public class GitRepositoryService {
 
     }
 
-    public Ref checkoutLocalBranch(String name) throws GECheckoutConflictException, GEScmAPIException {
+    public Ref checkoutLocalBranch(final String name, final String newName) throws GECheckoutConflictException, GEScmAPIException {
         try (Git git = new Git(repository)) {
-            return git.checkout()
-                    .setCreateBranch(false)
-                    .setName(name)
-                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                    .call();
+            if (newName == null) {
+                return git.checkout()
+                        .setCreateBranch(false)
+                        .setName(name)
+                        .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
+                        .call();
+            } else {
+                return git.checkout()
+                        .setCreateBranch(true)
+                        .setName(newName)
+                        .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+                        .setStartPoint(name)
+                        .call();
+            }
         } catch (CheckoutConflictException e) {
             throw new GECheckoutConflictException(e.getMessage(), e.getConflictingPaths());
         } catch (Exception e) {

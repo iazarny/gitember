@@ -1,9 +1,6 @@
 package com.az.gitember;
 
-import com.az.gitember.misc.Const;
-import com.az.gitember.misc.ScmBranch;
-import com.az.gitember.misc.ScmRevisionInformation;
-import com.az.gitember.misc.Settings;
+import com.az.gitember.misc.*;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
@@ -54,6 +51,7 @@ public class FXMLController implements Initializable {
 
     public MenuItem pushToRemoteLocalBranchMenuItem;
     public MenuItem fetchLocalBranchMenuItem;
+    public MenuItem checkoutRemoteBranchMenuItem;
     public MenuItem checkoutLocalBranchMenuItem;
     public MenuItem createLocalBranchMenuItem;
     public MenuItem mergeLocalBranchMenuItem;
@@ -417,6 +415,9 @@ public class FXMLController implements Initializable {
 
     private ContextMenu createLocalBranchContextMenu() {
 
+        checkoutRemoteBranchMenuItem = new MenuItem("Checkout ...");
+        checkoutRemoteBranchMenuItem.setOnAction(this::remoteBranchCheckoutHandler);
+
         checkoutLocalBranchMenuItem = new MenuItem("Checkout");
         checkoutLocalBranchMenuItem.setOnAction(this::localBranchCheckoutHandler);
 
@@ -444,6 +445,7 @@ public class FXMLController implements Initializable {
         deleteStashCtxMenuItem.setOnAction(this::deleteStashHandler);
 
         contextMenu = new ContextMenu(
+                checkoutRemoteBranchMenuItem,
                 checkoutLocalBranchMenuItem,
                 createLocalBranchMenuItem,
                 mergeLocalBranchMenuItem,
@@ -457,7 +459,8 @@ public class FXMLController implements Initializable {
 
 
         contextMenuItemVisibilityLTR = new ArrayList<MenuItemAvailbility>() {{
-            add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, true, false));
+            add(new MenuItemAvailbility(checkoutRemoteBranchMenuItem, false, false, true, false));
+            add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, false, false));
             add(new MenuItemAvailbility(createLocalBranchMenuItem, true, true, true, false));
             add(new MenuItemAvailbility(mergeLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(fetchLocalBranchMenuItem, true, false, true, false));
@@ -480,8 +483,27 @@ public class FXMLController implements Initializable {
 
 
     @SuppressWarnings("unchecked")
+    public void remoteBranchCheckoutHandler(ActionEvent actionEvent) {
+        CheckoutOriginBranch dialog = new CheckoutOriginBranch(
+                "Checkout remote branch",
+                "Please, specify action for branch " + getScmBranch().getShortName(),
+                getScmBranch().getShortName());
+        Optional<Pair<Boolean, String>> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
+            if(dialogResult.get().getFirst()) {
+                GitemberApp.getGitemberService().checkout(getScmBranch().getFullName(), dialogResult.get().getSecond());
+
+            } else {
+                GitemberApp.getGitemberService().checkout(getScmBranch().getFullName(), null);
+
+            }
+        }
+    }
+
+
+    @SuppressWarnings("unchecked")
     public void localBranchCheckoutHandler(ActionEvent actionEvent) {
-        GitemberApp.getGitemberService().checkout(getScmBranch().getFullName());
+        GitemberApp.getGitemberService().checkout(getScmBranch().getFullName(), null);
     }
 
     @SuppressWarnings("unchecked")
