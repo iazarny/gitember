@@ -749,7 +749,9 @@ public class GitRepositoryService {
                     .setMessage(message);
 
             if (overwriteAuthorWithCommiter) {
-                cmd.setAuthor(cmd.getCommitter().getName(), cmd.getCommitter().getEmailAddress());
+                cmd.setAuthor(
+                        GitemberApp.getRepositoryService().getUserName(),
+                        GitemberApp.getRepositoryService().getUserEmail());
             }
 
 
