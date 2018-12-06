@@ -56,6 +56,7 @@ public class WorkingCopyController implements Initializable {
     public Button stashBtn;
     public Button commitBtn;
     public Button stageAllBtn;
+    public Button unStageAllBtn;
     public Button refreshBtn;
     //public Button searchButton;
     public Pane spacerPane;
@@ -153,6 +154,10 @@ public class WorkingCopyController implements Initializable {
         stageAllBtn = new Button("Stage all");
         stageAllBtn.setOnAction(this::stageAllBtnHandler);
         stageAllBtn.setId(Const.MERGED);
+
+        unStageAllBtn = new Button("Unstage all");
+        //stageAllBtn.setOnAction(this::stageAllBtnHandler);
+        unStageAllBtn.setId(Const.MERGED);
 
         commitBtn = new Button("Commit ...");
         commitBtn.setOnAction(this::commitHandler);
@@ -469,6 +474,7 @@ public class WorkingCopyController implements Initializable {
 
     /**
      * Resolve conflict using their changes.
+     *
      * @param event event
      */
     public void resolveUsingTheirChanges(Event event) {
@@ -478,6 +484,7 @@ public class WorkingCopyController implements Initializable {
 
     /**
      * Resolve conflict using my changes.
+     *
      * @param event event
      */
     public void resolveUsingMyChanges(Event event) {
@@ -547,6 +554,11 @@ public class WorkingCopyController implements Initializable {
     }
 
 
+    private boolean isStaged(ScmItem scmItem) {
+        return scmItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
+                || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED);
+    }
+
     private boolean isUnstaged(ScmItem scmItem) {
         return scmItem.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)
                 || scmItem.getAttribute().getStatus().contains(ScmItemStatus.MISSED)
@@ -577,6 +589,7 @@ public class WorkingCopyController implements Initializable {
         try {
             if (item != null) {
                 if (isUnstaged(item)) {
+                    System.out.println(item.getAttribute().getStatus());
                     if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
                         GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
@@ -591,14 +604,36 @@ public class WorkingCopyController implements Initializable {
                         GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
                     }
+                } else if (isStaged(item)) {
+
+
+                    /*private boolean isStaged(ScmItem scmItem) {
+        return scmItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
+                || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED);
+    }*/
+                    System.out.println(item.getAttribute().getStatus());
+                    if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
+                            && item.getAttribute().getStatus().contains(ScmItemStatus.CHANGED)
+                            && item.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)
+                            && item.getAttribute().getStatus().size() == 3) {
+                        GitemberApp.getRepositoryService().removeFileFromCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().clear();
+                        item.getAttribute().getStatus().add(ScmItemStatus.UNTRACKED);
+
+                    } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)
+                            && item.getAttribute().getStatus().size() == 1) {
+                        GitemberApp.getRepositoryService().removeFileFromCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().add(ScmItemStatus.MODIFIED);
+                    }
+
 
                 } else if (item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT)) {
 
                     // mark resolved. so nothing meaningful, just delete of add as it even.
                     if (ScmItemStatus.CONFLICT_DELETED_BY_THEM.equals(item.getAttribute().getSubstatus())
-                            ||ScmItemStatus.CONFLICT_DELETED_BY_US.equals(item.getAttribute().getSubstatus())
-                            ||ScmItemStatus.CONFLICT_BOTH_DELETED.equals(item.getAttribute().getSubstatus())
-                            ) {
+                            || ScmItemStatus.CONFLICT_DELETED_BY_US.equals(item.getAttribute().getSubstatus())
+                            || ScmItemStatus.CONFLICT_BOTH_DELETED.equals(item.getAttribute().getSubstatus())
+                    ) {
                         if (Files.exists(Paths.get(item.getShortName()))) {
                             GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                             item.getAttribute().getStatus().remove(ScmItemStatus.CONFLICT);
@@ -610,9 +645,9 @@ public class WorkingCopyController implements Initializable {
                             item.getAttribute().getStatus().add(ScmItemStatus.REMOVED);
                         }
                     } else if (ScmItemStatus.CONFLICT_ADDED_BY_US.equals(item.getAttribute().getSubstatus())
-                            ||ScmItemStatus.CONFLICT_ADDED_BY_THEM.equals(item.getAttribute().getSubstatus())
-                            ||ScmItemStatus.CONFLICT_BOTH_ADDED.equals(item.getAttribute().getSubstatus())
-                            ||ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
+                            || ScmItemStatus.CONFLICT_ADDED_BY_THEM.equals(item.getAttribute().getSubstatus())
+                            || ScmItemStatus.CONFLICT_BOTH_ADDED.equals(item.getAttribute().getSubstatus())
+                            || ScmItemStatus.CONFLICT_BOTH_MODIFIED.equals(item.getAttribute().getSubstatus())) {
                         GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.CONFLICT);
                         item.getAttribute().getStatus().add(ScmItemStatus.CHANGED);
@@ -643,6 +678,7 @@ public class WorkingCopyController implements Initializable {
 
 
             toolBar.getItems().add(workingCopyController.stageAllBtn);
+            toolBar.getItems().add(workingCopyController.unStageAllBtn);
             toolBar.getItems().add(workingCopyController.commitBtn);
             toolBar.getItems().add(workingCopyController.stashBtn);
             toolBar.getItems().add(workingCopyController.refreshBtn);

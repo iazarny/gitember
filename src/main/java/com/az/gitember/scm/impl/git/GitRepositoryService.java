@@ -662,12 +662,27 @@ public class GitRepositoryService {
      * @param fileName
      * @throws Exception
      */
-    public void addFileToCommitStage(String fileName) {
+    public void addFileToCommitStage(final String fileName) {
         try (Git git = new Git(repository)) {
             git.add().addFilepattern(fileName).call();
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Cannot add file to stage", e);
         }
+    }
+
+    /**
+     * git reset HEAD ...
+     * @param fileName
+     * @throws Exception
+     */
+    public void removeFileFromCommitStage(final String fileName) {
+        try (Git git = new Git(repository)) {
+            git.reset().addPath(fileName).call();
+        } catch (GitAPIException e) {
+            log.log(Level.WARNING, "Cannot unstage stage", e);
+        }
+
+
     }
 
 
@@ -769,11 +784,7 @@ public class GitRepositoryService {
 
     }
 
-    //TODO unstage
-    public void removeFileFromCommitStage(String fileName) throws Exception {
 
-
-    }
 
     /**
      * Create new git repository.
