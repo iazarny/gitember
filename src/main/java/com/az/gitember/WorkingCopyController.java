@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
+import javafx.util.Callback;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -53,6 +54,7 @@ public class WorkingCopyController implements Initializable {
     public TableColumn<ScmItem, FontIcon> statusTableColumn;
     public TableColumn<ScmItem, Boolean> selectTableColumn;
     public TableColumn<ScmItem, String> itemTableColumn;
+    public TableColumn<ScmItem, String> itemTableColumnColorStatus;
     public Button stashBtn;
     public Button commitBtn;
     public Button stageAllBtn;
@@ -87,6 +89,62 @@ public class WorkingCopyController implements Initializable {
                 c -> StringConstant.valueOf(c.getValue().getShortName())
         );
 
+        itemTableColumnColorStatus.setCellValueFactory(
+                c -> StringConstant.valueOf(" ")
+        );
+
+        itemTableColumnColorStatus.setCellFactory(
+
+                new Callback<TableColumn<ScmItem, String>,
+                        TableCell<ScmItem, String>>() {
+
+
+
+
+                    @Override
+                    public TableCell<ScmItem, String> call(TableColumn<ScmItem, String> param) {
+                        return new TableCell<ScmItem, String> () {
+
+
+
+                            @Override
+                            protected void updateItem(String item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (!empty) {
+                                    int currentIndex = indexProperty()
+                                            .getValue() < 0 ? 0
+                                            : indexProperty().getValue();
+                                    ScmItem currItem = param
+                                            .getTableView().getItems()
+                                            .get(currentIndex);
+
+                                    if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
+                                        setStyle("-fx-background-color: lightgreen;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
+                                        setStyle("-fx-background-color: lightgray;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
+                                        setStyle("-fx-background-color: lightblue;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
+                                        setStyle("-fx-background-color: green;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED_FOLDER)) {
+                                        setStyle("-fx-background-color: lightcoral;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
+                                        setStyle("-fx-background-color: lightcoral;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)) {
+                                        setStyle("-fx-background-color: lightblue;");
+                                    }
+                                    System.out.println("### " + currItem.getAttribute().getStatus());
+
+                                }
+                            }
+                        };
+                    }
+
+
+                }
+
+        );
+
         statusTableColumn.setCellValueFactory(
                 c -> new StatusCellValueFactory(c.getValue().getAttribute().getStatus())
         ); //TODO add tooltip
@@ -102,31 +160,19 @@ public class WorkingCopyController implements Initializable {
                     return new TableRow<ScmItem>() {
 
                         private String calculateStyle(final ScmItem scmItem) {
-                            if (scmItem != null
-                                    && WorkingCopyController.this.searchText.getText() != null
-                                    && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
+                            StringBuilder sb = new StringBuilder();
+                            if (scmItem != null) {
+                                if (WorkingCopyController.this.searchText.getText() != null
+                                        && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
+                                    if (scmItem.getShortName().toLowerCase().contains(
+                                            WorkingCopyController.this.searchText.getText().toLowerCase())) {
+                                        sb.append("-fx-font-weight: bold;");
+                                    }
 
-                                if (scmItem.getShortName().toLowerCase().contains(WorkingCopyController.this.searchText.getText().toLowerCase())) {
-                                    return "-fx-font-weight: bold;";
                                 }
-                                /*ScmItemAttribute attr = scmItem.getAttribute();
-                                if (attr != null) {
-
-                                }
-
-                                if (item.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
-                                    //-fx-font-weight: bold;
-                                    setStyle(calculateStyle(item));
-                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
-                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
-                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
-                                } else if (item.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-
-                                }*/
-
 
                             }
-                            return "";
+                            return  sb.toString();
 
                         }
 
@@ -156,7 +202,7 @@ public class WorkingCopyController implements Initializable {
         stageAllBtn.setId(Const.MERGED);
 
         unStageAllBtn = new Button("Unstage all");
-        //stageAllBtn.setOnAction(this::stageAllBtnHandler);
+        //stageAllBtn.setOnAction(this::stageAllBtnHandler); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         unStageAllBtn.setId(Const.MERGED);
 
         commitBtn = new Button("Commit ...");
@@ -589,7 +635,7 @@ public class WorkingCopyController implements Initializable {
         try {
             if (item != null) {
                 if (isUnstaged(item)) {
-                    System.out.println(item.getAttribute().getStatus());
+                    System.out.println("UNSTAGED >>>> " + item.getAttribute().getStatus());
                     if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
                         GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);
@@ -611,8 +657,14 @@ public class WorkingCopyController implements Initializable {
         return scmItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
                 || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED);
     }*/
-                    System.out.println(item.getAttribute().getStatus());
-                    if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
+                    System.out.println("STAGED >>> " + item.getAttribute().getStatus());
+                    if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)
+                            && item.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)
+                            && item.getAttribute().getStatus().size() == 2) {
+                        GitemberApp.getRepositoryService().removeFileFromCommitStage(item.getShortName());
+                        item.getAttribute().getStatus().remove(ScmItemStatus.REMOVED);
+                        item.getAttribute().getStatus().add(ScmItemStatus.MISSED);
+                    } else if (item.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
                             && item.getAttribute().getStatus().contains(ScmItemStatus.CHANGED)
                             && item.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)
                             && item.getAttribute().getStatus().size() == 3) {

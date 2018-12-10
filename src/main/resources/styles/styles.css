@@ -29,7 +29,6 @@
 
 .copy-label, .copy-label:focused {
     -fx-background-color: transparent ;
-   /* -fx-background-color: transparent ;*/
     -fx-background-insets: 0px ;
     -fx-border-style: none;
     -fx-border-width: 0px;
@@ -37,6 +36,13 @@
     -fx-pref-width: 350px;
 }
 
+
+#fancytext {
+    -fx-font: 100px Tahoma;
+    -fx-fill: linear-gradient(from 0% 0% to 100% 200%, repeat, aqua 0%, red 50%);
+    -fx-stroke: black;
+    -fx-stroke-width: 1;
+}
 
 
 /*
