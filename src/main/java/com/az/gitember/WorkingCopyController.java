@@ -98,14 +98,9 @@ public class WorkingCopyController implements Initializable {
                 new Callback<TableColumn<ScmItem, String>,
                         TableCell<ScmItem, String>>() {
 
-
-
-
                     @Override
                     public TableCell<ScmItem, String> call(TableColumn<ScmItem, String> param) {
                         return new TableCell<ScmItem, String> () {
-
-
 
                             @Override
                             protected void updateItem(String item, boolean empty) {
@@ -117,24 +112,25 @@ public class WorkingCopyController implements Initializable {
                                     ScmItem currItem = param
                                             .getTableView().getItems()
                                             .get(currentIndex);
-
+                                    System.out.println("### " + currItem + " " +currItem.getAttribute().getStatus());
                                     if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
-                                        setStyle("-fx-background-color: lightgreen;");
+                                        setStyle("-fx-background-color: #49ee52;");
                                     } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
-                                        setStyle("-fx-background-color: lightgray;");
-                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)) {
-                                        setStyle("-fx-background-color: lightblue;");
-                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)) {
-                                        setStyle("-fx-background-color: green;");
+                                        setStyle("-fx-background-color: #a3a3a3;");
+                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT)) {
+                                        setStyle("-fx-background-color: #dd37d4;");
                                     } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED_FOLDER)) {
-                                        setStyle("-fx-background-color: lightcoral;");
+                                        setStyle("-fx-background-color: #f0262b;");
                                     } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNTRACKED)) {
-                                        setStyle("-fx-background-color: lightcoral;");
-                                    } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)) {
-                                        setStyle("-fx-background-color: lightblue;");
-                                    }
-                                    System.out.println("### " + currItem.getAttribute().getStatus());
+                                        setStyle("-fx-background-color: #f0262b;");
+                                    } else if (
+                                            (currItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED) && currItem.getAttribute().getStatus().size() == 1)
+                                            || (currItem.getAttribute().getStatus().contains(ScmItemStatus.REMOVED) && currItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED))
+                                            || (currItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED) && currItem.getAttribute().getStatus().contains(ScmItemStatus.CHANGED))
 
+                                            ) {
+                                        setStyle("-fx-background-color: #517de6;");
+                                    }
                                 }
                             }
                         };

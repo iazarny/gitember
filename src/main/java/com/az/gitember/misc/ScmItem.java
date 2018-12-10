@@ -19,6 +19,6 @@ public class ScmItem extends Pair<String, ScmItemAttribute> {
 
     @Override
     public String toString() {
-        return super.toString();
+        return "ScmItem " + getShortName() + " " + getAttribute();
     }
 }
