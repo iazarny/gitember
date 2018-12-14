@@ -1,10 +1,8 @@
 package com.az.gitember;
 
 import com.az.gitember.misc.*;
-import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
 import com.az.gitember.ui.AutoCompleteTextField;
-import com.az.gitember.ui.CommitDialog;
 import com.az.gitember.ui.StatusCellValueFactory;
 import com.sun.javafx.binding.StringConstant;
 import difflib.DiffUtils;
@@ -24,7 +22,6 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.text.Text;
 import javafx.util.Callback;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -35,7 +32,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -67,7 +63,8 @@ public class WorkingCopyController implements Initializable {
 
     public ContextMenu scmItemContextMenu;
     public MenuItem revertMenuItem;
-    public MenuItem addFileMenuItem;
+    public MenuItem stageFileMenuItem;
+    public MenuItem unstageFileMenuItem;
     public MenuItem openFileMenuItem;
     public MenuItem showHistoryMenuItem;
     public MenuItem showDiffMenuItem;
@@ -106,6 +103,7 @@ public class WorkingCopyController implements Initializable {
                             protected void updateItem(String item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (!empty) {
+
                                     int currentIndex = indexProperty()
                                             .getValue() < 0 ? 0
                                             : indexProperty().getValue();
@@ -183,7 +181,8 @@ public class WorkingCopyController implements Initializable {
                                     conflictResolveUsingMy.setVisible(isConflict);
                                     conflictResolveUsingTheir.setVisible(isConflict);
                                     conflictResolved.setVisible(isConflict);
-                                    addFileMenuItem.setVisible(!isConflict);
+                                    stageFileMenuItem.setVisible(!isConflict  && isUnstaged(item));
+                                    unstageFileMenuItem.setVisible(!isConflict  && isStaged(item));
                                     revertMenuItem.setVisible(!isConflict);
                                     showDiffMenuItem.setVisible(!isConflict);
                                 });
@@ -261,8 +260,11 @@ public class WorkingCopyController implements Initializable {
         revertMenuItem = new MenuItem("Revert changes ...");
         revertMenuItem.setOnAction(this::revertEventHandler);
 
-        addFileMenuItem = new MenuItem("Add item to stage");
-        addFileMenuItem.setOnAction(this::addItemToStageMiEventHandler);
+        stageFileMenuItem = new MenuItem("Add item to stage");
+        stageFileMenuItem.setOnAction(this::stageMiEventHandler);
+
+        unstageFileMenuItem = new MenuItem("Unstage");
+        unstageFileMenuItem.setOnAction(this::untageMiEventHandler);
 
 
         openFileMenuItem = new MenuItem("Open item");
@@ -282,7 +284,7 @@ public class WorkingCopyController implements Initializable {
         conflictResolveUsingTheir.setOnAction(this::resolveUsingTheirChanges);
 
         conflictResolved = new MenuItem("Mark resolved");
-        conflictResolved.setOnAction(this::addItemToStageMiEventHandler);
+        conflictResolved.setOnAction(this::stageMiEventHandler);
 
 
         scmItemContextMenu = new ContextMenu(
@@ -290,7 +292,8 @@ public class WorkingCopyController implements Initializable {
                 conflictResolveUsingTheir,
                 conflictResolved,
                 revertMenuItem,
-                addFileMenuItem,
+                stageFileMenuItem,
+                unstageFileMenuItem,
                 new SeparatorMenuItem(),
                 openFileMenuItem,
                 new SeparatorMenuItem(),
@@ -366,6 +369,7 @@ public class WorkingCopyController implements Initializable {
                         }
                     }
                     GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
+                    workingCopyTableView.refresh();
                 }
                 )
         );
@@ -403,7 +407,7 @@ public class WorkingCopyController implements Initializable {
      */
     @SuppressWarnings({"unchecked", "unused"})
     public void stageAllBtnHandler(ActionEvent actionEvent) {
-        workingCopyTableView.getItems().stream().forEach(i -> stageItem((ScmItem) i));
+        workingCopyTableView.getItems().stream().forEach(i -> stageUnstageItem((ScmItem) i));
         workingCopyTableView.refresh();
     }
 
@@ -465,10 +469,24 @@ public class WorkingCopyController implements Initializable {
      * @param event event
      */
     @SuppressWarnings("unused")
-    public void addItemToStageMiEventHandler(Event event) {
+    public void stageMiEventHandler(Event event) {
         ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
         if (item != null) {
             stageItem(item);
+            workingCopyTableView.refresh();
+        }
+    }
+
+    /**
+     * Add file to stage from context menu.
+     *
+     * @param event event
+     */
+    @SuppressWarnings("unused")
+    public void untageMiEventHandler(Event event) {
+        ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
+        if (item != null) {
+            unstageItem(item);
             workingCopyTableView.refresh();
         }
     }
@@ -619,10 +637,9 @@ public class WorkingCopyController implements Initializable {
             CheckBoxTableCell cell = (CheckBoxTableCell) event.getTarget();
             if (cell.getTableColumn() == this.selectTableColumn) {
                 ScmItem item = (ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem();
-                stageItem(item);
+                stageUnstageItem(item);
                 workingCopyTableView.refresh();
             }
-            //TODO V2 unstage changes
         }
     }
 
@@ -646,14 +663,18 @@ public class WorkingCopyController implements Initializable {
                         GitemberApp.getRepositoryService().addFileToCommitStage(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MODIFIED);
                     }
-                } else if (isStaged(item)) {
+                }
+            }
+        } catch (Exception e) {
+            GitemberApp.showException("Cannot add item " + item.getShortName() + " to stage", e);
+        }
+    }
 
 
-                    /*private boolean isStaged(ScmItem scmItem) {
-        return scmItem.getAttribute().getStatus().contains(ScmItemStatus.ADDED)
-                || scmItem.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED);
-    }*/
-                    System.out.println("STAGED >>> " + item.getAttribute().getStatus());
+    private void unstageItem(ScmItem item) {
+        try {
+            if (item != null) {
+                if (isStaged(item)) {
                     if (item.getAttribute().getStatus().contains(ScmItemStatus.REMOVED)
                             && item.getAttribute().getStatus().contains(ScmItemStatus.UNCOMMITED)
                             && item.getAttribute().getStatus().size() == 2) {
@@ -673,8 +694,20 @@ public class WorkingCopyController implements Initializable {
                         GitemberApp.getRepositoryService().removeFileFromCommitStage(item.getShortName());
                         item.getAttribute().getStatus().add(ScmItemStatus.MODIFIED);
                     }
+                }
+            }
+        } catch (Exception e) {
+            GitemberApp.showException("Cannot unstage item " + item.getShortName(), e);
+        }
+    }
 
-
+    private void stageUnstageItem(ScmItem item) {
+        try {
+            if (item != null) {
+                if (isUnstaged(item)) {
+                    stageItem(item);
+                } else if (isStaged(item)) {
+                    unstageItem(item);
                 } else if (item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT)) {
 
                     // mark resolved. so nothing meaningful, just delete of add as it even.
