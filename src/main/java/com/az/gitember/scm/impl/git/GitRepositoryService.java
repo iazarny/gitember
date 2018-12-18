@@ -955,7 +955,10 @@ public class GitRepositoryService {
                         new UsernamePasswordCredentialsProvider(userName, password));
             }
             PullResult pullRez = pullCommand.call();
-            return new RemoteOperationValue(pullRez.toString());
+            if (pullRez.isSuccessful()) {
+                return new RemoteOperationValue(pullRez.getMergeResult().getMergeStatus().toString());
+            }
+            return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, pullRez.toString());
         } catch (CheckoutConflictException conflictException) {
             return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
 
