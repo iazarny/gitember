@@ -110,7 +110,6 @@ public class WorkingCopyController implements Initializable {
                                     ScmItem currItem = param
                                             .getTableView().getItems()
                                             .get(currentIndex);
-                                    System.out.println("### " + currItem + " " +currItem.getAttribute().getStatus());
                                     if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MODIFIED)) {
                                         setStyle("-fx-background-color: #49ee52;");
                                     } else if (currItem.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
@@ -182,7 +181,8 @@ public class WorkingCopyController implements Initializable {
                                     conflictResolveUsingTheir.setVisible(isConflict);
                                     conflictResolved.setVisible(isConflict);
                                     stageFileMenuItem.setVisible(!isConflict  && isUnstaged(item));
-                                    unstageFileMenuItem.setVisible(!isConflict  && isStaged(item));
+                                    //unstageFileMenuItem.setVisible(stageFileMenuItem.isVisible());
+                                    //unstageFileMenuItem.setVisible(!isConflict  && isStaged(item));
                                     revertMenuItem.setVisible(!isConflict);
                                     showDiffMenuItem.setVisible(!isConflict);
                                 });
@@ -648,7 +648,6 @@ public class WorkingCopyController implements Initializable {
         try {
             if (item != null) {
                 if (isUnstaged(item)) {
-                    System.out.println("UNSTAGED >>>> " + item.getAttribute().getStatus());
                     if (item.getAttribute().getStatus().contains(ScmItemStatus.MISSED)) {
                         GitemberApp.getRepositoryService().removeMissedFile(item.getShortName());
                         item.getAttribute().getStatus().remove(ScmItemStatus.MISSED);

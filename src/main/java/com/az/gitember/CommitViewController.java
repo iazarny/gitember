@@ -214,7 +214,6 @@ public class CommitViewController implements Initializable {
         List<String> oldFileLines = Files.readAllLines(Paths.get(oldFile));
         Patch<String> pathc = DiffUtils.diff(oldFileLines, newFileLines);
 
-        System.out.println(newFile);
 
         final DiffViewController fileViewController = new DiffViewController();
         fileViewController.openFile(

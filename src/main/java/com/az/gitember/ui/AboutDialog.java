@@ -125,9 +125,9 @@ public class AboutDialog extends Dialog {
 
         Path path = new Path();
 
-        path.setStrokeWidth(10);
-        path.setStroke(javafx.scene.paint.Color.valueOf("#808080"));
-        path.setFill(javafx.scene.paint.Color.valueOf("#2e7cdb"));
+        path.setStrokeWidth(30);
+        path.setStroke(javafx.scene.paint.Color.valueOf("#42f4dc"));
+        path.setFill(javafx.scene.paint.Color.valueOf("#3e7cef"));
 
 
         path.getElements().add(new MoveTo(
