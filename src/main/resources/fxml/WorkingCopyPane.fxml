@@ -12,17 +12,14 @@
     </top>
     <center>
         <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0"
-                   prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+                   prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS" >
             <columns>
                 <TableColumn fx:id="itemTableColumnColorStatus" resizable="false" style="-fx-border-width: 0; -fx-font-size: 165%;  -fx-label-padding: 12px 0px 0px 5px;"  prefWidth="10.00" text="" />
                 <TableColumn fx:id="selectTableColumn" resizable="false" style="-fx-border-width: 0;  -fx-padding: 0px 0px 0px 10px;" prefWidth="40.0"  text="" />
                 <TableColumn fx:id="statusTableColumn" resizable="false" style="-fx-border-width: 0; -fx-font-size: 165%;  -fx-label-padding: 12px 0px 0px 5px;"  prefWidth="40.00" text="" />
-                <TableColumn fx:id="itemTableColumn" style="-fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;" text="File"  prefWidth="-1" minWidth="800"/>
+                <TableColumn fx:id="itemTableColumn" style="-fx-font-size: 165%; -fx-border-width: 0;  -fx-label-padding: 12px 0px 0px 5px;" text="File"  prefWidth="-1" minWidth="800"/>
             </columns>
-
-
-
-
         </TableView>
     </center>
 </BorderPane>

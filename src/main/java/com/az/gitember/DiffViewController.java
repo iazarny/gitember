@@ -227,6 +227,10 @@ public class DiffViewController extends BaseFileViewController {
                         diffIdx++;
                         oldCodeArea.moveTo(paragraphDiffList.get(diffIdx).getFirst().getFirst(), 0);
                         newCodeArea.moveTo(paragraphDiffList.get(diffIdx).getSecond().getFirst(), 0);
+                        oldCodeArea.requestFollowCaret();
+                        oldCodeArea.layout();
+                        newCodeArea.requestFollowCaret();
+                        newCodeArea.layout();
                         newVSPane.fireEvent(secScrollEvt);
                         oldVSPane.fireEvent(secScrollEvt);
                         FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );
@@ -240,6 +244,10 @@ public class DiffViewController extends BaseFileViewController {
                         diffIdx--;
                         oldCodeArea.moveTo(paragraphDiffList.get(diffIdx).getFirst().getFirst(), 0);
                         newCodeArea.moveTo(paragraphDiffList.get(diffIdx).getSecond().getFirst(), 0);
+                        oldCodeArea.requestFollowCaret();
+                        oldCodeArea.layout();
+                        newCodeArea.requestFollowCaret();
+                        newCodeArea.layout();
                         newVSPane.fireEvent(secScrollEvt);
                         oldVSPane.fireEvent(secScrollEvt);
                         FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );
@@ -457,14 +465,18 @@ public class DiffViewController extends BaseFileViewController {
 
         highlightParagraphDifference();
 
-        Optional<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> p = paragraphDiffList
-                .stream().findFirst();
-
-        if (p.isPresent()) {
-            diffIdx = 0;
-            oldCodeArea.moveTo(p.get().getFirst().getFirst(), 0);
-            newCodeArea.moveTo(p.get().getSecond().getFirst(), 0);
-        }
+        paragraphDiffList
+                .stream()
+                .findFirst()
+                .ifPresent(pairPairPair -> {
+                    diffIdx = 0;
+                    oldCodeArea.moveTo(pairPairPair.getFirst().getFirst(), 0);
+                    oldCodeArea.requestFollowCaret();
+                    oldCodeArea.layout();
+                    newCodeArea.moveTo(pairPairPair.getSecond().getFirst(), 0);
+                    newCodeArea.requestFollowCaret();
+                    newCodeArea.layout();
+        });
 
 
         Scene scene = new Scene(gridPanel, 1024, 768);
@@ -477,7 +489,7 @@ public class DiffViewController extends BaseFileViewController {
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.show();
 
-        FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0) );
+        FxTimer.runLater( Duration.ofMillis(DELAY),  () -> paintChanges(0, 0));
 
         eventSubscription();
 
