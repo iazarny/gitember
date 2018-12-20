@@ -180,11 +180,13 @@ public class WorkingCopyController implements Initializable {
                                     conflictResolveUsingMy.setVisible(isConflict);
                                     conflictResolveUsingTheir.setVisible(isConflict);
                                     conflictResolved.setVisible(isConflict);
-                                    stageFileMenuItem.setVisible(!isConflict  && isUnstaged(item));
-                                    //unstageFileMenuItem.setVisible(stageFileMenuItem.isVisible());
-                                    //unstageFileMenuItem.setVisible(!isConflict  && isStaged(item));
+
+                                    stageFileMenuItem.setDisable(!isUnstaged(item));
+                                    unstageFileMenuItem.setDisable(isUnstaged(item));
+
                                     revertMenuItem.setVisible(!isConflict);
                                     showDiffMenuItem.setVisible(!isConflict);
+
                                 });
                             }
                         }
@@ -197,7 +199,7 @@ public class WorkingCopyController implements Initializable {
         stageAllBtn.setId(Const.MERGED);
 
         unStageAllBtn = new Button("Unstage all");
-        //stageAllBtn.setOnAction(this::stageAllBtnHandler); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        unStageAllBtn.setOnAction(this::unstageAllBtnHandler);
         unStageAllBtn.setId(Const.MERGED);
 
         commitBtn = new Button("Commit ...");
@@ -407,7 +409,22 @@ public class WorkingCopyController implements Initializable {
      */
     @SuppressWarnings({"unchecked", "unused"})
     public void stageAllBtnHandler(ActionEvent actionEvent) {
-        workingCopyTableView.getItems().stream().forEach(i -> stageUnstageItem((ScmItem) i));
+        workingCopyTableView.getItems().stream()
+                .filter(i -> (isUnstaged((ScmItem) i)))
+                .forEach(i -> stageUnstageItem((ScmItem) i));
+        workingCopyTableView.refresh();
+    }
+
+    /**
+     * Unstage all changes
+     *
+     * @param actionEvent event
+     */
+    @SuppressWarnings({"unchecked", "unused"})
+    public void unstageAllBtnHandler(ActionEvent actionEvent) {
+        workingCopyTableView.getItems().stream()
+                .filter(i -> (!isUnstaged((ScmItem) i)))
+                .forEach(i -> stageUnstageItem((ScmItem) i));
         workingCopyTableView.refresh();
     }
 
