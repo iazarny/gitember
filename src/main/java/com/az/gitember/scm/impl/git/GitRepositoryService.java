@@ -8,6 +8,7 @@ import com.az.gitember.scm.exception.GEScmAPIException;
 import javafx.scene.control.Alert;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
+import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -234,6 +235,24 @@ public class GitRepositoryService {
             log.log(Level.SEVERE, "Cannot get tags", e);
         }
         return Collections.emptyList();
+    }
+
+
+    public void blame(final String fileName) throws Exception {
+        try (Git git = new Git(repository)) {
+
+            BlameCommand blamer = new BlameCommand(repository);
+
+            ObjectId commitID = repository.resolve("HEAD~~");
+            blamer.setStartCommit(commitID);
+            blamer.setFilePath("README.md");
+            BlameResult blame = blamer.call();
+
+            System.out.println(blame);
+
+
+
+        }
     }
 
 

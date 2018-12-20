@@ -169,7 +169,7 @@
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem text="Crete statistic report ..." fx:id="statReportMenuItem" disable="true">
+                                <MenuItem text="Create statistic report ..." fx:id="statReportMenuItem" disable="true" onAction="#createStatReport">
                                     <graphic>
                                         <StackedFontIcon>
                                             <FontIcon iconLiteral="fa-pie-chart" StackedFontIcon.iconSize="0.5"/>

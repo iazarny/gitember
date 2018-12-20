@@ -641,6 +641,15 @@ public class GitemberServiceImpl {
         }
     }
 
+    public void createStatReport() {
+        try {
+            GitemberApp.getRepositoryService().blame("README.md");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void compressDatabase() {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
