@@ -151,11 +151,13 @@
     </build>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
         <dependency>
-           <groupId>org.eclipse.jgit</groupId>
-           <artifactId>org.eclipse.jgit</artifactId>
-           <version>4.5.0.201609210915-r</version>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>5.2.0.201812061821-r</version>
         </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
