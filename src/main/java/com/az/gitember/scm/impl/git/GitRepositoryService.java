@@ -28,6 +28,7 @@ import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
@@ -238,51 +239,6 @@ public class GitRepositoryService {
     }
 
 
-
-
-
-
-    /*public String saveFile(String treeName, String revisionName,
-                           String fileName) throws IOException {
-
-        final ObjectId lastCommitId = repository.resolve(revisionName);
-        final String fileNameExtension = GitemberUtil.getExtension(fileName);
-        final File temp = File.createTempFile(
-                Const.TEMP_FILE_PREFIX,
-                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-        GitRepositoryService.deleteOnExit(temp);
-
-        try (RevWalk revWalk = new RevWalk(repository);
-             OutputStream outputStream = new FileOutputStream(temp)) {
-
-            RevCommit commit = revWalk.parseCommit(lastCommitId);
-            // and using commit's tree find the path
-            RevTree tree = commit.getTree();
-
-            // now try to find a specific file
-            try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-                treeWalk.setFilter(PathFilter.create(fileName));
-                if (!treeWalk.next()) {
-                    throw new IllegalStateException("Did not find expected file " + fileName);
-                }
-
-
-                ObjectId objectId = treeWalk.getObjectId(0);
-                ObjectLoader loader = repository.open(objectId);
-
-                // and then one can the loader to read the file
-                loader.copyTo(outputStream);
-            }
-
-            revWalk.dispose();
-        }
-
-        return temp.getAbsolutePath();
-    }*/
-
-
     public void blame(final String treeName) throws Exception {
 
         PlotCommitList<PlotLane> plotCommitList = getCommitsByTree(treeName);
@@ -290,56 +246,23 @@ public class GitRepositoryService {
                 s->{
                     System.out.println(s);
 
-
-
                     try( TreeWalk treeWalk = new TreeWalk( repository ) ) {
-                        treeWalk.reset(  );
+                        treeWalk.reset( s.getId() );
+                        treeWalk.setRecursive(true);
+                        treeWalk.addTree(new FileTreeIterator(repository));
                         while( treeWalk.next() ) {
                             String path = treeWalk.getPathString();
                             // ...
-                            System.out.println(path);
+                            System.out.print(" " + path);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
 
                     }
 
-
                 }
         );
 
-        /*TreeWalk treeWalk = new TreeWalk(repository);
-
-        RevCommit commit = treeWalk.parseCommit(head.getObjectId());
-        RevTree tree = commit.getTree();
-
-
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(false);
-        while (treeWalk.next()) {
-            if (treeWalk.isSubtree()) {
-                System.out.println("dir: " + treeWalk.getPathString());
-                treeWalk.enterSubtree();
-            } else {
-                System.out.println("file: " + treeWalk.getPathString());
-            }
-        }*/
-
-        /*getFiles();
-        try (Git git = new Git(repository)) {
-
-            BlameCommand blamer = new BlameCommand(repository);
-
-            ObjectId commitID = repository.resolve("HEAD~~");
-            blamer.setStartCommit(commitID);
-            blamer.setFilePath("README.md");
-            BlameResult blame = blamer.call();
-
-            System.out.println(blame);
-
-
-
-        }*/
     }
 
 
