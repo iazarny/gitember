@@ -238,7 +238,94 @@ public class GitRepositoryService {
     }
 
 
-    public void blame(final String fileName) throws Exception {
+
+
+
+
+    /*public String saveFile(String treeName, String revisionName,
+                           String fileName) throws IOException {
+
+        final ObjectId lastCommitId = repository.resolve(revisionName);
+        final String fileNameExtension = GitemberUtil.getExtension(fileName);
+        final File temp = File.createTempFile(
+                Const.TEMP_FILE_PREFIX,
+                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+        GitRepositoryService.deleteOnExit(temp);
+
+        try (RevWalk revWalk = new RevWalk(repository);
+             OutputStream outputStream = new FileOutputStream(temp)) {
+
+            RevCommit commit = revWalk.parseCommit(lastCommitId);
+            // and using commit's tree find the path
+            RevTree tree = commit.getTree();
+
+            // now try to find a specific file
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(fileName));
+                if (!treeWalk.next()) {
+                    throw new IllegalStateException("Did not find expected file " + fileName);
+                }
+
+
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repository.open(objectId);
+
+                // and then one can the loader to read the file
+                loader.copyTo(outputStream);
+            }
+
+            revWalk.dispose();
+        }
+
+        return temp.getAbsolutePath();
+    }*/
+
+
+    public void blame(final String treeName) throws Exception {
+
+        PlotCommitList<PlotLane> plotCommitList = getCommitsByTree(treeName);
+        plotCommitList.forEach(
+                s->{
+                    System.out.println(s);
+
+
+
+                    try( TreeWalk treeWalk = new TreeWalk( repository ) ) {
+                        treeWalk.reset(  );
+                        while( treeWalk.next() ) {
+                            String path = treeWalk.getPathString();
+                            // ...
+                            System.out.println(path);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }
+
+
+                }
+        );
+
+        /*TreeWalk treeWalk = new TreeWalk(repository);
+
+        RevCommit commit = treeWalk.parseCommit(head.getObjectId());
+        RevTree tree = commit.getTree();
+
+
+        treeWalk.addTree(tree);
+        treeWalk.setRecursive(false);
+        while (treeWalk.next()) {
+            if (treeWalk.isSubtree()) {
+                System.out.println("dir: " + treeWalk.getPathString());
+                treeWalk.enterSubtree();
+            } else {
+                System.out.println("file: " + treeWalk.getPathString());
+            }
+        }*/
+
+        /*getFiles();
         try (Git git = new Git(repository)) {
 
             BlameCommand blamer = new BlameCommand(repository);
@@ -252,7 +339,7 @@ public class GitRepositoryService {
 
 
 
-        }
+        }*/
     }
 
 
@@ -606,10 +693,6 @@ public class GitRepositoryService {
             Status status = statusCommand.call();
 
             Map<String, IndexDiff.StageState> conflictingStageState = status.getConflictingStageState();
-//            for(Map.Entry<String, IndexDiff.StageState> entry : conflictingStageState.entrySet()) {
-            //              System.out.println("ConflictingState: " + entry);
-            //        }
-
 
             status.getConflicting().forEach(item -> enrichStatus(statusMap, item, ScmItemStatus.CONFLICT));
             status.getAdded().forEach(s -> enrichStatus(statusMap, s, ScmItemStatus.ADDED));

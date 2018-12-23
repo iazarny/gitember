@@ -643,7 +643,9 @@ public class GitemberServiceImpl {
 
     public void createStatReport() {
         try {
-            GitemberApp.getRepositoryService().blame("README.md");
+            GitemberApp.getRepositoryService().blame(
+                    GitemberApp.workingBranch.get().getFullName()
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }
