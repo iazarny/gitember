@@ -96,6 +96,7 @@ public class HighlightProvider {
         String SEMICOLON_PATTERN = "\\;";
         String DIGIT_PATTERN = "\\p{Digit}+";
         String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
+        String COMMENT_PATTERN = "//[^\n]*(.|\\R)*?";
         //String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
 
 
@@ -107,7 +108,7 @@ public class HighlightProvider {
                         + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
                         + "|(?<DIGIT>" + DIGIT_PATTERN + ")"
                         + "|(?<STRING>" + STRING_PATTERN + ")"
-                      //  + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
+                        + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
         );
     }
 

@@ -166,8 +166,8 @@ public class CommitViewController implements Initializable {
             fileViewController.openFile(
                     GitemberApp.getRepositoryService().saveFile(treeName, revisionFullName, fileName),
                     fileName);
-        } catch (Exception e) {       //todo error dialog
-            e.printStackTrace();
+        } catch (Exception e) {
+            GitemberApp.showResult("Could not open file: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
