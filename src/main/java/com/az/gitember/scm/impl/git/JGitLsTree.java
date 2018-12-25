@@ -29,12 +29,12 @@ import org.eclipse.jgit.util.QuotedString;
  */
 public class JGitLsTree {
 
-    static List<String> prevList = null;
+    static Set<String> prevList = null;
 
     public static void main(String args[]) throws Exception {
 
 
-        TreeMap<RevCommit, List<String>> rawStatMap = new TreeMap<>(
+        TreeMap<RevCommit, Set<String>> rawStatMap = new TreeMap<>(
                 new Comparator() {
                     @Override
                     public int compare(Object o1, Object o2) {
@@ -45,7 +45,7 @@ public class JGitLsTree {
                 }
         );
 
-        Map<RevCommit, List<String>> deleted = new HashMap<>();
+        Map<RevCommit, Set<String>> deleted = new HashMap<>();
 
 
         Repository db = GitUtil.openRepository("c:\\dev\\gitember\\.git");
@@ -73,10 +73,10 @@ public class JGitLsTree {
                         tw.addTree(parent.getTree());
                     }
 
-                    List<String> fileList = new LinkedList<>();
+                    Set<String> fileList = new HashSet<>();
                     rawStatMap.put(commit, fileList);
 
-                    List<String> deletedList = new LinkedList<>();
+                    Set<String> deletedList = new HashSet<>();
                     deleted.put(commit, deletedList);
 
 
@@ -120,9 +120,9 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-                        System.out.println(r.getCommitTime() + " " + r.getFullMessage());
+                        System.out.println("\n--------------- " +r.getId() + "  " + r.getCommitTime() + " " + r.getFullMessage());
                         rawStatMap.get(r).stream().forEach(
-                                f -> System.out.println(f)
+                                f -> System.out.print(" " + f)
 
                         );
                     }
