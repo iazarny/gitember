@@ -29,25 +29,39 @@ import org.eclipse.jgit.util.QuotedString;
  */
 public class JGitLsTree {
 
+    static List<String> prevList = null;
 
-    public static void main (String args[]) throws Exception {
+    public static void main(String args[]) throws Exception {
 
 
-        LinkedHashMap<RevCommit, List<String>> rawStatMap = new LinkedHashMap<>();
+        TreeMap<RevCommit, List<String>> rawStatMap = new TreeMap<>(
+                new Comparator() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        return Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
+                                Integer.valueOf(((RevCommit) o2).getCommitTime())
+                        );
+                    }
+                }
+        );
+
+        Map<RevCommit, List<String>> deleted = new HashMap<>();
+
 
         Repository db = GitUtil.openRepository("c:\\dev\\gitember\\.git");
+        //Repository db = GitUtil.openRepository("C:\\dev\\epam\\dhq-merge-and-normalize\\.git");
         try (Git git = new Git(db)) {
             final LogCommand cmd = git.log()
+//                    .add(db.resolve("HEAD"))
                     .add(db.resolve("refs/heads/stat"))
                     .setRevFilter(RevFilter.ALL);
-                    //.addPath(fileName);
+            //.addPath(fileName);
             Iterable<RevCommit> logs = cmd.call();
             int k = 0;
             for (RevCommit commit : logs) {
                 String commitID = commit.getName();
-                System.out.println(">>>>>>>>>>>>>>>>>>>>> " + commitID);
-                if (commitID != null && !commitID.isEmpty())
-                {
+                //System.out.println(">>>>>>>>>>>>>>>>>>>>> " + commitID);
+                if (commitID != null && !commitID.isEmpty()) {
                     LogCommand logs2 = git.log().all();
                     Repository repository = logs2.getRepository();
                     TreeWalk tw = new TreeWalk(repository);
@@ -55,24 +69,65 @@ public class JGitLsTree {
 
                     RevCommit commitToCheck = commit;
                     tw.addTree(commitToCheck.getTree());
-                    for (RevCommit parent : commitToCheck.getParents())
-                    {
+                    for (RevCommit parent : commitToCheck.getParents()) {
                         tw.addTree(parent.getTree());
                     }
 
-                    List<String> rawStatMap.put(commit, new LinkedList<>());
+                    List<String> fileList = new LinkedList<>();
+                    rawStatMap.put(commit, fileList);
 
-                    while (tw.next())
-                    {
+                    List<String> deletedList = new LinkedList<>();
+                    deleted.put(commit, deletedList);
+
+
+
+                    while (tw.next()) {
                         int similarParents = 0;
                         for (int i = 1; i < tw.getTreeCount(); i++)
                             if (tw.getFileMode(i) == tw.getFileMode(0) && tw.getObjectId(0).equals(tw.getObjectId(i)))
                                 similarParents++;
-                        if (similarParents == 0)
-                            System.out.println("File names: " + tw.getPathString());
+                        if (similarParents == 0) {
+                            if (tw.getFileMode(0) != FileMode.MISSING) {
+                                fileList.add(tw.getPathString());
+                            } else {
+                                deletedList.add(tw.getPathString());
+
+                            }
+                            //System.out.println("File names: " + tw.getPathString());
+                        }
                     }
+
+
                 }
             }
+
+
+
+            rawStatMap.keySet().stream().forEach(
+                    r -> {
+
+                        if (prevList != null) {
+
+                            if (deleted.containsKey(r)) {
+                                prevList.removeAll(deleted.get(r));
+                            }
+
+                            rawStatMap.get(r).addAll(prevList);
+                        }
+                        prevList = rawStatMap.get(r);
+                    }
+            );
+
+            rawStatMap.keySet().stream().forEach(
+                    r -> {
+                        System.out.println(r.getCommitTime() + " " + r.getFullMessage());
+                        rawStatMap.get(r).stream().forEach(
+                                f -> System.out.println(f)
+
+                        );
+                    }
+            );
+
         }
 
 

@@ -144,7 +144,6 @@ public class CommitViewController implements Initializable {
         this.treeName = treeName;
         this.scmRevisionInformation = revInfo;
         this.changedFiles = revInfo.getAffectedItems();
-                //GitemberApp.getRepositoryService().getChangedFiles(treeName, plotCommit.getRevisionFullName());
     }
 
     public void openItemTableViewDoubleClickedHandler(MouseEvent event) {

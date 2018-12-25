@@ -1,13 +1,9 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.misc.ScmItem;
-import com.az.gitember.misc.ScmItemAction;
 import com.az.gitember.misc.ScmItemStatus;
-import com.az.gitember.misc.ScmRevisionInformation;
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.control.TableColumn;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
