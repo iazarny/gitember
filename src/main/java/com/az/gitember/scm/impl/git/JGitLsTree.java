@@ -9,8 +9,10 @@ import static org.eclipse.jgit.lib.FileMode.SYMLINK;
 
 import java.util.*;
 
+import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.dircache.DirCacheIterator;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
@@ -29,12 +31,12 @@ import org.eclipse.jgit.util.QuotedString;
  */
 public class JGitLsTree {
 
-    static List<String> prevList = null;
+    static Set<String> prevList = null;
 
     public static void main(String args[]) throws Exception {
 
 
-        TreeMap<RevCommit, List<String>> rawStatMap = new TreeMap<>(
+        TreeMap<RevCommit, Set<String>> rawStatMap = new TreeMap<>(
                 new Comparator() {
                     @Override
                     public int compare(Object o1, Object o2) {
@@ -45,7 +47,7 @@ public class JGitLsTree {
                 }
         );
 
-        Map<RevCommit, List<String>> deleted = new HashMap<>();
+        Map<RevCommit, Set<String>> deleted = new HashMap<>();
 
 
         Repository db = GitUtil.openRepository("c:\\dev\\gitember\\.git");
@@ -55,13 +57,15 @@ public class JGitLsTree {
 //                    .add(db.resolve("HEAD"))
                     .add(db.resolve("refs/heads/stat"))
                     .setRevFilter(RevFilter.ALL);
-            //.addPath(fileName);
             Iterable<RevCommit> logs = cmd.call();
             int k = 0;
             for (RevCommit commit : logs) {
                 String commitID = commit.getName();
-                //System.out.println(">>>>>>>>>>>>>>>>>>>>> " + commitID);
                 if (commitID != null && !commitID.isEmpty()) {
+
+                    BlameCommand blamer = new BlameCommand(db);
+                    blamer.setStartCommit(commit.getId());
+
                     LogCommand logs2 = git.log().all();
                     Repository repository = logs2.getRepository();
                     TreeWalk tw = new TreeWalk(repository);
@@ -73,13 +77,11 @@ public class JGitLsTree {
                         tw.addTree(parent.getTree());
                     }
 
-                    List<String> fileList = new LinkedList<>();
+                    Set<String> fileList = new HashSet<>();
                     rawStatMap.put(commit, fileList);
 
-                    List<String> deletedList = new LinkedList<>();
+                    Set<String> deletedList = new HashSet<>();
                     deleted.put(commit, deletedList);
-
-
 
                     while (tw.next()) {
                         int similarParents = 0;
@@ -88,16 +90,20 @@ public class JGitLsTree {
                                 similarParents++;
                         if (similarParents == 0) {
                             if (tw.getFileMode(0) != FileMode.MISSING) {
-                                fileList.add(tw.getPathString());
+                                String filePath = tw.getPathString();
+                                fileList.add(filePath);
+
+                                blamer.setFilePath(filePath);
+                                BlameResult blame = blamer.call();
+
+//https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/ShowBlame.java
+
                             } else {
                                 deletedList.add(tw.getPathString());
 
                             }
-                            //System.out.println("File names: " + tw.getPathString());
                         }
                     }
-
-
                 }
             }
 
@@ -105,14 +111,9 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-
                         if (prevList != null) {
-
-                            if (deleted.containsKey(r)) {
-                                prevList.removeAll(deleted.get(r));
-                            }
-
                             rawStatMap.get(r).addAll(prevList);
+                            rawStatMap.get(r).removeAll(deleted.get(r));
                         }
                         prevList = rawStatMap.get(r);
                     }
@@ -120,9 +121,9 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-                        System.out.println(r.getCommitTime() + " " + r.getFullMessage());
-                        rawStatMap.get(r).stream().forEach(
-                                f -> System.out.println(f)
+                        System.out.println("\n\n--------- " + r.getId() + " " +r.getCommitTime() + " " + r.getShortMessage());
+                        rawStatMap.get(r).stream().filter(f -> f.equals("aaa.txt")).forEach(
+                                f -> System.out.print(" " + f)
 
                         );
                     }
@@ -130,38 +131,6 @@ public class JGitLsTree {
 
         }
 
-
-
-
-        /*try (RevWalk revWalk = new RevWalk(db);
-             TreeWalk tw = new TreeWalk(db)) {
-            final ObjectId head = db.resolve("709163ff258ec7e69b0ea91654a28eac069e8752");
-            //final ObjectId head = db.resolve("refs/heads/stat");
-            if (head == null) {
-                return;
-            }
-            RevCommit c = revWalk.parseCommit(head);
-            do {
-
-                CanonicalTreeParser p = new CanonicalTreeParser();
-                p.reset(revWalk.getObjectReader(), c.getTree());
-                tw.reset(); // drop the first empty tree, which we do not need here
-                if (paths.size() > 0) {
-                    tw.setFilter(PathFilterGroup.createFromStrings(paths));
-                }
-                tw.addTree(p);
-                tw.addTree(new DirCacheIterator(db.readDirCache()));
-                tw.setRecursive(true);
-                while (tw.next()) {
-                    // (filterFileMode(tw, EXECUTABLE_FILE, GITLINK, REGULAR_FILE,  SYMLINK)) {
-                    System.out.println(
-                            QuotedString.GIT_PATH.quote(tw.getPathString()));
-                    // }
-                }
-                c = revWalk.next();
-            } while(c != null);
-
-        }*/
 
     }
 
