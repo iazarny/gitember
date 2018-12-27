@@ -116,14 +116,15 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-                        System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
+                        //System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
+                        System.out.println();
                         rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
                                 //f ->
 
 
                                 f -> {
 
-                                    System.out.print(" " + f);
+                                    //System.out.print(" " + f);
 
 
 
@@ -135,12 +136,20 @@ public class JGitLsTree {
                                     BlameResult blame = null;
                                     try {
                                         blame = blamer.call();
-                                       // blame.getResultContents();
 
-                                        int lines = countLinesOfFileInCommit(db, r.getId(), f);
-                                        for (int i = 0; i < lines; i++) {
-                                            RevCommit ccc = blame.getSourceCommit(i);
-                                            //System.out.println("Line: " + i + ": " + ccc + " " + ccc.getAuthorIdent());
+                                        //int lines = countLinesOfFileInCommit(db, r.getId(), f);
+                                        if ( blame != null &&  blame.getResultContents() != null) {
+
+                                            int lines = blame.getResultContents().size();
+                                            for (int i = 0; i < lines; i++) {
+                                                // blame.lastLength()
+                                                RevCommit ccc = blame.getSourceCommit(i);
+                                                System.out.println("Line: " + i + ": " + ccc + " " + ccc.getAuthorIdent());
+                                            }
+                                            //System.out.print("b");
+
+                                        } else {
+                                            //System.out.print("-");
                                         }
 
                                     } catch (GitAPIException e) {
@@ -175,7 +184,6 @@ public class JGitLsTree {
         try (RevWalk revWalk = new RevWalk(repository)) {
             RevCommit commit = revWalk.parseCommit(commitID);
             RevTree tree = commit.getTree();
-            System.out.println("Having tree: " + tree);
 
             // now try to find a specific file
             try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -203,11 +211,6 @@ public class JGitLsTree {
                 }
 
                 ByteArrayInputStream bias = new ByteArrayInputStream(arr);
-                /*int n= bias.available();
-                byte[] bytes = new byte[n];
-                bias.read(bytes, 0, n);
-                String s = new String(bytes, StandardCharsets.UTF_8);*/
-
 
                 LineNumberReader lineNumberReader = new LineNumberReader(new InputStreamReader(bias));
                 lineNumberReader.skip(Long.MAX_VALUE);
