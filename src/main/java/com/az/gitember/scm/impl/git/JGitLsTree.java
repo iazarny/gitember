@@ -7,24 +7,28 @@ import static org.eclipse.jgit.lib.FileMode.GITLINK;
 import static org.eclipse.jgit.lib.FileMode.REGULAR_FILE;
 import static org.eclipse.jgit.lib.FileMode.SYMLINK;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
+import org.eclipse.jgit.diff.RawText;
 import org.eclipse.jgit.dircache.DirCacheIterator;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.FileMode;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 import org.eclipse.jgit.util.QuotedString;
+import sun.misc.IOUtils;
 
 /**
  * Created by igor on 23.12.2018.
@@ -63,8 +67,6 @@ public class JGitLsTree {
                 String commitID = commit.getName();
                 if (commitID != null && !commitID.isEmpty()) {
 
-                    BlameCommand blamer = new BlameCommand(db);
-                    blamer.setStartCommit(commit.getId());
 
                     LogCommand logs2 = git.log().all();
                     Repository repository = logs2.getRepository();
@@ -92,12 +94,6 @@ public class JGitLsTree {
                             if (tw.getFileMode(0) != FileMode.MISSING) {
                                 String filePath = tw.getPathString();
                                 fileList.add(filePath);
-
-                                blamer.setFilePath(filePath);
-                                BlameResult blame = blamer.call();
-
-//https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/ShowBlame.java
-
                             } else {
                                 deletedList.add(tw.getPathString());
 
@@ -106,7 +102,6 @@ public class JGitLsTree {
                     }
                 }
             }
-
 
 
             rawStatMap.keySet().stream().forEach(
@@ -121,9 +116,50 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-                        System.out.println("\n\n--------- " + r.getId() + " " +r.getCommitTime() + " " + r.getShortMessage());
-                        rawStatMap.get(r).stream().filter(f -> f.equals("aaa.txt")).forEach(
-                                f -> System.out.print(" " + f)
+                        System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
+                        rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
+                                //f ->
+
+
+                                f -> {
+
+                                    System.out.print(" " + f);
+
+
+
+                                    ////////////////////////////////////////////
+                                    BlameCommand blamer = new BlameCommand(db);
+                                    blamer.setStartCommit(r.getId());
+
+                                    blamer.setFilePath(f);
+                                    BlameResult blame = null;
+                                    try {
+                                        blame = blamer.call();
+                                       // blame.getResultContents();
+
+                                        int lines = countLinesOfFileInCommit(db, r.getId(), f);
+                                        for (int i = 0; i < lines; i++) {
+                                            RevCommit ccc = blame.getSourceCommit(i);
+                                            //System.out.println("Line: " + i + ": " + ccc + " " + ccc.getAuthorIdent());
+                                        }
+
+                                    } catch (GitAPIException e) {
+                                        e.printStackTrace();
+                                    }
+
+//https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/ShowBlame.java
+
+
+
+                                    ////////////////////////////////////////////
+
+
+                                }
+
+
+
+
+
 
                         );
                     }
@@ -132,6 +168,54 @@ public class JGitLsTree {
         }
 
 
+    }
+
+
+    private static int countLinesOfFileInCommit(Repository repository, ObjectId commitID, String name)  {
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            RevCommit commit = revWalk.parseCommit(commitID);
+            RevTree tree = commit.getTree();
+            System.out.println("Having tree: " + tree);
+
+            // now try to find a specific file
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(name));
+                if (!treeWalk.next()) {
+                   // throw new IllegalStateException("Did not find expected file 'README.md'");
+                    return -1;
+                }
+
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repository.open(objectId);
+                //TODO skip veery large files loader.getSize()
+
+                // load the content of the file into a stream
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                loader.copyTo(stream);
+
+                revWalk.dispose();
+
+                byte [] arr = stream.toByteArray();
+                if(RawText.isBinary(arr)) {
+                    return 0;
+                }
+
+                ByteArrayInputStream bias = new ByteArrayInputStream(arr);
+                /*int n= bias.available();
+                byte[] bytes = new byte[n];
+                bias.read(bytes, 0, n);
+                String s = new String(bytes, StandardCharsets.UTF_8);*/
+
+
+                LineNumberReader lineNumberReader = new LineNumberReader(new InputStreamReader(bias));
+                lineNumberReader.skip(Long.MAX_VALUE);
+                return lineNumberReader.getLineNumber();
+            }
+        } catch (IOException e) {
+            return 0;
+        }
     }
 
 }
