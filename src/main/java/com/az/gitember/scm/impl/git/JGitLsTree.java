@@ -62,15 +62,15 @@ public class JGitLsTree {
                     .add(db.resolve("refs/heads/stat"))
                     .setRevFilter(RevFilter.ALL);
             Iterable<RevCommit> logs = cmd.call();
-            int k = 0;
             for (RevCommit commit : logs) {
                 String commitID = commit.getName();
                 if (commitID != null && !commitID.isEmpty()) {
 
 
-                    LogCommand logs2 = git.log().all();
-                    Repository repository = logs2.getRepository();
-                    TreeWalk tw = new TreeWalk(repository);
+                    //LogCommand logs2 = git.log().all();
+                    //Repository repository = logs2.getRepository();
+                    //TreeWalk tw = new TreeWalk(repository);
+                    TreeWalk tw = new TreeWalk(db);
                     tw.setRecursive(true);
 
                     RevCommit commitToCheck = commit;
