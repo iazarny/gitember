@@ -7,22 +7,28 @@ import static org.eclipse.jgit.lib.FileMode.GITLINK;
 import static org.eclipse.jgit.lib.FileMode.REGULAR_FILE;
 import static org.eclipse.jgit.lib.FileMode.SYMLINK;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.blame.BlameResult;
+import org.eclipse.jgit.diff.RawText;
 import org.eclipse.jgit.dircache.DirCacheIterator;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.FileMode;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 import org.eclipse.jgit.util.QuotedString;
+import sun.misc.IOUtils;
 
 /**
  * Created by igor on 23.12.2018.
@@ -55,16 +61,16 @@ public class JGitLsTree {
 //                    .add(db.resolve("HEAD"))
                     .add(db.resolve("refs/heads/stat"))
                     .setRevFilter(RevFilter.ALL);
-            //.addPath(fileName);
             Iterable<RevCommit> logs = cmd.call();
-            int k = 0;
             for (RevCommit commit : logs) {
                 String commitID = commit.getName();
-                //System.out.println(">>>>>>>>>>>>>>>>>>>>> " + commitID);
                 if (commitID != null && !commitID.isEmpty()) {
-                    LogCommand logs2 = git.log().all();
-                    Repository repository = logs2.getRepository();
-                    TreeWalk tw = new TreeWalk(repository);
+
+
+                    //LogCommand logs2 = git.log().all();
+                    //Repository repository = logs2.getRepository();
+                    //TreeWalk tw = new TreeWalk(repository);
+                    TreeWalk tw = new TreeWalk(db);
                     tw.setRecursive(true);
 
                     RevCommit commitToCheck = commit;
@@ -79,8 +85,6 @@ public class JGitLsTree {
                     Set<String> deletedList = new HashSet<>();
                     deleted.put(commit, deletedList);
 
-
-
                     while (tw.next()) {
                         int similarParents = 0;
                         for (int i = 1; i < tw.getTreeCount(); i++)
@@ -88,31 +92,23 @@ public class JGitLsTree {
                                 similarParents++;
                         if (similarParents == 0) {
                             if (tw.getFileMode(0) != FileMode.MISSING) {
-                                fileList.add(tw.getPathString());
+                                String filePath = tw.getPathString();
+                                fileList.add(filePath);
                             } else {
                                 deletedList.add(tw.getPathString());
 
                             }
-                            //System.out.println("File names: " + tw.getPathString());
                         }
                     }
-
-
                 }
             }
 
 
-
             rawStatMap.keySet().stream().forEach(
                     r -> {
-
                         if (prevList != null) {
-
-                            if (deleted.containsKey(r)) {
-                                prevList.removeAll(deleted.get(r));
-                            }
-
                             rawStatMap.get(r).addAll(prevList);
+                            rawStatMap.get(r).removeAll(deleted.get(r));
                         }
                         prevList = rawStatMap.get(r);
                     }
@@ -120,9 +116,59 @@ public class JGitLsTree {
 
             rawStatMap.keySet().stream().forEach(
                     r -> {
-                        System.out.println("\n--------------- " +r.getId() + "  " + r.getCommitTime() + " " + r.getFullMessage());
-                        rawStatMap.get(r).stream().forEach(
-                                f -> System.out.print(" " + f)
+                        //System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
+                        System.out.println();
+                        rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
+                                //f ->
+
+
+                                f -> {
+
+                                    //System.out.print(" " + f);
+
+
+
+                                    ////////////////////////////////////////////
+                                    BlameCommand blamer = new BlameCommand(db);
+                                    blamer.setStartCommit(r.getId());
+
+                                    blamer.setFilePath(f);
+                                    BlameResult blame = null;
+                                    try {
+                                        blame = blamer.call();
+
+                                        //int lines = countLinesOfFileInCommit(db, r.getId(), f);
+                                        if ( blame != null &&  blame.getResultContents() != null) {
+
+                                            int lines = blame.getResultContents().size();
+                                            for (int i = 0; i < lines; i++) {
+                                                // blame.lastLength()
+                                                RevCommit ccc = blame.getSourceCommit(i);
+                                                System.out.println("Line: " + i + ": " + ccc + " " + ccc.getAuthorIdent());
+                                            }
+                                            //System.out.print("b");
+
+                                        } else {
+                                            //System.out.print("-");
+                                        }
+
+                                    } catch (GitAPIException e) {
+                                        e.printStackTrace();
+                                    }
+
+//https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/ShowBlame.java
+
+
+
+                                    ////////////////////////////////////////////
+
+
+                                }
+
+
+
+
+
 
                         );
                     }
@@ -131,38 +177,48 @@ public class JGitLsTree {
         }
 
 
+    }
 
 
-        /*try (RevWalk revWalk = new RevWalk(db);
-             TreeWalk tw = new TreeWalk(db)) {
-            final ObjectId head = db.resolve("709163ff258ec7e69b0ea91654a28eac069e8752");
-            //final ObjectId head = db.resolve("refs/heads/stat");
-            if (head == null) {
-                return;
+    private static int countLinesOfFileInCommit(Repository repository, ObjectId commitID, String name)  {
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            RevCommit commit = revWalk.parseCommit(commitID);
+            RevTree tree = commit.getTree();
+
+            // now try to find a specific file
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(name));
+                if (!treeWalk.next()) {
+                   // throw new IllegalStateException("Did not find expected file 'README.md'");
+                    return -1;
+                }
+
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repository.open(objectId);
+                //TODO skip veery large files loader.getSize()
+
+                // load the content of the file into a stream
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                loader.copyTo(stream);
+
+                revWalk.dispose();
+
+                byte [] arr = stream.toByteArray();
+                if(RawText.isBinary(arr)) {
+                    return 0;
+                }
+
+                ByteArrayInputStream bias = new ByteArrayInputStream(arr);
+
+                LineNumberReader lineNumberReader = new LineNumberReader(new InputStreamReader(bias));
+                lineNumberReader.skip(Long.MAX_VALUE);
+                return lineNumberReader.getLineNumber();
             }
-            RevCommit c = revWalk.parseCommit(head);
-            do {
-
-                CanonicalTreeParser p = new CanonicalTreeParser();
-                p.reset(revWalk.getObjectReader(), c.getTree());
-                tw.reset(); // drop the first empty tree, which we do not need here
-                if (paths.size() > 0) {
-                    tw.setFilter(PathFilterGroup.createFromStrings(paths));
-                }
-                tw.addTree(p);
-                tw.addTree(new DirCacheIterator(db.readDirCache()));
-                tw.setRecursive(true);
-                while (tw.next()) {
-                    // (filterFileMode(tw, EXECUTABLE_FILE, GITLINK, REGULAR_FILE,  SYMLINK)) {
-                    System.out.println(
-                            QuotedString.GIT_PATH.quote(tw.getPathString()));
-                    // }
-                }
-                c = revWalk.next();
-            } while(c != null);
-
-        }*/
-
+        } catch (IOException e) {
+            return 0;
+        }
     }
 
 }

@@ -241,27 +241,23 @@ public class GitRepositoryService {
 
     public void blame(final String treeName) throws Exception {
 
-        PlotCommitList<PlotLane> plotCommitList = getCommitsByTree(treeName);
-        plotCommitList.forEach(
-                s->{
-                    System.out.println(s);
 
-                    try( TreeWalk treeWalk = new TreeWalk( repository ) ) {
-                        treeWalk.reset( s.getId() );
-                        treeWalk.setRecursive(true);
-                        treeWalk.addTree(new FileTreeIterator(repository));
-                        while( treeWalk.next() ) {
-                            String path = treeWalk.getPathString();
-                            // ...
-                            System.out.print(" " + path);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        try (Git git = new Git(repository)) {
 
-                    }
+            final LogCommand cmd = git.log()
+                    .add(repository.resolve(treeName))
+                    .setRevFilter(RevFilter.ALL);
 
-                }
-        );
+            Iterable<RevCommit> logs = cmd.call();
+
+
+
+
+
+
+
+
+        }
 
     }
 
