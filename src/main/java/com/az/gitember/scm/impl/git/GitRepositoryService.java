@@ -42,6 +42,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,6 +66,8 @@ public class GitRepositoryService {
     private final Repository repository;
 
     private final StoredConfig config;
+
+    private Set<String> prevList = null;
 
     /**
      * Construct service, which work with git
@@ -241,6 +247,75 @@ public class GitRepositoryService {
 
     public void blame(final String treeName) throws Exception {
 
+        prevList = null;
+
+        final TreeMap<RevCommit, Set<String>> rawStatMap = new TreeMap<RevCommit, Set<String>>(
+                (o1, o2) -> Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
+                        ((RevCommit) o2).getCommitTime()
+                )
+        );
+
+        final Map<RevCommit, Set<String>> deleted = new HashMap<>();
+
+        fillStatMaps(treeName, rawStatMap, deleted);
+
+        completeFileListPerRevision(rawStatMap, deleted);
+
+        TreeMap<RevCommit, Set<String>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+
+
+    }
+
+    private TreeMap<RevCommit, Set<String>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
+        TreeMap<RevCommit, Set<String>> rez = new TreeMap<RevCommit, Set<String>>(
+                (o1, o2) -> Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
+                        ((RevCommit) o2).getCommitTime()
+                )
+        );
+
+        RevCommit rc = rawStatMap.firstKey();
+
+        for (int startTime = rc.getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.MILLIS) / 1000) {
+
+        }
+
+
+        /*RevCommit r = rawStatMap.floorKey(rc);
+
+        if (r != null) {
+            rez.put(r, rawStatMap.get(r));
+        }*/
+
+        return rez;
+    }
+
+    //
+
+
+
+    /*
+    * |------|------|------|------|------|------|------|------|------|------|
+    * |----|||||--|---|||--|----------------|||||--|---|---|-|--||----|--|
+    * |------|----|-----|--|--------------------|------|-----|---|----|--|
+    *
+    * */
+
+    private void completeFileListPerRevision(Map<RevCommit, Set<String>> rawStatMap,
+                                             Map<RevCommit, Set<String>> deleted) {
+        rawStatMap.keySet().stream().forEach(
+                r -> {
+                    if (prevList != null) {
+                        rawStatMap.get(r).addAll(prevList);
+                        rawStatMap.get(r).removeAll(deleted.get(r));
+                    }
+                    prevList = rawStatMap.get(r);
+                }
+        );
+    }
+
+    private void fillStatMaps(String treeName,
+                              Map<RevCommit, Set<String>> rawStatMap,
+                              Map<RevCommit, Set<String>> deleted) throws IOException, GitAPIException {
 
         try (Git git = new Git(repository)) {
 
@@ -250,15 +325,39 @@ public class GitRepositoryService {
 
             Iterable<RevCommit> logs = cmd.call();
 
+            for (RevCommit commit : logs) {
+                String commitID = commit.getName();
+                if (!commitID.isEmpty()) {
+                    TreeWalk tw = new TreeWalk(repository);
+                    tw.setRecursive(true);
 
+                    tw.addTree(commit.getTree());
+                    for (RevCommit parent : commit.getParents()) {
+                        tw.addTree(parent.getTree());
+                    }
 
+                    rawStatMap.put(commit, new HashSet<>());
+                    deleted.put(commit, new HashSet<>());
 
-
-
-
-
+                    while (tw.next()) {
+                        int similarParents = 0;
+                        for (int i = 1; i < tw.getTreeCount(); i++) {
+                            if (tw.getFileMode(i) == tw.getFileMode(0) && tw.getObjectId(0).equals(tw.getObjectId(i))) {
+                                similarParents++;
+                            }
+                        }
+                        if (similarParents == 0) {
+                            if (tw.getFileMode(0) != FileMode.MISSING) {
+                                String filePath = tw.getPathString();
+                                rawStatMap.get(commit).add(filePath);
+                            } else {
+                                deleted.get(commit).add(tw.getPathString());
+                            }
+                        }
+                    }
+                }
+            }
         }
-
     }
 
 

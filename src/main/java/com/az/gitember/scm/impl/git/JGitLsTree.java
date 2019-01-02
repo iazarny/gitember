@@ -9,8 +9,11 @@ import static org.eclipse.jgit.lib.FileMode.SYMLINK;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import com.az.gitember.misc.GitemberUtil;
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
@@ -64,7 +67,7 @@ public class JGitLsTree {
             Iterable<RevCommit> logs = cmd.call();
             for (RevCommit commit : logs) {
                 String commitID = commit.getName();
-                if (commitID != null && !commitID.isEmpty()) {
+                if (!commitID.isEmpty()) {
 
 
                     //LogCommand logs2 = git.log().all();
@@ -73,9 +76,8 @@ public class JGitLsTree {
                     TreeWalk tw = new TreeWalk(db);
                     tw.setRecursive(true);
 
-                    RevCommit commitToCheck = commit;
-                    tw.addTree(commitToCheck.getTree());
-                    for (RevCommit parent : commitToCheck.getParents()) {
+                    tw.addTree(commit.getTree());
+                    for (RevCommit parent : commit.getParents()) {
                         tw.addTree(parent.getTree());
                     }
 
@@ -114,11 +116,27 @@ public class JGitLsTree {
                     }
             );
 
+            Period period = Period.ofWeeks(1);
+            RevCommit rc = rawStatMap.firstKey();
+
+
+            for (int startTime = rc.getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
+
+                System.out.println();
+                System.out.println(GitemberUtil.intToDate(startTime));
+                RevCommit nrc = floorRevCommit(rawStatMap, startTime);
+                if (nrc != null) {
+                    System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
+                }
+
+            }
+
+
             rawStatMap.keySet().stream().forEach(
                     r -> {
                         //System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
-                        System.out.println();
-                        rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
+                        //System.out.println(GitemberUtil.intToDate(r.getCommitTime()));
+                        /*rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
                                 //f ->
 
 
@@ -170,7 +188,7 @@ public class JGitLsTree {
 
 
 
-                        );
+                        );*/
                     }
             );
 
@@ -180,7 +198,27 @@ public class JGitLsTree {
     }
 
 
-    private static int countLinesOfFileInCommit(Repository repository, ObjectId commitID, String name)  {
+    /*
+    * |------|------|------|------|------|------|------|------|------|------|
+    * |----|||||--|---|||--|----------------|||||--|---|---|-|--||----|--|
+    * |------|----|-----|--|--------------------|------|-----|---|----|--|
+    *
+    * */
+
+    private static RevCommit floorRevCommit(TreeMap<RevCommit, Set<String>> rawStatMap, int startTime) {
+        RevCommit candidate = null;
+        for (RevCommit r : rawStatMap.keySet()) {
+            if (r.getCommitTime() <= startTime) {
+                candidate = r;
+            } else {
+                break;
+            }
+        }
+        return candidate;
+    }
+
+
+    private static int countLinesOfFileInCommit(Repository repository, ObjectId commitID, String name) {
         try (RevWalk revWalk = new RevWalk(repository)) {
             RevCommit commit = revWalk.parseCommit(commitID);
             RevTree tree = commit.getTree();
@@ -191,7 +229,7 @@ public class JGitLsTree {
                 treeWalk.setRecursive(true);
                 treeWalk.setFilter(PathFilter.create(name));
                 if (!treeWalk.next()) {
-                   // throw new IllegalStateException("Did not find expected file 'README.md'");
+                    // throw new IllegalStateException("Did not find expected file 'README.md'");
                     return -1;
                 }
 
@@ -205,8 +243,8 @@ public class JGitLsTree {
 
                 revWalk.dispose();
 
-                byte [] arr = stream.toByteArray();
-                if(RawText.isBinary(arr)) {
+                byte[] arr = stream.toByteArray();
+                if (RawText.isBinary(arr)) {
                     return 0;
                 }
 
