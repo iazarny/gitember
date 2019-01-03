@@ -54,6 +54,17 @@ public class JGitLsTree {
                 }
         );
 
+        TreeMap<RevCommit, Set<String>> normalizedStatMap = new TreeMap<>(
+                new Comparator() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        return Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
+                                Integer.valueOf(((RevCommit) o2).getCommitTime())
+                        );
+                    }
+                }
+        );
+
         Map<RevCommit, Set<String>> deleted = new HashMap<>();
 
 
@@ -127,6 +138,7 @@ public class JGitLsTree {
                 RevCommit nrc = floorRevCommit(rawStatMap, startTime);
                 if (nrc != null) {
                     System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
+                    normalizedStatMap.put(nrc, rawStatMap.get(nrc));
                 }
 
             }
