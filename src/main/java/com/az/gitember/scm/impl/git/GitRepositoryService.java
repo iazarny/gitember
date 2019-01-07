@@ -261,36 +261,37 @@ public class GitRepositoryService {
 
         completeFileListPerRevision(rawStatMap, deleted);
 
-        TreeMap<RevCommit, Set<String>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+
+        blameRevisions(adjustedRawStatMap);
 
 
     }
 
-    private TreeMap<RevCommit, Set<String>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
-        TreeMap<RevCommit, Set<String>> rez = new TreeMap<RevCommit, Set<String>>(
-                (o1, o2) -> Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
-                        ((RevCommit) o2).getCommitTime()
-                )
+    private void blameRevisions(TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap) {
+
+    }
+
+    private TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
+
+        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> rez = new TreeMap<>(
+                Integer::compareTo
         );
 
-        RevCommit rc = rawStatMap.firstKey();
+        //TODO optimize, start time shall not from first , but from resolved rc on previos step
 
-        for (int startTime = rc.getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.MILLIS) / 1000) {
-
+        for (int startTime = rawStatMap.firstKey().getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
+            RevCommit nrc = floorRevCommit(rawStatMap, startTime);
+            if (nrc != null) {
+                System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
+                rez.put(
+                        startTime,
+                        new Triplet<>(nrc, rawStatMap.get(nrc), false)
+                );
+            }
         }
-
-
-        /*RevCommit r = rawStatMap.floorKey(rc);
-
-        if (r != null) {
-            rez.put(r, rawStatMap.get(r));
-        }*/
-
         return rez;
     }
-
-    //
-
 
 
     /*
@@ -299,6 +300,17 @@ public class GitRepositoryService {
     * |------|----|-----|--|--------------------|------|-----|---|----|--|
     *
     * */
+    private  RevCommit floorRevCommit(TreeMap<RevCommit, Set<String>> rawStatMap, int startTime) {
+        RevCommit candidate = null;
+        for (RevCommit r : rawStatMap.keySet()) {
+            if (r.getCommitTime() <= startTime) {
+                candidate = r;
+            } else {
+                break;
+            }
+        }
+        return candidate;
+    }
 
     private void completeFileListPerRevision(Map<RevCommit, Set<String>> rawStatMap,
                                              Map<RevCommit, Set<String>> deleted) {
