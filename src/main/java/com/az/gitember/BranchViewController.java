@@ -66,6 +66,8 @@ public class BranchViewController implements Initializable {
 
     private AutoCompleteTextField searchText;
 
+    private Label searchLabel;
+
     private PlotCommitRenderer plotCommitRenderer = new PlotCommitRenderer();
 
     private String treeName;
@@ -187,6 +189,10 @@ public class BranchViewController implements Initializable {
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
         spacerPane.setId(Const.MERGED);
 
+        searchLabel = new Label();
+        searchLabel.setId(Const.MERGED);
+        searchLabel.setText("Search");
+
         searchText = new AutoCompleteTextField();
         searchText.setId(Const.MERGED);
         searchText.getEntries().addAll(GitemberApp.entries);
@@ -232,6 +238,7 @@ public class BranchViewController implements Initializable {
                     final BranchViewController branchViewController = fxmlLoader.getController();
                     branchViewController.treeName = scmBranch.getFullName();
                     toolBar.getItems().add(branchViewController.spacerPane);
+                    toolBar.getItems().add(branchViewController.searchLabel);
                     toolBar.getItems().add(branchViewController.searchText);
                     branchViewController.open();
                     return branchView;

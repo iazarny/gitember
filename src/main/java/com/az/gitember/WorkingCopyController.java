@@ -59,6 +59,7 @@ public class WorkingCopyController implements Initializable {
     //public Button searchButton;
     public Pane spacerPane;
     public AutoCompleteTextField searchText;
+    public Label searchLabel;
     public Menu workingCopyMenu;
 
     public ContextMenu scmItemContextMenu;
@@ -221,6 +222,10 @@ public class WorkingCopyController implements Initializable {
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
         spacerPane.setId(Const.MERGED);
 
+        searchLabel =  new Label();
+        searchLabel.setId(Const.MERGED);
+        searchLabel.setText("Search");
+
         searchText = new AutoCompleteTextField();
         searchText.setId(Const.MERGED);
         searchText.getEntries().addAll(GitemberApp.entries);
@@ -231,8 +236,6 @@ public class WorkingCopyController implements Initializable {
                         GitemberApp.entries.remove(oldValue);
                         GitemberApp.entries.add(newValue);
                     }
-
-
                 }
         );
 
@@ -780,6 +783,7 @@ public class WorkingCopyController implements Initializable {
             toolBar.getItems().add(workingCopyController.stashBtn);
             toolBar.getItems().add(workingCopyController.refreshBtn);
             toolBar.getItems().add(workingCopyController.spacerPane);
+            toolBar.getItems().add(workingCopyController.searchLabel);
             toolBar.getItems().add(workingCopyController.searchText);
             // toolBar.getItems().add(workingCopyController.searchButton);
 

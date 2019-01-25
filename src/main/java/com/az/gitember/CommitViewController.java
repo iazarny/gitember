@@ -79,6 +79,7 @@ public class CommitViewController implements Initializable {
     private String treeName;
     private List<ScmItem> changedFiles;
     private AutoCompleteTextField searchText = null;
+    private Label searchLabel = null;
 
     public void showPlotCommit() {
         this.msgLbl.setText(scmRevisionInformation.getFullMessage());
@@ -318,6 +319,10 @@ public class CommitViewController implements Initializable {
                 HBox.setHgrow(spacerPane, Priority.ALWAYS);
                 spacerPane.setId(Const.MERGED);
 
+                commitViewController.searchLabel = new Label();
+                commitViewController.searchLabel.setId(Const.MERGED);
+                commitViewController.searchLabel.setText("Search");
+
                 commitViewController.searchText = new AutoCompleteTextField();
                 commitViewController.searchText.setId(Const.MERGED);
                 commitViewController.searchText.getEntries().addAll(GitemberApp.entries);
@@ -337,6 +342,7 @@ public class CommitViewController implements Initializable {
 
 
                 mainToolBar.getItems().add(spacerPane);
+                mainToolBar.getItems().add(commitViewController.searchLabel);
                 mainToolBar.getItems().add(commitViewController.searchText);
             }
 
