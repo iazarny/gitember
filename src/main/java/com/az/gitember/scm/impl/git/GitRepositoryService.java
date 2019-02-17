@@ -47,6 +47,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -263,12 +264,69 @@ public class GitRepositoryService {
 
         TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
 
-        blameRevisions(adjustedRawStatMap);
+        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevsFileAuthCnt = blameRevisions(adjustedRawStatMap);
 
 
     }
 
-    private void blameRevisions(TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap) {
+    private Map<RevCommit, Map<String, Map<String, Integer>> >  blameRevisions(TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap) {
+
+
+        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevisionsCache = new TreeMap<RevCommit, Map<String, Map<String, Integer>>>(
+                (o1, o2) -> {
+                    return Integer.valueOf(o1.getCommitTime()).compareTo(
+                            o2.getCommitTime()
+                    );
+                }
+        );
+
+
+        adjustedRawStatMap.keySet().stream().forEach(
+                revTime -> {
+
+                    RevCommit toBlame = adjustedRawStatMap.get(revTime).getFirst();
+
+                    System.out.println("toBlame: " + toBlame);
+
+                    blamedRevisionsCache.computeIfAbsent(
+                            toBlame,
+                            revCommit -> {
+                                Map<String, Map<String, Integer>> fileAuthCnt = new HashMap<String, Map<String, Integer>>();
+
+                                AtomicInteger ai = new AtomicInteger(0);
+
+                                adjustedRawStatMap.get(revTime).getSecond().stream().forEach(
+                                        filePath -> {
+                                            ai.incrementAndGet();
+
+                                            BlameCommand blamer = new BlameCommand(repository);
+                                            blamer.setStartCommit(toBlame);
+                                            blamer.setFilePath(filePath);
+                                            try {
+                                                BlameResult blame = blamer.call();
+                                                Map<String, Integer> authCnt = new HashMap<String, Integer>();
+                                                if (blame != null && blame.getResultContents() != null) {
+                                                    int lines = blame.getResultContents().size();
+                                                    for (int i = 0; i < lines; i++) {
+                                                        RevCommit ccc = blame.getSourceCommit(i);
+                                                        String email = ccc.getAuthorIdent().getEmailAddress();
+                                                        Integer cnt = authCnt.getOrDefault(email , 0) + 1;
+                                                        authCnt.put(email, cnt);
+                                                    }
+                                                }
+                                                fileAuthCnt.put(filePath, authCnt);
+                                            } catch (GitAPIException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                );
+                                return fileAuthCnt;
+                            }
+                    );
+                }
+        );
+
+        return blamedRevisionsCache;
 
     }
 
