@@ -47,6 +47,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -261,36 +262,94 @@ public class GitRepositoryService {
 
         completeFileListPerRevision(rawStatMap, deleted);
 
-        TreeMap<RevCommit, Set<String>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+
+        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevsFileAuthCnt = blameRevisions(adjustedRawStatMap);
 
 
     }
 
-    private TreeMap<RevCommit, Set<String>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
-        TreeMap<RevCommit, Set<String>> rez = new TreeMap<RevCommit, Set<String>>(
-                (o1, o2) -> Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
-                        ((RevCommit) o2).getCommitTime()
-                )
+    private Map<RevCommit, Map<String, Map<String, Integer>> >  blameRevisions(TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap) {
+
+
+        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevisionsCache = new TreeMap<RevCommit, Map<String, Map<String, Integer>>>(
+                (o1, o2) -> {
+                    return Integer.valueOf(o1.getCommitTime()).compareTo(
+                            o2.getCommitTime()
+                    );
+                }
         );
 
-        RevCommit rc = rawStatMap.firstKey();
 
-        for (int startTime = rc.getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.MILLIS) / 1000) {
+        adjustedRawStatMap.keySet().stream().forEach(
+                revTime -> {
 
-        }
+                    RevCommit toBlame = adjustedRawStatMap.get(revTime).getFirst();
 
+                    System.out.println("toBlame: " + toBlame);
 
-        /*RevCommit r = rawStatMap.floorKey(rc);
+                    blamedRevisionsCache.computeIfAbsent(
+                            toBlame,
+                            revCommit -> {
+                                Map<String, Map<String, Integer>> fileAuthCnt = new HashMap<String, Map<String, Integer>>();
 
-        if (r != null) {
-            rez.put(r, rawStatMap.get(r));
-        }*/
+                                AtomicInteger ai = new AtomicInteger(0);
 
-        return rez;
+                                adjustedRawStatMap.get(revTime).getSecond().stream().forEach(
+                                        filePath -> {
+                                            ai.incrementAndGet();
+
+                                            BlameCommand blamer = new BlameCommand(repository);
+                                            blamer.setStartCommit(toBlame);
+                                            blamer.setFilePath(filePath);
+                                            try {
+                                                BlameResult blame = blamer.call();
+                                                Map<String, Integer> authCnt = new HashMap<String, Integer>();
+                                                if (blame != null && blame.getResultContents() != null) {
+                                                    int lines = blame.getResultContents().size();
+                                                    for (int i = 0; i < lines; i++) {
+                                                        RevCommit ccc = blame.getSourceCommit(i);
+                                                        String email = ccc.getAuthorIdent().getEmailAddress();
+                                                        Integer cnt = authCnt.getOrDefault(email , 0) + 1;
+                                                        authCnt.put(email, cnt);
+                                                    }
+                                                }
+                                                fileAuthCnt.put(filePath, authCnt);
+                                            } catch (GitAPIException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                );
+                                return fileAuthCnt;
+                            }
+                    );
+                }
+        );
+
+        return blamedRevisionsCache;
+
     }
 
-    //
+    private TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
 
+        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> rez = new TreeMap<>(
+                Integer::compareTo
+        );
+
+        //TODO optimize, start time shall not from first , but from resolved rc on previos step
+
+        for (int startTime = rawStatMap.firstKey().getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
+            RevCommit nrc = floorRevCommit(rawStatMap, startTime);
+            if (nrc != null) {
+                System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
+                rez.put(
+                        startTime,
+                        new Triplet<>(nrc, rawStatMap.get(nrc), false)
+                );
+            }
+        }
+        return rez;
+    }
 
 
     /*
@@ -299,6 +358,17 @@ public class GitRepositoryService {
     * |------|----|-----|--|--------------------|------|-----|---|----|--|
     *
     * */
+    private  RevCommit floorRevCommit(TreeMap<RevCommit, Set<String>> rawStatMap, int startTime) {
+        RevCommit candidate = null;
+        for (RevCommit r : rawStatMap.keySet()) {
+            if (r.getCommitTime() <= startTime) {
+                candidate = r;
+            } else {
+                break;
+            }
+        }
+        return candidate;
+    }
 
     private void completeFileListPerRevision(Map<RevCommit, Set<String>> rawStatMap,
                                              Map<RevCommit, Set<String>> deleted) {

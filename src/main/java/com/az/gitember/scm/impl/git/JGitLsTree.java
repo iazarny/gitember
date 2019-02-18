@@ -12,8 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.az.gitember.misc.GitemberUtil;
+import com.az.gitember.misc.Pair;
+import com.az.gitember.misc.Triplet;
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
@@ -54,16 +57,6 @@ public class JGitLsTree {
                 }
         );
 
-        TreeMap<RevCommit, Set<String>> normalizedStatMap = new TreeMap<>(
-                new Comparator() {
-                    @Override
-                    public int compare(Object o1, Object o2) {
-                        return Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
-                                Integer.valueOf(((RevCommit) o2).getCommitTime())
-                        );
-                    }
-                }
-        );
 
         Map<RevCommit, Set<String>> deleted = new HashMap<>();
 
@@ -127,80 +120,76 @@ public class JGitLsTree {
                     }
             );
 
+
+            TreeMap<Integer, Pair<RevCommit, Set<String>>> normalizedStatMap = new TreeMap<>(
+                    Integer::compareTo
+            );
+
             Period period = Period.ofWeeks(1);
-            RevCommit rc = rawStatMap.firstKey();
-
-
-            for (int startTime = rc.getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
-
-                System.out.println();
-                System.out.println(GitemberUtil.intToDate(startTime));
+            for (int startTime = rawStatMap.firstKey().getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
                 RevCommit nrc = floorRevCommit(rawStatMap, startTime);
                 if (nrc != null) {
                     System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
-                    normalizedStatMap.put(nrc, rawStatMap.get(nrc));
+                    normalizedStatMap.put(
+                            startTime,
+                            new Pair<>(nrc, rawStatMap.get(nrc))
+                    );
                 }
 
             }
 
 
-            rawStatMap.keySet().stream().forEach(
-                    r -> {
-                        //System.out.println("\n\n--------- " + r.getId() + " " + r.getCommitTime() + " " + r.getShortMessage());
-                        //System.out.println(GitemberUtil.intToDate(r.getCommitTime()));
-                        /*rawStatMap.get(r).stream().filter(f -> !f.contains(".zzzzz")).forEach(
-                                //f ->
+            Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevisions = new TreeMap<RevCommit, Map<String, Map<String, Integer>>>(
+                    (o1, o2) -> {
+                        return Integer.valueOf(o1.getCommitTime()).compareTo(
+                                o2.getCommitTime()
+                        );
+                    }
+            );
 
 
-                                f -> {
+            normalizedStatMap.keySet().stream().forEach(
+                    revTime -> {
 
-                                    //System.out.print(" " + f);
+                        RevCommit toBlame = normalizedStatMap.get(revTime).getFirst();
 
+                        System.out.println("toBlame: " + toBlame);
 
+                        blamedRevisions.computeIfAbsent(
+                                toBlame,
+                                revCommit -> {
+                                    Map<String, Map<String, Integer>> fileAuthCnt = new HashMap<String, Map<String, Integer>>();
 
-                                    ////////////////////////////////////////////
-                                    BlameCommand blamer = new BlameCommand(db);
-                                    blamer.setStartCommit(r.getId());
+                                    AtomicInteger ai = new AtomicInteger(0);
 
-                                    blamer.setFilePath(f);
-                                    BlameResult blame = null;
-                                    try {
-                                        blame = blamer.call();
+                                    normalizedStatMap.get(revTime).getSecond().stream().forEach(
+                                            filePath -> {
+                                                ai.incrementAndGet();
 
-                                        //int lines = countLinesOfFileInCommit(db, r.getId(), f);
-                                        if ( blame != null &&  blame.getResultContents() != null) {
-
-                                            int lines = blame.getResultContents().size();
-                                            for (int i = 0; i < lines; i++) {
-                                                // blame.lastLength()
-                                                RevCommit ccc = blame.getSourceCommit(i);
-                                                System.out.println("Line: " + i + ": " + ccc + " " + ccc.getAuthorIdent());
+                                                BlameCommand blamer = new BlameCommand(db);
+                                                blamer.setStartCommit(toBlame);
+                                                blamer.setFilePath(filePath);
+                                                try {
+                                                    BlameResult blame = blamer.call();
+                                                    Map<String, Integer> authCnt = new HashMap<String, Integer>();
+                                                    if (blame != null && blame.getResultContents() != null) {
+                                                        int lines = blame.getResultContents().size();
+                                                        for (int i = 0; i < lines; i++) {
+                                                            RevCommit ccc = blame.getSourceCommit(i);
+                                                            String email = ccc.getAuthorIdent().getEmailAddress();
+                                                            Integer cnt = authCnt.getOrDefault(email , 0) + 1;
+                                                            authCnt.put(email, cnt);
+                                                        }
+                                                    }
+                                                    fileAuthCnt.put(filePath, authCnt);
+                                                } catch (GitAPIException e) {
+                                                    e.printStackTrace();
+                                                }
                                             }
-                                            //System.out.print("b");
-
-                                        } else {
-                                            //System.out.print("-");
-                                        }
-
-                                    } catch (GitAPIException e) {
-                                        e.printStackTrace();
-                                    }
-
-//https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/ShowBlame.java
-
-
-
-                                    ////////////////////////////////////////////
-
-
+                                    );
+                                    return fileAuthCnt;
                                 }
-
-
-
-
-
-
-                        );*/
+                        );
                     }
             );
 
@@ -208,6 +197,9 @@ public class JGitLsTree {
 
 
     }
+
+
+
 
 
     /*
@@ -226,6 +218,7 @@ public class JGitLsTree {
                 break;
             }
         }
+        System.out.println("########### " + candidate);
         return candidate;
     }
 
