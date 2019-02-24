@@ -68,8 +68,6 @@ public class GitRepositoryService {
 
     private final StoredConfig config;
 
-    private Set<String> prevList = null;
-
     /**
      * Construct service, which work with git
      *
@@ -246,188 +244,79 @@ public class GitRepositoryService {
     }
 
 
-    public void blame(final String treeName) throws Exception {
+    public RemoteOperationValue blame(final Set<String> files, final ProgressMonitor progressMonitor) throws Exception {
 
-        prevList = null;
+        final Ref head = repository.exactRef(Constants.HEAD);
+        final RevWalk walk = new RevWalk(repository);
+        final RevCommit commit = walk.parseCommit(head.getObjectId());
+        final Map<String, Map> rez = new TreeMap<>();
+        final Iterator<String> pathIter = files.iterator();
 
-        final TreeMap<RevCommit, Set<String>> rawStatMap = new TreeMap<RevCommit, Set<String>>(
-                (o1, o2) -> Integer.valueOf(((RevCommit) o1).getCommitTime()).compareTo(
-                        ((RevCommit) o2).getCommitTime()
-                )
-        );
+        progressMonitor.beginTask("Blame", files.size());
 
-        final Map<RevCommit, Set<String>> deleted = new HashMap<>();
+        int cnt = 0;
 
-        fillStatMaps(treeName, rawStatMap, deleted);
+        while(pathIter.hasNext()) {
+            final String path = pathIter.next();
+            final BlameCommand blamer = new BlameCommand(repository);
 
-        completeFileListPerRevision(rawStatMap, deleted);
+            blamer.setStartCommit(commit);
+            blamer.setFilePath(path);
 
-        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap = adjustRawStatMap(rawStatMap, Period.ofWeeks(1));
+            final BlameResult blame = blamer.call();
+            rez.put(path, countLines(blame));
 
-        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevsFileAuthCnt = blameRevisions(adjustedRawStatMap);
+            progressMonitor.update(cnt++);
 
+        }
 
-    }
-
-    private Map<RevCommit, Map<String, Map<String, Integer>> >  blameRevisions(TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustedRawStatMap) {
-
-
-        Map<RevCommit, Map<String, Map<String, Integer>> > blamedRevisionsCache = new TreeMap<RevCommit, Map<String, Map<String, Integer>>>(
-                (o1, o2) -> {
-                    return Integer.valueOf(o1.getCommitTime()).compareTo(
-                            o2.getCommitTime()
-                    );
+        Map<String, Integer> total = new TreeMap<>();
+        rez.values().stream().forEach(
+                m -> {
+                    System.out.println(m);
                 }
         );
 
+        progressMonitor.endTask();
 
-        adjustedRawStatMap.keySet().stream().forEach(
-                revTime -> {
-
-                    RevCommit toBlame = adjustedRawStatMap.get(revTime).getFirst();
-
-                    System.out.println("toBlame: " + toBlame);
-
-                    blamedRevisionsCache.computeIfAbsent(
-                            toBlame,
-                            revCommit -> {
-                                Map<String, Map<String, Integer>> fileAuthCnt = new HashMap<String, Map<String, Integer>>();
-
-                                AtomicInteger ai = new AtomicInteger(0);
-
-                                adjustedRawStatMap.get(revTime).getSecond().stream().forEach(
-                                        filePath -> {
-                                            ai.incrementAndGet();
-
-                                            BlameCommand blamer = new BlameCommand(repository);
-                                            blamer.setStartCommit(toBlame);
-                                            blamer.setFilePath(filePath);
-                                            try {
-                                                BlameResult blame = blamer.call();
-                                                Map<String, Integer> authCnt = new HashMap<String, Integer>();
-                                                if (blame != null && blame.getResultContents() != null) {
-                                                    int lines = blame.getResultContents().size();
-                                                    for (int i = 0; i < lines; i++) {
-                                                        RevCommit ccc = blame.getSourceCommit(i);
-                                                        String email = ccc.getAuthorIdent().getEmailAddress();
-                                                        Integer cnt = authCnt.getOrDefault(email , 0) + 1;
-                                                        authCnt.put(email, cnt);
-                                                    }
-                                                }
-                                                fileAuthCnt.put(filePath, authCnt);
-                                            } catch (GitAPIException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                );
-                                return fileAuthCnt;
-                            }
-                    );
-                }
-        );
-
-        return blamedRevisionsCache;
+        return new RemoteOperationValue(RemoteOperationValue.Result.OK, "Ok", rez);
 
     }
 
-    private TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> adjustRawStatMap(TreeMap<RevCommit, Set<String>> rawStatMap,  Period period) {
-
-        TreeMap<Integer, Triplet<RevCommit, Set<String>, Boolean>> rez = new TreeMap<>(
-                Integer::compareTo
-        );
-
-        //TODO optimize, start time shall not from first , but from resolved rc on previos step
-
-        for (int startTime = rawStatMap.firstKey().getCommitTime(); startTime < rawStatMap.lastKey().getCommitTime(); startTime += period.get(ChronoUnit.DAYS) * 24 * 60 * 60) {
-            RevCommit nrc = floorRevCommit(rawStatMap, startTime);
-            if (nrc != null) {
-                System.out.println(GitemberUtil.intToDate(rawStatMap.floorKey(nrc).getCommitTime()));
-                rez.put(
-                        startTime,
-                        new Triplet<>(nrc, rawStatMap.get(nrc), false)
-                );
+    private Map<String, Integer> countLines(BlameResult blame) {
+        Map<String,Integer> rez =  new HashMap<>();
+        if (blame != null && blame.getResultContents() != null) {
+            int lines = blame.getResultContents().size();
+            for (int i = 0; i < lines; i++) {
+                String email = blame.getSourceAuthor(i).getEmailAddress();
+                Integer cnt = rez.getOrDefault(email , 0) + 1;
+                rez.put(email, cnt);
             }
         }
         return rez;
     }
 
+    public Set<String> getAllFiles() throws IOException {
+        final Set<String> rez = new TreeSet<>();
 
-    /*
-    * |------|------|------|------|------|------|------|------|------|------|
-    * |----|||||--|---|||--|----------------|||||--|---|---|-|--||----|--|
-    * |------|----|-----|--|--------------------|------|-----|---|----|--|
-    *
-    * */
-    private  RevCommit floorRevCommit(TreeMap<RevCommit, Set<String>> rawStatMap, int startTime) {
-        RevCommit candidate = null;
-        for (RevCommit r : rawStatMap.keySet()) {
-            if (r.getCommitTime() <= startTime) {
-                candidate = r;
+        final Ref head = repository.exactRef(Constants.HEAD);
+        final RevWalk walk = new RevWalk(repository);
+        final RevCommit commit = walk.parseCommit(head.getObjectId());
+        final RevTree tree = commit.getTree();
+        final TreeWalk treeWalk = new TreeWalk(repository);
+
+        treeWalk.addTree(tree);
+        treeWalk.setRecursive(true);
+
+        while (treeWalk.next()) {
+            if (treeWalk.isSubtree()) {
+                treeWalk.enterSubtree();
             } else {
-                break;
+                final String path = treeWalk.getPathString();
+                rez.add(path);
             }
         }
-        return candidate;
-    }
-
-    private void completeFileListPerRevision(Map<RevCommit, Set<String>> rawStatMap,
-                                             Map<RevCommit, Set<String>> deleted) {
-        rawStatMap.keySet().stream().forEach(
-                r -> {
-                    if (prevList != null) {
-                        rawStatMap.get(r).addAll(prevList);
-                        rawStatMap.get(r).removeAll(deleted.get(r));
-                    }
-                    prevList = rawStatMap.get(r);
-                }
-        );
-    }
-
-    private void fillStatMaps(String treeName,
-                              Map<RevCommit, Set<String>> rawStatMap,
-                              Map<RevCommit, Set<String>> deleted) throws IOException, GitAPIException {
-
-        try (Git git = new Git(repository)) {
-
-            final LogCommand cmd = git.log()
-                    .add(repository.resolve(treeName))
-                    .setRevFilter(RevFilter.ALL);
-
-            Iterable<RevCommit> logs = cmd.call();
-
-            for (RevCommit commit : logs) {
-                String commitID = commit.getName();
-                if (!commitID.isEmpty()) {
-                    TreeWalk tw = new TreeWalk(repository);
-                    tw.setRecursive(true);
-
-                    tw.addTree(commit.getTree());
-                    for (RevCommit parent : commit.getParents()) {
-                        tw.addTree(parent.getTree());
-                    }
-
-                    rawStatMap.put(commit, new HashSet<>());
-                    deleted.put(commit, new HashSet<>());
-
-                    while (tw.next()) {
-                        int similarParents = 0;
-                        for (int i = 1; i < tw.getTreeCount(); i++) {
-                            if (tw.getFileMode(i) == tw.getFileMode(0) && tw.getObjectId(0).equals(tw.getObjectId(i))) {
-                                similarParents++;
-                            }
-                        }
-                        if (similarParents == 0) {
-                            if (tw.getFileMode(0) != FileMode.MISSING) {
-                                String filePath = tw.getPathString();
-                                rawStatMap.get(commit).add(filePath);
-                            } else {
-                                deleted.get(commit).add(tw.getPathString());
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        return rez;
     }
 
 

@@ -16,6 +16,13 @@ public class RemoteOperationValue {
 
     private Result result;
     private Object value;
+    private Object secondValue;
+
+    public RemoteOperationValue(Result result, Object value, Object secondValue) {
+        this.result = result;
+        this.value = value;
+        this.secondValue = secondValue;
+    }
 
     public RemoteOperationValue(Result result, Object value) {
         this.result = result;
@@ -25,6 +32,14 @@ public class RemoteOperationValue {
     public RemoteOperationValue(Object value) {
         this.result = Result.OK;
         this.value = value;
+    }
+
+    public Object getSecondValue() {
+        return secondValue;
+    }
+
+    public void setSecondValue(Object secondValue) {
+        this.secondValue = secondValue;
     }
 
     public Result getResult() {

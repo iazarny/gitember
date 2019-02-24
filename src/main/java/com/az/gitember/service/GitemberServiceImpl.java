@@ -91,11 +91,10 @@ public class GitemberServiceImpl {
     }
 
 
-
     /**
      * Checkout given branch into working copy.
      *
-     * @param fullName given branch.
+     * @param fullName     given branch.
      * @param newLocalName optional , new local branch wil be created if given
      */
     public void checkout(final String fullName, final String newLocalName) {
@@ -641,13 +640,50 @@ public class GitemberServiceImpl {
         }
     }
 
+    /**
+     * Create stat report.
+     */
     public void createStatReport() {
+
         try {
-            GitemberApp.getRepositoryService().blame(
-                    GitemberApp.workingBranch.get().getFullName()
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            final Set<String> files = GitemberApp.getRepositoryService().getAllFiles();
+
+            Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                @Override
+                protected RemoteOperationValue call() throws Exception {
+
+                    return remoteRepositoryOperation(
+                            () -> {
+                                try {
+                                    return GitemberApp.getRepositoryService().blame(
+                                            files,
+                                            new DefaultProgressMonitor((t, d) -> {
+                                                updateTitle(t);
+                                                updateProgress(d, 1.0);
+                                            }
+                                            )
+                                    );
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            }
+                    );
+                }
+
+            };
+
+            prepareLongTask(longTask, null, null);
+            new Thread(longTask).start();
+
+        } catch (Exception ex) {
+            if (ex instanceof GECheckoutConflictException) {
+                GitemberApp.showResult(ex.getMessage(), Alert.AlertType.WARNING);
+            } else {
+                GitemberApp.showException("Error :(", ex);
+                log.log(Level.SEVERE, ex.getMessage(), ex);
+            }
         }
 
     }

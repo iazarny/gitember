@@ -807,7 +807,6 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void createStatReport(ActionEvent actionEvent) {
-        //statReportMenuItem
         GitemberApp.getGitemberService().createStatReport();
     }
 
