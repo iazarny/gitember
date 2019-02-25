@@ -52,14 +52,16 @@ public class DefaultProgressMonitor implements ProgressMonitor {
     public void setTotalWork(int totalWork) {
         this.totalWork = totalWork;
         if (totalWork > 0) {
-            percentageCompleteConsumer.accept(title, 1.0 * completed  / totalWork);
+            double tw = 1.0 * completed  / totalWork;
+            percentageCompleteConsumer.accept(title, tw );
         }
     }
 
     public void setCompleted(int completed) {
-        this.completed += completed;
+        this.completed = completed;
+        double c = 1.0 * this.completed / totalWork;
         if (totalWork > 0) {
-            percentageCompleteConsumer.accept(title, 1.0 * this.completed / totalWork);
+            percentageCompleteConsumer.accept(title, c);
         }
     }
 }

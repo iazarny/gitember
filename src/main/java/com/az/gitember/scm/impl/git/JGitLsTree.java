@@ -193,6 +193,8 @@ public class JGitLsTree {
                     }
             );
 
+            System.out.println("Fin");
+
         }
 
 
