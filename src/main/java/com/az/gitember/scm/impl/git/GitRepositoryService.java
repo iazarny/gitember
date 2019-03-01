@@ -48,6 +48,8 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -272,10 +274,21 @@ public class GitRepositoryService {
 
         Map<String, Integer> total = new TreeMap<>();
         rez.values().stream().forEach(
-                m -> {
-                    System.out.println(m);
-                }
+                m -> m.forEach(
+                        (author,  c) -> {
+                            total.computeIfPresent(
+                                    (String)author,
+                                    (s, integer) -> integer + (Integer) c
+                            );
+                            total.computeIfAbsent(
+                                    (String)author,
+                                    s -> (Integer) c
+                            );
+                        }
+                )
         );
+
+        System.out.println(total);
 
         progressMonitor.endTask();
 
@@ -288,9 +301,9 @@ public class GitRepositoryService {
         if (blame != null && blame.getResultContents() != null) {
             int lines = blame.getResultContents().size();
             for (int i = 0; i < lines; i++) {
-                String email = blame.getSourceAuthor(i).getEmailAddress();
-                Integer cnt = rez.getOrDefault(email , 0) + 1;
-                rez.put(email, cnt);
+                String author = blame.getSourceAuthor(i).getName();
+                Integer cnt = rez.getOrDefault(author , 0) + 1;
+                rez.put(author, cnt);
             }
         }
         return rez;
