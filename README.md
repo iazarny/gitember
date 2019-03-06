@@ -13,12 +13,6 @@ Nothing in particular, but
 ### Next version
 
  * Add ssh protocol support
- * Add statics
 
-### Current todo items
-
- * Site
- * Show result of operations
- * Package for OSes and web start
 
 

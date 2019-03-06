@@ -107,7 +107,7 @@ public class StatViewController implements Initializable {
                             @Override public void handle(MouseEvent e) {
                                 caption.setTranslateX(e.getSceneX());
                                 caption.setTranslateY(e.getSceneY() - chart.getHeight() / 2);
-                                caption.setText(String.valueOf(data.getPieValue()) + " lines");
+                                caption.setText(String.valueOf((int)data.getPieValue()) + " lines");
                             }
                         });
             }
