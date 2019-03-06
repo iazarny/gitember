@@ -1039,9 +1039,14 @@ public class GitRepositoryService {
                 );
             }
             FetchResult fetchResult = fetchCommand.call();
-            return new RemoteOperationValue("TODO fetch result more human readable or " + fetchResult.toString());
+            if (fetchResult.getTrackingRefUpdates().isEmpty()) {
+                return new RemoteOperationValue("Nothing changed");
+            }
+            return new RemoteOperationValue(
+                    MessageFormat.format("Found {0} refs to process.",fetchResult.getTrackingRefUpdates().size()));
         } catch (CheckoutConflictException conflictException) {
-            return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
+            return new RemoteOperationValue(
+                    RemoteOperationValue.Result.ERROR, "Fetch conflict error" + conflictException.getMessage());
         } catch (GitAPIException e) {
             return processError(e);
         }

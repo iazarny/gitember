@@ -4,6 +4,9 @@ import com.az.gitember.misc.*;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -280,9 +283,9 @@ public class FXMLController implements Initializable {
         );
 
         GitemberApp.workingBranch.addListener(
-                (observable, oldValue, newValue) -> {
+                observable -> {
+                    ScmBranch newValue = (ScmBranch) ((SimpleObjectProperty) observable).get();
                     boolean trackingRemoteBranch = newValue.getRemoteName() != null;
-
                     try {
                         fillAllBranchTrees();
                         if (trackingRemoteBranch) {
@@ -291,7 +294,6 @@ public class FXMLController implements Initializable {
                             fetchMenuItem.setText("Fetch remote " + remoteBranch + " to " + localBranch);
                             pullMenuItem.setText("Pull remote " + remoteBranch + " to " + localBranch);
                             pushMenuItem.setText("Push " + localBranch + " remote to " + remoteBranch);
-
                             Tooltip tt = new Tooltip(
                                     MessageFormat.format(
                                             "Branch {0} tracking remote {1}",
@@ -306,11 +308,9 @@ public class FXMLController implements Initializable {
                             pushMenuItem.setText("Push");
 
                         }
-
                         fetchMenuItem.setDisable(!trackingRemoteBranch);
                         pullMenuItem.setDisable(!trackingRemoteBranch);
                         pushMenuItem.setDisable(!trackingRemoteBranch);
-
                         fetchBtn.setDisable(!trackingRemoteBranch);
                         pullBtn.setDisable(!trackingRemoteBranch);
                         pushBtn.setDisable(!trackingRemoteBranch);
@@ -318,10 +318,8 @@ public class FXMLController implements Initializable {
                         GitemberApp.showException("Cannot reload list of branches", e);
                     }
 
-
                 }
         );
-
 
     }
 
