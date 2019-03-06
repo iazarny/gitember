@@ -17,13 +17,15 @@ import java.util.function.Consumer;
 public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<Object>> {
 
     final ContextMenu contextMenu;
+    final ContextMenu tagContextMenu;
     final Consumer<Object> validateContextMenu;
 
 
 
-    public ScmItemCellFactory(ContextMenu contextMenu, Consumer<Object> validateContextMenu) {
+    public ScmItemCellFactory(ContextMenu contextMenu, ContextMenu tagContextMenu, Consumer<Object> validateContextMenu) {
         this.contextMenu = contextMenu;
         this.validateContextMenu = validateContextMenu;
+        this.tagContextMenu = tagContextMenu;
     }
 
     public class ScmItemCell extends TreeCell<Object> {
@@ -41,6 +43,10 @@ public class ScmItemCellFactory implements Callback<TreeView<Object>, TreeCell<O
                     setText(item.toString());
                     setGraphic(getTreeItem().getGraphic());
                     setStyle("");
+                    if ("Tags".equals(item)) {
+                        setContextMenu(tagContextMenu);
+
+                    }
                 } else if (item instanceof ScmBranch) {
                     ScmBranch scmBranch = (ScmBranch) item;
                     setText(scmBranch.getShortName());

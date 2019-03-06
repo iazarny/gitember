@@ -25,10 +25,12 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.eclipse.jgit.transport.*;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
@@ -42,19 +44,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
-import java.time.Period;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static org.eclipse.jgit.lib.IndexDiff.StageState.BOTH_DELETED;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -258,7 +251,7 @@ public class GitRepositoryService {
 
         int cnt = 0;
 
-        while(pathIter.hasNext()) {
+        while (pathIter.hasNext()) {
             final String path = pathIter.next();
             final BlameCommand blamer = new BlameCommand(repository);
 
@@ -275,34 +268,54 @@ public class GitRepositoryService {
         Map<String, Integer> total = new TreeMap<>();
         rez.values().stream().forEach(
                 m -> m.forEach(
-                        (author,  c) -> {
+                        (author, c) -> {
                             total.computeIfPresent(
-                                    (String)author,
+                                    (String) author,
                                     (s, integer) -> integer + (Integer) c
                             );
                             total.computeIfAbsent(
-                                    (String)author,
+                                    (String) author,
                                     s -> (Integer) c
                             );
                         }
                 )
         );
 
-        System.out.println(total);
+        progressMonitor.endTask();
+
+        progressMonitor.beginTask("Log", 300);
+        Map<String, Integer> logMap = new HashMap<>();
+
+        try (Git git = new Git(repository)) {
+            Iterable<RevCommit> commits = git.log().call();
+            int count = 0;
+            for (RevCommit rc : commits) {
+                count++;
+                String author = rc.getAuthorIdent().getName();
+                logMap.computeIfPresent(
+                        author,
+                        (a, i) -> i + 1
+                );
+                logMap.computeIfAbsent(
+                        author,
+                        s -> 1
+                );
+            }
+        }
 
         progressMonitor.endTask();
 
-        return new RemoteOperationValue(RemoteOperationValue.Result.OK, "Ok", rez);
+        return new RemoteOperationValue(RemoteOperationValue.Result.OK, "Ok", new ScmStat(total, logMap));
 
     }
 
     private Map<String, Integer> countLines(BlameResult blame) {
-        Map<String,Integer> rez =  new HashMap<>();
+        Map<String, Integer> rez = new HashMap<>();
         if (blame != null && blame.getResultContents() != null) {
             int lines = blame.getResultContents().size();
             for (int i = 0; i < lines; i++) {
                 String author = blame.getSourceAuthor(i).getName();
-                Integer cnt = rez.getOrDefault(author , 0) + 1;
+                Integer cnt = rez.getOrDefault(author, 0) + 1;
                 rez.put(author, cnt);
             }
         }
@@ -571,6 +584,21 @@ public class GitRepositoryService {
 
 
     /**
+     * Create new tag
+     *
+     * @param tagName tag name
+     */
+    public Ref creteTag(String tagName) throws GEScmAPIException {
+
+        try (Git git = new Git(repository);) {
+            return git.tag().setName(tagName).setForceUpdate(true).setAnnotated(true).call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot create tag", e);
+            throw new GEScmAPIException(e.getMessage());
+        }
+    }
+
+    /**
      * Save given fileName at tree/revision into output stream.
      *
      * @param treeName     tree name
@@ -764,6 +792,7 @@ public class GitRepositoryService {
 
     /**
      * git reset HEAD ...
+     *
      * @param fileName
      * @throws Exception
      */
@@ -875,7 +904,6 @@ public class GitRepositoryService {
         }
 
     }
-
 
 
     /**
@@ -1303,11 +1331,24 @@ public class GitRepositoryService {
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec) {
+        return remoteRepositoryPush(userName, password,   setOrigin,   progressMonitor,  refSpec,   null);
+    }
+
+    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+                                                     boolean setOrigin,
+                                                     ProgressMonitor progressMonitor,
+                                                     RefSpec refSpec,
+                                                     Ref pushTagRef) {
         try (Git git = new Git(repository)) {
 
-            PushCommand cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
-            if (setOrigin) {
-                cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);
+            final PushCommand cmd;
+            if (pushTagRef == null) {
+                cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
+                if (setOrigin) {
+                    cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);
+                }
+            } else {
+                cmd = git.push().add(pushTagRef).setProgressMonitor(progressMonitor);
             }
             if (userName != null) {
                 cmd.setCredentialsProvider(
@@ -1318,7 +1359,7 @@ public class GitRepositoryService {
             StringBuilder stringBuilder = new StringBuilder();
             pushResults.forEach(
                     pushResult -> {
-                        String rezInfo = "";//todo
+                        String rezInfo = pushResult.getMessages();// "";//todo
                         stringBuilder.append(rezInfo);
                     }
             );
@@ -1334,7 +1375,8 @@ public class GitRepositoryService {
                     return remoteRepositoryPush(
                             userName, password,
                             setOrigin, progressMonitor,
-                            refSpec
+                            refSpec,
+                            pushTagRef
                     );
                 } catch (IOException e) {
                     return processError(e);

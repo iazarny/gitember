@@ -60,6 +60,10 @@ public class FXMLController implements Initializable {
     public MenuItem deleteStashCtxMenuItem;
     public MenuItem applyStashCtxMenuItem;
 
+
+    public MenuItem createTagMenuItem;
+
+    public ContextMenu tagContextMenu;
     public ContextMenu contextMenu;
     public MenuBar mainMenuBar;
     public ToolBar mainToolBar;
@@ -114,7 +118,7 @@ public class FXMLController implements Initializable {
             );
 
             repoTreeView.setCellFactory(
-                    new ScmItemCellFactory(contextMenu, this::validateContextMenu)
+                    new ScmItemCellFactory(contextMenu, tagContextMenu, this::validateContextMenu)
             );
             repoTreeView.getSelectionModel().selectedItemProperty().addListener(
                     (ob, o, n) -> treeItemClickHandlers.getOrDefault(n, z -> {
@@ -245,6 +249,8 @@ public class FXMLController implements Initializable {
         createLocalBranchContextMenu();
 
         createOpenRecentMenu();
+
+        createTagContextMenu();
 
         openGitTerminalMenuItem.setVisible(GitemberApp.getSettingsService().isWindows());
 
@@ -413,6 +419,15 @@ public class FXMLController implements Initializable {
     }
 
 
+    private ContextMenu createTagContextMenu() {
+
+        createTagMenuItem = new MenuItem("Create tag ...");
+        createTagMenuItem.setOnAction(this::createTagHandler);
+        tagContextMenu = new ContextMenu(createTagMenuItem);
+
+        return tagContextMenu;
+    }
+
     private ContextMenu createLocalBranchContextMenu() {
 
         checkoutRemoteBranchMenuItem = new MenuItem("Checkout ...");
@@ -477,6 +492,30 @@ public class FXMLController implements Initializable {
 
     //---------------------------------------------------------------------------------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
+    //-----------------------------    Tag handler                            ---------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
+    @SuppressWarnings("unchecked")
+    public void createTagHandler(ActionEvent actionEvent) {
+
+        CreateTagDialog dialog = new CreateTagDialog(
+                "Create tag",
+                "Create tag",
+                "",
+                "Just create", "Create and push"
+        );
+        Optional<Pair<Boolean, String>> dialogResult = dialog.showAndWait();
+        if (dialogResult.isPresent()) {
+            GitemberApp.getGitemberService().createTag(dialogResult.get().getFirst(), dialogResult.get().getSecond());
+            tagsTreeItem.getChildren().clear();
+            fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
+        }
+
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------//
+    //---------------------------------------------------------------------------------------------------------------//
     //-----------------------------    Local branch context menu item handlers---------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
     //---------------------------------------------------------------------------------------------------------------//
@@ -487,10 +526,12 @@ public class FXMLController implements Initializable {
         CheckoutOriginBranch dialog = new CheckoutOriginBranch(
                 "Checkout remote branch",
                 "Please, specify action for branch " + getScmBranch().getShortName(),
-                getScmBranch().getShortName());
+                getScmBranch().getShortName(),
+                "Just checkout", "Create local branch"
+        );
         Optional<Pair<Boolean, String>> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
-            if(dialogResult.get().getFirst()) {
+            if (dialogResult.get().getFirst()) {
                 GitemberApp.getGitemberService().checkout(getScmBranch().getFullName(), dialogResult.get().getSecond());
 
             } else {

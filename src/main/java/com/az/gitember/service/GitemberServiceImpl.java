@@ -1,6 +1,7 @@
 package com.az.gitember.service;
 
 import com.az.gitember.GitemberApp;
+import com.az.gitember.StatViewController;
 import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
@@ -339,6 +340,44 @@ public class GitemberServiceImpl {
         }
     }
 
+    public void createTag(boolean push, String tag) {
+
+        try {
+            Ref ref = GitemberApp.getRepositoryService().creteTag(tag);
+
+            if (push) {
+
+
+                RefSpec refSpec = new RefSpec(":refs/tags/" + tag);
+
+                Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
+                    @Override
+                    protected RemoteOperationValue call() throws Exception {
+                        return remoteRepositoryOperation(
+                                () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
+                                        login, pwd, true,
+                                        new DefaultProgressMonitor((t, d) -> {
+                                            //do nothing
+                                        }),
+                                        refSpec,
+                                        ref)
+                        );
+                    }
+                };
+                prepareLongTask(longTask, null, null);
+                new Thread(longTask).start();
+
+
+
+
+
+            }
+        } catch (GEScmAPIException e) {
+            GitemberApp.showResult("Cannot dd tag " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+
+    }
+
 
     public void pushToRemoteRepository(String localBranchName, String remoteBranchName,
                                        boolean setOrigin, boolean setTrackeRemote) {
@@ -453,23 +492,23 @@ public class GitemberServiceImpl {
         longTask.setOnSucceeded(val -> Platform.runLater(
                 () -> {
                     RemoteOperationValue rval = longTask.getValue();
+                    String info = rval.getValue().toString(); //todo rval value can be not an string.
+                    GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                     switch (rval.getResult()) {
                         case OK: {
                             if (onOk != null) {
                                 onOk.accept(rval);
                             }
-                            String okInfo = rval.getValue().toString(); //todo rval value can be not an string.
-                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult(okInfo, Alert.AlertType.INFORMATION);
+                            if (rval.getSecondValue() == null) {
+                                GitemberApp.showResult(info, Alert.AlertType.INFORMATION);
+                            }
                             break;
                         }
                         case ERROR: {
                             if (onError != null) {
                                 onError.accept(rval);
                             }
-                            String errInfo = rval.getValue().toString(); //todo rval value can be not an string.
-                            GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
-                            GitemberApp.showResult(errInfo, Alert.AlertType.ERROR);
+                            GitemberApp.showResult(info, Alert.AlertType.ERROR);
                             break;
                         }
                     }
@@ -674,10 +713,29 @@ public class GitemberServiceImpl {
 
             };
 
-            prepareLongTask(longTask, null, null);
+            prepareLongTask(longTask,
+                    remoteOperationValue -> {
+                        try {
+                            ScmStat scmStat = (ScmStat) remoteOperationValue.getSecondValue();
+                            StatViewController.openStatWindow(
+                                    scmStat.getTotal(),
+                                    scmStat.getLogMap()
+                            );
+
+                        } catch (Exception e) {
+                            String msg = "Cannot open statistic report";
+                            log.log(Level.WARNING, msg, e);
+                            GitemberApp.showResult(msg, Alert.AlertType.ERROR);
+                        }
+
+                    },
+                    null);
             new Thread(longTask).start();
 
         } catch (Exception ex) {
+
+            ex.printStackTrace();
+
             if (ex instanceof GECheckoutConflictException) {
                 GitemberApp.showResult(ex.getMessage(), Alert.AlertType.WARNING);
             } else {

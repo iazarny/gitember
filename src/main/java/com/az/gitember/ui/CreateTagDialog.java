@@ -11,23 +11,23 @@ import javafx.scene.layout.Priority;
 /**
  * Created by Igor_Azarny on 25 - Feb -2017.
  */
-public class CheckoutOriginBranch extends Dialog<Pair<Boolean, String>> {
+public class CreateTagDialog extends Dialog<Pair<Boolean, String>> {
 
     private TextField localBranchName;
     private Label localBranchLabel;
 
-    public CheckoutOriginBranch(final String title,
-                                final String header,
-                                final String defaultLocalName,
-                                final String firstRadioText,
-                                final String secondRadioText
+    public CreateTagDialog(final String title,
+                           final String header,
+                           final String defaultLocalName,
+                           final String firstRadioText,
+                           final String secondRadioText
     ) {
 
         super();
         this.setTitle(title);
         this.setHeaderText(header);
 
-        ButtonType checkoutBtn = new ButtonType("Checkout", ButtonBar.ButtonData.OK_DONE);
+        ButtonType checkoutBtn = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(checkoutBtn, ButtonType.CANCEL);
 
 
@@ -43,15 +43,7 @@ public class CheckoutOriginBranch extends Dialog<Pair<Boolean, String>> {
         checkoutRadioButton.setToggleGroup(group);
         RadioButton trackRadioButton = new RadioButton(secondRadioText);
         trackRadioButton.setToggleGroup(group);
-        group.selectedToggleProperty().addListener(
-                observable -> {
-                    localBranchName.setVisible(group.getSelectedToggle() == trackRadioButton);
-                    localBranchLabel.setVisible(group.getSelectedToggle() == trackRadioButton);
-                    if (group.getSelectedToggle() == trackRadioButton) {
-                        Platform.runLater(() -> localBranchName.requestFocus());
-                    }
-                }
-        );
+
 
         grid.add(new Label("Specify the action : "), 0, 0);
         grid.add(checkoutRadioButton, 1, 0);
@@ -59,9 +51,7 @@ public class CheckoutOriginBranch extends Dialog<Pair<Boolean, String>> {
 
         localBranchName = new TextField(defaultLocalName);
         HBox.setHgrow(localBranchName, Priority.ALWAYS);
-        localBranchName.setVisible(false);
-        localBranchLabel = new Label("Track remote branch with local name : ");
-        localBranchLabel.setVisible(false);
+        localBranchLabel = new Label("New tag name : ");
 
         grid.add(localBranchLabel, 0, 1);
         grid.add(localBranchName, 1, 1, 2, 1);
