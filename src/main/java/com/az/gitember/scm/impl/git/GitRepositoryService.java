@@ -943,6 +943,7 @@ public class GitRepositoryService {
      */
     public RemoteOperationValue cloneRepository(final String reporitoryUrl, final String folder,
                                                 final String userName, final String password,
+                                                final String pathToKey,
                                                 final ProgressMonitor progressMonitor) {
 
         final CloneCommand cmd = Git.cloneRepository()

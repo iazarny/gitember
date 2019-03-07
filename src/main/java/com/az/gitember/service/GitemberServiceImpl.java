@@ -21,6 +21,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -597,15 +598,27 @@ public class GitemberServiceImpl {
                 "Remote repository URL",
                 urls);
         dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+        Optional<CloneDialog.CloneParameters> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
 
-            String url = dialogResult.get().getFirst();
+            String url = dialogResult.get().getUrl();
             GitemberApp.remoteUrl.setValue(url);
             urls.add(url);
             settings.getGiturls().clear();
             settings.getGiturls().addAll(urls);
             GitemberApp.getSettingsService().save(settings);
+
+            if (dialogResult.get().getUrl().startsWith("git@")) {
+                pwd = dialogResult.get().getKeyPassPhrase();
+                try {
+                    URL gitUrl = new URL(dialogResult.get().getUrl());
+                    login = gitUrl.getUserInfo();
+                } catch (Exception e) {
+                    GitemberApp.showException(e.getMessage(), e);
+                    log.log(Level.INFO, e.getMessage());
+                }
+
+            }
 
 
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
@@ -613,10 +626,11 @@ public class GitemberServiceImpl {
                 protected RemoteOperationValue call() throws Exception {
                     return remoteRepositoryOperation(
                             () -> GitemberApp.getRepositoryService().cloneRepository(
-                                    dialogResult.get().getFirst(),
-                                    dialogResult.get().getSecond(),
+                                    dialogResult.get().getUrl(),
+                                    dialogResult.get().getDestinationFolder(),
                                     login,
                                     pwd,
+                                    dialogResult.get().getPathToKey(),
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);
                                         updateProgress(d, 1.0);

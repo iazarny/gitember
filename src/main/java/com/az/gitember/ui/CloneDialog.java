@@ -3,6 +3,9 @@ package com.az.gitember.ui;
 import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -10,16 +13,84 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by Igor_Azarny on 29 - Dec - 2016.
  */
-public class CloneDialog extends Dialog<Pair<String, String>> {
+public class CloneDialog extends Dialog<CloneDialog.CloneParameters> {
+
+    public static class CloneParameters {
+
+        private StringProperty url = new SimpleStringProperty("");
+        private StringProperty destinationFolder = new SimpleStringProperty("");
+        private StringProperty pathToKey = new SimpleStringProperty(System.getProperty("user.home")
+                + File.separator
+                + ".ssh"
+                + File.separator
+                + "id_rsa");
+        private StringProperty keyPassPhrase = new SimpleStringProperty("");
+
+        public String getUrl() {
+            return url.get();
+        }
+
+        public StringProperty urlProperty() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url.set(url);
+        }
+
+        public String getDestinationFolder() {
+            return destinationFolder.get();
+        }
+
+        public StringProperty destinationFolderProperty() {
+            return destinationFolder;
+        }
+
+        public void setDestinationFolder(String destinationFolder) {
+            this.destinationFolder.set(destinationFolder);
+        }
+
+        public String getPathToKey() {
+            return pathToKey.get();
+        }
+
+        public StringProperty pathToKeyProperty() {
+            return pathToKey;
+        }
+
+        public void setPathToKey(String pathToKey) {
+            this.pathToKey.set(pathToKey);
+        }
+
+        public String getKeyPassPhrase() {
+            return keyPassPhrase.get();
+        }
+
+        public StringProperty keyPassPhraseProperty() {
+            return keyPassPhrase;
+        }
+
+        public void setKeyPassPhrase(String keyPassPhrase) {
+            this.keyPassPhrase.set(keyPassPhrase);
+        }
+    }
+
+    private Label pathToKeyLabel;
+    private TextField pathToKey;
+    private Button selectPathToKeyBtn;
+
+    private Label passphrazeLabel;
+    private PasswordField passphraze;
+
+    private CloneParameters cloneParameters = new CloneParameters();
 
     public CloneDialog(final String title,
                        final String header,
@@ -28,7 +99,6 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
         super();
         this.setTitle(title);
         this.setHeaderText(header);
-        //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString())); todo
 
 
         ButtonType loginButtonType = new ButtonType("Clone", ButtonBar.ButtonData.OK_DONE);
@@ -52,11 +122,32 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
         Button selectFolder = new Button("...");
         HBox folderHBox = new HBox(folder, selectFolder);
 
+        pathToKeyLabel = new Label("Key path : ");
+        selectPathToKeyBtn = new Button("...");
+        pathToKey = new TextField();
+        HBox.setHgrow(pathToKey, Priority.ALWAYS);
+        HBox keyHBox = new HBox(pathToKey, selectPathToKeyBtn);
+
+        passphrazeLabel = new Label("Key passphraze");
+        passphraze = new PasswordField();
+
         grid.add(new Label("URL : "), 0, 0);
         grid.add(repositoryURL, 1, 0);
 
         grid.add(new Label("Folder : "), 0, 1);
         grid.add(folderHBox, 1, 1);
+
+        grid.add(pathToKeyLabel, 0, 2);
+        grid.add(keyHBox, 1, 2);
+
+        grid.add(passphrazeLabel, 0, 3);
+        grid.add(passphraze, 1, 3);
+
+        pathToKeyLabel.setDisable(true);
+        pathToKey.setDisable(true);
+        passphrazeLabel.setDisable(true);
+        passphraze.setDisable(true);
+        selectPathToKeyBtn.setDisable(true);
 
         Node loginButton = this.getDialogPane().lookupButton(loginButtonType);
         loginButton.setDisable(true);
@@ -73,9 +164,39 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
                 }
         );
 
+        selectPathToKeyBtn.setOnAction(
+                event -> {
+                    final FileChooser fileChooser = new FileChooser();
+                    fileChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
+                    final File selectedFile =
+                            fileChooser.showOpenDialog(GitemberApp.getMainStage());
+                    if (selectedFile != null) {
+                        pathToKey.setText(selectedFile.getAbsolutePath());
+                    }
+                }
+        );
+
         repositoryURL.textProperty().addListener((observable, oldValue, newValue) -> {
-            loginButton.setDisable(newValue.trim().isEmpty() /*|| folder.getText().isEmpty()*/);
+            String nw = newValue.trim();
+            loginButton.setDisable(nw.isEmpty());
+            boolean keyyDisable = true;
+            if (nw.startsWith("git@")){
+                keyyDisable = false;
+            } else if (nw.startsWith("https:") || nw.startsWith("http:")){
+                keyyDisable = true;
+            }
+            pathToKeyLabel.setDisable(keyyDisable);
+            pathToKey.setDisable(keyyDisable);
+            passphrazeLabel.setDisable(keyyDisable);
+            passphraze.setDisable(keyyDisable);
+            selectPathToKeyBtn.setDisable(keyyDisable);
+
         });
+
+        Bindings.bindBidirectional(repositoryURL.textProperty(), cloneParameters.urlProperty());
+        Bindings.bindBidirectional(folder.textProperty(), cloneParameters.destinationFolderProperty());
+        Bindings.bindBidirectional(pathToKey.textProperty(), cloneParameters.pathToKeyProperty());
+        Bindings.bindBidirectional(passphraze.textProperty(), cloneParameters.keyPassPhraseProperty());
 
         /*folder.textProperty().addListener((observable, oldValue, newValue) -> {
             loginButton.setDisable(newValue.trim().isEmpty() || repositoryURL.getText().isEmpty());
@@ -87,7 +208,7 @@ public class CloneDialog extends Dialog<Pair<String, String>> {
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == loginButtonType) {
-                return new Pair<>(repositoryURL.getText(), folder.getText());
+                return cloneParameters;
             }
             return null;
         });
