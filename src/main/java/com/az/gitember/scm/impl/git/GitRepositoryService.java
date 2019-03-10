@@ -1057,16 +1057,14 @@ public class GitRepositoryService {
      * //http://stackoverflow.com/questions/12927163/jgit-checkout-a-remote-branch
      *
      * @param shortRemoteBranch optional short name on remote repo, i.e. without ref/heads/ prefix, if not provided command will fetch all
-     * @param userName          optional username
-     * @param password          optional password
      * @param progressMonitor   optional progress
      * @return result of operation
      */
-    public RemoteOperationValue remoteRepositoryFetch(final String shortRemoteBranch,
-                                                      final String userName, final String password,
+    public RemoteOperationValue remoteRepositoryFetch(final RepoInfo repoInfo,
+                                                      final String shortRemoteBranch,
                                                       final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
 
         try (Git git = new Git(repository)) {
             final FetchCommand fetchCommand = git
@@ -1077,9 +1075,11 @@ public class GitRepositoryService {
                 fetchCommand.setRefSpecs(new RefSpec(Constants.R_HEADS + shortRemoteBranch));
             }
 
-            if (userName != null) {
+            configureTransportCommand(fetchCommand, repoInfo);
+
+            if (repoInfo.getLogin() != null) {
                 fetchCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password)
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
                 );
             }
             FetchResult fetchResult = fetchCommand.call();
@@ -1348,23 +1348,18 @@ public class GitRepositoryService {
      *
      * @param localBranch    local branch name
      * @param remoteBranch   remote branch name
-     * @param userName       optional login name
-     * @param password       optional password
      * @param setTrackRemote set track remote
      * @return
      * @throws Exception in case of error
      */
-    public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
-                                                     String userName, String password,
-                                                     boolean setOrigin,
-                                                     boolean setTrackRemote,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
+                                                     String localBranch, String remoteBranch,
+                                                     boolean setOrigin, boolean setTrackRemote,
                                                      final ProgressMonitor progressMonitor) {
 
         RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
 
-        RemoteOperationValue val = remoteRepositoryPush(
-                userName, password, setOrigin,
-                progressMonitor, refSpec);
+        RemoteOperationValue val = remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec);
 
         if (val.getResult() == RemoteOperationValue.Result.OK) {
             try (Git git = new Git(repository)) {
@@ -1389,14 +1384,14 @@ public class GitRepositoryService {
 
     }
 
-    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec) {
-        return remoteRepositoryPush(userName, password,   setOrigin,   progressMonitor,  refSpec,   null);
+        return remoteRepositoryPush(repoInfo, setOrigin, progressMonitor,  refSpec,   null);
     }
 
-    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec,
@@ -1412,9 +1407,12 @@ public class GitRepositoryService {
             } else {
                 cmd = git.push().add(pushTagRef).setProgressMonitor(progressMonitor);
             }
-            if (userName != null) {
+
+            configureTransportCommand(cmd, repoInfo);
+
+            if (repoInfo.getLogin() != null) {
                 cmd.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password)
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
                 );
             }
             Iterable<PushResult> pushResults = cmd.call();
@@ -1435,10 +1433,7 @@ public class GitRepositoryService {
                     config.setBoolean("http", null, "sslVerify", false);
                     config.save();
                     return remoteRepositoryPush(
-                            userName, password,
-                            setOrigin, progressMonitor,
-                            refSpec,
-                            pushTagRef
+                            repoInfo, setOrigin, progressMonitor, refSpec, pushTagRef
                     );
                 } catch (IOException e) {
                     return processError(e);
