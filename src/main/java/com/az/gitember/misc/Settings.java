@@ -28,7 +28,7 @@ public class Settings implements Serializable {
     private ArrayList<String> commitMessages = new ArrayList<>();
     private ArrayList<String> projects = new ArrayList<>();
     private ArrayList<String> giturls = new ArrayList<>();
-    private ArrayList<Triplet<String, String, String>> loginPassword = new ArrayList<>();
+    private ArrayList<RepoInfo> loginPassword = new ArrayList<>();
 
     public ArrayList<String> getGiturls() {
         return giturls;
@@ -134,11 +134,11 @@ public class Settings implements Serializable {
         this.proxyPassword = proxyPassword;
     }
 
-    public ArrayList<Triplet<String, String, String>> getLoginPassword() {
+    public ArrayList<RepoInfo> getLoginPassword() {
         return loginPassword;
     }
 
-    public void setLoginPassword(ArrayList<Triplet<String, String, String>> loginPassword) {
+    public void setLoginPassword(ArrayList<RepoInfo> loginPassword) {
         this.loginPassword = loginPassword;
     }
 }

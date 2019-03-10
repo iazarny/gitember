@@ -198,10 +198,6 @@ public class CloneDialog extends Dialog<CloneDialog.CloneParameters> {
         Bindings.bindBidirectional(pathToKey.textProperty(), cloneParameters.pathToKeyProperty());
         Bindings.bindBidirectional(passphraze.textProperty(), cloneParameters.keyPassPhraseProperty());
 
-        /*folder.textProperty().addListener((observable, oldValue, newValue) -> {
-            loginButton.setDisable(newValue.trim().isEmpty() || repositoryURL.getText().isEmpty());
-        });*/
-
         this.getDialogPane().setContent(grid);
 
         Platform.runLater(() -> repositoryURL.requestFocus());

@@ -2,8 +2,8 @@ package com.az.gitember.service;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
+import com.az.gitember.misc.RepoInfo;
 import com.az.gitember.misc.Settings;
-import com.az.gitember.misc.Triplet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -203,25 +203,25 @@ public class SettingsServiceImpl {
         }
     }
 
-    public Triplet<String, String, String> getLoginAndPassword(String remoteUrl) {
+    public RepoInfo getLoginAndPassword(String remoteUrl) {
         return read().getLoginPassword()
                 .stream()
-                .filter(t -> remoteUrl.equals(t.getFirst()))
-                .findFirst().orElse(Triplet.of(null, null, null));
+                .filter(t -> remoteUrl.equals(t.getUrl()))
+                .findFirst().orElse(RepoInfo.of(null, null, null, null));
     }
 
-    public void saveLoginAndPassword(String repoUrl, String login, String pwd) {
+    public void saveLoginAndPassword(String repoUrl, String login, String pwd, String key) {
         Settings settings = read();
-        Optional<Triplet<String, String, String>> tr = settings.getLoginPassword()
+        Optional<RepoInfo> tr = settings.getLoginPassword()
                 .stream()
-                .filter(t -> repoUrl.equals(t.getFirst()))
+                .filter(t -> repoUrl.equals(t.getUrl()))
                 .findFirst();
         if (tr.isPresent()) {
-            Triplet<String, String, String> t = tr.get();
-            t.setSecond(login);
-            t.setThird(pwd);
+            RepoInfo t = tr.get();
+            t.setLogin(login);
+            t.setPwd(pwd);
         } else {
-            settings.getLoginPassword().add(Triplet.of(repoUrl, login, pwd));
+            settings.getLoginPassword().add(RepoInfo.of(repoUrl, login, pwd, key));
         }
         save(settings);
 

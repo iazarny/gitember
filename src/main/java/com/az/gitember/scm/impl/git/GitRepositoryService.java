@@ -5,6 +5,10 @@ import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UserInfo;
 import javafx.scene.control.Alert;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
@@ -25,14 +29,12 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -952,15 +954,19 @@ public class GitRepositoryService {
                 .setCloneAllBranches(true)
                 .setCloneSubmodules(true)
                 .setProgressMonitor(progressMonitor);
+
+        if (reporitoryUrl.startsWith("git@")) {
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(password, pathToKey);
+            cmd.setTransportConfigCallback(transport -> {
+                        SshTransport sshTransport = ( SshTransport )transport;
+                        sshTransport.setSshSessionFactory( sshSessionFactory );
+                    });
+        }
+
         if (userName != null) {
             cmd.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(userName, password)
             );
-        }
-
-
-        if (userName != null) {
-            return fetchRepository(reporitoryUrl, folder, userName, password, progressMonitor);
         }
 
         try {
@@ -982,11 +988,48 @@ public class GitRepositoryService {
 
     }
 
+    private JschConfigSessionFactory createSshSessionFactory(final String password, final String pathToKey) {
+        return new JschConfigSessionFactory() {
+
+                    @Override
+                    protected JSch createDefaultJSch(FS fs) throws JSchException {
+                        JSch jSch = super.createDefaultJSch(fs);
+                        jSch.addIdentity(pathToKey, password.getBytes());
+                        return jSch;
+                    }
+
+                    @Override
+                    protected void configure(OpenSshConfig.Host host, Session session ) {
+                        session.setUserInfo(new UserInfo() {
+                            @Override
+                            public String getPassphrase() {
+                                return password;
+                            }
+                            @Override
+                            public String getPassword() {return null;}
+                            @Override
+                            public boolean promptPassword(String message) {return false;}
+                            @Override
+                            public boolean promptPassphrase(String message) {return true;}
+                            @Override
+                            public boolean promptYesNo(String message) {return false;}
+                            @Override
+                            public void showMessage(String message) {
+                                System.out.println(message);
+                            }
+                        });
+                    }
+                };
+    }
+
     private RemoteOperationValue processError(Exception e) {
         if (e instanceof TransportException) {
             if (e.getMessage().contains("Authentication is required")) {
                 log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.AUTH_REQUIRED, e.getMessage());
+            } else if (e.getMessage().contains("USERAUTH fail") || e.getMessage().contains("Auth fail")) {
+                log.log(Level.INFO, e.getMessage());
+                return new RemoteOperationValue(RemoteOperationValue.Result.GIT_AUTH_REQUIRED, e.getMessage());
             } else if (e.getMessage().contains("not authorized")) {
                 log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.NOT_AUTHORIZED, e.getMessage());
@@ -1054,31 +1097,44 @@ public class GitRepositoryService {
 
     }
 
+
+    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo){
+        final String repoteUrl = getRemoteUrl();
+
+
+       if (repoteUrl != null && repoteUrl.startsWith("git@")) {
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getPwd(), repoInfo.getKey());
+            transportCommand.setTransportConfigCallback(transport -> {
+                SshTransport sshTransport = ( SshTransport )transport;
+                sshTransport.setSshSessionFactory( sshSessionFactory );
+            });
+       }
+    }
+
     /**
      * Pull changes.
      *
-     * @param userName optional user name if required
-     * @param password optional password
-     * @return
+     * @param repoInfo repoInfo
+     * @return result of opertion
      * @throws Exception
      */
     public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
-                                                     final String userName, final String password,
+                                                     final RepoInfo repoInfo,
                                                      final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
 
         try (Git git = new Git(repository)) {
+
             PullCommand pullCommand = git.pull()
                     .setProgressMonitor(progressMonitor);
-
+            configureTransportCommand(pullCommand, repoInfo);
             if (shortRemoteBranch != null) {
                 pullCommand.setRemoteBranchName(Constants.R_HEADS + shortRemoteBranch);
             }
-
-            if (userName != null) {
+            if (repoInfo.getLogin() != null) {
                 pullCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password));
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd()));
             }
             PullResult pullRez = pullCommand.call();
             if (pullRez.isSuccessful()) {
