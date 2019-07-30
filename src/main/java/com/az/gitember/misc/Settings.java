@@ -22,6 +22,8 @@ public class Settings implements Serializable {
     private boolean useProxyAuth;
     private String proxyUserName;
     private String proxyPassword;
+    private String repoUserName;
+    private String repoUserEmail;
 
     private String lastLoginName;
     private String lastProject;
@@ -140,5 +142,21 @@ public class Settings implements Serializable {
 
     public void setLoginPassword(ArrayList<RepoInfo> loginPassword) {
         this.loginPassword = loginPassword;
+    }
+
+    public String getRepoUserName() {
+        return repoUserName;
+    }
+
+    public void setRepoUserName(String repoUserName) {
+        this.repoUserName = repoUserName;
+    }
+
+    public String getRepoUserEmail() {
+        return repoUserEmail;
+    }
+
+    public void setRepoUserEmail(String repoUserEmail) {
+        this.repoUserEmail = repoUserEmail;
     }
 }

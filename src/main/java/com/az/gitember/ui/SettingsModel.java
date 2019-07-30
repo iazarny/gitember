@@ -24,6 +24,8 @@ public class SettingsModel {
     private BooleanProperty useProxyAuth = new SimpleBooleanProperty();
     private StringProperty proxyUserName = new SimpleStringProperty();
     private StringProperty proxyPassword = new SimpleStringProperty();
+    private StringProperty repoUserName = new SimpleStringProperty();
+    private StringProperty repoUserEmail = new SimpleStringProperty();
 
     public String getAuthorName() {
         return authorName.get();
@@ -145,6 +147,30 @@ public class SettingsModel {
         this.proxyPassword.set(proxyPassword);
     }
 
+    public String getRepoUserName() {
+        return repoUserName.get();
+    }
+
+    public StringProperty repoUserNameProperty() {
+        return repoUserName;
+    }
+
+    public void setRepoUserName(String repoUserName) {
+        this.repoUserName.set(repoUserName);
+    }
+
+    public String getRepoUserEmail() {
+        return repoUserEmail.get();
+    }
+
+    public StringProperty repoUserEmailProperty() {
+        return repoUserEmail;
+    }
+
+    public void setRepoUserEmail(String repoUserEmail) {
+        this.repoUserEmail.set(repoUserEmail);
+    }
+
     public SettingsModel() {
         super();
     }
@@ -161,6 +187,8 @@ public class SettingsModel {
         this.setUseProxyAuth(settings.isUseProxyAuth());
         this.setProxyUserName(settings.getProxyUserName());
         this.setProxyPassword(settings.getProxyPassword());
+        this.setRepoUserName(settings.getRepoUserName());
+        this.setRepoUserEmail(settings.getRepoUserEmail());
     }
 
     public Settings createSettings() {
@@ -175,6 +203,8 @@ public class SettingsModel {
         settings.setUseProxyAuth(this.getUseProxyAuth());
         settings.setProxyUserName(this.getProxyUserName());
         settings.setProxyPassword(this.getProxyPassword());
+        settings.setRepoUserName(this.getRepoUserName());
+        settings.setRepoUserEmail(this.getRepoUserEmail());
 
         return settings;
     }

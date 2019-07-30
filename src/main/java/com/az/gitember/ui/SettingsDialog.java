@@ -1,9 +1,13 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.GitemberApp;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.Repository;
 
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -16,14 +20,19 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
 
     private final Logger log = Logger.getLogger(SettingsDialog.class.getName());
 
-    public CheckBox rememberPasswords;
-    public CheckBox useProxy;
-    public TextField proxyServer;
-    public TextField proxyPort;
-    public CheckBox useProxyAuth;
-    public TextField proxyUserName;
-    public PasswordField proxyPassword;
-    public CheckBox overwriteAuthorWithCommiter;
+    private CheckBox rememberPasswords;
+    private CheckBox useProxy;
+    private TextField proxyServer;
+    private TextField proxyPort;
+    private CheckBox useProxyAuth;
+    private TextField proxyUserName;
+    private PasswordField proxyPassword;
+    private CheckBox overwriteAuthorWithCommiter;
+
+
+    private TextField repoUserName;
+    private TextField repoUserEmail;
+
 
     private SettingsModel settingsModel;
 
@@ -47,11 +56,28 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
             );
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot load dialog", e);
+            e.printStackTrace();
         }
     }
 
 
     private void bind() {
+
+
+        Repository repo = GitemberApp.getRepositoryService().getRepository();
+        if (repo != null) {
+            Config config = repo.getConfig();
+            String repoUserNameString = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
+            String repoUserEmailString = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
+
+            settingsModel.repoUserNameProperty().setValue(repoUserNameString);
+            settingsModel.repoUserEmailProperty().setValue(repoUserEmailString);
+
+            Bindings.bindBidirectional(repoUserName.textProperty(), settingsModel.repoUserNameProperty());
+            Bindings.bindBidirectional(repoUserEmail.textProperty(), settingsModel.repoUserEmailProperty());
+
+
+        }
 
         Bindings.bindBidirectional(rememberPasswords.selectedProperty(), settingsModel.rememberPasswordsProperty());
         Bindings.bindBidirectional(useProxy.selectedProperty(), settingsModel.useProxyProperty());
@@ -61,7 +87,7 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
         Bindings.bindBidirectional(proxyUserName.textProperty(), settingsModel.proxyUserNameProperty());
         Bindings.bindBidirectional(proxyPassword.textProperty(), settingsModel.proxyPasswordProperty());
 
-        Bindings.bindBidirectional(overwriteAuthorWithCommiter.selectedProperty(), settingsModel.overwriteAuthorWithCommiterProperty());
+
 
     }
 

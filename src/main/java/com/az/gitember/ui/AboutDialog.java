@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -14,6 +15,10 @@ import javafx.scene.shape.ArcTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.util.*;
 
 import java.awt.*;
 import java.io.IOException;
@@ -120,6 +125,7 @@ public class AboutDialog extends Dialog {
 
 
     }
+
 
     private Path createLogoPath() {
 

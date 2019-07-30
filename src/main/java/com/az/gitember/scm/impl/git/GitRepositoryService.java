@@ -81,6 +81,14 @@ public class GitRepositoryService {
         config = null;
     }
 
+    /**
+     * Get repotitory. TOTO Incorrect, because for settings. But ok for now.
+     * @return
+     */
+    public Repository getRepository() {
+        return repository;
+    }
+
     public void setUserName(String userName) {
         try {
             config.setString("user", null, "name", userName);

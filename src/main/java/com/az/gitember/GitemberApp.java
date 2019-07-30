@@ -144,10 +144,24 @@ public class GitemberApp extends Application {
     }
 
     public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {
+
+        TextArea textArea = new TextArea(text);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        GridPane gridPane = new GridPane();
+        gridPane.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(textArea, 0, 0);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane.setFillWidth(textArea, true);
+
+
+
         Alert alert = new Alert(alertTypet);
         alert.setWidth(600);
-        alert.setTitle("Operation result");
-        alert.setContentText(text);
+        alert.setTitle("Result");
+        //alert.setContentText(text);
+        alert.getDialogPane().setContent(gridPane);
+
         return alert.showAndWait();
     }
 
