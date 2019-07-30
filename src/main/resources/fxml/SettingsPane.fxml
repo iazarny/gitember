@@ -124,7 +124,7 @@
                                     </rowConstraints>
                                     <children>
 
-                                        <Label text="Repository todo name :" GridPane.rowIndex="0" GridPane.columnSpan="6"/>
+                                        <Label fx:id="repoName"  text="Repository" GridPane.rowIndex="0" GridPane.columnSpan="6"/>
 
 
 

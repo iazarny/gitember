@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.GitemberApp;
 import javafx.beans.binding.Bindings;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
@@ -20,18 +21,30 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
 
     private final Logger log = Logger.getLogger(SettingsDialog.class.getName());
 
+    @FXML
     private CheckBox rememberPasswords;
+    @FXML
     private CheckBox useProxy;
+    @FXML
     private TextField proxyServer;
+    @FXML
     private TextField proxyPort;
+    @FXML
     private CheckBox useProxyAuth;
+    @FXML
     private TextField proxyUserName;
+    @FXML
     private PasswordField proxyPassword;
+    @FXML
     private CheckBox overwriteAuthorWithCommiter;
 
-
+    @FXML
     private TextField repoUserName;
+    @FXML
     private TextField repoUserEmail;
+
+    @FXML
+    private Label repoName;
 
 
     private SettingsModel settingsModel;
@@ -45,7 +58,7 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
             Parent settingsView = fxmlLoader.load(is);
             getDialogPane().setContent(settingsView);
             getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-            bind();
+
             this.setResultConverter(
                     dialogButton -> {
                         if (dialogButton == ButtonType.OK) {
@@ -54,6 +67,8 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
                         return null;
                     }
             );
+
+            bind();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot load dialog", e);
             e.printStackTrace();
@@ -64,8 +79,9 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
     private void bind() {
 
 
-        Repository repo = GitemberApp.getRepositoryService().getRepository();
-        if (repo != null) {
+
+        if (GitemberApp.getRepositoryService() != null && GitemberApp.getRepositoryService().getRepository() != null) {
+            Repository repo = GitemberApp.getRepositoryService().getRepository();
             Config config = repo.getConfig();
             String repoUserNameString = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
             String repoUserEmailString = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
@@ -76,6 +92,8 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
             Bindings.bindBidirectional(repoUserName.textProperty(), settingsModel.repoUserNameProperty());
             Bindings.bindBidirectional(repoUserEmail.textProperty(), settingsModel.repoUserEmailProperty());
 
+            repoName.setText("Repository " + repo.getIdentifier());
+        } else {
 
         }
 

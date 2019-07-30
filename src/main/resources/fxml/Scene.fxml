@@ -120,7 +120,7 @@
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
                                           text="Terminal"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#settingsActionHandler" text="Settings ...">
+                                <MenuItem onAction="#settingsActionHandler" text="Settings ..." fx:id="settingsMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon>
                                             <FontIcon iconLiteral="fa-cogs" StackedFontIcon.iconSize="0.5"/>

@@ -79,6 +79,7 @@ public class FXMLController implements Initializable {
 
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
+    public MenuItem settingsMenuItem;
     public MenuItem fetchAllMenuItem;
     public MenuItem pullMenuItem;
     public MenuItem pullAllMenuItem;
@@ -154,7 +155,9 @@ public class FXMLController implements Initializable {
             repoTreeView.getSelectionModel().select(workingCopyTreeItem);
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot open repository", e);
+            final String msg = "Cannot open repository";
+            log.log(Level.SEVERE, msg , e);
+            GitemberApp.showException(msg, e);
         }
     }
 
@@ -279,6 +282,7 @@ public class FXMLController implements Initializable {
                     boolean disable = nv == null;
                     statReportMenuItem.setDisable(disable);
                     compressDataMenuItem.setDisable(disable);
+                    settingsMenuItem.setDisable(disable);
                 }
         );
 
@@ -735,7 +739,8 @@ public class FXMLController implements Initializable {
         SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
-            Settings newSettings = model.get().createSettings();
+            SettingsModel settingsModel = model.get();
+            Settings newSettings = settingsModel.createSettings();
             GitemberApp.getSettingsService().save(newSettings);
             GitemberApp.applySettings(newSettings);
         }

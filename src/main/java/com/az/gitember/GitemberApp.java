@@ -169,7 +169,7 @@ public class GitemberApp extends Application {
 
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setWidth(600);
-        alert.setTitle("Operation result");
+        alert.setTitle("Result");
         alert.setContentText(text);
 
         StringWriter sw = new StringWriter();
