@@ -22,6 +22,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.io.IOException;
@@ -158,23 +159,26 @@ public class GitemberApp extends Application {
     }
 
     public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {
+        GridPane gridPane = null;
+        if (StringUtils.isNotBlank(text)) {
+            TextArea textArea = new TextArea(text);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            gridPane = new GridPane();
+            gridPane.setMaxWidth(Double.MAX_VALUE);
+            gridPane.add(textArea, 0, 0);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+            GridPane.setFillWidth(textArea, true);
 
-        TextArea textArea = new TextArea(text);
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        GridPane gridPane = new GridPane();
-        gridPane.setMaxWidth(Double.MAX_VALUE);
-        gridPane.add(textArea, 0, 0);
-        GridPane.setHgrow(textArea, Priority.ALWAYS);
-        GridPane.setFillWidth(textArea, true);
-
-
+        }
 
         Alert alert = new Alert(alertTypet);
         alert.setWidth(600);
         alert.setTitle("Result");
         //alert.setContentText(text);
-        alert.getDialogPane().setContent(gridPane);
+        if (StringUtils.isNotBlank(text)) {
+            alert.getDialogPane().setContent(gridPane);
+        }
 
         return alert.showAndWait();
     }
