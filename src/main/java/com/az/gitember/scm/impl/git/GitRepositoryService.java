@@ -5,6 +5,10 @@ import com.az.gitember.misc.*;
 import com.az.gitember.scm.exception.GECannotDeleteCurrentBranchException;
 import com.az.gitember.scm.exception.GECheckoutConflictException;
 import com.az.gitember.scm.exception.GEScmAPIException;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UserInfo;
 import javafx.scene.control.Alert;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
@@ -25,14 +29,13 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.treewalk.filter.TreeFilter;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -77,6 +80,15 @@ public class GitRepositoryService {
     public GitRepositoryService() {
         repository = null;
         config = null;
+    }
+
+    /**
+     * Get repotitory. TOTO Incorrect, because for settings. But ok for now.
+     *
+     * @return
+     */
+    public Repository getRepository() {
+        return repository;
     }
 
     public void setUserName(String userName) {
@@ -230,7 +242,7 @@ public class GitRepositoryService {
         try {
             return getBranches(
                     ListBranchCommand.ListMode.REMOTE,
-                    GitConst.REMOTE_PREFIX,
+                    Const.REMOTE_PREFIX,
                     ScmBranch.BranchType.REMOTE);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get tags", e);
@@ -520,13 +532,49 @@ public class GitRepositoryService {
         return new ScmItem(diff.getChangeType().name(), attr);
     }
 
-
+    /**
+     * Visualize branch commits.
+     * @param treeName trhee name
+     * @return PlotCommitList<PlotLane>
+     * @throws Exception
+     */
     public PlotCommitList<PlotLane> getCommitsByTree(final String treeName) throws Exception {
+        final PlotCommitList<PlotLane> rez =  getCommitsByTree(treeName, false);
+        return  rez;
+    }
+
+    /**
+     * Get revisions to visualize. Fr more detail look at
+     * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
+     * @param treeName trhee name
+     * @param all to visualize with merges
+     * @return PlotCommitList<PlotLane>
+     * @throws Exception
+     */
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, boolean all) throws Exception {
         try (PlotWalk revWalk = new PlotWalk(repository)) {
             final ObjectId rootId = repository.resolve(treeName);
+
             final RevCommit root = revWalk.parseCommit(rootId);
             revWalk.markStart(root);
 
+            //final ObjectId rootId = repository.resolve(Constants.HEAD);
+
+            /*
+            Aternative  to see all ?
+            revWalk.setTreeFilter(
+                    AndTreeFilter.create(PathFilter.create(path), TreeFilter.ANY_DIFF));
+            */
+            if(all) {
+                revWalk.setTreeFilter(TreeFilter.ALL);
+
+                Collection<Ref> allRefs = repository.getAllRefs().values();
+                for (Ref ref : allRefs) {
+                    revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
+
+                }
+                //revWalk.addAdditionalRefs(allRefs);
+            }
             final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
             plotCommitList.source(revWalk);
             plotCommitList.fillTo(Integer.MAX_VALUE);
@@ -534,6 +582,58 @@ public class GitRepositoryService {
             return plotCommitList;
         }
     }
+
+    /*private void v2() {
+        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        try {
+            Collection<Ref> allRefs = repository.getAllRefs().values();
+
+            // a RevWalk allows to walk over commits based on some filtering that is defined
+            try (RevWalk revWalk = new RevWalk(repository)) {
+                for (Ref ref : allRefs) {
+                    revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
+                }
+                System.out.println("Walking all commits starting with " + allRefs.size() + " refs: " + allRefs);
+                System.out.println();
+                int count = 0;
+                for (RevCommit commit : revWalk) {
+                    System.out.println("Commit: " + commit.toString()
+                            + " "  + commit.getShortMessage()
+                    );
+                    count++;
+                }
+                System.out.println("\nHad " + count + " commits");
+            }
+
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "dddddddddddddd", e);
+            e.printStackTrace();
+        }
+    }*/
+
+    /*private void v1() {
+        System.out.println("######################################");
+        try (Git git = new Git(repository)) {
+            ObjectId master = repository.resolve("refs/heads/master");
+            ObjectId branch1 = repository.resolve("refs/heads/br1");
+            ObjectId branch2 = repository.resolve("refs/heads/br2");
+
+            Iterable<RevCommit> commits = git.log().call();
+            commits.forEach(
+                    revCommit -> {
+                        System.out.println(revCommit.getFullMessage());
+                    }
+            );
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "adsfdfadffs", e);
+            e.printStackTrace();
+        }
+
+    }*/
+
+
 
 
     public String saveDiff(String treeName, String oldRevision, String newRevision, String fileName) throws Exception {
@@ -943,6 +1043,7 @@ public class GitRepositoryService {
      */
     public RemoteOperationValue cloneRepository(final String reporitoryUrl, final String folder,
                                                 final String userName, final String password,
+                                                final String pathToKey,
                                                 final ProgressMonitor progressMonitor) {
 
         final CloneCommand cmd = Git.cloneRepository()
@@ -951,15 +1052,19 @@ public class GitRepositoryService {
                 .setCloneAllBranches(true)
                 .setCloneSubmodules(true)
                 .setProgressMonitor(progressMonitor);
+
+        if (reporitoryUrl.startsWith("git@")) {
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(password, pathToKey);
+            cmd.setTransportConfigCallback(transport -> {
+                SshTransport sshTransport = (SshTransport) transport;
+                sshTransport.setSshSessionFactory(sshSessionFactory);
+            });
+        }
+
         if (userName != null) {
             cmd.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(userName, password)
             );
-        }
-
-
-        if (userName != null) {
-            return fetchRepository(reporitoryUrl, folder, userName, password, progressMonitor);
         }
 
         try {
@@ -981,11 +1086,61 @@ public class GitRepositoryService {
 
     }
 
+    private JschConfigSessionFactory createSshSessionFactory(final String password, final String pathToKey) {
+        return new JschConfigSessionFactory() {
+
+            @Override
+            protected JSch createDefaultJSch(FS fs) throws JSchException {
+                JSch jSch = super.createDefaultJSch(fs);
+                jSch.addIdentity(pathToKey, password.getBytes());
+                return jSch;
+            }
+
+            @Override
+            protected void configure(OpenSshConfig.Host host, Session session) {
+                session.setUserInfo(new UserInfo() {
+                    @Override
+                    public String getPassphrase() {
+                        return password;
+                    }
+
+                    @Override
+                    public String getPassword() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean promptPassword(String message) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean promptPassphrase(String message) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean promptYesNo(String message) {
+                        return false;
+                    }
+
+                    @Override
+                    public void showMessage(String message) {
+                        System.out.println(message);
+                    }
+                });
+            }
+        };
+    }
+
     private RemoteOperationValue processError(Exception e) {
         if (e instanceof TransportException) {
             if (e.getMessage().contains("Authentication is required")) {
                 log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.AUTH_REQUIRED, e.getMessage());
+            } else if (e.getMessage().contains("USERAUTH fail") || e.getMessage().contains("Auth fail")) {
+                log.log(Level.INFO, e.getMessage());
+                return new RemoteOperationValue(RemoteOperationValue.Result.GIT_AUTH_REQUIRED, e.getMessage());
             } else if (e.getMessage().contains("not authorized")) {
                 log.log(Level.INFO, e.getMessage());
                 return new RemoteOperationValue(RemoteOperationValue.Result.NOT_AUTHORIZED, e.getMessage());
@@ -1013,16 +1168,14 @@ public class GitRepositoryService {
      * //http://stackoverflow.com/questions/12927163/jgit-checkout-a-remote-branch
      *
      * @param shortRemoteBranch optional short name on remote repo, i.e. without ref/heads/ prefix, if not provided command will fetch all
-     * @param userName          optional username
-     * @param password          optional password
      * @param progressMonitor   optional progress
      * @return result of operation
      */
-    public RemoteOperationValue remoteRepositoryFetch(final String shortRemoteBranch,
-                                                      final String userName, final String password,
+    public RemoteOperationValue remoteRepositoryFetch(final RepoInfo repoInfo,
+                                                      final String shortRemoteBranch,
                                                       final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
 
         try (Git git = new Git(repository)) {
             final FetchCommand fetchCommand = git
@@ -1033,9 +1186,11 @@ public class GitRepositoryService {
                 fetchCommand.setRefSpecs(new RefSpec(Constants.R_HEADS + shortRemoteBranch));
             }
 
-            if (userName != null) {
+            configureTransportCommand(fetchCommand, repoInfo);
+
+            if (repoInfo.getLogin() != null) {
                 fetchCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password)
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
                 );
             }
             FetchResult fetchResult = fetchCommand.call();
@@ -1043,7 +1198,7 @@ public class GitRepositoryService {
                 return new RemoteOperationValue("Nothing changed");
             }
             return new RemoteOperationValue(
-                    MessageFormat.format("Found {0} refs to process.",fetchResult.getTrackingRefUpdates().size()));
+                    MessageFormat.format("Found {0} refs to process.", fetchResult.getTrackingRefUpdates().size()));
         } catch (CheckoutConflictException conflictException) {
             return new RemoteOperationValue(
                     RemoteOperationValue.Result.ERROR, "Fetch conflict error" + conflictException.getMessage());
@@ -1053,31 +1208,44 @@ public class GitRepositoryService {
 
     }
 
+
+    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo) {
+        final String repoteUrl = getRemoteUrl();
+
+
+        if (repoteUrl != null && repoteUrl.startsWith("git@")) {
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getPwd(), repoInfo.getKey());
+            transportCommand.setTransportConfigCallback(transport -> {
+                SshTransport sshTransport = (SshTransport) transport;
+                sshTransport.setSshSessionFactory(sshSessionFactory);
+            });
+        }
+    }
+
     /**
      * Pull changes.
      *
-     * @param userName optional user name if required
-     * @param password optional password
-     * @return
+     * @param repoInfo repoInfo
+     * @return result of opertion
      * @throws Exception
      */
     public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
-                                                     final String userName, final String password,
+                                                     final RepoInfo repoInfo,
                                                      final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, userName));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
 
         try (Git git = new Git(repository)) {
+
             PullCommand pullCommand = git.pull()
                     .setProgressMonitor(progressMonitor);
-
+            configureTransportCommand(pullCommand, repoInfo);
             if (shortRemoteBranch != null) {
                 pullCommand.setRemoteBranchName(Constants.R_HEADS + shortRemoteBranch);
             }
-
-            if (userName != null) {
+            if (repoInfo.getLogin() != null) {
                 pullCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password));
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd()));
             }
             PullResult pullRez = pullCommand.call();
             if (pullRez.isSuccessful()) {
@@ -1291,23 +1459,18 @@ public class GitRepositoryService {
      *
      * @param localBranch    local branch name
      * @param remoteBranch   remote branch name
-     * @param userName       optional login name
-     * @param password       optional password
      * @param setTrackRemote set track remote
      * @return
      * @throws Exception in case of error
      */
-    public RemoteOperationValue remoteRepositoryPush(String localBranch, String remoteBranch,
-                                                     String userName, String password,
-                                                     boolean setOrigin,
-                                                     boolean setTrackRemote,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
+                                                     String localBranch, String remoteBranch,
+                                                     boolean setOrigin, boolean setTrackRemote,
                                                      final ProgressMonitor progressMonitor) {
 
         RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
 
-        RemoteOperationValue val = remoteRepositoryPush(
-                userName, password, setOrigin,
-                progressMonitor, refSpec);
+        RemoteOperationValue val = remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec);
 
         if (val.getResult() == RemoteOperationValue.Result.OK) {
             try (Git git = new Git(repository)) {
@@ -1332,14 +1495,14 @@ public class GitRepositoryService {
 
     }
 
-    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec) {
-        return remoteRepositoryPush(userName, password,   setOrigin,   progressMonitor,  refSpec,   null);
+        return remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec, null);
     }
 
-    public RemoteOperationValue remoteRepositoryPush(String userName, String password,
+    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec,
@@ -1355,9 +1518,12 @@ public class GitRepositoryService {
             } else {
                 cmd = git.push().add(pushTagRef).setProgressMonitor(progressMonitor);
             }
-            if (userName != null) {
+
+            configureTransportCommand(cmd, repoInfo);
+
+            if (repoInfo.getLogin() != null) {
                 cmd.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(userName, password)
+                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
                 );
             }
             Iterable<PushResult> pushResults = cmd.call();
@@ -1378,10 +1544,7 @@ public class GitRepositoryService {
                     config.setBoolean("http", null, "sslVerify", false);
                     config.save();
                     return remoteRepositoryPush(
-                            userName, password,
-                            setOrigin, progressMonitor,
-                            refSpec,
-                            pushTagRef
+                            repoInfo, setOrigin, progressMonitor, refSpec, pushTagRef
                     );
                 } catch (IOException e) {
                     return processError(e);

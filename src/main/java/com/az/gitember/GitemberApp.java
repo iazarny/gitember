@@ -22,7 +22,9 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -127,8 +129,21 @@ public class GitemberApp extends Application {
             gitemberService.setOperationProgressBar(controller.operationProgressBar);
             gitemberService.setOperationName(controller.operationName);
             applySettings(getSettingsService().read());
-            Scene scene = new Scene(root);
+
+
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            int minus = 100;
+            int width = gd.getDisplayMode().getWidth() - minus;
+            int height = gd.getDisplayMode().getHeight() - minus;
+
+
+
+            Scene scene = new Scene(root, width, height);
             scene.getStylesheets().add(Const.DEFAULT_CSS);
+
+
+
+
             mainStage = stage;
             setTitle(Const.TITLE);
             stage.setScene(scene);
@@ -144,10 +159,27 @@ public class GitemberApp extends Application {
     }
 
     public static Optional<ButtonType> showResult(String text, Alert.AlertType alertTypet) {
+        GridPane gridPane = null;
+        if (StringUtils.isNotBlank(text)) {
+            TextArea textArea = new TextArea(text);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            gridPane = new GridPane();
+            gridPane.setMaxWidth(Double.MAX_VALUE);
+            gridPane.add(textArea, 0, 0);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+            GridPane.setFillWidth(textArea, true);
+
+        }
+
         Alert alert = new Alert(alertTypet);
         alert.setWidth(600);
-        alert.setTitle("Operation result");
-        alert.setContentText(text);
+        alert.setTitle("Result");
+        //alert.setContentText(text);
+        if (StringUtils.isNotBlank(text)) {
+            alert.getDialogPane().setContent(gridPane);
+        }
+
         return alert.showAndWait();
     }
 
@@ -155,7 +187,7 @@ public class GitemberApp extends Application {
 
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setWidth(600);
-        alert.setTitle("Operation result");
+        alert.setTitle("Result");
         alert.setContentText(text);
 
         StringWriter sw = new StringWriter();

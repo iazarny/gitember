@@ -2,6 +2,11 @@
     -fx-font-weight: bold;
 }
 
+.highlight {
+    -fx-font-weight: bold;
+    -fx-background-color: linear-gradient(#9fbed6 0%, #d0fad0 100%);
+}
+
 .list-cell:filled:hover {
 
     -fx-cursor: hand;

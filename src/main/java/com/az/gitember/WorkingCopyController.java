@@ -160,7 +160,9 @@ public class WorkingCopyController implements Initializable {
                                         && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
                                     if (scmItem.getShortName().toLowerCase().contains(
                                             WorkingCopyController.this.searchText.getText().toLowerCase())) {
-                                        sb.append("-fx-font-weight: bold;");
+                                        //sb.append("-fx-font-weight: bold;");
+                                        sb.append("-fx-font-weight: bold; ");
+                                        sb.append("-fx-background-color: linear-gradient(#9fbed6 0%, #d0fad0 100%);");
                                     }
 
                                 }

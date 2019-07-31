@@ -49,6 +49,13 @@
                                 </graphic>
 
                             </TreeItem>
+                            <TreeItem fx:id="historyTreeItemAll" value="History all">
+                                <graphic>
+                                    <StackedFontIcon>
+                                        <FontIcon iconLiteral="fa-code-fork" />
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
                             <TreeItem fx:id="stashesTreeItem" value="Stashes">
                                 <graphic>
                                     <StackedFontIcon>
@@ -120,7 +127,7 @@
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
                                           text="Terminal"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#settingsActionHandler" text="Settings ...">
+                                <MenuItem onAction="#settingsActionHandler" text="Settings ..." fx:id="settingsMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon>
                                             <FontIcon iconLiteral="fa-cogs" StackedFontIcon.iconSize="0.5"/>
@@ -181,7 +188,7 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem text="Check for update"/>
+                                <MenuItem text="Check for update" onAction="#chckeForUpdate"/>
                                 <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About" onAction="#aboutHandler"/>

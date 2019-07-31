@@ -79,6 +79,7 @@ public class FXMLController implements Initializable {
 
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
+    public MenuItem settingsMenuItem;
     public MenuItem fetchAllMenuItem;
     public MenuItem pullMenuItem;
     public MenuItem pullAllMenuItem;
@@ -90,6 +91,7 @@ public class FXMLController implements Initializable {
     public TreeItem workingCopyTreeItem;
     public TreeItem workSpaceTreeItem;
     public TreeItem historyTreeItem;
+    public TreeItem historyTreeItemAll;
     public TreeItem stashesTreeItem;
     public TreeItem localBranchesTreeItem;
     public TreeItem tagsTreeItem;
@@ -141,9 +143,24 @@ public class FXMLController implements Initializable {
                 hostPanel.getChildren().add(workCopyView);
             });
 
+            // Just show revision
             treeItemClickHandlers.put(historyTreeItem, o -> {
+
                 undockSlaveItems();
-                Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar);
+                Parent branchView = BranchViewController
+                        .openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar);
+
+                hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                hostPanel.getChildren().add(branchView);
+            });
+
+            // Show all revision
+            treeItemClickHandlers.put(historyTreeItemAll, o -> {
+
+                undockSlaveItems();
+                Parent branchView = BranchViewController
+                        .openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar, true);
+
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(branchView);
             });
@@ -154,7 +171,9 @@ public class FXMLController implements Initializable {
             repoTreeView.getSelectionModel().select(workingCopyTreeItem);
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot open repository", e);
+            final String msg = "Cannot open repository";
+            log.log(Level.SEVERE, msg , e);
+            GitemberApp.showException(msg, e);
         }
     }
 
@@ -180,18 +199,7 @@ public class FXMLController implements Initializable {
 
     private BlockingQueue<Object> msgQ = new ArrayBlockingQueue<Object>(10);
 
-    private void test() {
-
-        try {
-            msgQ.put("eeee");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
-    private void fillStashTree() {
+        private void fillStashTree() {
         stashInfo = GitemberApp.getRepositoryService().getStashList();
         cleanUp(stashesTreeItem);
         stashInfo.stream().forEach(
@@ -279,6 +287,7 @@ public class FXMLController implements Initializable {
                     boolean disable = nv == null;
                     statReportMenuItem.setDisable(disable);
                     compressDataMenuItem.setDisable(disable);
+                    settingsMenuItem.setDisable(disable);
                 }
         );
 
@@ -735,7 +744,8 @@ public class FXMLController implements Initializable {
         SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
-            Settings newSettings = model.get().createSettings();
+            SettingsModel settingsModel = model.get();
+            Settings newSettings = settingsModel.createSettings();
             GitemberApp.getSettingsService().save(newSettings);
             GitemberApp.applySettings(newSettings);
         }
@@ -857,12 +867,21 @@ public class FXMLController implements Initializable {
     //---------------------------------------------------------------------------------------------------------------//
 
     public void createBugReportHandler(ActionEvent actionEvent) {
-        String httpaddr = "https://github.com/iazarny/gitember/issues/new";
+        showExternalPage("https://github.com/iazarny/gitember/issues/new");
+    }
+
+    public void chckeForUpdate(ActionEvent actionEvent) {
+        showExternalPage("http://gitember.com");
+    }
+
+    private void showExternalPage(String httpaddr) {
         new Thread(() -> {
             try {
                 Desktop.getDesktop().browse(URI.create(httpaddr));
             } catch (IOException e) {
-                log.log(Level.WARNING, "Cannot open url " + httpaddr, e);
+                String msg = "Cannot open url " + httpaddr;
+                log.log(Level.WARNING, msg , e);
+                GitemberApp.showException(msg, e);
 
             }
         }).start();

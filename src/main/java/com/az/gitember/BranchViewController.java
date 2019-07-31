@@ -120,7 +120,10 @@ public class BranchViewController implements Initializable {
                                         .collect(Collectors.joining(","))
                                         .toLowerCase()
                                         .contains(searchText)) {
-                                    return "-fx-font-weight: bold;";
+
+                                    return "-fx-font-weight: bold; " +
+                                            "-fx-background-color: linear-gradient(#9fbed6 0%, #d0fad0 100%);";
+
                                 }
                             }
                             return "";
@@ -215,11 +218,15 @@ public class BranchViewController implements Initializable {
     }
 
 
-    public void open() throws Exception {
-        this.plotCommits = GitemberApp.getRepositoryService().getCommitsByTree(this.treeName);
+    public void open(final boolean all) throws Exception {
+        this.plotCommits = GitemberApp.getRepositoryService().getCommitsByTree(this.treeName, all);
         commitsTableView.setItems(FXCollections.observableArrayList(plotCommits));
         plotWidth = calculateLineColumnWidth(plotCommits);
         laneTableColumn.setPrefWidth(plotWidth);
+    }
+
+    public void open() throws Exception {
+        open(false);
 
     }
 
@@ -228,8 +235,9 @@ public class BranchViewController implements Initializable {
         return 36 + 12 * plotCommits.stream().mapToInt(p -> p.getLane().getPosition()).max().orElse(0);
     }
 
-    public static Parent openBranchHistory(final ScmBranch scmBranch,
-                                           ToolBar toolBar) {
+    static Parent openBranchHistory(final ScmBranch scmBranch,
+                                    final ToolBar toolBar,
+                                    final boolean all) {
         try {
             if (scmBranch != null) {
                 final FXMLLoader fxmlLoader = new FXMLLoader();
@@ -240,7 +248,7 @@ public class BranchViewController implements Initializable {
                     toolBar.getItems().add(branchViewController.spacerPane);
                     toolBar.getItems().add(branchViewController.searchLabel);
                     toolBar.getItems().add(branchViewController.searchText);
-                    branchViewController.open();
+                    branchViewController.open(all);
                     return branchView;
                 }
 
@@ -249,5 +257,10 @@ public class BranchViewController implements Initializable {
             log.log(Level.SEVERE, "Cannot open branch view", e);
         }
         return null;
+    }
+
+    static Parent openBranchHistory(final ScmBranch scmBranch,
+                                    ToolBar toolBar) {
+        return openBranchHistory(scmBranch, toolBar, false);
     }
 }

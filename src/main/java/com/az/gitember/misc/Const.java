@@ -1,5 +1,7 @@
 package com.az.gitember.misc;
 
+import org.eclipse.jgit.lib.Constants;
+
 /**
  * Created by Igor_Azarny on Dec - 17- 2016.
  */
@@ -30,5 +32,8 @@ public interface Const {
 
     String PROP_FOLDER = ".gitember";
     String PROP_FILE_NAME = "gitember.json";
+
+
+    String REMOTE_PREFIX = Constants.R_REMOTES  + Constants.DEFAULT_REMOTE_NAME +  '/';
 
 }

@@ -39,24 +39,28 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="ALWAYS"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
                                     </rowConstraints>
                                     <children>
                                         <CheckBox fx:id="rememberPasswords" mnemonicParsing="false"
                                                   text="Remember my credentials for repositories"
                                                   GridPane.columnSpan="2"/>
-                                        <CheckBox fx:id="useProxy" mnemonicParsing="false" text="Use HTTP proxy" GridPane.columnSpan="2"
+                                        <CheckBox fx:id="useProxy" mnemonicParsing="false" text="Use HTTP proxy"
+                                                  GridPane.columnSpan="2"
                                                   GridPane.rowIndex="2"/>
-                                        <Label  text="Server :" GridPane.rowIndex="3"/>
-                                        <Label  text="Port :" GridPane.rowIndex="4"/>
+                                        <Label text="Server :" GridPane.rowIndex="3"/>
+                                        <Label text="Port :" GridPane.rowIndex="4"/>
                                         <TextField fx:id="proxyServer" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
                                         <TextField fx:id="proxyPort" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                                        <CheckBox fx:id="useProxyAuth" mnemonicParsing="false" text="HTTP Proxy authentication"
+                                        <CheckBox fx:id="useProxyAuth" mnemonicParsing="false"
+                                                  text="HTTP Proxy authentication"
                                                   GridPane.columnSpan="2" GridPane.rowIndex="5"/>
-                                        <Label  text="Username :" GridPane.rowIndex="6"/>
-                                        <Label  text="Password :" GridPane.rowIndex="7"/>
-                                        <TextField fx:id="proxyUserName" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
-                                        <PasswordField fx:id="proxyPassword" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                                        <Label text="Username :" GridPane.rowIndex="6"/>
+                                        <Label text="Password :" GridPane.rowIndex="7"/>
+                                        <TextField fx:id="proxyUserName" GridPane.columnIndex="1"
+                                                   GridPane.rowIndex="6"/>
+                                        <PasswordField fx:id="proxyPassword" GridPane.columnIndex="1"
+                                                       GridPane.rowIndex="7"/>
                                         <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
                                     </children>
                                     <padding>
@@ -74,15 +78,16 @@
                                     </columnConstraints>
                                     <rowConstraints>
                                         <RowConstraints/>
-                                        <RowConstraints minHeight="10.0"  prefHeight="30.0"  vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0"  vgrow="ALWAYS"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
                                         <RowConstraints/>
                                     </rowConstraints>
                                     <children>
-                                        <CheckBox fx:id="overwriteAuthorWithCommiter" mnemonicParsing="false" text="Always overwrite author with committer"
+                                        <CheckBox fx:id="overwriteAuthorWithCommiter" mnemonicParsing="false"
+                                                  text="Always overwrite author with committer"
                                                   GridPane.columnSpan="1"
                                                   GridPane.rowIndex="1"/>
 
@@ -92,6 +97,52 @@
                                     </padding>
                                 </GridPane>
 
+                            </content>
+                        </Tab>
+                        <Tab text="Repository">
+                            <content>
+                                <GridPane>
+
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
+                                    </rowConstraints>
+                                    <children>
+
+                                        <Label fx:id="repoName"  text="Repository" GridPane.rowIndex="0" GridPane.columnSpan="6"/>
+
+
+
+                                        <Label text="User name :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                        <Label text="User email :" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+
+                                        <TextField fx:id="repoUserName"  GridPane.rowIndex="2" GridPane.columnIndex="1"    />
+                                        <TextField fx:id="repoUserEmail" GridPane.rowIndex="3" GridPane.columnIndex="1"   />
+
+
+                                        <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
+                                    </padding>
+
+
+                                </GridPane>
                             </content>
                         </Tab>
                     </tabs>

@@ -22,13 +22,15 @@ public class Settings implements Serializable {
     private boolean useProxyAuth;
     private String proxyUserName;
     private String proxyPassword;
+    private String repoUserName;
+    private String repoUserEmail;
 
     private String lastLoginName;
     private String lastProject;
     private ArrayList<String> commitMessages = new ArrayList<>();
     private ArrayList<String> projects = new ArrayList<>();
     private ArrayList<String> giturls = new ArrayList<>();
-    private ArrayList<Triplet<String, String, String>> loginPassword = new ArrayList<>();
+    private ArrayList<RepoInfo> loginPassword = new ArrayList<>();
 
     public ArrayList<String> getGiturls() {
         return giturls;
@@ -134,11 +136,27 @@ public class Settings implements Serializable {
         this.proxyPassword = proxyPassword;
     }
 
-    public ArrayList<Triplet<String, String, String>> getLoginPassword() {
+    public ArrayList<RepoInfo> getLoginPassword() {
         return loginPassword;
     }
 
-    public void setLoginPassword(ArrayList<Triplet<String, String, String>> loginPassword) {
+    public void setLoginPassword(ArrayList<RepoInfo> loginPassword) {
         this.loginPassword = loginPassword;
+    }
+
+    public String getRepoUserName() {
+        return repoUserName;
+    }
+
+    public void setRepoUserName(String repoUserName) {
+        this.repoUserName = repoUserName;
+    }
+
+    public String getRepoUserEmail() {
+        return repoUserEmail;
+    }
+
+    public void setRepoUserEmail(String repoUserEmail) {
+        this.repoUserEmail = repoUserEmail;
     }
 }

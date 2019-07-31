@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -10,10 +11,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.ArcTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.util.*;
 
 import java.awt.*;
 import java.io.IOException;
@@ -28,21 +36,21 @@ import java.util.logging.Level;
 public class AboutDialog extends Dialog {
 
 
-    int LOGO_WIDTH = 1184;
-    int LOGO_HEIGHT = 1184;
-    int RADIUS = 60;
-    int E_RADIUS_INT = 190;
-    int E_RADIUS_EXT = 310;
-    int SMALL_DELTA_A = 44;
-    int SMALL_DELTA_B = 6;
-    int CENTER_X = LOGO_WIDTH / 2;
-    int CENTER_Y = LOGO_HEIGHT / 2;
+    private int LOGO_WIDTH = 1184;
+    private int LOGO_HEIGHT = 1184;
+    private int RADIUS = 60;
+    private int E_RADIUS_INT = 190;
+    private int E_RADIUS_EXT = 310;
+    private int SMALL_DELTA_A = 44;
+    private int SMALL_DELTA_B = 6;
+    private int CENTER_X = LOGO_WIDTH / 2;
+    private int CENTER_Y = LOGO_HEIGHT / 2;
 
-    int BIG_DELTA_A = 64;
-    int BIG_DELTA_B = 7;
+    private int BIG_DELTA_A = 64;
+    private int BIG_DELTA_B = 7;
 
-    int G_RADIUS_INT = 465;
-    int G_RADIUS_EXT = 586;
+    private int G_RADIUS_INT = 465;
+    private int G_RADIUS_EXT = 586;
 
     Label label;
 
@@ -121,17 +129,26 @@ public class AboutDialog extends Dialog {
 
     }
 
+
     private Path createLogoPath() {
 
         Path path = new Path();
 
-        path.setStrokeWidth(30);
-        path.setStroke(javafx.scene.paint.Color.valueOf("#7FD8BE"));
-        path.setFill(javafx.scene.paint.Color.valueOf("#A1FCDF"));
-/*
-        path.setStroke(javafx.scene.paint.Color.valueOf("#42f4dc"));
-        path.setFill(javafx.scene.paint.Color.valueOf("#3e7cef"));
-*/
+        path.setStrokeWidth(45);
+
+        path.setStroke(javafx.scene.paint.Color.valueOf("#a69dd1"));
+        Stop[] stops = new Stop[] {
+                new Stop(0d, javafx.scene.paint.Color.valueOf("#17e8ab")),
+                new Stop(1d, javafx.scene.paint.Color.valueOf("#88cdeb"))};
+        LinearGradient lg1 = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+        path.setFill(lg1);
+
+
+//        path.setStroke(javafx.scene.paint.Color.valueOf("#7FD8BE"));
+//        path.setFill(javafx.scene.paint.Color.valueOf("#A1FCDF"));
+
+//        path.setStroke(javafx.scene.paint.Color.valueOf("#42f4dc"));
+//        path.setFill(javafx.scene.paint.Color.valueOf("#3e7cef"));
 
 
         path.getElements().add(new MoveTo(

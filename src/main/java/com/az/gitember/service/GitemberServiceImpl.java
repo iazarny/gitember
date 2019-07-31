@@ -21,12 +21,15 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -42,6 +45,7 @@ public class GitemberServiceImpl {
 
     private String login = null;
     private String pwd = null;
+    private String pathToKey = null;
 
     private ToolBar progressBar;
     private ProgressBar operationProgressBar;
@@ -274,6 +278,8 @@ public class GitemberServiceImpl {
                                    Consumer<RemoteOperationValue> operationRezConsumer,
                                    Consumer<RemoteOperationValue> operationErrConsumer) {
 
+        RepoInfo repoInfo = GitemberApp.getSettingsService().getLoginAndPassword(GitemberApp.remoteUrl.get());
+
         Optional<ButtonType> dialogResult = getDeleteBranchConfirmDialogValue(scmBranch);
         if (dialogResult.isPresent() && dialogResult.get() == ButtonType.OK) {
             String nameOnRemoteSide = Constants.R_HEADS + scmBranch.getShortName();
@@ -283,7 +289,7 @@ public class GitemberServiceImpl {
                 protected RemoteOperationValue call() throws Exception {
                     return remoteRepositoryOperation(
                             () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
-                                    login, pwd, false,
+                                    repoInfo, false,
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);
                                         updateProgress(d, 1.0);
@@ -342,11 +348,12 @@ public class GitemberServiceImpl {
 
     public void createTag(boolean push, String tag) {
 
+        RepoInfo repoInfo = GitemberApp.getSettingsService().getLoginAndPassword(GitemberApp.remoteUrl.get());
+
         try {
             Ref ref = GitemberApp.getRepositoryService().creteTag(tag);
 
             if (push) {
-
 
                 RefSpec refSpec = new RefSpec(":refs/tags/" + tag);
 
@@ -355,7 +362,7 @@ public class GitemberServiceImpl {
                     protected RemoteOperationValue call() throws Exception {
                         return remoteRepositoryOperation(
                                 () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
-                                        login, pwd, true,
+                                        repoInfo, true,
                                         new DefaultProgressMonitor((t, d) -> {
                                             //do nothing
                                         }),
@@ -366,12 +373,8 @@ public class GitemberServiceImpl {
                 };
                 prepareLongTask(longTask, null, null);
                 new Thread(longTask).start();
-
-
-
-
-
             }
+
         } catch (GEScmAPIException e) {
             GitemberApp.showResult("Cannot dd tag " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -381,12 +384,15 @@ public class GitemberServiceImpl {
 
     public void pushToRemoteRepository(String localBranchName, String remoteBranchName,
                                        boolean setOrigin, boolean setTrackeRemote) {
+
+        RepoInfo repoInfo = GitemberApp.getSettingsService().getLoginAndPassword(GitemberApp.remoteUrl.get());
+
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
-                        () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
-                                localBranchName, remoteBranchName, login, pwd, setOrigin, setTrackeRemote,
+                        () -> GitemberApp.getRepositoryService().remoteRepositoryPush (
+                                repoInfo, localBranchName, remoteBranchName, setOrigin, setTrackeRemote,
                                 new DefaultProgressMonitor((t, d) -> {
                                     updateTitle(t);
                                     updateProgress(d, 1.0);
@@ -414,14 +420,28 @@ public class GitemberServiceImpl {
             uiInputResultToService = null;
             operationValue = supplier.get();
             switch (operationValue.getResult()) {
+                case GIT_AUTH_REQUIRED: {
+                    uiInputLatchToService = new CountDownLatch(1);
+                    Platform.runLater(() -> {
+                        uiInputResultToService = new LoginDialog("Auth", "Please, provide key and  pass phrase", login, pwd)
+                                .showAndWait();
+                        uiInputLatchToService.countDown();
+                    });
+                    try {
+                        uiInputLatchToService.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                }
                 case AUTH_REQUIRED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
                         if (settings.isRememberPasswords()) {
-                            Triplet<String, String, String> loginPwd = GitemberApp.getSettingsService()
+                            RepoInfo repoInfo = GitemberApp.getSettingsService()
                                     .getLoginAndPassword(GitemberApp.remoteUrl.get());
-                            login = loginPwd.getSecond();
-                            pwd = loginPwd.getThird();
+                            login = repoInfo.getLogin();
+                            pwd = repoInfo.getPwd();
 
                         } else {
                             login = GitemberApp.getSettingsService().getLastLoginName();
@@ -462,7 +482,7 @@ public class GitemberServiceImpl {
                 login = uiInputResultToService.get().getFirst();
                 pwd = uiInputResultToService.get().getSecond();
                 if (settings.isRememberPasswords()) {
-                    GitemberApp.getSettingsService().saveLoginAndPassword(GitemberApp.remoteUrl.get(), login, pwd);
+                    GitemberApp.getSettingsService().saveLoginAndPassword(GitemberApp.remoteUrl.get(), login, pwd, pathToKey);
                 } else {
                     GitemberApp.getSettingsService().saveLastLoginName(login);
                 }
@@ -540,12 +560,15 @@ public class GitemberServiceImpl {
     }
 
     public void fetch(final String branchName) {
+
+        RepoInfo repoInfo = GitemberApp.getSettingsService().getLoginAndPassword(GitemberApp.remoteUrl.get());
+
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryFetch(
-                                branchName, login, pwd,
+                                repoInfo, branchName,
                                 new DefaultProgressMonitor((t, d) -> {
                                     updateTitle(t);
                                     updateProgress(d, 1.0);
@@ -558,12 +581,15 @@ public class GitemberServiceImpl {
     }
 
     public void pull(final String branchName) {
+
+        RepoInfo repoInfo = GitemberApp.getSettingsService().getLoginAndPassword(GitemberApp.remoteUrl.get());
+
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
             @Override
             protected RemoteOperationValue call() throws Exception {
                 return remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryPull(
-                                branchName, login, pwd,
+                                branchName, repoInfo,
                                 new DefaultProgressMonitor((t, d) -> {
                                     updateTitle(t);
                                     updateProgress(d, 1.0);
@@ -597,15 +623,40 @@ public class GitemberServiceImpl {
                 "Remote repository URL",
                 urls);
         dialog.setContentText("Please provide remote repository URL:");
-        Optional<Pair<String, String>> dialogResult = dialog.showAndWait();
+        Optional<CloneDialog.CloneParameters> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
 
-            String url = dialogResult.get().getFirst();
-            GitemberApp.remoteUrl.setValue(url);
-            urls.add(url);
+            String repoUrl = dialogResult.get().getUrl();
+            GitemberApp.remoteUrl.setValue(repoUrl);
+            pathToKey = dialogResult.get().getPathToKey();
+            urls.add(repoUrl);
             settings.getGiturls().clear();
             settings.getGiturls().addAll(urls);
             GitemberApp.getSettingsService().save(settings);
+            ////////////////////////////////////////////////
+            //TODO save login and password
+
+            if (repoUrl.startsWith("git@")) {
+                pwd = dialogResult.get().getKeyPassPhrase();
+                try {
+                    URL gitUrl = new URL(repoUrl);
+                    login = gitUrl.getUserInfo();
+                } catch (Exception e) {
+                    try {
+                        String re = "(.*)\\@(.*)\\:(.*)/";
+                        Pattern pattern = Pattern.compile(re);
+                        Matcher matcher = pattern.matcher(repoUrl);
+                        if (matcher.find()) {
+                            login = matcher.group(3);
+                        }
+
+                    } catch (Exception e2) {
+
+                    }
+                }
+
+                GitemberApp.getSettingsService().saveLoginAndPassword(GitemberApp.remoteUrl.get(), login, pwd, pathToKey);
+            }
 
 
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
@@ -613,10 +664,11 @@ public class GitemberServiceImpl {
                 protected RemoteOperationValue call() throws Exception {
                     return remoteRepositoryOperation(
                             () -> GitemberApp.getRepositoryService().cloneRepository(
-                                    dialogResult.get().getFirst(),
-                                    dialogResult.get().getSecond(),
+                                    dialogResult.get().getUrl(),
+                                    dialogResult.get().getDestinationFolder(),
                                     login,
                                     pwd,
+                                    dialogResult.get().getPathToKey(),
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);
                                         updateProgress(d, 1.0);
