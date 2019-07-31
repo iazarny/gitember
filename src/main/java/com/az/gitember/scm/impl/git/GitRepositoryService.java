@@ -18,7 +18,6 @@ import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.*;
@@ -34,7 +33,6 @@ import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.eclipse.jgit.util.FS;
@@ -244,7 +242,7 @@ public class GitRepositoryService {
         try {
             return getBranches(
                     ListBranchCommand.ListMode.REMOTE,
-                    GitConst.REMOTE_PREFIX,
+                    Const.REMOTE_PREFIX,
                     ScmBranch.BranchType.REMOTE);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get tags", e);
@@ -534,6 +532,16 @@ public class GitRepositoryService {
         return new ScmItem(diff.getChangeType().name(), attr);
     }
 
+    /**
+     * Visualize branch commits.
+     * @param treeName trhee name
+     * @return PlotCommitList<PlotLane>
+     * @throws Exception
+     */
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName) throws Exception {
+        final PlotCommitList<PlotLane> rez =  getCommitsByTree(treeName, false);
+        return  rez;
+    }
 
     /**
      * Get revisions to visualize. Fr more detail look at
@@ -546,11 +554,11 @@ public class GitRepositoryService {
     public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, boolean all) throws Exception {
         try (PlotWalk revWalk = new PlotWalk(repository)) {
             final ObjectId rootId = repository.resolve(treeName);
-            //final ObjectId rootId = repository.resolve(Constants.HEAD);
 
             final RevCommit root = revWalk.parseCommit(rootId);
             revWalk.markStart(root);
 
+            //final ObjectId rootId = repository.resolve(Constants.HEAD);
 
             /*
             Aternative  to see all ?
@@ -559,25 +567,20 @@ public class GitRepositoryService {
             */
             if(all) {
                 revWalk.setTreeFilter(TreeFilter.ALL);
+
+                Collection<Ref> allRefs = repository.getAllRefs().values();
+                for (Ref ref : allRefs) {
+                    revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
+
+                }
+                //revWalk.addAdditionalRefs(allRefs);
             }
-
-
             final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
             plotCommitList.source(revWalk);
             plotCommitList.fillTo(Integer.MAX_VALUE);
             revWalk.dispose();
             return plotCommitList;
         }
-    }
-
-    /**
-     * Visualize branch commits.
-     * @param treeName trhee name
-     * @return PlotCommitList<PlotLane>
-     * @throws Exception
-     */
-    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName) throws Exception {
-        return  getCommitsByTree(treeName, false);
     }
 
     /*private void v2() {
@@ -607,6 +610,27 @@ public class GitRepositoryService {
             log.log(Level.SEVERE, "dddddddddddddd", e);
             e.printStackTrace();
         }
+    }*/
+
+    /*private void v1() {
+        System.out.println("######################################");
+        try (Git git = new Git(repository)) {
+            ObjectId master = repository.resolve("refs/heads/master");
+            ObjectId branch1 = repository.resolve("refs/heads/br1");
+            ObjectId branch2 = repository.resolve("refs/heads/br2");
+
+            Iterable<RevCommit> commits = git.log().call();
+            commits.forEach(
+                    revCommit -> {
+                        System.out.println(revCommit.getFullMessage());
+                    }
+            );
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "adsfdfadffs", e);
+            e.printStackTrace();
+        }
+
     }*/
 
 

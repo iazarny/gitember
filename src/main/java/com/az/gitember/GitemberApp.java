@@ -23,6 +23,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -127,8 +128,21 @@ public class GitemberApp extends Application {
             gitemberService.setOperationProgressBar(controller.operationProgressBar);
             gitemberService.setOperationName(controller.operationName);
             applySettings(getSettingsService().read());
-            Scene scene = new Scene(root);
+
+
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            int minus = 100;
+            int width = gd.getDisplayMode().getWidth() - minus;
+            int height = gd.getDisplayMode().getHeight() - minus;
+
+
+
+            Scene scene = new Scene(root, width, height);
             scene.getStylesheets().add(Const.DEFAULT_CSS);
+
+
+
+
             mainStage = stage;
             setTitle(Const.TITLE);
             stage.setScene(scene);

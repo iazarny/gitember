@@ -143,9 +143,24 @@ public class FXMLController implements Initializable {
                 hostPanel.getChildren().add(workCopyView);
             });
 
+            // Just show revision
             treeItemClickHandlers.put(historyTreeItem, o -> {
+
                 undockSlaveItems();
-                Parent branchView = BranchViewController.openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar);
+                Parent branchView = BranchViewController
+                        .openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar);
+
+                hostPanel.getChildren().removeAll(hostPanel.getChildren());
+                hostPanel.getChildren().add(branchView);
+            });
+
+            // Show all revision
+            treeItemClickHandlers.put(historyTreeItemAll, o -> {
+
+                undockSlaveItems();
+                Parent branchView = BranchViewController
+                        .openBranchHistory(GitemberApp.workingBranch.get(), mainToolBar, true);
+
                 hostPanel.getChildren().removeAll(hostPanel.getChildren());
                 hostPanel.getChildren().add(branchView);
             });
