@@ -49,6 +49,13 @@
                                 </graphic>
 
                             </TreeItem>
+                            <TreeItem fx:id="historyTreeItemAll" value="History all">
+                                <graphic>
+                                    <StackedFontIcon>
+                                        <FontIcon iconLiteral="fa-code-fork" />
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
                             <TreeItem fx:id="stashesTreeItem" value="Stashes">
                                 <graphic>
                                     <StackedFontIcon>
@@ -181,7 +188,7 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem text="Check for update"/>
+                                <MenuItem text="Check for update" onAction="#chckeForUpdate"/>
                                 <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About" onAction="#aboutHandler"/>

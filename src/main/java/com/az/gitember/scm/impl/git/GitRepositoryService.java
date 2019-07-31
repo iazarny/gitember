@@ -18,6 +18,7 @@ import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.*;
@@ -33,7 +34,9 @@ import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
@@ -83,6 +86,7 @@ public class GitRepositoryService {
 
     /**
      * Get repotitory. TOTO Incorrect, because for settings. But ok for now.
+     *
      * @return
      */
     public Repository getRepository() {
@@ -531,11 +535,32 @@ public class GitRepositoryService {
     }
 
 
-    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName) throws Exception {
+    /**
+     * Get revisions to visualize. Fr more detail look at
+     * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
+     * @param treeName trhee name
+     * @param all to visualize with merges
+     * @return PlotCommitList<PlotLane>
+     * @throws Exception
+     */
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, boolean all) throws Exception {
         try (PlotWalk revWalk = new PlotWalk(repository)) {
             final ObjectId rootId = repository.resolve(treeName);
+            //final ObjectId rootId = repository.resolve(Constants.HEAD);
+
             final RevCommit root = revWalk.parseCommit(rootId);
             revWalk.markStart(root);
+
+
+            /*
+            Aternative  to see all ?
+            revWalk.setTreeFilter(
+                    AndTreeFilter.create(PathFilter.create(path), TreeFilter.ANY_DIFF));
+            */
+            if(all) {
+                revWalk.setTreeFilter(TreeFilter.ALL);
+            }
+
 
             final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
             plotCommitList.source(revWalk);
@@ -544,6 +569,47 @@ public class GitRepositoryService {
             return plotCommitList;
         }
     }
+
+    /**
+     * Visualize branch commits.
+     * @param treeName trhee name
+     * @return PlotCommitList<PlotLane>
+     * @throws Exception
+     */
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName) throws Exception {
+        return  getCommitsByTree(treeName, false);
+    }
+
+    /*private void v2() {
+        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        try {
+            Collection<Ref> allRefs = repository.getAllRefs().values();
+
+            // a RevWalk allows to walk over commits based on some filtering that is defined
+            try (RevWalk revWalk = new RevWalk(repository)) {
+                for (Ref ref : allRefs) {
+                    revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
+                }
+                System.out.println("Walking all commits starting with " + allRefs.size() + " refs: " + allRefs);
+                System.out.println();
+                int count = 0;
+                for (RevCommit commit : revWalk) {
+                    System.out.println("Commit: " + commit.toString()
+                            + " "  + commit.getShortMessage()
+                    );
+                    count++;
+                }
+                System.out.println("\nHad " + count + " commits");
+            }
+
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "dddddddddddddd", e);
+            e.printStackTrace();
+        }
+    }*/
+
+
 
 
     public String saveDiff(String treeName, String oldRevision, String newRevision, String fileName) throws Exception {
@@ -966,9 +1032,9 @@ public class GitRepositoryService {
         if (reporitoryUrl.startsWith("git@")) {
             JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(password, pathToKey);
             cmd.setTransportConfigCallback(transport -> {
-                        SshTransport sshTransport = ( SshTransport )transport;
-                        sshTransport.setSshSessionFactory( sshSessionFactory );
-                    });
+                SshTransport sshTransport = (SshTransport) transport;
+                sshTransport.setSshSessionFactory(sshSessionFactory);
+            });
         }
 
         if (userName != null) {
@@ -999,35 +1065,48 @@ public class GitRepositoryService {
     private JschConfigSessionFactory createSshSessionFactory(final String password, final String pathToKey) {
         return new JschConfigSessionFactory() {
 
+            @Override
+            protected JSch createDefaultJSch(FS fs) throws JSchException {
+                JSch jSch = super.createDefaultJSch(fs);
+                jSch.addIdentity(pathToKey, password.getBytes());
+                return jSch;
+            }
+
+            @Override
+            protected void configure(OpenSshConfig.Host host, Session session) {
+                session.setUserInfo(new UserInfo() {
                     @Override
-                    protected JSch createDefaultJSch(FS fs) throws JSchException {
-                        JSch jSch = super.createDefaultJSch(fs);
-                        jSch.addIdentity(pathToKey, password.getBytes());
-                        return jSch;
+                    public String getPassphrase() {
+                        return password;
                     }
 
                     @Override
-                    protected void configure(OpenSshConfig.Host host, Session session ) {
-                        session.setUserInfo(new UserInfo() {
-                            @Override
-                            public String getPassphrase() {
-                                return password;
-                            }
-                            @Override
-                            public String getPassword() {return null;}
-                            @Override
-                            public boolean promptPassword(String message) {return false;}
-                            @Override
-                            public boolean promptPassphrase(String message) {return true;}
-                            @Override
-                            public boolean promptYesNo(String message) {return false;}
-                            @Override
-                            public void showMessage(String message) {
-                                System.out.println(message);
-                            }
-                        });
+                    public String getPassword() {
+                        return null;
                     }
-                };
+
+                    @Override
+                    public boolean promptPassword(String message) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean promptPassphrase(String message) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean promptYesNo(String message) {
+                        return false;
+                    }
+
+                    @Override
+                    public void showMessage(String message) {
+                        System.out.println(message);
+                    }
+                });
+            }
+        };
     }
 
     private RemoteOperationValue processError(Exception e) {
@@ -1095,7 +1174,7 @@ public class GitRepositoryService {
                 return new RemoteOperationValue("Nothing changed");
             }
             return new RemoteOperationValue(
-                    MessageFormat.format("Found {0} refs to process.",fetchResult.getTrackingRefUpdates().size()));
+                    MessageFormat.format("Found {0} refs to process.", fetchResult.getTrackingRefUpdates().size()));
         } catch (CheckoutConflictException conflictException) {
             return new RemoteOperationValue(
                     RemoteOperationValue.Result.ERROR, "Fetch conflict error" + conflictException.getMessage());
@@ -1106,17 +1185,17 @@ public class GitRepositoryService {
     }
 
 
-    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo){
+    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo) {
         final String repoteUrl = getRemoteUrl();
 
 
-       if (repoteUrl != null && repoteUrl.startsWith("git@")) {
+        if (repoteUrl != null && repoteUrl.startsWith("git@")) {
             JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getPwd(), repoInfo.getKey());
             transportCommand.setTransportConfigCallback(transport -> {
-                SshTransport sshTransport = ( SshTransport )transport;
-                sshTransport.setSshSessionFactory( sshSessionFactory );
+                SshTransport sshTransport = (SshTransport) transport;
+                sshTransport.setSshSessionFactory(sshSessionFactory);
             });
-       }
+        }
     }
 
     /**
@@ -1396,7 +1475,7 @@ public class GitRepositoryService {
                                                      boolean setOrigin,
                                                      ProgressMonitor progressMonitor,
                                                      RefSpec refSpec) {
-        return remoteRepositoryPush(repoInfo, setOrigin, progressMonitor,  refSpec,   null);
+        return remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec, null);
     }
 
     public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,

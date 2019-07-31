@@ -30,12 +30,16 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
  */
 public class CommitViewController implements Initializable {
+
+    private final static Logger log = Logger.getLogger(FXMLController.class.getName());
 
     @FXML
     public Menu stashMenu;
@@ -226,7 +230,7 @@ public class CommitViewController implements Initializable {
 
 
     /**
-     * Show difference
+     * Show the  difference.
      * @param actionEvent event
      * @throws Exception
      */
@@ -348,7 +352,7 @@ public class CommitViewController implements Initializable {
 
             return commitView;
         } catch (Exception e) {
-            e.printStackTrace(); //todo log
+            log.log(Level.SEVERE, "Cannot open window", e);
         }
         return null;
     }

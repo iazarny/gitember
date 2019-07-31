@@ -91,6 +91,7 @@ public class FXMLController implements Initializable {
     public TreeItem workingCopyTreeItem;
     public TreeItem workSpaceTreeItem;
     public TreeItem historyTreeItem;
+    public TreeItem historyTreeItemAll;
     public TreeItem stashesTreeItem;
     public TreeItem localBranchesTreeItem;
     public TreeItem tagsTreeItem;
@@ -183,18 +184,7 @@ public class FXMLController implements Initializable {
 
     private BlockingQueue<Object> msgQ = new ArrayBlockingQueue<Object>(10);
 
-    private void test() {
-
-        try {
-            msgQ.put("eeee");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
-    private void fillStashTree() {
+        private void fillStashTree() {
         stashInfo = GitemberApp.getRepositoryService().getStashList();
         cleanUp(stashesTreeItem);
         stashInfo.stream().forEach(
@@ -862,12 +852,21 @@ public class FXMLController implements Initializable {
     //---------------------------------------------------------------------------------------------------------------//
 
     public void createBugReportHandler(ActionEvent actionEvent) {
-        String httpaddr = "https://github.com/iazarny/gitember/issues/new";
+        showExternalPage("https://github.com/iazarny/gitember/issues/new");
+    }
+
+    public void chckeForUpdate(ActionEvent actionEvent) {
+        showExternalPage("http://gitember.com");
+    }
+
+    private void showExternalPage(String httpaddr) {
         new Thread(() -> {
             try {
                 Desktop.getDesktop().browse(URI.create(httpaddr));
             } catch (IOException e) {
-                log.log(Level.WARNING, "Cannot open url " + httpaddr, e);
+                String msg = "Cannot open url " + httpaddr;
+                log.log(Level.WARNING, msg , e);
+                GitemberApp.showException(msg, e);
 
             }
         }).start();

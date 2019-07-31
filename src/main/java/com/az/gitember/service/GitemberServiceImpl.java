@@ -423,8 +423,6 @@ public class GitemberServiceImpl {
                 case GIT_AUTH_REQUIRED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
                         uiInputResultToService = new LoginDialog("Auth", "Please, provide key and  pass phrase", login, pwd)
                                 .showAndWait();
                         uiInputLatchToService.countDown();

@@ -228,7 +228,7 @@ public class BranchViewController implements Initializable {
         return 36 + 12 * plotCommits.stream().mapToInt(p -> p.getLane().getPosition()).max().orElse(0);
     }
 
-    public static Parent openBranchHistory(final ScmBranch scmBranch,
+    static Parent openBranchHistory(final ScmBranch scmBranch,
                                            ToolBar toolBar) {
         try {
             if (scmBranch != null) {
