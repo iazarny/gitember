@@ -45,6 +45,7 @@ public class GitemberServiceImpl {
 
     private String login = null;
     private String pwd = null;
+    private boolean rememberMe;
     private String pathToKey = null;
 
     private ToolBar progressBar;
@@ -420,21 +421,7 @@ public class GitemberServiceImpl {
             uiInputResultToService = null;
             operationValue = supplier.get();
             switch (operationValue.getResult()) {
-                case GIT_AUTH_REQUIRED: {
-                    uiInputLatchToService = new CountDownLatch(1);
-                    Platform.runLater(() -> {
-                        uiInputResultToService = new LoginDialog("Auth", "Please, provide key and  pass phrase", login, pwd)
-                                .showAndWait();
-                        uiInputLatchToService.countDown();
-                    });
-                    try {
-                        uiInputLatchToService.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-                case AUTH_REQUIRED: {
+                case GIT_AUTH_REQUIRED:  case AUTH_REQUIRED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
                         if (settings.isRememberPasswords()) {
@@ -442,13 +429,14 @@ public class GitemberServiceImpl {
                                     .getLoginAndPassword(GitemberApp.remoteUrl.get());
                             login = repoInfo.getLogin();
                             pwd = repoInfo.getPwd();
+                            rememberMe = true;
 
                         } else {
                             login = GitemberApp.getSettingsService().getLastLoginName();
                             pwd = null;
                         }
 
-                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, pwd)
+                        uiInputResultToService = new LoginDialog("Login", "Please, provide login and password", login, pwd, rememberMe)
                                 .showAndWait();
                         uiInputLatchToService.countDown();
                     });
@@ -462,7 +450,7 @@ public class GitemberServiceImpl {
                 case NOT_AUTHORIZED: {
                     uiInputLatchToService = new CountDownLatch(1);
                     Platform.runLater(() -> {
-                        uiInputResultToService = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd)
+                        uiInputResultToService = new LoginDialog("Login", "Not authorized. Provide correct credentials", login, pwd, rememberMe)
                                 .showAndWait();
                         uiInputLatchToService.countDown();
                     });

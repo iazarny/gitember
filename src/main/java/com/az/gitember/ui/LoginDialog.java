@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
@@ -14,7 +15,7 @@ import javafx.scene.layout.GridPane;
  */
 public class LoginDialog extends Dialog<Pair<String, String>> {
 
-    public LoginDialog(String title, String header, String login, String pwd) {
+    public LoginDialog(String title, String header, String login, String pwd, boolean rememberMe) {
 
         super();
         this.setTitle(title);
@@ -40,10 +41,15 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
             password.setText(pwd);
         }
 
+        CheckBox rememberPassword = new CheckBox();
+        rememberPassword.setText("Remember me");
+        rememberPassword.setSelected(rememberMe);
+
         grid.add(new Label("Username : "), 0, 0);
         grid.add(username, 1, 0);
         grid.add(new Label("Password : "), 0, 1);
         grid.add(password, 1, 1);
+        grid.add(rememberPassword, 1, 2);
 
         Node loginButton = this.getDialogPane().lookupButton(loginButtonType);
         loginButton.setDisable(username.textProperty().isEmpty().get());
@@ -66,7 +72,5 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
 
     }
 
-    public LoginDialog(String title, String header) {
-        this(title, header, null, null);
-    }
+
 }
