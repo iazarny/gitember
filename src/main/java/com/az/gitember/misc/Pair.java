@@ -50,4 +50,12 @@ public class Pair<FIRST, SECOND> implements Serializable {
         result = 31 * result + (second != null ? second.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "first=" + first +
+                ", second=" + second +
+                '}';
+    }
 }
