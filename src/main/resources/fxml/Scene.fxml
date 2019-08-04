@@ -123,7 +123,6 @@
                                     </items>
                                 </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
-                                <MenuItem onAction="#openShellActionHandler" text="GUI shell"/>
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
                                           text="Terminal"/>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
@@ -150,6 +149,7 @@
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true">
+
                                 </MenuItem>
                                 <MenuItem text="Fetch all" onAction="#fetchHandlerAll" fx:id="fetchAllMenuItem"
                                           disable="true">

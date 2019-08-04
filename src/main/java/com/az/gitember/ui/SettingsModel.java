@@ -17,7 +17,6 @@ public class SettingsModel {
     private StringProperty authorEmail = new SimpleStringProperty();
     private BooleanProperty overwriteAuthorWithCommiter = new SimpleBooleanProperty();
 
-    private BooleanProperty rememberPasswords = new SimpleBooleanProperty();
     private BooleanProperty useProxy = new SimpleBooleanProperty();
     private StringProperty proxyServer = new SimpleStringProperty();
     private StringProperty proxyPort = new SimpleStringProperty();
@@ -61,18 +60,6 @@ public class SettingsModel {
 
     public void setOverwriteAuthorWithCommiter(boolean overwriteAuthorWithCommiter) {
         this.overwriteAuthorWithCommiter.set(overwriteAuthorWithCommiter);
-    }
-
-    public boolean getRememberPasswords() {
-        return rememberPasswords.get();
-    }
-
-    public BooleanProperty rememberPasswordsProperty() {
-        return rememberPasswords;
-    }
-
-    public void setRememberPasswords(boolean rememberPasswords) {
-        this.rememberPasswords.set(rememberPasswords);
     }
 
     public boolean getUseProxy() {
@@ -180,7 +167,6 @@ public class SettingsModel {
         super();
         this.setOverwriteAuthorWithCommiter(settings.isOverwriteAuthorWithCommiter());
 
-        this.setRememberPasswords(settings.isRememberPasswords());
         this.setUseProxy(settings.isUseProxy());
         this.setProxyServer(settings.getProxyServer());
         this.setProxyPort(settings.getProxyPort());
@@ -196,7 +182,6 @@ public class SettingsModel {
 
         settings.setOverwriteAuthorWithCommiter(this.getOverwriteAuthorWithCommiter());
 
-        settings.setRememberPasswords(this.getRememberPasswords());
         settings.setUseProxy(this.getUseProxy());
         settings.setProxyServer(this.getProxyServer());
         settings.setProxyPort(this.getProxyPort());

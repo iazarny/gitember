@@ -22,7 +22,7 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
     private final Logger log = Logger.getLogger(SettingsDialog.class.getName());
 
     @FXML
-    private CheckBox rememberPasswords;
+    private TextField proxySettings;
     @FXML
     private CheckBox useProxy;
     @FXML
@@ -97,7 +97,6 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
 
         }
 
-        Bindings.bindBidirectional(rememberPasswords.selectedProperty(), settingsModel.rememberPasswordsProperty());
         Bindings.bindBidirectional(useProxy.selectedProperty(), settingsModel.useProxyProperty());
         Bindings.bindBidirectional(proxyServer.textProperty(), settingsModel.proxyServerProperty());
         Bindings.bindBidirectional(proxyPort.textProperty(), settingsModel.proxyPortProperty());

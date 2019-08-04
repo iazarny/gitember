@@ -26,10 +26,12 @@
                         <Tab text="Gitember">
                             <content>
                                 <GridPane>
+
                                     <columnConstraints>
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
                                     </columnConstraints>
+
                                     <rowConstraints>
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
@@ -41,9 +43,11 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
                                     </rowConstraints>
+
+
                                     <children>
-                                        <CheckBox fx:id="rememberPasswords" mnemonicParsing="false"
-                                                  text="Remember my credentials for repositories"
+                                        <Label fx:id="proxySettings" mnemonicParsing="false"
+                                                  text="Proxy settings"
                                                   GridPane.columnSpan="2"/>
                                         <CheckBox fx:id="useProxy" mnemonicParsing="false" text="Use HTTP proxy"
                                                   GridPane.columnSpan="2"
@@ -62,67 +66,14 @@
                                         <PasswordField fx:id="proxyPassword" GridPane.columnIndex="1"
                                                        GridPane.rowIndex="7"/>
                                         <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
-                                    </children>
-                                    <padding>
-                                        <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
-                                    </padding>
-                                </GridPane>
-                            </content>
-                        </Tab>
-                        <Tab text="Git general">
-                            <content>
-                                <GridPane>
-                                    <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
-                                    </columnConstraints>
-                                    <rowConstraints>
-                                        <RowConstraints/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
-                                        <RowConstraints/>
-                                    </rowConstraints>
-                                    <children>
+
                                         <CheckBox fx:id="overwriteAuthorWithCommiter" mnemonicParsing="false"
                                                   text="Always overwrite author with committer"
                                                   GridPane.columnSpan="1"
                                                   GridPane.rowIndex="1"/>
 
-                                    </children>
-                                    <padding>
-                                        <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
-                                    </padding>
-                                </GridPane>
 
-                            </content>
-                        </Tab>
-                        <Tab text="Repository">
-                            <content>
-                                <GridPane>
-
-                                    <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
-                                    </columnConstraints>
-                                    <rowConstraints>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
-                                    </rowConstraints>
-                                    <children>
+                                        <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
 
                                         <Label fx:id="repoName"  text="Repository" GridPane.rowIndex="0" GridPane.columnSpan="6"/>
 
@@ -136,15 +87,16 @@
 
 
                                         <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1"/>
+
                                     </children>
                                     <padding>
                                         <Insets bottom="10.0" left="25.0" right="10.0" top="10.0"/>
                                     </padding>
-
-
                                 </GridPane>
                             </content>
                         </Tab>
+
+
                     </tabs>
                 </TabPane>
             </center>

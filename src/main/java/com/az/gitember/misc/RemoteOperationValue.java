@@ -1,7 +1,5 @@
 package com.az.gitember.misc;
 
-import com.sun.org.apache.regexp.internal.RE;
-
 /**
  * Created by Igor_Azarny on 01 - Jan - 2017.
  */

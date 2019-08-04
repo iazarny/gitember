@@ -5,6 +5,8 @@ import com.az.gitember.misc.Pair;
 import com.az.gitember.misc.RepoInfo;
 import com.az.gitember.misc.Settings;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,11 @@ import java.util.logging.Logger;
 public class SettingsServiceImpl {
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    static {
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    }
+
     private final static Logger log = Logger.getLogger(SettingsServiceImpl.class.getName());
 
     private final static String SYSTEM_PROP_USER_HOME = "user.home";
@@ -30,28 +37,6 @@ public class SettingsServiceImpl {
     private final int COMMIT_HISTORY_LIMIT = 50;
 
     private final static String OS = System.getProperty(SYSTEM_PROP_OS_NAME).toLowerCase();
-
-
-    /**
-     * Get stored login name.
-     *
-     * @return login name if was saved before
-     */
-    public String getLastLoginName() {
-        return read().getLastLoginName();
-    }
-
-    /**
-     * Save given string as last use login name.
-     *
-     * @param login given login name
-     */
-    public void saveLastLoginName(final String login) {
-        Settings settings = read();
-        settings.setLastLoginName(login);
-        save(settings);
-    }
-
 
     /**
      * Get absolute path to last project.
@@ -119,57 +104,14 @@ public class SettingsServiceImpl {
         }
         keyToRemove.stream().forEach(k -> props.getProjects().remove(k));
         save(props);
-        Collections.sort(pairs, (o1, o2) -> o1.getFirst().compareTo(o2.getFirst()));
+        Collections.sort(pairs, Comparator.comparing(Pair::getFirst));
         return pairs;
     }
 
     public static boolean isWindows() {
-        return (OS.indexOf("win") >= 0);
+        return (OS.contains("win"));
     }
 
-    public static boolean isMac() {
-        return (OS.indexOf("mac") >= 0);
-    }
-
-    public static boolean isUnix() {
-        return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0);
-    }
-
-    public static boolean isSolaris() {
-        return (OS.indexOf("sunos") >= 0);
-    }
-
-    public static String getOS() {
-        if (isWindows()) {
-            return "win";
-        } else if (isMac()) {
-            return "osx";
-        } else if (isUnix()) {
-            return "uni";
-        } else if (isSolaris()) {
-            return "sol";
-        } else {
-            return "err";
-        }
-    }
-
-
-    /**
-     * Save properties.
-     *
-     * @param settings given properties.
-     */
-    public void save(final Settings settings) {
-        try {
-            cleanupOldCommitMessages(settings);
-            objectMapper.writerFor(Settings.class).writeValue(
-                    new File(getAbsolutePathToPropertyFile()),
-                    settings
-            );
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "Cannot save settings", e);
-        }
-    }
 
     private void cleanupOldCommitMessages(Settings settings) {
 
@@ -203,27 +145,49 @@ public class SettingsServiceImpl {
         }
     }
 
-    public RepoInfo getLoginAndPassword(String remoteUrl) {
-        return read().getLoginPassword()
+    public RepoInfo getRepositoryCred(String remoteUrl) {
+        Settings settingsAll = read();
+        ArrayList<RepoInfo> infos = settingsAll.getLoginPassword();
+
+        Optional<RepoInfo> ri = infos
                 .stream()
-                .filter(t -> remoteUrl.equals(t.getUrl()))
-                .findFirst().orElse(RepoInfo.of(null, null, null, null));
+                .filter(  repoInfo -> StringUtils.equals(repoInfo.getUrl(), remoteUrl)   )
+                .findFirst();
+        if (ri.isPresent()) {
+            return ri.get();
+        } else {
+            return RepoInfo.of(null, null, null, null, false);
+
+        }
     }
 
-    public void saveLoginAndPassword(String repoUrl, String login, String pwd, String key) {
+    public void saseRepositoryCred(RepoInfo repoInfo) {
         Settings settings = read();
-        Optional<RepoInfo> tr = settings.getLoginPassword()
-                .stream()
-                .filter(t -> repoUrl.equals(t.getUrl()))
-                .findFirst();
-        if (tr.isPresent()) {
-            RepoInfo t = tr.get();
-            t.setLogin(login);
-            t.setPwd(pwd);
-        } else {
-            settings.getLoginPassword().add(RepoInfo.of(repoUrl, login, pwd, key));
-        }
+        settings.getLoginPassword().removeIf(t -> StringUtils.isBlank(t.getUrl()));
+        settings.getLoginPassword().removeIf(t -> repoInfo.equals(t.getUrl()));
+        settings.getLoginPassword().add(repoInfo);
+        log.log(Level.INFO, "Save global settings " + settings);
         save(settings);
 
     }
+
+
+    /**
+     * Save properties.
+     *
+     * @param settings given properties.
+     */
+    public void save(final Settings settings) {
+        try {
+            cleanupOldCommitMessages(settings);
+            objectMapper.writerFor(Settings.class).writeValue(
+                    new File(getAbsolutePathToPropertyFile()),
+                    settings
+            );
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Cannot save settings", e);
+        }
+    }
+
+
 }

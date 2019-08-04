@@ -1,12 +1,7 @@
 package com.az.gitember.misc;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by Igor_Azarny on 07 -Jan -2017.
@@ -158,5 +153,20 @@ public class Settings implements Serializable {
 
     public void setRepoUserEmail(String repoUserEmail) {
         this.repoUserEmail = repoUserEmail;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Settings{" +
+                ", remember pwd=" + rememberPasswords +
+                ", repoUserName='" + repoUserName + '\'' +
+                ", repoUserEmail='" + repoUserEmail + '\'' +
+                ", lastLoginName='" + lastLoginName + '\'' +
+                ", lastProject='" + lastProject + '\'' +
+                ", projects=" + projects +
+                ", giturls=" + giturls +
+                ", loginPasswors d=" + loginPassword +
+                '}';
     }
 }

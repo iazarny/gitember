@@ -1,21 +1,19 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.GitemberApp;
-import com.az.gitember.misc.Const;
-import com.az.gitember.misc.Pair;
+import com.az.gitember.misc.RepoInfo;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 
 /**
  * Created by Igor_Azarny on 25 - Dec -2016.
  */
-public class LoginDialog extends Dialog<Pair<String, String>> {
+public class LoginDialog extends Dialog<RepoInfo> {
 
-    public LoginDialog(String title, String header, String login, String pwd, boolean rememberMe) {
+    public LoginDialog(String title, String header,
+                       RepoInfo repoInfo) {
 
         super();
         this.setTitle(title);
@@ -32,18 +30,18 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
 
         TextField username = new TextField();
         username.setPromptText("Username");
-        if (login != null) {
-            username.setText(login);
+        if (repoInfo.getLogin() != null) {
+            username.setText(repoInfo.getLogin());
         }
         PasswordField password = new PasswordField();
         password.setPromptText("Password");
-        if (pwd!=null) {
-            password.setText(pwd);
+        if (repoInfo.getPwd() != null) {
+            password.setText(repoInfo.getPwd());
         }
 
         CheckBox rememberPassword = new CheckBox();
         rememberPassword.setText("Remember me");
-        rememberPassword.setSelected(rememberMe);
+        rememberPassword.setSelected(repoInfo.isRememberMe());
 
         grid.add(new Label("Username : "), 0, 0);
         grid.add(username, 1, 0);
@@ -65,7 +63,14 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == loginButtonType) {
-                return new Pair<>(username.getText(), password.getText());
+                return RepoInfo.of(
+                        repoInfo.getUrl(),
+                        username.getText(),
+                        password.getText(),
+                        repoInfo.getKey(),
+                        rememberPassword.isSelected()
+
+                );
             }
             return null;
         });

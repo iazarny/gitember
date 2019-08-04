@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -18,6 +19,9 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -54,6 +58,7 @@ public class FXMLController implements Initializable {
 
     public MenuItem pushToRemoteLocalBranchMenuItem;
     public MenuItem fetchLocalBranchMenuItem;
+    public MenuItem pullLocalBranchMenuItem;
     public MenuItem checkoutRemoteBranchMenuItem;
     public MenuItem checkoutLocalBranchMenuItem;
     public MenuItem createLocalBranchMenuItem;
@@ -79,9 +84,10 @@ public class FXMLController implements Initializable {
 
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
+    public MenuItem pullMenuItem;
     public MenuItem settingsMenuItem;
     public MenuItem fetchAllMenuItem;
-    public MenuItem pullMenuItem;
+
     public MenuItem pullAllMenuItem;
     public MenuItem pushMenuItem;
     public MenuItem pushAllMenuItem;
@@ -279,6 +285,7 @@ public class FXMLController implements Initializable {
                     statReportMenuItem.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
+                    pullLocalBranchMenuItem.setDisable(disableRemoteOps);
                 }
         );
 
@@ -329,6 +336,49 @@ public class FXMLController implements Initializable {
 
                 }
         );
+
+
+        List<Pair<String, String>> recenntProjects = GitemberApp.getSettingsService().getRecentProjects();
+        if (!recenntProjects.isEmpty()) {
+            BorderPane borderPane = new BorderPane();
+            borderPane.setStyle("-fx-background-color: rgba(80, 180, 44, 0.5);");
+
+
+            hostPanel.getChildren().addAll( borderPane);
+            hostPanel.setStyle("-fx-background-color: rgba(33, 80, 180, 0.5);");
+
+            VBox vBox = new VBox();
+            vBox.setStyle("-fx-background-color: rgba(120, 80, 80, 0.5);");
+
+            Label gtLabl = new Label("Gitember 1.4");
+            gtLabl.setRotate(-90.0);
+            //gtLabl.setTextFill(Color.DARKGRAY);
+            //gtLabl.setStyle("-fx-font: 24 arial;");
+
+            Label openProjLblb =  new Label("Open recent project(s)");
+
+            borderPane.setLeft( gtLabl );
+            borderPane.setCenter( vBox );
+
+            vBox.getChildren().add(openProjLblb);
+            vBox.getChildren().add(new Separator());
+
+            recenntProjects.stream().forEach(
+                    pairOfProject -> {
+                        Hyperlink  projectNameHl = new Hyperlink (pairOfProject.getFirst());
+                        vBox.getChildren().add(projectNameHl);
+                        projectNameHl.setOnAction(
+                                event -> {
+                                    System.out.println("Got evt " + event + " pp " + pairOfProject);
+                                }
+                        );
+
+                    }
+            );
+        }
+
+
+
 
     }
 
@@ -384,13 +434,16 @@ public class FXMLController implements Initializable {
             if (ScmBranch.BranchType.LOCAL.equals(scmBranch.getBranchType())) {
                 boolean disableRemoteOp = scmBranch.getRemoteName() == null;
                 fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
+                pullLocalBranchMenuItem.setDisable(disableRemoteOp);
                 if (disableRemoteOp) {
                     pushToRemoteLocalBranchMenuItem.setText("Push to ... ");
                 } else {
                     fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
+                    pullLocalBranchMenuItem.setText("Pull remote " + scmBranch.getRemoteName());
                     pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
                 }
                 fetchLocalBranchMenuItem.setVisible(!disableRemoteOp);
+                pullLocalBranchMenuItem.setVisible(!disableRemoteOp);
 
             } else if (ScmBranch.BranchType.REMOTE.equals(scmBranch.getBranchType())) {
             } else if (ScmBranch.BranchType.TAG.equals(scmBranch.getBranchType())) {
@@ -452,6 +505,9 @@ public class FXMLController implements Initializable {
         fetchLocalBranchMenuItem = new MenuItem("Fetch");
         fetchLocalBranchMenuItem.setOnAction(this::fetchHandler);
 
+        pullLocalBranchMenuItem = new MenuItem("Pull");
+        pullLocalBranchMenuItem.setOnAction(this::pullHandler);
+
         pushToRemoteLocalBranchMenuItem = new MenuItem("Push ...");
         pushToRemoteLocalBranchMenuItem.setOnAction(this::localBranchPushHandler);
 
@@ -472,6 +528,7 @@ public class FXMLController implements Initializable {
                 createLocalBranchMenuItem,
                 mergeLocalBranchMenuItem,
                 fetchLocalBranchMenuItem,
+                pullLocalBranchMenuItem,
                 pushToRemoteLocalBranchMenuItem,
                 applyStashCtxMenuItem,
                 new SeparatorMenuItem(),
@@ -486,6 +543,7 @@ public class FXMLController implements Initializable {
             add(new MenuItemAvailbility(createLocalBranchMenuItem, true, true, true, false));
             add(new MenuItemAvailbility(mergeLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(fetchLocalBranchMenuItem, true, false, true, false));
+            add(new MenuItemAvailbility(pullLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(pushToRemoteLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(deleteLocalBranchMenuItem, true, true, true, false));
             add(new MenuItemAvailbility(deleteStashCtxMenuItem, false, false, false, true));
@@ -677,34 +735,6 @@ public class FXMLController implements Initializable {
             openRepository(absPath);
         }
         createOpenRecentMenu();
-    }
-
-    /**
-     * Open GUI shell in home or in repository folder, if it was opened.
-     *
-     * @param actionEvent event
-     */
-    @SuppressWarnings("unused")
-    public void openShellActionHandler(ActionEvent actionEvent) {
-        if (Desktop.isDesktopSupported()) {
-            new Thread(() -> {
-                try {
-                    Desktop.getDesktop().browse(
-                            Paths.get(
-                                    ObjectUtils.defaultIfNull(
-                                            GitemberApp.getCurrentRepositoryPathWOGit(),
-                                            GitemberApp.getSettingsService().getUserHomeFolder()
-                                    )
-                            ).toUri()
-                    );
-                } catch (Exception e) {
-                    String msg = "Cannot open GUI shell";
-                    log.log(Level.WARNING, msg, e);
-                    GitemberApp.showResult(msg, Alert.AlertType.ERROR);
-                }
-            }).start();
-        }
-
     }
 
     /**

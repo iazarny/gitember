@@ -22,6 +22,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
@@ -68,9 +69,7 @@ public class GitemberApp extends Application {
 
     public static String getCurrentRepositoryPathWOGit() {
         if (currentRepositoryPath != null) {
-            return currentRepositoryPath.getValue().substring(
-                    0,
-                    currentRepositoryPath.getValue().indexOf(Const.GIT_FOLDER) - 1);
+            return FilenameUtils.getFullPathNoEndSeparator(currentRepositoryPath.getValue());
         }
         return null;
     }
@@ -81,7 +80,7 @@ public class GitemberApp extends Application {
 
     public static void setRepositoryService(GitRepositoryService repositoryService) {
         GitemberApp.repositoryService = repositoryService;
-        GitemberApp.remoteUrl.setValue(repositoryService.getRemoteUrl());
+        GitemberApp.remoteUrl.setValue(repositoryService.getRemoteUrlFromStoredRepoConfig());
     }
 
     public static GitemberServiceImpl getGitemberService() {
@@ -137,11 +136,8 @@ public class GitemberApp extends Application {
             int height = gd.getDisplayMode().getHeight() - minus;
 
 
-
             Scene scene = new Scene(root, width, height);
             scene.getStylesheets().add(Const.DEFAULT_CSS);
-
-
 
 
             mainStage = stage;
