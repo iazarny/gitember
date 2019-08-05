@@ -2,7 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmBranch;
-import com.az.gitember.misc.Settings;
+import com.az.gitember.misc.GitemberSettings;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.GitemberServiceImpl;
 import com.az.gitember.service.SettingsServiceImpl;
@@ -96,13 +96,15 @@ public class GitemberApp extends Application {
     }
 
 
-    public static void applySettings(Settings newSettings) {
-        if (newSettings.isUseProxy()) {
-            System.setProperty(Const.SYSTEM_PROXY_HOST, newSettings.getProxyServer());
-            System.setProperty(Const.SYSTEM_PROXY_PORT, newSettings.getProxyPort());
-            if (newSettings.isUseProxyAuth()) {
-                System.setProperty(Const.SYSTEM_PROXY_USER, newSettings.getProxyUserName());
-                System.setProperty(Const.SYSTEM_PROXY_PASSWORD, newSettings.getProxyPassword());
+    public static void applySettings(GitemberSettings newGitemberSettings) {
+
+        // TODO
+        /*if (newGitemberSettings.isUseProxy()) {
+            System.setProperty(Const.SYSTEM_PROXY_HOST, newGitemberSettings.getProxyServer());
+            System.setProperty(Const.SYSTEM_PROXY_PORT, newGitemberSettings.getProxyPort());
+            if (newGitemberSettings.isUseProxyAuth()) {
+                System.setProperty(Const.SYSTEM_PROXY_USER, newGitemberSettings.getProxyUserName());
+                System.setProperty(Const.SYSTEM_PROXY_PASSWORD, newGitemberSettings.getProxyPassword());
             } else {
                 System.clearProperty(Const.SYSTEM_PROXY_USER);
                 System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
@@ -112,7 +114,7 @@ public class GitemberApp extends Application {
             System.clearProperty(Const.SYSTEM_PROXY_PORT);
             System.clearProperty(Const.SYSTEM_PROXY_USER);
             System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
-        }
+        }*/
 
     }
 

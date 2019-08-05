@@ -200,17 +200,17 @@ public class GitemberServiceImpl {
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
             try {
-                Settings settings = GitemberApp.getSettingsService().read();
+                GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
                 String msg = result.get();
-                settings.getCommitMessages().add(msg);
-                GitemberApp.getSettingsService().save(settings);
+                gitemberSettings.getCommitMessages().add(msg);
+                GitemberApp.getSettingsService().save(gitemberSettings);
 
                 GitemberApp.getRepositoryService().setUserEmailToStoredRepoConfig(dialog.getUserEmail());
                 GitemberApp.getRepositoryService().setUserNameToStoredRepoConfig(dialog.getUserName());
 
                 GitemberApp.getRepositoryService().commit(
                         result.get(),
-                        settings.isOverwriteAuthorWithCommiter());
+                        gitemberSettings.isOverwriteAuthorWithCommiter());
                 return true;
 
             } catch (GEScmAPIException e) {
@@ -627,8 +627,8 @@ public class GitemberServiceImpl {
 
     public void cloneRepo(final Consumer<RemoteOperationValue> onOk,
                           final Consumer<RemoteOperationValue> onError) {
-        final Settings settings = GitemberApp.getSettingsService().read();
-        final Set<String> urls = new TreeSet<>(settings.getGiturls());
+        final GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
+        final Set<String> urls = new TreeSet<>(gitemberSettings.getGiturls());
         CloneDialog dialog = new CloneDialog(
                 "Repository",
                 "Remote repository URL",
@@ -642,9 +642,9 @@ public class GitemberServiceImpl {
             String repoUrl = dialogResult.get().getUrl();
             GitemberApp.remoteUrl.setValue(repoUrl);
             urls.add(repoUrl);
-            settings.getGiturls().clear();
-            settings.getGiturls().addAll(urls);
-            GitemberApp.getSettingsService().save(settings);
+            gitemberSettings.getGiturls().clear();
+            gitemberSettings.getGiturls().addAll(urls);
+            GitemberApp.getSettingsService().save(gitemberSettings);
             if (repoUrl.startsWith("git@")) {
                 String login = "";
                 try {

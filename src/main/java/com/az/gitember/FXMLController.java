@@ -4,13 +4,10 @@ import com.az.gitember.misc.*;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -18,10 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -30,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
@@ -340,33 +333,39 @@ public class FXMLController implements Initializable {
 
         List<Pair<String, String>> recenntProjects = GitemberApp.getSettingsService().getRecentProjects();
         if (!recenntProjects.isEmpty()) {
-            BorderPane borderPane = new BorderPane();
-            borderPane.setStyle("-fx-background-color: rgba(80, 180, 44, 0.5);");
 
 
-            hostPanel.getChildren().addAll( borderPane);
-            hostPanel.setStyle("-fx-background-color: rgba(33, 80, 180, 0.5);");
+            GridPane gridPane= new GridPane();
+            //gridPane.setStyle("-fx-background-color: rgba(200, 18, 18, 0.5);");
 
-            VBox vBox = new VBox();
-            vBox.setStyle("-fx-background-color: rgba(120, 80, 80, 0.5);");
+            for (int i = 0; i < 9; i++) {
+                Label lbl = new Label("      ");
+                GridPane.setRowIndex(lbl, i);
+                GridPane.setColumnIndex(lbl, 1);
+                gridPane.getChildren().add(lbl);
 
-            Label gtLabl = new Label("Gitember 1.4");
-            gtLabl.setRotate(-90.0);
-            //gtLabl.setTextFill(Color.DARKGRAY);
-            //gtLabl.setStyle("-fx-font: 24 arial;");
+            }
 
-            Label openProjLblb =  new Label("Open recent project(s)");
+            VBox hBox = new VBox();
+            GridPane.setRowIndex(hBox, 3);
+            GridPane.setColumnIndex(hBox, 3);
+            gridPane.getChildren().add(hBox);
 
-            borderPane.setLeft( gtLabl );
-            borderPane.setCenter( vBox );
+            hostPanel.getChildren().addAll( gridPane);
 
-            vBox.getChildren().add(openProjLblb);
-            vBox.getChildren().add(new Separator());
+            Label lbl = new Label("Open recent project(s)");
+            lbl.setStyle("-fx-font-size: 18 pt;");
+            hBox.getChildren().add(lbl);
+            hBox.getChildren().add(new Label(" "));
+            hBox.getChildren().add(new Separator());
+            hBox.getChildren().add(new Label(" "));
+
 
             recenntProjects.stream().forEach(
                     pairOfProject -> {
                         Hyperlink  projectNameHl = new Hyperlink (pairOfProject.getFirst());
-                        vBox.getChildren().add(projectNameHl);
+                        projectNameHl.setStyle("-fx-font-size: 16 pt;");
+                        hBox.getChildren().add(projectNameHl);
                         projectNameHl.setOnAction(
                                 event -> {
                                     System.out.println("Got evt " + event + " pp " + pairOfProject);
@@ -376,7 +375,6 @@ public class FXMLController implements Initializable {
                     }
             );
         }
-
 
 
 
@@ -722,8 +720,8 @@ public class FXMLController implements Initializable {
      */
     public void openHandler(ActionEvent actionEvent) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        if (GitemberApp.getSettingsService().getLastProject() != null) {
-            directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getLastProject()));
+        if (GitemberApp.getSettingsService().getUserHomeFolder() != null) {
+            directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
         }
         File selectedDirectory =
                 directoryChooser.showDialog(GitemberApp.getMainStage());
@@ -770,14 +768,14 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void settingsActionHandler(ActionEvent actionEvent) {
-        Settings settings = GitemberApp.getSettingsService().read();
-        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
+        GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
+        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(gitemberSettings));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
             SettingsModel settingsModel = model.get();
-            Settings newSettings = settingsModel.createSettings();
-            GitemberApp.getSettingsService().save(newSettings);
-            GitemberApp.applySettings(newSettings);
+            GitemberSettings newGitemberSettings = settingsModel.toGitemberProjectSettings();
+            GitemberApp.getSettingsService().save(newGitemberSettings);
+            GitemberApp.applySettings(newGitemberSettings);
         }
     }
 
