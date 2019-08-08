@@ -44,7 +44,8 @@ public class GitemberApp extends Application {
     public static StringProperty remoteUrl = new SimpleStringProperty();
     public static ObjectProperty<ScmBranch> workingBranch = new SimpleObjectProperty<ScmBranch>();
 
-    private static GitRepositoryService repositoryService = new GitRepositoryService();
+    //todo
+    public static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService = new GitemberServiceImpl();
 
@@ -62,9 +63,7 @@ public class GitemberApp extends Application {
         return mainStage;
     }
 
-    public static void setCurrentRepositoryPath(String currentRepositoryPath) {
-        GitemberApp.currentRepositoryPath.setValue(currentRepositoryPath);
-    }
+
 
 
     public static String getCurrentRepositoryPathWOGit() {
@@ -78,10 +77,7 @@ public class GitemberApp extends Application {
         return repositoryService;
     }
 
-    public static void setRepositoryService(GitRepositoryService repositoryService) {
-        GitemberApp.repositoryService = repositoryService;
-        GitemberApp.remoteUrl.setValue(repositoryService.getRemoteUrlFromStoredRepoConfig());
-    }
+
 
     public static GitemberServiceImpl getGitemberService() {
         return gitemberService;
@@ -97,6 +93,8 @@ public class GitemberApp extends Application {
 
 
     public static void applySettings(GitemberSettings newGitemberSettings) {
+
+        System.out.println("TODO wtf");
 
         // TODO
         /*if (newGitemberSettings.isUseProxy()) {
@@ -129,7 +127,7 @@ public class GitemberApp extends Application {
             gitemberService.setProgressBar(controller.progressBar);
             gitemberService.setOperationProgressBar(controller.operationProgressBar);
             gitemberService.setOperationName(controller.operationName);
-            applySettings(getSettingsService().read());
+            applySettings(getSettingsService().getGitemberSettings());
 
 
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();

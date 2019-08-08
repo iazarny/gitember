@@ -137,4 +137,18 @@ public class GitemberProjectSettings implements Serializable, Comparable<Gitembe
         }
         return this.projectHameFolder.compareTo(o.projectHameFolder);
     }
+
+    public RepoInfo toRepoInfo() {
+        return RepoInfo.of(
+                projectRemoteUrl, userEmail, projectPwd, projectKeyPath, rememberMe
+        );
+    }
+
+    public void updateFrom(RepoInfo repoInfo){
+        setProjectRemoteUrl(repoInfo.getUrl());
+        setUserName(repoInfo.getLogin());
+        setProjectPwd(repoInfo.getPwd());
+        setProjectKeyPath(repoInfo.getKey());
+        setRememberMe(repoInfo.isRememberMe());
+    }
 }

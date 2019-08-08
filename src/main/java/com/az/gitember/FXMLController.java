@@ -109,9 +109,12 @@ public class FXMLController implements Initializable {
     @SuppressWarnings("unchecked")
     public void openRepository(final String absPath) {
         try {
-            GitemberApp.setCurrentRepositoryPath(absPath);
-            GitemberApp.setRepositoryService(new GitRepositoryService(absPath));
-            GitemberApp.getSettingsService().saveLastProject(absPath);
+
+            GitemberApp.currentRepositoryPath.setValue(absPath);
+
+            GitemberApp.repositoryService = new GitRepositoryService(absPath);
+            //todo it it right place ?
+            GitemberApp.remoteUrl.setValue(GitemberApp.getSettingsService().getRemoteUrlFromStoredRepoConfig());
 
             List<ScmBranch> branches = GitemberApp.getRepositoryService().getLocalBranches();
             branches.addAll(GitemberApp.getRepositoryService().getRemoteBranches());
@@ -768,14 +771,15 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void settingsActionHandler(ActionEvent actionEvent) {
-        GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
-        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(gitemberSettings));
+        GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
+        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(gitemberSettings.getLastProjectSettings()));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
+            //todo  update last projet
             SettingsModel settingsModel = model.get();
-            GitemberSettings newGitemberSettings = settingsModel.toGitemberProjectSettings();
-            GitemberApp.getSettingsService().save(newGitemberSettings);
-            GitemberApp.applySettings(newGitemberSettings);
+            GitemberProjectSettings newGitemberSettings = settingsModel.toGitemberProjectSettings();
+            GitemberApp.getSettingsService().save();
+
         }
     }
 

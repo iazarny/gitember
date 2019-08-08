@@ -1,6 +1,11 @@
 package com.az.gitember.misc;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.TreeSet;
 
 /**
@@ -10,9 +15,22 @@ public class GitemberSettings implements Serializable {
 
 
     private String lastLoginName;
-    private String lastProject;
+    private String lastGitFolder;
+
+    @JsonDeserialize(as=TreeSet.class)
     private TreeSet<String> commitMessages = new TreeSet<>();
-    private TreeSet<GitemberProjectSettings> projects = new TreeSet<>();
+
+    @JsonDeserialize(as=TreeSet.class)
+    private TreeSet<GitemberProjectSettings> projects = new TreeSet<>(
+
+            (o1, o2) -> {
+                if (o1 == null && o2 == null) return 0;
+                if (o1 != null && o2 == null) return -1;
+                if (o1 == null && o2 != null) return 1;
+                return o1.getProjectHameFolder().compareTo(o2.getProjectHameFolder());
+            }
+
+    );
 
     public String getLastLoginName() {
         return lastLoginName;
@@ -22,12 +40,12 @@ public class GitemberSettings implements Serializable {
         this.lastLoginName = lastLoginName;
     }
 
-    public String getLastProject() {
-        return lastProject;
+    public String getLastGitFolder() {
+        return lastGitFolder;
     }
 
-    public void setLastProject(String lastProject) {
-        this.lastProject = lastProject;
+    public void setLastGitFolder(String lastGitFolder) {
+        this.lastGitFolder = lastGitFolder;
     }
 
     public TreeSet<String> getCommitMessages() {
@@ -44,5 +62,21 @@ public class GitemberSettings implements Serializable {
 
     public void setProjects(TreeSet<GitemberProjectSettings> projects) {
         this.projects = projects;
+    }
+
+    public GitemberProjectSettings getLastProjectSettings() {
+        Optional<GitemberProjectSettings> gpsOpt = projects.stream().filter(
+                gps -> {  return gps.getProjectHameFolder().equalsIgnoreCase(lastGitFolder); }
+        ).findFirst();
+        if (gpsOpt.isPresent()) {
+            return gpsOpt.get();
+        }
+        return null;
+    }
+
+    public void addGitemberProjectSettings(GitemberProjectSettings ps) {
+        if ( ! projects.contains(ps)) {
+            projects.add(ps);
+        }
     }
 }

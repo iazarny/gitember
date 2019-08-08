@@ -67,8 +67,12 @@ public class GitRepositoryService {
 
     private final StoredConfig config;
 
+    private final String gitFolder;
+
     /**
-     * Construct service, which work with git
+     * Construct service, which work with git. Each service designated to work with onew repo.
+     * So we can have create project setting here form given folder
+     * and trannsfer to to global config.
      *
      * @param gitFolder folder with git repository, for example "~/project/.git"
      * @throws IOException
@@ -76,12 +80,25 @@ public class GitRepositoryService {
     public GitRepositoryService(final String gitFolder) throws IOException {
         this.repository = GitUtil.openRepository(gitFolder);
         this.config = repository.getConfig();
+        this.gitFolder = gitFolder;
+        String userName = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
+        String userEMail = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
+        String projectRemoteUrl =  config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, ConfigConstants.CONFIG_KEY_URL);
+//todo not sure
+        GitemberApp.getSettingsService().createNewGitemberProjectSettings(
+                userName,
+                userEMail,
+                projectRemoteUrl,
+                gitFolder
+        );
     }
 
     public GitRepositoryService() {
         repository = null;
         config = null;
+        gitFolder = null;
     }
+
 
     /**
      * Get repotitory. TOTO Incorrect, because for settings. But ok for now.
@@ -92,7 +109,8 @@ public class GitRepositoryService {
         return repository;
     }
 
-    public void setUserNameToStoredRepoConfig(String userName) {
+
+    /*public void setUserNameToStoredRepoConfig(String userName) {
         try {
             config.setString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME, userName);
             config.save();
@@ -110,17 +128,7 @@ public class GitRepositoryService {
         }
     }
 
-    public String getUserNameFromStoredRepoConfig() {
-        return config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
-    }
-
-    public String getUserEmailFromStoredRepoConfig() {
-        return config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
-    }
-
-    public String getRemoteUrlFromStoredRepoConfig() {
-        return config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, ConfigConstants.CONFIG_KEY_URL);
-    }
+    */
 
     public ScmBranch getScmBranchByName(String name) {
         try (Git git = new Git(repository)) {
@@ -974,24 +982,14 @@ public class GitRepositoryService {
      * Commit changes.
      *
      * @param message                     commit message
-     * @param overwriteAuthorWithCommiter
      * @return result.
      * @throws GEScmAPIException
      */
-    public RevCommit commit(final String message,
-                            final boolean overwriteAuthorWithCommiter) throws GEScmAPIException {
+    public RevCommit commit(final String message) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
             final CommitCommand cmd = git
                     .commit()
                     .setMessage(message);
-
-            if (overwriteAuthorWithCommiter) {
-                cmd.setAuthor(
-                        GitemberApp.getRepositoryService().getUserNameFromStoredRepoConfig(),
-                        GitemberApp.getRepositoryService().getUserEmailFromStoredRepoConfig());
-            }
-
-
             return cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit", e);
@@ -1136,6 +1134,7 @@ public class GitRepositoryService {
     }
 
     private RemoteOperationValue processError(Exception e) {
+        e.printStackTrace(); //todo
         if (e instanceof TransportException) {
             if (e.getMessage().contains("Authentication is required")) {
                 log.log(Level.INFO, e.getMessage());
@@ -1651,7 +1650,9 @@ public class GitRepositoryService {
     private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo) {
 
 
-        final String repoteUrl = getRemoteUrlFromStoredRepoConfig();
+        final String repoteUrl = repoInfo.getUrl();
+
+        log.log(Level.INFO, " Transport command for ", repoteUrl);
 
         // todo no ssh atm, git proto only
         if (repoteUrl != null && repoteUrl.startsWith("git@")) {
@@ -1663,8 +1664,8 @@ public class GitRepositoryService {
             });
         }
 
-        if (repoInfo.getLogin() != null) {
-            log.log(Level.INFO, " Transport command configured with credentiial provider");
+        if (repoInfo.getLogin() != null && repoInfo.getPwd() != null) {
+            log.log(Level.INFO, " Transport command configured with credential provider");
             transportCommand.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
             );

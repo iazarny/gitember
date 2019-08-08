@@ -24,15 +24,6 @@ public class RepoInfo {
     public RepoInfo() {
     }
 
-    /*public static RepoInfo of(RepoInfo ri) {
-        return new RepoInfo(
-                ri.url,
-                ri.login,
-                ri.pwd,
-                ri.key,
-                ri.rememberMe);
-    }*/
-
     public static RepoInfo of(String url, String login, String pwd, String key, boolean rememberMe) {
         return new RepoInfo(url, login, pwd, key, rememberMe);
     }

@@ -1,9 +1,10 @@
 package com.az.gitember.service;
 
+import com.az.gitember.GitemberApp;
 import com.az.gitember.misc.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ public class SettingsServiceImpl {
 
     static {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     private final static Logger log = Logger.getLogger(SettingsServiceImpl.class.getName());
@@ -36,9 +38,6 @@ public class SettingsServiceImpl {
     private final static String OS = System.getProperty(SYSTEM_PROP_OS_NAME).toLowerCase();
 
     private GitemberSettings gitemberSettings;
-
-
-
 
 
 
@@ -75,7 +74,7 @@ public class SettingsServiceImpl {
      * @return list of repo
      */
     public List<Pair<String, String>> getRecentProjects() {
-//todo read gitemberSettings read mustlean up !!!!!
+        read();
         List<Pair<String, String>> pairs = new ArrayList<>();
         for(GitemberProjectSettings ps : gitemberSettings.getProjects()) {
             String folder = ps.getProjectHameFolder();
@@ -88,38 +87,47 @@ public class SettingsServiceImpl {
         Collections.sort(pairs, Comparator.comparing(Pair::getFirst));
         return pairs;
     }
-
-
-
-
     /**
      * Read properties from disk.
      *
      * @return
      */
-    private GitemberSettings read() {
-        //todo add get
-        //todo clead up !!!!! and rett empty in case if absent
+    private void read() { // todo each time or ??????
+        File file = null;
         try {
-            File file = new File(getAbsolutePathToPropertyFile());
-            return objectMapper.readValue(file, GitemberSettings.class);
+            file = new File(getAbsolutePathToPropertyFile());
+            GitemberSettings gitemberSettings =  objectMapper.readValue(file, GitemberSettings.class);
+            gitemberSettings.getProjects().removeIf(
+                    gitemberProjectSettings -> {
+                        Path path = Paths.get(gitemberProjectSettings.getProjectHameFolder());
+                        return  !(Files.exists(path));
+                    }
+            );
+            this.gitemberSettings = gitemberSettings;
         } catch (IOException e) {
-            return new GitemberSettings();
+            this.gitemberSettings = new GitemberSettings();
+            e.printStackTrace();
+            log.log(Level.SEVERE, "Sorry. Cannot read settings. New created.", e);
+            if (file != null) {
+                if (file.delete()) {
+                    save();
+                }
+            }
         }
+
     }
 
     public RepoInfo getRepositoryCred(String remoteUrl) {
 
-        // todo read if absent
-        GitemberSettings gitemberSettingsAll = read();
-        ArrayList<RepoInfo> infos = gitemberSettingsAll.getLoginPassword();
-
-        Optional<RepoInfo> ri = infos
+        Optional<RepoInfo> repoInfoOpt = gitemberSettings
+                .getProjects()
                 .stream()
-                .filter(  repoInfo -> StringUtils.equals(repoInfo.getUrl(), remoteUrl)   )
-                .findFirst();
-        if (ri.isPresent()) {
-            return ri.get();
+                .map( gitemberProjectSettings -> gitemberProjectSettings.toRepoInfo())
+                .filter(repoInfo -> remoteUrl.equalsIgnoreCase(remoteUrl))
+        .findFirst();
+
+        if (repoInfoOpt.isPresent()) {
+            return repoInfoOpt.get();
         } else {
             return RepoInfo.of(null, null, null, null, false);
 
@@ -127,48 +135,75 @@ public class SettingsServiceImpl {
     }
 
     public void saseRepositoryCred(RepoInfo repoInfo) {
-        GitemberSettings gitemberSettings = read();
-        gitemberSettings.getLoginPassword().removeIf(t -> StringUtils.isBlank(t.getUrl()));
-        gitemberSettings.getLoginPassword().removeIf(t -> repoInfo.equals(t.getUrl()));
-        gitemberSettings.getLoginPassword().add(repoInfo);
-        log.log(Level.INFO, "Save global gitemberSettings " + gitemberSettings);
-        save(gitemberSettings);
+        Optional<GitemberProjectSettings> gpsOpt =
+        gitemberSettings.getProjects().stream().filter(gitemberProjectSettings -> {
+            return repoInfo.getUrl().equalsIgnoreCase(gitemberProjectSettings.getProjectRemoteUrl());
+        }).findFirst();
 
+        if (gpsOpt.isPresent()) {
+            GitemberProjectSettings projectSettings = gpsOpt.get();
+            projectSettings.updateFrom(repoInfo);
+            save();
+        }
     }
 
 
-
-    /**
-     * Save given repository as last open repo.
-     *
-     * @param absPath given absolute path to repository
-     */
-    public void saveLastProject(final String absPath) {
-        GitemberSettings gitemberSettings = read();
-        gitemberSettings.setLastProject(absPath);
-        Set<String> proj = new HashSet<>(gitemberSettings.getProjects());
-        proj.add(absPath);
-        gitemberSettings.getProjects().clear();
-        gitemberSettings.getProjects().addAll(proj);
-        save(gitemberSettings);
-    }
 
     /**
      * Save properties.
-     *
-     * @param gitemberSettings given properties.
      */
-    public void save(final GitemberSettings gitemberSettings) {
+    public void save() {
         try {
-            cleanupOldCommitMessages(gitemberSettings);
             objectMapper.writerFor(GitemberSettings.class).writeValue(
                     new File(getAbsolutePathToPropertyFile()),
                     gitemberSettings
             );
         } catch (IOException e) {
-            log.log(Level.SEVERE, "Cannot save gitemberSettings", e);
+            log.log(Level.SEVERE, "Cannot save settings", e);
         }
     }
 
 
+    public void createNewGitemberProjectSettings(
+            String userName,
+            String userEMail,
+            String projectRemoteUrl,
+            String gitFolder
+    ) {
+        GitemberProjectSettings ps = new GitemberProjectSettings();
+        ps.setProjectName(gitFolder);
+        ps.setProjectHameFolder(gitFolder);
+        ps.setUserName(userName);
+        ps.setUserEmail(userEMail);
+        ps.setProjectRemoteUrl(projectRemoteUrl);
+
+        GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
+        gitemberSettings.addGitemberProjectSettings(ps);
+        gitemberSettings.setLastGitFolder(gitFolder);
+        GitemberApp.getSettingsService().save();
+    }
+
+
+    //todo rename 4 f un
+
+    public String getUserNameFromStoredRepoConfig() {
+        return gitemberSettings.getLastProjectSettings().getUserName();
+    }
+
+    public String getUserEmailFromStoredRepoConfig() {
+        return gitemberSettings.getLastProjectSettings().getUserEmail();
+    }
+
+    public String getRemoteUrlFromStoredRepoConfig() {
+        return gitemberSettings.getLastProjectSettings().getProjectRemoteUrl();
+    }
+
+    public String getProjectHameFolderdRepoConfig() {
+        return gitemberSettings.getLastProjectSettings().getProjectHameFolder();
+    }
+
+
+    public GitemberSettings getGitemberSettings() {
+        return gitemberSettings;
+    }
 }

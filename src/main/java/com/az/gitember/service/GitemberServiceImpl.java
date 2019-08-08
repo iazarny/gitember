@@ -188,10 +188,10 @@ public class GitemberServiceImpl {
     public boolean commit(ScmBranch brnch) {
         CommitDialog dialog = new CommitDialog(
                 "",
-                GitemberApp.getRepositoryService().getUserNameFromStoredRepoConfig(),
-                GitemberApp.getRepositoryService().getUserEmailFromStoredRepoConfig(),
+                GitemberApp.getSettingsService().getUserNameFromStoredRepoConfig(),
+                GitemberApp.getSettingsService().getUserEmailFromStoredRepoConfig(),
                 false,
-                GitemberApp.getSettingsService().read().getCommitMessages()
+                GitemberApp.getSettingsService().getGitemberSettings().getCommitMessages()
 
         );
         dialog.setTitle("Commit message");
@@ -199,26 +199,18 @@ public class GitemberServiceImpl {
         dialog.setContentText("Message:");
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
+            GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
+            String msg = result.get();
+            gitemberSettings.getCommitMessages().add(msg);
+            GitemberApp.getSettingsService().save();
             try {
-                GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
-                String msg = result.get();
-                gitemberSettings.getCommitMessages().add(msg);
-                GitemberApp.getSettingsService().save(gitemberSettings);
-
-                GitemberApp.getRepositoryService().setUserEmailToStoredRepoConfig(dialog.getUserEmail());
-                GitemberApp.getRepositoryService().setUserNameToStoredRepoConfig(dialog.getUserName());
-
-                GitemberApp.getRepositoryService().commit(
-                        result.get(),
-                        gitemberSettings.isOverwriteAuthorWithCommiter());
-                return true;
-
+                GitemberApp.getRepositoryService().commit(result.get());
             } catch (GEScmAPIException e) {
-                GitemberApp.showResult("Cannot commit, because: " + e.getMessage(), Alert.AlertType.ERROR);
-                log.log(Level.SEVERE, "Cannot commit", e);
+                GitemberApp.showException("Cannot commit", e);
             }
-        }
 
+            return true;
+        }
         return false;
     }
 
@@ -518,14 +510,14 @@ public class GitemberServiceImpl {
 
         longTask.setOnSucceeded(val -> Platform.runLater(
                 () -> {
-
+                    RemoteOperationValue rval = longTask.getValue();
                     GitemberApp.getMainStage().getScene().setCursor(Cursor.DEFAULT);
                     operationProgressBar.progressProperty().unbind();
                     operationName.textProperty().unbind();
                     progressBar.setVisible(false);
 
 
-                    RemoteOperationValue rval = longTask.getValue();
+                    //RemoteOperationValue rval = longTask.getValue();
                     if (rval == null) {
                         rval = new RemoteOperationValue(RemoteOperationValue.Result.ERROR, "Error");
                     }
@@ -627,8 +619,8 @@ public class GitemberServiceImpl {
 
     public void cloneRepo(final Consumer<RemoteOperationValue> onOk,
                           final Consumer<RemoteOperationValue> onError) {
-        final GitemberSettings gitemberSettings = GitemberApp.getSettingsService().read();
-        final Set<String> urls = new TreeSet<>(gitemberSettings.getGiturls());
+        final GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
+        final Set<String> urls = gitemberSettings.getProjects().stream().map( p -> {return p.getProjectRemoteUrl();}).collect(Collectors.toSet());
         CloneDialog dialog = new CloneDialog(
                 "Repository",
                 "Remote repository URL",
@@ -642,9 +634,8 @@ public class GitemberServiceImpl {
             String repoUrl = dialogResult.get().getUrl();
             GitemberApp.remoteUrl.setValue(repoUrl);
             urls.add(repoUrl);
-            gitemberSettings.getGiturls().clear();
-            gitemberSettings.getGiturls().addAll(urls);
-            GitemberApp.getSettingsService().save(gitemberSettings);
+            // todo add to project after colone !!!!!!!!!!!! gitemberSettings.get  getGiturls().addAll(urls);
+            // GitemberApp.getSettingsService().save();
             if (repoUrl.startsWith("git@")) {
                 String login = "";
                 try {
