@@ -109,8 +109,8 @@ public class SettingsDialog extends Dialog<SettingsModel>  {
         Repository repo = GitemberApp.getRepositoryService().getRepository();
         Config config = repo.getConfig();
 
-        String projectName =  repo.getIdentifier();
         String projectHameFolder =  repo.getDirectory().getAbsolutePath();
+        String projectName = projectHameFolder;
         String name = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
         String email = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
         String projectRemoteUrl =  config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, ConfigConstants.CONFIG_KEY_URL);

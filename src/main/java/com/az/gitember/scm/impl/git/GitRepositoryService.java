@@ -1502,6 +1502,7 @@ public class GitRepositoryService {
             );
             return new RemoteOperationValue(stringBuilder.toString());
         } catch (TransportException te) {
+            te.printStackTrace();
             if (te.getCause() != null && te.getCause().getCause() != null
                     && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
                 try (Git git = new Git(repository)) {
@@ -1517,6 +1518,7 @@ public class GitRepositoryService {
                 return processError(te);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return processError(e);
         }
     }

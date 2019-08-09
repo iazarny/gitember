@@ -198,11 +198,6 @@ public class SettingsServiceImpl {
         return gitemberSettings.getLastProjectSettings().getProjectRemoteUrl();
     }
 
-    public String getProjectHameFolderdRepoConfig() {
-        return gitemberSettings.getLastProjectSettings().getProjectHameFolder();
-    }
-
-
     public GitemberSettings getGitemberSettings() {
         return gitemberSettings;
     }

@@ -1,12 +1,20 @@
 package com.az.gitember.misc;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 import java.io.Serializable;
 import java.util.TreeSet;
 
 /**
  * Created by Igor_Azarny on 05 -Aug -2019.
  */
-public class GitemberProjectSettings implements Serializable, Comparable<GitemberProjectSettings> {
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE
+)
+public class GitemberProjectSettings implements Serializable, Comparable<GitemberProjectSettings>  {
 
 
     private boolean rememberMe;
@@ -131,11 +139,25 @@ public class GitemberProjectSettings implements Serializable, Comparable<Gitembe
     }
 
     @Override
-    public int compareTo(GitemberProjectSettings o) {
-        if(o == null) {
-            return 0;
+    public boolean equals(Object o) {
+        if(o instanceof GitemberProjectSettings){
+            GitemberProjectSettings other = (GitemberProjectSettings) o;
+            return projectHameFolder.equals(other.projectHameFolder);
         }
-        return this.projectHameFolder.compareTo(o.projectHameFolder);
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return projectHameFolder.hashCode();
+    }
+
+    @Override
+    public int compareTo(GitemberProjectSettings o) {
+        if (o != null) {
+            return o.projectHameFolder.compareTo(this.getProjectHameFolder());
+        }
+        return -1;
     }
 
     public RepoInfo toRepoInfo() {

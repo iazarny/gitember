@@ -68,6 +68,11 @@ public class RepoInfo {
         this.rememberMe = rememberMe;
     }
 
+    public boolean isNeedRelogon() {
+        return !rememberMe
+                || ( login == null || pwd == null);
+    }
+
     @Override
     public String toString() {
         return "RepoInfo{" +

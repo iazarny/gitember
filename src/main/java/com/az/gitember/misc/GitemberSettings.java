@@ -1,16 +1,21 @@
 package com.az.gitember.misc;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.TreeSet;
 
 /**
  * Created by Igor_Azarny on 07 -Jan -2017.
  */
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE
+)
 public class GitemberSettings implements Serializable {
 
 
@@ -21,16 +26,7 @@ public class GitemberSettings implements Serializable {
     private TreeSet<String> commitMessages = new TreeSet<>();
 
     @JsonDeserialize(as=TreeSet.class)
-    private TreeSet<GitemberProjectSettings> projects = new TreeSet<>(
-
-            (o1, o2) -> {
-                if (o1 == null && o2 == null) return 0;
-                if (o1 != null && o2 == null) return -1;
-                if (o1 == null && o2 != null) return 1;
-                return o1.getProjectHameFolder().compareTo(o2.getProjectHameFolder());
-            }
-
-    );
+    private TreeSet<GitemberProjectSettings> projects = new TreeSet<>();
 
     public String getLastLoginName() {
         return lastLoginName;
@@ -75,8 +71,6 @@ public class GitemberSettings implements Serializable {
     }
 
     public void addGitemberProjectSettings(GitemberProjectSettings ps) {
-        if ( ! projects.contains(ps)) {
-            projects.add(ps);
-        }
+        projects.add(ps);
     }
 }
