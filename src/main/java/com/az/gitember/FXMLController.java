@@ -536,7 +536,6 @@ public class FXMLController implements Initializable {
                 deleteLocalBranchMenuItem
         );
 
-
         contextMenuItemVisibilityLTR = new ArrayList<MenuItemAvailbility>() {{
             add(new MenuItemAvailbility(checkoutRemoteBranchMenuItem, false, false, true, false));
             add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, false, false));
