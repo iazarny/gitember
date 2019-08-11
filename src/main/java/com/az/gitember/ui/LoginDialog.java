@@ -6,6 +6,9 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 /**
  * Created by Igor_Azarny on 25 - Dec -2016.
@@ -30,6 +33,7 @@ public class LoginDialog extends Dialog<RepoInfo> {
 
         TextField username = new TextField();
         username.setPromptText("Username");
+        HBox.setHgrow(username, Priority.ALWAYS);
         if (repoInfo.getLogin() != null) {
             username.setText(repoInfo.getLogin());
         }
@@ -48,6 +52,7 @@ public class LoginDialog extends Dialog<RepoInfo> {
         grid.add(new Label("Password : "), 0, 1);
         grid.add(password, 1, 1);
         grid.add(rememberPassword, 1, 2);
+
 
         Node loginButton = this.getDialogPane().lookupButton(loginButtonType);
         loginButton.setDisable(username.textProperty().isEmpty().get());

@@ -117,21 +117,13 @@ public class SettingsServiceImpl {
 
     }
 
-    public RepoInfo getRepositoryCred(String remoteUrl) {
-
-        Optional<RepoInfo> repoInfoOpt = gitemberSettings
+    public Optional<RepoInfo> getRepositoryCred(String remoteUrl) {
+        return  gitemberSettings
                 .getProjects()
                 .stream()
                 .map( gitemberProjectSettings -> gitemberProjectSettings.toRepoInfo())
                 .filter(repoInfo -> remoteUrl.equalsIgnoreCase(remoteUrl))
-        .findFirst();
-
-        if (repoInfoOpt.isPresent()) {
-            return repoInfoOpt.get();
-        } else {
-            return RepoInfo.of(null, null, null, null, false);
-
-        }
+                .findFirst();
     }
 
     public void saseRepositoryCred(RepoInfo repoInfo) {
@@ -170,6 +162,10 @@ public class SettingsServiceImpl {
             String projectRemoteUrl,
             String gitFolder
     ) {
+
+        SettingsServiceImpl settingsSrv = GitemberApp.getSettingsService();
+        GitemberServiceImpl gitemberService = GitemberApp.getGitemberService();
+
         GitemberProjectSettings ps = new GitemberProjectSettings();
         ps.setProjectName(gitFolder);
         ps.setProjectHameFolder(gitFolder);
@@ -177,10 +173,20 @@ public class SettingsServiceImpl {
         ps.setUserEmail(userEMail);
         ps.setProjectRemoteUrl(projectRemoteUrl);
 
+        //so just to try update  from saved creds and used it.
+
+        Optional<RepoInfo> optRI = settingsSrv.getRepositoryCred(projectRemoteUrl);
+
+        if (optRI.isPresent()) {
+            ps.updateFrom(optRI.get());
+        }
+
         GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
         gitemberSettings.addGitemberProjectSettings(ps);
         gitemberSettings.setLastGitFolder(gitFolder);
-        GitemberApp.getSettingsService().save();
+
+        settingsSrv.save();
+        gitemberService.setNewRepoInfo(ps.toRepoInfo());
     }
 
 

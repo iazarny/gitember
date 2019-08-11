@@ -73,6 +73,10 @@ public class RepoInfo {
                 || ( login == null || pwd == null);
     }
 
+    public boolean isRelogonPresent() {
+        return rememberMe  && login != null  && pwd != null;
+    }
+
     @Override
     public String toString() {
         return "RepoInfo{" +

@@ -162,7 +162,7 @@ public class GitemberProjectSettings implements Serializable, Comparable<Gitembe
 
     public RepoInfo toRepoInfo() {
         return RepoInfo.of(
-                projectRemoteUrl, userEmail, projectPwd, projectKeyPath, rememberMe
+                projectRemoteUrl, userName, projectPwd, projectKeyPath, rememberMe
         );
     }
 

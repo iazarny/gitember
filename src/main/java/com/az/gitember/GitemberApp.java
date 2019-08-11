@@ -94,7 +94,7 @@ public class GitemberApp extends Application {
 
     public static void applySettings(GitemberSettings newGitemberSettings) {
 
-        System.out.println("TODO wtf");
+        System.out.println("TODO wtf !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
         // TODO
         /*if (newGitemberSettings.isUseProxy()) {

@@ -49,6 +49,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -109,26 +110,6 @@ public class GitRepositoryService {
         return repository;
     }
 
-
-    /*public void setUserNameToStoredRepoConfig(String userName) {
-        try {
-            config.setString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME, userName);
-            config.save();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot save settings", e);
-        }
-    }
-
-    public void setUserEmailToStoredRepoConfig(String userEmail) {
-        try {
-            config.setString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL, userEmail);
-            config.save();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot save settings", e);
-        }
-    }
-
-    */
 
     public ScmBranch getScmBranchByName(String name) {
         try (Git git = new Git(repository)) {
@@ -1233,9 +1214,11 @@ public class GitRepositoryService {
             }
             return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, pullRez.toString());
         } catch (CheckoutConflictException conflictException) {
+            conflictException.printStackTrace();
             return new RemoteOperationValue("Fetch conflict error" + conflictException.getMessage());
 
         } catch (Exception e) {
+            e.printStackTrace();
             return processError(e);
         }
     }
@@ -1456,7 +1439,8 @@ public class GitRepositoryService {
 
     public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
                                                      RefSpec refSpec,
-                                                     ProgressMonitor progressMonitor) {
+                                                     ProgressMonitor progressMonitor
+                                                      ) {
         try (Git git = new Git(repository)) {
 
             final PushCommand pushCommand = git.push().setRefSpecs(refSpec);
@@ -1473,11 +1457,11 @@ public class GitRepositoryService {
             StoredConfig config = repository.getConfig();
             String ru = config.getString("remote", "origin", "url");
 
-
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> push to remove cnd " + pushCommand);
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> with repoInfo " + repoInfo);
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> with repoInfo " + refSpec);
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> ru from conf " + ru);
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> push to remove  "
+                    + pushCommand
+            +" repo info"  + repoInfo
+            +" sprc " + refSpec
+            +" url "  + ru);
 
 
 
@@ -1666,7 +1650,7 @@ public class GitRepositoryService {
             });
         }
 
-        if (repoInfo.getLogin() != null && repoInfo.getPwd() != null) {
+        if (repoInfo.isRelogonPresent()) {
             log.log(Level.INFO, " Transport command configured with credential provider");
             transportCommand.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())

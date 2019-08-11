@@ -10,7 +10,8 @@ public class RemoteOperationValue {
         ERROR,
         AUTH_REQUIRED,
         GIT_AUTH_REQUIRED,
-        NOT_AUTHORIZED
+        NOT_AUTHORIZED,
+        CANCEL
     }
 
     private Result result;

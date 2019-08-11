@@ -18,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.NullProgressMonitor;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.transport.RefSpec;
 
@@ -337,7 +338,29 @@ public class GitemberServiceImpl {
         }
     }
 
-    public void createTag(boolean push, String tag) {
+
+
+   public void createTagZZZ(boolean push, String tag) {
+
+        try {
+            GitemberApp.getRepositoryService().creteTag(tag);
+            if (push) {
+                final RefSpec refSpec = new RefSpec(":refs/tags/" + tag);
+                final RemoteOperationValueTask remoteOperationValueTask = new RemoteOperationValueTask(this);
+                remoteOperationValueTask.setSupplier(
+                        () -> GitemberApp.getRepositoryService().remoteRepositoryPush(repositoryLoginInfo,  refSpec,
+                                remoteOperationValueTask.getProgressMonitor()
+                ));
+                prepareLongTask(remoteOperationValueTask, null, null);
+                new Thread(remoteOperationValueTask).start();
+            }
+        } catch (GEScmAPIException e) {
+            GitemberApp.showResult("Cannot create tag " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+
+    }
+
+    /*public void createTag(boolean push, String tag) {
         try {
             GitemberApp.getRepositoryService().creteTag(tag);
 
@@ -363,28 +386,19 @@ public class GitemberServiceImpl {
             }
 
         } catch (GEScmAPIException e) {
-            GitemberApp.showResult("Cannot dd tag " + e.getMessage(), Alert.AlertType.ERROR);
+            GitemberApp.showResult("Cannot delete tag " + e.getMessage(), Alert.AlertType.ERROR);
         }
 
     }
-
+*/
 
     public void pushToRemoteRepository(String localBranchName, String remoteBranchName) {
 
         GitemberApp.getRepositoryService().trackRemote(repositoryLoginInfo, localBranchName, remoteBranchName);
 
-
         Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
 
-            private ProgressMonitor progressMonitor = new DefaultProgressMonitor((t, d) -> {
-                updateTitle(t);
-                updateProgress(d, 1.0);
-            });
-
             private RefSpec refSpec = new RefSpec(localBranchName + ":" + remoteBranchName);
-
-
-
 
             @Override
             protected RemoteOperationValue call()  {
@@ -392,15 +406,18 @@ public class GitemberServiceImpl {
                         () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
                                 repositoryLoginInfo,
                                 refSpec,
-                                progressMonitor
+                                new DefaultProgressMonitor((t, d) -> {
+                                    updateTitle(t);
+                                    updateProgress(d, 1.0);
+                                })
 
                         )
                 );
             }
+
         };
         prepareLongTask(longTask, null, null);
         Thread th = new Thread(longTask);
-        th.setDaemon(true);
         th.start();
 
     }
@@ -411,13 +428,18 @@ public class GitemberServiceImpl {
      * @param supplier remote repository command.
      * @return RemoteOperationValue which shall be interpret by caller
      */
-
+    RemoteOperationValue  operationValue;
     public RemoteOperationValue remoteRepositoryOperation(final Supplier<RemoteOperationValue> supplier) {
 
-        RemoteOperationValue operationValue = supplier.get();
 
-        while (repositoryLoginInfo.isNeedRelogon() &&
-                operationValue.getResult() != RemoteOperationValue.Result.OK) {
+        operationValue = supplier.get();
+
+        while (repositoryLoginInfo.isNeedRelogon() ||
+
+                (operationValue.getResult() != RemoteOperationValue.Result.OK
+                && operationValue.getResult() != RemoteOperationValue.Result.CANCEL)
+
+        ) {
 
 
             uiInputLatchToService = new CountDownLatch(1);
@@ -434,6 +456,14 @@ public class GitemberServiceImpl {
                 if (riOptional.isPresent()) {
                     repositoryLoginInfo = riOptional.get();
                     GitemberApp.getSettingsService().saseRepositoryCred(repositoryLoginInfo);
+                    operationValue = supplier.get();
+                } else {
+                    operationValue = new RemoteOperationValue(
+                            RemoteOperationValue.Result.CANCEL, ""
+                    );
+                    GitemberApp.showResult(
+                            "Cancel",  Alert.AlertType.INFORMATION
+                    );
                 }
                 uiInputLatchToService.countDown();
             });
@@ -804,5 +834,9 @@ public class GitemberServiceImpl {
             prepareLongTask(longTask, null, null);
             new Thread(longTask).start();
         }
+    }
+
+    public void setNewRepoInfo(RepoInfo toRepoInfo) {
+        this.repositoryLoginInfo = toRepoInfo;
     }
 }

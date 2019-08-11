@@ -372,15 +372,14 @@ public class FXMLController implements Initializable {
                         projectNameHl.setOnAction(
                                 event -> {
                                     System.out.println("Got evt " + event + " pp " + pairOfProject);
+                                    openRepository(pairOfProject.getSecond());
+                                    createOpenRecentMenu();
                                 }
                         );
 
                     }
             );
         }
-
-
-
     }
 
     /**
@@ -441,7 +440,7 @@ public class FXMLController implements Initializable {
                 } else {
                     fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
                     pullLocalBranchMenuItem.setText("Pull remote " + scmBranch.getRemoteName());
-                    pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
+                    pushToRemoteLocalBranchMenuItem.setText("zzz Push to remote " + scmBranch.getRemoteName());
                 }
                 fetchLocalBranchMenuItem.setVisible(!disableRemoteOp);
                 pullLocalBranchMenuItem.setVisible(!disableRemoteOp);
@@ -572,7 +571,7 @@ public class FXMLController implements Initializable {
         );
         Optional<Pair<Boolean, String>> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
-            GitemberApp.getGitemberService().createTag(dialogResult.get().getFirst(), dialogResult.get().getSecond());
+            GitemberApp.getGitemberService().createTagZZZ(dialogResult.get().getFirst(), dialogResult.get().getSecond());
             tagsTreeItem.getChildren().clear();
             fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
         }
