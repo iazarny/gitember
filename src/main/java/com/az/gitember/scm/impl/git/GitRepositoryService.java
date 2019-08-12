@@ -1195,9 +1195,9 @@ public class GitRepositoryService {
      */
     public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
                                                      final RepoInfo repoInfo,
-                                                     final ProgressMonitor progressMonitor) {
-        log.log(Level.INFO,
-                MessageFormat.format("Pull {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
+                                                     final ProgressMonitor progressMonitor,
+                                                     final boolean processExeption ) {
+        log.log(Level.INFO,  MessageFormat.format("Pull {0} ", shortRemoteBranch));
 
         try (Git git = new Git(repository)) {
 
@@ -1215,11 +1215,15 @@ public class GitRepositoryService {
             return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, pullRez.toString());
         } catch (CheckoutConflictException conflictException) {
             conflictException.printStackTrace();
-            return new RemoteOperationValue("Fetch conflict error" + conflictException.getMessage());
+            return new RemoteOperationValue("Pull conflict error" + conflictException.getMessage());
 
         } catch (Exception e) {
             e.printStackTrace();
-            return processError(e);
+            if (processExeption) {
+                return processError(e);
+            } else {
+                return new RemoteOperationValue(RemoteOperationValue.Result.CANCEL, "");
+            }
         }
     }
 
@@ -1484,6 +1488,12 @@ public class GitRepositoryService {
 
                     }
             );
+
+
+
+
+
+
             return new RemoteOperationValue(stringBuilder.toString());
         } catch (TransportException te) {
             te.printStackTrace();

@@ -340,7 +340,7 @@ public class GitemberServiceImpl {
 
 
 
-   public void createTagZZZ(boolean push, String tag) {
+   /*public void createTagZZZ(boolean push, String tag) {
 
         try {
             GitemberApp.getRepositoryService().creteTag(tag);
@@ -358,9 +358,9 @@ public class GitemberServiceImpl {
             GitemberApp.showResult("Cannot create tag " + e.getMessage(), Alert.AlertType.ERROR);
         }
 
-    }
+    }*/
 
-    /*public void createTag(boolean push, String tag) {
+    public void createTagZZZ(boolean push, String tag) {
         try {
             GitemberApp.getRepositoryService().creteTag(tag);
 
@@ -390,7 +390,7 @@ public class GitemberServiceImpl {
         }
 
     }
-*/
+
 
     public void pushToRemoteRepository(String localBranchName, String remoteBranchName) {
 
@@ -402,7 +402,8 @@ public class GitemberServiceImpl {
 
             @Override
             protected RemoteOperationValue call()  {
-                return remoteRepositoryOperation(
+                //remoteRepositoryPull
+                final RemoteOperationValue operationValue = remoteRepositoryOperation(
                         () -> GitemberApp.getRepositoryService().remoteRepositoryPush(
                                 repositoryLoginInfo,
                                 refSpec,
@@ -413,6 +414,20 @@ public class GitemberServiceImpl {
 
                         )
                 );
+
+                try {
+                    GitemberApp.getRepositoryService().remoteRepositoryPull(
+                            localBranchName, repositoryLoginInfo, new DefaultProgressMonitor((t, d) -> {
+                                updateTitle(t);
+                                updateProgress(d, 1.0);
+                            }), false
+                    );
+                    //
+                } catch (Exception e) {
+
+                }
+
+                return operationValue;
             }
 
         };
@@ -603,7 +618,9 @@ public class GitemberServiceImpl {
                                 new DefaultProgressMonitor((t, d) -> {
                                     updateTitle(t);
                                     updateProgress(d, 1.0);
-                                }))
+                                }),
+                                true
+                        )
                 );
             }
         };
