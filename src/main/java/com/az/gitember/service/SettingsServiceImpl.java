@@ -117,13 +117,18 @@ public class SettingsServiceImpl {
 
     }
 
-    public Optional<RepoInfo> getRepositoryCred(String remoteUrl) {
-        return  gitemberSettings
+    public Optional<RepoInfo> getRepositoryCred(String gitFolder) {
+        Optional<GitemberProjectSettings> gps  =  gitemberSettings
                 .getProjects()
                 .stream()
-                .map( gitemberProjectSettings -> gitemberProjectSettings.toRepoInfo())
-                .filter(repoInfo -> remoteUrl.equalsIgnoreCase(remoteUrl))
+                .filter(gitemberProjectSettings -> gitemberProjectSettings.getProjectHameFolder().equalsIgnoreCase(gitFolder))
                 .findFirst();
+        
+        if (gps.isPresent()) {
+            return Optional.of(gps.get().toRepoInfo());
+        } else {
+            return Optional.of(RepoInfo.of(null,null,null,null, false));
+        }
     }
 
     public void saseRepositoryCred(RepoInfo repoInfo) {
@@ -175,7 +180,7 @@ public class SettingsServiceImpl {
 
         //so just to try update  from saved creds and used it.
 
-        Optional<RepoInfo> optRI = settingsSrv.getRepositoryCred(projectRemoteUrl);
+        Optional<RepoInfo> optRI = settingsSrv.getRepositoryCred(gitFolder);
 
         if (optRI.isPresent()) {
             ps.updateFrom(optRI.get());
