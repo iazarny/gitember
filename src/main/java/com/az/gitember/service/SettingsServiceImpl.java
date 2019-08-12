@@ -123,7 +123,7 @@ public class SettingsServiceImpl {
                 .stream()
                 .filter(gitemberProjectSettings -> gitemberProjectSettings.getProjectHameFolder().equalsIgnoreCase(gitFolder))
                 .findFirst();
-        
+
         if (gps.isPresent()) {
             return Optional.of(gps.get().toRepoInfo());
         } else {
