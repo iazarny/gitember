@@ -18,8 +18,6 @@ import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.NullProgressMonitor;
-import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
@@ -45,7 +43,7 @@ public class GitemberServiceImpl {
     private final static Logger log = Logger.getLogger(GitemberServiceImpl.class.getName());
 
     private CountDownLatch uiInputLatchToService;
-    private RepoInfo repositoryLoginInfo = RepoInfo.of(null, null, null, null, false);
+    private GitemberProjectSettings repositoryLoginInfo = null;
 
     private ToolBar progressBar;
     private ProgressBar operationProgressBar;
@@ -411,7 +409,6 @@ public class GitemberServiceImpl {
                                     updateTitle(t);
                                     updateProgress(d, 1.0);
                                 })
-
                         )
                 );
 
@@ -462,15 +459,24 @@ public class GitemberServiceImpl {
 
                 String dialogHeader = fillHeaderAndRelogomFlag(operationValue);
 
-                Optional<RepoInfo> riOptional =
+                Optional<GitemberProjectSettings> riOptional =
                         new LoginDialog(
                                 "Login",
                                 dialogHeader,
                                 repositoryLoginInfo)
                                 .showAndWait();
                 if (riOptional.isPresent()) {
-                    repositoryLoginInfo = riOptional.get();
-                    GitemberApp.getSettingsService().saseRepositoryCred(repositoryLoginInfo);
+                    GitemberProjectSettings tmpGps = riOptional.get();
+
+                    repositoryLoginInfo.setUserName(tmpGps.getUserName());
+                    repositoryLoginInfo.setProjectPwd(tmpGps.getProjectPwd());
+                    repositoryLoginInfo.setRememberMe(tmpGps.isRememberMe());
+                    repositoryLoginInfo.setProjectRemoteUrl(tmpGps.getProjectRemoteUrl());
+
+
+
+                    GitemberApp.getSettingsService().saveRepositoryCred(repositoryLoginInfo);
+
                     operationValue = supplier.get();
                 } else {
                     operationValue = new RemoteOperationValue(
@@ -676,11 +682,11 @@ public class GitemberServiceImpl {
                         login = matcher.group(3);
                     }
                 }
-                this.repositoryLoginInfo.setLogin(login);
-                this.repositoryLoginInfo.setKey(dialogResult.get().getPathToKey());
-                this.repositoryLoginInfo.setPwd(dialogResult.get().getKeyPassPhrase());
+                this.repositoryLoginInfo.setUserName(login);
+                this.repositoryLoginInfo.setProjectKeyPath(dialogResult.get().getPathToKey());
+                this.repositoryLoginInfo.setProjectPwd(dialogResult.get().getKeyPassPhrase());
                 //save login  password key
-                GitemberApp.getSettingsService().saseRepositoryCred(this.repositoryLoginInfo);
+                GitemberApp.getSettingsService().saveRepositoryCred(this.repositoryLoginInfo);
             }
 
 
@@ -691,8 +697,8 @@ public class GitemberServiceImpl {
                             () -> GitemberApp.getRepositoryService().cloneRepository(
                                     dialogResult.get().getUrl(),
                                     dialogResult.get().getDestinationFolder(),
-                                    repositoryLoginInfo.getLogin(),
-                                    repositoryLoginInfo.getPwd(),
+                                    repositoryLoginInfo.getUserName(),
+                                    repositoryLoginInfo.getProjectPwd(),
                                     dialogResult.get().getPathToKey(),
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);
@@ -853,7 +859,7 @@ public class GitemberServiceImpl {
         }
     }
 
-    public void setNewRepoInfo(RepoInfo toRepoInfo) {
+    public void setNewRepoInfo(GitemberProjectSettings toRepoInfo) {
         this.repositoryLoginInfo = toRepoInfo;
     }
 }

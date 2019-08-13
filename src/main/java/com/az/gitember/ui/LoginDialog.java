@@ -1,6 +1,6 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.misc.RepoInfo;
+import com.az.gitember.misc.GitemberProjectSettings;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -8,15 +8,14 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 
 /**
  * Created by Igor_Azarny on 25 - Dec -2016.
  */
-public class LoginDialog extends Dialog<RepoInfo> {
+public class LoginDialog extends Dialog<GitemberProjectSettings> {
 
     public LoginDialog(String title, String header,
-                       RepoInfo repoInfo) {
+                       GitemberProjectSettings repoInfo) {
 
         super();
         this.setTitle(title);
@@ -34,13 +33,13 @@ public class LoginDialog extends Dialog<RepoInfo> {
         TextField username = new TextField();
         username.setPromptText("Username");
         HBox.setHgrow(username, Priority.ALWAYS);
-        if (repoInfo.getLogin() != null) {
-            username.setText(repoInfo.getLogin());
+        if (repoInfo.getUserName() != null) {
+            username.setText(repoInfo.getUserName());
         }
         PasswordField password = new PasswordField();
         password.setPromptText("Password");
-        if (repoInfo.getPwd() != null) {
-            password.setText(repoInfo.getPwd());
+        if (repoInfo.getProjectPwd() != null) {
+            password.setText(repoInfo.getProjectPwd());
         }
 
         CheckBox rememberPassword = new CheckBox();
@@ -68,14 +67,14 @@ public class LoginDialog extends Dialog<RepoInfo> {
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == loginButtonType) {
-                return RepoInfo.of(
-                        repoInfo.getUrl(),
-                        username.getText(),
-                        password.getText(),
-                        repoInfo.getKey(),
-                        rememberPassword.isSelected()
-
-                );
+                GitemberProjectSettings settings = new GitemberProjectSettings();
+                settings.setProjectRemoteUrl(repoInfo.getProjectRemoteUrl());
+                settings.setUserName(username.getText());
+                settings.setProjectPwd(password.getText());
+                settings.setProjectKeyPath(repoInfo.getProjectKeyPath());
+                settings.setRememberMe(rememberPassword.isSelected());
+                settings.setProjectHameFolder(repoInfo.getProjectHameFolder());
+                return settings;
             }
             return null;
         });

@@ -117,31 +117,19 @@ public class SettingsServiceImpl {
 
     }
 
-    public Optional<RepoInfo> getRepositoryCred(String gitFolder) {
-        Optional<GitemberProjectSettings> gps  =  gitemberSettings
+    public Optional<GitemberProjectSettings> getRepositoryCred(String remoteUrl, String gitFolder) {
+        return  gitemberSettings
                 .getProjects()
                 .stream()
-                .filter(gitemberProjectSettings -> gitemberProjectSettings.getProjectHameFolder().equalsIgnoreCase(gitFolder))
-                .findFirst();
-
-        if (gps.isPresent()) {
-            return Optional.of(gps.get().toRepoInfo());
-        } else {
-            return Optional.of(RepoInfo.of(null,null,null,null, false));
-        }
+                .filter(
+                        ri -> ri.getProjectRemoteUrl().equalsIgnoreCase(remoteUrl)
+                        && ri.getProjectHameFolder().equalsIgnoreCase(gitFolder)
+                ).findFirst();
     }
 
-    public void saseRepositoryCred(RepoInfo repoInfo) {
-        Optional<GitemberProjectSettings> gpsOpt =
-        gitemberSettings.getProjects().stream().filter(gitemberProjectSettings -> {
-            return repoInfo.getUrl().equalsIgnoreCase(gitemberProjectSettings.getProjectRemoteUrl());
-        }).findFirst();
-
-        if (gpsOpt.isPresent()) {
-            GitemberProjectSettings projectSettings = gpsOpt.get();
-            projectSettings.updateFrom(repoInfo);
-            save();
-        }
+    public void saveRepositoryCred(GitemberProjectSettings repoInfo) {
+        gitemberSettings.getProjects().add(repoInfo);
+        save();
     }
 
 
@@ -169,7 +157,6 @@ public class SettingsServiceImpl {
     ) {
 
         SettingsServiceImpl settingsSrv = GitemberApp.getSettingsService();
-        GitemberServiceImpl gitemberService = GitemberApp.getGitemberService();
 
         GitemberProjectSettings ps = new GitemberProjectSettings();
         ps.setProjectName(gitFolder);
@@ -179,8 +166,9 @@ public class SettingsServiceImpl {
         ps.setProjectRemoteUrl(projectRemoteUrl);
 
         //so just to try update  from saved creds and used it.
+        //todo not sure what to upd
 
-        Optional<RepoInfo> optRI = settingsSrv.getRepositoryCred(gitFolder);
+        Optional<GitemberProjectSettings> optRI = settingsSrv.getRepositoryCred(projectRemoteUrl, gitFolder);
 
         if (optRI.isPresent()) {
             ps.updateFrom(optRI.get());
@@ -191,7 +179,7 @@ public class SettingsServiceImpl {
         gitemberSettings.setLastGitFolder(gitFolder);
 
         settingsSrv.save();
-        gitemberService.setNewRepoInfo(ps.toRepoInfo());
+        GitemberApp.getGitemberService().setNewRepoInfo(ps);
     }
 
 

@@ -1,8 +1,10 @@
 package com.az.gitember.misc;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.TreeSet;
 
 /**
@@ -142,35 +144,53 @@ public class GitemberProjectSettings implements Serializable, Comparable<Gitembe
     public boolean equals(Object o) {
         if(o instanceof GitemberProjectSettings){
             GitemberProjectSettings other = (GitemberProjectSettings) o;
-            return projectHameFolder.equals(other.projectHameFolder);
+            return
+                    projectHameFolder.equals(other.projectHameFolder)
+                    && projectRemoteUrl.equals(other.projectRemoteUrl);
         }
         return false;
     }
 
+
     @Override
     public int hashCode() {
-        return projectHameFolder.hashCode();
+        return Objects.hash(projectHameFolder, projectRemoteUrl);
     }
 
     @Override
     public int compareTo(GitemberProjectSettings o) {
-        if (o != null) {
+        if (o != null && o.projectHameFolder != null) {
             return o.projectHameFolder.compareTo(this.getProjectHameFolder());
         }
         return -1;
     }
 
-    public RepoInfo toRepoInfo() {
-        return RepoInfo.of(
-                projectRemoteUrl, userName, projectPwd, projectKeyPath, rememberMe
-        );
+    public boolean isNeedRelogon() {
+        return  !rememberMe ||
+                StringUtils.isEmpty(userName) || StringUtils.isEmpty(projectPwd);
     }
 
-    public void updateFrom(RepoInfo repoInfo){
-        setProjectRemoteUrl(repoInfo.getUrl());
-        setUserName(repoInfo.getLogin());
-        setProjectPwd(repoInfo.getPwd());
-        setProjectKeyPath(repoInfo.getKey());
-        setRememberMe(repoInfo.isRememberMe());
+    public boolean isRelogonPresent() {
+        //return rememberMe  && login != null  && pwd != null;
+        return rememberMe && StringUtils.isNotEmpty(userName) || StringUtils.isNotEmpty(projectPwd);
     }
+
+    public void updateFrom(GitemberProjectSettings gps) {
+        this.rememberMe = gps.rememberMe;
+        this.projectName = gps.projectName;
+        this.projectHameFolder = gps.projectHameFolder;
+        this.userName = gps.userName;
+        this.userEmail = gps.userEmail;
+        this.projectRemoteUrl = gps.projectRemoteUrl;
+        this.projectKeyPath = gps.projectKeyPath;
+        this.projectPwd = gps.projectPwd;
+        this.useProxy = gps.useProxy;
+        this.proxyServer = gps.proxyServer;
+        this.proxyPort = gps.proxyPort;
+        this.proxyUserName = gps.proxyUserName;
+        this.proxyPassword = gps.proxyPassword;
+    }
+
+
+
 }

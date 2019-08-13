@@ -71,7 +71,7 @@ public class GitRepositoryService {
     private final String gitFolder;
 
     /**
-     * Construct service, which work with git. Each service designated to work with onew repo.
+     * Construct service, which work with git. Each service designated to work with the new repo.
      * So we can have create project setting here form given folder
      * and trannsfer to to global config.
      *
@@ -1153,11 +1153,11 @@ public class GitRepositoryService {
      * @param progressMonitor   optional progress
      * @return result of operation
      */
-    public RemoteOperationValue remoteRepositoryFetch(final RepoInfo repoInfo,
+    public RemoteOperationValue remoteRepositoryFetch(final GitemberProjectSettings repoInfo,
                                                       final String shortRemoteBranch,
                                                       final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getUserName()));
 
         try (Git git = new Git(repository)) {
             final FetchCommand fetchCommand = git
@@ -1194,7 +1194,7 @@ public class GitRepositoryService {
      * @throws Exception
      */
     public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
-                                                     final RepoInfo repoInfo,
+                                                     final GitemberProjectSettings repoInfo,
                                                      final ProgressMonitor progressMonitor,
                                                      final boolean processExeption ) {
         log.log(Level.INFO,  MessageFormat.format("Pull {0} ", shortRemoteBranch));
@@ -1272,7 +1272,6 @@ public class GitRepositoryService {
      * Get stash list.
      *
      * @return list of stashed changes
-     * @throws GEScmAPIException
      */
     public List<ScmRevisionInformation> getStashList() {
         try (Git git = new Git(repository)) {
@@ -1428,7 +1427,7 @@ public class GitRepositoryService {
      * @return
      * @throws Exception in case of error
      */
-    public void  trackRemote(RepoInfo repoInfo, String localBranch, String remoteBranch) {
+    public void  trackRemote(GitemberProjectSettings repoInfo, String localBranch, String remoteBranch) {
         try (Git git = new Git(repository)) {
             final StoredConfig config = git.getRepository().getConfig();
             config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
@@ -1441,7 +1440,7 @@ public class GitRepositoryService {
         }
     }
 
-    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
+    public RemoteOperationValue remoteRepositoryPush(GitemberProjectSettings repoInfo,
                                                      RefSpec refSpec,
                                                      ProgressMonitor progressMonitor
                                                       ) {
@@ -1453,7 +1452,7 @@ public class GitRepositoryService {
             }
 
             configureTransportCommand(pushCommand, repoInfo);
-            pushCommand.setRemote(repoInfo.getUrl());
+            pushCommand.setRemote(repoInfo.getProjectRemoteUrl());
             //todo message !!!!!!!!!!!!!!!!1
 
 
@@ -1643,17 +1642,17 @@ public class GitRepositoryService {
 
 
 
-    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo) {
+    private void configureTransportCommand(TransportCommand transportCommand, final GitemberProjectSettings repoInfo) {
 
 
-        final String repoteUrl = repoInfo.getUrl();
+        final String repoteUrl = repoInfo.getProjectRemoteUrl();
 
         log.log(Level.INFO, " Transport command for ", repoteUrl);
 
         // todo no ssh atm, git proto only
         if (repoteUrl != null && repoteUrl.startsWith("git@")) {
             log.log(Level.INFO, " Transport command configured with ssh support");
-            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getPwd(), repoInfo.getKey());
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getProjectPwd(), repoInfo.getProjectKeyPath());
             transportCommand.setTransportConfigCallback(transport -> {
                 SshTransport sshTransport = (SshTransport) transport;
                 sshTransport.setSshSessionFactory(sshSessionFactory);
@@ -1663,7 +1662,7 @@ public class GitRepositoryService {
         if (repoInfo.isRelogonPresent()) {
             log.log(Level.INFO, " Transport command configured with credential provider");
             transportCommand.setCredentialsProvider(
-                    new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
+                    new UsernamePasswordCredentialsProvider(repoInfo.getUserName(), repoInfo.getProjectPwd())
             );
         }
 
