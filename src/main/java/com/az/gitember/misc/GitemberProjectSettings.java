@@ -165,30 +165,24 @@ public class GitemberProjectSettings implements Serializable, Comparable<Gitembe
         return -1;
     }
 
-    public boolean isNeedRelogon() {
-        return  !rememberMe ||
-                StringUtils.isEmpty(userName) || StringUtils.isEmpty(projectPwd);
-    }
-
     public boolean isRelogonPresent() {
-        //return rememberMe  && login != null  && pwd != null;
-        return rememberMe && StringUtils.isNotEmpty(userName) || StringUtils.isNotEmpty(projectPwd);
+        return rememberMe && StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(projectPwd);
     }
 
-    public void updateFrom(GitemberProjectSettings gps) {
+    public void updateForLogon(GitemberProjectSettings gps) {
         this.rememberMe = gps.rememberMe;
         this.projectName = gps.projectName;
         this.projectHameFolder = gps.projectHameFolder;
         this.userName = gps.userName;
-        this.userEmail = gps.userEmail;
+        //this.userEmail = gps.userEmail;
         this.projectRemoteUrl = gps.projectRemoteUrl;
         this.projectKeyPath = gps.projectKeyPath;
         this.projectPwd = gps.projectPwd;
-        this.useProxy = gps.useProxy;
+        /*this.useProxy = gps.useProxy;
         this.proxyServer = gps.proxyServer;
         this.proxyPort = gps.proxyPort;
         this.proxyUserName = gps.proxyUserName;
-        this.proxyPassword = gps.proxyPassword;
+        this.proxyPassword = gps.proxyPassword;*/
     }
 
 

@@ -366,12 +366,12 @@ public class FXMLController implements Initializable {
 
             recenntProjects.stream().forEach(
                     pairOfProject -> {
-                        Hyperlink  projectNameHl = new Hyperlink (pairOfProject.getFirst());
+                        Hyperlink  projectNameHl = new Hyperlink (
+                                pairOfProject.getFirst() + "   " + pairOfProject.getSecond());
                         projectNameHl.setStyle("-fx-font-size: 16 pt;");
                         hBox.getChildren().add(projectNameHl);
                         projectNameHl.setOnAction(
                                 event -> {
-                                    System.out.println("Got evt " + event + " pp " + pairOfProject);
                                     openRepository(pairOfProject.getSecond());
                                     createOpenRecentMenu();
                                 }

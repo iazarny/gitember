@@ -1222,7 +1222,7 @@ public class GitRepositoryService {
             if (processExeption) {
                 return processError(e);
             } else {
-                return new RemoteOperationValue(RemoteOperationValue.Result.CANCEL, "");
+                return new RemoteOperationValue(RemoteOperationValue.Result.CANCEL, "User cancel operation .");
             }
         }
     }

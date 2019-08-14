@@ -128,6 +128,13 @@ public class SettingsServiceImpl {
     }
 
     public void saveRepositoryCred(GitemberProjectSettings repoInfo) {
+        gitemberSettings.getProjects().removeIf(
+            gps -> {
+                return gps.getProjectHameFolder().equals(repoInfo.getProjectHameFolder()) &&
+                gps.getProjectRemoteUrl().equals(repoInfo.getProjectRemoteUrl());
+            }
+
+        );
         gitemberSettings.getProjects().add(repoInfo);
         save();
     }
@@ -171,7 +178,7 @@ public class SettingsServiceImpl {
         Optional<GitemberProjectSettings> optRI = settingsSrv.getRepositoryCred(projectRemoteUrl, gitFolder);
 
         if (optRI.isPresent()) {
-            ps.updateFrom(optRI.get());
+            ps.updateForLogon(optRI.get());
         }
 
         GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();

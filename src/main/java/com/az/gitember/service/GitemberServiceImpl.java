@@ -446,19 +446,19 @@ public class GitemberServiceImpl {
 
         operationValue = supplier.get();
 
-        while (repositoryLoginInfo.isNeedRelogon() ||
+        //repositoryLoginInfo.isRelogonPresent() &&
 
-                (operationValue.getResult() != RemoteOperationValue.Result.OK
-                && operationValue.getResult() != RemoteOperationValue.Result.CANCEL)
+        while (
+
+                !(operationValue.getResult() == RemoteOperationValue.Result.OK
+                || operationValue.getResult() == RemoteOperationValue.Result.CANCEL)
 
         ) {
 
 
             uiInputLatchToService = new CountDownLatch(1);
             Platform.runLater(() -> {
-
                 String dialogHeader = fillHeaderAndRelogomFlag(operationValue);
-
                 Optional<GitemberProjectSettings> riOptional =
                         new LoginDialog(
                                 "Login",
@@ -473,14 +473,12 @@ public class GitemberServiceImpl {
                     repositoryLoginInfo.setRememberMe(tmpGps.isRememberMe());
                     repositoryLoginInfo.setProjectRemoteUrl(tmpGps.getProjectRemoteUrl());
 
-
-
                     GitemberApp.getSettingsService().saveRepositoryCred(repositoryLoginInfo);
 
                     operationValue = supplier.get();
                 } else {
                     operationValue = new RemoteOperationValue(
-                            RemoteOperationValue.Result.CANCEL, ""
+                            RemoteOperationValue.Result.CANCEL, "User cancel operation"
                     );
                     GitemberApp.showResult(
                             "Cancel",  Alert.AlertType.INFORMATION
