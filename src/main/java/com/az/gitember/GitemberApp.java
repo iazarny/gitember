@@ -11,6 +11,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -48,6 +50,7 @@ public class GitemberApp extends Application {
     public static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService = new GitemberServiceImpl();
+    private static  WorkingCopyController workingCopyController = null;
 
     public final static SortedSet<String> entries = new TreeSet<>();
 
@@ -62,9 +65,6 @@ public class GitemberApp extends Application {
     public static Stage getMainStage() {
         return mainStage;
     }
-
-
-
 
     public static String getCurrentRepositoryPathWOGit() {
         if (currentRepositoryPath != null) {
@@ -150,6 +150,17 @@ public class GitemberApp extends Application {
                     e -> GitRepositoryService.cleanUpTempFiles()
             );
 
+            stage.focusedProperty().addListener(new ChangeListener<Boolean>()  {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown)       {
+
+                    if(onShown  && (workingCopyController instanceof  WorkingCopyController) ) {
+                        ((WorkingCopyController) workingCopyController).refreshBtnHandler(null);
+                    }
+
+                }
+            });
+
         }
 
     }
@@ -211,6 +222,10 @@ public class GitemberApp extends Application {
         alert.getDialogPane().setExpandableContent(expContent);
         alert.showAndWait();
 
+    }
+
+    public static void setWorkingCopyController(WorkingCopyController workingCopyController) {
+        GitemberApp.workingCopyController = workingCopyController;
     }
 
     /**

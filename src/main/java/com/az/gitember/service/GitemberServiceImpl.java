@@ -16,6 +16,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
@@ -446,8 +447,6 @@ public class GitemberServiceImpl {
 
         operationValue = supplier.get();
 
-        //repositoryLoginInfo.isRelogonPresent() &&
-
         while (
 
                 !(operationValue.getResult() == RemoteOperationValue.Result.OK
@@ -688,6 +687,7 @@ public class GitemberServiceImpl {
             }
 
 
+
             Task<RemoteOperationValue> longTask = new Task<RemoteOperationValue>() {
                 @Override
                 protected RemoteOperationValue call()  {
@@ -695,8 +695,8 @@ public class GitemberServiceImpl {
                             () -> GitemberApp.getRepositoryService().cloneRepository(
                                     dialogResult.get().getUrl(),
                                     dialogResult.get().getDestinationFolder(),
-                                    repositoryLoginInfo.getUserName(),
-                                    repositoryLoginInfo.getProjectPwd(),
+                                    repositoryLoginInfo == null ? null : repositoryLoginInfo.getUserName(),
+                                    repositoryLoginInfo == null ? null : repositoryLoginInfo.getProjectPwd(),
                                     dialogResult.get().getPathToKey(),
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);

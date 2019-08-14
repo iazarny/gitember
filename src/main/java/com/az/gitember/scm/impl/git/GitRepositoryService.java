@@ -1245,6 +1245,13 @@ public class GitRepositoryService {
                         new UsernamePasswordCredentialsProvider(userName, password)
                 );
             }
+
+            List<RefSpec> specs = new ArrayList<RefSpec>();
+            specs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+            specs.add(new RefSpec("+refs/tags/*:refs/tags/*"));
+            specs.add(new RefSpec("+refs/notes/*:refs/notes/*"));
+            fetchCommand.setRefSpecs(specs);
+
             FetchResult fetchResult = fetchCommand.call();
             checkout(git.getRepository(), fetchResult);
 
@@ -1460,13 +1467,16 @@ public class GitRepositoryService {
             StoredConfig config = repository.getConfig();
             String ru = config.getString("remote", "origin", "url");
 
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> push to remove  "
-                    + pushCommand
-            +" repo info"  + repoInfo
-            +" sprc " + refSpec
-            +" url "  + ru);
 
 
+
+            if (refSpec != null && refSpec.getDestination() != null && refSpec.getDestination().contains("refs/tags/")) {
+                pushCommand.setPushTags().setRefSpecs(refSpec);
+            }
+
+            log.log(Level.INFO,
+                    "Pushing " + pushCommand + " " +repoInfo
+                            + " ref: " + refSpec + " url " + ru);
 
             Iterable<PushResult> pushResults = pushCommand.call();
             StringBuilder stringBuilder = new StringBuilder();
@@ -1475,10 +1485,7 @@ public class GitRepositoryService {
                         String rezInfo = pushResult.getMessages();// "";//todo
                         stringBuilder.append(rezInfo);
 
-                        System.out.println(
-                                "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
-                                        + " updates: " + pushResult.getRemoteUpdates()
-                        );
+
 
                         log.log(Level.INFO,
                                 "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()

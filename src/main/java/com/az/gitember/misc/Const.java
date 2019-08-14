@@ -11,7 +11,7 @@ public interface Const {
 
     String TEMP_FILE_PREFIX = "gitember";
 
-    String TITLE = "Gitember ";
+    String TITLE = "Gitember 1.4 ";
 
     String DIFF_EXTENSION = "diff";
 

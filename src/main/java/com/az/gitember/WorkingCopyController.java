@@ -788,6 +788,7 @@ public class WorkingCopyController implements Initializable {
             toolBar.getItems().add(workingCopyController.searchLabel);
             toolBar.getItems().add(workingCopyController.searchText);
             // toolBar.getItems().add(workingCopyController.searchButton);
+            GitemberApp.setWorkingCopyController(workingCopyController);
 
 
             return workCopyView;

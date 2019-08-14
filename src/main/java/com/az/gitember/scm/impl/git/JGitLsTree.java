@@ -210,7 +210,6 @@ public class JGitLsTree {
                 break;
             }
         }
-        System.out.println("########### " + candidate);
         return candidate;
     }
 

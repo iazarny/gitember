@@ -440,7 +440,7 @@ public class FXMLController implements Initializable {
                 } else {
                     fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
                     pullLocalBranchMenuItem.setText("Pull remote " + scmBranch.getRemoteName());
-                    pushToRemoteLocalBranchMenuItem.setText("zzz Push to remote " + scmBranch.getRemoteName());
+                    pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
                 }
                 fetchLocalBranchMenuItem.setVisible(!disableRemoteOp);
                 pullLocalBranchMenuItem.setVisible(!disableRemoteOp);
