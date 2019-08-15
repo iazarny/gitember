@@ -48,19 +48,10 @@ Source: "C:\home\igor\gitember\target\jfx\native\gitember-1.4\*"; DestDir: "{app
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{src}\gitember-1.4.ico"; WorkingDir: "{src}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}";  IconFilename: "{src}\gitember-1.4.ico"; Tasks: desktopicon; WorkingDir: "{src}"
 
 
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\gitember-1.4.ico"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}";  IconFilename: "{app}\gitember-1.4.ico"; Tasks: desktopicon
-
-;Name: "{autoprograms}\{#MyAppName}"; Filename: "C:\home\igor\gitember\target\jfx\native\gitember-1.4\gitember-1.4.ico"
-;Name: "{autodesktop}\{#MyAppName}"; Filename: "C:\home\igor\gitember\target\jfx\native\gitember-1.4\gitember-1.4.ico"; Tasks: desktopicon
-
-;Name: {group}\MyApplication; Filename: {app}\MyApplication.exe; WorkingDir: {app}; IconFilename: {app}\MyApplication.ico; Comment: "MyApplication"; Components: MyApplication; 
-;Name: {commondesktop}\MyApplication; Filename: {app}\MyApplication.exe; WorkingDir: {app}; IconFilename: {app}\MyApplication.ico; Comment: "MyApplication"; Components: MyApplication;
-
-;Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-;Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 
 [Run]
