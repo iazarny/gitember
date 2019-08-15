@@ -2,7 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.misc.Const;
 import com.az.gitember.misc.ScmBranch;
-import com.az.gitember.misc.Settings;
+import com.az.gitember.misc.GitemberSettings;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.service.GitemberServiceImpl;
 import com.az.gitember.service.SettingsServiceImpl;
@@ -11,6 +11,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -22,7 +24,9 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.awt.*;
 import java.io.IOException;
@@ -43,9 +47,11 @@ public class GitemberApp extends Application {
     public static StringProperty remoteUrl = new SimpleStringProperty();
     public static ObjectProperty<ScmBranch> workingBranch = new SimpleObjectProperty<ScmBranch>();
 
-    private static GitRepositoryService repositoryService = new GitRepositoryService();
+    //todo
+    public static GitRepositoryService repositoryService = new GitRepositoryService();
     private static SettingsServiceImpl settingsService = new SettingsServiceImpl();
     private static GitemberServiceImpl gitemberService = new GitemberServiceImpl();
+    private static  WorkingCopyController workingCopyController = null;
 
     public final static SortedSet<String> entries = new TreeSet<>();
 
@@ -61,16 +67,9 @@ public class GitemberApp extends Application {
         return mainStage;
     }
 
-    public static void setCurrentRepositoryPath(String currentRepositoryPath) {
-        GitemberApp.currentRepositoryPath.setValue(currentRepositoryPath);
-    }
-
-
     public static String getCurrentRepositoryPathWOGit() {
         if (currentRepositoryPath != null) {
-            return currentRepositoryPath.getValue().substring(
-                    0,
-                    currentRepositoryPath.getValue().indexOf(Const.GIT_FOLDER) - 1);
+            return FilenameUtils.getFullPathNoEndSeparator(currentRepositoryPath.getValue());
         }
         return null;
     }
@@ -79,10 +78,7 @@ public class GitemberApp extends Application {
         return repositoryService;
     }
 
-    public static void setRepositoryService(GitRepositoryService repositoryService) {
-        GitemberApp.repositoryService = repositoryService;
-        GitemberApp.remoteUrl.setValue(repositoryService.getRemoteUrl());
-    }
+
 
     public static GitemberServiceImpl getGitemberService() {
         return gitemberService;
@@ -97,13 +93,14 @@ public class GitemberApp extends Application {
     }
 
 
-    public static void applySettings(Settings newSettings) {
-        if (newSettings.isUseProxy()) {
-            System.setProperty(Const.SYSTEM_PROXY_HOST, newSettings.getProxyServer());
-            System.setProperty(Const.SYSTEM_PROXY_PORT, newSettings.getProxyPort());
-            if (newSettings.isUseProxyAuth()) {
-                System.setProperty(Const.SYSTEM_PROXY_USER, newSettings.getProxyUserName());
-                System.setProperty(Const.SYSTEM_PROXY_PASSWORD, newSettings.getProxyPassword());
+    public static void applySettings(GitemberSettings newGitemberSettings) {
+        // TODO
+        /*if (newGitemberSettings.isUseProxy()) {
+            System.setProperty(Const.SYSTEM_PROXY_HOST, newGitemberSettings.getProxyServer());
+            System.setProperty(Const.SYSTEM_PROXY_PORT, newGitemberSettings.getProxyPort());
+            if (newGitemberSettings.isUseProxyAuth()) {
+                System.setProperty(Const.SYSTEM_PROXY_USER, newGitemberSettings.getProxyUserName());
+                System.setProperty(Const.SYSTEM_PROXY_PASSWORD, newGitemberSettings.getProxyPassword());
             } else {
                 System.clearProperty(Const.SYSTEM_PROXY_USER);
                 System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
@@ -113,7 +110,7 @@ public class GitemberApp extends Application {
             System.clearProperty(Const.SYSTEM_PROXY_PORT);
             System.clearProperty(Const.SYSTEM_PROXY_USER);
             System.clearProperty(Const.SYSTEM_PROXY_PASSWORD);
-        }
+        }*/
 
     }
 
@@ -128,7 +125,7 @@ public class GitemberApp extends Application {
             gitemberService.setProgressBar(controller.progressBar);
             gitemberService.setOperationProgressBar(controller.operationProgressBar);
             gitemberService.setOperationName(controller.operationName);
-            applySettings(getSettingsService().read());
+            applySettings(getSettingsService().getGitemberSettings());
 
 
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
@@ -137,11 +134,8 @@ public class GitemberApp extends Application {
             int height = gd.getDisplayMode().getHeight() - minus;
 
 
-
             Scene scene = new Scene(root, width, height);
             scene.getStylesheets().add(Const.DEFAULT_CSS);
-
-
 
 
             mainStage = stage;
@@ -153,6 +147,17 @@ public class GitemberApp extends Application {
             stage.setOnCloseRequest(
                     e -> GitRepositoryService.cleanUpTempFiles()
             );
+
+            stage.focusedProperty().addListener(new ChangeListener<Boolean>()  {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown)       {
+
+                    if(onShown  && (workingCopyController instanceof  WorkingCopyController) ) {
+                        ((WorkingCopyController) workingCopyController).refreshBtnHandler(null);
+                    }
+
+                }
+            });
 
         }
 
@@ -192,7 +197,6 @@ public class GitemberApp extends Application {
 
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        ex.printStackTrace(pw);
         String exceptionText = sw.toString();
 
         Label label = new Label("The exception stacktrace was:");
@@ -217,6 +221,10 @@ public class GitemberApp extends Application {
 
     }
 
+    public static void setWorkingCopyController(WorkingCopyController workingCopyController) {
+        GitemberApp.workingCopyController = workingCopyController;
+    }
+
     /**
      * The main() method is ignored in correctly deployed JavaFX application.
      * main() serves only as fallback in case the application can not be
@@ -229,6 +237,8 @@ public class GitemberApp extends Application {
 
         try {
             LogManager.getLogManager().readConfiguration(GitemberApp.class.getResourceAsStream("/log.properties"));
+            WindowCacheConfig c = new WindowCacheConfig();
+            c.install();
         } catch (IOException e) {
             e.printStackTrace();
 

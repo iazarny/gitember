@@ -12,11 +12,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>com.az.gitember.GitemberApp</mainClass>
+
     </properties>
 
     <organization>
         <!-- Used as the 'Vendor' for JNLP generation -->
-        <name>Your Organisation</name>
+        <name>Igor Azarny</name>
     </organization>
 
     <repositories>
@@ -35,6 +36,7 @@
             </resource>
         </resources>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -67,7 +69,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${java.home}/../bin/javafxpackager</executable>
+                            <executable>${java.home}/../bin/javapackager</executable>
                             <arguments>
                                 <argument>-createjar</argument>
                                 <argument>-nocss2bin</argument>
@@ -127,7 +129,8 @@
                         <!-- to include "dtjava.js" and other related files, set this to TRUE -->
                         <jnlp.includeDT>true</jnlp.includeDT>
 
-                        <!-- the JNLP-bundler needs this, they don't use "appName" for the filename ... you have to set this, otherwise it doesn't build -->
+                        <!-- the JNLP-bundler needs this, they don't use "appName" for the filename ... you have to set this,
+                         otherwise it doesn't build -->
                         <!-- for details of that JNLP-bundler, please have a look at the source -->
                         <!-- https://github.com/Debian/openjfx/blob/e32fd960e20c58c9b7db27e426b4bca6d52add2f/modules/fxpackager/src/main/java/com/oracle/tools/packager/jnlp/JNLPBundler.java#L84 -->
                         <jnlp.outfile>Gitember</jnlp.outfile>
@@ -155,23 +158,15 @@
         <!--<dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>5.2.0.201812061821-r</version>
+            <version>5.4.0.201906121030-r</version>
         </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>5.4.0.201906121030-r</version>
+            <version>5.3.2.201906051522-r</version>
         </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
-        <!--<dependency>
-            <groupId>org.fxmisc.richtext</groupId>
-            <artifactId>richtextfx</artifactId>
-            <version>0.9.2</version>
-        </dependency>-->
 
 
         <!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
@@ -203,6 +198,13 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.reactfx/reactfx -->
         <dependency>
             <groupId>org.reactfx</groupId>
@@ -231,10 +233,6 @@
 
 
 
-
     </dependencies>
-
-
-
 
 </project>

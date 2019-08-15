@@ -1,78 +1,132 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.misc.Settings;
+import com.az.gitember.misc.GitemberProjectSettings;
+import com.az.gitember.misc.GitemberSettings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import java.io.Serializable;
 
 /**
  * Created by Igor_Azarny on 06 -Jan - 2017.
  */
 public class SettingsModel {
 
-    private StringProperty authorName = new SimpleStringProperty();
-    private StringProperty authorEmail = new SimpleStringProperty();
-    private BooleanProperty overwriteAuthorWithCommiter = new SimpleBooleanProperty();
+    private BooleanProperty rememberMe = new SimpleBooleanProperty();
+    private StringProperty projectName = new SimpleStringProperty();
+    private StringProperty projectHameFolder = new SimpleStringProperty();
+    private StringProperty userName = new SimpleStringProperty();
+    private StringProperty userEmail = new SimpleStringProperty();
+    private StringProperty projectRemoteUrl = new SimpleStringProperty();
+    private StringProperty projectKeyPath = new SimpleStringProperty();
+    private StringProperty projectPwd = new SimpleStringProperty();
 
-    private BooleanProperty rememberPasswords = new SimpleBooleanProperty();
+
+    /////////////////// proxy
     private BooleanProperty useProxy = new SimpleBooleanProperty();
     private StringProperty proxyServer = new SimpleStringProperty();
     private StringProperty proxyPort = new SimpleStringProperty();
-    private BooleanProperty useProxyAuth = new SimpleBooleanProperty();
     private StringProperty proxyUserName = new SimpleStringProperty();
     private StringProperty proxyPassword = new SimpleStringProperty();
-    private StringProperty repoUserName = new SimpleStringProperty();
-    private StringProperty repoUserEmail = new SimpleStringProperty();
 
-    public String getAuthorName() {
-        return authorName.get();
+    public boolean isRememberMe() {
+        return rememberMe.get();
     }
 
-    public StringProperty authorNameProperty() {
-        return authorName;
+    public BooleanProperty rememberMeProperty() {
+        return rememberMe;
     }
 
-    public void setAuthorName(String authorName) {
-        this.authorName.set(authorName);
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe.set(rememberMe);
     }
 
-    public String getAuthorEmail() {
-        return authorEmail.get();
+    public String getProjectName() {
+        return projectName.get();
     }
 
-    public StringProperty authorEmailProperty() {
-        return authorEmail;
+    public StringProperty projectNameProperty() {
+        return projectName;
     }
 
-    public void setAuthorEmail(String authorEmail) {
-        this.authorEmail.set(authorEmail);
+    public void setProjectName(String projectName) {
+        this.projectName.set(projectName);
     }
 
-    public boolean getOverwriteAuthorWithCommiter() {
-        return overwriteAuthorWithCommiter.get();
+    public String getProjectHameFolder() {
+        return projectHameFolder.get();
     }
 
-    public BooleanProperty overwriteAuthorWithCommiterProperty() {
-        return overwriteAuthorWithCommiter;
+    public StringProperty projectHameFolderProperty() {
+        return projectHameFolder;
     }
 
-    public void setOverwriteAuthorWithCommiter(boolean overwriteAuthorWithCommiter) {
-        this.overwriteAuthorWithCommiter.set(overwriteAuthorWithCommiter);
+    public void setProjectHameFolder(String projectHameFolder) {
+        this.projectHameFolder.set(projectHameFolder);
     }
 
-    public boolean getRememberPasswords() {
-        return rememberPasswords.get();
+    public String getUserName() {
+        return userName.get();
     }
 
-    public BooleanProperty rememberPasswordsProperty() {
-        return rememberPasswords;
+    public StringProperty userNameProperty() {
+        return userName;
     }
 
-    public void setRememberPasswords(boolean rememberPasswords) {
-        this.rememberPasswords.set(rememberPasswords);
+    public void setUserName(String userName) {
+        this.userName.set(userName);
+    }
+
+    public String getUserEmail() {
+        return userEmail.get();
+    }
+
+    public StringProperty userEmailProperty() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail.set(userEmail);
+    }
+
+    public String getProjectRemoteUrl() {
+        return projectRemoteUrl.get();
+    }
+
+    public StringProperty projectRemoteUrlProperty() {
+        return projectRemoteUrl;
+    }
+
+    public void setProjectRemoteUrl(String projectRemoteUrl) {
+        this.projectRemoteUrl.set(projectRemoteUrl);
+    }
+
+    public String getProjectKeyPath() {
+        return projectKeyPath.get();
+    }
+
+    public StringProperty projectKeyPathProperty() {
+        return projectKeyPath;
+    }
+
+    public void setProjectKeyPath(String projectKeyPath) {
+        this.projectKeyPath.set(projectKeyPath);
+    }
+
+    public String getProjectPwd() {
+        return projectPwd.get();
+    }
+
+    public StringProperty projectPwdProperty() {
+        return projectPwd;
+    }
+
+    public void setProjectPwd(String projectPwd) {
+        this.projectPwd.set(projectPwd);
+    }
+
+    public boolean isUseProxy() {
+        return useProxy.get();
     }
 
     public boolean getUseProxy() {
@@ -111,18 +165,6 @@ public class SettingsModel {
         this.proxyPort.set(proxyPort);
     }
 
-    public boolean getUseProxyAuth() {
-        return useProxyAuth.get();
-    }
-
-    public BooleanProperty useProxyAuthProperty() {
-        return useProxyAuth;
-    }
-
-    public void setUseProxyAuth(boolean useProxyAuth) {
-        this.useProxyAuth.set(useProxyAuth);
-    }
-
     public String getProxyUserName() {
         return proxyUserName.get();
     }
@@ -146,66 +188,52 @@ public class SettingsModel {
     public void setProxyPassword(String proxyPassword) {
         this.proxyPassword.set(proxyPassword);
     }
-
-    public String getRepoUserName() {
-        return repoUserName.get();
-    }
-
-    public StringProperty repoUserNameProperty() {
-        return repoUserName;
-    }
-
-    public void setRepoUserName(String repoUserName) {
-        this.repoUserName.set(repoUserName);
-    }
-
-    public String getRepoUserEmail() {
-        return repoUserEmail.get();
-    }
-
-    public StringProperty repoUserEmailProperty() {
-        return repoUserEmail;
-    }
-
-    public void setRepoUserEmail(String repoUserEmail) {
-        this.repoUserEmail.set(repoUserEmail);
-    }
-
     public SettingsModel() {
         super();
     }
 
 
-    public SettingsModel(Settings settings) {
+    public SettingsModel(GitemberProjectSettings gitemberSettings) {
         super();
-        this.setOverwriteAuthorWithCommiter(settings.isOverwriteAuthorWithCommiter());
 
-        this.setRememberPasswords(settings.isRememberPasswords());
-        this.setUseProxy(settings.isUseProxy());
-        this.setProxyServer(settings.getProxyServer());
-        this.setProxyPort(settings.getProxyPort());
-        this.setUseProxyAuth(settings.isUseProxyAuth());
-        this.setProxyUserName(settings.getProxyUserName());
-        this.setProxyPassword(settings.getProxyPassword());
-        this.setRepoUserName(settings.getRepoUserName());
-        this.setRepoUserEmail(settings.getRepoUserEmail());
+        this.rememberMe.setValue(gitemberSettings.isRememberMe());
+        this.projectName.setValue(gitemberSettings.getProjectName());
+        this.projectHameFolder.setValue(gitemberSettings.getProjectHameFolder());
+        this.userName.setValue(gitemberSettings.getUserName());
+        this.userEmail.setValue(gitemberSettings.getUserEmail());
+        this.projectRemoteUrl.setValue(gitemberSettings.getProjectRemoteUrl());
+        this.projectKeyPath.setValue(gitemberSettings.getProjectKeyPath());
+        this.projectPwd.setValue(gitemberSettings.getProjectPwd());
+
+
+        /////////////////// proxy
+        this.useProxy.setValue(gitemberSettings.isUseProxy());
+        this.proxyServer.setValue(gitemberSettings.getProxyServer());
+        this.proxyPort.setValue(gitemberSettings.getProxyPort());
+        this.proxyUserName.setValue(gitemberSettings.getProxyUserName());
+        this.proxyPassword.setValue(gitemberSettings.getProxyPassword());
     }
 
-    public Settings createSettings() {
-        final Settings settings = new Settings();
+    public GitemberProjectSettings toGitemberProjectSettings() {
+        final GitemberProjectSettings gitemberSettings = new GitemberProjectSettings();
 
-        settings.setOverwriteAuthorWithCommiter(this.getOverwriteAuthorWithCommiter());
+        gitemberSettings.setRememberMe(this.rememberMe.getValue());
+        gitemberSettings.setProjectName(this.projectName.getValueSafe());
+        gitemberSettings.setProjectHameFolder(this.projectHameFolder.getValueSafe());
+        gitemberSettings.setUserName(this.userName.getValueSafe());
+        gitemberSettings.setUserEmail(this.userEmail.getValueSafe());
+        gitemberSettings.setProjectRemoteUrl(this.projectRemoteUrl.getValueSafe());
+        gitemberSettings.setProjectKeyPath(this.projectKeyPath.getValueSafe());
+        gitemberSettings.setProjectPwd(this.projectPwd.getValueSafe());
 
-        settings.setRememberPasswords(this.getRememberPasswords());
-        settings.setUseProxy(this.getUseProxy());
-        settings.setProxyServer(this.getProxyServer());
-        settings.setProxyPort(this.getProxyPort());
-        settings.setUseProxyAuth(this.getUseProxyAuth());
-        settings.setProxyUserName(this.getProxyUserName());
-        settings.setProxyPassword(this.getProxyPassword());
-        settings.setRepoUserName(this.getRepoUserName());
-        settings.setRepoUserEmail(this.getRepoUserEmail());
+        // proxy
+        gitemberSettings.setUseProxy(this.useProxy.getValue());
+        gitemberSettings.setProxyServer(this.proxyServer.getValueSafe());
+        gitemberSettings.setProxyPort(this.proxyPort.getValueSafe());
+        gitemberSettings.setProxyUserName(this.proxyUserName.getValueSafe());
+        gitemberSettings.setProxyPassword(this.proxyPassword.getValueSafe());
 
-        return settings;
+
+        return gitemberSettings;
     }
 }

@@ -1,7 +1,5 @@
 package com.az.gitember.misc;
 
-import com.sun.org.apache.regexp.internal.RE;
-
 /**
  * Created by Igor_Azarny on 01 - Jan - 2017.
  */
@@ -12,7 +10,8 @@ public class RemoteOperationValue {
         ERROR,
         AUTH_REQUIRED,
         GIT_AUTH_REQUIRED,
-        NOT_AUTHORIZED
+        NOT_AUTHORIZED,
+        CANCEL
     }
 
     private Result result;

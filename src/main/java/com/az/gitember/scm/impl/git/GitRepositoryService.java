@@ -10,6 +10,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.blame.BlameResult;
@@ -48,6 +49,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,8 +68,12 @@ public class GitRepositoryService {
 
     private final StoredConfig config;
 
+    private final String gitFolder;
+
     /**
-     * Construct service, which work with git
+     * Construct service, which work with git. Each service designated to work with the new repo.
+     * So we can have create project setting here form given folder
+     * and trannsfer to to global config.
      *
      * @param gitFolder folder with git repository, for example "~/project/.git"
      * @throws IOException
@@ -75,51 +81,35 @@ public class GitRepositoryService {
     public GitRepositoryService(final String gitFolder) throws IOException {
         this.repository = GitUtil.openRepository(gitFolder);
         this.config = repository.getConfig();
+        this.gitFolder = gitFolder;
+        String userName = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
+        String userEMail = config.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
+        String projectRemoteUrl =  config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, ConfigConstants.CONFIG_KEY_URL);
+//todo not sure
+        GitemberApp.getSettingsService().createNewGitemberProjectSettings(
+                userName,
+                userEMail,
+                projectRemoteUrl,
+                gitFolder
+        );
     }
 
     public GitRepositoryService() {
         repository = null;
         config = null;
+        gitFolder = null;
     }
+
 
     /**
      * Get repotitory. TOTO Incorrect, because for settings. But ok for now.
-     *
+     * todo
      * @return
      */
     public Repository getRepository() {
         return repository;
     }
 
-    public void setUserName(String userName) {
-        try {
-            config.setString("user", null, "name", userName);
-            config.save();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot save settings", e);
-        }
-    }
-
-    public void setUserEmail(String userEmail) {
-        try {
-            config.setString("user", null, "email", userEmail);
-            config.save();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot save settings", e);
-        }
-    }
-
-    public String getUserName() {
-        return config.getString("user", null, "name");
-    }
-
-    public String getUserEmail() {
-        return config.getString("user", null, "email");
-    }
-
-    public String getRemoteUrl() {
-        return config.getString(ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME, "url");
-    }
 
     public ScmBranch getScmBranchByName(String name) {
         try (Git git = new Git(repository)) {
@@ -973,24 +963,14 @@ public class GitRepositoryService {
      * Commit changes.
      *
      * @param message                     commit message
-     * @param overwriteAuthorWithCommiter
      * @return result.
      * @throws GEScmAPIException
      */
-    public RevCommit commit(final String message,
-                            final boolean overwriteAuthorWithCommiter) throws GEScmAPIException {
+    public RevCommit commit(final String message) throws GEScmAPIException {
         try (Git git = new Git(repository)) {
             final CommitCommand cmd = git
                     .commit()
                     .setMessage(message);
-
-            if (overwriteAuthorWithCommiter) {
-                cmd.setAuthor(
-                        GitemberApp.getRepositoryService().getUserName(),
-                        GitemberApp.getRepositoryService().getUserEmail());
-            }
-
-
             return cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit", e);
@@ -1086,6 +1066,7 @@ public class GitRepositoryService {
 
     }
 
+
     private JschConfigSessionFactory createSshSessionFactory(final String password, final String pathToKey) {
         return new JschConfigSessionFactory() {
 
@@ -1171,11 +1152,11 @@ public class GitRepositoryService {
      * @param progressMonitor   optional progress
      * @return result of operation
      */
-    public RemoteOperationValue remoteRepositoryFetch(final RepoInfo repoInfo,
+    public RemoteOperationValue remoteRepositoryFetch(final GitemberProjectSettings repoInfo,
                                                       final String shortRemoteBranch,
                                                       final ProgressMonitor progressMonitor) {
         log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
+                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getUserName()));
 
         try (Git git = new Git(repository)) {
             final FetchCommand fetchCommand = git
@@ -1188,11 +1169,7 @@ public class GitRepositoryService {
 
             configureTransportCommand(fetchCommand, repoInfo);
 
-            if (repoInfo.getLogin() != null) {
-                fetchCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
-                );
-            }
+
             FetchResult fetchResult = fetchCommand.call();
             if (fetchResult.getTrackingRefUpdates().isEmpty()) {
                 return new RemoteOperationValue("Nothing changed");
@@ -1208,20 +1185,6 @@ public class GitRepositoryService {
 
     }
 
-
-    private void configureTransportCommand(TransportCommand transportCommand, final RepoInfo repoInfo) {
-        final String repoteUrl = getRemoteUrl();
-
-
-        if (repoteUrl != null && repoteUrl.startsWith("git@")) {
-            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getPwd(), repoInfo.getKey());
-            transportCommand.setTransportConfigCallback(transport -> {
-                SshTransport sshTransport = (SshTransport) transport;
-                sshTransport.setSshSessionFactory(sshSessionFactory);
-            });
-        }
-    }
-
     /**
      * Pull changes.
      *
@@ -1230,10 +1193,10 @@ public class GitRepositoryService {
      * @throws Exception
      */
     public RemoteOperationValue remoteRepositoryPull(final String shortRemoteBranch,
-                                                     final RepoInfo repoInfo,
-                                                     final ProgressMonitor progressMonitor) {
-        log.log(Level.INFO,
-                MessageFormat.format("Fetch {0} null means all, for user {1}", shortRemoteBranch, repoInfo.getLogin()));
+                                                     final GitemberProjectSettings repoInfo,
+                                                     final ProgressMonitor progressMonitor,
+                                                     final boolean processExeption ) {
+        log.log(Level.INFO,  MessageFormat.format("Pull {0} ", shortRemoteBranch));
 
         try (Git git = new Git(repository)) {
 
@@ -1243,20 +1206,22 @@ public class GitRepositoryService {
             if (shortRemoteBranch != null) {
                 pullCommand.setRemoteBranchName(Constants.R_HEADS + shortRemoteBranch);
             }
-            if (repoInfo.getLogin() != null) {
-                pullCommand.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd()));
-            }
+
             PullResult pullRez = pullCommand.call();
             if (pullRez.isSuccessful()) {
                 return new RemoteOperationValue(pullRez.getMergeResult().getMergeStatus().toString());
             }
             return new RemoteOperationValue(RemoteOperationValue.Result.ERROR, pullRez.toString());
         } catch (CheckoutConflictException conflictException) {
-            return new RemoteOperationValue("TODO fetch conflict error" + conflictException.getMessage());
+            conflictException.printStackTrace();
+            return new RemoteOperationValue("Pull conflict error" + conflictException.getMessage());
 
         } catch (Exception e) {
-            return processError(e);
+            if (processExeption) {
+                return processError(e);
+            } else {
+                return new RemoteOperationValue(RemoteOperationValue.Result.CANCEL, "User cancel operation .");
+            }
         }
     }
 
@@ -1278,6 +1243,13 @@ public class GitRepositoryService {
                         new UsernamePasswordCredentialsProvider(userName, password)
                 );
             }
+
+            List<RefSpec> specs = new ArrayList<RefSpec>();
+            specs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+            specs.add(new RefSpec("+refs/tags/*:refs/tags/*"));
+            specs.add(new RefSpec("+refs/notes/*:refs/notes/*"));
+            fetchCommand.setRefSpecs(specs);
+
             FetchResult fetchResult = fetchCommand.call();
             checkout(git.getRepository(), fetchResult);
 
@@ -1305,7 +1277,6 @@ public class GitRepositoryService {
      * Get stash list.
      *
      * @return list of stashed changes
-     * @throws GEScmAPIException
      */
     public List<ScmRevisionInformation> getStashList() {
         try (Git git = new Git(repository)) {
@@ -1450,88 +1421,70 @@ public class GitRepositoryService {
         return foundBranch;
     }
 
-
     /**
-     * Push to remote directory.
+     * Set track remote branch
      * TODO support ssh http://www.codeaffine.com/2014/12/09/jgit-authentication/
      * Additional info  http://stackoverflow.com/questions/13446842/how-do-i-do-git-push-with-jgit
      * git push origin remotepush:r-remotepush
      *
      * @param localBranch    local branch name
      * @param remoteBranch   remote branch name
-     * @param setTrackRemote set track remote
      * @return
      * @throws Exception in case of error
      */
-    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
-                                                     String localBranch, String remoteBranch,
-                                                     boolean setOrigin, boolean setTrackRemote,
-                                                     final ProgressMonitor progressMonitor) {
-
-        RefSpec refSpec = new RefSpec(localBranch + ":" + remoteBranch);
-
-        RemoteOperationValue val = remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec);
-
-        if (val.getResult() == RemoteOperationValue.Result.OK) {
-            try (Git git = new Git(repository)) {
-                if (setTrackRemote /*&& res is ok */) {
-                    final StoredConfig config = git.getRepository().getConfig();
-                    config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
-                            ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME);
-                    config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
-                            ConfigConstants.CONFIG_KEY_MERGE, Constants.R_HEADS + remoteBranch);
-                    config.save();
-                }
-
-            } catch (IOException e) {
-                log.log(Level.WARNING, "Cannot track remote branch", e);
-
-            }
-
+    public void  trackRemote(GitemberProjectSettings repoInfo, String localBranch, String remoteBranch) {
+        try (Git git = new Git(repository)) {
+            final StoredConfig config = git.getRepository().getConfig();
+            config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
+                    ConfigConstants.CONFIG_KEY_REMOTE, Constants.DEFAULT_REMOTE_NAME);
+            config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, localBranch,
+                    ConfigConstants.CONFIG_KEY_MERGE, Constants.R_HEADS + remoteBranch);
+            config.save();
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Cannot track remote branch", e);
         }
-
-
-        return val;
-
     }
 
-    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
-                                                     boolean setOrigin,
-                                                     ProgressMonitor progressMonitor,
-                                                     RefSpec refSpec) {
-        return remoteRepositoryPush(repoInfo, setOrigin, progressMonitor, refSpec, null);
-    }
-
-    public RemoteOperationValue remoteRepositoryPush(RepoInfo repoInfo,
-                                                     boolean setOrigin,
-                                                     ProgressMonitor progressMonitor,
+    public RemoteOperationValue remoteRepositoryPush(GitemberProjectSettings repoInfo,
                                                      RefSpec refSpec,
-                                                     Ref pushTagRef) {
+                                                     ProgressMonitor progressMonitor
+                                                      ) {
         try (Git git = new Git(repository)) {
 
-            final PushCommand cmd;
-            if (pushTagRef == null) {
-                cmd = git.push().setRefSpecs(refSpec).setProgressMonitor(progressMonitor);
-                if (setOrigin) {
-                    cmd.setRemote(Constants.DEFAULT_REMOTE_NAME);
-                }
-            } else {
-                cmd = git.push().add(pushTagRef).setProgressMonitor(progressMonitor);
+            final PushCommand pushCommand = git.push().setRefSpecs(refSpec);
+            if(progressMonitor != null) {
+                pushCommand.setProgressMonitor(progressMonitor);
             }
 
-            configureTransportCommand(cmd, repoInfo);
+            configureTransportCommand(pushCommand, repoInfo);
+            pushCommand.setRemote(repoInfo.getProjectRemoteUrl());
+            //todo message !!!!!!!!!!!!!!!!1
 
-            if (repoInfo.getLogin() != null) {
-                cmd.setCredentialsProvider(
-                        new UsernamePasswordCredentialsProvider(repoInfo.getLogin(), repoInfo.getPwd())
-                );
+
+
+            StoredConfig config = repository.getConfig();
+            String ru = config.getString("remote", "origin", "url");
+
+
+
+
+            if (refSpec != null && refSpec.getDestination() != null && refSpec.getDestination().contains("refs/tags/")) {
+                pushCommand.setPushTags().setRefSpecs(refSpec);
             }
-            Iterable<PushResult> pushResults = cmd.call();
+
+            log.log(Level.INFO,
+                    "Pushing " + pushCommand + " " +repoInfo
+                            + " ref: " + refSpec + " url " + ru);
+
+            Iterable<PushResult> pushResults = pushCommand.call();
             StringBuilder stringBuilder = new StringBuilder();
             pushResults.forEach(
                     pushResult -> {
                         String rezInfo = pushResult.getMessages();// "";//todo
                         stringBuilder.append(rezInfo);
+                        log.log(Level.INFO,
+                                "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
+                                        + " updates: " + pushResult.getRemoteUpdates());
                     }
             );
             return new RemoteOperationValue(stringBuilder.toString());
@@ -1543,9 +1496,7 @@ public class GitRepositoryService {
                     final StoredConfig config = git.getRepository().getConfig();
                     config.setBoolean("http", null, "sslVerify", false);
                     config.save();
-                    return remoteRepositoryPush(
-                            repoInfo, setOrigin, progressMonitor, refSpec, pushTagRef
-                    );
+                    return remoteRepositoryPush( repoInfo, refSpec,  progressMonitor);
                 } catch (IOException e) {
                     return processError(e);
                 }
@@ -1624,11 +1575,6 @@ public class GitRepositoryService {
         }
     }
 
-
-    public String getRepositoryAbsolutePath() {
-        return repository.getDirectory().getAbsolutePath();
-    }
-
     public void checkoutFile(final String fileName, Stage stage) {
 
         try (Git git = new Git(repository)) {
@@ -1647,14 +1593,7 @@ public class GitRepositoryService {
 
     }
 
-    private CheckoutCommand.Stage adaptStage(Stage stage) {
-        if (stage == Stage.OURS) {
-            return CheckoutCommand.Stage.OURS;
-        } else if (stage == Stage.THEIRS) {
-            return CheckoutCommand.Stage.THEIRS;
-        }
-        return CheckoutCommand.Stage.BASE;
-    }
+
 
     public void checkoutFile(final String fileName) {
         checkoutFile(fileName, null);
@@ -1691,6 +1630,44 @@ public class GitRepositoryService {
                 }
             }
         }
+    }
+
+
+
+    private void configureTransportCommand(TransportCommand transportCommand, final GitemberProjectSettings repoInfo) {
+
+
+        final String repoteUrl = repoInfo.getProjectRemoteUrl();
+
+        log.log(Level.INFO, " Transport command for ", repoteUrl);
+
+        // todo no ssh atm, git proto only
+        if (repoteUrl != null && repoteUrl.startsWith("git@")) {
+            log.log(Level.INFO, " Transport command configured with ssh support");
+            JschConfigSessionFactory sshSessionFactory = createSshSessionFactory(repoInfo.getProjectPwd(), repoInfo.getProjectKeyPath());
+            transportCommand.setTransportConfigCallback(transport -> {
+                SshTransport sshTransport = (SshTransport) transport;
+                sshTransport.setSshSessionFactory(sshSessionFactory);
+            });
+        }
+
+        if (repoInfo.isRelogonPresent()) {
+            log.log(Level.INFO, " Transport command configured with credential provider");
+            transportCommand.setCredentialsProvider(
+                    new UsernamePasswordCredentialsProvider(repoInfo.getUserName(), repoInfo.getProjectPwd())
+            );
+        }
+
+
+    }
+
+    private CheckoutCommand.Stage adaptStage(Stage stage) {
+        if (stage == Stage.OURS) {
+            return CheckoutCommand.Stage.OURS;
+        } else if (stage == Stage.THEIRS) {
+            return CheckoutCommand.Stage.THEIRS;
+        }
+        return CheckoutCommand.Stage.BASE;
     }
 
 }

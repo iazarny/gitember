@@ -4,8 +4,6 @@ import com.az.gitember.misc.*;
 import com.az.gitember.scm.impl.git.GitRepositoryService;
 import com.az.gitember.ui.*;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,7 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -26,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
@@ -54,6 +51,7 @@ public class FXMLController implements Initializable {
 
     public MenuItem pushToRemoteLocalBranchMenuItem;
     public MenuItem fetchLocalBranchMenuItem;
+    public MenuItem pullLocalBranchMenuItem;
     public MenuItem checkoutRemoteBranchMenuItem;
     public MenuItem checkoutLocalBranchMenuItem;
     public MenuItem createLocalBranchMenuItem;
@@ -79,9 +77,10 @@ public class FXMLController implements Initializable {
 
     public MenuItem openGitTerminalMenuItem;
     public MenuItem fetchMenuItem;
+    public MenuItem pullMenuItem;
     public MenuItem settingsMenuItem;
     public MenuItem fetchAllMenuItem;
-    public MenuItem pullMenuItem;
+
     public MenuItem pullAllMenuItem;
     public MenuItem pushMenuItem;
     public MenuItem pushAllMenuItem;
@@ -110,9 +109,12 @@ public class FXMLController implements Initializable {
     @SuppressWarnings("unchecked")
     public void openRepository(final String absPath) {
         try {
-            GitemberApp.setCurrentRepositoryPath(absPath);
-            GitemberApp.setRepositoryService(new GitRepositoryService(absPath));
-            GitemberApp.getSettingsService().saveLastProject(absPath);
+
+            GitemberApp.currentRepositoryPath.setValue(absPath);
+
+            GitemberApp.repositoryService = new GitRepositoryService(absPath);
+            //todo it it right place ?
+            GitemberApp.remoteUrl.setValue(GitemberApp.getSettingsService().getRemoteUrlFromStoredRepoConfig());
 
             List<ScmBranch> branches = GitemberApp.getRepositoryService().getLocalBranches();
             branches.addAll(GitemberApp.getRepositoryService().getRemoteBranches());
@@ -279,6 +281,7 @@ public class FXMLController implements Initializable {
                     statReportMenuItem.setDisable(disableRemoteOps);
                     pushToRemoteLocalBranchMenuItem.setDisable(disableRemoteOps);
                     fetchLocalBranchMenuItem.setDisable(disableRemoteOps);
+                    pullLocalBranchMenuItem.setDisable(disableRemoteOps);
                 }
         );
 
@@ -330,6 +333,53 @@ public class FXMLController implements Initializable {
                 }
         );
 
+
+        List<Pair<String, String>> recenntProjects = GitemberApp.getSettingsService().getRecentProjects();
+        if (!recenntProjects.isEmpty()) {
+
+
+            GridPane gridPane= new GridPane();
+            //gridPane.setStyle("-fx-background-color: rgba(200, 18, 18, 0.5);");
+
+            for (int i = 0; i < 9; i++) {
+                Label lbl = new Label("      ");
+                GridPane.setRowIndex(lbl, i);
+                GridPane.setColumnIndex(lbl, 1);
+                gridPane.getChildren().add(lbl);
+
+            }
+
+            VBox hBox = new VBox();
+            GridPane.setRowIndex(hBox, 3);
+            GridPane.setColumnIndex(hBox, 3);
+            gridPane.getChildren().add(hBox);
+
+            hostPanel.getChildren().addAll( gridPane);
+
+            Label lbl = new Label("Open recent project(s) ...");
+            lbl.setStyle("-fx-font-size: 18 pt;");
+            hBox.getChildren().add(lbl);
+            hBox.getChildren().add(new Label(" "));
+            hBox.getChildren().add(new Separator());
+            hBox.getChildren().add(new Label(" "));
+
+
+            recenntProjects.stream().forEach(
+                    pairOfProject -> {
+                        Hyperlink  projectNameHl = new Hyperlink (
+                                pairOfProject.getFirst() + "   " + pairOfProject.getSecond());
+                        projectNameHl.setStyle("-fx-font-size: 16 pt;");
+                        hBox.getChildren().add(projectNameHl);
+                        projectNameHl.setOnAction(
+                                event -> {
+                                    openRepository(pairOfProject.getSecond());
+                                    createOpenRecentMenu();
+                                }
+                        );
+
+                    }
+            );
+        }
     }
 
     /**
@@ -384,13 +434,16 @@ public class FXMLController implements Initializable {
             if (ScmBranch.BranchType.LOCAL.equals(scmBranch.getBranchType())) {
                 boolean disableRemoteOp = scmBranch.getRemoteName() == null;
                 fetchLocalBranchMenuItem.setDisable(disableRemoteOp);
+                pullLocalBranchMenuItem.setDisable(disableRemoteOp);
                 if (disableRemoteOp) {
                     pushToRemoteLocalBranchMenuItem.setText("Push to ... ");
                 } else {
                     fetchLocalBranchMenuItem.setText("Fetch remote " + scmBranch.getRemoteName());
+                    pullLocalBranchMenuItem.setText("Pull remote " + scmBranch.getRemoteName());
                     pushToRemoteLocalBranchMenuItem.setText("Push to remote " + scmBranch.getRemoteName());
                 }
                 fetchLocalBranchMenuItem.setVisible(!disableRemoteOp);
+                pullLocalBranchMenuItem.setVisible(!disableRemoteOp);
 
             } else if (ScmBranch.BranchType.REMOTE.equals(scmBranch.getBranchType())) {
             } else if (ScmBranch.BranchType.TAG.equals(scmBranch.getBranchType())) {
@@ -452,6 +505,9 @@ public class FXMLController implements Initializable {
         fetchLocalBranchMenuItem = new MenuItem("Fetch");
         fetchLocalBranchMenuItem.setOnAction(this::fetchHandler);
 
+        pullLocalBranchMenuItem = new MenuItem("Pull");
+        pullLocalBranchMenuItem.setOnAction(this::pullHandler);
+
         pushToRemoteLocalBranchMenuItem = new MenuItem("Push ...");
         pushToRemoteLocalBranchMenuItem.setOnAction(this::localBranchPushHandler);
 
@@ -472,6 +528,7 @@ public class FXMLController implements Initializable {
                 createLocalBranchMenuItem,
                 mergeLocalBranchMenuItem,
                 fetchLocalBranchMenuItem,
+                pullLocalBranchMenuItem,
                 pushToRemoteLocalBranchMenuItem,
                 applyStashCtxMenuItem,
                 new SeparatorMenuItem(),
@@ -479,13 +536,13 @@ public class FXMLController implements Initializable {
                 deleteLocalBranchMenuItem
         );
 
-
         contextMenuItemVisibilityLTR = new ArrayList<MenuItemAvailbility>() {{
             add(new MenuItemAvailbility(checkoutRemoteBranchMenuItem, false, false, true, false));
             add(new MenuItemAvailbility(checkoutLocalBranchMenuItem, true, true, false, false));
             add(new MenuItemAvailbility(createLocalBranchMenuItem, true, true, true, false));
             add(new MenuItemAvailbility(mergeLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(fetchLocalBranchMenuItem, true, false, true, false));
+            add(new MenuItemAvailbility(pullLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(pushToRemoteLocalBranchMenuItem, true, false, true, false));
             add(new MenuItemAvailbility(deleteLocalBranchMenuItem, true, true, true, false));
             add(new MenuItemAvailbility(deleteStashCtxMenuItem, false, false, false, true));
@@ -513,7 +570,7 @@ public class FXMLController implements Initializable {
         );
         Optional<Pair<Boolean, String>> dialogResult = dialog.showAndWait();
         if (dialogResult.isPresent()) {
-            GitemberApp.getGitemberService().createTag(dialogResult.get().getFirst(), dialogResult.get().getSecond());
+            GitemberApp.getGitemberService().createTagZZZ(dialogResult.get().getFirst(), dialogResult.get().getSecond());
             tagsTreeItem.getChildren().clear();
             fillBranchTree(GitemberApp.getRepositoryService().getTags(), tagsTreeItem);
         }
@@ -664,8 +721,8 @@ public class FXMLController implements Initializable {
      */
     public void openHandler(ActionEvent actionEvent) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        if (GitemberApp.getSettingsService().getLastProject() != null) {
-            directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getLastProject()));
+        if (GitemberApp.getSettingsService().getUserHomeFolder() != null) {
+            directoryChooser.setInitialDirectory(new File(GitemberApp.getSettingsService().getUserHomeFolder()));
         }
         File selectedDirectory =
                 directoryChooser.showDialog(GitemberApp.getMainStage());
@@ -677,34 +734,6 @@ public class FXMLController implements Initializable {
             openRepository(absPath);
         }
         createOpenRecentMenu();
-    }
-
-    /**
-     * Open GUI shell in home or in repository folder, if it was opened.
-     *
-     * @param actionEvent event
-     */
-    @SuppressWarnings("unused")
-    public void openShellActionHandler(ActionEvent actionEvent) {
-        if (Desktop.isDesktopSupported()) {
-            new Thread(() -> {
-                try {
-                    Desktop.getDesktop().browse(
-                            Paths.get(
-                                    ObjectUtils.defaultIfNull(
-                                            GitemberApp.getCurrentRepositoryPathWOGit(),
-                                            GitemberApp.getSettingsService().getUserHomeFolder()
-                                    )
-                            ).toUri()
-                    );
-                } catch (Exception e) {
-                    String msg = "Cannot open GUI shell";
-                    log.log(Level.WARNING, msg, e);
-                    GitemberApp.showResult(msg, Alert.AlertType.ERROR);
-                }
-            }).start();
-        }
-
     }
 
     /**
@@ -740,14 +769,15 @@ public class FXMLController implements Initializable {
      */
     @SuppressWarnings("unused")
     public void settingsActionHandler(ActionEvent actionEvent) {
-        Settings settings = GitemberApp.getSettingsService().read();
-        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(settings));
+        GitemberSettings gitemberSettings = GitemberApp.getSettingsService().getGitemberSettings();
+        SettingsDialog settingsDialog = new SettingsDialog(new SettingsModel(gitemberSettings.getLastProjectSettings()));
         Optional<SettingsModel> model = settingsDialog.showAndWait();
         if (model.isPresent()) {
+            //todo  update last projet
             SettingsModel settingsModel = model.get();
-            Settings newSettings = settingsModel.createSettings();
-            GitemberApp.getSettingsService().save(newSettings);
-            GitemberApp.applySettings(newSettings);
+            GitemberProjectSettings newGitemberSettings = settingsModel.toGitemberProjectSettings();
+            GitemberApp.getSettingsService().save();
+
         }
     }
 
