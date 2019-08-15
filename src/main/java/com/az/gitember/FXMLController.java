@@ -356,7 +356,7 @@ public class FXMLController implements Initializable {
 
             hostPanel.getChildren().addAll( gridPane);
 
-            Label lbl = new Label("Open recent project(s)");
+            Label lbl = new Label("Open recent project(s) ...");
             lbl.setStyle("-fx-font-size: 18 pt;");
             hBox.getChildren().add(lbl);
             hBox.getChildren().add(new Label(" "));

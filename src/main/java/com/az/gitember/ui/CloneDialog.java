@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.GitemberApp;
+import com.az.gitember.misc.GitemberProjectSettings;
 import com.az.gitember.misc.Pair;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -21,10 +22,12 @@ import java.util.Collection;
 /**
  * Created by Igor_Azarny on 29 - Dec - 2016.
  */
-public class CloneDialog extends Dialog<CloneDialog.CloneParameters> {
+public class CloneDialog extends Dialog<GitemberProjectSettings> {
 
     public static class CloneParameters {
 
+        private StringProperty userName = new SimpleStringProperty("");
+        private StringProperty userPwd = new SimpleStringProperty("");
         private StringProperty url = new SimpleStringProperty("");
         private StringProperty destinationFolder = new SimpleStringProperty("");
         private StringProperty pathToKey = new SimpleStringProperty(System.getProperty("user.home")
@@ -80,6 +83,45 @@ public class CloneDialog extends Dialog<CloneDialog.CloneParameters> {
 
         public void setKeyPassPhrase(String keyPassPhrase) {
             this.keyPassPhrase.set(keyPassPhrase);
+        }
+
+        public String getUserName() {
+            return userName.get();
+        }
+
+        public StringProperty userNameProperty() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName.set(userName);
+        }
+
+        public String getUserPwd() {
+            return userPwd.get();
+        }
+
+        public StringProperty userPwdProperty() {
+            return userPwd;
+        }
+
+        public void setUserPwd(String userPwd) {
+            this.userPwd.set(userPwd);
+        }
+
+        public GitemberProjectSettings toGitemberProjectSettings() {
+            GitemberProjectSettings projectSettings = new GitemberProjectSettings();
+            projectSettings.setRememberMe(false);
+            projectSettings.setProjectName(destinationFolder.getValueSafe());
+            projectSettings.setProjectHameFolder(destinationFolder.getValueSafe());
+            projectSettings.setUserName(userName.getValueSafe());
+            projectSettings.setProjectPwd(userPwd.getValueSafe());
+            projectSettings.setProjectRemoteUrl(url.getValueSafe());
+            projectSettings.setProjectKeyPath(pathToKey.getValueSafe());
+
+
+
+            return projectSettings;
         }
     }
 
@@ -204,7 +246,7 @@ public class CloneDialog extends Dialog<CloneDialog.CloneParameters> {
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == loginButtonType) {
-                return cloneParameters;
+                return cloneParameters.toGitemberProjectSettings();
             }
             return null;
         });

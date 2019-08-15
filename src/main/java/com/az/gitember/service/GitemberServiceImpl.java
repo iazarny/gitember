@@ -657,11 +657,13 @@ public class GitemberServiceImpl {
                 urls);
         dialog.setContentText("Please provide remote repository URL:");
 
-        Optional<CloneDialog.CloneParameters> dialogResult = dialog.showAndWait();
+        Optional<GitemberProjectSettings> dialogResult = dialog.showAndWait();
 
         if (dialogResult.isPresent()) {
 
-            String repoUrl = dialogResult.get().getUrl();
+            this.repositoryLoginInfo = dialogResult.get();
+
+            String repoUrl = repositoryLoginInfo.getProjectRemoteUrl();
             GitemberApp.remoteUrl.setValue(repoUrl);
             urls.add(repoUrl);
             // todo add to project after colone !!!!!!!!!!!! gitemberSettings.get  getGiturls().addAll(urls);
@@ -679,12 +681,14 @@ public class GitemberServiceImpl {
                         login = matcher.group(3);
                     }
                 }
-                this.repositoryLoginInfo.setUserName(login);
+                /*this.repositoryLoginInfo.setUserName(login);
                 this.repositoryLoginInfo.setProjectKeyPath(dialogResult.get().getPathToKey());
                 this.repositoryLoginInfo.setProjectPwd(dialogResult.get().getKeyPassPhrase());
-                //save login  password key
-                GitemberApp.getSettingsService().saveRepositoryCred(this.repositoryLoginInfo);
+                //save login  password key*/
+
             }
+
+            GitemberApp.getSettingsService().saveRepositoryCred(this.repositoryLoginInfo);
 
 
 
@@ -693,11 +697,11 @@ public class GitemberServiceImpl {
                 protected RemoteOperationValue call()  {
                     return remoteRepositoryOperation(
                             () -> GitemberApp.getRepositoryService().cloneRepository(
-                                    dialogResult.get().getUrl(),
-                                    dialogResult.get().getDestinationFolder(),
-                                    repositoryLoginInfo == null ? null : repositoryLoginInfo.getUserName(),
-                                    repositoryLoginInfo == null ? null : repositoryLoginInfo.getProjectPwd(),
-                                    dialogResult.get().getPathToKey(),
+                                    repositoryLoginInfo.getProjectRemoteUrl(),
+                                    repositoryLoginInfo.getProjectHameFolder(),
+                                    repositoryLoginInfo.getUserName(),
+                                    repositoryLoginInfo.getProjectPwd(),
+                                    repositoryLoginInfo.getProjectKeyPath(),
                                     new DefaultProgressMonitor((t, d) -> {
                                         updateTitle(t);
                                         updateProgress(d, 1.0);
@@ -815,7 +819,6 @@ public class GitemberServiceImpl {
 
         } catch (Exception ex) {
 
-            ex.printStackTrace();
 
             if (ex instanceof GECheckoutConflictException) {
                 GitemberApp.showResult(ex.getMessage(), Alert.AlertType.WARNING);

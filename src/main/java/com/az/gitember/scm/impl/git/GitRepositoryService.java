@@ -1115,7 +1115,6 @@ public class GitRepositoryService {
     }
 
     private RemoteOperationValue processError(Exception e) {
-        e.printStackTrace(); //todo
         if (e instanceof TransportException) {
             if (e.getMessage().contains("Authentication is required")) {
                 log.log(Level.INFO, e.getMessage());
@@ -1218,7 +1217,6 @@ public class GitRepositoryService {
             return new RemoteOperationValue("Pull conflict error" + conflictException.getMessage());
 
         } catch (Exception e) {
-            e.printStackTrace();
             if (processExeption) {
                 return processError(e);
             } else {
@@ -1484,25 +1482,13 @@ public class GitRepositoryService {
                     pushResult -> {
                         String rezInfo = pushResult.getMessages();// "";//todo
                         stringBuilder.append(rezInfo);
-
-
-
                         log.log(Level.INFO,
                                 "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
                                         + " updates: " + pushResult.getRemoteUpdates());
-
-
                     }
             );
-
-
-
-
-
-
             return new RemoteOperationValue(stringBuilder.toString());
         } catch (TransportException te) {
-            te.printStackTrace();
             if (te.getCause() != null && te.getCause().getCause() != null
                     && te.getCause().getCause().getClass().equals(SSLHandshakeException.class)) {
                 try (Git git = new Git(repository)) {
@@ -1518,7 +1504,6 @@ public class GitRepositoryService {
                 return processError(te);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return processError(e);
         }
     }

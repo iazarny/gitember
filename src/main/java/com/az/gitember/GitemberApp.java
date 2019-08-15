@@ -26,6 +26,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.awt.*;
 import java.io.IOException;
@@ -93,9 +94,6 @@ public class GitemberApp extends Application {
 
 
     public static void applySettings(GitemberSettings newGitemberSettings) {
-
-        System.out.println("TODO wtf !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
         // TODO
         /*if (newGitemberSettings.isUseProxy()) {
             System.setProperty(Const.SYSTEM_PROXY_HOST, newGitemberSettings.getProxyServer());
@@ -199,7 +197,6 @@ public class GitemberApp extends Application {
 
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        ex.printStackTrace(pw);
         String exceptionText = sw.toString();
 
         Label label = new Label("The exception stacktrace was:");
@@ -240,6 +237,8 @@ public class GitemberApp extends Application {
 
         try {
             LogManager.getLogManager().readConfiguration(GitemberApp.class.getResourceAsStream("/log.properties"));
+            WindowCacheConfig c = new WindowCacheConfig();
+            c.install();
         } catch (IOException e) {
             e.printStackTrace();
 

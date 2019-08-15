@@ -100,13 +100,12 @@ public class SettingsServiceImpl {
             gitemberSettings.getProjects().removeIf(
                     gitemberProjectSettings -> {
                         Path path = Paths.get(gitemberProjectSettings.getProjectHameFolder());
-                        return  !(Files.exists(path));
+                        return  !path.toFile().exists();
                     }
             );
             this.gitemberSettings = gitemberSettings;
         } catch (IOException e) {
             this.gitemberSettings = new GitemberSettings();
-            e.printStackTrace();
             log.log(Level.SEVERE, "Sorry. Cannot read settings. New created.", e);
             if (file != null) {
                 if (file.delete()) {
