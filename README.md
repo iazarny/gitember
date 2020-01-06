@@ -8,7 +8,7 @@ Written on *JavaFX* just for fun.
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
  * I dont like standard UX of GIT
- * Check http://www.gitember.com
+ * Check http://gitember-site.s3.eu-central-1.amazonaws.com/index.html
  * Please, test it.
  
  
