@@ -1,0 +1,2 @@
+jpackage --input shade/  --name Gitember2 --vendor "Igor Azarny"  --main-jar gitember.jar  --main-class com.az.gitember.GitemberLauncher --win-menu --win-shortcut --type "msi"  --icon src\main\resources\icon\gitember.ico 
+move Gitember2-1.0.msi Gitember2.msi

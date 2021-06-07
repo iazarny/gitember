@@ -1,7 +1,9 @@
-# Gitember 1.4
+# Gitember 2
 ---
 September, October, November, December, Gitember. Just another GIT gui client
 Written on *JavaFX* just for fun. 
+
+## Multiplatform GUI for GIT
 
 ## Reasons to create 
 
