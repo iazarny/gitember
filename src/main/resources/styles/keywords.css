@@ -1,0 +1,57 @@
+.kwfont {
+    -fx-font-size: 20;
+    -fx-font-family: "Monospace";
+}
+
+.linenum {
+    -fx-fill: gray;
+}
+
+.keyword {
+    -fx-fill: darkblue;
+}
+
+.semicolon {
+
+}
+
+.paren {
+    -fx-fill: darkblue;
+}
+
+.bracket {
+    -fx-fill: darkblue;
+}
+
+.brace {
+    -fx-fill: darkblue;
+}
+
+.digit {
+    -fx-fill: blue;
+}
+
+.string {
+    -fx-fill: darkgreen;
+}
+
+.comment {
+    -fx-fill: gray;
+}
+
+.mlcomment {
+     -fx-fill: gray;
+
+ }
+
+.diff-new {
+    -fx-background-color: #97fa97;
+}
+
+.diff-modified {
+    -fx-background-color: #b17efc;
+}
+
+.diff-deleted {
+    -fx-background-color: #fa7d7d;
+}

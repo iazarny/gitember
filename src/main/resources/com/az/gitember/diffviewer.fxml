@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.TextFlow?>
+
+<?import javafx.scene.control.TextField?>
+<GridPane fx:id="mainPanel" prefHeight="600.0" prefWidth="860.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
+   <columnConstraints>
+      <ColumnConstraints percentWidth="45" />
+      <ColumnConstraints halignment="CENTER" percentWidth="10" />
+      <ColumnConstraints percentWidth="45" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints  percentHeight="96.2"/>
+   </rowConstraints>
+   <children>
+       <TextField fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
+
+       <TextField fx:id="newLabel" text="New Label" GridPane.columnIndex="2"  editable="false" style="-right-button-visible: false;"/>
+
+       <ScrollPane fx:id="oldScrollPane" prefHeight="565.0" prefWidth="387.0" BorderPane.alignment="CENTER" GridPane.rowIndex="1" >
+           <TextFlow fx:id="oldTextFlow"  />
+       </ScrollPane>
+
+       <ScrollPane fx:id="newScrollPane" BorderPane.alignment="CENTER" GridPane.columnIndex="2" GridPane.rowIndex="1" >
+           <TextFlow fx:id="newTextFlow" />
+       </ScrollPane>
+
+      <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-background-color: background_color" />
+
+   </children>
+</GridPane>

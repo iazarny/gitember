@@ -1,0 +1,34 @@
+module com.az.gitember {
+    requires javafx.controls;
+    requires javafx.base;
+    requires javafx.graphics;
+    requires javafx.fxml;
+    requires javafx.web;
+    requires org.jfxtras.styles.jmetro;
+
+
+    requires java.logging;
+    requires org.apache.commons.io;
+    requires org.apache.commons.lang3;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.annotation;
+    requires com.fasterxml.jackson.datatype.jsr310;
+    requires com.fasterxml.jackson.core;
+    requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.iconli.core;
+    requires org.kordamp.ikonli.fontawesome;
+
+    requires jsch;
+    requires org.eclipse.jgit;
+
+    //requires org.eclipse.jgit;
+    //requires org.eclipse.jgit.ssh.jsch; //5.11 , but now 5.3 to avoid package split
+
+
+    opens com.az.gitember to javafx.fxml;
+    opens com.az.gitember.controller to javafx.fxml;
+    opens com.az.gitember.data  to com.fasterxml.jackson.databind;
+
+
+    exports com.az.gitember;
+}

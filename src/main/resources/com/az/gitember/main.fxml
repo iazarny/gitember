@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
+<?import com.az.gitember.controller.MainTreeItemCellFactory?>
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Main" style="-fx-background-color: background_color;">
+    <top>
+        <VBox>
+            <children>
+                <MenuBar fx:id="mainMenuBar">
+                    <menus>
+                        <Menu mnemonicParsing="false" text="File">
+                            <items>
+                                <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ...">
+                                    <graphic>
+                                    </graphic>
+                                </MenuItem>
+                                <Menu fx:id="openRecentMenuItem" disable="true" mnemonicParsing="false" text="Open recent">
+                                    <items></items>
+                                </Menu>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Repository">
+                            <items>
+                                <MenuItem text="Clone ..." onAction="#cloneHandler">
+                                    <graphic>
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Fetch" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
+
+                                <SeparatorMenuItem />
+                                <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <Menu text="Statistic" fx:id="statReportMenu"  disable="true" >
+                                    <MenuItem text="Code lines"   onAction="#createStatReport"/>
+                                    <MenuItem text="Work progress ..."  onAction="#createStatReportProgress"/>
+                                    <MenuItem text="Branch live time ..."   onAction="#createStatReportBranchTime"/>
+                                    <MenuItem text="Branches ..."   onAction="#createStatReportBranches"/>
+                                </Menu>
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem text="Check for update" onAction="#checkForUpdate"/>
+                                <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
+                                <Menu text="Style">
+                                    <MenuItem text="Light" onAction="#setThemeLight"/>
+                                    <MenuItem text="Dark" onAction="#setThemeDark"/>
+
+                                </Menu>
+                                <SeparatorMenuItem mnemonicParsing="false"/>
+                                <MenuItem text="About" onAction="#aboutHandler"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <ToolBar fx:id="mainToolBar" >
+                    <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
+                        <graphic>
+                            <StackedFontIcon style="-fx-icon-color: text_color">
+                                <FontIcon iconLiteral="fa-folder-open" StackedFontIcon.iconSize="0.5"  />
+                            </StackedFontIcon>
+                        </graphic>
+                    </Button>
+                    <Separator/>
+                    <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone"  >
+                        <graphic>
+                            <StackedFontIcon style="-fx-icon-color: text_color">
+                                <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5" />
+                            </StackedFontIcon>
+                        </graphic>
+                    </Button>
+                    <Separator/>
+                    <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/>
+                    <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull">
+                        <graphic>
+                            <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
+                                <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
+                            </StackedFontIcon>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push">
+                        <graphic>
+                            <StackedFontIcon rotate="-23" style="-fx-icon-color: text_color">
+                                <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
+                            </StackedFontIcon>
+                        </graphic>
+                    </Button>
+
+
+                </ToolBar>
+
+            </children>
+        </VBox>
+    </top>
+    <left>
+    </left>
+    <center>
+
+        <SplitPane orientation="HORIZONTAL" dividerPositions="0.16">
+
+
+            <TreeView  minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false"  disable="true">
+                <cellFactory>
+                    <MainTreeItemCellFactory />
+                </cellFactory>
+                <TreeItem value="dummy">
+                    <children>
+                        <TreeItem fx:id="workingCopyTreeItem"  >
+                            <value>Working copy</value>
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-folder-open-o" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+                        <TreeItem fx:id="historyTreeItem" value="History">
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-code-fork" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+                        <TreeItem fx:id="localBranchesTreeItem" value="Local branches" >
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-share-alt" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+                        <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-share-alt" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+                        <TreeItem fx:id="tagsTreeItem" value="Tags" >
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-tags" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+                        <TreeItem fx:id="stashesTreeItem" value="Stashes">
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-sticky-note-o" />
+                                </StackedFontIcon>
+                            </graphic>
+                        </TreeItem>
+
+                    </children>
+                </TreeItem>
+            </TreeView>
+            <AnchorPane fx:id="hostPanel" BorderPane.alignment="CENTER">
+                <fx:include source="recentprojects.fxml"/>
+            </AnchorPane>
+        </SplitPane>
+
+
+
+    </center>
+
+    <bottom>
+        <ToolBar visible="false" fx:id="toolBar" >
+            <Label       fx:id="operationName" text="Operation" HBox.hgrow="ALWAYS"/>
+            <ProgressBar  fx:id="progressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0" HBox.hgrow="ALWAYS" />
+
+        </ToolBar>
+    </bottom>
+
+</BorderPane>

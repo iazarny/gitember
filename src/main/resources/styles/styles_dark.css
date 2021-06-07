@@ -1,0 +1,11 @@
+.copy-label, .copy-label:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    /*
+    -fx-background-insets: 0px ;
+
+    -fx-padding: 0px;
+    -fx-pref-width: 350px;
+    -fx-color-label-visible: #dadada;*/
+}
+

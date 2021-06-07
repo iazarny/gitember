@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.TextField?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Workingcopy">
+<center>
+    <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0" prefWidth="500"
+               AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS" styleClass="noheader">
+        <placeholder>
+            <Label text=""/>
+        </placeholder>
+        <columns>
+            <TableColumn fx:id="itemTableColumnColorStatus" prefWidth="10.00" resizable="false" text="" />
+            <TableColumn fx:id="selectTableColumn" prefWidth="40.0" resizable="false" text="" />
+            <TableColumn fx:id="statusTableColumn" prefWidth="40.00" resizable="false" style="-fx-border-width: 0; -fx-font-size: 180%;  -fx-label-padding: 12px 0px 0px 5px;" text="" />
+            <TableColumn fx:id="itemTableColumn" minWidth="800" prefWidth="-1" text="File" />
+        </columns>
+    </TableView>
+</center>
+    <bottom>
+        <HBox id="MERGEBOX">
+            <MenuBar id="MERGEMBAR">
+                <Menu id="MERGEMENU"  text="Working copy">
+                    <MenuItem id="MERGEMI" onAction="#checkoutEventHandler" text="Checkout ..." />
+                    <MenuItem id="MERGEMI" onAction="#mergeEventHandler" text="Merge ..." />
+                    <MenuItem id="MERGEMI" onAction="#rebaseEventHandler" text="Rebase ..." />
+                    <MenuItem id="MERGEMI" onAction="#commitEventHandler" text="Commit ..." />
+                    <MenuItem id="MERGEMI" onAction="#stashEventHandler" text="Stash ..." />
+                </Menu>
+            </MenuBar>
+            <ToolBar id="MERGETB">
+                <Separator id="MERGEBTN"/>
+                <Button id="MERGEBTN" onAction="#stageAllEventHandler" text="Stage all" />
+                <Button id="MERGEBTN" onAction="#unstageAllEventHandler" text="Unstage all" />
+                <Separator id="MERGEBTN"/>
+                <Button id="MERGEBTN" onAction="#mergeEventHandler" text="Merge" />
+                <Button id="MERGEBTN" onAction="#rebaseEventHandler" text="Rebase" />
+                <Button id="MERGEBTN" onAction="#commitEventHandler" text="Commit" />
+                <Separator id="MERGEBTN"/>
+                <Button id="MERGEBTN" onAction="#refreshEventHandler" text="Refresh" />
+                <Pane id="MERGEBTN" fx:id="spacerPane"/>
+                <Label id="MERGEBTN" text="Search"/>
+                <TextField id="MERGEBTN" fx:id="searchText"  />
+            </ToolBar>
+
+        </HBox>
+
+    </bottom>
+</BorderPane>

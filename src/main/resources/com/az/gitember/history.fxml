@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ContextMenu?>
+<BorderPane fx:id="mainBorderPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+            xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.controller.History">
+    <center>
+        <SplitPane fx:id="splitPanel" orientation="VERTICAL">
+            <AnchorPane fx:id="hostHistoryViewPanel"  minHeight="150" minWidth="0.0" maxHeight="Infinity" prefHeight="500.0" prefWidth="820.0" >
+                <children>
+                    <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <columns>
+                            <TableColumn fx:id="laneTableColumn" sortable="false" prefWidth="200.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
+                            <TableColumn fx:id="messageTableColumn" sortable="false"  text="Message" />
+                            <TableColumn fx:id="authorTableColumn" sortable="false"  text="Author" />
+                            <TableColumn fx:id="dateTableColumn" sortable="false"  text="Date" />
+                        </columns>
+                        <contextMenu>
+                            <ContextMenu>
+                                <items>
+                                    <MenuItem  mnemonicParsing="false"  onAction="#checkoutMenuItemClickHandler" text="Checkout" />
+                                    <MenuItem  mnemonicParsing="false"  onAction="#checkoutAsMenuItemClickHandler" text="Checkout as ..." />
+                                </items>
+                            </ContextMenu>
+                        </contextMenu>
+
+                    </TableView>
+                </children>
+            </AnchorPane>
+        </SplitPane>
+    </center>
+    <bottom>
+        <HBox id="MERGEBOX">
+
+            <ToolBar id="MERGETB">
+                <Pane id="MERGEBTN" fx:id="spacerPane"/>
+                <Label id="MERGEBTN" text="Search"/>
+                <TextField id="MERGEBTN" fx:id="searchText"  />
+            </ToolBar>
+        </HBox>
+    </bottom>
+</BorderPane>

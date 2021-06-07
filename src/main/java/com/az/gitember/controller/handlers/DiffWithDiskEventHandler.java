@@ -1,0 +1,71 @@
+package com.az.gitember.controller.handlers;
+
+import com.az.gitember.App;
+import com.az.gitember.controller.DiffViewer;
+import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.data.CommitInfo;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.Pair;
+import com.az.gitember.data.ScmItem;
+import com.az.gitember.service.Context;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class DiffWithDiskEventHandler implements EventHandler<ActionEvent> {
+
+    private final static Logger log = Logger.getLogger(DiffWithDiskEventHandler.class.getName());
+
+
+    private final ScmItem item;
+    private final String revision;
+
+    public DiffWithDiskEventHandler(final ScmItem item) {
+        this(item, null);
+    }
+
+    public DiffWithDiskEventHandler(final ScmItem item, final String revision) {
+
+        this.item = item;
+        this.revision = revision;
+
+    }
+
+    @Override
+    public void handle(ActionEvent event) {
+
+        try {
+            final String fileName = item.getShortName();
+            final String sha;
+            if (revision == null) {
+                final CommitInfo head = Context.getGitRepoService().getHead();
+                sha = head.getSha();
+            } else {
+                sha = revision;
+            }
+            final String oldFile = Context.getGitRepoService().saveFile( sha, fileName);
+            final String newFile = Path.of(Context.getProjectFolder(), item.getShortName()).toString();
+
+            final Pair<Parent, Object> pair = App.loadFXMLToNewStage("diffviewer",
+                    "Difference with repository version " + fileName);
+            pair.getFirst().getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
+            final DiffViewer diffViewer = (DiffViewer) pair.getSecond();
+            diffViewer.setData(oldFile, newFile);
+            diffViewer.setOldLabel("Repository version ");
+            diffViewer.setNewLabel("Disk version ");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot show  difference for  " + item.getShortName(), e);
+            Context.getMain().showResult("Cannot show  difference for  " + item.getShortName(),
+                    ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+
+}
