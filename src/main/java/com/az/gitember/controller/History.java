@@ -26,6 +26,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -37,6 +39,7 @@ public class History implements Initializable {
     private final static Logger log = Logger.getLogger(History.class.getName());
 
     private static final int HEIGH = 30;
+
 
     private int plotWidth = 20 * HEIGH;
 
@@ -67,7 +70,15 @@ public class History implements Initializable {
     private TableColumn<PlotCommit, String> authorTableColumn;
 
     @FXML
+    public TableColumn<PlotCommit, String> shaTableColumn;
+
+    @FXML
+    public TableColumn<PlotCommit, String> refTableColumn;
+
+    @FXML
     private TableView commitsTableView;
+
+
 
 
 
@@ -180,6 +191,23 @@ public class History implements Initializable {
                         }
 
                     };
+                }
+        );
+
+        shaTableColumn.setCellValueFactory(
+                c -> new ReadOnlyStringWrapper(c.getValue().getName())
+        );
+
+        refTableColumn.setCellValueFactory(
+                c -> {
+                    PlotCommit plotCommit = c.getValue();
+                    LinkedList<String> refs = new LinkedList<>();
+                    for (int i = 0; i < plotCommit.getRefCount(); i++) {
+                        refs.add(
+                                plotCommit.getRef(i).getName()
+                        );
+                    }
+                    return new ReadOnlyStringWrapper(refs.stream().collect(Collectors.joining(", ")));
                 }
         );
 

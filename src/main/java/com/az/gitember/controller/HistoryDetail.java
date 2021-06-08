@@ -17,6 +17,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
@@ -60,7 +61,7 @@ public class HistoryDetail implements Initializable {
     private TableView changedFilesListView;
 
     @FXML
-    private TableColumn<ScmItem, FontIcon> actionTableColumn;
+    private TableColumn<ScmItem, StackedFontIcon> actionTableColumn;
 
     @FXML
     private TableColumn<ScmItem, String> fileTableColumn;

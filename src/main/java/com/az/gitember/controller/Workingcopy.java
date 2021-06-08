@@ -27,6 +27,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
@@ -47,7 +48,7 @@ public class Workingcopy implements Initializable {
     public TableColumn<ScmItem, Boolean> selectTableColumn;
     public TableColumn<ScmItem, String> itemTableColumn;
     public TableColumn<ScmItem, ScmItem> itemTableColumnColorStatus;
-    public TableColumn<ScmItem, FontIcon> statusTableColumn;
+    public TableColumn<ScmItem, StackedFontIcon> statusTableColumn;
     public Pane spacerPane;
     public TextField searchText;
 

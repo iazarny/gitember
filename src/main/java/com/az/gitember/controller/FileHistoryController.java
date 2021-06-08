@@ -13,6 +13,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class FileHistoryController implements Initializable {
 
     public TableView historyTableView;
     public TableColumn<ScmRevisionInformation, String> revisionTableColumn;
-    public TableColumn<ScmRevisionInformation, FontIcon> actionTableColumn;
+    public TableColumn<ScmRevisionInformation, StackedFontIcon> actionTableColumn;
     public TableColumn<ScmRevisionInformation, String> authorTableColumn;
     public TableColumn<ScmRevisionInformation, String> dateTableColumn;
     public TableColumn<ScmRevisionInformation, String> messageTableColumn;

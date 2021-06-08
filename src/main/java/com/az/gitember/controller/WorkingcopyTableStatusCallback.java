@@ -13,11 +13,8 @@ public class WorkingcopyTableStatusCallback implements Callback<TableColumn<ScmI
             @Override
             protected void updateItem(ScmItem item, boolean empty) {
                 super.updateItem(item, empty);
-
-                //setStyle("-fx-background-color: #EA1010;");
-
+                String color = null;
                 if (!empty) {
-                    String color = null;
                     switch (item.getAttribute().getStatus()) {
                         case ScmItem.Status.RENAMED:
                             color = "#10EA10;";
@@ -46,11 +43,15 @@ public class WorkingcopyTableStatusCallback implements Callback<TableColumn<ScmI
                         case ScmItem.Status.UNTRACKED:
                             color = "#808080;";
                             break;
+                        default:
+                            color ="";
                     }
-                    if (color != null) {
-                        setStyle("-fx-background-color: " + color);
-                    }
+
+                } else {
+                    color = "transparent;";
                 }
+
+                setStyle("-fx-background-color: " + color);
 
             }
         };

@@ -7,6 +7,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -18,7 +19,7 @@ public class Stash implements Initializable {
 
     public TableView workingCopyTableView;
     public TableColumn<ScmItem, String> itemTableColumn;
-    public TableColumn<ScmItem, FontIcon> statusTableColumn;
+    public TableColumn<ScmItem, StackedFontIcon> statusTableColumn;
 
 
     @Override

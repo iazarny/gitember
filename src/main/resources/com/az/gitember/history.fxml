@@ -32,6 +32,8 @@
                             <TableColumn fx:id="messageTableColumn" sortable="false"  text="Message" />
                             <TableColumn fx:id="authorTableColumn" sortable="false"  text="Author" />
                             <TableColumn fx:id="dateTableColumn" sortable="false"  text="Date" />
+                            <TableColumn fx:id="shaTableColumn" sortable="false"  text="Sha" />
+                            <TableColumn fx:id="refTableColumn" sortable="false"  text="Ref" />
                         </columns>
                         <contextMenu>
                             <ContextMenu>

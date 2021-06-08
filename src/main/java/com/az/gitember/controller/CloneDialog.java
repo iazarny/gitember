@@ -22,8 +22,6 @@ import java.util.Collection;
  */
 public class CloneDialog extends Dialog<RemoteRepoParameters> {
 
-
-
     private Label pathToKeyLabel;
     private TextField pathToKey;
     private Button selectPathToKeyBtn;
@@ -55,7 +53,7 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
         //grid.setGridLinesVisible(true);
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 10, 10, 20));
+        grid.setPadding(new Insets(25, 15, 15, 25));
 
         TextField repositoryURL = new TextField();
         repositoryURL.setPromptText("URL");
@@ -183,13 +181,6 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
         Bindings.bindBidirectional(passphraze.textProperty(), cloneParameters.keyPassPhraseProperty());
         Bindings.bindBidirectional(httpLogin.textProperty(), cloneParameters.userNameProperty());
         Bindings.bindBidirectional(httpPpassword.textProperty(), cloneParameters.userPwdProperty());
-
-
-        /*rid.add(httpLoginLabel, 0, 2);
-        grid.add(httpLogin, 1, 2);
-
-        grid.add(httpPasswordLabel, 0, 3);
-        grid.add(, 1, 3);*/
 
         this.getDialogPane().setContent(grid);
 
