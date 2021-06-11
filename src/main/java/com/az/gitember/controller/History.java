@@ -38,7 +38,7 @@ public class History implements Initializable {
 
     private final static Logger log = Logger.getLogger(History.class.getName());
 
-    private static final int HEIGH = 30;
+    private static final int HEIGH = 40;
 
 
     private int plotWidth = 20 * HEIGH;

@@ -176,7 +176,7 @@ public class Workingcopy implements Initializable {
         final String cfgCommitName = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
         final String cfgCommitEmail = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
         String commitName = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitName(), cfgCommitName), proj.getUserName());
-        String commitEmail = StringUtils.defaultIfBlank(proj.getUserCommitEmail(),cfgCommitEmail);
+        String commitEmail = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitEmail(),cfgCommitEmail), "");
 
         CommitDialog dialog = new CommitDialog(
                 "",

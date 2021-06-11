@@ -1288,9 +1288,12 @@ public class GitRepoService {
         if (revCommit instanceof PlotCommit) {
             ArrayList<String> refs = new ArrayList<>();
             for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
-                refs.add(
-                        ((PlotCommit) revCommit).getRef(i).getName()
-                );
+                if (revCommit != null && ((PlotCommit) revCommit).getRef(i) != null && ((PlotCommit) revCommit).getRef(i).getName() != null) {
+                    refs.add(
+                            ((PlotCommit) revCommit).getRef(i).getName()
+                    );
+
+                }
             }
             info.setRef(refs);
 

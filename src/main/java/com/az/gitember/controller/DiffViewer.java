@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.data.SquarePos;
+import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -36,12 +37,11 @@ public class DiffViewer implements Initializable {
     public ScrollPane oldScrollPane;
     public ScrollPane newScrollPane;
 
-
-
-
     private String oldText = null;
     private String newText = null;
     private EditList diffList = new EditList();
+
+    private double fontSize;
 
     public void setData(String  oldFileName, String newFileName) throws IOException {
 
@@ -81,8 +81,11 @@ public class DiffViewer implements Initializable {
 
 
         //scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
-
-
+        if (Context.isWindows() ) {
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0125; // windows
+        } else {
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.88; // linux
+        }
 
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
@@ -104,7 +107,7 @@ public class DiffViewer implements Initializable {
 
     private SquarePos getDiffPos(Edit delta) {
 
-        final double fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.015; // windows
+
 
         final int origPos = delta.getBeginA();
         final int origLines = delta.getLengthA();
