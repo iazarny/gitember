@@ -104,7 +104,7 @@ public class DiffViewer implements Initializable {
 
     private SquarePos getDiffPos(Edit delta) {
 
-        final double fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0;
+        final double fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.015; // windows
 
         final int origPos = delta.getBeginA();
         final int origLines = delta.getLengthA();
