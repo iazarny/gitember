@@ -1,5 +1,8 @@
+
+// hb ;
 package com.az.gitember.controller;
 
+import com.az.gitember.data.LangDefinition;
 import com.az.gitember.service.LangResolver;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -16,9 +19,7 @@ import org.eclipse.jgit.diff.EditList;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,7 +27,6 @@ import java.util.stream.Collectors;
 
 /**
  * Adapt to Text for TextFlow.
- *
  */
 public class TextBrowserContentAdapter {
 
@@ -38,7 +38,7 @@ public class TextBrowserContentAdapter {
     private boolean rawDiff = false;
     private Pattern pattern = null;
     private EditList patch = null;
-    private boolean leftSide ;
+    private boolean leftSide;
     private boolean rpadLines;
     private int maxLineLength = 0;
 
@@ -47,10 +47,9 @@ public class TextBrowserContentAdapter {
     private Color backgroundColor = null;
 
     /**
-     *
      * @param extension The file extension
-     * @param patch patch
-     * @param leftSide what side ro read left - old, right - new
+     * @param patch     patch
+     * @param leftSide  what side ro read left - old, right - new
      * @param rpadLines pad lined withs space to length of line with max length ?
      */
     public TextBrowserContentAdapter(final String extension, final EditList patch, boolean leftSide, boolean rpadLines, Color backgroundColor) {
@@ -62,7 +61,6 @@ public class TextBrowserContentAdapter {
     }
 
 
-
     TextBrowserContentAdapter(final String extension, final boolean rawDiff, final boolean rpadLines) {
 
         this.rawDiff = rawDiff;
@@ -70,7 +68,7 @@ public class TextBrowserContentAdapter {
 
         langResolver.resolveLang(extension).ifPresent(ld -> {
 
-            pattern = createPattern(ld.getKeywords(), ld.isComments());
+            pattern = createPattern(ld);
 
         });
     }
@@ -98,7 +96,7 @@ public class TextBrowserContentAdapter {
 
     private List<Node> lineToTexts(String line, int linePos, int pos) {
         final List<Node> rez = new LinkedList<>();
-        final String lineNum = StringUtils.leftPad(String.valueOf(linePos), pos , "0") + "  ";
+        final String lineNum = StringUtils.leftPad(String.valueOf(linePos), pos, "0") + "  ";
 
         rez.add(createText(lineNum, "linenum", linePos));
 
@@ -137,18 +135,20 @@ public class TextBrowserContentAdapter {
             int start = 0;
             int end = 0;
             String candidate = "";
+            boolean matcherFind = false;
 
             do {
                 final String str = line.substring(start, end);
                 final Matcher matcher = pattern.matcher(str);
                 if (matcher.find()) {
+                    matcherFind = true;
                     String matchedGroup = getMatchedGroup(matcher);
                     styleClass = calculateStyleClass(matchedGroup, linePos);
                     //TODO refactor - method, which create textext
                     if (matcher.start() == 0) {
                         rez.add(createText(str, styleClass, linePos));
                     } else {
-                        if (multilineComment) {
+                        if (multilineComment || sinlglineComment) {
                             rez.add(createText(str.substring(0, matcher.start()), styleClass, linePos));
                         } else {
                             rez.add(createText(str.substring(0, matcher.start()), "", linePos));
@@ -163,6 +163,7 @@ public class TextBrowserContentAdapter {
                     start = end;
                     candidate = "";
                 } else {
+                    matcherFind = false;
                     candidate = str;
                 }
                 end++;
@@ -172,9 +173,8 @@ public class TextBrowserContentAdapter {
             if (multilineComment) {
                 styleClass = "mlcomment";
             }
-
             if (candidate.length() > 0) {
-                rez.add(createText(candidate, styleClass, linePos));
+                rez.add(createText(candidate, (multilineComment || matcherFind ) ? styleClass : "", linePos));
             }
         }
         return rez;
@@ -182,12 +182,12 @@ public class TextBrowserContentAdapter {
 
     private String getMatchedGroup(Matcher matcher) {
         return matcher.group("KEYWORD") != null ? "keyword" :
-                matcher.group("PAREN") != null ? "paren" :
-                        matcher.group("BRACE") != null ? "brace" :
-                                matcher.group("BRACKET") != null ? "bracket" :
-                                        matcher.group("SEMICOLON") != null ? "semicolon" :
-                                                matcher.group("DIGIT") != null ? "digit" :
-                                                        matcher.group("STRING") != null ? "string" :
+                matcher.group("BRACKET") != null ? "bracket" :
+                        matcher.group("SEMICOLON") != null ? "semicolon" :
+                                matcher.group("DIGIT") != null ? "digit" :
+                                        matcher.group("STRING") != null ? "string" :
+                                                matcher.group("STRING2") != null ? "string" :
+                                                        matcher.group("STRING3") != null ? "string3" :
                                                                 matcher.group("SLCOMMENT") != null ? "comment" :
                                                                         matcher.group("MLBEGIN") != null ? "MLBEGIN" :
                                                                                 matcher.group("MLEND") != null ? "MLEND" :
@@ -221,7 +221,7 @@ public class TextBrowserContentAdapter {
             styleClass = "comment";
         }
 
-        return  styleClass;
+        return styleClass;
     }
 
 
@@ -245,14 +245,14 @@ public class TextBrowserContentAdapter {
         //hb.setStyle("-fx-border-style: solid inside;"
         //        + "-fx-border-width: 1;-fx-border-color: gray;");
 
-
         if (this.rawDiff) {
 
             hb.setBackground(
                     new Background(new BackgroundFill(null, CornerRadii.EMPTY, Insets.EMPTY)));
             hb.getStyleClass().add(style);
 
-        } if (patch != null) {
+        }
+        if (patch != null) {
             for (Edit delta : patch) {
                 int origPos;
                 int origLines;
@@ -265,7 +265,7 @@ public class TextBrowserContentAdapter {
                     origLines = delta.getLengthB();
                 }
 
-                if (origPos <= linePos && linePos < (origLines + origPos) ) {
+                if (origPos <= linePos && linePos < (origLines + origPos)) {
 
                     hb.setBackground(
                             new Background(new BackgroundFill(backgroundColor, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -275,36 +275,43 @@ public class TextBrowserContentAdapter {
             }
         }
 
-        return  hb;
+        return hb;
     }
 
-    private synchronized Pattern createPattern(String[] keywords, boolean commentsSupported) {
+    private final Map<String, Pattern> langParserCache = new HashMap<>();
 
-        String KEYWORD_PATTERN = "\\b(" + String.join("|", keywords) + ")\\b";
-        String PAREN_PATTERN = "\\(|\\)";
-        String BRACE_PATTERN = "\\{|\\}";
-        String BRACKET_PATTERN = "\\[|\\]";
-        String SEMICOLON_PATTERN = "\\;";
-        String DIGIT_PATTERN = "\\p{Digit}+";
-        String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
-        String COMMENT_SINGELINE_PATTERN = "//.*";
-        String COMMENT_MULTILINE_BEGIN_PATTERN = "/\\*";
-        String COMMENT_MULTI_END_PATTERN = "\\*/";
+    private Pattern createPattern(LangDefinition ld) {
 
-        String exp = "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-                + "|(?<PAREN>" + PAREN_PATTERN + ")"
-                + "|(?<BRACE>" + BRACE_PATTERN + ")"
-                + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-                + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
-                + "|(?<DIGIT>" + DIGIT_PATTERN + ")"
-                + "|(?<STRING>" + STRING_PATTERN + ")";
-        if (commentsSupported) {
-            exp +=  "|(?<SLCOMMENT>" + COMMENT_SINGELINE_PATTERN + ")"
-                    + "|(?<MLBEGIN>" + COMMENT_MULTILINE_BEGIN_PATTERN + ")"
-                    + "|(?<MLEND>" + COMMENT_MULTI_END_PATTERN + ")";
-        }
+        return langParserCache.computeIfAbsent(ld.getName(), s -> {
+            //work in test mode, however not in real
+            String KEYWORD_PATTERN = "\\b(" + String.join("|", ld.getKeywords()) + ")(?=[^\"|^']*(?:\"[^\"]*\"[^\"]*)*$)";
+            String BRACKET_PATTERN = "\\{|\\(|\\[|}|\\)|]";
+            String SEMICOLON_PATTERN = ";";
+            String DIGIT_PATTERN = "\\b\\d+\\b";
+            String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
+            String STRING_PATTERN2 = "'([^'\\\\]|\\\\.)*'";
+            String STRING_PATTERN3 = "`([^`\\\\]|\\\\.)*`";
+            String COMMENT_SINGELINE_PATTERN = "//.*";
+            String COMMENT_MULTILINE_BEGIN_PATTERN = "/\\*";
+            String COMMENT_MULTI_END_PATTERN = "\\*/";
 
-        return Pattern.compile(exp );
+            String exp = "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
+                    + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
+                    + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
+                    + "|(?<DIGIT>" + DIGIT_PATTERN + ")"
+                    + "|(?<STRING>" + STRING_PATTERN + ")"
+                    + "|(?<STRING2>" + STRING_PATTERN2 + ")"
+                    + "|(?<STRING3>" + STRING_PATTERN3 + ")";
+            if (ld.isComments()) {
+                exp += "|(?<SLCOMMENT>" + COMMENT_SINGELINE_PATTERN + ")"
+                        + "|(?<MLBEGIN>" + COMMENT_MULTILINE_BEGIN_PATTERN + ")"
+                        + "|(?<MLEND>" + COMMENT_MULTI_END_PATTERN + ")";
+            }
+
+            return Pattern.compile(exp, Pattern.CANON_EQ);
+
+        });
+
     }
 
 }

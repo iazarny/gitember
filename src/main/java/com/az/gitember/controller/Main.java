@@ -163,7 +163,7 @@ public class Main implements Initializable {
             openRecentMenuItem.getItems().clear();
             Context.settingsProperty.get().getProjects().stream().forEach(
                     o -> {
-                        MenuItem mi = new MenuItem(o.getProjectHomeFolder());
+                        MenuItem mi = new MenuItem(o.getProjectHomeFolder().replace(".git", ""));
                         mi.setOnAction(
                                 event -> {
                                     try {

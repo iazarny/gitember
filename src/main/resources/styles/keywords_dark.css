@@ -12,18 +12,10 @@
 }
 
 .semicolon {
-
-}
-
-.paren {
-    -fx-fill: #936d08;
+    -fx-fill: #a76d17;
 }
 
 .bracket {
-    -fx-fill: #936d08;
-}
-
-.brace {
     -fx-fill: #936d08;
 }
 
@@ -33,6 +25,10 @@
 
 .string {
     -fx-fill: #049204;
+}
+
+.string3 {
+    -fx-fill: lightgreen;
 }
 
 .comment {

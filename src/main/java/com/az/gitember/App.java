@@ -93,13 +93,11 @@ public class App extends Application {
         final Scene newScene = new Scene(pair.getFirst());
         jMetro.setScene(newScene);
 
-
-
-        newScene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
         newStage.getIcons().add(new Image(App.class.getResourceAsStream(Const.ICON)));
         newStage.setScene(newScene);
         newStage.show();
         newStage.setTitle(windowTitle);
+        newScene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
         return pair;
     }
 
