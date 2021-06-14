@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StatBranchLiveTimeHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class StatBranchLiveTimeHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final MainTreeChangeListener mainTreeChangeListener;
     private boolean brances = false;

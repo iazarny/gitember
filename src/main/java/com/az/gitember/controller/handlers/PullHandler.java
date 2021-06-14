@@ -13,7 +13,7 @@ import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PullHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class PullHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(PullHandler.class.getName());
 

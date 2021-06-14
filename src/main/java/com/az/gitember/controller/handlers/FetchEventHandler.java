@@ -12,7 +12,7 @@ import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FetchEventHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class FetchEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(FetchEventHandler.class.getName());
 

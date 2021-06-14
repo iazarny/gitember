@@ -13,7 +13,7 @@ import org.eclipse.jgit.lib.Ref;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CheckoutBranchEventHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CheckoutBranchEventHandler.class.getName());
 

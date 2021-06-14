@@ -5,6 +5,8 @@ import com.az.gitember.App;
 import com.az.gitember.data.RemoteRepoParameters;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -46,6 +48,7 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
         this.setHeaderText(header);
 
 
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         ButtonType cloneBtn = new ButtonType("Clone", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(cloneBtn, ButtonType.CANCEL);
 
@@ -195,6 +198,22 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
 
 
         this.initOwner(App.getScene().getWindow());
+        /*App.getScene().getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
+        repositoryURL.focusedProperty().addListener(new ChangeListener<Boolean>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
+            {
+                if (newPropertyValue)
+                {
+                    repositoryURL.getParent().setStyle("-fx-background-color: lightblue;");
+                }
+                else
+                {
+                    repositoryURL.setStyle("-fx-background-color: red;");
+                }
+            }
+        });*/
 
     }
 }

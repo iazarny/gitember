@@ -18,11 +18,11 @@ public class LookAndFeelSet {
     public static String DEFAULT_CSS = "/styles/styles.css";
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
-    public static Color DIFF_COLOR = Color.rgb(106, 206, 159);
+    public static Color DIFF_COLOR;
 
-    public static Color DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.3);
+    public static Color DIFF_STROKE_COLOR;
 
-    public static Color DIFF_FILL_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
+    public static Color DIFF_FILL_COLOR;
 
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
@@ -32,9 +32,9 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
-            DIFF_COLOR = Color.rgb(106, 206, 159);
-            DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.3);
-            DIFF_FILL_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
+            DIFF_COLOR = Color.valueOf("#203e20"); //rgb(106, 206, 159);
+            DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.9);
+            DIFF_FILL_COLOR = Color.valueOf("#203e20"); //Color.rgb(106, 206, 159);
 
 
         } else {
@@ -44,9 +44,9 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords.css";
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
-            DIFF_COLOR = Color.rgb(106, 206, 159);
+            DIFF_COLOR = Color.valueOf("#97fa97") ;//rgb(106, 206, 159);
             DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.3);
-            DIFF_FILL_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
+            DIFF_FILL_COLOR = Color.valueOf("#97fa97") ;// DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
 
         }
     }

@@ -7,7 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 
-public class CompressDataBaseEventHandler extends   AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class CompressDataBaseEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
 
     @Override

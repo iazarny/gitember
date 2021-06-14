@@ -13,7 +13,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CloneEventHandler extends   AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class CloneEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CloneEventHandler.class.getName());
 

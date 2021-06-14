@@ -2,10 +2,7 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.control.ChangeListenerHistoryHint;
-import com.az.gitember.controller.handlers.CheckoutEventHandler;
-import com.az.gitember.controller.handlers.MergeBranchEventHandler;
-import com.az.gitember.controller.handlers.RebaseBranchEventHandler;
-import com.az.gitember.controller.handlers.StageEventHandler;
+import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
@@ -157,7 +154,7 @@ public class Workingcopy implements Initializable {
                 } catch (IOException e) {
                     log.log(Level.WARNING, "Cannot stash ",  e.getMessage());
                 }
-                Context.updateStatus();
+                new StatusUpdateEventHandler(true).handle(null);
             }
         });
 
@@ -195,7 +192,7 @@ public class Workingcopy implements Initializable {
             try {
                 Context.settingsProperty.getValue().getCommitMsg().add(r);
                 Context.getGitRepoService().commit(r, dialog.getUserName(), dialog.getUserEmail());
-                Context.updateStatus();
+                new StatusUpdateEventHandler(true).handle(null);
             } catch (GitAPIException e) {
                 Context.getMain().showResult("Commit error", e.getMessage(), Alert.AlertType.ERROR);
             }

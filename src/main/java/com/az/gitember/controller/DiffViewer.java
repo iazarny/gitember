@@ -1,18 +1,14 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.data.SquarePos;
+import com.az.gitember.service.Context;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
@@ -36,12 +32,11 @@ public class DiffViewer implements Initializable {
     public ScrollPane oldScrollPane;
     public ScrollPane newScrollPane;
 
-
-
-
     private String oldText = null;
     private String newText = null;
     private EditList diffList = new EditList();
+
+    private double fontSize;
 
     public void setData(String  oldFileName, String newFileName) throws IOException {
 
@@ -50,7 +45,6 @@ public class DiffViewer implements Initializable {
 
         RawText oldRawTet = new RawText(new File(oldFileName)); //TODO use this constructor RawText(byte[] input)
         RawText newRawTet = new RawText(new File(newFileName));
-
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         RawTextComparator comparator = RawTextComparator.DEFAULT;
@@ -81,8 +75,11 @@ public class DiffViewer implements Initializable {
 
 
         //scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
-
-
+        if (Context.isWindows() ) {
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0125; // windows
+        } else {
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.88; // linux
+        }
 
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
@@ -104,7 +101,7 @@ public class DiffViewer implements Initializable {
 
     private SquarePos getDiffPos(Edit delta) {
 
-        final double fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.88;
+
 
         final int origPos = delta.getBeginA();
         final int origLines = delta.getLengthA();

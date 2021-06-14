@@ -15,15 +15,7 @@
 
 }
 
-.paren {
-    -fx-fill: darkblue;
-}
-
 .bracket {
-    -fx-fill: darkblue;
-}
-
-.brace {
     -fx-fill: darkblue;
 }
 
@@ -33,6 +25,10 @@
 
 .string {
     -fx-fill: darkgreen;
+}
+
+.string3 {
+    -fx-fill: green;
 }
 
 .comment {

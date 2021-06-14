@@ -127,9 +127,9 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                     scmItemContextMenu.getItems().add(open);
                                 }
 
-                                if(!is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.UNTRACKED) ) {
-                                    MenuItem history = new MenuItem("History");
-                                    scmItemContextMenu.getItems().add(history);
+                                if(!is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED, ScmItem.Status.REMOVED) ) {
+                                    //MenuItem history = new MenuItem("History");  TODO
+                                    //scmItemContextMenu.getItems().add(history);
 
                                     MenuItem diff = new MenuItem("Diff with repository");
                                     diff.setOnAction(new DiffWithDiskEventHandler(item));

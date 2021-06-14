@@ -778,29 +778,24 @@ public class GitRepoService {
      *
      * @return
      */
-    public List<ScmItem> getStatuses() {
+    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor) {
 
         final List<ScmItem> scmItems = new ArrayList<>();
         try (Git git = new Git(repository)) {
 
-
             Set<String> filter = new HashSet<>();
 
-            Status status = git.status().call();
-
+            Status status = git.status().setProgressMonitor(progressMonitor).call();
 
             Ref refHead = repository.exactRef(Constants.HEAD);
             RevWalk revWalk = new RevWalk(repository);
             RevCommit revCommitHead = revWalk.parseCommit(refHead.getObjectId());
-
             TreeWalk tw = new TreeWalk(repository);
             tw.setRecursive(false);
             tw.addTree(revCommitHead.getTree());
             tw.addTree(new FileTreeIterator(repository));
-
             RenameDetector rd = new RenameDetector(repository);
             rd.addAll(DiffEntry.scan(tw));
-
             List<DiffEntry> lde = rd.compute(tw.getObjectReader(), null);
             for (DiffEntry de : lde) {
                 if (de.getScore() >= rd.getRenameScore()) {
@@ -818,7 +813,6 @@ public class GitRepoService {
                     }
             );
             status.getMissing().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MISSED))));
-
             status.getAdded().forEach(item -> {
                 if (!filter.contains(item)) {
                     scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.ADDED)));
@@ -828,9 +822,7 @@ public class GitRepoService {
 
             status.getModified().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MODIFIED))));
             status.getChanged().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CHANGED))));
-
             status.getConflicting().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
-
             //status.getUntrackedFolders().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.ScmItemStatus.UNTRACKED_FOLDER))));
 
 
@@ -1288,9 +1280,12 @@ public class GitRepoService {
         if (revCommit instanceof PlotCommit) {
             ArrayList<String> refs = new ArrayList<>();
             for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
-                refs.add(
-                        ((PlotCommit) revCommit).getRef(i).getName()
-                );
+                if (revCommit != null && ((PlotCommit) revCommit).getRef(i) != null && ((PlotCommit) revCommit).getRef(i).getName() != null) {
+                    refs.add(
+                            ((PlotCommit) revCommit).getRef(i).getName()
+                    );
+
+                }
             }
             info.setRef(refs);
 

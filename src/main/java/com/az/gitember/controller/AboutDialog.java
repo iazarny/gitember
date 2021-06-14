@@ -40,6 +40,7 @@ public class AboutDialog extends Dialog {
         super();
         this.setTitle("Gitember 2");
 
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
 
         GridPane grid = new GridPane();

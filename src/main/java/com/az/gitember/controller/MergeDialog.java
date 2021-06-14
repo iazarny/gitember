@@ -26,7 +26,7 @@ public class MergeDialog extends Dialog<Pair<String,String>> {
         super();
         this.setTitle("Merge");
         this.setHeaderText("Merge selected branch to working copy");
-
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         final Label branchesLabel;
         final Label messageLabel;
 

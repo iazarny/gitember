@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CreateTagEventHandler extends AbstractLontTaskEventHandler  implements EventHandler<ActionEvent> {
+public class CreateTagEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CreateTagEventHandler.class.getName());
 

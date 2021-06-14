@@ -28,7 +28,7 @@ public class MainRecentProjects implements Initializable {
             Context.settingsProperty.get().getProjects().forEach(
                     p-> {
 
-                        Hyperlink projectNameHl = new Hyperlink (p.getProjectHomeFolder());
+                        Hyperlink projectNameHl = new Hyperlink (p.getProjectHomeFolder().replace(".git", ""));
                         projectNameHl.getStyleClass().add("projectlink"); //TODO
                         recentProjects.getChildren().add(projectNameHl);
                         projectNameHl.setOnAction(
