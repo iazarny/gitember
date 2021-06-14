@@ -175,11 +175,9 @@ public class Context {
     }
 
     public static void updateStatus(ProgressMonitor progressMonitor) {
-        System.out.println(">>>");
         statusList.clear();
         plotCommitList.clear();
         statusList.addAll(gitRepoService.getStatuses(progressMonitor));
-        System.out.println("<<<");
     }
 
     public static void updateWorkingBranch() {
