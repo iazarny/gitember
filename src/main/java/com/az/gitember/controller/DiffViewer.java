@@ -78,7 +78,7 @@ public class DiffViewer implements Initializable {
         if (Context.isWindows() ) {
             fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0125; // windows
         } else {
-            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.88; // linux
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.87; // linux
         }
 
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
