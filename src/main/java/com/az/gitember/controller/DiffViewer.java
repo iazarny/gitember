@@ -3,17 +3,12 @@ package com.az.gitember.controller;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
@@ -50,7 +45,6 @@ public class DiffViewer implements Initializable {
 
         RawText oldRawTet = new RawText(new File(oldFileName)); //TODO use this constructor RawText(byte[] input)
         RawText newRawTet = new RawText(new File(newFileName));
-
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         RawTextComparator comparator = RawTextComparator.DEFAULT;

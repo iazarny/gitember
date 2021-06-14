@@ -1,9 +1,11 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -41,8 +43,9 @@ public class MainTreeChangeListener implements ChangeListener {
         try {
             if (newValue == Context.getMain().workingCopyTreeItem) {
                 file = "workingcopy";
-                Context.updateStatus();
-
+                if(Context.statusList.isEmpty()) { //TODO or is changed
+                    Platform.runLater( () ->   new StatusUpdateEventHandler(false).handle(null));
+                }
             } else if (newValue.equals("stat")) {
                 file = (String) newValue;
             } else if (newValue.equals("statworkingprogress")) {

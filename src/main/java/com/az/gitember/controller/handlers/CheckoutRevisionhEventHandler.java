@@ -13,7 +13,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CheckoutRevisionhEventHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class CheckoutRevisionhEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CheckoutRevisionhEventHandler.class.getName());
 

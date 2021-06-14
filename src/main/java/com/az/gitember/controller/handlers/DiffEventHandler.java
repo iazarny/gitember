@@ -7,6 +7,7 @@ import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -14,6 +15,7 @@ import javafx.scene.control.Alert;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

@@ -17,9 +17,9 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AbstractLontTaskEventHandler {
+public class AbstractLongTaskEventHandler {
 
-    private final static Logger log = Logger.getLogger(AbstractLontTaskEventHandler.class.getName());
+    private final static Logger log = Logger.getLogger(AbstractLongTaskEventHandler.class.getName());
 
     protected void launchLongTask(final Task longTask, final Consumer<WorkerStateEvent> onOk, final Consumer<WorkerStateEvent> onError) {
         Context.getMain().toolBar.setVisible(true);

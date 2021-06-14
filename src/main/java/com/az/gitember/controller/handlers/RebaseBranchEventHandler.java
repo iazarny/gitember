@@ -13,13 +13,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class RebaseBranchEventHandler implements EventHandler<ActionEvent> {
+public class RebaseBranchEventHandler extends StatusUpdateEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(RebaseBranchEventHandler.class.getName());
 
     private final String preselectedBranch;
 
     public RebaseBranchEventHandler(String preselectedBranch) {
+        super(true);
         this.preselectedBranch = preselectedBranch;
     }
 
@@ -45,7 +46,7 @@ public class RebaseBranchEventHandler implements EventHandler<ActionEvent> {
                         log.log(Level.WARNING, "Cannot rebase " + r + " " + branchName,  e.getMessage());
                         Context.getMain().showResult("Rebase result", e.getMessage(), Alert.AlertType.ERROR);
                     }
-                    Context.updateStatus();
+                    super.handle(event);
                 }
         );
 

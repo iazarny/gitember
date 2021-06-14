@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PushHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class PushHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(PushHandler.class.getName());
 

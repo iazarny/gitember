@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StatWorkProgressHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class StatWorkProgressHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final MainTreeChangeListener mainTreeChangeListener;
 

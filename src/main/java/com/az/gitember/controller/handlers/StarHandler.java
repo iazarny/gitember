@@ -11,7 +11,7 @@ import javafx.scene.control.Alert;
 
 import java.util.Set;
 
-public class StarHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class StarHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final MainTreeChangeListener mainTreeChangeListener;
 

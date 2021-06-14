@@ -23,7 +23,7 @@ public class LoginDialog extends Dialog<RemoteRepoParameters> {
         this.setTitle(title);
         this.setHeaderText(header);
         //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString())); todo
-
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         ButtonType okButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 

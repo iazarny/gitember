@@ -17,7 +17,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DeleteBranchEventHandler extends AbstractLontTaskEventHandler implements EventHandler<ActionEvent> {
+public class DeleteBranchEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(DeleteBranchEventHandler.class.getName());
 

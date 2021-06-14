@@ -6,11 +6,9 @@ import com.az.gitember.data.Pair;
 import com.az.gitember.service.Context;
 import javafx.application.Application;
 import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -61,13 +59,11 @@ public class App extends Application {
         jMetro = new JMetro(LookAndFeelSet.THEME_NAME);
         jMetro.setScene(scene);
 
-
-
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
                 if (onShown && "workingcopy".equals(Context.mainPaneName.getValueSafe())) {
-                    Context.updateStatus();
+                    Platform.runLater(() -> Context.updateStatus(null));
                 }
             }
         });

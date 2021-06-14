@@ -1,19 +1,27 @@
 package com.az.gitember.controller.handlers;
 
+import com.az.gitember.controller.DefaultProgressMonitor;
 import com.az.gitember.service.Context;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class CheckoutEventHandler implements EventHandler<ActionEvent> {
+public class CheckoutEventHandler extends StatusUpdateEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CheckoutEventHandler.class.getName());
+
+    public CheckoutEventHandler() {
+        super(true);
+    }
 
     @Override
     public void handle(ActionEvent event) {
@@ -28,13 +36,14 @@ public class CheckoutEventHandler implements EventHandler<ActionEvent> {
         dialog.setContentText("Available branches:");
         dialog.showAndWait().ifPresent(
                 r -> {
+
                     try {
                         Context.getGitRepoService().checkoutBranch(r, null);
-                    } catch (Exception e) {
-                        log.log(Level.WARNING, "Cannot checkout " + r + " . Current branch is " + branchName,  e.getMessage());
-                        Context.getMain().showResult("Cannot checkout " + r, e.getMessage(), Alert.AlertType.ERROR);
+                        super.handle(event);
+                    } catch (IOException e) {
+                        log.log(Level.WARNING, "Cannot checkout " + r + " . Current branch is " + branchName, e);
                     }
-                    Context.updateStatus();
+
                 }
         );
     }

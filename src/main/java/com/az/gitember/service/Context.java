@@ -1,6 +1,7 @@
 package com.az.gitember.service;
 
 import com.az.gitember.controller.Main;
+import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -84,6 +85,8 @@ public class Context {
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
 
+
+
         String gitFolder = remoteRepoParameters.getDestinationFolder();
 
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
@@ -97,7 +100,7 @@ public class Context {
         updateBranches();
         updateTags();
         stashProperty.setValue(gitRepoService.getStashList());
-        statusList.addAll(gitRepoService.getStatuses()); // TODO only when is open the form ? ??
+        //statusList.addAll(gitRepoService.getStatuses()); // TODO only when is open the form ? ??
 
         Project project = new Project();
         project.setOpenTime(new Date());
@@ -120,11 +123,7 @@ public class Context {
         );
 
         repositoryPathProperty.setValue(gitFolder);
-
-
     }
-
-
 
     public static void init(String gitFolder) throws Exception {
         RemoteRepoParameters params = new RemoteRepoParameters();
@@ -164,7 +163,7 @@ public class Context {
 
 
     public static void updateAll() {
-        updateStatus();
+        new StatusUpdateEventHandler(true).handle(null);
         updateWorkingBranch();
         try {
             updateBranches();
@@ -175,10 +174,12 @@ public class Context {
         updateStash();
     }
 
-    public static void updateStatus() {
+    public static void updateStatus(ProgressMonitor progressMonitor) {
+        System.out.println(">>>");
         statusList.clear();
         plotCommitList.clear();
-        statusList.addAll(gitRepoService.getStatuses());
+        statusList.addAll(gitRepoService.getStatuses(progressMonitor));
+        System.out.println("<<<");
     }
 
     public static void updateWorkingBranch() {

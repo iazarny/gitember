@@ -1,5 +1,3 @@
-
-// hb ;
 package com.az.gitember.controller;
 
 import com.az.gitember.data.LangDefinition;
@@ -19,6 +17,8 @@ import org.eclipse.jgit.diff.EditList;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,7 +74,6 @@ public class TextBrowserContentAdapter {
     }
 
     public List<Node> getText(final String content) {
-
         final List<String> lines = getLines(content);
         final List<Node> rez = new LinkedList<>();
         final int pos = positions(lines.size());
@@ -90,7 +89,6 @@ public class TextBrowserContentAdapter {
             rez.addAll(lineToTexts(line, cnt, pos));
             cnt++;
         }
-
         return rez;
     }
 
@@ -137,6 +135,8 @@ public class TextBrowserContentAdapter {
             String candidate = "";
             boolean matcherFind = false;
 
+
+
             do {
                 final String str = line.substring(start, end);
                 final Matcher matcher = pattern.matcher(str);
@@ -169,6 +169,10 @@ public class TextBrowserContentAdapter {
                 end++;
 
             } while (end <= line.length());
+
+
+
+
 
             if (multilineComment) {
                 styleClass = "mlcomment";

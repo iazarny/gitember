@@ -32,7 +32,7 @@ public class CreateDialog extends Dialog<InitRepoParameters> {
         super();
         this.setTitle(title);
         this.setHeaderText(header);
-
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         final ButtonType createBtn = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(createBtn, ButtonType.CANCEL);
 

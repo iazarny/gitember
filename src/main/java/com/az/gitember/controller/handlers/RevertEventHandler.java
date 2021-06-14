@@ -1,22 +1,22 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.DefaultProgressMonitor;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Stage;
 import com.az.gitember.service.Context;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableView;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 
-import java.io.IOException;
-import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class RevertEventHandler implements EventHandler<ActionEvent> {
+public class RevertEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(StageEventHandler.class.getName());
 
@@ -45,18 +45,30 @@ public class RevertEventHandler implements EventHandler<ActionEvent> {
             alert.setTitle("Question");
             alert.setContentText("Would you like to revert " + item.getShortName() + " changes ?");
             alert.initOwner(App.getScene().getWindow());
-
             alert.showAndWait().ifPresent( r -> {
                 if (r == ButtonType.OK) {
-                    try {
-                        Context.getGitRepoService().checkoutFile(item.getShortName(), adaptStage(stage) );
-                    } catch (IOException e) {
-                        log.log(Level.WARNING, "Cannot revert {0}. {1}", new String[] {item.getShortName(), e.getMessage()});
-                    }
-                    Context.updateStatus();
+
+                    Task<Void> longTask = new Task<Void>() {
+                        @Override
+                        protected Void call() throws Exception {
+                            Context.getGitRepoService().checkoutFile(item.getShortName(), adaptStage(stage) );
+                            Context.updateStatus(new DefaultProgressMonitor((t, d) -> {
+                                updateTitle(t);
+                                updateProgress(d, 1.0);
+                            }));
+                            return null;
+                        }
+                    };
+
+                    launchLongTask(
+                            longTask,o -> {},
+                            o -> {
+                                Context.getMain().showResult("Revert", "Failed to revert " + item.getShortName() + "\n" +
+                                        ExceptionUtils.getStackTrace(longTask.getException()), Alert.AlertType.ERROR);
+                            }
+                    );
                 }
             });
-
 
         }
     }

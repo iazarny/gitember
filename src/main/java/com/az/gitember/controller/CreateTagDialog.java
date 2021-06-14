@@ -26,7 +26,7 @@ public class CreateTagDialog extends Dialog<Pair<Boolean, String>> {
         super();
         this.setTitle(title);
         this.setHeaderText(header);
-
+        this.getDialogPane().getStyleClass().add("text-input-dialog");
         ButtonType checkoutBtn = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(checkoutBtn, ButtonType.CANCEL);
 
