@@ -9,6 +9,7 @@ public class ExtensionMap {
     private static HashMap<String, String> map = new HashMap<>(50);
 
     static {
+        add(new ExtensionInfo("text/plain", "sql", true));
         add(new ExtensionInfo("text/plain", "sh", true));
         add(new ExtensionInfo("text/plain", "cmd", true));
         add(new ExtensionInfo("text/plain", "bat", true));

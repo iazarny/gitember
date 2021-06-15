@@ -9,6 +9,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.shape.*;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
@@ -23,6 +24,8 @@ import java.util.ResourceBundle;
 
 public class DiffViewer implements Initializable {
 
+    private final  static double VER_HEAD_HEIGHT = 25;
+
     public TextField newLabel;
     public TextField oldLabel;
     public TextFlow oldTextFlow;
@@ -31,6 +34,8 @@ public class DiffViewer implements Initializable {
     public Pane mainPanel;
     public ScrollPane oldScrollPane;
     public ScrollPane newScrollPane;
+    public RowConstraints firstRowConstraint;
+    public RowConstraints secondRowConstraint;
 
     private String oldText = null;
     private String newText = null;
@@ -83,13 +88,23 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
-            newScrollPane.setVvalue(new_val.doubleValue());
+
+            System.out.println(">>>>>>>>>>>>. newScrollPane.isFitToHeight() " + newScrollPane.isFitToHeight());
+            if (newText.length() > 0 && !newScrollPane.isFitToHeight()) {
+                newScrollPane.setVvalue(new_val.doubleValue());
+
+            }
             updatePathElements();
         });
 
         newScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
-            oldScrollPane.setVvalue(new_val.doubleValue());
+            System.out.println(">>>>>>>>>>>>. oldScrollPane.isFitToHeight() " + oldScrollPane.isFitToHeight());
+            System.out.println(">>>>>>>>>>>>. oth " + oldTextFlow.getHeight());
+            if (oldText.length() > 0 && !oldScrollPane.isFitToHeight()) {
+                oldScrollPane.setVvalue(new_val.doubleValue());
+            }
+
             updatePathElements();
         });
 
@@ -97,11 +112,27 @@ public class DiffViewer implements Initializable {
             Platform.runLater( () -> updatePathElements() );
         });
 
+        diffDrawPanel.widthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater( () -> updatePathElements() );
+        });
+
+        firstRowConstraint.setMaxHeight(VER_HEAD_HEIGHT);
+        firstRowConstraint.setMinHeight(VER_HEAD_HEIGHT);
+        firstRowConstraint.setPrefHeight(VER_HEAD_HEIGHT);
+
+        mainPanel.heightProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    double val = newValue.doubleValue() - VER_HEAD_HEIGHT;
+                    secondRowConstraint.setMaxHeight(val);
+                    secondRowConstraint.setMinHeight(val);
+                    secondRowConstraint.setPrefHeight(val);
+
+                }
+        );
+
     }
 
     private SquarePos getDiffPos(Edit delta) {
-
-
 
         final int origPos = delta.getBeginA();
         final int origLines = delta.getLengthA();

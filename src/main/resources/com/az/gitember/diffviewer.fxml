@@ -18,15 +18,15 @@
       <ColumnConstraints percentWidth="45" />
    </columnConstraints>
    <rowConstraints>
-      <RowConstraints />
-      <RowConstraints  percentHeight="96.2"/>
+      <RowConstraints fx:id="firstRowConstraint"/>
+      <RowConstraints fx:id="secondRowConstraint"/>
    </rowConstraints>
    <children>
        <TextField fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
 
        <TextField fx:id="newLabel" text="New Label" GridPane.columnIndex="2"  editable="false" style="-right-button-visible: false;"/>
 
-       <ScrollPane fx:id="oldScrollPane" prefHeight="565.0" prefWidth="387.0" BorderPane.alignment="CENTER" GridPane.rowIndex="1" >
+       <ScrollPane style="-fx-background-color: red" fx:id="oldScrollPane" prefHeight="565.0" prefWidth="387.0" BorderPane.alignment="CENTER" GridPane.rowIndex="1" >
            <TextFlow fx:id="oldTextFlow"  />
        </ScrollPane>
 

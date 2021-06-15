@@ -1333,7 +1333,7 @@ public class GitRepoService {
 
         for (PlotCommit pc : lastCommitPerMonth) {
 
-            Context.getGitRepoService().checkoutRevCommit(pc, progressMonitor);
+            checkoutRevCommit(pc, progressMonitor);
             final Set<String> files = getAllFiles();
             final Date date = GitemberUtil.intToDate(pc.getCommitTime());
             final String taskName = new SimpleDateFormat("yyyy MMM  ").format(date);

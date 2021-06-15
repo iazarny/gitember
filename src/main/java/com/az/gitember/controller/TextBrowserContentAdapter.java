@@ -32,7 +32,6 @@ public class TextBrowserContentAdapter {
 
     public static final double FONT_SIZE = 20;
 
-
     private LangResolver langResolver = new LangResolver();
 
     private boolean rawDiff = false;
@@ -83,7 +82,9 @@ public class TextBrowserContentAdapter {
             lines.stream().mapToInt(String::length).max().ifPresent(
                     i -> this.maxLineLength = i
             );
+            this.maxLineLength = Math.max(80, this.maxLineLength);
         }
+
         while (linesIterator.hasNext()) {
             String line = linesIterator.next();
             rez.addAll(lineToTexts(line, cnt, pos));

@@ -20,6 +20,8 @@ import jfxtras.styles.jmetro.JMetro;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.logging.LogManager;
 
 /**
@@ -51,7 +53,6 @@ public class App extends Application {
         stage.setTitle(Const.APP_NAME);
         stage.show();
 
-        //App.scene = scene;
         App.stage = stage;
         App.app = this;
         Context.updateSettings(Context.getSettingService().read());
@@ -62,12 +63,24 @@ public class App extends Application {
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
-                if (onShown && "workingcopy".equals(Context.mainPaneName.getValueSafe())) {
+                if (onShown && "workingcopy".equals(Context.mainPaneName.getValueSafe()) && isAllowUpdateByTime()) {
                     Platform.runLater(() -> Context.updateStatus(null));
                 }
             }
         });
 
+    }
+
+    private boolean isAllowUpdateByTime() {
+        boolean allowUpdateByTime = false;
+        LocalDateTime lastUpdate = Context.lastUpdate.get();
+        if (lastUpdate != null) {
+            Duration duration = Duration.between(lastUpdate, LocalDateTime.now());
+            if (duration.toSeconds() > 15) {
+                allowUpdateByTime = true;
+            }
+        }
+        return allowUpdateByTime;
     }
 
     @Override

@@ -22,7 +22,7 @@
         </ToolBar>
     </top>
    <center>
-       <ScrollPane fx:id="scrollPane" BorderPane.alignment="CENTER" hbarPolicy="ALWAYS" vbarPolicy="AS_NEEDED">
+       <ScrollPane fx:id="scrollPane" BorderPane.alignment="CENTER" hbarPolicy="ALWAYS" >
            <TextFlow fx:id="codeArea"></TextFlow>
        </ScrollPane>
    </center>

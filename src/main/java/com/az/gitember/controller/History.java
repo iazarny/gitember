@@ -212,7 +212,7 @@ public class History implements Initializable {
         );
 
         authorTableColumn.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(c.getValue().getCommitterIdent().getName())
+                c -> new ReadOnlyStringWrapper(c.getValue().getAuthorIdent().getName())
         );
 
         messageTableColumn.setCellValueFactory(

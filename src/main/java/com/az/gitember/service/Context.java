@@ -11,6 +11,7 @@ import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,18 +20,17 @@ public class Context {
     private final static String OS = System.getProperty("os.name").toLowerCase();
 
 
-    private  static GitRepoService gitRepoService = new GitRepoService();
-    private  static SettingService settingService = new SettingService();
+    private static GitRepoService gitRepoService = new GitRepoService();
+    private final static SettingService settingService = new SettingService();
 
 
     public static final StringProperty repositoryPathProperty = new SimpleStringProperty();
     public static ObjectProperty<ScmBranch> workingBranch = new SimpleObjectProperty<ScmBranch>();
     public static final ObjectProperty<Settings> settingsProperty = new SimpleObjectProperty<Settings>();
-    public static final ObjectProperty<ScmRevisionInformation> scmRevCommitDetails =
-            new SimpleObjectProperty<ScmRevisionInformation>();
+    public static final ObjectProperty<ScmRevisionInformation> scmRevCommitDetails = new SimpleObjectProperty<ScmRevisionInformation>();
 
-    public static final StringProperty selectedTreeName =
-            new SimpleStringProperty();
+    public static final StringProperty selectedTreeName = new SimpleStringProperty();
+    public static final SimpleObjectProperty<LocalDateTime> lastUpdate = new SimpleObjectProperty();
 
 
 
@@ -177,7 +177,10 @@ public class Context {
     public static void updateStatus(ProgressMonitor progressMonitor) {
         statusList.clear();
         plotCommitList.clear();
-        statusList.addAll(gitRepoService.getStatuses(progressMonitor));
+        List<ScmItem> getStatuses = gitRepoService.getStatuses(progressMonitor);
+        statusList.clear();
+        statusList.addAll(getStatuses);
+        lastUpdate.set(LocalDateTime.now());
     }
 
     public static void updateWorkingBranch() {
