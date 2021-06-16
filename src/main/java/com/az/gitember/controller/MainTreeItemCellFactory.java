@@ -20,8 +20,6 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
 
     public class ScmItemCell extends TreeCell<Object> {
 
-
-
         @Override
         protected void updateItem(Object item, boolean empty) {
             super.updateItem(item, empty);
