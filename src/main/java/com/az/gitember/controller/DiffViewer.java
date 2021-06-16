@@ -89,8 +89,8 @@ public class DiffViewer implements Initializable {
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
 
-            System.out.println(">>>>>>>>>>>>. newScrollPane.isFitToHeight() " + newScrollPane.isFitToHeight());
-            if (newText.length() > 0 && !newScrollPane.isFitToHeight()) {
+            //In case if content higher than scroll panel
+            if (newScrollPane.getHeight() < newTextFlow.getHeight()) {
                 newScrollPane.setVvalue(new_val.doubleValue());
 
             }
@@ -99,9 +99,8 @@ public class DiffViewer implements Initializable {
 
         newScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
-            System.out.println(">>>>>>>>>>>>. oldScrollPane.isFitToHeight() " + oldScrollPane.isFitToHeight());
-            System.out.println(">>>>>>>>>>>>. oth " + oldTextFlow.getHeight());
-            if (oldText.length() > 0 && !oldScrollPane.isFitToHeight()) {
+            //In case if content higher than scroll panel
+            if (oldScrollPane.getHeight() < oldTextFlow.getHeight()) {
                 oldScrollPane.setVvalue(new_val.doubleValue());
             }
 
@@ -116,6 +115,7 @@ public class DiffViewer implements Initializable {
             Platform.runLater( () -> updatePathElements() );
         });
 
+        //Fix the top of table row size
         firstRowConstraint.setMaxHeight(VER_HEAD_HEIGHT);
         firstRowConstraint.setMinHeight(VER_HEAD_HEIGHT);
         firstRowConstraint.setPrefHeight(VER_HEAD_HEIGHT);

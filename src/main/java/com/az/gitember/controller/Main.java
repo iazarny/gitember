@@ -82,9 +82,10 @@ public class Main implements Initializable {
                 (observableValue, oldValue, newValue) -> {
                     final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
                     final ScmBranch scmBranch = Context.workingBranch.getValue();
+                    final String repoState = Context.getGitRepoService().getRepository().getRepositoryState().getDescription();
                     App.getStage().setTitle(
-                            Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
-                                    + ScmBranch.getNameSafe(scmBranch));
+                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
+                                    + ScmBranch.getNameSafe(scmBranch) + "     " + repoState);
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
 
@@ -189,13 +190,18 @@ public class Main implements Initializable {
 
         repoTreeView.getSelectionModel().selectedItemProperty().addListener(mainTreeChangeListener);
 
-        repoTreeView.setOnKeyPressed( event -> {
-            Context.branchFilter.set(event.getText());
-            localBranchesTreeItem.setExpanded(true);
-            remoteBranchesTreeItem.setExpanded(true);
-            tagsTreeItem.setExpanded(true);
-            new MainTreeBranchSearchHandler(App.getStage().getX() + 150 , App.getStage().getY() + 120).handle(null);
-        }  );
+
+        //search on letter only to not react on Alt, Ctrl, etc
+        repoTreeView.setOnKeyPressed(event -> {
+            if (event.getCode().isLetterKey()) {
+                Context.branchFilter.set(event.getText());
+                localBranchesTreeItem.setExpanded(true);
+                remoteBranchesTreeItem.setExpanded(true);
+                tagsTreeItem.setExpanded(true);
+                new MainTreeBranchSearchHandler(App.getStage().getX() + 150, App.getStage().getY() + 120).handle(null);
+
+            }
+        });
     }
 
 
