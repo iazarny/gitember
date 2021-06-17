@@ -1,12 +1,12 @@
 # Gitember 2
 ---
-November, December, Gitember. Just another GIT gui client
-Written on *JavaFX* just for fun. 
+November, December, Gitember. Just another GIT gui client just for fun. 
 
 ## Multiplatform GUI for GIT
 
 For Linux, Windows and Mac
 
+![Gitember](site/img/portfolio/1.png)
 
 ## Reasons to create 
 
