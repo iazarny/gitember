@@ -6,6 +6,7 @@ import javafx.scene.text.Text;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +17,7 @@ class TextBrowserContentAdapterTest {
     @Test
     void reTest() {
 
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter("java", false, true);
+        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter("java", false, true, new LinkedList<>());
         List<Node> nodes = adapter.lineToTexts("  import zzz;  \"s\"[ zx]{}()", 0);
         List<HBox> textList = new ArrayList(nodes);
         assertEquals(13, textList.size());

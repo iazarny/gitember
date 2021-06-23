@@ -11,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
@@ -45,6 +46,10 @@ public class TextBrowserContentAdapter {
     private boolean sinlglineComment = false;
     private Color backgroundColor = null;
 
+    private List<TerminalNode> parsedCode;
+    private Iterator<TerminalNode> parsedCodeIterator;
+    private TerminalNode terminalNode;
+
     /**
      * @param extension The file extension
      * @param patch     patch
@@ -52,7 +57,7 @@ public class TextBrowserContentAdapter {
      * @param rpadLines pad lined withs space to length of line with max length ?
      */
     public TextBrowserContentAdapter(final String extension, final EditList patch, boolean leftSide, boolean rpadLines, Color backgroundColor) {
-        this(extension, false, true);
+        this(extension, false, true, new LinkedList<>());
         this.patch = patch;
         this.leftSide = leftSide;
         this.rpadLines = rpadLines;
@@ -60,7 +65,11 @@ public class TextBrowserContentAdapter {
     }
 
 
-    TextBrowserContentAdapter(final String extension, final boolean rawDiff, final boolean rpadLines) {
+    TextBrowserContentAdapter(final String extension, final boolean rawDiff, final boolean rpadLines, final List<TerminalNode> parsedCode) {
+
+        this.parsedCode = parsedCode;
+        this.parsedCodeIterator = parsedCode.iterator();
+        this.terminalNode = parsedCodeIterator.next();
 
         this.rawDiff = rawDiff;
         this.rpadLines = rpadLines;
@@ -131,10 +140,34 @@ public class TextBrowserContentAdapter {
         } else if (pattern == null) {
             rez.add(createText(line, "", linePos));
         } else {
+
             int start = 0;
+
+            while (terminalNode != null && (linePos+1) == terminalNode.getSymbol().getLine())  {
+                int tokenStart = terminalNode.getSymbol().getCharPositionInLine();
+                if (start < tokenStart) {
+                    rez.add(createText(line.substring(start, tokenStart), "", linePos));
+                    start = tokenStart;
+                } else {
+                    String tokenText = terminalNode.getText();
+                    int tokenLength = tokenText.length();
+                    rez.add(createText(tokenText, "keyword", linePos)); //todo style
+                    start = tokenStart + tokenLength;
+                    if (parsedCodeIterator.hasNext()) {
+                        terminalNode = parsedCodeIterator.next();
+                    }
+                }
+            }
+
+            rez.add(createText(line.substring(start), "", linePos));
+
+
+
+            /*int start = 0;
             int end = 0;
             String candidate = "";
             boolean matcherFind = false;
+
 
 
 
@@ -180,7 +213,9 @@ public class TextBrowserContentAdapter {
             }
             if (candidate.length() > 0) {
                 rez.add(createText(candidate, (multilineComment || matcherFind ) ? styleClass : "", linePos));
-            }
+            }*/
+
+
         }
         return rez;
     }
@@ -247,8 +282,8 @@ public class TextBrowserContentAdapter {
                 + "-fx-border-width: 2;" + "-fx-border-insets: 5;"
                 + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
 
-        //hb.setStyle("-fx-border-style: solid inside;"
-        //        + "-fx-border-width: 1;-fx-border-color: gray;");
+        hb.setStyle("-fx-border-style: solid inside;"
+                + "-fx-border-width: 1;-fx-border-color: gray;");
 
         if (this.rawDiff) {
 

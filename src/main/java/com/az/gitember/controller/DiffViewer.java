@@ -251,7 +251,8 @@ public class DiffViewer implements Initializable {
                 FilenameUtils.getExtension(fileName),
                 this.diffList,
                 leftSide,
-                true, LookAndFeelSet.DIFF_FILL_COLOR);
+                true,
+                LookAndFeelSet.DIFF_FILL_COLOR);
 
         textFlow.getChildren().addAll(
                 adapter.getText(text)

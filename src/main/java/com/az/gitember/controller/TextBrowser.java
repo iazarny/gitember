@@ -1,16 +1,17 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.lang.java.*;
+import com.az.gitember.controller.lang.java.impl.Java9ParserVisitorImpl;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,7 +20,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 public class TextBrowser implements Initializable {
 
@@ -27,6 +27,8 @@ public class TextBrowser implements Initializable {
     public ScrollPane scrollPane;
     private String content;
     private String fileName;
+
+    private Java9ParserVisitorImpl visitor = new Java9ParserVisitorImpl();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -39,11 +41,28 @@ public class TextBrowser implements Initializable {
         codeArea.setPrefWidth(Region.USE_COMPUTED_SIZE);
         codeArea.setMinWidth(Region.USE_PREF_SIZE);
 
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(FilenameUtils.getExtension(fileName), diff, true);
+        content = text;
+
+        long dt = System.currentTimeMillis();
+
+        Java9Lexer lex = new Java9Lexer( new ANTLRInputStream(content));
+        System.out.println(">>>> 1 " + (System.currentTimeMillis() - dt));
+        lex.getAllTokens();
+        Java9Parser parser = new Java9Parser(new CommonTokenStream(lex));
+        System.out.println(">>>> 2 " + (System.currentTimeMillis() - dt));
+        ParseTree tree = parser.compilationUnit();
+        System.out.println(">>>> 3 " + (System.currentTimeMillis() - dt));
+        visitor.visit(tree);
+        System.out.println(">>>> 4 " + (System.currentTimeMillis() - dt));
+
+        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(FilenameUtils.getExtension(fileName), diff, true, visitor.getParsedCode());
         codeArea.getChildren().addAll(
                 adapter.getText(text)
         );
-        content = new String(text);
+
+
+
+
     }
 
     public void setFileName(String fileName) {
