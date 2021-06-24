@@ -1,7 +1,7 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.data.LangDefinition;
-import com.az.gitember.service.LangResolver;
+import com.az.gitember.controller.lang.BaseTokenTypeAdapter;
+import com.az.gitember.controller.lang.LangResolver;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.Background;
@@ -11,18 +11,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
-import java.time.LocalDateTime;
-import java.time.Period;
+import java.rmi.dgc.Lease;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -33,22 +32,20 @@ public class TextBrowserContentAdapter {
 
     public static final double FONT_SIZE = 20;
 
-    private LangResolver langResolver = new LangResolver();
-
     private boolean rawDiff = false;
-    private Pattern pattern = null;
     private EditList patch = null;
     private boolean leftSide;
     private boolean rpadLines;
     private int maxLineLength = 0;
 
-    private boolean multilineComment = false;
-    private boolean sinlglineComment = false;
     private Color backgroundColor = null;
+    private final String content;
+    private List<Token> parsedCode;
+    private Iterator<Token> parsedCodeIterator;
+    private Token token;
+    private final LangResolver langResolver;
 
-    private List<TerminalNode> parsedCode;
-    private Iterator<TerminalNode> parsedCodeIterator;
-    private TerminalNode terminalNode;
+
 
     /**
      * @param extension The file extension
@@ -56,8 +53,8 @@ public class TextBrowserContentAdapter {
      * @param leftSide  what side ro read left - old, right - new
      * @param rpadLines pad lined withs space to length of line with max length ?
      */
-    public TextBrowserContentAdapter(final String extension, final EditList patch, boolean leftSide, boolean rpadLines, Color backgroundColor) {
-        this(extension, false, true, new LinkedList<>());
+    public TextBrowserContentAdapter(final String content, final String extension, final EditList patch, boolean leftSide, boolean rpadLines, Color backgroundColor) {
+        this(content, extension, false, true);
         this.patch = patch;
         this.leftSide = leftSide;
         this.rpadLines = rpadLines;
@@ -65,23 +62,21 @@ public class TextBrowserContentAdapter {
     }
 
 
-    TextBrowserContentAdapter(final String extension, final boolean rawDiff, final boolean rpadLines, final List<TerminalNode> parsedCode) {
-
-        this.parsedCode = parsedCode;
+    TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff, final boolean rpadLines) {
+        this.langResolver = new LangResolver(extension, content);
+        CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.resolve());
+        commonTokenStream.fill();
+        this.content = content;
+        this.parsedCode = commonTokenStream.getTokens();
         this.parsedCodeIterator = parsedCode.iterator();
-        this.terminalNode = parsedCodeIterator.next();
-
+        this.token = parsedCodeIterator.next();
         this.rawDiff = rawDiff;
         this.rpadLines = rpadLines;
 
-        langResolver.resolveLang(extension).ifPresent(ld -> {
-
-            pattern = createPattern(ld);
-
-        });
     }
 
-    public List<Node> getText(final String content) {
+    //todo refactor the name
+    public List<Node> getText() {
         final List<String> lines = getLines(content);
         final List<Node> rez = new LinkedList<>();
         final int pos = positions(lines.size());
@@ -121,9 +116,6 @@ public class TextBrowserContentAdapter {
 
     List<Node> lineToTexts(final String line, final int linePos) {
         final List<Node> rez = new LinkedList<>();
-        sinlglineComment = false;
-
-        String styleClass = "";
 
         if (rawDiff) {
             final String style;
@@ -137,102 +129,39 @@ public class TextBrowserContentAdapter {
                 style = "";
             }
             rez.add(createText(line, style, linePos));
-        } else if (pattern == null) {
-            rez.add(createText(line, "", linePos));
+       // } else if (pattern == null) { TODO default txt lexer
+         //   rez.add(createText(line, "", linePos));
         } else {
 
             int start = 0;
 
-            while (terminalNode != null && (linePos+1) == terminalNode.getSymbol().getLine())  {
-                int tokenStart = terminalNode.getSymbol().getCharPositionInLine();
+            while (token != null && (linePos+1) == token.getLine())  {
+                int tokenStart = token.getCharPositionInLine();
                 if (start < tokenStart) {
                     rez.add(createText(line.substring(start, tokenStart), "", linePos));
                     start = tokenStart;
                 } else {
-                    String tokenText = terminalNode.getText();
+                    String tokenText = token.getText();
                     int tokenLength = tokenText.length();
-                    rez.add(createText(tokenText, "keyword", linePos)); //todo style
+                    rez.add(createText(tokenText, langResolver.resolveAdapter().adaptToStyleClass(token.getType()), linePos));
                     start = tokenStart + tokenLength;
                     if (parsedCodeIterator.hasNext()) {
-                        terminalNode = parsedCodeIterator.next();
-                    }
-                }
-            }
-
-            rez.add(createText(line.substring(start), "", linePos));
-
-
-
-            /*int start = 0;
-            int end = 0;
-            String candidate = "";
-            boolean matcherFind = false;
-
-
-
-
-            do {
-                final String str = line.substring(start, end);
-                final Matcher matcher = pattern.matcher(str);
-                if (matcher.find()) {
-                    matcherFind = true;
-                    String matchedGroup = getMatchedGroup(matcher);
-                    styleClass = calculateStyleClass(matchedGroup, linePos);
-                    //TODO refactor - method, which create textext
-                    if (matcher.start() == 0) {
-                        rez.add(createText(str, styleClass, linePos));
+                        token = parsedCodeIterator.next();
                     } else {
-                        if (multilineComment || sinlglineComment) {
-                            rez.add(createText(str.substring(0, matcher.start()), styleClass, linePos));
-                        } else {
-                            rez.add(createText(str.substring(0, matcher.start()), "", linePos));
-                        }
-                        rez.add(createText(str.substring(matcher.start(), matcher.end()), styleClass, linePos));
+                        break;
                     }
-
-                    if ("MLEND".equals(matchedGroup)) {
-                        multilineComment = false;
-                        sinlglineComment = false;
-                    }
-                    start = end;
-                    candidate = "";
-                } else {
-                    matcherFind = false;
-                    candidate = str;
                 }
-                end++;
-
-            } while (end <= line.length());
-
-
-
-
-
-            if (multilineComment) {
-                styleClass = "mlcomment";
             }
-            if (candidate.length() > 0) {
-                rez.add(createText(candidate, (multilineComment || matcherFind ) ? styleClass : "", linePos));
-            }*/
 
+            if (start < line.length()) {
+                rez.add(createText(line.substring(start), "", linePos));
+            }
 
         }
         return rez;
     }
 
-    private String getMatchedGroup(Matcher matcher) {
-        return matcher.group("KEYWORD") != null ? "keyword" :
-                matcher.group("BRACKET") != null ? "bracket" :
-                        matcher.group("SEMICOLON") != null ? "semicolon" :
-                                matcher.group("DIGIT") != null ? "digit" :
-                                        matcher.group("STRING") != null ? "string" :
-                                                matcher.group("STRING2") != null ? "string" :
-                                                        matcher.group("STRING3") != null ? "string3" :
-                                                                matcher.group("SLCOMMENT") != null ? "comment" :
-                                                                        matcher.group("MLBEGIN") != null ? "MLBEGIN" :
-                                                                                matcher.group("MLEND") != null ? "MLEND" :
-                                                                                        null;
-    }
+
 
     private List<String> getLines(final String content) {
         return new BufferedReader(new StringReader(content))
@@ -244,25 +173,7 @@ public class TextBrowserContentAdapter {
         return String.valueOf(cnt).length();
     }
 
-    private String calculateStyleClass(final String matchedGroup, final int linePos) {
 
-        String styleClass = matchedGroup;
-
-        if ("comment".equals(matchedGroup)) {
-            sinlglineComment = true;
-        }
-        if ("MLBEGIN".equals(matchedGroup)) {
-            multilineComment = true;
-        }
-        if (multilineComment) {
-            styleClass = "mlcomment";
-        }
-        if (sinlglineComment) {
-            styleClass = "comment";
-        }
-
-        return styleClass;
-    }
 
 
     private Node createText(final String str, final String style, final int linePos) {
@@ -282,8 +193,8 @@ public class TextBrowserContentAdapter {
                 + "-fx-border-width: 2;" + "-fx-border-insets: 5;"
                 + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
 
-        hb.setStyle("-fx-border-style: solid inside;"
-                + "-fx-border-width: 1;-fx-border-color: gray;");
+        //hb.setStyle("-fx-border-style: solid inside;"
+         //       + "-fx-border-width: 1;-fx-border-color: gray;");
 
         if (this.rawDiff) {
 
@@ -311,47 +222,10 @@ public class TextBrowserContentAdapter {
                             new Background(new BackgroundFill(backgroundColor, CornerRadii.EMPTY, Insets.EMPTY)));
 
                 }
-
             }
         }
 
         return hb;
-    }
-
-    private final Map<String, Pattern> langParserCache = new HashMap<>();
-
-    private Pattern createPattern(LangDefinition ld) {
-
-        return langParserCache.computeIfAbsent(ld.getName(), s -> {
-            //work in test mode, however not in real
-            String KEYWORD_PATTERN = "\\b(" + String.join("|", ld.getKeywords()) + ")(?=[^\"|^']*(?:\"[^\"]*\"[^\"]*)*$)";
-            String BRACKET_PATTERN = "\\{|\\(|\\[|}|\\)|]";
-            String SEMICOLON_PATTERN = ";";
-            String DIGIT_PATTERN = "\\b\\d+\\b";
-            String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
-            String STRING_PATTERN2 = "'([^'\\\\]|\\\\.)*'";
-            String STRING_PATTERN3 = "`([^`\\\\]|\\\\.)*`";
-            String COMMENT_SINGELINE_PATTERN = "//.*";
-            String COMMENT_MULTILINE_BEGIN_PATTERN = "/\\*";
-            String COMMENT_MULTI_END_PATTERN = "\\*/";
-
-            String exp = "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-                    + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-                    + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
-                    + "|(?<DIGIT>" + DIGIT_PATTERN + ")"
-                    + "|(?<STRING>" + STRING_PATTERN + ")"
-                    + "|(?<STRING2>" + STRING_PATTERN2 + ")"
-                    + "|(?<STRING3>" + STRING_PATTERN3 + ")";
-            if (ld.isComments()) {
-                exp += "|(?<SLCOMMENT>" + COMMENT_SINGELINE_PATTERN + ")"
-                        + "|(?<MLBEGIN>" + COMMENT_MULTILINE_BEGIN_PATTERN + ")"
-                        + "|(?<MLEND>" + COMMENT_MULTI_END_PATTERN + ")";
-            }
-
-            return Pattern.compile(exp, Pattern.CANON_EQ);
-
-        });
-
     }
 
 }

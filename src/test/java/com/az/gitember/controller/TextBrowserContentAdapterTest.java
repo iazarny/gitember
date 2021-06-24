@@ -17,7 +17,9 @@ class TextBrowserContentAdapterTest {
     @Test
     void reTest() {
 
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter("java", false, true, new LinkedList<>());
+        //TODo refactor
+
+        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter("TODO", "java", false, true);
         List<Node> nodes = adapter.lineToTexts("  import zzz;  \"s\"[ zx]{}()", 0);
         List<HBox> textList = new ArrayList(nodes);
         assertEquals(13, textList.size());

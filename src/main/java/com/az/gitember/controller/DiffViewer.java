@@ -248,6 +248,7 @@ public class DiffViewer implements Initializable {
         textFlow.setLineSpacing(-2.2);
 
         TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(
+                text,
                 FilenameUtils.getExtension(fileName),
                 this.diffList,
                 leftSide,
@@ -255,7 +256,7 @@ public class DiffViewer implements Initializable {
                 LookAndFeelSet.DIFF_FILL_COLOR);
 
         textFlow.getChildren().addAll(
-                adapter.getText(text)
+                adapter.getText()
         );
 
     }
