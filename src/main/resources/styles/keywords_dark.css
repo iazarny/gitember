@@ -11,6 +11,10 @@
     -fx-fill: #ffd542;
 }
 
+.boolean {
+    -fx-fill: rgb(4, 210, 246);
+}
+
 .semicolon {
     -fx-fill: #a76d17;
 }
@@ -20,7 +24,7 @@
 }
 
 .digit {
-    -fx-fill: #09abf6;
+    -fx-fill: #1070d5;
 }
 
 .string {

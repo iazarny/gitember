@@ -10,6 +10,9 @@
 .keyword {
     -fx-fill: darkblue;
 }
+.boolean {
+    -fx-fill: rgb(3, 66, 142);
+}
 
 .semicolon {
 

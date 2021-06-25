@@ -10,6 +10,7 @@ public class BaseTokenTypeAdapter {
     public static String DIGIT = "digit";
     public static String STRING = "string";
     public static String COMMENT = "comment";
+    public static String BOOLEAN = "boolean";
 
     private final Lexer lexer;
 

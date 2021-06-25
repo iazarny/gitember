@@ -1,6 +1,5 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.controller.lang.BaseTokenTypeAdapter;
 import com.az.gitember.controller.lang.LangResolver;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -12,7 +11,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
@@ -20,7 +18,6 @@ import org.eclipse.jgit.diff.EditList;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
-import java.rmi.dgc.Lease;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +32,6 @@ public class TextBrowserContentAdapter {
     private boolean rawDiff = false;
     private EditList patch = null;
     private boolean leftSide;
-    private boolean rpadLines;
     private int maxLineLength = 0;
 
     private Color backgroundColor = null;
@@ -51,27 +47,24 @@ public class TextBrowserContentAdapter {
      * @param extension The file extension
      * @param patch     patch
      * @param leftSide  what side ro read left - old, right - new
-     * @param rpadLines pad lined withs space to length of line with max length ?
      */
-    public TextBrowserContentAdapter(final String content, final String extension, final EditList patch, boolean leftSide, boolean rpadLines, Color backgroundColor) {
-        this(content, extension, false, true);
+    public TextBrowserContentAdapter(final String content, final String extension, final EditList patch, boolean leftSide) {
+        this(content, extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
-        this.rpadLines = rpadLines;
-        this.backgroundColor = backgroundColor;
+        this.backgroundColor = LookAndFeelSet.DIFF_FILL_COLOR;
     }
 
 
-    TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff, final boolean rpadLines) {
+    TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff) {
         this.langResolver = new LangResolver(extension, content);
-        CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.resolve());
+        CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
         this.content = content;
         this.parsedCode = commonTokenStream.getTokens();
         this.parsedCodeIterator = parsedCode.iterator();
         this.token = parsedCodeIterator.next();
         this.rawDiff = rawDiff;
-        this.rpadLines = rpadLines;
 
     }
 
@@ -82,12 +75,10 @@ public class TextBrowserContentAdapter {
         final int pos = positions(lines.size());
         final Iterator<String> linesIterator = lines.iterator();
         int cnt = 0;
-        if (rpadLines) {
-            lines.stream().mapToInt(String::length).max().ifPresent(
-                    i -> this.maxLineLength = i
-            );
-            this.maxLineLength = Math.max(80, this.maxLineLength);
-        }
+        lines.stream().mapToInt(String::length).max().ifPresent(
+                i -> this.maxLineLength = i
+        );
+        this.maxLineLength = Math.max(80, this.maxLineLength);
 
         while (linesIterator.hasNext()) {
             String line = linesIterator.next();
@@ -104,9 +95,7 @@ public class TextBrowserContentAdapter {
         rez.add(createText(lineNum, "linenum", linePos));
 
         String adjustedByLength = line;
-        if (rpadLines) {
-            adjustedByLength = StringUtils.rightPad(line, maxLineLength, " ");
-        }
+        adjustedByLength = StringUtils.rightPad(line, maxLineLength, " ");
 
         rez.addAll(lineToTexts(adjustedByLength, linePos));
 
@@ -129,8 +118,6 @@ public class TextBrowserContentAdapter {
                 style = "";
             }
             rez.add(createText(line, style, linePos));
-       // } else if (pattern == null) { TODO default txt lexer
-         //   rez.add(createText(line, "", linePos));
         } else {
 
             int start = 0;
@@ -141,15 +128,20 @@ public class TextBrowserContentAdapter {
                     rez.add(createText(line.substring(start, tokenStart), "", linePos));
                     start = tokenStart;
                 } else {
-                    String tokenText = token.getText();
-                    int tokenLength = tokenText.length();
-                    rez.add(createText(tokenText, langResolver.resolveAdapter().adaptToStyleClass(token.getType()), linePos));
+                    final String tokenText = token.getText();
+                    final int tokenLength = tokenText.length();
+                    final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
+
+                    //TODo multiline comment
+
+                    rez.add(createText(tokenText, style, linePos));
                     start = tokenStart + tokenLength;
                     if (parsedCodeIterator.hasNext()) {
                         token = parsedCodeIterator.next();
                     } else {
                         break;
                     }
+
                 }
             }
 
@@ -176,7 +168,13 @@ public class TextBrowserContentAdapter {
 
 
 
-    private Node createText(final String str, final String style, final int linePos) {
+    private Node createText(final String string, final String style, final int linePos) {
+        final String str = string;
+        /*if (string.contains("\n")) {
+            str = string.substring(0, string.indexOf("\n") -1 );
+        } else {
+            str = string;
+        }*/
 
         Text te = new Text(str);
         te.setFont(Font.font("Monospace", FONT_SIZE));
@@ -194,7 +192,7 @@ public class TextBrowserContentAdapter {
                 + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
 
         //hb.setStyle("-fx-border-style: solid inside;"
-         //       + "-fx-border-width: 1;-fx-border-color: gray;");
+        //        + "-fx-border-width: 1;-fx-border-color: gray;");
 
         if (this.rawDiff) {
 

@@ -27,6 +27,8 @@ public class JavaTokenTypeAdapter extends BaseTokenTypeAdapter {
             return DIGIT;
         } else if (tokenType < java9Lexer.SEMI) {
             return BRACKET;
+        } else if (tokenType == java9Lexer.COMMENT || tokenType == java9Lexer.LINE_COMMENT ) {
+            return COMMENT;
         } else if (tokenType == java9Lexer.SEMI) {
             return SEMICOLON;
         }

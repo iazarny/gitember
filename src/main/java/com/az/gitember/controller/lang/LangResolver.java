@@ -10,10 +10,8 @@ public class LangResolver {
 
     private final Lexer lexer;
     private final BaseTokenTypeAdapter baseTokenTypeAdapter;
-    private final String fileExtention;
 
     public LangResolver(String fileExtention, String content) {
-        this.fileExtention = fileExtention;
         CharStream charStream = new ANTLRInputStream(content);
         if ("java".equalsIgnoreCase(fileExtention)) {
             this.lexer = new Java9Lexer(charStream );
@@ -24,12 +22,11 @@ public class LangResolver {
         }
     }
 
-    public Lexer resolve() {
+    public Lexer getLexer() {
         return  lexer;
     }
 
-    public BaseTokenTypeAdapter resolveAdapter() {
-
+    public BaseTokenTypeAdapter getAdapter() {
         return baseTokenTypeAdapter;
     }
 

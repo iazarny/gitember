@@ -35,7 +35,7 @@ public class TextBrowser implements Initializable {
         codeArea.setMinWidth(Region.USE_PREF_SIZE);
 
         content = text;
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff, true);
+        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff);
         codeArea.getChildren().addAll(
                 adapter.getText()
         );
