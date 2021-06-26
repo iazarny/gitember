@@ -35,11 +35,10 @@ public class TextBrowserContentAdapter {
     private final int maxLineLength;
     private final int lineNumWidth;
     private final List<String> lines;
+
     private Color backgroundColor = null;
+
     private final LangResolver langResolver;
-    final String content;
-
-
 
     /**
      * @param extension The file extension
@@ -53,61 +52,180 @@ public class TextBrowserContentAdapter {
         this.backgroundColor = LookAndFeelSet.DIFF_FILL_COLOR;
     }
 
+
     TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff) {
         this.langResolver = new LangResolver(extension, content);
         this.rawDiff = rawDiff;
         this.lines = getLines(content);
         this.lineNumWidth = String.valueOf(lines.size()).length();
         this.maxLineLength = lines.stream().mapToInt(String::length).max().orElseGet(() -> 80);
-        this.content = content;
     }
 
-    //todo refactor the name
     public List<Node> getText() {
-        final List<String> lines = getLines(content);
-        final List<Node> rez = new LinkedList<>();
-        final Iterator<String> linesIterator = lines.iterator();
 
+        final List<Node> rez = new LinkedList<>();
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
         final List<Token> parsedCode = commonTokenStream.getTokens();
-        parsedCodeIter = parsedCode.iterator();
-        token = parsedCodeIter.next();
+        final Map<Integer, List<Token>> tokensPerLine = new HashMap<>();
+        parsedCode.stream().forEach(token -> {
+            List<Token> tokens = tokensPerLine.computeIfAbsent(token.getLine(), integer -> new LinkedList<>());
+            tokens.add(token);
+        });
 
-        int cnt = 0;
+        for (int line = 1; line < 1 + lines.size(); line++) {
+            List<Token> tokens = tokensPerLine.get(line);
+            Node node = createLineNumbedNode(line);
+            rez.add(node);
 
-        while (linesIterator.hasNext()) {
-            final String line = linesIterator.next();
+            if (tokens != null) {
+                Token prevToken = null;
+                Iterator<Token> tokenIterator = tokens.iterator();
+                while (tokenIterator.hasNext()) {
+                    final Token token = tokenIterator.next();
+                    final String tokenText = token.getText();
+                    final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
+                    String empty;
+                    if (prevToken == null) {
+                        empty = StringUtils.repeat(" ", token.getCharPositionInLine());
+                    } else {
+                        empty = StringUtils.repeat(" ", token.getStartIndex() - prevToken.getStopIndex() - 1);
+                    }
+                    rez.add(createText(empty, "", 88888888));
 
-            final String lineNum = StringUtils.leftPad(String.valueOf(cnt), lineNumWidth, "0") + "  ";
-            rez.add(createText(lineNum, "linenum"));
 
-            final String padLine = StringUtils.rightPad(line, maxLineLength, " ");
-            if (rawDiff) {
-                rez.add(createText(padLine, calculateRawDiffStyle(line)));
-            } else {
-                rez.addAll(lineToTexts(padLine,  cnt));
+                    List<String> strings = this.getLines(tokenText);
+                    if (strings.size() > 1) {
+                        //multiline token
+                        int mlline = 0;
+                        Iterator<String> stringIterator = strings.iterator();
+                        while (stringIterator.hasNext()) {
+                            if (mlline > 0) {
+                                rez.add(createLineNumbedNode(line));
+                            }
+                            mlline++;
+
+                            rez.add(createText(stringIterator.next(), style, 88888888));
+                            if (mlline < (strings.size() )) {
+                                rez.add(new Text(" \n"));
+                                line++;
+                            }
+
+                        }
+
+                    } else {
+                        rez.add(createText(tokenText, style, 88888888));
+                    }
+
+
+                    prevToken = token;
+                }
+
             }
 
             rez.add(new Text(" \n"));
-            cnt++;
         }
+
+        /*Set<Integer> lineAdded =  new HashSet<>();
+        int lineNum = 1;
+
+        while (parsedCodeIter.hasNext()) {
+            final Token token = parsedCodeIter.next();
+            if (lineNum <= token.getLine() && !lineAdded.contains(lineNum)) {
+                for (int i = lineNum; i <= token.getLine(); i++) {
+                    if (lineNum != 1) {
+                        rez.add(new Text(" \n"));
+                    }
+                    Node node = createLineNumbedNode(lineNum);
+                    rez.add(node);
+                    lineAdded.add(lineNum);
+                    lineNum++;
+                }
+            }
+
+            if (prevToken != null) {
+                String empty;
+                if (prevToken.getLine() == token.getLine()) {
+
+
+                } else {
+                    empty = StringUtils.repeat(" ", token.getCharPositionInLine());
+
+                }
+                rez.add(createText(empty, "", 88888888));
+            }
+
+
+
+        }*/
         return rez;
     }
 
-    Iterator<Token> parsedCodeIter ;
-    Token token ;
 
-    List<Node> lineToTexts(final String line,  final int linePos) {
+    private Node createLineNumbedNode(int lineNum) {
+        final String lineNumText = StringUtils.leftPad(String.valueOf(lineNum), this.lineNumWidth, "0") + "  ";
+        Node node = createText(lineNumText, "linenum", 77777777);
+        return node;
+    }
+
+    //todo refactor the name
+    /*public List<Node> getNodes() {
+        //
+        final Iterator<String> linesIterator = lines.iterator();
+        int cnt = 0;
+        lines.stream().mapToInt(String::length).max().ifPresent(
+                i -> this.maxLineLength = i
+        );
+        this.maxLineLength = Math.max(80, this.maxLineLength);
+
+        while (linesIterator.hasNext()) {
+            String line = linesIterator.next();
+            rez.addAll(lineToTexts(line, cnt, pos));
+            cnt++;
+        }
+        return rez;
+    }*/
+
+
+
+    /*private List<Node> lineToTexts(String line, int linePos, int pos) {
         final List<Node> rez = new LinkedList<>();
-        int start = 0;
+        final String lineNum = StringUtils.leftPad(String.valueOf(linePos), pos, "0") + "  ";
 
+        rez.add(createText(lineNum, "linenum", linePos));
 
+        String adjustedByLength = line;
+        adjustedByLength = StringUtils.rightPad(line, maxLineLength, " ");
+
+        rez.addAll(lineToTexts(adjustedByLength, linePos));
+
+        rez.add(new Text(" \n")); // TODO length of biggest line
+        return rez;
+    }*/
+
+    /*List<Node> lineToTexts(final String line, final int linePos) {
+        final List<Node> rez = new LinkedList<>();
+
+        if (rawDiff) {
+            final String style;
+            if (line.startsWith("+")) {
+                style = "diff-new";
+            } else if (line.startsWith("-")) {
+                style = "diff-deleted";
+            } else if (line.startsWith("@@")) {
+                style = "diff-modified";
+            } else {
+                style = "";
+            }
+            rez.add(createText(line, style, linePos));
+        } else {
+
+            int start = 0;
 
             while (token != null && (linePos+1) == token.getLine())  {
                 int tokenStart = token.getCharPositionInLine();
                 if (start < tokenStart) {
-                    rez.add(createText(line.substring(start, tokenStart), ""));
+                    rez.add(createText(line.substring(start, tokenStart), "", linePos));
                     start = tokenStart;
                 } else {
                     final String tokenText = token.getText();
@@ -116,25 +234,40 @@ public class TextBrowserContentAdapter {
 
                     //TODo multiline comment
 
-                    rez.add(createText(tokenText, style));
+                    rez.add(createText(tokenText, style, linePos));
                     start = tokenStart + tokenLength;
-                    if (parsedCodeIter.hasNext()) {
-                        token = parsedCodeIter.next();
+                    if (parsedCodeIterator.hasNext()) {
+                        token = parsedCodeIterator.next();
                     } else {
                         break;
                     }
 
                 }
             }
+
             if (start < line.length()) {
-                rez.add(createText(line.substring(start), ""));
+                rez.add(createText(line.substring(start), "", linePos));
             }
+
+        }
         return rez;
+    }*/
+
+
+    private List<String> getLines(final String content) {
+        return new BufferedReader(new StringReader(content))
+                .lines()
+                .collect(Collectors.toList());
     }
 
 
-
-    private Node createText(final String str, final String style) {
+    private Node createText(final String string, final String style, final int linePos) {
+        final String str = string;
+        /*if (string.contains("\n")) {
+            str = string.substring(0, string.indexOf("\n") -1 );
+        } else {
+            str = string;
+        }*/
 
         Text te = new Text(str);
         te.setFont(Font.font("Monospace", FONT_SIZE));
@@ -152,7 +285,7 @@ public class TextBrowserContentAdapter {
                 + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
 
         //hb.setStyle("-fx-border-style: solid inside;"
-        //        + "-fx-border-width: 1;-fx-border-color: gray;");
+        //     + "-fx-border-width: 1;-fx-border-color: gray;");
 
         if (this.rawDiff) {
 
@@ -161,7 +294,7 @@ public class TextBrowserContentAdapter {
             hb.getStyleClass().add(style);
 
         }
-        /*if (patch != null) {
+        if (patch != null) {
             for (Edit delta : patch) {
                 int origPos;
                 int origLines;
@@ -181,29 +314,9 @@ public class TextBrowserContentAdapter {
 
                 }
             }
-        }*/
+        }
 
         return hb;
-    }
-
-    private String calculateRawDiffStyle(String line) {
-        final String style;
-        if (line.startsWith("+")) {
-            style = "diff-new";
-        } else if (line.startsWith("-")) {
-            style = "diff-deleted";
-        } else if (line.startsWith("@@")) {
-            style = "diff-modified";
-        } else {
-            style = "";
-        }
-        return style;
-    }
-
-    private List<String> getLines(final String content) {
-        return new BufferedReader(new StringReader(content))
-                .lines()
-                .collect(Collectors.toList());
     }
 
 }
