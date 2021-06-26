@@ -8,7 +8,7 @@
 }
 
 .keyword {
-    -fx-fill: #ffd542;
+    -fx-fill: #936d08;
 }
 
 .boolean {
@@ -20,7 +20,7 @@
 }
 
 .bracket {
-    -fx-fill: #936d08;
+    -fx-fill: #ffd542;
 }
 
 .digit {
