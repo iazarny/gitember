@@ -2,6 +2,7 @@ package com.az.gitember.controller;
 
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
@@ -10,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
@@ -219,12 +221,14 @@ public class DiffViewer implements Initializable {
             CubicCurveTo curve1 = getCubicCurveTo(squarePos.getX3(), squarePos.getY3(), squarePos.getX4(), squarePos.getY4());
             LineTo lineTo1 = new LineTo(squarePos.getX1(), squarePos.getY1());
 
+            Color fillColor = GitemberUtil.getDiffColor(delta);
+            Color strokeColor = fillColor.deriveColor(1, 1, 1, 0.5);
             Path path = new Path();
             path.getElements().addAll(moveTo, curve0, lineTo0, curve1, lineTo1);
-            path.setStroke(LookAndFeelSet.DIFF_STROKE_COLOR);
-            path.setStrokeWidth(1);
             path.setStrokeLineCap(StrokeLineCap.ROUND);
-            path.setFill(LookAndFeelSet.DIFF_FILL_COLOR);
+            path.setStroke(strokeColor);
+            path.setStrokeWidth(0.5);
+            path.setFill(fillColor);
             diffDrawPanel.getChildren().add(path);
         }
     }

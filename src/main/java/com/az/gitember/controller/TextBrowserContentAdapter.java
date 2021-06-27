@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.controller.lang.LangResolver;
+import com.az.gitember.service.GitemberUtil;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.Background;
@@ -38,7 +39,7 @@ public class TextBrowserContentAdapter {
     private final int lineNumWidth;
     private final ArrayList<String> lines;
 
-    private Color backgroundColor = null;
+
 
     private final LangResolver langResolver;
 
@@ -51,7 +52,7 @@ public class TextBrowserContentAdapter {
         this(content, extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
-        this.backgroundColor = LookAndFeelSet.DIFF_FILL_COLOR;
+
     }
 
 
@@ -76,9 +77,9 @@ public class TextBrowserContentAdapter {
         });
 
         for (int line = 1; line < 1 + lines.size(); line++) {
-            final int lineIdx = line - 1;
+            int lineIdx = line - 1;
             final List<Token> tokens = tokensPerLine.get(line);
-            final Node node = createLineNumbedNode(line);
+            final Node node = createLineNumbedNode(lineIdx, "");
             final String originalLine = lines.get(lineIdx);
             rez.add(node);
 
@@ -90,41 +91,42 @@ public class TextBrowserContentAdapter {
                     final Token token = tokenIterator.next();
                     final String tokenText = token.getText();
                     final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
-                    rez.add(createSpacesBetweenTokens(line, originalLine, prevToken, token));
+                    rez.add(createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token));
                     List<String> strings = this.getLines(tokenText);
                     if (strings.size() > 1) { //multiline token
                         int mlline = 0;
                         Iterator<String> stringIterator = strings.iterator();
                         while (stringIterator.hasNext()) {
                             if (mlline > 0) {
-                                rez.add(createLineNumbedNode(line));
+                                rez.add(createLineNumbedNode(lineIdx, "")); // debug
                             }
                             String commentString = stringIterator.next();
-                            rez.add(createText(originalLine, commentString, style, lineIdx));
+                            rez.add(createText(originalLine, commentString, style, lineIdx, ""));
                             int lengtnTillEol;
                             if (mlline == 0) {
                                 lengtnTillEol = this.maxLineLength - originalLine.length();
                             } else {
                                 lengtnTillEol = this.maxLineLength - commentString.length();
                             }
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx)); // till end
+                            rez.add(createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx, "")); // till end
                             mlline++;
                             if (mlline < (strings.size())) {
                                 rez.add(new Text(" \n"));
                                 line++;
+                                lineIdx++;
                             }
                         }
                     } else { //single line
-                        rez.add(createText(originalLine, tokenText, style, lineIdx));
+                        rez.add(createText(originalLine, tokenText, style, lineIdx, ""));
                         if (lastTokenInLine == token) {
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx));
+                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx, ""));
                         }
                     }
                     prevToken = token;
                 }
 
             } else { // empty line shall be right padded with spaces
-                rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx)); // till end
+                rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "")); // till end
             }
 
             rez.add(new Text(" \n"));
@@ -136,23 +138,23 @@ public class TextBrowserContentAdapter {
 
     /**
      * Add empty string which is delimit the parsed tokens.
-     * Can just a empty space from the begining of the line
+     * * Can just a empty space from the begining of the line
      * or something = value;
-     */
-    private Node createSpacesBetweenTokens(int line, String originalLine, Token prevToken, Token token) {
+     * */
+    private Node createSpacesBetweenTokens(int lineIdx, String originalLine, Token prevToken, Token token) {
         String empty;
         if (prevToken == null) {
             empty = StringUtils.repeat(" ", token.getCharPositionInLine());
         } else {
             empty = StringUtils.repeat(" ", token.getStartIndex() - prevToken.getStopIndex() - 1);
         }
-        return createText(originalLine, empty, "", line - 1);
+        return createText(originalLine, empty, "", lineIdx, "");
     }
 
 
-    private Node createLineNumbedNode(int lineNum) {
-        final String lineNumText = StringUtils.leftPad(String.valueOf(lineNum), this.lineNumWidth, "0") + "  ";
-        Node node = createText("", lineNumText, "linenum", lineNum - 1);
+    private Node createLineNumbedNode(int lineIdx, String hhhh) {
+        final String lineNumText = StringUtils.leftPad(String.valueOf(lineIdx), this.lineNumWidth, "0") + "  ";
+        Node node = createText("", lineNumText, "linenum", lineIdx, hhhh);
         return node;
     }
 
@@ -164,10 +166,10 @@ public class TextBrowserContentAdapter {
     }
 
 
-    private Node createText(final String lineString, final String tokenString, final String style, final int linePos) {
+    private Node createText(final String lineString, final String tokenString, final String style, final int linePos, String hhhhh) {
 
         Font font = Font.font("Monospace", FONT_SIZE);
-        Text te = new Text(tokenString);
+        Text te = new Text(tokenString + hhhhh);
         te.setFont(font);
         te.getStyleClass().add(style); //the font background is not working
         te.getStyleClass().add("kwfont");
@@ -181,8 +183,7 @@ public class TextBrowserContentAdapter {
         hb.setPrefWidth(width);
 
         hb.setSpacing(0);
-        /*
-        Fun to visualize splitting
+        /* Fun to visualize splitting
         hb.setSpacing(10);
         hb.setStyle("-fx-padding: 10;" + "-fx-border-style: solid inside;"
                 + "-fx-border-width: 2;" + "-fx-border-insets: 5;"
@@ -207,20 +208,29 @@ public class TextBrowserContentAdapter {
             int origPos;
             int origLines;
 
+            Color color;
+
             if (leftSide) {
                 origPos = delta.getBeginA();
                 origLines = delta.getLengthA();
+                color =  GitemberUtil.getDiffColor(delta);
+
             } else {
                 origPos = delta.getBeginB();
                 origLines = delta.getLengthB();
+                color =  GitemberUtil.getDiffColor(delta);
             }
+
+
 
             if (origPos <= linePos && linePos < (origLines + origPos)) {
                 hb.setBackground(
-                        new Background(new BackgroundFill(backgroundColor, CornerRadii.EMPTY, Insets.EMPTY)));
+                        new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY)));
             }
         }
     }
+
+
 
     private void decorateByRawDiff(final String lineString, HBox hb) {
         final String style;

@@ -20,9 +20,11 @@ public class LookAndFeelSet {
 
     public static Color DIFF_COLOR;
 
-    public static Color DIFF_STROKE_COLOR;
 
-    public static Color DIFF_FILL_COLOR;
+    public static Color DIFF_FILL_COLOR_INSERT;
+    public static Color DIFF_FILL_COLOR_DELETE;
+    public static Color DIFF_FILL_COLOR_REPLACE;
+    public static Color DIFF_FILL_COLOR_EMPTY;
 
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
@@ -33,9 +35,10 @@ public class LookAndFeelSet {
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
             DIFF_COLOR = Color.valueOf("#203e20"); //rgb(106, 206, 159);
-            DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.9);
-            DIFF_FILL_COLOR = Color.valueOf("#203e20"); //Color.rgb(106, 206, 159);
-
+            DIFF_FILL_COLOR_INSERT = Color.valueOf("#203e20");
+            DIFF_FILL_COLOR_DELETE = Color.valueOf("#3e202c");
+            DIFF_FILL_COLOR_REPLACE = Color.valueOf("#424242");
+            DIFF_FILL_COLOR_EMPTY = Color.valueOf("#35436d");
 
         } else {
             PIECHART_LEGENF_STYLE = "";
@@ -45,8 +48,10 @@ public class LookAndFeelSet {
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
             DIFF_COLOR = Color.valueOf("#97fa97") ;//rgb(106, 206, 159);
-            DIFF_STROKE_COLOR = DIFF_COLOR.deriveColor(1, 1, 1, 0.3);
-            DIFF_FILL_COLOR = Color.valueOf("#97fa97") ;// DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
+            DIFF_FILL_COLOR_INSERT = Color.valueOf("#97fa97") ;// DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
+            DIFF_FILL_COLOR_DELETE = Color.valueOf("#fa97b3");
+            DIFF_FILL_COLOR_REPLACE = Color.valueOf("#97a7fa");
+            DIFF_FILL_COLOR_EMPTY = Color.valueOf("#d0f8d0");
 
         }
     }

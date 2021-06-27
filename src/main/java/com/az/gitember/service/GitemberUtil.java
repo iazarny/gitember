@@ -1,9 +1,12 @@
 package com.az.gitember.service;
 
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.LangDefinition;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.paint.Color;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.diff.Edit;
 
 import java.io.*;
 import java.net.URLConnection;
@@ -74,6 +77,16 @@ public class GitemberUtil {
                 .collect(Collectors.toMap(
                         stringIntegerEntry -> stringIntegerEntry.getKey(),
                         stringIntegerEntry -> stringIntegerEntry.getValue()));
+    }
+
+    public static Color getDiffColor(Edit delta) {
+        switch (delta.getType()) {
+            case INSERT: return LookAndFeelSet.DIFF_FILL_COLOR_INSERT;
+            case DELETE: return LookAndFeelSet.DIFF_FILL_COLOR_DELETE;
+            case REPLACE: return  LookAndFeelSet.DIFF_FILL_COLOR_REPLACE;
+            case EMPTY: return  LookAndFeelSet.DIFF_FILL_COLOR_EMPTY;
+        }
+        return  LookAndFeelSet.DIFF_FILL_COLOR_INSERT;
     }
 
 
