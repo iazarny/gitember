@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 public class TextBrowserContentAdapter {
 
     public static final double FONT_SIZE = 20;
+    public static final double FONT_SYMBOL_WIDTH =11.99;
 
     private boolean rawDiff = false;
     private EditList patch = null;
@@ -75,9 +76,10 @@ public class TextBrowserContentAdapter {
         });
 
         for (int line = 1; line < 1 + lines.size(); line++) {
-            final String originalLine = lines.get(line-1);
+            final int lineIdx = line - 1;
             final List<Token> tokens = tokensPerLine.get(line);
             final Node node = createLineNumbedNode(line);
+            final String originalLine = lines.get(lineIdx);
             rez.add(node);
 
             if (tokens != null) {
@@ -97,26 +99,32 @@ public class TextBrowserContentAdapter {
                             if (mlline > 0) {
                                 rez.add(createLineNumbedNode(line));
                             }
-                            mlline++;
                             String commentString = stringIterator.next();
-                            rez.add(createText(originalLine,commentString , style, line-1));
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - commentString.length() ) , style, line-1)); // till end
-                            if (mlline < (strings.size() )) { /*
-                            some stupi ml
-                            comment */
+                            rez.add(createText(originalLine, commentString, style, lineIdx));
+                            int lengtnTillEol;
+                            if (mlline == 0) {
+                                lengtnTillEol = this.maxLineLength - originalLine.length();
+                            } else {
+                                lengtnTillEol = this.maxLineLength - commentString.length();
+                            }
+                            rez.add(createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx)); // till end
+                            mlline++;
+                            if (mlline < (strings.size())) {
                                 rez.add(new Text(" \n"));
                                 line++;
                             }
                         }
-                    } else {
-                        rez.add(createText(originalLine, tokenText, style, line-1));
+                    } else { //single line
+                        rez.add(createText(originalLine, tokenText, style, lineIdx));
                         if (lastTokenInLine == token) {
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()) , style, line-1));
+                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx));
                         }
                     }
                     prevToken = token;
                 }
 
+            } else { // empty line shall be right padded with spaces
+                rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx)); // till end
             }
 
             rez.add(new Text(" \n"));
@@ -138,13 +146,13 @@ public class TextBrowserContentAdapter {
         } else {
             empty = StringUtils.repeat(" ", token.getStartIndex() - prevToken.getStopIndex() - 1);
         }
-        return createText(originalLine, empty, "", line -1);
+        return createText(originalLine, empty, "", line - 1);
     }
 
 
     private Node createLineNumbedNode(int lineNum) {
         final String lineNumText = StringUtils.leftPad(String.valueOf(lineNum), this.lineNumWidth, "0") + "  ";
-        Node node = createText("", lineNumText, "linenum", lineNum-1);
+        Node node = createText("", lineNumText, "linenum", lineNum - 1);
         return node;
     }
 
@@ -164,11 +172,8 @@ public class TextBrowserContentAdapter {
         te.getStyleClass().add(style); //the font background is not working
         te.getStyleClass().add("kwfont");
 
-        //var textA = new Text("Aa");
-        //textA.setBoundsType(TextBoundsType.VISUAL);
-        //double dbl = textA.getLayoutBounds().getWidth() / 2.0;
         HBox hb = new HBox(te);
-        double width = 11.99 * tokenString.length();
+        double width = FONT_SYMBOL_WIDTH * tokenString.length();
 
 
         hb.setMaxWidth(width);
@@ -183,8 +188,8 @@ public class TextBrowserContentAdapter {
                 + "-fx-border-width: 2;" + "-fx-border-insets: 5;"
                 + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
 
-       // hb.setStyle("-fx-border-style: solid inside;"
-         //    + "-fx-border-width: 1;-fx-border-color: gray;");
+        // hb.setStyle("-fx-border-style: solid inside;"
+        //    + "-fx-border-width: 1;-fx-border-color: gray;");
 
         if (this.rawDiff) {
             decorateByRawDiff(lineString, hb);
