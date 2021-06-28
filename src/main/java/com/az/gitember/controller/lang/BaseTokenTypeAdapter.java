@@ -11,6 +11,7 @@ public class BaseTokenTypeAdapter {
     public static String STRING = "string";
     public static String COMMENT = "comment";
     public static String BOOLEAN = "boolean";
+    public static String DEFAULT = "default";
 
     private final Lexer lexer;
 
@@ -19,13 +20,10 @@ public class BaseTokenTypeAdapter {
     }
 
     public String adaptToStyleClass(int tokenType) {
-        return "";
+        return DEFAULT;
     }
 
     public Lexer getLexer() {
         return lexer;
     }
-
-
-
 }

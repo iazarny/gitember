@@ -3,6 +3,7 @@ package com.az.gitember.controller;
 import com.az.gitember.App;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.text.TextFlow;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class TextBrowser implements Initializable {
@@ -36,9 +38,14 @@ public class TextBrowser implements Initializable {
 
         content = text;
         TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff);
-        codeArea.getChildren().addAll(
-                adapter.getText()
-        );
+
+        long dt = System.currentTimeMillis();
+
+        List<Node> nodes = adapter.getText();
+        codeArea.getChildren().addAll(nodes );
+
+
+        System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt) + " nodes " + nodes.size());
 
     }
 

@@ -1328,11 +1328,8 @@ public class GitRepoService {
     }
 
     public List<ScmStat> blame(final PlotCommitList<PlotLane> lastCommitPerMonth, final ProgressMonitor progressMonitor) throws Exception {
-
         final List<ScmStat> scmStats = new ArrayList<>(lastCommitPerMonth.size());
-
         for (PlotCommit pc : lastCommitPerMonth) {
-
             checkoutRevCommit(pc, progressMonitor);
             final Set<String> files = getAllFiles();
             final Date date = GitemberUtil.intToDate(pc.getCommitTime());
@@ -1340,12 +1337,8 @@ public class GitRepoService {
             final ScmStat stat = blame(files, taskName, progressMonitor);
             stat.setDate(date);
             scmStats.add(stat);
-
         }
-
-
         return scmStats;
-
     }
 
     public ScmStat blame(final Set<String> files, final ProgressMonitor progressMonitor) throws Exception {
@@ -1362,7 +1355,6 @@ public class GitRepoService {
         final Map<String, Integer> commitsMap = new HashMap<>();
         final Iterator<String> pathIter = files.iterator();
 
-
         progressMonitor.beginTask(taskName, files.size());
 
         int cnt = 0;
@@ -1370,17 +1362,12 @@ public class GitRepoService {
         while (pathIter.hasNext()) {
             final String path = pathIter.next();
             final BlameCommand blamer = new BlameCommand(repository);
-
             blamer.setStartCommit(commit);
             blamer.setFilePath(path);
-
             final BlameResult blame = blamer.call();
             rez.put(path, countLines(blame));
-
             progressMonitor.update(cnt++);
-
         }
-
 
         rez.values().stream().forEach(
                 m -> m.forEach(
@@ -1400,7 +1387,6 @@ public class GitRepoService {
         progressMonitor.endTask();
 
         progressMonitor.beginTask("Log", 300);
-
 
         try (Git git = new Git(repository)) {
             Iterable<RevCommit> commits = git.log().call();

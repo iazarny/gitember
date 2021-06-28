@@ -79,6 +79,7 @@ public class GitemberUtil {
                         stringIntegerEntry -> stringIntegerEntry.getValue()));
     }
 
+    //TODO return styleclass
     public static Color getDiffColor(Edit delta) {
         switch (delta.getType()) {
             case INSERT: return LookAndFeelSet.DIFF_FILL_COLOR_INSERT;

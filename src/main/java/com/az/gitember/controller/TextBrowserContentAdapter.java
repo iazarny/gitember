@@ -29,8 +29,11 @@ import java.util.stream.Collectors;
  */
 public class TextBrowserContentAdapter {
 
+    public static Font FONT;
+    public static String FONT_NAME = "Monospace";
+    //public static String FONT_NAME = "Consolas";
     public static final double FONT_SIZE = 20;
-    public static final double FONT_SYMBOL_WIDTH =11.99;
+    public static final double FONT_SYMBOL_WIDTH = 11.99;
 
     private boolean rawDiff = false;
     private EditList patch = null;
@@ -38,7 +41,8 @@ public class TextBrowserContentAdapter {
     private final int maxLineLength;
     private final int lineNumWidth;
     private final ArrayList<String> lines;
-
+    private final Map<Integer, List<Token>> tokensPerLine = new HashMap<>();
+    private final Map<Integer, List<Node>> nodesPerLine = new HashMap<>();
 
 
     private final LangResolver langResolver;
@@ -62,26 +66,28 @@ public class TextBrowserContentAdapter {
         this.lines = getLines(content);
         this.lineNumWidth = String.valueOf(lines.size()).length();
         this.maxLineLength = lines.stream().mapToInt(String::length).max().orElseGet(() -> 80);
-    }
 
-    public List<Node> getText() {
-
-        final List<Node> rez = new LinkedList<>();
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
         final List<Token> parsedCode = commonTokenStream.getTokens();
-        final Map<Integer, List<Token>> tokensPerLine = new HashMap<>();
+
         parsedCode.stream().forEach(token -> {
             List<Token> tokens = tokensPerLine.computeIfAbsent(token.getLine(), integer -> new ArrayList<>());
             tokens.add(token);
         });
 
+        FONT = Font.font(FONT_NAME, FONT_SIZE);
+
+    }
+
+    public List<Node> getText() {
+
+        final List<Node> rez = new ArrayList<>(1024);
         for (int line = 1; line < 1 + lines.size(); line++) {
             int lineIdx = line - 1;
             final List<Token> tokens = tokensPerLine.get(line);
-            final Node node = createLineNumbedNode(lineIdx, "");
             final String originalLine = lines.get(lineIdx);
-            rez.add(node);
+            rez.add(createLineNumbedNode(lineIdx, ""));
 
             if (tokens != null) {
                 Token lastTokenInLine = tokens.get(tokens.size() - 1);
@@ -91,7 +97,7 @@ public class TextBrowserContentAdapter {
                     final Token token = tokenIterator.next();
                     final String tokenText = token.getText();
                     final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
-                    rez.add(createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token));
+                    safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
                     List<String> strings = this.getLines(tokenText);
                     if (strings.size() > 1) { //multiline token
                         int mlline = 0;
@@ -101,14 +107,14 @@ public class TextBrowserContentAdapter {
                                 rez.add(createLineNumbedNode(lineIdx, "")); // debug
                             }
                             String commentString = stringIterator.next();
-                            rez.add(createText(originalLine, commentString, style, lineIdx, ""));
+                            safeAdd(rez, createText(originalLine, commentString, style, lineIdx, "", rez.get(rez.size() - 1)));
                             int lengtnTillEol;
                             if (mlline == 0) {
                                 lengtnTillEol = this.maxLineLength - originalLine.length();
                             } else {
                                 lengtnTillEol = this.maxLineLength - commentString.length();
                             }
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx, "")); // till end
+                            safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx, "", rez.get(rez.size() - 1))); // till end
                             mlline++;
                             if (mlline < (strings.size())) {
                                 rez.add(new Text(" \n"));
@@ -117,46 +123,154 @@ public class TextBrowserContentAdapter {
                             }
                         }
                     } else { //single line
-                        rez.add(createText(originalLine, tokenText, style, lineIdx, ""));
+                        safeAdd(rez, createText(originalLine, tokenText, style, lineIdx, "", rez.get(rez.size() - 1)));
                         if (lastTokenInLine == token) {
-                            rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx, ""));
+                            safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx, "", rez.get(rez.size() - 1)));
                         }
                     }
                     prevToken = token;
                 }
 
             } else { // empty line shall be right padded with spaces
-                rez.add(createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "")); // till end
+                safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "", rez.get(rez.size() - 1))); // till end
             }
 
             rez.add(new Text(" \n"));
         }
 
+        //Set line num
+        rez.stream().filter(n -> n instanceof HBox).forEach(
+                n -> {
+                    List<Node> nodes = nodesPerLine.computeIfAbsent(((Integer) n.getUserData()), integer -> new ArrayList<Node>());
+                    nodes.add(n);
+                }
+        );
+
+
+        decorateByPatch();
+        decorateByRawDiff();
 
         return rez;
     }
+
+
+
 
     /**
      * Add empty string which is delimit the parsed tokens.
      * * Can just a empty space from the begining of the line
      * or something = value;
-     * */
-    private Node createSpacesBetweenTokens(int lineIdx, String originalLine, Token prevToken, Token token) {
-        String empty;
-        if (prevToken == null) {
-            empty = StringUtils.repeat(" ", token.getCharPositionInLine());
-        } else {
-            empty = StringUtils.repeat(" ", token.getStartIndex() - prevToken.getStopIndex() - 1);
-        }
-        return createText(originalLine, empty, "", lineIdx, "");
+     */
+    private HBox createSpacesBetweenTokens(int lineIdx, String originalLine, Token prevToken, Token token, Node prevHBox) {
+        int charsQty = prevToken == null ? token.getCharPositionInLine() : token.getStartIndex() - prevToken.getStopIndex() - 1;
+        String empty = StringUtils.repeat(" ", charsQty);
+        return createText(originalLine, empty, "default", lineIdx, "", prevHBox);
     }
 
 
-    private Node createLineNumbedNode(int lineIdx, String hhhh) {
+    private HBox createLineNumbedNode(int lineIdx, String hhhh) {
         final String lineNumText = StringUtils.leftPad(String.valueOf(lineIdx), this.lineNumWidth, "0") + "  ";
-        Node node = createText("", lineNumText, "linenum", lineIdx, hhhh);
+        HBox node = createText("", lineNumText, "linenum", lineIdx, hhhh, null);
         return node;
     }
+
+
+    /**
+     * Create node if necessary.
+     *
+     * @return null is concatenated to the prev node otherwise new node.
+     */
+    private HBox createText(final String lineString, final String tokenString, final String style, final int lineIdx, String hhhhh, final Node prevNode) {
+
+        if (prevNode instanceof HBox) {
+            final HBox prevHBox = (HBox) prevNode;
+            final Text prevText = (Text) prevHBox.getChildren().get(0);
+            if (prevText.getStyleClass().contains(style)) {
+                String newTExt = prevText.getText() + tokenString;
+                prevText.setText(newTExt);
+                adjustHBoxWidth(newTExt, prevHBox);
+                return null;
+            }
+        }
+        Text te = new Text(tokenString + hhhhh);
+        te.setFont(FONT);
+        te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
+        te.getStyleClass().add("kwfont");
+        HBox hb = new HBox(te);
+        hb.setUserData(lineIdx);
+        hb.setSpacing(0);
+        adjustHBoxWidth(tokenString, hb);
+
+        /* Fun to visualize splitting */
+        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+
+        return hb;
+    }
+
+    private void adjustHBoxWidth(String tokenString, HBox hb) {
+        double width = FONT_SYMBOL_WIDTH * tokenString.length();
+        hb.setMaxWidth(width);
+        hb.setMinWidth(width);
+        hb.setPrefWidth(width);
+    }
+
+    private void decorateByRawDiff() {
+        if (rawDiff) {
+            for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
+                final String line = lines.get(lineIdx);
+                final String style;
+                if (line.startsWith("+")) {
+                    style = "diff-new";
+                } else if (line.startsWith("-")) {
+                    style = "diff-deleted";
+                } else if (line.startsWith("@@")) {
+                    style = "diff-modified";
+                } else {
+                    style = null;
+                }
+                if (style != null) {
+                    List<Node> nodes = nodesPerLine.get(lineIdx);
+                    if (nodes != null) {
+                        nodes.forEach(node -> {
+                                    HBox hb = ((HBox) node);
+                                    hb.setBackground(new Background(new BackgroundFill(null, CornerRadii.EMPTY, Insets.EMPTY)));
+                                    hb.getStyleClass().add(style);
+                                }
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Highlight new , deleted and changed lines by patch.
+     */
+    private void decorateByPatch() {
+        if (patch != null) {
+            for (Edit delta : patch) {
+                int origPos = delta.getBeginB();
+                int origLines = delta.getLengthB();
+                Color color = GitemberUtil.getDiffColor(delta);
+                if (leftSide) {
+                    origPos = delta.getBeginA();
+                    origLines = delta.getLengthA();
+                }
+
+                for (int line = origPos; line < (origLines + origPos); line++) {
+                    List<Node> nodes = nodesPerLine.get(line);
+                    if (nodes != null) {
+                        nodes.forEach(node -> {
+                                    ((HBox) node).setBackground(new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY)));
+                                }
+                        );
+                    }
+                }
+            }
+        }
+    }
+
 
 
     private ArrayList<String> getLines(final String content) {
@@ -166,86 +280,12 @@ public class TextBrowserContentAdapter {
     }
 
 
-    private Node createText(final String lineString, final String tokenString, final String style, final int linePos, String hhhhh) {
 
-        Font font = Font.font("Monospace", FONT_SIZE);
-        Text te = new Text(tokenString + hhhhh);
-        te.setFont(font);
-        te.getStyleClass().add(style); //the font background is not working
-        te.getStyleClass().add("kwfont");
-
-        HBox hb = new HBox(te);
-        double width = FONT_SYMBOL_WIDTH * tokenString.length();
-
-
-        hb.setMaxWidth(width);
-        hb.setMinWidth(width);
-        hb.setPrefWidth(width);
-
-        hb.setSpacing(0);
-        /* Fun to visualize splitting
-        hb.setSpacing(10);
-        hb.setStyle("-fx-padding: 10;" + "-fx-border-style: solid inside;"
-                + "-fx-border-width: 2;" + "-fx-border-insets: 5;"
-                + "-fx-border-radius: 5;" + "-fx-border-color: blue;");*/
-
-        // hb.setStyle("-fx-border-style: solid inside;"
-        //    + "-fx-border-width: 1;-fx-border-color: gray;");
-
-        if (this.rawDiff) {
-            decorateByRawDiff(lineString, hb);
-        }
-
-        if (patch != null) {
-            decorateByPatch(linePos, hb);
-        }
-
-        return hb;
-    }
-
-    private void decorateByPatch(int linePos, HBox hb) {
-        for (Edit delta : patch) {
-            int origPos;
-            int origLines;
-
-            Color color;
-
-            if (leftSide) {
-                origPos = delta.getBeginA();
-                origLines = delta.getLengthA();
-                color =  GitemberUtil.getDiffColor(delta);
-
-            } else {
-                origPos = delta.getBeginB();
-                origLines = delta.getLengthB();
-                color =  GitemberUtil.getDiffColor(delta);
-            }
-
-
-
-            if (origPos <= linePos && linePos < (origLines + origPos)) {
-                hb.setBackground(
-                        new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY)));
-            }
+    private void safeAdd(List<Node> lst, Node node) {
+        if (node != null) {
+            lst.add(node);
         }
     }
 
-
-
-    private void decorateByRawDiff(final String lineString, HBox hb) {
-        final String style;
-        if (lineString.startsWith("+")) {
-            style = "diff-new";
-        } else if (lineString.startsWith("-")) {
-            style = "diff-deleted";
-        } else if (lineString.startsWith("@@")) {
-            style = "diff-modified";
-        } else {
-            style = "";
-        }
-        hb.setBackground(
-                new Background(new BackgroundFill(null, CornerRadii.EMPTY, Insets.EMPTY)));
-        hb.getStyleClass().add(style);
-    }
 
 }

@@ -7,6 +7,10 @@
     -fx-fill: gray;
 }
 
+.default {
+    -fx-fill: #bababa;
+}
+
 .keyword {
     -fx-fill: #936d08;
 }

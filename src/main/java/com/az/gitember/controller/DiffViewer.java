@@ -6,6 +6,7 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class DiffViewer implements Initializable {
@@ -61,6 +63,7 @@ public class DiffViewer implements Initializable {
         setText(oldTextFlow,  oldText, oldFileName, true);
         setText(newTextFlow,  newText, newFileName, false);
         createPathElements();
+        init();
 
     }
 
@@ -81,6 +84,11 @@ public class DiffViewer implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
 
+
+
+    }
+
+    private void init() {
         //scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
         if (Context.isWindows() ) {
             fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0125; // windows
@@ -131,7 +139,6 @@ public class DiffViewer implements Initializable {
 
                 }
         );
-
     }
 
     private SquarePos getDiffPos(Edit delta) {
@@ -143,7 +150,7 @@ public class DiffViewer implements Initializable {
 
         int origBottomPos = origPos + origLines;
         int revBottomPos = revPos + revLines;
-
+        /* The first call oldTextFlow.getBoundsInParent().getMaxY() will calculate the getBoundsInParent  TODO takes  some time */
         double deltaY1 = (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.getViewportBounds().getHeight())
                 * oldScrollPane.getVvalue();
         double deltaY2 = (newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
@@ -213,14 +220,11 @@ public class DiffViewer implements Initializable {
 
         for (Edit delta : this.diffList) {
             SquarePos squarePos = getDiffPos(delta);
-
-
             MoveTo moveTo = new MoveTo(squarePos.getX1(), squarePos.getY1());
             CubicCurveTo curve0 = getCubicCurveTo(squarePos.getX1(), squarePos.getY1(), squarePos.getX2(), squarePos.getY4());
             LineTo lineTo0 = new LineTo(squarePos.getX3(), squarePos.getY3());
             CubicCurveTo curve1 = getCubicCurveTo(squarePos.getX3(), squarePos.getY3(), squarePos.getX4(), squarePos.getY4());
             LineTo lineTo1 = new LineTo(squarePos.getX1(), squarePos.getY1());
-
             Color fillColor = GitemberUtil.getDiffColor(delta);
             Color strokeColor = fillColor.deriveColor(1, 1, 1, 0.5);
             Path path = new Path();
@@ -241,9 +245,6 @@ public class DiffViewer implements Initializable {
                 x2, y2);
     }
 
-
-
-
     private void setText(final TextFlow textFlow,
                          final String text, final String fileName, final boolean leftSide) {
 
@@ -257,9 +258,10 @@ public class DiffViewer implements Initializable {
                 this.diffList,
                 leftSide  );
 
-        textFlow.getChildren().addAll(
-                adapter.getText()
-        );
+        long dt = System.currentTimeMillis();
+        List<Node> nodes =  adapter.getText();
+        textFlow.getChildren().addAll( nodes );
+        System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt)  + " nodes " + nodes.size());
 
     }
 
