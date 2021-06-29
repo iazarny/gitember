@@ -12,6 +12,7 @@ public class BaseTokenTypeAdapter {
     public static String COMMENT = "comment";
     public static String BOOLEAN = "boolean";
     public static String DEFAULT = "default";
+    public static String EMBEDED = "embeded";
 
     private final Lexer lexer;
 

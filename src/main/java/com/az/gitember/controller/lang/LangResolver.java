@@ -1,7 +1,9 @@
 package com.az.gitember.controller.lang;
 
+import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
+import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
@@ -9,16 +11,24 @@ import org.antlr.v4.runtime.Lexer;
 public class LangResolver {
 
     private final Lexer lexer;
-    private final BaseTokenTypeAdapter baseTokenTypeAdapter;
+    private final BaseTokenTypeAdapter tokenTypeAdapter;
 
     public LangResolver(String fileExtention, String content) {
         CharStream charStream = new ANTLRInputStream(content);
         if ("java".equalsIgnoreCase(fileExtention)) {
             this.lexer = new Java9Lexer(charStream );
-            this.baseTokenTypeAdapter = new JavaTokenTypeAdapter(lexer);
-        } else /*if ("json".equalsIgnoreCase(fileExtention))*/ {
+            this.tokenTypeAdapter = new JavaTokenTypeAdapter(lexer);
+        } else if ("json".equalsIgnoreCase(fileExtention)) {
             this.lexer = new JSONLexer(charStream );
-            this.baseTokenTypeAdapter = new  JsonTokenTypeAdapter(lexer);
+            this.tokenTypeAdapter = new  JsonTokenTypeAdapter(lexer);
+/*
+        } else if ("html".equalsIgnoreCase(fileExtention) || "htm".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new HTMLLexer(charStream );
+            this.tokenTypeAdapter = new HtmlTokenTypeAdapter(lexer);
+*/
+        } else  {
+            this.lexer = new SimpleTextLexer(charStream );
+            this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);
         }
     }
 
@@ -27,7 +37,7 @@ public class LangResolver {
     }
 
     public BaseTokenTypeAdapter getAdapter() {
-        return baseTokenTypeAdapter;
+        return tokenTypeAdapter;
     }
 
 }

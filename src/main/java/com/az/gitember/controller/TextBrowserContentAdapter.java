@@ -202,11 +202,12 @@ public class TextBrowserContentAdapter {
         adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
-        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
 
         return hb;
     }
 
+//todo fix the error with tab width
     private void adjustHBoxWidth(String tokenString, HBox hb) {
         double width = FONT_SYMBOL_WIDTH * tokenString.length();
         hb.setMaxWidth(width);
