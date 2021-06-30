@@ -4,10 +4,7 @@ import com.az.gitember.controller.lang.LangResolver;
 import com.az.gitember.service.GitemberUtil;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -34,6 +31,7 @@ public class TextBrowserContentAdapter {
     //public static String FONT_NAME = "Consolas";
     public static final double FONT_SIZE = 20;
     public static final double FONT_SYMBOL_WIDTH = 11.99;
+    public static final double FONT_HEIGHT = FONT_SIZE + 4;
 
     private boolean rawDiff = false;
     private EditList patch = null;
@@ -65,7 +63,7 @@ public class TextBrowserContentAdapter {
         this.rawDiff = rawDiff;
         this.lines = getLines(content);
         this.lineNumWidth = String.valueOf(lines.size()).length();
-        this.maxLineLength = lines.stream().mapToInt(String::length).max().orElseGet(() -> 80);
+        this.maxLineLength = lines.stream().mapToInt(String::length).max().orElseGet(() -> 120);
 
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
@@ -150,11 +148,38 @@ public class TextBrowserContentAdapter {
         decorateByPatch();
         decorateByRawDiff();
 
-        return rez;
+        double rowWidth = (this.maxLineLength + this.lineNumWidth) * FONT_SYMBOL_WIDTH;
+
+        final List<Node> rows = new ArrayList<>(1024);
+        for (int line = 0; line < lines.size(); line++) {
+            HBox row = new HBox();
+
+            row.setMaxWidth(rowWidth);
+            row.setMinWidth(rowWidth);
+            row.setPrefWidth(rowWidth);
+            //row.setMaxHeight(FONT_HEIGHT);
+            //row.setMinHeight(FONT_HEIGHT);
+            //row.setPrefHeight(FONT_HEIGHT);
+            //row.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: red;");
+
+            row.getChildren().addAll(nodesPerLine.get(line));
+            rows.add(row);
+
+        }
+
+        VBox vBox = new VBox();
+        vBox.getChildren().addAll(rows);
+
+        vBox.setMaxWidth(rowWidth);
+        vBox.setMinWidth(rowWidth);
+        vBox.setPrefWidth(rowWidth);
+        //vBox.setMaxHeight(FONT_HEIGHT * lines.size());
+        //vBox.setMinHeight(FONT_HEIGHT * lines.size());
+        //vBox.setPrefHeight(FONT_HEIGHT * lines.size());
+
+        return Collections.singletonList(vBox);
+        //return rez;
     }
-
-
-
 
     /**
      * Add empty string which is delimit the parsed tokens.
@@ -202,17 +227,23 @@ public class TextBrowserContentAdapter {
         adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
-        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
 
         return hb;
     }
 
 //todo fix the error with tab width
     private void adjustHBoxWidth(String tokenString, HBox hb) {
-        double width = FONT_SYMBOL_WIDTH * tokenString.length();
+
+
+        hb.setMaxHeight(FONT_HEIGHT);
+        hb.setMinHeight(FONT_HEIGHT);
+        hb.setPrefHeight(FONT_HEIGHT);
+
+        /*double width = FONT_SYMBOL_WIDTH * tokenString.length();
         hb.setMaxWidth(width);
         hb.setMinWidth(width);
-        hb.setPrefWidth(width);
+        hb.setPrefWidth(width);*/
     }
 
     private void decorateByRawDiff() {
@@ -287,6 +318,7 @@ public class TextBrowserContentAdapter {
             lst.add(node);
         }
     }
+
 
 
 }
