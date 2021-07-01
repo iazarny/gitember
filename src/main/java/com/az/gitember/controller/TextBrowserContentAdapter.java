@@ -8,7 +8,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextBoundsType;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +30,7 @@ public class TextBrowserContentAdapter {
     //public static String FONT_NAME = "Consolas";
     public static final double FONT_SIZE = 20;
     public static final double FONT_SYMBOL_WIDTH = 11.99;
-    public static final double FONT_HEIGHT = FONT_SIZE + 4;
+    public static final double ROW_HEIGHT = FONT_SIZE + 4;
 
     private boolean rawDiff = false;
     private EditList patch = null;
@@ -157,9 +156,9 @@ public class TextBrowserContentAdapter {
             row.setMaxWidth(rowWidth);
             row.setMinWidth(rowWidth);
             row.setPrefWidth(rowWidth);
-            //row.setMaxHeight(FONT_HEIGHT);
-            //row.setMinHeight(FONT_HEIGHT);
-            //row.setPrefHeight(FONT_HEIGHT);
+            row.setMaxHeight(ROW_HEIGHT);
+            row.setMinHeight(ROW_HEIGHT);
+            row.setPrefHeight(ROW_HEIGHT);
             //row.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: red;");
 
             row.getChildren().addAll(nodesPerLine.get(line));
@@ -234,12 +233,6 @@ public class TextBrowserContentAdapter {
 
 //todo fix the error with tab width
     private void adjustHBoxWidth(String tokenString, HBox hb) {
-
-
-        hb.setMaxHeight(FONT_HEIGHT);
-        hb.setMinHeight(FONT_HEIGHT);
-        hb.setPrefHeight(FONT_HEIGHT);
-
         /*double width = FONT_SYMBOL_WIDTH * tokenString.length();
         hb.setMaxWidth(width);
         hb.setMinWidth(width);
@@ -303,22 +296,16 @@ public class TextBrowserContentAdapter {
         }
     }
 
-
-
     private ArrayList<String> getLines(final String content) {
         return (ArrayList) new BufferedReader(new StringReader(content))
                 .lines()
                 .collect(Collectors.toList());
     }
 
-
-
     private void safeAdd(List<Node> lst, Node node) {
+
         if (node != null) {
             lst.add(node);
         }
     }
-
-
-
 }
