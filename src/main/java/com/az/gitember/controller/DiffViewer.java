@@ -91,7 +91,7 @@ public class DiffViewer implements Initializable {
     private void init() {
         //scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
         if (Context.isWindows() ) {
-            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0125; // windows
+            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows
         } else {
             fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.87; // linux
         }
@@ -151,7 +151,7 @@ public class DiffViewer implements Initializable {
         int origBottomPos = origPos + origLines;
         int revBottomPos = revPos + revLines;
         /* The first call oldTextFlow.getBoundsInParent().getMaxY() will calculate the getBoundsInParent  TODO takes  some time */
-        double deltaY1 = (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.getViewportBounds().getHeight())
+        double deltaY1 =  (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.getViewportBounds().getHeight())
                 * oldScrollPane.getVvalue();
         double deltaY2 = (newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
                 * newScrollPane.getVvalue();
@@ -160,10 +160,10 @@ public class DiffViewer implements Initializable {
         int y1 = (int) (origPos * fontSize - deltaY1);
 
         int x2 = (int) diffDrawPanel.getWidth() + 1;
-        int y2 = (int) (revPos * fontSize - deltaY2);
+        int y2 = (int) (revPos * fontSize - deltaY2) + 2; //+ 2 the border of uber node
 
         int x3 = x2;
-        int y3 = (int) (revBottomPos * fontSize - deltaY2);
+        int y3 = (int) (revBottomPos * fontSize - deltaY2) + 2;// + 2 order of uder node
 
         int x4 = x1;
         int y4 = (int) (origBottomPos * fontSize - deltaY1);
