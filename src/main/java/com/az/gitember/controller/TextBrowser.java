@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -39,13 +40,21 @@ public class TextBrowser implements Initializable {
         content = text;
         TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff);
 
-        long dt = System.currentTimeMillis();
-
-        List<Node> nodes = adapter.getText();
-        codeArea.getChildren().addAll(nodes );
 
 
-        System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt) + " nodes " + nodes.size());
+
+        Platform.runLater(
+                () -> {
+                    long dt = System.currentTimeMillis();
+                    List<Node> nodes = adapter.getText();
+                    codeArea.getChildren().addAll(nodes );
+                    System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt) + " nodes " + nodes.size());
+                }
+        );
+
+
+
+
 
     }
 

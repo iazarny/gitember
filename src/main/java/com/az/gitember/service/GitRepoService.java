@@ -1390,9 +1390,7 @@ public class GitRepoService {
 
         try (Git git = new Git(repository)) {
             Iterable<RevCommit> commits = git.log().call();
-            int count = 0;
             for (RevCommit rc : commits) {
-                count++;
                 String author = rc.getAuthorIdent().getName();
                 commitsMap.computeIfPresent(
                         author,

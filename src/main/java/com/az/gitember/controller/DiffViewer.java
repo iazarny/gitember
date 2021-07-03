@@ -56,12 +56,17 @@ public class DiffViewer implements Initializable {
         RawText newRawTet = new RawText(new File(newFileName));
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
-        RawTextComparator comparator = RawTextComparator.DEFAULT;
+        RawTextComparator comparator = RawTextComparator.WS_IGNORE_ALL;
 
         diffList.addAll(diffAlgorithm.diff(comparator, oldRawTet, newRawTet));
 
-        setText(oldTextFlow,  oldText, oldFileName, true);
-        setText(newTextFlow,  newText, newFileName, false);
+
+
+        Runnable oldRunnable = () -> {setText(oldTextFlow,  oldText, oldFileName, true);};
+        Runnable newRunnable = () -> {setText(newTextFlow,  newText, newFileName, false);};
+        Platform.runLater(oldRunnable);
+        Platform.runLater(newRunnable);
+
         createPathElements();
         init();
 
@@ -156,17 +161,19 @@ public class DiffViewer implements Initializable {
         double deltaY2 = (newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
                 * newScrollPane.getVvalue();
 
+        int border_shift = 2; //uber node and 1 node border
+
         int x1 = -1;
-        int y1 = (int) (origPos * fontSize - deltaY1);
+        int y1 = (int) (origPos * fontSize - deltaY1) + border_shift;
 
         int x2 = (int) diffDrawPanel.getWidth() + 1;
-        int y2 = (int) (revPos * fontSize - deltaY2) + 2; //+ 2 the border of uber node
+        int y2 = (int) (revPos * fontSize - deltaY2) + border_shift;
 
         int x3 = x2;
-        int y3 = (int) (revBottomPos * fontSize - deltaY2) + 2;// + 2 order of uder node
+        int y3 = (int) (revBottomPos * fontSize - deltaY2) + border_shift;
 
         int x4 = x1;
-        int y4 = (int) (origBottomPos * fontSize - deltaY1);
+        int y4 = (int) (origBottomPos * fontSize - deltaY1) + border_shift;
 
         return new SquarePos(x1,y1,x2,y2,x3,y3,x4,y4);
 
