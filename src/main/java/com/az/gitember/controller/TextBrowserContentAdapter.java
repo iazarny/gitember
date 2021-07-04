@@ -5,7 +5,6 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -62,7 +61,7 @@ public class TextBrowserContentAdapter {
         this.rawDiff = rawDiff;
         this.lines = getLines(content);
         this.lineNumWidth = String.valueOf(lines.size()).length();
-        this.maxLineLength = lines.stream().mapToInt(String::length).max().orElseGet(() -> 120);
+        this.maxLineLength = Math.max(lines.stream().mapToInt(String::length).max().getAsInt(), LookAndFeelSet.DEFAULT_LINE_LENGTH);
 
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
@@ -231,7 +230,7 @@ public class TextBrowserContentAdapter {
         return hb;
     }
 
-//todo fix the error with tab width
+    //todo fix the error with tab width
     private void adjustHBoxWidth(String tokenString, HBox hb) {
         /*double width = FONT_SYMBOL_WIDTH * tokenString.length();
         hb.setMaxWidth(width);
@@ -277,7 +276,7 @@ public class TextBrowserContentAdapter {
             for (Edit delta : patch) {
                 int origPos = delta.getBeginB();
                 int origLines = delta.getLengthB();
-                Color color = GitemberUtil.getDiffColor(delta);
+                String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
                 if (leftSide) {
                     origPos = delta.getBeginA();
                     origLines = delta.getLengthA();
@@ -287,7 +286,7 @@ public class TextBrowserContentAdapter {
                     List<Node> nodes = nodesPerLine.get(line);
                     if (nodes != null) {
                         nodes.forEach(node -> {
-                                    ((HBox) node).setBackground(new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY)));
+                                    node.getStyleClass().add(styleClass);
                                 }
                         );
                     }

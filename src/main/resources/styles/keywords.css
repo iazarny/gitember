@@ -8,12 +8,13 @@
 }
 
 .default {
-    -fx-fill: #bababa;
+    -fx-fill: #323232;
 }
 
 .keyword {
     -fx-fill: darkblue;
 }
+
 .boolean {
     -fx-fill: rgb(3, 66, 142);
 }
@@ -52,9 +53,36 @@
 }
 
 .diff-modified {
-    -fx-background-color: #b17efc;
+    -fx-background-color: #cdcdcd;
 }
 
 .diff-deleted {
-    -fx-background-color: #fa7d7d;
+    -fx-background-color: #fa97b3;
+}
+
+.diff-path-new {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #d1e8d1;
+    -fx-fill:  #97fa97;
+}
+.diff-path-modified {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #e5e5e5;
+    -fx-fill: #cdcdcd;
+}
+
+.diff-path-deleted {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #e5cad1;
+    -fx-fill: #fa97b3;
+}
+
+.diff-line-new {
+    -fx-background-color:  #97fa97;
+}
+.diff-line-modified {
+    -fx-background-color: #cdcdcd;
+}
+.diff-line-deleted {
+    -fx-background-color: #fa97b3;
 }

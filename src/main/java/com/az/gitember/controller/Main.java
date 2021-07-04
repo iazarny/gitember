@@ -347,6 +347,7 @@ public class Main implements Initializable {
         alert.setTitle(title);
         alert.initOwner(App.getScene().getWindow());
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
 
         if (Alert.AlertType.ERROR == alertTypet || StringUtils.countMatches(text, "\n") > 7) {
             TextArea textArea = new TextArea(text);
@@ -387,7 +388,7 @@ public class Main implements Initializable {
 
     public void confirmReboot() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setWidth(600);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
         alert.setTitle("Information");
         alert.setContentText("Please restart application to apply theme change");
         alert.initOwner(App.getScene().getWindow());

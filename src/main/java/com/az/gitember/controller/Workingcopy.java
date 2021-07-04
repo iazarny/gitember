@@ -141,7 +141,7 @@ public class Workingcopy implements Initializable {
     public void stashEventHandler(ActionEvent actionEvent) throws IOException {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setWidth(600);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
         alert.setTitle("Question");
         alert.setContentText("Would you like to stash changes ?");
         alert.initOwner(App.getScene().getWindow());

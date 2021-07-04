@@ -2,6 +2,7 @@ package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Stage;
 import com.az.gitember.service.Context;
@@ -41,7 +42,7 @@ public class RevertEventHandler extends AbstractLongTaskEventHandler implements 
         if (item != null) {
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setWidth(600);
+            alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
             alert.setTitle("Question");
             alert.setContentText("Would you like to revert " + item.getShortName() + " changes ?");
             alert.initOwner(App.getScene().getWindow());

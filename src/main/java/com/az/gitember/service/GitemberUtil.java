@@ -79,15 +79,12 @@ public class GitemberUtil {
                         stringIntegerEntry -> stringIntegerEntry.getValue()));
     }
 
-    //TODO return styleclass
-    public static Color getDiffColor(Edit delta) {
+    public static String getDiffSyleClass(Edit delta, String prefix) {
         switch (delta.getType()) {
-            case INSERT: return LookAndFeelSet.DIFF_FILL_COLOR_INSERT;
-            case DELETE: return LookAndFeelSet.DIFF_FILL_COLOR_DELETE;
-            case REPLACE: return  LookAndFeelSet.DIFF_FILL_COLOR_REPLACE;
-            case EMPTY: return  LookAndFeelSet.DIFF_FILL_COLOR_EMPTY;
+            case INSERT: return prefix + "-new";
+            case DELETE: return prefix + "-deleted";
+            default : return prefix + "-modified";
         }
-        return  LookAndFeelSet.DIFF_FILL_COLOR_INSERT;
     }
 
 

@@ -12,7 +12,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
@@ -21,6 +20,7 @@ import org.eclipse.jgit.diff.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -52,8 +52,8 @@ public class DiffViewer implements Initializable {
         this.oldText = Files.readString(Paths.get(oldFileName));
         this.newText = Files.readString(Paths.get(newFileName));
 
-        RawText oldRawTet = new RawText(new File(oldFileName)); //TODO use this constructor RawText(byte[] input)
-        RawText newRawTet = new RawText(new File(newFileName));
+        RawText oldRawTet = new RawText(oldText.getBytes(StandardCharsets.UTF_8)); //TODO use this constructor RawText(byte[] input)
+        RawText newRawTet = new RawText(newText.getBytes(StandardCharsets.UTF_8));
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         RawTextComparator comparator = RawTextComparator.WS_IGNORE_ALL;
@@ -232,14 +232,11 @@ public class DiffViewer implements Initializable {
             LineTo lineTo0 = new LineTo(squarePos.getX3(), squarePos.getY3());
             CubicCurveTo curve1 = getCubicCurveTo(squarePos.getX3(), squarePos.getY3(), squarePos.getX4(), squarePos.getY4());
             LineTo lineTo1 = new LineTo(squarePos.getX1(), squarePos.getY1());
-            Color fillColor = GitemberUtil.getDiffColor(delta);
-            Color strokeColor = fillColor.deriveColor(1, 1, 1, 0.5);
+
             Path path = new Path();
             path.getElements().addAll(moveTo, curve0, lineTo0, curve1, lineTo1);
-            path.setStrokeLineCap(StrokeLineCap.ROUND);
-            path.setStroke(strokeColor);
-            path.setStrokeWidth(0.5);
-            path.setFill(fillColor);
+            path.getStyleClass().add(GitemberUtil.getDiffSyleClass(delta, "diff-path"));
+
             diffDrawPanel.getChildren().add(path);
         }
     }
@@ -268,7 +265,6 @@ public class DiffViewer implements Initializable {
         long dt = System.currentTimeMillis();
         List<Node> nodes =  adapter.getText();
         textFlow.getChildren().addAll( nodes );
-        System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt)  + " nodes " + nodes.size());
 
     }
 

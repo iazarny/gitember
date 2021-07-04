@@ -2,6 +2,7 @@ package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
@@ -30,7 +31,7 @@ public class ApplyStashEventHandler extends StatusUpdateEventHandler implements 
     @Override
     public void handle(ActionEvent event) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setWidth(600);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
         alert.setTitle("Question");
         alert.setContentText("Would you like to apply stash " + scmItem.getRevisionFullName() + "  ?");
         alert.initOwner(App.getScene().getWindow());

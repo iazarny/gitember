@@ -5,6 +5,8 @@ import jfxtras.styles.jmetro.Style;
 
 public class LookAndFeelSet {
 
+    public static int DIALOG_DEFAULT_WIDTH = 800;
+    public static int DEFAULT_LINE_LENGTH = 120;
     public static String PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
     public static Style THEME_NAME = Style.LIGHT;
     public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F);
@@ -18,14 +20,6 @@ public class LookAndFeelSet {
     public static String DEFAULT_CSS = "/styles/styles.css";
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
-    public static Color DIFF_COLOR;
-
-
-    public static Color DIFF_FILL_COLOR_INSERT;
-    public static Color DIFF_FILL_COLOR_DELETE;
-    public static Color DIFF_FILL_COLOR_REPLACE;
-    public static Color DIFF_FILL_COLOR_EMPTY;
-
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
@@ -34,12 +28,6 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
-            DIFF_COLOR = Color.valueOf("#203e20"); //rgb(106, 206, 159);
-            DIFF_FILL_COLOR_INSERT = Color.valueOf("#203e20");
-            DIFF_FILL_COLOR_DELETE = Color.valueOf("#3e202c");
-            DIFF_FILL_COLOR_REPLACE = Color.valueOf("#424242");
-            DIFF_FILL_COLOR_EMPTY = Color.valueOf("#35436d");
-
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;
@@ -47,11 +35,6 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords.css";
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
-            DIFF_COLOR = Color.valueOf("#97fa97") ;//rgb(106, 206, 159);
-            DIFF_FILL_COLOR_INSERT = Color.valueOf("#97fa97") ;// DIFF_COLOR.deriveColor(1, 1, 1, 0.15);
-            DIFF_FILL_COLOR_DELETE = Color.valueOf("#fa97b3");
-            DIFF_FILL_COLOR_REPLACE = Color.valueOf("#97a7fa");
-            DIFF_FILL_COLOR_EMPTY = Color.valueOf("#d0f8d0");
 
         }
     }

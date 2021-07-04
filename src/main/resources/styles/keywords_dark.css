@@ -49,15 +49,42 @@
  }
 
 .diff-new {
-    -fx-background-color: #032b03;
+    -fx-background-color: #124e12;
 }
 
 .diff-modified {
-    -fx-background-color: #1e0d38;
+    -fx-background-color: #505050;
 }
 
 .diff-deleted {
-    -fx-background-color: #320303;
+    -fx-background-color: #761d1d;
+}
+
+.diff-path-new {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: transparent;
+    -fx-fill:  #124e12;
+}
+.diff-path-modified {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: transparent;
+    -fx-fill: #505050;
+}
+
+.diff-path-deleted {
+    -fx-stroke-width: 0.5;
+    -fx-stroke: transparent;
+    -fx-fill: #761d1d;
+}
+
+.diff-line-new {
+    -fx-background-color:  #124e12;
+}
+.diff-line-modified {
+    -fx-background-color:#505050;
+}
+.diff-line-deleted {
+    -fx-background-color: #761d1d;
 }
 
 
