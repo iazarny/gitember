@@ -9,7 +9,7 @@ public class LookAndFeelSet {
     public static int DEFAULT_LINE_LENGTH = 120;
     public static String PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
     public static Style THEME_NAME = Style.LIGHT;
-    public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F);
+    public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F); //TODO to css
     public static final Color[] historyPlotCommitRenderedColors = new Color[]{
             Color.rgb(255, 0, 0), Color.rgb(0, 255, 0), Color.rgb(229, 229, 0), Color.rgb(177, 178, 255), Color.rgb(255, 0, 255), Color.rgb(0, 255, 255),
             Color.rgb(206, 0, 0), Color.rgb(0, 187, 0), Color.rgb(0, 187, 187), Color.rgb(133, 133, 255), Color.rgb(217, 0, 190), Color.rgb(0, 197, 197),

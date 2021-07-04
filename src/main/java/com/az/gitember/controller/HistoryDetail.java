@@ -16,11 +16,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -73,6 +73,8 @@ public class HistoryDetail implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+
+
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
 
         msgLbl.setText(scmInfo.getFullMessage().replace("\n", ""));
@@ -89,6 +91,26 @@ public class HistoryDetail implements Initializable {
         changedFilesListView.setItems(
                 FXCollections.observableList(scmInfo.getAffectedItems())
         );
+
+
+        Context.searchValue.addListener(
+                (observable, oldValue, newValue) -> {
+                    changedFilesListView.refresh();
+                }
+        );
+        changedFilesListView.setRowFactory( tr -> {
+
+            return new TableRow<ScmItem>() {
+                @Override
+                protected void updateItem(ScmItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (item != null &&  item.getViewRepresentation().toLowerCase().contains(Context.searchValue.getValueSafe().toLowerCase())) {
+                        setStyle(LookAndFeelSet.FOUND_ROW);
+                    }
+                }
+            };
+
+        });
 
 
         fileTableColumn.setCellValueFactory(

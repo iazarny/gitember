@@ -236,6 +236,7 @@ public class History implements Initializable {
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
+                        Context.searchValue.setValue(newValue);
                     }
                 }
         );

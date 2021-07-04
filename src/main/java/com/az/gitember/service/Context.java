@@ -77,6 +77,8 @@ public class Context {
     public static final ObjectProperty<StatWPParameters> scmStatListPropertyParam =
             new SimpleObjectProperty(null);
 
+    public static StringProperty searchValue = new SimpleStringProperty();
+
 
     private static Main main;
 
