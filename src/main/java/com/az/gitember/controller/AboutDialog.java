@@ -38,7 +38,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2");
+        this.setTitle("Gitember 2.1");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);

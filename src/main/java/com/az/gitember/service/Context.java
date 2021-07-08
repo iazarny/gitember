@@ -177,9 +177,8 @@ public class Context {
     }
 
     public static void updateStatus(ProgressMonitor progressMonitor) {
-        statusList.clear();
-        plotCommitList.clear();
         List<ScmItem> getStatuses = gitRepoService.getStatuses(progressMonitor);
+        plotCommitList.clear();
         statusList.clear();
         statusList.addAll(getStatuses);
         lastUpdate.set(LocalDateTime.now());

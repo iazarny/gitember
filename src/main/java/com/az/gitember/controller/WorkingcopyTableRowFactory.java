@@ -7,11 +7,18 @@ import com.az.gitember.controller.handlers.StageEventHandler;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 import org.eclipse.jgit.api.CheckoutCommand;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -141,28 +148,17 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
 
                                     MenuItem revert = new MenuItem("Revert ...");
                                     revert.setOnAction(new RevertEventHandler(param, item));
+                                    try {
+                                        revert.setGraphic(icons.get("Revert ...").call());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
                                     scmItemContextMenu.getItems().add(revert);
                                 }
 
                             }
                     );
 
-                    //scmItemContextMenu.get
-
-                    /*
-                    setOnContextMenuRequested(event -> {
-                        boolean isConflict = item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT);
-                        conflictResolveUsingMy.setVisible(isConflict);
-                        conflictResolveUsingTheir.setVisible(isConflict);
-                        conflictResolved.setVisible(isConflict);
-
-                        stageFileMenuItem.setDisable(!isUnstaged(item));
-                        unstageFileMenuItem.setDisable(isUnstaged(item));
-
-                        revertMenuItem.setVisible(!isConflict);
-                        showDiffMenuItem.setVisible(!isConflict);
-
-                    });*/
                 }
             }
 
@@ -170,53 +166,11 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
     }
 
 
-    /*workingCopyTableView.setRowFactory(
-                tr -> {
-                    return new TableRow<ScmItem>() {
+    static Map<String, Callable<StackedFontIcon>> icons = new HashMap<>();
 
-                        private String calculateStyle(final ScmItem scmItem) {
-                            StringBuilder sb = new StringBuilder();
-                            if (scmItem != null) {
-                                if (WorkingCopyController.this.searchText.getText() != null
-                                        && WorkingCopyController.this.searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
-                                    if (scmItem.getShortName().toLowerCase().contains(
-                                            WorkingCopyController.this.searchText.getText().toLowerCase())) {
-                                        //sb.append("-fx-font-weight: bold;");
-                                        sb.append("-fx-font-weight: bold; ");
-                                        sb.append("-fx-background-color: linear-gradient(#9fbed6 0%, #d0fad0 100%);");
-                                    }
-
-                                }
-
-                            }
-                            return  sb.toString();
-
-                        }
-
-                        @Override
-                        protected void updateItem(ScmItem item, boolean empty) {
-                            super.updateItem(item, empty);
-                            setStyle(calculateStyle(item));
-                            if (!empty) {
-                                setContextMenu(scmItemContextMenu);
-                                setOnContextMenuRequested(event -> {
-                                    boolean isConflict = item.getAttribute().getStatus().contains(ScmItemStatus.CONFLICT);
-                                    conflictResolveUsingMy.setVisible(isConflict);
-                                    conflictResolveUsingTheir.setVisible(isConflict);
-                                    conflictResolved.setVisible(isConflict);
-
-                                    stageFileMenuItem.setDisable(!isUnstaged(item));
-                                    unstageFileMenuItem.setDisable(isUnstaged(item));
-
-                                    revertMenuItem.setVisible(!isConflict);
-                                    showDiffMenuItem.setVisible(!isConflict);
-
-                                });
-                            }
-                        }
-                    };
-                }
-        );*/
+    static {
+        icons.put("Revert ...", () -> GitemberUtil.create(new FontIcon(FontAwesome.COPY)));
+    }
 
 
 }

@@ -17,9 +17,6 @@ import javafx.stage.StageStyle;
 
 public class MainTreeContextMenuFactory {
 
-    private MenuItem pullMI;
-    private MenuItem pushMI;
-
     ContextMenu createContextMenu(final ScmBranch branchItem) {
 
         boolean disablePool = branchItem.getRemoteMergeName() == null &&  ScmBranch.BranchType.LOCAL.equals(branchItem.getBranchType());
@@ -45,8 +42,8 @@ public class MainTreeContextMenuFactory {
         MenuItem deleteMI = new MenuItem("Delete "+ branchItem.getShortName() + "...");
         deleteMI.setOnAction(new DeleteBranchEventHandler(branchItem));
 
-        pullMI = new MenuItem("Pull " + (disablePool ? "" : fullName));
-        pushMI = new MenuItem("Push " + (name == fullName ? (name + " ..."):(fullName) ) );
+        MenuItem pullMI = new MenuItem("Pull " + (disablePool ? "" : fullName));
+        MenuItem pushMI = new MenuItem("Push " + (name == fullName ? (name + " ...") : (fullName)));
 
         cm.getItems().add(checkoutMI);
         cm.getItems().add(branchMI);
@@ -82,7 +79,7 @@ public class MainTreeContextMenuFactory {
         pushMI.setOnAction( new PushHandler(branchItem) );
 
         if (ScmBranch.BranchType.TAG == branchItem.getBranchType()) {
-            cm.getItems().removeAll( pullMI, pushMI);
+            cm.getItems().removeAll(pullMI, pushMI);
         }
 
         return cm;
