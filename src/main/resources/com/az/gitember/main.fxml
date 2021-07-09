@@ -45,6 +45,12 @@
                                     <MenuItem text="Work progress ..."  onAction="#createStatReportProgress"/>
                                     <MenuItem text="Branch live time ..."   onAction="#createStatReportBranchTime"/>
                                     <MenuItem text="Branches ..."   onAction="#createStatReportBranches"/>
+                                    <graphic>
+                                        <StackedFontIcon style="-fx-icon-color: text_color">
+                                            <FontIcon iconLiteral="fa-bar-chart" StackedFontIcon.iconSize="0.5"  />
+                                        </StackedFontIcon>
+
+                                    </graphic>
                                 </Menu>
                             </items>
                         </Menu>

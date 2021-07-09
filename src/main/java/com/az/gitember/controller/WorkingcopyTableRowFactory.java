@@ -75,18 +75,20 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                 scmItemContextMenu.getItems().clear();
 
                                 if(is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED)) {
-                                    MenuItem stage = new MenuItem("Stage item");
+                                    MenuItem stage = new MenuItem(MI_STAGE_NAME);
                                     stage.setOnAction(e -> {
                                         new StageEventHandler(param, item).handle(null);
                                     });
+                                    stage.setGraphic(icons.get(MI_STAGE_NAME));
                                     scmItemContextMenu.getItems().add(stage);
                                 }
 
                                 if(is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
-                                    MenuItem unstage = new MenuItem("Unstage item");
+                                    MenuItem unstage = new MenuItem(MI_UNSTAGE_NAME);
                                     unstage.setOnAction(e -> {
                                         new StageEventHandler(param, item).handle(null);
                                     });
+                                    unstage.setGraphic(icons.get(MI_UNSTAGE_NAME));
                                     scmItemContextMenu.getItems().add(unstage);
                                 }
 
@@ -129,8 +131,9 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                 scmItemContextMenu.getItems().add(new SeparatorMenuItem());
 
                                 if(!is(itemStatus).oneOf(ScmItem.Status.MISSED, ScmItem.Status.REMOVED) ) {
-                                    MenuItem open = new MenuItem("Open");
+                                    MenuItem open = new MenuItem(MI_OPEN_NAME);
                                     open.setOnAction(new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE));
+                                    open.setGraphic(icons.get(MI_OPEN_NAME));
                                     scmItemContextMenu.getItems().add(open);
                                 }
 
@@ -138,21 +141,18 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                     //MenuItem history = new MenuItem("History");  TODO
                                     //scmItemContextMenu.getItems().add(history);
 
-                                    MenuItem diff = new MenuItem("Diff with repository");
+                                    MenuItem diff = new MenuItem(MI_DIFF_REPO);
                                     diff.setOnAction(new DiffWithDiskEventHandler(item));
+                                    diff.setGraphic(icons.get(MI_DIFF_REPO));
                                     scmItemContextMenu.getItems().add(diff);
                                 }
 
                                 if(is(itemStatus).oneOf(ScmItem.Status.MODIFIED) ) {
                                     scmItemContextMenu.getItems().add(new SeparatorMenuItem());
 
-                                    MenuItem revert = new MenuItem("Revert ...");
+                                    MenuItem revert = new MenuItem(MI_REVERT_NAME);
                                     revert.setOnAction(new RevertEventHandler(param, item));
-                                    try {
-                                        revert.setGraphic(icons.get("Revert ...").call());
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
+                                    revert.setGraphic(icons.get(MI_REVERT_NAME));
                                     scmItemContextMenu.getItems().add(revert);
                                 }
 
@@ -166,10 +166,19 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
     }
 
 
-    static Map<String, Callable<StackedFontIcon>> icons = new HashMap<>();
+    static Map<String, StackedFontIcon> icons = new HashMap<>();
+    public static String MI_REVERT_NAME = "Revert ...";
+    public static String MI_DIFF_REPO = "Diff with repository";
+    public static String MI_OPEN_NAME = "Open";
+    public static String MI_UNSTAGE_NAME = "Unstage item";
+    public static String MI_STAGE_NAME = "Stage item";
 
     static {
-        icons.put("Revert ...", () -> GitemberUtil.create(new FontIcon(FontAwesome.COPY)));
+        icons.put(MI_OPEN_NAME, GitemberUtil.create(new FontIcon(FontAwesome.FOLDER_OPEN)));
+        icons.put(MI_REVERT_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ROTATE_LEFT)));
+        icons.put(MI_DIFF_REPO, GitemberUtil.create(new FontIcon(FontAwesome.EXCHANGE)));
+        icons.put(MI_STAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ARROW_CIRCLE_UP)));
+        icons.put(MI_UNSTAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ARROW_CIRCLE_DOWN)));
     }
 
 

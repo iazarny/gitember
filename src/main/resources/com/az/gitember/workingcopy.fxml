@@ -16,6 +16,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.control.TextField?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Workingcopy">
 <center>
     <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0" prefWidth="500"
@@ -44,8 +46,21 @@
             </MenuBar>
             <ToolBar id="MERGETB">
                 <Separator id="MERGEBTN"/>
-                <Button id="MERGEBTN" onAction="#stageAllEventHandler" text="Stage all" />
-                <Button id="MERGEBTN" onAction="#unstageAllEventHandler" text="Unstage all" />
+                <Button id="MERGEBTN" onAction="#stageAllEventHandler" text="Stage all">
+                    <graphic>
+                        <StackedFontIcon style="-fx-icon-color: text_color">
+                            <FontIcon iconLiteral="fa-arrow-circle-up" StackedFontIcon.iconSize="0.5"  />
+                        </StackedFontIcon>
+                    </graphic>
+                </Button>
+                <Button id="MERGEBTN" onAction="#unstageAllEventHandler" text="Unstage all">
+                    <graphic>
+                        <StackedFontIcon style="-fx-icon-color: text_color">
+                            <FontIcon iconLiteral="fa-arrow-circle-down" StackedFontIcon.iconSize="0.5"  />
+                        </StackedFontIcon>
+                    </graphic>
+
+                </Button>
                 <Separator id="MERGEBTN"/>
                 <Button id="MERGEBTN" onAction="#mergeEventHandler" text="Merge" />
                 <Button id="MERGEBTN" onAction="#rebaseEventHandler" text="Rebase" />
