@@ -66,7 +66,7 @@ public class AboutDialog extends Dialog {
         GridPane.setColumnSpan(pane, 2);
 
         grid.add(new Label("Gitember version : " ), 0, 1);
-        grid.add(new Label("2.0" ), 1, 1);
+        grid.add(new Label("2.1" ), 1, 1);
 
         grid.add(new Label("Web site : " ), 0, 2);
         Hyperlink gitember = new Hyperlink("https://github.com/iazarny/gitember");

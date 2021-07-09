@@ -31,6 +31,9 @@
                             <items>
                                 <MenuItem text="Clone ..." onAction="#cloneHandler">
                                     <graphic>
+                                        <StackedFontIcon style="-fx-icon-color: text_color">
+                                            <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5" />
+                                        </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>

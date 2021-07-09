@@ -7,6 +7,8 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -59,7 +61,15 @@
             <contextMenu>
                 <ContextMenu fx:id="scmItemContextMenu">
                     <items>
-                        <MenuItem fx:id="historyMenuItem" mnemonicParsing="false"  onAction="#fileHistoryItemMenuItemClickHandler" text="Show history" />
+                        <MenuItem fx:id="historyMenuItem" mnemonicParsing="false"  onAction="#fileHistoryItemMenuItemClickHandler" text="Show history">
+                            <graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-history" StackedFontIcon.iconSize="0.5"  />
+                                </StackedFontIcon>
+
+                            </graphic>
+
+                        </MenuItem>
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem fx:id="openFileMenuItem" mnemonicParsing="false" onAction="#openItemMenuItemClickHandler"  text="Open" />
                         <SeparatorMenuItem mnemonicParsing="false" />

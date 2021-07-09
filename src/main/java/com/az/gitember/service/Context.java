@@ -97,12 +97,12 @@ public class Context {
 
 
         gitRepoService = new GitRepoService(gitFolder);
-        //scmBranchProperty = new SimpleObjectProperty(new GitRepoService(gitFolder));
 
         updateBranches();
         updateTags();
         stashProperty.setValue(gitRepoService.getStashList());
-        //statusList.addAll(gitRepoService.getStatuses()); // TODO only when is open the form ? ??
+
+        updateStatus(null);
 
         Project project = new Project();
         project.setOpenTime(new Date());

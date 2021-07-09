@@ -16,6 +16,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
@@ -104,7 +105,8 @@ public class HistoryDetail implements Initializable {
                 @Override
                 protected void updateItem(ScmItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null &&  item.getViewRepresentation().toLowerCase().contains(Context.searchValue.getValueSafe().toLowerCase())) {
+                    String searchTerm = Context.searchValue.getValueSafe().toLowerCase();
+                    if (item != null && StringUtils.isNotBlank(searchTerm) && item.getViewRepresentation().toLowerCase().contains(searchTerm)) {
                         setStyle(LookAndFeelSet.FOUND_ROW);
                     }
                 }

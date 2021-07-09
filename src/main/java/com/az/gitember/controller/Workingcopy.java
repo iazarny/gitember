@@ -7,9 +7,12 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -104,14 +107,14 @@ public class Workingcopy implements Initializable {
 
 
     public void stageAllEventHandler(ActionEvent actionEvent) {
-        workingCopyTableView.getItems().stream()
-                .filter(i -> (isUnstaged((ScmItem) i)))
-                .forEach(i -> stageUnstageItem((ScmItem) i));
+        Context.statusList.stream()
+                .filter(i -> (isUnstaged(i)))
+                .forEach(i -> stageUnstageItem(i));
         workingCopyTableView.refresh();
     }
 
     public void unstageAllEventHandler(ActionEvent actionEvent) {
-        workingCopyTableView.getItems().stream()
+        Context.statusList.stream()
                 .filter(i -> (!isUnstaged((ScmItem) i)))
                 .forEach(i -> stageUnstageItem((ScmItem) i));
         workingCopyTableView.refresh();
