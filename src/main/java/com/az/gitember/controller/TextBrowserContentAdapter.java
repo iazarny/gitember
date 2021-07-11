@@ -93,7 +93,7 @@ public class TextBrowserContentAdapter {
                     final Token token = tokenIterator.next();
                     final String tokenText = token.getText();
                     final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
-                    System.out.println(lineIdx + "   " + token.getType() + " " + tokenText);
+                    System.out.println(lineIdx + "   " + token.getType() + " " + tokenText + "     <--" + style);
                     safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
                     List<String> strings = this.getLines(tokenText);
                     if (strings.size() > 1) { //multiline token

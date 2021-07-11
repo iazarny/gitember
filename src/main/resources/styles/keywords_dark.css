@@ -49,7 +49,10 @@
 
 .mlcomment {
      -fx-fill: gray;
+ }
 
+.embeded {
+     -fx-fill: #6b845b;
  }
 
 .diff-new {
