@@ -97,12 +97,12 @@ public class Context {
 
 
         gitRepoService = new GitRepoService(gitFolder);
-        //scmBranchProperty = new SimpleObjectProperty(new GitRepoService(gitFolder));
 
         updateBranches();
         updateTags();
         stashProperty.setValue(gitRepoService.getStashList());
-        //statusList.addAll(gitRepoService.getStatuses()); // TODO only when is open the form ? ??
+
+        updateStatus(null);
 
         Project project = new Project();
         project.setOpenTime(new Date());
@@ -177,9 +177,8 @@ public class Context {
     }
 
     public static void updateStatus(ProgressMonitor progressMonitor) {
-        statusList.clear();
-        plotCommitList.clear();
         List<ScmItem> getStatuses = gitRepoService.getStatuses(progressMonitor);
+        plotCommitList.clear();
         statusList.clear();
         statusList.addAll(getStatuses);
         lastUpdate.set(LocalDateTime.now());

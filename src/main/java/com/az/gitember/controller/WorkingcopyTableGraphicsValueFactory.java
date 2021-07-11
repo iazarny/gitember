@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.service.GitemberUtil;
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -14,25 +15,25 @@ import java.util.concurrent.Callable;
 
 public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<StackedFontIcon> {
 
-    private static Callable<StackedFontIcon> fontIconUnknown = () -> create(new FontIcon(FontAwesome.QUESTION));
+    private static Callable<StackedFontIcon> fontIconUnknown = () -> GitemberUtil.create(new FontIcon(FontAwesome.QUESTION));
 
     static Map<String, Callable<StackedFontIcon>> icons = new HashMap<>();
 
     static {
-        icons.put(ScmItem.Status.RENAMED, () -> create(new FontIcon(FontAwesome.COPY)));
+        icons.put(ScmItem.Status.RENAMED, () -> GitemberUtil.create(new FontIcon(FontAwesome.COPY)));
 
 
-        icons.put(ScmItem.Status.UNTRACKED, () -> create(new FontIcon(FontAwesome.QUESTION)));
-        icons.put(ScmItem.Status.ADDED, () -> create(new FontIcon(FontAwesome.PLUS_SQUARE_O)));
+        icons.put(ScmItem.Status.UNTRACKED, () -> GitemberUtil.create(new FontIcon(FontAwesome.QUESTION)));
+        icons.put(ScmItem.Status.ADDED, () -> GitemberUtil.create(new FontIcon(FontAwesome.PLUS_SQUARE_O)));
 
-        icons.put(ScmItem.Status.REMOVED, () -> create(new FontIcon(FontAwesome.MINUS_SQUARE_O)));
-        icons.put(ScmItem.Status.MISSED, () -> create(new FontIcon(FontAwesome.MINUS_SQUARE_O)));
+        icons.put(ScmItem.Status.REMOVED, () -> GitemberUtil.create(new FontIcon(FontAwesome.MINUS_SQUARE_O)));
+        icons.put(ScmItem.Status.MISSED, () -> GitemberUtil.create(new FontIcon(FontAwesome.MINUS_SQUARE_O)));
 
-        icons.put(ScmItem.Status.MODIFIED, () -> create(new FontIcon(FontAwesome.EDIT)));
-        icons.put(ScmItem.Status.CHANGED, () -> create(new FontIcon(FontAwesome.EDIT)));
+        icons.put(ScmItem.Status.MODIFIED, () -> GitemberUtil.create(new FontIcon(FontAwesome.EDIT)));
+        icons.put(ScmItem.Status.CHANGED, () -> GitemberUtil.create(new FontIcon(FontAwesome.EDIT)));
 
-        icons.put(ScmItem.Status.CONFLICT, () -> create(new FontIcon(FontAwesome.EXCHANGE)));
-        icons.put(ScmItem.Status.UNCOMMITED, () -> create(new FontIcon(FontAwesome.CHECK_SQUARE_O)));
+        icons.put(ScmItem.Status.CONFLICT, () -> GitemberUtil.create(new FontIcon(FontAwesome.EXCHANGE)));
+        icons.put(ScmItem.Status.UNCOMMITED, () -> GitemberUtil.create(new FontIcon(FontAwesome.CHECK_SQUARE_O)));
     }
 
     private final String status;
@@ -70,11 +71,5 @@ public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<Sta
 
     }
 
-    private static StackedFontIcon create(final FontIcon fontIcon) {
-        final StackedFontIcon stackedFontIcon = new StackedFontIcon();
-        stackedFontIcon.setStyle("-fx-icon-color: text_color");
-        stackedFontIcon.getChildren().add(fontIcon);
-        return stackedFontIcon;
-    }
 
 }

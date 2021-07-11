@@ -7,6 +7,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.*;
 import java.net.URLConnection;
@@ -85,6 +87,13 @@ public class GitemberUtil {
             case DELETE: return prefix + "-deleted";
             default : return prefix + "-modified";
         }
+    }
+
+    public static StackedFontIcon create(final FontIcon fontIcon) {
+        final StackedFontIcon stackedFontIcon = new StackedFontIcon();
+        stackedFontIcon.setStyle("-fx-icon-color: text_color");
+        stackedFontIcon.getChildren().add(fontIcon);
+        return stackedFontIcon;
     }
 
 
