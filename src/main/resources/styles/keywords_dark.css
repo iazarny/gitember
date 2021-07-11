@@ -7,6 +7,10 @@
     -fx-fill: gray;
 }
 
+.debug {
+    -fx-fill: magenta;
+}
+
 .default {
     -fx-fill: #bababa;
 }

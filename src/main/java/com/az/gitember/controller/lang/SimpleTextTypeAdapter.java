@@ -2,19 +2,14 @@ package com.az.gitember.controller.lang;
 
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.Token;
 
 public class SimpleTextTypeAdapter extends BaseTokenTypeAdapter {
 
     private SimpleTextLexer textLexer;
 
     public SimpleTextTypeAdapter(Lexer lexer) {
-
         super(lexer);
-
         this.textLexer = (SimpleTextLexer) lexer;
-/*
-* Про сто камент для проверки */
     }
 
     @Override

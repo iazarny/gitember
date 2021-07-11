@@ -9,10 +9,12 @@ public class BaseTokenTypeAdapter {
     public static String SEMICOLON = "semicolon";
     public static String DIGIT = "digit";
     public static String STRING = "string";
+    public static String STRING3 = "string3";
     public static String COMMENT = "comment";
     public static String BOOLEAN = "boolean";
     public static String DEFAULT = "default";
     public static String EMBEDED = "embeded";
+    public static String DEBUG = "debug";
 
     private final Lexer lexer;
 

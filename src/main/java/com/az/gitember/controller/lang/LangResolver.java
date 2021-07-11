@@ -1,5 +1,6 @@
 package com.az.gitember.controller.lang;
 
+import com.az.gitember.controller.lang.asm.MASMLexer;
 import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
@@ -21,6 +22,9 @@ public class LangResolver {
         } else if ("json".equalsIgnoreCase(fileExtention)) {
             this.lexer = new JSONLexer(charStream );
             this.tokenTypeAdapter = new  JsonTokenTypeAdapter(lexer);
+        } else if ("asm".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new MASMLexer(charStream );
+            this.tokenTypeAdapter = new  AsmTokenTypeAdapter(lexer);
 /*
         } else if ("html".equalsIgnoreCase(fileExtention) || "htm".equalsIgnoreCase(fileExtention)) {
             this.lexer = new HTMLLexer(charStream );
