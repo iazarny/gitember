@@ -3,6 +3,7 @@ package com.az.gitember.controller.lang;
 import com.az.gitember.controller.lang.asm.MASMLexer;
 import com.az.gitember.controller.lang.basic.jvmBasicLexer;
 import com.az.gitember.controller.lang.c.CLexer;
+import com.az.gitember.controller.lang.cpp.CPP14Lexer;
 import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
@@ -33,6 +34,9 @@ public class LangResolver {
         } else if ("c".equalsIgnoreCase(fileExtention) || "h".equalsIgnoreCase(fileExtention)) {
             this.lexer = new CLexer(charStream );
             this.tokenTypeAdapter = new  CTokenTypeAdapter(lexer);
+        } else if ("cc".equalsIgnoreCase(fileExtention) || "cpp".equalsIgnoreCase(fileExtention)|| "hh".equalsIgnoreCase(fileExtention)|| "hpp".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new CPP14Lexer(charStream );
+            this.tokenTypeAdapter = new  CppTokenTypeAdapter(lexer);
 /*
         } else if ("html".equalsIgnoreCase(fileExtention) || "htm".equalsIgnoreCase(fileExtention)) {
             this.lexer = new HTMLLexer(charStream );
