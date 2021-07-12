@@ -2,7 +2,6 @@ package com.az.gitember.controller;
 
 import com.az.gitember.controller.lang.LangResolver;
 import com.az.gitember.service.GitemberUtil;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -39,8 +38,6 @@ public class TextBrowserContentAdapter {
     private final ArrayList<String> lines;
     private final Map<Integer, List<Token>> tokensPerLine = new HashMap<>();
     private final Map<Integer, List<Node>> nodesPerLine = new HashMap<>();
-
-
     private final LangResolver langResolver;
 
     /**
@@ -52,14 +49,6 @@ public class TextBrowserContentAdapter {
         this(content, extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
-
-        /*Tokens on current line, so the multiline token can end on the line where new token is starts.
-         * So need to handle it. Example - below
-         */  String testAndExample = "here example";
-                 /* Here
-                 one */ /* more
-                 example*/
-
     }
 
     TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff) {
@@ -87,7 +76,6 @@ public class TextBrowserContentAdapter {
             final String originalLine = lines.get(lineIdx);
             rez.add(createLineNumbedNode(lineIdx, ""));
             if (tokens != null) {
-                Token lastTokenInLine = tokens.get(tokens.size() - 1);
                 Token prevToken = null;
                 Iterator<Token> tokenIterator = tokens.iterator();
                 while (tokenIterator.hasNext()) {
@@ -103,25 +91,14 @@ public class TextBrowserContentAdapter {
                         if (tokensPerLine.get(lineIdx + 1) != null) {
                             tokens = tokensPerLine.get(lineIdx + 1);
                             tokenIterator = tokens.iterator();
-                            System.out.println("fffffffffffffffffffffffffffffffffffffffffff" + tokens);
                         }
                     } else { //single line
                         safeAdd(rez, createText(originalLine, tokenText, style, lineIdx, "", rez.get(rez.size() - 1)));
-                        /*if (lastTokenInLine == token) {
-                            safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx, "", rez.get(rez.size() - 1)));
-                        }*/
                     }
                     prevToken = token;
                 }
-
-            } else { // empty line shall be right padded with spaces
-                //safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "", rez.get(rez.size() - 1))); // till end
             }
-
-           // rez.add(new Text(" \n"));
         }
-
-        System.out.println("------------------------");
         //Set line num
         rez.stream().filter(n -> n instanceof HBox).forEach(
                 n -> {
@@ -129,9 +106,6 @@ public class TextBrowserContentAdapter {
                     nodes.add(n);
                 }
         );
-
-
-
 
         double rowWidth = (this.maxLineLength + this.lineNumWidth) * FONT_SYMBOL_WIDTH;
 
@@ -148,8 +122,8 @@ public class TextBrowserContentAdapter {
             row.getChildren().addAll(nodesPerLine.get(line));
             rows.add(row);
         }
-        decorateByPatch2(rows);
-        decorateByRawDiff();
+        decorateByPatch(rows);
+        decorateByRawDiff(rows);
         VBox vBox = new VBox();
         vBox.getChildren().addAll(rows);
         vBox.setMaxWidth(rowWidth);
@@ -158,10 +132,32 @@ public class TextBrowserContentAdapter {
         return Collections.singletonList(vBox);
     }
 
+    private void decorateByRawDiff(final ArrayList<Node> rows) {
+        if (rawDiff) {
+            for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
+                final String line = lines.get(lineIdx);
+                final String style;
+                if (line.startsWith("+")) {
+                    style = "diff-new";
+                } else if (line.startsWith("-")) {
+                    style = "diff-deleted";
+                } else if (line.startsWith("@@")) {
+                    style = "diff-modified";
+                } else {
+                    style = null;
+                }
+                if (style != null) {
+                    HBox row = (HBox) rows.get(lineIdx);
+                    row.getStyleClass().add(style);
+                }
+            }
+        }
+    }
+
     /**
      * Highlight new , deleted and changed lines by patch.
      */
-    private void decorateByPatch2(final ArrayList<Node> rows) {
+    private void decorateByPatch(final ArrayList<Node> rows) {
         if (patch != null) {
             for (Edit delta : patch) {
                 int origPos = delta.getBeginB();
@@ -175,13 +171,6 @@ public class TextBrowserContentAdapter {
                 for (int line = origPos; line < (origLines + origPos); line++) {
                     HBox row = (HBox) rows.get(line);
                     row.getStyleClass().add(styleClass);
-                    /*List<Node> nodes = nodesPerLine.get(line);
-                    if (nodes != null) {
-                        nodes.forEach(node -> {
-                                    node.getStyleClass().add(styleClass);
-                                }
-                        );
-                    }*/
                 }
             }
         }
@@ -200,7 +189,6 @@ public class TextBrowserContentAdapter {
             safeAdd(rez, createText(originalLine, commentString, style, lineIdx, "", rez.get(rez.size() - 1)));
             mlline++;
             if (mlline < (strings.size())) {
-               // rez.add(new Text(" \n"));
                 lineIdx++;
             }
         }
@@ -239,7 +227,6 @@ public class TextBrowserContentAdapter {
             if (prevText.getStyleClass().contains(style)) {
                 String newTExt = prevText.getText() + tokenString;
                 prevText.setText(newTExt);
-                adjustHBoxWidth(newTExt, prevHBox);
                 return null;
             }
         }
@@ -250,52 +237,12 @@ public class TextBrowserContentAdapter {
         HBox hb = new HBox(te);
         hb.setUserData(lineIdx);
         hb.setSpacing(0);
-        adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
         //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
 
         return hb;
     }
-
-    //todo fix the error with tab width
-    private void adjustHBoxWidth(String tokenString, HBox hb) {
-        /*double width = FONT_SYMBOL_WIDTH * tokenString.length();
-        hb.setMaxWidth(width);
-        hb.setMinWidth(width);
-        hb.setPrefWidth(width);*/
-    }
-
-    private void decorateByRawDiff() {
-        if (rawDiff) {
-            for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-                final String line = lines.get(lineIdx);
-                final String style;
-                if (line.startsWith("+")) {
-                    style = "diff-new";
-                } else if (line.startsWith("-")) {
-                    style = "diff-deleted";
-                } else if (line.startsWith("@@")) {
-                    style = "diff-modified";
-                } else {
-                    style = null;
-                }
-                if (style != null) {
-                    List<Node> nodes = nodesPerLine.get(lineIdx);
-                    if (nodes != null) {
-                        nodes.forEach(node -> {
-                                    HBox hb = ((HBox) node);
-                                    hb.setBackground(new Background(new BackgroundFill(null, CornerRadii.EMPTY, Insets.EMPTY)));
-                                    hb.getStyleClass().add(style);
-                                }
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-
 
     private ArrayList<String> getLines(final String content) {
         return (ArrayList) new BufferedReader(new StringReader(content))
@@ -304,7 +251,6 @@ public class TextBrowserContentAdapter {
     }
 
     private void safeAdd(List<Node> lst, Node node) {
-
         if (node != null) {
             lst.add(node);
         }
