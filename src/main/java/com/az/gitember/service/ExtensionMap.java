@@ -10,6 +10,7 @@ public class ExtensionMap {
 
     static {
         add(new ExtensionInfo("text/plain", "sql", true));
+        add(new ExtensionInfo("text/plain", "cs", true));
         add(new ExtensionInfo("text/plain", "sh", true));
         add(new ExtensionInfo("text/plain", "cmd", true));
         add(new ExtensionInfo("text/plain", "bat", true));

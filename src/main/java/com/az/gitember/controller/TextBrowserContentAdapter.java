@@ -53,8 +53,14 @@ public class TextBrowserContentAdapter {
         this.patch = patch;
         this.leftSide = leftSide;
 
-    }
+        /*Tokens on current line, so the multiline token can end on the line where new token is starts.
+         * So need to handle it. Example - below
+         */  String testAndExample = "here example";
+                 /* Here
+                 one */ /* more
+                 example*/
 
+    }
 
     TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff) {
         this.langResolver = new LangResolver(extension, content);
@@ -71,20 +77,15 @@ public class TextBrowserContentAdapter {
             List<Token> tokens = tokensPerLine.computeIfAbsent(token.getLine(), integer -> new ArrayList<>());
             tokens.add(token);
         });
-
         FONT = Font.font(FONT_NAME, FONT_SIZE);
-
     }
 
     public List<Node> getText() {
-
         final List<Node> rez = new ArrayList<>(1024);
-        for (int line = 1; line < 1 + lines.size(); line++) {
-            int lineIdx = line - 1;
-            final List<Token> tokens = tokensPerLine.get(line);
+        for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
+            List<Token> tokens = tokensPerLine.get(lineIdx + 1);
             final String originalLine = lines.get(lineIdx);
             rez.add(createLineNumbedNode(lineIdx, ""));
-
             if (tokens != null) {
                 Token lastTokenInLine = tokens.get(tokens.size() - 1);
                 Token prevToken = null;
@@ -97,44 +98,30 @@ public class TextBrowserContentAdapter {
                     safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
                     List<String> strings = this.getLines(tokenText);
                     if (strings.size() > 1) { //multiline token
-                        int mlline = 0;
-                        Iterator<String> stringIterator = strings.iterator();
-                        while (stringIterator.hasNext()) {
-                            if (mlline > 0) {
-                                rez.add(createLineNumbedNode(lineIdx, "")); // debug
-                            }
-                            String commentString = stringIterator.next();
-                            safeAdd(rez, createText(originalLine, commentString, style, lineIdx, "", rez.get(rez.size() - 1)));
-                            int lengtnTillEol;
-                            if (mlline == 0) {
-                                lengtnTillEol = this.maxLineLength - originalLine.length();
-                            } else {
-                                lengtnTillEol = this.maxLineLength - commentString.length();
-                            }
-                            safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", lengtnTillEol), style, lineIdx, "", rez.get(rez.size() - 1))); // till end
-                            mlline++;
-                            if (mlline < (strings.size())) {
-                                rez.add(new Text(" \n"));
-                                line++;
-                                lineIdx++;
-                            }
+                        int processedLines = processMultilineToken(rez, lineIdx, originalLine, style, strings);
+                        lineIdx += processedLines;
+                        if (tokensPerLine.get(lineIdx + 1) != null) {
+                            tokens = tokensPerLine.get(lineIdx + 1);
+                            tokenIterator = tokens.iterator();
+                            System.out.println("fffffffffffffffffffffffffffffffffffffffffff" + tokens);
                         }
                     } else { //single line
                         safeAdd(rez, createText(originalLine, tokenText, style, lineIdx, "", rez.get(rez.size() - 1)));
-                        if (lastTokenInLine == token) {
+                        /*if (lastTokenInLine == token) {
                             safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - tokenText.length() - token.getCharPositionInLine()), style, lineIdx, "", rez.get(rez.size() - 1)));
-                        }
+                        }*/
                     }
                     prevToken = token;
                 }
 
             } else { // empty line shall be right padded with spaces
-                safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "", rez.get(rez.size() - 1))); // till end
+                //safeAdd(rez, createText(originalLine, StringUtils.repeat(" ", this.maxLineLength - originalLine.length()), "", lineIdx, "", rez.get(rez.size() - 1))); // till end
             }
 
-            rez.add(new Text(" \n"));
+           // rez.add(new Text(" \n"));
         }
 
+        System.out.println("------------------------");
         //Set line num
         rez.stream().filter(n -> n instanceof HBox).forEach(
                 n -> {
@@ -144,15 +131,13 @@ public class TextBrowserContentAdapter {
         );
 
 
-        decorateByPatch();
-        decorateByRawDiff();
+
 
         double rowWidth = (this.maxLineLength + this.lineNumWidth) * FONT_SYMBOL_WIDTH;
 
-        final List<Node> rows = new ArrayList<>(1024);
+        final ArrayList<Node> rows = new ArrayList<>(1024);
         for (int line = 0; line < lines.size(); line++) {
             HBox row = new HBox();
-
             row.setMaxWidth(rowWidth);
             row.setMinWidth(rowWidth);
             row.setPrefWidth(rowWidth);
@@ -160,24 +145,66 @@ public class TextBrowserContentAdapter {
             row.setMinHeight(ROW_HEIGHT);
             row.setPrefHeight(ROW_HEIGHT);
             //row.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: red;");
-
             row.getChildren().addAll(nodesPerLine.get(line));
             rows.add(row);
-
         }
-
+        decorateByPatch2(rows);
+        decorateByRawDiff();
         VBox vBox = new VBox();
         vBox.getChildren().addAll(rows);
-
         vBox.setMaxWidth(rowWidth);
         vBox.setMinWidth(rowWidth);
         vBox.setPrefWidth(rowWidth);
-        //vBox.setMaxHeight(FONT_HEIGHT * lines.size());
-        //vBox.setMinHeight(FONT_HEIGHT * lines.size());
-        //vBox.setPrefHeight(FONT_HEIGHT * lines.size());
-
         return Collections.singletonList(vBox);
-        //return rez;
+    }
+
+    /**
+     * Highlight new , deleted and changed lines by patch.
+     */
+    private void decorateByPatch2(final ArrayList<Node> rows) {
+        if (patch != null) {
+            for (Edit delta : patch) {
+                int origPos = delta.getBeginB();
+                int origLines = delta.getLengthB();
+                String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
+                if (leftSide) {
+                    origPos = delta.getBeginA();
+                    origLines = delta.getLengthA();
+                }
+
+                for (int line = origPos; line < (origLines + origPos); line++) {
+                    HBox row = (HBox) rows.get(line);
+                    row.getStyleClass().add(styleClass);
+                    /*List<Node> nodes = nodesPerLine.get(line);
+                    if (nodes != null) {
+                        nodes.forEach(node -> {
+                                    node.getStyleClass().add(styleClass);
+                                }
+                        );
+                    }*/
+                }
+            }
+        }
+    }
+
+
+
+    private int processMultilineToken(List<Node> rez, int lineIdx, String originalLine, String style, List<String> strings) {
+        int mlline = 0;
+        Iterator<String> stringIterator = strings.iterator();
+        while (stringIterator.hasNext()) {
+            if (mlline > 0) {
+                rez.add(createLineNumbedNode(lineIdx, "")); // debug
+            }
+            String commentString = stringIterator.next();
+            safeAdd(rez, createText(originalLine, commentString, style, lineIdx, "", rez.get(rez.size() - 1)));
+            mlline++;
+            if (mlline < (strings.size())) {
+               // rez.add(new Text(" \n"));
+                lineIdx++;
+            }
+        }
+        return strings.size() - 1;
     }
 
     /**
@@ -192,9 +219,9 @@ public class TextBrowserContentAdapter {
     }
 
 
-    private HBox createLineNumbedNode(int lineIdx, String hhhh) {
+    private HBox createLineNumbedNode(int lineIdx, String debugString) {
         final String lineNumText = StringUtils.leftPad(String.valueOf(lineIdx), this.lineNumWidth, "0") + "  ";
-        HBox node = createText("", lineNumText, "linenum", lineIdx, hhhh, null);
+        HBox node = createText("", lineNumText, "linenum", lineIdx, debugString, null);
         return node;
     }
 
@@ -204,7 +231,7 @@ public class TextBrowserContentAdapter {
      *
      * @return null is concatenated to the prev node otherwise new node.
      */
-    private HBox createText(final String lineString, final String tokenString, final String style, final int lineIdx, String hhhhh, final Node prevNode) {
+    private HBox createText(final String lineString, final String tokenString, final String style, final int lineIdx, String debugString, final Node prevNode) {
 
         if (prevNode instanceof HBox) {
             final HBox prevHBox = (HBox) prevNode;
@@ -216,7 +243,7 @@ public class TextBrowserContentAdapter {
                 return null;
             }
         }
-        Text te = new Text(tokenString + hhhhh);
+        Text te = new Text(tokenString + debugString);
         te.setFont(FONT);
         te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
         te.getStyleClass().add("kwfont");
@@ -269,32 +296,6 @@ public class TextBrowserContentAdapter {
     }
 
 
-    /**
-     * Highlight new , deleted and changed lines by patch.
-     */
-    private void decorateByPatch() {
-        if (patch != null) {
-            for (Edit delta : patch) {
-                int origPos = delta.getBeginB();
-                int origLines = delta.getLengthB();
-                String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
-                if (leftSide) {
-                    origPos = delta.getBeginA();
-                    origLines = delta.getLengthA();
-                }
-
-                for (int line = origPos; line < (origLines + origPos); line++) {
-                    List<Node> nodes = nodesPerLine.get(line);
-                    if (nodes != null) {
-                        nodes.forEach(node -> {
-                                    node.getStyleClass().add(styleClass);
-                                }
-                        );
-                    }
-                }
-            }
-        }
-    }
 
     private ArrayList<String> getLines(final String content) {
         return (ArrayList) new BufferedReader(new StringReader(content))
