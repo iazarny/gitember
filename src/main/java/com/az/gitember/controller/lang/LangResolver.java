@@ -5,6 +5,7 @@ import com.az.gitember.controller.lang.basic.jvmBasicLexer;
 import com.az.gitember.controller.lang.c.CLexer;
 import com.az.gitember.controller.lang.cpp.CPP14Lexer;
 import com.az.gitember.controller.lang.cpp.CSharpLexer;
+import com.az.gitember.controller.lang.css.css3Lexer;
 import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
@@ -41,6 +42,9 @@ public class LangResolver {
         } else if ("cs".equalsIgnoreCase(fileExtention)) {
             this.lexer = new CSharpLexer(charStream );
             this.tokenTypeAdapter = new  CSharpTokenTypeAdapter(lexer);
+        } else if ("css".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new css3Lexer(charStream );
+            this.tokenTypeAdapter = new  CssTokenTypeAdapter(lexer);
 /*
         } else if ("html".equalsIgnoreCase(fileExtention) || "htm".equalsIgnoreCase(fileExtention)) {
             this.lexer = new HTMLLexer(charStream );

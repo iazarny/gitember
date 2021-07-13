@@ -18,10 +18,6 @@ public class CSharpTokenTypeAdapter extends BaseTokenTypeAdapter {
 
     @Override
     public String adaptToStyleClass(int tokenType) {
-        if (tokenType == lexer.VERBATIUM_STRING ) {
-            return DEBUG;
-        }
-
         if (tokenType >= lexer.SINGLE_LINE_DOC_COMMENT && tokenType <= lexer.DELIMITED_COMMENT) {
             return COMMENT;
         } else if (tokenType >= lexer.SHARP &&  tokenType <= lexer.YIELD) {
@@ -29,7 +25,7 @@ public class CSharpTokenTypeAdapter extends BaseTokenTypeAdapter {
         } else if (tokenType == lexer.IDENTIFIER) {
             return super.adaptToStyleClass(tokenType);
         } else if (tokenType == lexer.LITERAL_ACCESS || tokenType == lexer.CHARACTER_LITERAL || tokenType == lexer.REGULAR_STRING
-                  ) {
+                || tokenType == lexer.VERBATIUM_STRING  ) {
             return STRING;
         } else if (tokenType == lexer.INTERPOLATED_REGULAR_STRING_START || tokenType == lexer.INTERPOLATED_VERBATIUM_STRING_START  ) {
             return STRING3;
