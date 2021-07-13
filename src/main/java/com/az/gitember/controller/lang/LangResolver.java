@@ -13,6 +13,10 @@ import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.javascript.JavaScriptLexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
+import com.az.gitember.controller.lang.kotlin.KotlinLexer;
+import com.az.gitember.controller.lang.lua.LuaLexer;
+import com.az.gitember.controller.lang.pascal.pascalLexer;
+import com.az.gitember.controller.lang.php.PhpLexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
 import com.az.gitember.data.Is;
@@ -73,6 +77,18 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("ts")) {
             this.lexer = new TypeScriptLexer(charStream );
             this.tokenTypeAdapter = new TypeScriptTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("kt","ktm", "kts")) {
+            this.lexer = new KotlinLexer(charStream );
+            this.tokenTypeAdapter = new  KotlinTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("lua")) {
+            this.lexer = new LuaLexer(charStream );
+            this.tokenTypeAdapter = new  LuaTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("pas")) {
+            this.lexer = new pascalLexer(charStream );
+            this.tokenTypeAdapter = new  PascalTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("php")) {
+            this.lexer = new PhpLexer(charStream );
+            this.tokenTypeAdapter = new  PhpTokenTypeAdapter(lexer);
         } else  {
             this.lexer = new SimpleTextLexer(charStream );
             this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);

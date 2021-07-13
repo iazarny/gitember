@@ -34,10 +34,10 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/plain", "exs", true));
         add(new ExtensionInfo("text/plain", "kt", true));
         add(new ExtensionInfo("text/plain", "kts", true));
+        add(new ExtensionInfo("text/plain", "ktm", true));
         add(new ExtensionInfo("text/plain", "properties", true));
         add(new ExtensionInfo("text/plain", "props", true));
         add(new ExtensionInfo("text/plain", "prop", true));
-        add(new ExtensionInfo("text/plain", "ktm", true));
         add(new ExtensionInfo("text/plain", "text", true));
         add(new ExtensionInfo("text/plain", "conf", true));
         add(new ExtensionInfo("text/plain", "def", true));
