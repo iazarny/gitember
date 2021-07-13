@@ -11,6 +11,7 @@ import com.az.gitember.controller.lang.fortran.Fortran77Lexer;
 import com.az.gitember.controller.lang.golang.GoLexer;
 import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
+import com.az.gitember.controller.lang.javascript.JavaScriptLexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.data.Is;
@@ -65,6 +66,9 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("html","html")) {
             this.lexer = new HTMLLexer(charStream );
             this.tokenTypeAdapter = new HtmlTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("js")) {
+            this.lexer = new JavaScriptLexer(charStream );
+            this.tokenTypeAdapter = new JavaScriptTokenTypeAdapter(lexer);
         } else  {
             this.lexer = new SimpleTextLexer(charStream );
             this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);
