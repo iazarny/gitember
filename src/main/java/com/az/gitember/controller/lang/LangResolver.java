@@ -6,6 +6,8 @@ import com.az.gitember.controller.lang.c.CLexer;
 import com.az.gitember.controller.lang.cpp.CPP14Lexer;
 import com.az.gitember.controller.lang.cpp.CSharpLexer;
 import com.az.gitember.controller.lang.css.css3Lexer;
+import com.az.gitember.controller.lang.erlang.ErlangLexer;
+import com.az.gitember.controller.lang.fortran.Fortran77Lexer;
 import com.az.gitember.controller.lang.html.HTMLLexer;
 import com.az.gitember.controller.lang.java.Java9Lexer;
 import com.az.gitember.controller.lang.json.JSONLexer;
@@ -36,7 +38,8 @@ public class LangResolver {
         } else if ("c".equalsIgnoreCase(fileExtention) || "h".equalsIgnoreCase(fileExtention)) {
             this.lexer = new CLexer(charStream );
             this.tokenTypeAdapter = new  CTokenTypeAdapter(lexer);
-        } else if ("cc".equalsIgnoreCase(fileExtention) || "cpp".equalsIgnoreCase(fileExtention)|| "hh".equalsIgnoreCase(fileExtention)|| "hpp".equalsIgnoreCase(fileExtention)) {
+        } else if ("cc".equalsIgnoreCase(fileExtention) || "cpp".equalsIgnoreCase(fileExtention)
+                || "hh".equalsIgnoreCase(fileExtention)|| "hpp".equalsIgnoreCase(fileExtention)) {
             this.lexer = new CPP14Lexer(charStream );
             this.tokenTypeAdapter = new  CppTokenTypeAdapter(lexer);
         } else if ("cs".equalsIgnoreCase(fileExtention)) {
@@ -45,6 +48,14 @@ public class LangResolver {
         } else if ("css".equalsIgnoreCase(fileExtention)) {
             this.lexer = new css3Lexer(charStream );
             this.tokenTypeAdapter = new  CssTokenTypeAdapter(lexer);
+        } else if ("erl".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new ErlangLexer(charStream );
+            this.tokenTypeAdapter = new  ErlangTokenTypeAdapter(lexer);
+        } else if ("f".equalsIgnoreCase(fileExtention) || "for".equalsIgnoreCase(fileExtention)
+                || "f77".equalsIgnoreCase(fileExtention) || "f03".equalsIgnoreCase(fileExtention)
+                || "f90".equalsIgnoreCase(fileExtention)) {
+            this.lexer = new Fortran77Lexer(charStream );
+            this.tokenTypeAdapter = new  Fortran77TokenTypeAdapter(lexer);
 /*
         } else if ("html".equalsIgnoreCase(fileExtention) || "htm".equalsIgnoreCase(fileExtention)) {
             this.lexer = new HTMLLexer(charStream );
