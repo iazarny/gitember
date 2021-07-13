@@ -107,6 +107,8 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/x-vcalendar", "vcs", true));
         add(new ExtensionInfo("text/x-vcard", "vcf", true));
         add(new ExtensionInfo("application/javascript", "js", true));
+        add(new ExtensionInfo("application/typescript", "ts", true));
+        add(new ExtensionInfo("application/javascript", "jsx", true));
         add(new ExtensionInfo("application/json", "json", true));
         add(new ExtensionInfo("application/lost+xml", "lostxml", true));
         add(new ExtensionInfo("application/atom+xml", "atom", true));

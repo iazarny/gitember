@@ -1,23 +1,23 @@
 package com.az.gitember.controller.lang;
 
-import com.az.gitember.controller.lang.javascript.JavaScriptLexer;
+import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
 import org.antlr.v4.runtime.Lexer;
 
-public class JavaScriptTokenTypeAdapter extends BaseTokenTypeAdapter {
+public class TypeScriptTokenTypeAdapter extends BaseTokenTypeAdapter {
 
-    private JavaScriptLexer lexer;
+    private TypeScriptLexer lexer;
 
-    public JavaScriptTokenTypeAdapter(Lexer lexer) {
+    public TypeScriptTokenTypeAdapter(Lexer lexer) {
 
         super(lexer);
 
-        this.lexer = (JavaScriptLexer) lexer;
+        this.lexer = (TypeScriptLexer) lexer;
 
     }
 
     @Override
     public String adaptToStyleClass(int tokenType) {
-        if ((tokenType >= lexer.HashBangLine && tokenType <= lexer.SingleLineComment) || tokenType == lexer.HtmlComment|| tokenType == lexer.CDataComment) {
+        if (tokenType == lexer.MultiLineComment && tokenType == lexer.SingleLineComment || tokenType == lexer.HtmlComment|| tokenType == lexer.CDataComment) {
             return COMMENT;
         } else if (tokenType == lexer.RegularExpressionLiteral)  {
             return STRING3;
@@ -27,7 +27,7 @@ public class JavaScriptTokenTypeAdapter extends BaseTokenTypeAdapter {
             return SEMICOLON;
         } else if (tokenType == lexer.BooleanLiteral)  {
             return BOOLEAN;
-        } else if (tokenType >= lexer.DecimalLiteral && tokenType <= lexer.BigDecimalIntegerLiteral) {
+        } else if (tokenType >= lexer.DecimalLiteral && tokenType <= lexer.BinaryIntegerLiteral) {
             return DIGIT;
         } else if (tokenType >= lexer.Break && tokenType <= lexer.Yield) {
             return KEYWORD;
