@@ -27,12 +27,10 @@ public class CppTokenTypeAdapter extends BaseTokenTypeAdapter {
             return STRING;
         } else if (tokenType == lexer.Comma || tokenType == lexer.Semi || tokenType == lexer.Colon  || tokenType == lexer.Doublecolon  ) {
             return SEMICOLON;
-        /*} else if (tokenType == lexer.LeftParen || tokenType == lexer.LeftBrace || tokenType == lexer.LeftBracket  ) {
+        } else if (tokenType == lexer.LeftParen || tokenType == lexer.LeftBrace || tokenType == lexer.LeftBracket  ) {
             return BRACKET;
-
         } else if (tokenType == lexer.RightParen || tokenType == lexer.RightBrace || tokenType == lexer.RightBracket  ) {
-            return BRACKET;*/
-
+            return BRACKET;
         } else if (tokenType == lexer.Identifier) {
             return super.adaptToStyleClass(tokenType);
         } else if (tokenType == lexer.Directive ) {

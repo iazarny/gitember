@@ -16,7 +16,7 @@
 }
 
 .keyword {
-    -fx-fill: #936d08;
+    -fx-fill: #e09e15;
 }
 
 .boolean {
@@ -52,7 +52,7 @@
  }
 
 .embeded {
-     -fx-fill: #6b845b;
+    -fx-fill: rgba(217, 184, 86, 0.51);
  }
 
 .diff-new {

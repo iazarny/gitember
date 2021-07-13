@@ -11,6 +11,7 @@ public class ExtensionMap {
     static {
         add(new ExtensionInfo("text/plain", "sql", true));
         add(new ExtensionInfo("text/plain", "cs", true));
+        add(new ExtensionInfo("text/plain", "csharp", true));
         add(new ExtensionInfo("text/plain", "sh", true));
         add(new ExtensionInfo("text/plain", "cmd", true));
         add(new ExtensionInfo("text/plain", "bat", true));
@@ -47,6 +48,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/plain", "vb", true));
         add(new ExtensionInfo("text/plain", "md", true));
         add(new ExtensionInfo("text/plain", "go", true));
+        add(new ExtensionInfo("text/plain", "golang", true));
         add(new ExtensionInfo("text/plain", "rb", true));
         add(new ExtensionInfo("text/plain", "lua", true));
         add(new ExtensionInfo("text/plain", "php", true));
@@ -83,6 +85,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/vnd.wap.wmlscript", "wmls", true));
         add(new ExtensionInfo("text/x-assembly", "s", true));
         add(new ExtensionInfo("text/x-assembly", "asm", true));
+        add(new ExtensionInfo("text/x-assembly", "masm", true));
         add(new ExtensionInfo("text/x-csrc", "c", true));
         add(new ExtensionInfo("text/x-c++src", "cc", true));
         add(new ExtensionInfo("text/x-c++src", "cxx", true));

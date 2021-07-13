@@ -1,0 +1,962 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>The Best HTML Examples and HTML5 Examples</title>
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="description" content="HTML provides the structure of websites. Here are some examples of how to use HTML syntax to build websites, including some examples of newer HTML5 features. The A Href Attribute ExampleThe &lt;a href&gt; attribute refers to a destination provided by a link. The a (anchor) tag is dead">
+
+
+    <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism.min.css" />
+    <noscript><link rel="stylesheet" href="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism.min.css"></noscript>
+    <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"
+          href="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-unescaped-markup.css" />
+    <noscript><link rel="stylesheet" href="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-unescaped-markup.css"></noscript>
+
+    <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700|Roboto+Mono:400,700?&display=swap">
+
+    <link rel="stylesheet" type="text/css" href="/news/assets/built/screen.css?v=f07a8cf4bd" />
+    <link rel="preload" onload="this.onload=null;this.rel='stylesheet'" as="style" href="/news/assets/built/global.css?v=f07a8cf4bd" />
+    <link rel="stylesheet" type="text/css" href="/news/assets/built/algolia-search.css?v=f07a8cf4bd" />
+
+    <script defer src="https://cdn.freecodecamp.org/news-assets/algolia/algoliasearch-3-33-0/algoliasearch.min.js"></script>
+    <script defer src="https://cdn.freecodecamp.org/news-assets/algolia/autocomplete-0-36-0/autocomplete.min.js"></script>
+
+    <script defer type="text/javascript" src="/news/assets/config/en/main.js?v=f07a8cf4bd"></script>
+    <script defer type="text/javascript" src="/news/assets/config/en/footer.js?v=f07a8cf4bd"></script>
+
+    <script defer type="text/javascript" src="/news/assets/config/es/main.js?v=f07a8cf4bd"></script>
+    <script defer type="text/javascript" src="/news/assets/config/es/footer.js?v=f07a8cf4bd"></script>
+
+    <script defer type="text/javascript" src="/news/assets/config/zh-cn/main.js?v=f07a8cf4bd"></script>
+    <script defer type="text/javascript" src="/news/assets/config/zh-cn/footer.js?v=f07a8cf4bd"></script>
+
+    <script defer type="text/javascript" src="/news/assets/config/setup-locale.js?v=f07a8cf4bd"></script>
+
+    <script defer src="https://cdn.freecodecamp.org/news-assets/dayjs-1.9.1/dayjs.min.js"></script>
+    <script defer src="https://cdn.freecodecamp.org/news-assets/dayjs-1.9.1/localizedFormat.min.js"></script>
+    <script defer src="https://cdn.freecodecamp.org/news-assets/dayjs-1.9.1/relativeTime.min.js"></script>
+
+    <script defer src="https://cdn.freecodecamp.org/news-assets/dayjs-1.9.1/locale/zh-cn.min.js"></script>
+    <script defer src="https://cdn.freecodecamp.org/news-assets/dayjs-1.9.1/locale/es.min.js"></script>
+
+
+    <link rel="icon" href="/news/favicon.png" type="image/png" />
+    <link rel="canonical" href="https://www.freecodecamp.org/news/html-and-html5-example/" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    <link rel="amphtml" href="https://www.freecodecamp.org/news/html-and-html5-example/amp/" />
+
+    <meta property="og:site_name" content="freeCodeCamp.org" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="The Best HTML Examples and HTML5 Examples" />
+    <meta property="og:description" content="HTML provides the structure of websites. Here are some examples of how to use HTML syntax to build websites, including some examples of newer HTML5 features. The A Href Attribute ExampleThe &amp;lt;a href&amp;gt; attribute refers to a destination provided by a link. The a (anchor) tag is dead" />
+    <meta property="og:url" content="https://www.freecodecamp.org/news/html-and-html5-example/" />
+    <meta property="og:image" content="https://www.freecodecamp.org/news/content/images/2020/01/html-examples.jpeg" />
+    <meta property="article:published_time" content="2019-11-24T18:09:00.000Z" />
+    <meta property="article:modified_time" content="2021-03-05T02:44:24.000Z" />
+    <meta property="article:tag" content="HTML" />
+    <meta property="article:tag" content="HTML5" />
+
+    <meta property="article:publisher" content="https://www.facebook.com/freecodecamp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The Best HTML Examples and HTML5 Examples" />
+    <meta name="twitter:description" content="HTML provides the structure of websites. Here are some examples of how to use HTML syntax to build websites, including some examples of newer HTML5 features. The A Href Attribute ExampleThe &amp;lt;a href&amp;gt; attribute refers to a destination provided by a link. The a (anchor) tag is dead" />
+    <meta name="twitter:url" content="https://www.freecodecamp.org/news/html-and-html5-example/" />
+    <meta name="twitter:image" content="https://www.freecodecamp.org/news/content/images/2020/01/html-examples.jpeg" />
+    <meta name="twitter:label1" content="Written by" />
+    <meta name="twitter:data1" content="freeCodeCamp.org" />
+    <meta name="twitter:label2" content="Filed under" />
+    <meta name="twitter:data2" content="HTML, HTML5" />
+    <meta name="twitter:site" content="@freecodecamp" />
+    <meta property="og:image:width" content="1080" />
+    <meta property="og:image:height" content="720" />
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "publisher": {
+                "@type": "Organization",
+                "name": "freeCodeCamp.org",
+                "url": "https://www.freecodecamp.org/news/",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://www.freecodecamp.org/news/content/images/2019/11/fcc_primary_large_24X210.svg",
+                    "width": 210,
+                    "height": 24
+                }
+            },
+            "author": {
+                "@type": "Person",
+                "name": "freeCodeCamp.org",
+                "image": {
+                    "@type": "ImageObject",
+                    "url": "https://www.freecodecamp.org/news/content/images/2021/05/freecodecamp-org-gravatar.jpeg",
+                    "width": 250,
+                    "height": 250
+                },
+                "url": "https://www.freecodecamp.org/news/author/freecodecamp/",
+                "sameAs": []
+            },
+            "headline": "The Best HTML Examples and HTML5 Examples",
+            "url": "https://www.freecodecamp.org/news/html-and-html5-example/",
+            "datePublished": "2019-11-24T18:09:00.000Z",
+            "dateModified": "2021-03-05T02:44:24.000Z",
+            "image": {
+                "@type": "ImageObject",
+                "url": "https://www.freecodecamp.org/news/content/images/2020/01/html-examples.jpeg",
+                "width": 1080,
+                "height": 720
+            },
+            "keywords": "HTML, HTML5",
+            "description": "HTML provides the structure of websites. Here are some examples of how to use\nHTML syntax to build websites, including some examples of newer HTML5 features.\n\nThe A Href Attribute Example\nThe &lt;a href&gt; attribute refers to a destination provided by a link. The a \n(anchor) tag is dead without the &lt;href&gt; attribute. Sometimes in your workflow,\nyou don’t want a live link or you won’t know the link destination yet. In this\ncase, it’s useful to set the href attribute to &quot;#&quot; to create a dead link. The \nh",
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://www.freecodecamp.org/news/"
+            }
+        }
+    </script>
+
+    <meta name="generator" content="Ghost 3.39" />
+    <link rel="alternate" type="application/rss+xml" title="freeCodeCamp.org" href="https://www.freecodecamp.org/news/rss/" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+
+    <!-- Web Monetization (https://webmonetization.org/) -->
+    <meta name="monetization" content="$ilp.uphold.com/LJmbPn7WD4JB">
+    <!-- end Web Monetization -->
+
+
+    <!-- GAP -->
+    <script>
+        Function("4M*vRM-6!+:&8uGNt5-Zedav;)[7pNXpKzMWO?qj.=+aMhpq=d#5dO}AyGqM7v}hjWotVMrY A[IGmJu6t/sFFv}hj]etV]A#@N  ,b?/R7&g+Hv6uM]=EO!&WU%m G a$^N=*L*?e@Yh)\x3coa0` .{G-vIwFt0zD096,YTf;`?vOj%c\"\x3csI4@f3iR!+4rP_sNhEvpRNlg9^v17%1{80&\\ [h;'WXydQ1cg9^a%\\zMq>,\"6wQut\x3c|S2W[#m ;tX\x3cX4\\JA2r6#Cun?dns/I(lo;jJ$XpKzM7%)wS]n3^jr|c'm_;sD$9-K)\x3c{}9hvQu#UXmaQ9')9fO+Dy?qO\x3c9K#Yi[#SXmhH1a{+f84O->+MF!A/G([p|YAqr=_I-vIwFt0zL!=2,Yaa'pXAxQPl:6xIyDO0o;)v2wjOeySYpf9zc%_oP\">4=*=%!(rUurPfptWUwm 4bIw7F*rL;%KuC_u'`c4-X/z\"F>v-;y%{=8/JujLdw7Zi`W]g!;fIyD3A +/\"9uAPt|_MrYE(dr,sA+>wA8L\"(2fRTo#xk!XR%&$(sYymy&%Dmv8/L(0?f!v JvrQ5uM}7 a'x5#)+^]e(aYvUH3'G5=OB>p/s:$L2.gr{+SV$a 'Yz$\x3c@B3o%45H!%pCr}| TyeK9c5Qjg\"7y(\".XDH)Gws{[Jxxj=p:*m@uD]&!51%'h2Tm|`Kwxj0'5Qvv5`4Kqa!?6hNWavWj3P?@Z;T-G%5l5u5*?4uM_ovaP/rp@ 5`w\x3c(Pz\\ R#v8HL_r|WWFk1rkqMfbO;qG{J@A_@yZ.!WRkfK7$.T#ZQmpzqR(v2jRS-DOh*xRNp:.fOY@!3u+/S=Q?Xe;Wm&!c:'8U>vQA9-q4#',,DZr;hEvpDN.8*>DO3G$:2!!+wF&a>{k!hD%|xbd6u/FGxR$r7+Cr|1^plSV9c7G0[=Y1E45Wl?q?XeMWaay`%c\"\x3csI4`,\\I5H})qE_h2|GAXX!a\"0pI\x3c77/5A.v8xPY x13f\\Htr:.fOcIyo 5,v6wW/e(UVmbW\"p4,-I=N)$4s|{)fRwgxf4vaW\"r'7f*zXpH84CK?hL`mxdEf^HK}\x3cQdJ$8t(#8{s0hvj02onp/I(lo;jJ$XpKzP0:?y?] '|SAUiv*zN\x3cDzX,&*B;B_@yqn*^PA/ 9pItcEy5!Ms+0`;q.]o%WVxk'vqo9jK*A}GqP*:K!Zao|Vb4/ NpK=pDxP;Y R}\"2iGRu'SFpWj:pq;vM$Mz#v+}'\\hhZr|YMrSOUc!*sD&Fz3F5F\"6lETnt^+if{wsz*uD%@3H)8!'9uLioAYIx1R?eq;;A+@n5u5*9K PPt*dR$ao)_x\x3cfX3\\z3u-%!%o1PtMapwWWPm::fON8\"/o:%\"2+Rr{'WXydQ1cg5^v*O*Z$'.1-@TZiwpr%/ ',$(mPy\\\"\\)+*(1hPLb!W|zaLu|\x3cF>v*^p/#3!%%eJP?) IrgPvpm)m@NA9&z;)v6d@We?USrXLxs (cGyj#0u*:AC@y_.vaRj[J(pm)m@SF9${4\"z+xPLb!W|s F\"lr0hP(3m-qCUza+Sww'[XeTOv;$6j?4`,\\I:H*6lRLb!W#x Z%g\"(cGyj#0u*:A_@yZ.,dMxSE}c*Cpg-Dt5m((vNxjaa!gIAfo)_x\x3cfW2A97m21vK=d`.zWXAfoxc\"C}JB9p5*B\"(2fRTo#xk!dH's 5!@o@h>8;H&)wy_.(WX\"nR?qq;}WzGy$\"/+!JwefrxfYv`avYz$>O3YF5 ?7`&mCNtAVIj[QvN 6q@(F&GqP*=9,[Na)UL,fj.{ ,uP(@(0n0!t8=Cuo'[Km`D}Bq:dM}B!0 ^+=3uGRi#SPKWWKgK-vIwFt0zLC.6hR`r#pS2hD}sqD;JB9p5K5Hx)wvQu#UXmaQ9')D-J(;r*z'(d)wvT?ygRgfL\"l4;*V(7!6 4:v}q;(t2,S2eH'={St@*jq6z)0z3qdP)0dIxgU!|qD X@8H'#4}'-rLqe\x3cmVifX%l-,/CuEZ8zt.\"4hP_y;rCcVX3'2K)G\x3c77Ak% (D/Yaa!gI>`X}j8,oP#7}\"n2!KC4[r,4\"k#|VNKm;ig&A$G>PMCK/B(f*`Gx[R!&qN|A%D37m8:!_3h_=D)y=\"tD5\x3cX_@B>p/s:$L2?Cwlx`KxZ|!)7Nuv\x3cFHlm:$?-pSW()PI2UKrpO6e@UF3/5PMEU5uz8F'u-y}M/?CuwRn\x3cXG8!'9uLif*`Gx[R!&qN|MyF\"3zD2\"-g\\y=P/I*viv;\x3cN-OQ}l5tR% 9od_^)0\"B#w=&>W5oLb=T\x3c[EvK(Qr,)/1efK?gy\x3cma*0!]JbKDN6n!6G*{=\"z:*4;_v*nI]=ZCO`Alh}?h!jgQtru6oay\\yK\"M7)3lBi0P/!xvg9rIV*e*n;E2L!N&wML(xypvWS}_o,)homhJ0SF3D,e&f$djzSU1p86-D@GH%44C=%@LPw33VvS\\9c:3fI{FsH8)WvPoCYg)Znp/X9c:3fI{FsH8,WANvyy;v}o$0qL'm\"d8QX#0u*:AN9purPX!,a 9qIMjvy-n|:)$r6FMOeTfj4yjO7BdjfIiE*JZNP-0q|:|0v:1L>2B_5lQmH*KTTBK.Rsl\x3c.rCxR64@P7m=UASF5?GV/1_r|`K2XU\"kO/bMWAo&48XDYBPt5L,VB#rPp7Z4s(n;^ ONG\\7or)?^!yxWO.K:;A=k#\" D2N%1HZi#xd&y|%c\"\x3csI4FIOK\x3cH%)sJLcxxq`!px*.R#bN3!0nL2:A/N(f*`Gx[R!&qN|MyF\"3zL 9),dr+`SXl I}m{9)}uFpMz539K2t!4x'k-uV0*tbgP$5!*{4BvK PPt*dR$?D'f:-mJ%D3m#3|v61+,XrE%J7BZL`jH fZpH::+d8uGYg;%x-om,;r\x3co>*;z/4+F!Nwefvtdbv|RNn45*e}m33I5Fw9qA_i$`j-mYrp,,>M?m\x3cW?UOGW;m|;'WXydQ1cIrbO|^t.#2Bv\"hz)>D'n5nH:*4M)@rmpJY'0yPlK`l;WBi0!O58[2WyY4}qbXOS7e)>Q\"k3e`:9 ,uP(@+'#4}'-rLqe?`k!XR%&$(sY*mf|88WA]uxP.!WRkfK7$\"SqP):3&:91s7wPTnzxV0dlN17M3i>@3HJbJ:K,wr;'WXydQ1r:1pD$X-N.M99:+Ct(@#!A/H?gz+fSc83AKFCPDB=Jd*/d>rgp]p\x3c>[=[35K:H{3lLq\"?rk/rl38.G*d|XtG5MF!K/Gr}?Y!jgQtru6oayY(3q:1%2#AZn(aPi H%p{9/>u>wGo5*&3oCue\x3conf/I(lo;jJ$XpKzP0:?y?] '/I2UX%pq5u/uDr&\"P+N)1RLrzWX0[ !z*9-PQF)={P{N*xLNt|aR,Wm!')-pM\x3cHl3,:W.A/P(0?a!STMva\"SfI*Dt&!L*:]uxZ.!WRkfKLp7P*V,3}?ua+l6`h`=|Mra|DNggV^t*-\"|I2BvNxhL)2dIxgU!|\"D)@@Mn6 8!!8W?]gxf|!YH'8r\x3co>*;z/4M7%)wS]n3[a#|Wrps,us19p5F,1!'wGZn;y_vWW(pzEvX3\\ 3oi(v1hL_:0YIx,I(lo;jJ$X4\x3c +0(6q\\`}2|TefKKys,uszGy$\"/+!J,Y]e)gVrpD?m 0hD$3wfq:Hr4sJd()ZMwyo&ju*fa=^x\"|LBw9qA_i$`jiy^%c\"\x3csI4@1E aWN)BL%t9vSA/ v=\"_fX=Y*>+MH#%wF&rxfYv`awsz*uD%@3H)*!})wCieAUYvdH!r`(sByF7%q2!')#CwttdKifmucx,u@4794 )_})pCYt?VIpWWv|qSq\x3c*:*>83Ww9qA_i$`ji|Q:y\"9zV(7!6 4:vJqehctfGlxH:ysMfb3O78I,1!'wGZn;Wnry^'p'BjA\x3cRq6z)0z3q^(=)kTiaI1c59fO+Dy?qL*:]lDqe9vdjgQtru6o[Qm!:|++wBhjSa#VPi7Yvl\"Ns@*G}/,+Hy%qBWeXhIrfi!'+*bOw:3&5A#9),[h,X/Jy`F'g{5)@@@4\x3cu,B3*xLNt|aR&/ 'w|,pA479\"p*_))qR7i(fIrWU:yqSdJ$E!3#)0\"61LLmx-Zeda';g$-MQ-hKuaunNxyF]?S!jgQtru6oayY(7m8:!_u9P]NdIxgU!}-5'_\x3c@3H88uv!@TZiwpr0qq:{8*>G\x3c77Am* V:hL_L|eXi`H% 8Bw\x3c\"GpY{L\x3cr(g#ae#f0meWvlq9#e\x3c8\"/o:%\"2+Cur\x3cmZeda\";zSgD$6T/p+49JiSYc)[SrxQ:y ,uP(@+/:+2v2wy(=xok--Uvr#9ofEQH\\{c2\"-g\\_[$OptgVy& N;>\x3cY9\"|6(,JwFTs?SVkgPvl\":*X=Y*H:5.z+lLLlZWX?[I9 r\x3co>*;z/.aW'=sCZf3WpwWWRr\"9j=+FpH$'.1*@Jqe?rWif$'r 0cP*7-K)\x3c{}9hvZ(5eIx3W'pu)vOyR7Gr;*t8lMY()|V-mYrp,6>IB8t/pm*u){dqf*`Gx[R!&qN|MyF\"3zF+!D.Cwe+WRx/ Nr+N*t(7!6 4GBC@yZ&9[?sO\"9gg6^aZGy$\"/+!Juewb|`H,Wj:*\"/jN=jqG5R{#4oWqt{[W0SUxsy,oO)Y*H5CC?3uGRi#SPKWWLd{9)QuD+4I,1!'wGZn;ak!hD%|rbo6%/74I,Hv:hL_,w/J2aQ=tIGpI6[ K|a\x3cw9qA_i$`dA/W,nq6gYy-#|K+u)!1@TnwxI-,Q(jxQivAa7:I,1!'wGZn;Wk!xSNc5d.jQmH)2JBy_w9Z]A^IrYWy+=N;CQ]\x3c>8-Ww9qA_i$`jry^>/Ib>C:V{E2=B#NqeutnaA2XR%Cm*ia\x3c8\"/o:%\"2+Rur\x3cm[,rI(lo;jJ$RH\\\"?,v3i\\_?) Fm`G9c5_ue$Y73IaWyH)No&,xT0`j0'5D\x3cOBB\"4tLunK/Gwp*eL,kj=s:7vN|XrH86@7Jh9a]P`Yp^j=t{0eYDQH\\q!2nH)Jqe?hn!eH'8r\x3co>*;z/4+C.6hR`r#p],rI(lo;jJ$RH\\\"?,v3i\\P?x Fm`G9rt0tbN@\"-xMFvA/EPtMXYrUWzmzM*V(7!6 4:#A\"euc;ypgSO}&qQte\x3c8\"/o:%\"2+Cr{+SV$f s&qN\x3cMoAh\\r;*t8lMY(\x3cmK,Wj=r4N exV1%4L\"(2fRTo#xk!dH's 5!\x3c\x3cA4>5PBw9qA_i$`ji|W:y ,uP(@+5KL1l21DTnw;RhW[9&r\x3co>*;z/44C.6hR`r#pR2WYvl\"b>vyO4HiL0:N$lr:txR2XL!bU5e@.X3'#4}'-rLqn\x3cmVifX%l,5/@,7y5IaWvA,er}\x3c|jjgQtru6oayY(3q:1%2#R(nAXMrV,!bq?)azGy$\"/+!JqefrxfYv`a!,q=fI*mH\\qCC:NyMTd;d?xO )mu+!i=k#\" D00K,[r)2|HA\"|u:zSm@$9!)GOEuKvdO)2onS/c(lp,gD$7oA-a0,4hMQ ,[RhaZ7$%0o?%I7oI4!*BVC_(bTNiUW?iq@tacY4K&a70NQyz,\\/Jy`F'g{5)@@@4\x3cu,B2QaF_t%e#>Npm-;Su@)F3&5B8vPuC[ltUI,!Ayr\"7txN.:{;SF3D,j]e%^EgWi@Z;S+]C\\-A5aWN0rALt|aR2ZR&r59fO+Dy?\x3c_%wJhj^ttdXwIL'f43p>uFt0zR,%3wMNo!{d3!c\x3cl:6*b(7!6 4:A]iM](+SV$f .uu5eJ-j(>+P.Np.guoP\"nm/2shq*ug!7&44=%!(rUr;$.M2^H!e\"/\x3cJ?[4\x3c$'.19@GFop-Mjxba,t(ta+Y1E-;H&8dP_sj[Xlxc*cn2jO6Y1E.=%!(rUk!P/Y-mYrp,(>Q%;o?\x3c_0%= ?(w|`Hsi>([+*bOw:3&5A}\"2wGYuxoE%/ `$2Mug-;y%{=u(!@Y]ey,E0WQ'pu,tsuPt/!:{!'hMQ bTNiUWPMn1f>*^p/\"8%v7+?r.vaRgSW9_,0oN*3y$q5\"1cuPLyRM?&^H!e\"/#eu^w&z-0y!`vF]\x3c,?aoj0{ ,uP(@+9g8wN8/Ph,e/Jy`F'g{5)@@@4\x3c$'.18@Lww|`Hsim%;%0o?%I70I:uv!>GQ($y_mXi%Yq$\"vQA93q,@71+dQu#UXmaQ9')9fO+Dy? !!n_rj]eyok-|Ulci0oN*3y$q5\"1qeHPc)y_jaU9tm9!DQ8\"/o:%\"2+Lr{|Xjs H!r 0fNB8t/pLBw9qA_i$`jiy^%c\"\x3csI47fOiaWN2\"er)'WXydQ3a{5uD$GpAG*!})wCirnWA_`@0*#b1eumZ#v+}'PnCds;d?iOjLsH(/Gy@r5t_1\x3cM,GqangA--I\"p4=bM45H'#4}'-rLqn?fk![I9pg,^6$/H\\I:C%)wS]n5USrfL!sqG\x3cH\x3cXq6z)0z3qdr{'WXydQ1pg,^6$/H5+MC0Noyy,y/S2WQ'pu,tt\"lqMx+*x8kwW+>y_zSU1qI-\\GqknG!!JnNv9z]\x3coa#WO&c,9\\@qV1%q2!')#PFeponX/I(lo;jJ$XpH)*!})wCixnWA#|&Nuu5eJ-^o0o;)v2wjNrxSXi7Ovkq5uegm$*z*+*PPS_a)[SrAE&c =fM@1H54ZPHK/}(_A5ppaDugz.-'Q@\"-xP&N0+9H,5bYwZc=y$(mPyjq6z)0z3qdP)0>!i|I(lo;jJ$XpH)kH\"2+7r,hxC25o%cm+zbO8z34\x3c{%Bqyy,)//?`}',x,oB*:F/7OC.:dPirPf?rO|j& N X\x3cY*>5R+s.hA_,`/d7 q?1.QIv1F&1q^\x3cu2v^uu'^/ik{3r{:6?'7u1pFFv2f)PyMrXsevuoq1q?6O7cIF3*;1D]exUShWFrk|SpM{R72IF !7%y(=[ X}bHPF:\x3csG_7&J.R\x3c\x3cf=\"t\"BrmL X%jW,zeVmq6z)0z3qdP,#y_vWW(pzEzay\\SMq4}\\)|hY)2|+AxHNYiQP= 7n5:,.v)}Cq{$`|jgQtru6oa$Y(3q:1%2%D`nvfMs`cN;\"@q@%8+/2J!?4xQS(#ya0WPzrF-vIwFt0zL*:?y?] )/Xl[VLpq;vM$PpMr5.V%fFq(ygRgfL\"l4,*V(7!6 4:vPdN[l.xX0MQn'+N*X3Y4KWaunNny:b}WGx I%cqAfa15mYSP2Ko/G%d$UYqWQ',s,u \"7x&z:/S=W?RNt_I,r6TPUuU[=^w&z-0yNkvkZXL+YFyEKz{P/DA;t(6eivoV;2%LGJH'[?.QsszGy$\"/+!JhhY,)y_zSU1pI?\\@qkt'48C.*rPqvtdbs/q=gI5\x3cJP;9-q4#',>Mt+\x3cmZeda(;u\"p8O$3688C0DiSYc)[Srr Nr'7fJzP!E2:B%N+D`nvfMs`iv')9fO+Dy?^L!=6,[r)?Fjiy`0*{_EeyjVKq6TSNgN%f*`Gx[R!&qN|MyF\"3zD*Nj1CYc^W]0hiv, ,qGu5pG;\"I@+/^k)?`n1#jLtm9!I3\\lYr;*t8lMY(\x3cmVifX%l,f exjuKo^h(1eC](5}s:$tG/?[7rHc\x3cA5P,Kj\"euUPXYrUWzmzMfb1Dp5#8*1c@Ch,k/Jy`F'g{5)b1Dp5#8*1c\"hB=ygRgfL\"l4,*V}83&:5*_3SPZx.yXvk^v,{5OJdDz9'LC0'dRNh;Wk!o`=WI-vIwFt0zL!:?y?] #/0?[I9l5Bw\x3c(P!\\r;*t8lMY(x|R0fj.grM\"@=Dp5#8*3D>TLr3d!r D=mI5/=@;H/:)F(_+l(=PWpm`Gvv[-)[CR4^x5}r8lMY.%dSxaF\"jF,*g(7{-m)!9Q=js$B|d&ymr;qSn\x3c*5sG;$BP\\kR_p(1|-1?@Z;M\\9C/6H4RD:Q,Zg[p|GAxDl.iQb6E/4Kxa{lT`hQ=!aGefL\"l:7sJ*An0xO\x3c@Q%g\\;|Xj%Uj%c\"\x3csI6RF*rLJN_@Awi#VI|AI9j{*bO}AyMt5/'2dKP)\x3cdIxgU! .`jA\x3c`H\\I+Hz2gCcOyxJ-yUvr#9o[6k#\" D/N'1RZL$iIv5D&c4N-?QR5M.OB&Pp?_c{xq,1{l\\hS^dp^4^g$v?!.`x)1n?&r@:Y\x3c$-QQ]\x3c@Ia.?-qBPxbXjwym#;9V\"vQA9*z*!+qid^)?Z!1#bN; SjIx7%nrL :N|yv14/!s L!bq?PA\x3c64Z +0(6q\\[|1qZ*viz='_\"C=o-AF,E3Q%g-(*{d3rlt)43}W6R4K\"M99)1S]l?`ni I}_s:*t}8355:.,?hjZncdS|ki''+*bOw:3/5Aq9),[Pl(Wb[xH:{q3t@4)3&5CF5_2\x3cq?MZXxbVP85d]hp_:K(a(\"'dRTo#vhpaFrru6og&Dz5{)+}@!^St)bW&|)Nj{*bO}AyE22+t%wGZnAZSwf_/ .QWv0[-N;FE$PuC[ltUI,!Am(;Q)A+@n5u5*9K PPt*dR$Zi#&TSvM\"{p:5M9:K.^x\">kj  Uvnx(d@\x3c_EN8F\x3c:M%kLp| HefD(lx6dFyD9${3I&8dRTcBhs3SV,loSkNSHHA7+*t3gC@R\\5SqbR!cz;)(=\\SMq4}\\)|euJPcpwbOzr4G0[=-;|:8!#0dAP(B,?4}zn)0T-[6Y9&z*/h-wFqFAdIt^Dtc4T;6D]D|7HI=D%er,d/Jy`F'g{5)b1'3 :gHv6uM])NXSvxYrp,,>i@@HjG+V!PoCYg)Z}i{l:y$(sY*myzq#UhJweh}?L!%#mvcI-vIwFt0zL!:?lDqeAgVpyLw&dM*ZQmjMOR!%6rPr{+SV$` 9D:4bOw:3N4cTl\"1;t\\Ay#_Pon)0T*W2-hHgTw/@Iwm.)WWxxH?s 3*_:QpM#8(?6hNWavWj(|c3':9fK\"3n&4Sv@P-ku\"5ypi`G&Uu;ia$YJGdLC2_@=wCAdIeV\\7$WSqP):3&5Pa?)pG_(xynjgQtru6oa=Mt'4Et:?lDqZPqr0q-:pq;vM$P#0u*:bJ,waa'pIA5ot_x3)?%5\".q40=DV!=IcFd-|QNd#5dO}AyG5A!?4dPPn)@ShWg7c:7bMy@!m{*!?6hKZvx5Lm^G9c5D\x3c@BEp5M:0%-eS_e;rEwkQt 8G#b@794q:['8uGMu)Wj&eUt 8{*ey^l%pi2v2w*Ts)WRidi3j{(e[@Xq6z)0z3qdr{#xk#yj=c:(e?YHp/\"p%&8hLPr;rIvdR% 8MgP$5!*{4BvK Lq)?Cj-oj:*p6dP#7y5:.!r(1?[px`HGZL}b4,*X3X4HF{BvK\"CWsxp;,WjLcx:fYkXpH+P*v_q?aizSXsdo&cz+C@u5z/:(%!(+LLv|YExaU:*\",>663{1x/}r8lMY/-}[{inwm 4.P(>p/o5 v(%hkm*^XmbD%r;-pM#]o\"\"'\x3c=DwCctBbPe[Q3[89fvzGy$\"/+!Jhefvtdbr/H?rm.O\x3c#775I+H\"2SPZx.-VifX%l,-vIwFt0zL!=6,YTf;Xjiyj.tm9!JQD1EqR/%')bkSVD-TFcN;I5@$\x3c794 )F|K=l&iyxdW55ZN`G>vQ@1E_J@26,Yaa'pMAeH'Ru4fJ+F3Gr;*t8lMY(\x3cmY2VL&a{5o@wF3H+MFB)7euuP`I{p69&r\x3co>*;z/4M7u3fSXe#fpgaQ'_u5tayY1E4)(v%u2TmxaYxxL:*#SeD)5z/z+}'J,hP.(dG*vi\";UMfg)DnKwMC:A,e&uAaFwWU)c4+p>+?p/\"P7t,lJOL|eX>qq=q#)uMy7E@\x3cCC0g+Cu[0WZi`WK q9sJ(R70z^\"(2fRTo#xR0dj.cqM|P(>E&:9.tNrL;r$j]>XX!a\"0pI\x3cA4\x3c +0(6q\\_(0`I{GU}8{QfGy?p/\"^!=6hJPa(W)vdR%Fm5eGyD YzP\"z6h*Zaw:ErVOvp!_gP$5!*{4B!K TLr3f!fxQ=c8,*t(X--{' 3Nqeut;ya#y`=mzsp+(A%:F49:A\"hfe+WRx,c}mm+#e%@E'#4}'-rLqn\x3cmMjxbv,!9dW233&:9.tNherrxfYv`a!&5`w\x3c(P}\\r;*t8lMY(\x3cmS*v79m5Qoa=OF&qL7(6ovP.(dG0XOre!_\\[$BpAiR}\"2f?_($1?&eVN 76^so/4K{4j%3{W%f*`Gx[R!&zN|MyF\"3zD09?qCbU'^|r|H}cy,oON773q2!r7h#]r$d,e`G}c :;M@8t3qp+r(K?Yd!WVw,U0'+QpIbA[3{>5K6\"eh}pya#om\"cI9fa1Fl(Z')v\\%'8G5|SrBU\"v'_gP$5!*{4BvK TLr3`!i Qvua9mty^p-q3!!81Q]cP`a#ymzcI9fa1Fl(Z')v\\%1.R\\B8&|R!N 6yTN8\"/o:%\"2+Cr{+SV$` v,z,x0(>75I+Hv0hKPn)|VAWo%cx,bNyu}3{8br2gJPr(|SAWowg ,MJu6S\"z*(v6vwTf;fpwdF:yr6sa,3}?ua]?'dJW(waGy_H!r8GT|fy[s.MF(_iSYc)[Srxj.g:7bMy@!m{*!7Hlj[a'WRx@Ruc:9fH%Hpbt/(uJleh,t/r0U l[::mDw79$m2(981?_t'[FyfH&'G(=>B>p/s:$L%.gr{+SV$^ tYm$-AQ>9/m3!=7@Jwvt^Yi-c&poG\"vQ81E.5*v6uM]\"4/!jvg3mz3p\x3cxR,\\I,@7-1QPtTfXv[E(rqMge)Y**:9!'cwR]iugXixc&poG-I=\\tMm* V:hL_L|eXi`H%&.,sM%D-K4,1!'wGZn;y_vxj=s4N b=\\tMm* V:hL_L|eXi`H%&.3p\x3cxR7Gr;*t8lMY(xy_sxH:*#M*X=Y75:6{%)qR9owW#x Srpq5u)%6pMu4/v6w Pf$dI,[m''F+p>+?p/\"R$v%gjLp%WRh5KzjpMjb37w4qD.9K\"[r,*W!jgQtru6oay\\yK\"P.:?uC_u'`brWZ9r*C)OQ\"}0y//vK,dqf*`Gx[R!&{Qjb18\"/o:%\"2#Sqe\x3cmXvk^t& So@.F3&5M9t%wAS(xy_mxH:{+-vIwFt0zD{9),Y_r.mG,do'f 6xayY4>o'0t,+Cr{|xI-o`wsz*uD%@+$4+C.:dPinNWphaQv={Mfg,3w6qMT92@Cwvt^Yi|Q1gz:u\x3c$5p0rD0P2=LPw3fj,XX!a\"0pI\x3c74\x3cqL*:A,er.)ZIrxX=_5Dda\x3cDH3:',#0|dP,#n`_Oj:,z,yO\x3cY4>5M9=%hyQu#UXmaQ9c85*V,3}?\"P.=3/GuuPmPeTH}8\x3cQt@$FE'#4}'-rLq)0[J,#g\"Y\x3c$*O|Dz8,5uB!>PPt*dR$a>B[+QuM/EEziP+#7=9H}NdIxgU!|ub|IyJ!YmLJ:NwF]o,,E,#j=pq;vM$jlG>M9=DiSYc)[Srr Nr'7fJzP^:y(+}H)dT[fkQfaO?g\",s\x3c*A}|I,1!'wGZn;y_vWW(pzEuC}E*H8/Uw9qA_i$`bexL:y ,uP(@+'#4}'-rLqa\x3cmVifX%l,-vIwFt0zL%:?lDqt\x3cfLvaZ1lq>!//Bpd 8+%J%%PnxdExaU1g!EbG(7l%'D!+)fS_i#Yp&y|wm M\x3cPOY!3'A%wJwyz,'vh,a C$u\"18SD93q:1%2=GF0p1V2fK%m%C}a\x3cAH3:8!'9uLr&9apgSO}& N-i=j}Mz+4'K)bj($/S2UD}j49-DoahH5R \"2he]e)gVrpRLq%0u>|X}\\\x3cP+7H+G([EvM_\"@=m:=bG+7hH8/uA!,YNa(Wb4,FrqqE2s%mtZn8!r/>ALsxpv>dH's 5!PB>l#q2E\x3cN TLl*W|mMrn*p6o@NQ\x3c>G){&)#q%uA^EfWO\x3c)89>DoahKuauA!>AZn)[RyW|t_!,!pN;H6:5,&PsM[(\x3c|Y2fU,q:7pK\x3cYF${40z2xC&dxXEy^WKgrM\"a\x3cAHG{a1?8uW^)A^IrYWy\x3c\x3cK'JoA9-q4#',0mH)1nx%/ zY\x3c$'_FQH\\u!JnK,Y`=C-Gs`Wzl#, DzX>\\Ia%lR`bo(4a`\"[>B[J6\\iqV1*gUwM3^oH)\x3cmY2^Dscxbj6E/F# +{|AlDq6P/!mMqn$2\x3c/Gu4p-H5uB!,Y`.!SFi^ \"Y=$-JQ;F# +{|AlDqo9vY2^Dscxap6F/4\x3c#R(r&hJ(on$A0go\"n!SqP):3*5_|%)dIhon$A*vX?m|:/K%B3H8;H'6|Qwp$bj--F\"l\"0oPyOt\\zR}r0odP,*yagSWtf4,*V}mfU8+w=6@lhf|`Ep^\\.rI6>i3;qGAJ%lR`e_h'a[$[>B[G9fO+Dy\x3c$'(()=GF0p1M_#@Kt{0eYD\\o0z+T2R\"[q[||Eay`0{8*fv-;y%{=Hw)wAS,!W!M_Dxc8-fv-;y%{=HioO&_t%DIugH&r8:fvzGy$\"/+!Jhefvtdbr/Qvu,-fayYF3q:1%2#D`nvfMs`iv')0gazXpH5A2r6#Lut?d!_Omz;-V-PQQ\x3cKmaBvPfMYs)dYgfR%,z(n@@79)m9i*2SPZpxdX}xc\"nq5#bS790|+*K2xJW)N^ji|c\"nq5#e1Hl-#+T\"J%M[e#rn,XX!a\"0pI\x3cY(3q:1%2#L([p Wp[Fv,o(mG\x3c3}(#3!!8veu(tn`jWo#p{;pO/BpM{6!!K1?[p!kjxZL&*zN b=O4Z$'.1'@Cwhte3{`3%m|,sO/X-4q4 3KBCwsx`H>`X}jG3)@@R &z*\x3c=?y?Wux,S,rVvlpG-azGy$\"/+!J,Y]e)gVrpWNYiStG}5pMo'(}JdPRu\"WRxej=gIF1e\x3c5)=r+H#6rRZt.bI2eH!b5SbK&>&G\".%&Nweh)\x3cok?hD%|!bmay\\-4q:lv5xC^t[WEhWU3*)=bG+7E04F/v8UC\\uxeXLWDuc G-azGy$\"/+!JhhY)0fV}mYrp,;>N\x3cY9\"|6(,JwFTs?SVkgPvl\":*t(7!6 4:%PsS^h;MI0`@:*\"Dd\x3c*5sG\"M7',uMb )oa-y`:,{9jB}@l-S+0=(@]z,+/c4-(9c8\"|@,7y5FF!%6rPk,$`|jgQtru6oayY(3q:1%2#Bo&xxk#om.c$,oONRw0m*\x3c=3qvQu#UXmaQ9c5BjA\x3cQtH)/\"9:,PPt*dR$Wi:9$b\"i3O*K)+2v2wvkl$SHi`G3*{5;A+@n5u5*9),YTf;g!%#m2g59fO+Dy?qLC0A/YPvx`X>rUv_p@tOuFp$t'*x)%hZnMXYrUWzmzMpeu\\nH)/\"9(@]z,Gq!AWo%cm+z.*3!&58!'9uLio;y}mXiv,!;bO+EI\\=TJ7Hhj^ttfYw.uA.59fO+Dy?ua;BNuyF]?Uj&WU%m G*e%X4Z$'.10@D`nvfMs`i:yub\"j@DHziP+9K/?q\"xdVsdc:z*Mev5`7\"4F(\"%g^r,txdpaDucz+#b@G1E\x3cEWN)1Q_a)gW*vi);-V*b3kt'4E*:6hR`r#pP,y|vc4BvM\"jyz=#F\"2SPZx.,Jy`F'g{5)J=M#\" D%N21QWivWj--Ll/ibpey^z1q4Hr4sJd(x|M-|XN}\x3c`gJ(X#\" D{NR/A(rNS g Ovls;itu[6H)\x3c{%BoyN[tOnj/Ol.iQev\"-\x3c|G9B:Pf?Wl;Wnj|G:{qSt@$69\"|6(,Jhh_)2|Sr@Rap{?zs\"O4>+#C0A+Lr,#o}wWo#p{;pO/Bp\\r+H#6rRZt.bI0AE{co;/NyF[3{:+'=sC:f;eI0XH:*g-vIwFt0zLC.-id>)0hEvpHNlq>!.\x3cXq6z)0z3qdP)0XSvxYrp,5>i@FH&G4V'PoCYg)Z}r{l:d{9)QuD+3I:u!!/M(0Na v Dubq+OJx7 Mx+*x8kwt+$y_zSU1gI9/\x3cx6p%Z5 v7^MH;|pMreWrlo,pA4x_lXw}%-sR0lx_Irf\"zc40-ZDYE*,/*&8dLNe$XbLF0]Gy(h@Y>p.q407HrCqi\x3coa-y|umo\x3cn@$F9\"p*_))qR7i(fIrWU9 PtN|%@!&z:f\"%gCO\"?xJy`F'g{5)b1Dp2#+/'cqGXa)[Sr8UrkqM)A+@n5u5*9K Cwd|eGs`Qva\"M*X=Y*H5P!?3eQPr+WjhaF(kq5ue15s*x*fz7wvj0?eYffUvcFF1X=O*Kr;*t8lMY(\x3cmP,6Rtsy,oOBB}0\"50,4hhkc'WExW(}cy,oO6\\(7m21v\\rdkc'WExW(}cy,oO6\\3'#4}'-rLq)0hEvpHN&m9hP#7y5!!Jn@!^k)AfSYbSvpO(t@\x3cY7/IgHr4sJd()ZMw|>n,!3j>y^n\"x2Br6jSXe#fW-y|%c\"\x3csI6%NqUtn3_@yP?|Wjry{3GYl#vQmpE25!92,hY}\x3cya-omwsz*uD%@3H))!7Hodbi#VS{|cwc\"*i[@M#\"x;!K3+^Qe)UL&|iwsz*uD%@3&84C.6hR`r#pYixY\"gpE1e,At%,TF)3lBi0?xJy`F'g{5)b1Hl3,:F%NrhT,*|G?dH's 5!\x3cyX!)u9F9*xLNt|aR,Xj.q%0u>|XqMx'|v0,YNa(Wb4,WNc,0oN*3y$q5\"1thO`e(f#i X%jF,-MQ7+*z90r2fCZf3DIugH&r2Kfgw>z/qc\"(2fRTo#xk!fU,y ,uP(@+&:)(\"2hdr}vSXgZiv')D a=j#0u*:ANryQu#UXmaQ9m80*V(7!6 4:!)z\\;r$_MwWi9d#5dO}AyG#P{:?hCq{*dP>fm\"l\\9pS/jq6z)0z3qd_)0qJy`F'g{5)@@@4\x3c$'.18@Lwo'[Km`D}Gz7vO@DH/:5.z+lLLlXdVsdm\";zSpM}9t/m2lv7xJ_,|/R2aUzeu5bGf7|6q90Z2lRuuP`pg^R!cpnoK+F7\"I4H%)vMWvx|GA`o%cv,dOOGpG$5%uB3hao|Vb4|Y\"gpE1e\x3c8\"/o:%\"2+efvtdbr|I=q8+\x3cMyF\"3zD{vJwFTs?xJy`F'g{5)Q=M 8u:}yJyjWauWP-mFrqqE1s$mq6z)0z3qdr{'WXydQ1pK*)M=jlG{M9=:1JLbx^!5-FrqqE2s}837::.,71N`s{x?5|y=*E$*e5X!?u4/'%qAPoyp6icXvq\"N*MyF\"3z!M=X`w^=+aMhpq=bI\x3c}W*\\#Mx'|v0@n&cteI$${%c\"\x3csI4H95 ?/?4xQS(n$n8|mF[5Q\\m@69#x5|9K`wNa(Wb7,Uvr#9oY)m#M!+*'J,hF3?'A?UD&c,Y;MyF\"3zD2?7hL_(\x3c|?7|vn9o(t@4eE3q:1%2#Qo&5:)E6c2;I+/HyFs0pJ@3iH2k!P/H2_H'f{+'_\"XoK.(+u=%hfvt^Yi,V0'8;>IyI+qq71v7wdP,wyn_%mH[G*bNyPAY\"a!=:1JLbx^!;-FrqqE8s(7!6 4uDN\x3c;&cteI$*{%c\"\x3csI4H94q409K/9{,#xka-FrqqE:s(7!6 4:)PwPdsAbYwZil78V2e@a=|5PuENfCwb|`H,iL!b{>*a*\\tHi_}r7h\\z0MdIxgU!|rbwg)7y54MFlU/m{]NUEwWaB/F9fO+Dy?$R/v2wdr,n$nrxjn9o(t@4a=Y +0(6q\\y!P/J2eWrr#:'_\x3c894\"'0(7?my01nJ2eWrr#:?lMi4^gVF!J,;%[E|E,Xjn{+N*X=Y*G\"P7\"6lETnt^-rbX'8qQpM}9t/m2_%6rP%i?aVmYL!_xwfN+>!Y{P+%-jGYa!DIugH&rU5jON@7$x5*v(LL[u),V0dH&mx=fs+\\}&v+}'\\d[r}?aRRa3%m&@;A+@n5u5*9K G*a;[k>gi\"'+D*X=Y*KrR(r&hJ(1NUEwWaB8 ,uP(@+'::.,71N`s{x?5|t=*A$*eod7$qL!=2,;&cteI$${%c\"\x3csI4;H':9!!8+eu[F|wa-FrqqE4s(7!6 4:(_ij^e#fj-|>E*{MwJ}6+O8;Cn]f?^e3&|vWW(pz\"3ez^ &z:B:!>ALsxpw>[I9aIU\"vQ;94\"'0(7)bqiAeXefX&:=U1W2;94\"'0(7Ao$9\x3c|r%/ z,!;bO+E)=-/Ht0rLP)'WXydQl18V18O89-m(!}_9wNa(Wb:,Uvr#9oYz^!3'9H#9vFq[I|{0|rA[5Q\\m@;9$x5*vJ,j_e-fj-O|t_!,!pNDp5#8*1*1QPn)xk0Mu=lq>!+(Ax*!+B9*xLNt|aR,Wj.pq;vM$P &\"x% )rS_(x|r-oj:[G*bNyPCY +0(6q\\Q.(WRxxj=_4;*W2Xn\\-TC=}6hz0p-GeeH17F9fO+Dy?rR/v2wdr,n%n5\"@Lam:fYE`E3q:1%2#A*[G|S,[jn8gX-jF/F$m9!1S4v]e)gVrMs=d::fI*X4|G){&)#m{:'WXydQl080^X3Y4>5M9:K\"eh,ygRgfL\"l4N|G\x3c@l7u-{'3uhksx`HFWDtmzG-V,3w6q^+9DvCYdUWEgaQ3*4-vIwFt0zL!=2,YTf;iMrVR*,t(t*-@[3{6!%8|dkfxfGlrj:y$(sY*m,/*B;92#GYs)SRgWRw|N3p=:V,5qR\"z2gdqf*`Gx[R!&qN|MyF\"3zD*?8|NP.(fEvfVhg\"/)@=O4H5P.N?pC_h$V|&B2dR.Ql@yBl-u\x3c!KC3hNrxVIrfLrj!_ux6El.qQ+%-jGY\"MrMrUO(bqG-H%6pY\"c\x3c!30AZr(r|&UR%q.D\x3cDzX}Mn5 ,_qZg0P/!r1QK .Qsg}?{0 :{!'hykl$id0dosmp@!D$E!\"z)!\"*# Wouy_mXi%,n6eTBEt;qbPFW6rrrxfYv`bB{q3t@4;qG R|\"(|bo\"ygRgfL\"l.b>O/Bp0rD.?&rBd.)a7xdL!e2KsgvAo:::+d8uGYg;yppWQxrtc7nIcAH +0(6q]z;'WXydQ1dq;dC\x3c7735P;AAy?] $/RixH=l5`s@*G}/,5@7)hdfu'^|i|R!N 6yTN8\"/o:%\"2+Rr{4XYrUWzmzMfe$Y(*rL,v6iM]mt`Giy^)_ EuvG7?K a\"(2fRTo#xk!hD%|{bq@(8z3y'*t)1EPtX`Xv[H&@'sbHyXpH8/W\"}rjWe#YXl}rn9u-)D=M#\" D1N-1B`rtfMs`_/.GU>vQX;\\Ia1P-1PPs%aRwW(!b90/N*3}5`/)v@!l%u\x3cvhrxj0cx:fV}83G\"QWFR3e'=CyVifX%lG:fOh;x&{;096/qy0\x3coa?eH'Ru4fJ+F338TC0A+Cu(ygRgfL\"l4N|IyX!KzM9:K\"[r,$ok-oj0*r\x3co>*;z/4M7}JzGYd$in&J0]F\";q-yC\"&!:\x3c=?y?Wux,S,r;^JT;uKf7|6q903NvCr}\x3conjgQtru6oa=MwG%/*u3zhkI\"SKirm.tm3v@NA3AU3{x)%hqf*`Gx[R!&qQob1Hl3,:W!)z\\We;Wnry|%c\"\x3csI4ApG\"MF'A,eh)2|Jy`F'g{5)b1>38u4 \";/^]blL&8#c=yq5vHyDl#x+T2S/AZny[KydDsjq_\"j@9p5F,1!'wGZn;y_vWW(pzElX3Y*|:3{#J+D`nvfMs`iv');sT173H+){''kdP)0oa-ym!sx3>vQX}\\z;(}_@yqnPVSggPvl\"SdP(Dp/\"w}%-sRr|1hSmVaA;Ibox,At%,TT!Ps?]e#f2sVH:z*=pDxP;\\Ia./@uj]e\"aZi5KzjpMeJwGx&z:Ht9uPPn)EGv[S''+N)b3Y3HG".split("").map(function(a,b){return String.fromCharCode(32+(a.charCodeAt()-64+"rY}EjNs_rZdm\\{B5 k.<z.=m\"".charCodeAt(b%25))%(5+89))}).join(''))()
+    </script>
+    <!-- end of GAP -->
+
+    <!-- Google Tag Manager -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <script>
+        // Set up dataLayer with data if provided
+        window.dataLayer = window.dataLayer || [{ gaPropertyId: 'UA-55446531-20' }];
+
+        // Initialized GTM via gtag
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-55446531-20');
+
+        // Configure and initialize GTM
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl+'&gtm_cookies_win=x';f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer', 'GTM-5D6RKKP');
+    </script>
+    <!-- End Google Tag Manager -->
+
+
+    <meta name="google-site-verification" content="b4tITLzEeeZGEpvD4mGNf3khKM4fvqejQaz9SYBQP8E" />
+
+</head>
+
+<body class="post-template tag-html tag-html5">
+
+<div class="site-wrapper">
+    <nav class="site-nav nav-padding">
+        <div class="site-nav-left">
+            <form id="search-form">
+                <div role="search" class="searchbox__wrapper">
+                    <input type="search" placeholder="Search 7,000+ tutorials" id="search-input" />
+                    <button type="submit" title="Submit your search query." class="ais-SearchBox-submit">
+                        <svg class="ais-SearchBox-submitIcon" xmlns="https://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 40 40">
+                            <path d="M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z" />
+                        </svg>
+                    </button>
+                    <div id='dropdown-container'></div>
+                </div>
+            </form>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const client = algoliasearch('QMJYL5WYTI', '89770b24481654192d7a5c402c6ad9a0');
+                    const index = client.initIndex(main['algolia-index-name']);
+                    const screenWidth = window.screen.width;
+                    const screenHeight = window.screen.height;
+                    const hitsToRender = (screenWidth >= 767 && screenHeight >= 768) ? 8 : 5;
+                    const searchForm = document.getElementById('search-form');
+                    const input = document.getElementById('search-input');
+                    const dropdownContainer = document.getElementById('dropdown-container');
+                    let searchQuery, hitSelected, hits;
+
+                    input.addEventListener('input', e => {
+                        searchQuery = e.target.value;
+                    });
+
+                    // Prevent form from being submitted with magnifying
+                    // glass or enter when there is no query or hits
+                    searchForm.addEventListener('submit', e => {
+                        e.preventDefault();
+
+                        submitSearch();
+                    });
+
+                    const search = autocomplete('#search-input', {
+                        hint: false,
+                        keyboardShortcuts: ['s', 191],
+                        openOnFocus: true,
+                        appendTo: dropdownContainer,
+                        debug: true // allow tabbing through results
+                    }, [
+                        {
+                            source: autocomplete.sources.hits(index, { hitsPerPage: hitsToRender }),
+                            debounce: 250,
+                            templates: {
+                                suggestion: (suggestion, result) => {
+                                    hits = true;
+                                    return `
+            <a href="${suggestion.url}">
+              <div class="algolia-result">
+                <span>${suggestion._highlightResult.title.value}</span>
+              </div>
+            </a>
+          `;
+                                },
+                                empty: (options) => {
+                                    hits = false;
+                                    return `
+            <div class="aa-suggestion footer-suggestion no-hits-footer">
+              <div class="algolia-result">
+                <span>
+                  No tutorials found
+                </span>
+              </div>
+            </div>
+          `;
+                                },
+                                footer: (query, result) => {
+                                    if (!query.isEmpty) {
+                                        return `
+              <div class="aa-suggestion footer-suggestion">
+                <a id="algolia-footer-selector" href="https://www.freecodecamp.org/news/search?query=${searchQuery}">
+                  <div class="algolia-result algolia-footer">
+                    <span>See all results for ${searchQuery}</span>
+                  </div>
+                </a>
+              </div>
+            `;
+                                    }
+                                }
+                            }
+                        }
+                    ]).on('autocomplete:selected', (event, suggestion, dataset, context) => {
+                        // If article is selected, set to URL of the article.
+                        // If footer is selected, set to search results path
+                        hitSelected = suggestion ? suggestion.url : `https://www.freecodecamp.org/news/search?query=${searchQuery}`;
+
+                        // Let browser handle click, and do not go to selection on tab key press
+                        if (context.selectionMethod === 'click' || context.selectionMethod === 'tabKey') {
+                            return;
+                        }
+
+                        // Go to selected article or footer path
+                        if (hits) {
+                            window.location.assign(hitSelected);
+                        }
+                    });
+
+                    // Go to highlighted hit or search for current query
+                    // when magnifying glass or enter is pressed
+                    function submitSearch() {
+                        hitSelected = document.getElementsByClassName('aa-cursor')[0];
+
+                        if (hitSelected && searchQuery) {
+                            const articleUrl = hitSelected.querySelector('a').href;
+                            window.location.assign(articleUrl);
+                        } else if (!hitSelected && searchQuery && hits) {
+                            window.location.assign(`https://www.freecodecamp.org/news/search?query=${searchQuery}`);
+                        }
+                    }
+
+                    // close dropbar when clicking off
+                    document.addEventListener('click', e => {
+                        if (e.target !== input) {
+                            search.autocomplete.close();
+                        }
+                    });
+                });
+            </script>
+        </div>
+        <div class="site-nav-middle">
+            <a class="site-nav-logo" href="https://www.freecodecamp.org/news"><img src="/news/content/images/2019/11/fcc_primary_large_24X210.svg" alt="freeCodeCamp.org" /></a>
+        </div>
+        <div class="site-nav-right">
+            <div class="nav-group">
+                <a class="nav-forum" id="nav-forum" rel="noopener noreferrer" target="_blank">Forum</a>
+
+                <a class="toggle-button-nav" id="nav-donate" rel="noopener noreferrer" target="_blank">
+                    Donate
+                </a>
+            </div>
+
+        </div>
+    </nav>
+
+
+    <a class="banner" id="banner" rel="noopener noreferrer" target="_blank">
+        <p>
+            Learn to code — <span>free 3,000-hour curriculum</span>
+        </p>
+    </a>
+
+
+    <div id="error-message"></div>
+
+
+
+
+
+
+
+    <main id="site-main" class="site-main outer">
+        <div class="inner">
+
+            <article class="post-full post tag-html tag-html5 ">
+
+                <header class="post-full-header">
+                    <section class="post-full-meta">
+                        <time class="post-full-meta-date" datetime="November 24, 2019">November 24, 2019</time>
+                        <span class="date-divider">/</span>
+                        <a href="/news/tag/html/">
+                            #HTML
+                        </a>
+                    </section>
+                    <h1 class="post-full-title">The Best HTML Examples and HTML5 Examples</h1>
+                </header>
+
+                <div class="post-full-author-header">
+
+
+                </div>
+
+                <figure class="post-full-image">
+                    <picture>
+                        <source media="(max-width: 700px)" sizes="1px"
+                                srcset="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7 1w" />
+                        <source media="(min-width: 701px)" sizes="(max-width: 800px) 400px,
+            (max-width: 1170px) 700px,
+            1400px" srcset="/news/content/images/size/w300/2020/01/html-examples.jpeg 300w,
+            /news/content/images/size/w600/2020/01/html-examples.jpeg 600w,
+            /news/content/images/size/w1000/2020/01/html-examples.jpeg 1000w,
+            /news/content/images/size/w2000/2020/01/html-examples.jpeg 2000w" />
+                        <img onerror="this.style.display='none'" src="/news/content/images/size/w2000/2020/01/html-examples.jpeg"
+                             alt="The Best HTML Examples and HTML5 Examples" />
+                    </picture>
+                </figure>
+
+                <section class="post-full-content">
+                    <div class="post-content medium-migrated-article">
+                        <p>HTML provides the structure of websites. Here are some examples of how to use HTML syntax to build websites, including some examples of newer HTML5 features.</p><h2 id="the-a-href-attribute-example"><strong>The A Href Attribute Example</strong></h2><p>The <code>&lt;a href&gt;</code> attribute refers to a destination provided by a link. The <code>a</code> (anchor) tag is dead without the <code>&lt;href&gt;</code> attribute. Sometimes in your workflow, you don’t want a live link or you won’t know the link destination yet. In this case, it’s useful to set the <code>href</code> attribute to <code>"#"</code> to create a dead link. The <code>href</code>attribute can be used to link to local files or files on the internet.</p><p>For instance:</p><pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Href Attribute Example&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Href Attribute Example&lt;/h1&gt;
+    &lt;p&gt;
+      &lt;a href="https://www.freecodecamp.org/contribute/"&gt;The freeCodeCamp Contribution Page&lt;/a&gt; shows you how and where you can contribute to freeCodeCamp's community and growth.
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><p>The <code>&lt;a href&gt;</code> attribute is supported by all browsers.</p><h4 id="more-attributes-"><strong>More attributes:</strong></h4><p><code>hreflang</code> : Specifies the language of the linked resource. <code>target</code> : Specifies the context in which the linked resource will open. <code>title</code> : Defines the title of a link, which appears to the user as a tooltip.</p><h3 id="examples"><strong>Examples</strong></h3><pre><code class="language-html">&lt;a href="#"&gt;This is a dead link&lt;/a&gt;
+&lt;a href="https://www.freecodecamp.org"&gt;This is a live link to freeCodeCamp&lt;/a&gt;
+&lt;a href="https://html.com/attributes/a-href/"&gt;more with a href attribute&lt;/a&gt;</code></pre><h3 id="in-page-anchors"><strong>In-page anchors</strong></h3><p>It’s also possible to set an anchor to certain place of the page. To do this you should first place a tab at location on the page with tag <a>and necessary attribute “name” with any keyword description in it, like this:</a></p><pre><code class="language-html">&lt;a name="top"&gt;&lt;/a&gt;</code></pre><p><a>Any description between tags is not required. After that you can place a link leading to this anchor at any palce on same page. To do this you should use tag with necessary attribute “href” with symbol # (sharp) and key-word description of the anchor, like this:</a></p><pre><code class="language-html">&lt;a href="#top"&gt;Go to Top&lt;/a&gt;</code></pre><h3 id="image-links"><strong><strong>Image Links</strong></strong></h3><p>The <code>&lt;a href="#"&gt;</code> may also be applied to images and other HTML elements.</p><h3 id="example"><strong><strong>Example</strong></strong></h3><pre><code class="language-html">&lt;a href="#"&gt;
+  &lt;img itemprop="image" style="height: 90px;" src="https://bit.ly/fcc-relaxing-cat" alt="A cute orange cat lying on its back."&gt;
+&lt;/a&gt;</code></pre><h3 id="example-1"><strong><strong>Example</strong></strong></h3><figure class="kg-card kg-image-card"><img src="https://www.freecodecamp.org/news/content/images/2021/03/relaxing-cat.jpg" class="kg-image" alt="A cute orange cat lying on its back."></figure><h3 id="the-a-target-example">The A Target Example</h3><p>The <code>&lt;a target&gt;</code> attribute specifies where to open the linked document in an <code>a</code> (anchor) tag. </p><p><strong>Examples:</strong></p><p>A target attribute with the value of “_blank” opens the linked document in a new window or tab.</p><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/" target="_blank"&gt;freeCodeCamp&lt;/a&gt;</code></pre><p>A target attribute with the value of “_self” opens the linked document in the same frame as it was clicked (this is the default and usually does not need to be specified).</p><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/" target="_self"&gt;freeCodeCamp&lt;/a&gt;</code></pre><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/"&gt;freeCodeCamp&lt;/a&gt;</code></pre><p>A target attribute with the value of “_parent” opens the linked document in the parent frame.</p><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/" target="_parent"&gt;freeCodeCamp&lt;/a&gt;</code></pre><p>A target attribute with the value of “_top” opens the linked document in the full body of the window.</p><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/" target="_top"&gt;freeCodeCamp&lt;/a&gt;</code></pre><p>A target attribute with the value of <em>“framename”</em> Opens the linked document in a specified named frame.</p><pre><code class="language-html">&lt;a href="https://www.freecodecamp.org/" target="framename"&gt;freeCodeCamp&lt;/a&gt;</code></pre><h2 id="the-body-background-attribute-example"><strong>The Body Background Attribute Example</strong></h2><p>If you want to add a background image instead of a color, one solution is the <code>&lt;body background&gt;</code> attribute. It specifies a background image for an HTML document.</p><p>Syntax:</p><p><code>&lt;body background="URL"&gt;</code></p><p>Attribute:</p><p><code>background - URL for background image</code></p><p>Example:</p><pre><code class="language-html">&lt;html&gt;
+  &lt;body background="https://assets.digitalocean.com/blog/static/hacktoberfest-is-back/hero.png"&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><h2 id="body-background-attribute-is-depreciated"><strong>body-background attribute is depreciated</strong></h2><p>the body-background attribute been deprecated in HTML5. The correct way to style the <code>&lt;body&gt;</code> tag is with CSS.</p><p>There are several CSS properties used for setting the background of an element. These can be used on to set the background of an entire page.</p><h2 id="the-body-bgcolor-attribute-example"><strong>The Body Bgcolor Attribute Example</strong></h2><p>The <code>&lt;body bgcolor&gt;</code> attribute assigns a background color for an HTML document.</p><p><strong><strong>Syntax</strong></strong>:</p><p><code>&lt;body bgcolor="color"&gt;</code> The color value can be either a color name (like, <code>purple</code>) or a hex value (like, <code>#af0000</code>).</p><p>To add a background color to a webpage you can use the <code>&lt;body bgcolor="######"&gt;</code> attribute. It specifies a color for the HTML document to display.</p><p><strong><strong>For example:</strong></strong></p><pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Body bgcolor Attribute example&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body bgcolor="#afafaf"&gt;
+    &lt;h1&gt;This webpage has colored background.&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><p>You can change the color by replacing ###### with a hexadecimal value. For simple colors you can also use the word, such as “red” or “black”.</p><p>All major browsers support the <code>&lt;body bgcolor&gt;</code> attribute.</p><p><em>Note:</em></p><ul><li>HTML 5 does not support the <code>&lt;body bgcolor&gt;</code> attribute. Use CSS for this purpose. How? By using the following code: <code>&lt;body style="background-color: color"&gt;</code> Of course, you can also do it in a separate document instead of an inline method.</li><li>Do not use RGB value in <code>&lt;body bgcolor&gt;</code> attribute because <code>rgb()</code> is for CSS only, that is, it will not work in HTML.</li></ul><h2 id="the-div-align-attribute-example"><strong>The Div Align Attribute Example</strong></h2><p>The <code>&lt;div align=""&gt;</code> attribute is used for aligning the text in a div tag to The Left, Right, center or justify.</p><p>For instance:</p><pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Div Align Attribbute&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div align="left"&gt;
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua.
+    &lt;/div&gt;
+    &lt;div align="right"&gt;
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua.
+    &lt;/div&gt;
+    &lt;div align="center"&gt;
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua.
+    &lt;/div&gt;
+    &lt;div align="justify"&gt;
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua.
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><h2 id="important-"><strong>Important!</strong></h2><p>This attribute is no longer supported in html5. css is the way to go.</p><p>The Div Align attribute can be used to horizontally align the contents within a div. In the below example, the text will be centered within the div.</p><pre><code class="language-html">&lt;div align="center"&gt;
+  This Text Will Be Centered
+&lt;/div&gt;</code></pre><p>**This attribute is not supported in HTML5 and <a href="https://github.com/freeCodeCamp/guides/blob/f50b7370be514b2a03ee707cd0f0febe2bb713ae/src/pages/css/text-align/index.md">CSS Text Align</a> should be used instead</p><h2 id="the-font-color-attribute-example"><strong>The Font Color Attribute Example</strong></h2><p>This attribute is used to set a color to the text enclosed in a <code>&lt;font&gt;</code> tag.</p><h3 id="important--1">Important:</h3><p>This attribute is not supported in HTML5. Instead, this <a href="https://guide.freecodecamp.org/css/colors">freeCodeCamp article</a> specifies a CSS method, which can be used.</p><h3 id="note-">Note:</h3><p>A color can also be specified using a 'hex code' or an 'rgb code', instead of using a name.</p><h3 id="example-">Example:</h3><ol><li>Color name attribute</li></ol><pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;font color="green"&gt;Font color example using color attribute&lt;/font&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>Hex code attribute</p><pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;font color="#00FF00"&gt;Font color example using color attribute&lt;/font&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>RGB attribute</p><pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;font color="rgb(0,255,0)"&gt;Font color example using color attribute&lt;/font&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><h2 id="the-font-size-attribute-example"><strong>The Font Size Attribute Example</strong></h2><p>This attribute specifies the font size as either a numeric or relative value. Numeric values range from <code>1</code> to <code>7</code>with <code>1</code> being the smallest and <code>3</code> the default. It can also be defined using a relative value, like <code>+2</code> or <code>-3</code>, which set it relative to the value of the size attribute of the <code>&lt;basefont&gt;</code> element, or relative to <code>3</code>, the default value, if none does exist.</p><p>Syntax:</p><p><code>&lt;font size="number"&gt;</code></p><p>Example:</p><pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;font size="6"&gt;This is some text!&lt;/font&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><p>Note : <code>The size attribute of &lt;font&gt; is not supported in HTML5. Use CSS instead.</code></p><h2 id="the-img-align-attribute-example"><strong>The Img Align Attribute Example</strong></h2><p>The align attribute of an image specifies where the image should be aligned according to the surrounding element.</p><p>Attribute Values:<br>right - Align image to the right left - Align image to the left<br>top - Align image to the top<br>bottom - Align image to the bottom<br>middle - Align image to the middle</p><p>For example:</p><pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;Img Align Attribute&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      This is an example. &lt;img src="image.png" alt="Image" align="middle" /&gt; More text right here
+      &lt;img src="image.png" alt="Image" width="100" /&gt;
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>We can also align in right if we want:</p><pre><code class="language-html">&lt;p&gt;This is another example&lt;img src="image.png" alt="Image" align="right" /&gt;&lt;/p&gt;
+</code></pre><p><strong><strong>Please note the align attribute is not supported in HTML5, and you should use CSS instead. However, it is still supported by all the major browsers.</strong></strong></p><h2 id="the-img-width-attribute"><strong>The Img Width Attribute</strong></h2><p>The HTML ‘width’ attribute refers to the width of an image. The value in the quotations is the amount of pixels.</p><p>For example, if you already have a link to an image set up via the <code>src</code> attribute you can add the width attribute like so:</p><pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;Img Width Attribute&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;img src="image.png" alt="Image" width="100" /&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>In the code snippet above there is an image tag and the image is set to a width of 100 pixels. <code>width="100"</code></p><h2 id="the-img-src-attribute-example"><strong>The Img Src Attribute Example</strong></h2><p>The <code>&lt;img src&gt;</code> attribute refers to the source of the image you want to display. The <code>img</code> tag will not display an image without the <code>src</code> attribute. However, if you set the source to the location of the image, you can display any image.</p><p>There is an image of the freeCodeCamp Logo located at <code>https://avatars0.githubusercontent.com/u/9892522?v=4&amp;s=400</code></p><p>You can set that as the image using the <code>src</code> attribute.</p><pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Img Src Attribute Example&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;img src="https://avatars0.githubusercontent.com/u/9892522?v=4&amp;s=400" /&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>The above code displays like this:</p><figure class="kg-card kg-image-card"><img src="https://avatars0.githubusercontent.com/u/9892522?v=4&amp;s=400?raw=true" class="kg-image" alt="The freeCodeCamp Avatar"></figure><p>The <code>src</code> attribute is supported by all browsers.</p><p>You can also have a locally hosted file as your image.</p><p>For example, <code>&lt;img src="images/freeCodeCamp.jpeg&gt;</code> would work if you had a folder called <code>images</code>which had the <code>freeCodeCamp.jpeg</code> inside, as long as the ‘images’ folder was in the same location as the <code>index.html</code> file.</p><p><code>../files/index.html</code></p><p><code>..files/images/freeCodeCamp.jpeg</code></p><h1 id="html-entity-example"><strong>HTML Entity Example</strong></h1><h2 id="overview"><strong>Overview</strong></h2><h3 id="what-are-html-entities"><strong>What are HTML Entities?</strong></h3><p>HTML entities are characters that are used to replace reserved characters in HTML or for characters that do not appear on your keyboard. Some characters are reserved in HTML. If you use the less than(&lt;) or greater than(&gt;) signs in your text, the browser might mix them up with tags.</p><h3 id="what-are-they-used-for"><strong>What are they used for?</strong></h3><p>As mentioned about HTML entities are used in order to replace reserved characters that are reserved by HTML.</p><h3 id="how-do-you-use-them"><strong>How do you use them?</strong></h3><p>A character entity looks similar to this:</p><pre><code class="language-html">&lt;!-- format &amp;[entity_name]; --&gt;
+&lt;!-- example for a less-than sign (&lt;) --&gt;
+&amp;lt;</code></pre><p>Or</p><pre><code class="language-html">&lt;!-- &amp;#[entity_number]; --&gt;
+&lt;!-- example for a less-than sign (&lt;) --&gt;
+&amp;#60;</code></pre><h2 id="reference-guide"><strong>Reference Guide</strong></h2><p>This is by no means an exhaustive list but the links below will be able to give you more entities if the ones below do not work for your needs. Happy Coding :bowtie:</p><pre><code>Character	Entity Name	Entity Number	Description
+&amp;#32;	Space
+!		&amp;#33;	Exclamation mark
+”		&amp;#34;	Quotation mark
+#		&amp;#35;	Number sign
+$		&amp;#36;	Dollar sign
+¢	&amp;cent;	&amp;#162;	Cent sign
+€	&amp;euro;	&amp;#8364;	Euro sign
+£	&amp;pound;	&amp;#163;	GBP sign
+¥	&amp;yen;	&amp;#165;	Yen sign
+%		&amp;#37;	Percent sign
+&amp;	&amp;amp;	&amp;#38;	Ampersand
+’		&amp;#39;	Apostrophe
+(		&amp;#40;	Opening/Left Parenthesis
+)		&amp;#41;	Closing/Right Parenthesis
+*		&amp;#42;	Asterisk
++		&amp;#43;	Plus sign
+,		&amp;#44;	Comma
+-		&amp;#45;	Hyphen
+.		&amp;#46;	Period
+/		&amp;#47;	Slash
+©	&amp;copy;	&amp;#169;	Copyright
+®	&amp;reg;	&amp;#174;	Registered Trademark
+”	&amp;quot;	&amp;#34;	double quotation mark
+&gt;	&amp;gt;	&amp;#62;	Greater-than sign
+&lt;	&amp;lt;	&amp;#60;	Less-than sign
+•	&amp;bull;	&amp;#8226	Bullet point</code></pre><h2 id="html-form-example"><strong>HTML Form Example</strong></h2><p>Basically, forms are used to collect data entered by a user, which are then sent to the server for further processing. They can be used for different kinds of user inputs, such as name, email etc.</p><p>Form contains control elements which are wrapped around <code>&lt;form&gt;&lt;/form&gt;</code> tags, like <code>input</code>, which can have types like:</p><ul><li><code>text</code></li><li><code>email</code></li><li><code>password</code></li><li><code>checkbox</code></li><li><code>radio</code></li><li><code>submit</code></li><li><code>range</code></li><li><code>search</code></li><li><code>date</code></li><li><code>time</code></li><li><code>week</code></li><li><code>color</code></li><li><code>datalist</code></li></ul><p>Code example:</p><pre><code class="language-html">&lt;form&gt;
+  &lt;label for="username"&gt;Username:&lt;/label&gt;
+  &lt;input type="text" name="username" id="username" /&gt;
+  &lt;label for="password"&gt;Password:&lt;/label&gt;
+  &lt;input type="password" name="password" id="password" /&gt;
+  &lt;input type="radio" name="gender" value="male" /&gt;Male&lt;br /&gt;
+  &lt;input type="radio" name="gender" value="female" /&gt;Female&lt;br /&gt;
+  &lt;input type="radio" name="gender" value="other" /&gt;Other
+  &lt;input list="Options" /&gt;
+  &lt;datalist id="Options"&gt;
+    &lt;option value="Option1"&gt;&lt;/option&gt;
+    &lt;option value="Option2"&gt;&lt;/option&gt;
+    &lt;option value="Option3"&gt;&lt;/option&gt;
+  &lt;/datalist&gt;
+
+  &lt;input type="submit" value="Submit" /&gt;
+  &lt;input type="color" /&gt;
+  &lt;input type="checkbox" name="correct" value="correct" /&gt;Correct
+&lt;/form&gt;
+</code></pre><p>Other elements that form can contain:</p><ul><li><code>textarea</code> - is a multiline box which is most often used for adding some text eg. comment. Size of textarea is defined by number of rows and columns.</li><li><code>select</code> - together with <code>&lt;option&gt;&lt;/option&gt;</code> tag creates drop-down select menu.</li><li><code>button</code> - The button element can be used to define a clickable button.</li></ul><p>MORE INFORMATION ON HTML FORMS.</p><p>HTML Forms are required when you want to collect some data from the site visitor. For example, during user registration you would like to collect information such as name, email address, credit card, etc.</p><p>A form will take input from the site visitor and then will post it to a back-end application such as CGI, ASP Script or PHP script etc. The back-end application will perform required processing on the passed data based on defined business logic inside the application.</p><p>There are various form elements available like text fields, textarea fields, drop-down menus, radio buttons, checkboxes, etc.</p><p>The HTML <code>&lt;form&gt;</code> tag is used to create an HTML form and it has following syntax −</p><pre><code class="language-html">&lt;form action="Script URL" method="GET|POST"&gt;form elements like input, textarea etc.&lt;/form&gt;
+</code></pre><p>If the form method is not defined then it will default to “GET”.</p><p>The form tag can also have an attribute named “target” which specifies where the link will open. It can open in the browser tab, a frame, or in the current window.</p><p>The action attribute defines the action to be performed when the form is submitted. Normally, the form data is sent to a web page at the Script URL when the user clicks on the submit button. If the action attribute is omitted, the action is set to the current page.</p><h2 id="html5-audio-example"><strong>HTML5 Audio Example</strong></h2><p>Before HTML5, audio files had to be played in a browser using a plug-in like Adobe Flash. The HTML</p><p>The following code snippet adds an audio file with the filename <code>tutorial.ogg</code> or <code>tutorial.mp3</code>. Theelement indicates alternative audio files which the browser may choose from. The browser will utilize the first recognized format.</p><h4 id="example-1"><strong>Example 1</strong></h4><pre><code class="language-html">&lt;audio controls&gt;
+  &lt;source src="tutorial.ogg" type="audio/ogg" /&gt;
+  &lt;source src="tutorial.mp3" type="audio/mpeg" /&gt;
+  Your browser does not support the audio element.
+&lt;/audio&gt;
+</code></pre><h4 id="example-2"><strong>Example 2</strong></h4><pre><code class="language-html">&lt;audio src="https://s3.amazonaws.com/freecodecamp/simonSound1.mp3" controls loop autoplay&gt;&lt;/audio&gt;
+</code></pre><p>The <code>controls</code> attribute includes audio controls like play, pause, and volume. If you don’t use this attribute, then no controls will be shown.</p><p>The <code>&lt;source&gt;</code> element enables you to indicate alternative audio files which the browser may choose from. The browser will utilize the first recognize format. The text between the <code>&lt;audio&gt;</code> and <code>&lt;/audio&gt;</code> tags may be shown in browser that does not support the HTML5 <code>&lt;audio&gt;</code> element.</p><p>The autoplay attribute will automatically play your audio file in the background. It is considered better practice to let visitors choose to play audio.</p><p>The preload attribute indicates what the browser should do if the player is not set to autoplay.</p><p>The loop attribute will play your audio file in a continous loop if mentioned</p><p>Since this is html5, some browser do not support it. You can check it at <a href="https://caniuse.com/#search=audio">https://caniuse.com/#search=audio</a></p><h2 id="html5-semantic-elements-example"><strong>HTML5 Semantic Elements Example</strong></h2><p>Semantic HTML elements clearly describe it’s meaning in a human and machine readable way. Elements such as <code>&lt;header&gt;</code>, <code>&lt;footer&gt;</code> and <code>&lt;article&gt;</code> are all considered semantic because they accurately describe the purpose of the element and the type of content that is inside them.</p><h3 id="a-quick-history"><strong>A Quick History</strong></h3><p>HTML was originally created as a markup language to describe documents on the early internet. As the internet grew and was adopted by more people, it’s needs changed. Where the internet was originally inteded for sharing scientific documents, now people wanted to share other things as well. Very quickly, people started wanting to make the web look nicer. Because the web was not initially built to be designed, programmers used different hacks to get things laid out in different ways. Rather than using the <code>&lt;table&gt;&lt;/table&gt;</code> to describe information using a table, programmers would use them to position other elements on a page. As the use of visually designed layouts progressed, programmers started to use a generic “non-semantic” tag like <code>&lt;div&gt;</code>. They would often give these elements a <code>class</code> or <code>id</code> attribute to describe their purpose. For example, instead of <code>&lt;header&gt;</code> this was often written as <code>&lt;div class="header"&gt;</code>. As HTML5 is still relatively new, this use of non-semantic elements is still very common on websites today.</p><h4 id="list-of-new-semantic-elements"><strong>List of new semantic elements</strong></h4><p>The semantic elements added in HTML5 are:</p><ul><li><code>&lt;article&gt;</code></li><li><code>&lt;aside&gt;</code></li><li><code>&lt;details&gt;</code></li><li><code>&lt;figcaption&gt;</code></li><li><code>&lt;figure&gt;</code></li><li><code>&lt;footer&gt;</code></li><li><code>&lt;header&gt;</code></li><li><code>&lt;main&gt;</code></li><li><code>&lt;mark&gt;</code></li><li><code>&lt;nav&gt;</code></li><li><code>&lt;section&gt;</code></li><li><code>&lt;summary&gt;</code></li><li><code>&lt;time&gt;</code></li></ul><p>Elements such as <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;aside&gt;</code>, and <code>&lt;footer&gt;</code> act more or less like <code>&lt;div&gt;</code> elements. They group other elements together into page sections. However where a <code>&lt;div&gt;</code> tag could contain any type of information, it is easy to identify what sort of information would go in a semantic <code>&lt;header&gt;</code> region.</p><p><strong><strong>An example of semantic element layout by w3schools</strong></strong></p><figure class="kg-card kg-image-card"><img src="https://www.w3schools.com/html/img_sem_elements.gif" class="kg-image" alt="Semantic elements laying out a page by w3schools"></figure><h3 id="benefits-of-semantic-elements"><strong>Benefits of semantic elements</strong></h3><p>To look at the benefits of semantic elements, here are two pieces of HTML code. This first block of code uses semantic elements:</p><pre><code class="language-text">&lt;header&gt;&lt;/header&gt;
+&lt;section&gt;
+  &lt;article&gt;
+    &lt;figure&gt;
+      &lt;img /&gt;
+      &lt;figcaption&gt;&lt;/figcaption&gt;
+    &lt;/figure&gt;
+  &lt;/article&gt;
+&lt;/section&gt;
+&lt;footer&gt;&lt;/footer&gt;
+</code></pre><p>Whilst this second block of code uses non-semantic elements:</p><pre><code class="language-text">&lt;div id="header"&gt;&lt;/div&gt;
+&lt;div class="section"&gt;
+  &lt;div class="article"&gt;
+    &lt;div class="figure"&gt;
+      &lt;img /&gt;
+      &lt;div class="figcaption"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id="footer"&gt;&lt;/div&gt;
+</code></pre><p>First, it is much <strong><strong>easier to read</strong></strong>. This is probably the first thing you will notice when looking at the first block of code using semantic elements. This is a small example, but as a programmer you can be reading through hundreds or thousands of lines of code. The easier it is to read and understand that code, the easier it makes your job.</p><p>It has <strong><strong>greater accessibility</strong></strong>. You are not the only one that finds semantic elements easier to understand. Search engines and assistive technologies (like screen readers for users with a sight impairment) are also able to better understand the context and content of your website, meaning a better experience for your users.</p><p>Overall, semantic elements also lead to more <strong><strong>consistent code</strong></strong>. When creating a header using non-semantic elements, different programmers might write this as <code>&lt;div class="header"&gt;</code>, <code>&lt;div id="header"&gt;</code>, <code>&lt;div class="head"&gt;</code>, or simply <code>&lt;div&gt;</code>. There are so many ways that you can create a header element, and they all depend on the personal preference of the programmer. By creating a standard semantic element, it makes it easier for everyone.</p><p>Since October 2014, HTML4 got upgraded to HTML5, along with some new “semantic” elements. To this day, some of us might still be confused as to why so many different elements that doesn’t seem to show any major changes.</p><h4 id="section-and-article"><strong><code>&lt;section&gt;</code> and <code>&lt;article&gt;</code></strong></h4><p>“What’s the difference?”, you may ask. Both these elements are used for sectioning a content, and yes, they can definitely be used interchangeably. It’s a matter of in which situation. HTML4 offered only one type of container element, which is <code>&lt;div&gt;</code>. While this is still used in HTML5, HTML5 provided us with <code>&lt;section&gt;</code>and <code>&lt;article&gt;</code> in a way to replace <code>&lt;div&gt;</code>.</p><p>The <code>&lt;section&gt;</code> and <code>&lt;article&gt;</code> elements are conceptually similar and interchangeable. To decide which of these you should choose, take note of the following:</p><ol><li>An article is intended to be independently distributable or reusable.</li><li>A section is a thematic grouping of content.</li></ol><pre><code class="language-html">&lt;section&gt;
+  &lt;p&gt;Top Stories&lt;/p&gt;
+  &lt;section&gt;
+    &lt;p&gt;News&lt;/p&gt;
+    &lt;article&gt;Story 1&lt;/article&gt;
+    &lt;article&gt;Story 2&lt;/article&gt;
+    &lt;article&gt;Story 3&lt;/article&gt;
+  &lt;/section&gt;
+  &lt;section&gt;
+    &lt;p&gt;Sport&lt;/p&gt;
+    &lt;article&gt;Story 1&lt;/article&gt;
+    &lt;article&gt;Story 2&lt;/article&gt;
+    &lt;article&gt;Story 3&lt;/article&gt;
+  &lt;/section&gt;
+&lt;/section&gt;
+</code></pre><h4 id="header-and-hgroup"><strong><code>&lt;header&gt;</code> and <code>&lt;hgroup&gt;</code></strong></h4><p>The <code>&lt;header&gt;</code> element is generally found at the top of a document, a section, or an article and usually contains the main heading and some navigation and search tools.</p><pre><code class="language-html">&lt;header&gt;
+  &lt;h1&gt;Company A&lt;/h1&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/home"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/about"&gt;About&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/contact"&gt;Contact us&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+  &lt;form target="/search"&gt;
+    &lt;input name="q" type="search" /&gt;
+    &lt;input type="submit" /&gt;
+  &lt;/form&gt;
+&lt;/header&gt;
+</code></pre><p>The <code>&lt;hgroup&gt;</code> element should be used where you want a main heading with one or more subheadings.</p><pre><code class="language-html">&lt;hgroup&gt;
+  &lt;h1&gt;Heading 1&lt;/h1&gt;
+  &lt;h2&gt;Subheading 1&lt;/h2&gt;
+  &lt;h2&gt;Subheading 2&lt;/h2&gt;
+&lt;/hgroup&gt;
+</code></pre><p>REMEMBER, that the <code>&lt;header&gt;</code> element can contain any content, but the <code>&lt;hgroup&gt;</code> element can only contain other headers, that is <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> and including <code>&lt;hgroup&gt;</code>.</p><h4 id="aside"><strong><code>&lt;aside&gt;</code></strong></h4><p>The <code>&lt;aside&gt;</code> element is intended for content that is not part of the flow of the text in which it appears, however still related in some way. This of <code>&lt;aside&gt;</code> as a sidebar to your main content.</p><pre><code class="language-html">&lt;aside&gt;
+  &lt;p&gt;
+    This is a sidebar, for example a terminology definition or a short background to a historical
+    figure.
+  &lt;/p&gt;
+&lt;/aside&gt;
+</code></pre><p>Before HTML5, our menus were created with <code>&lt;ul&gt;</code>’s and <code>&lt;li&gt;</code>’s. Now, together with these, we can separate our menu items with a <code>&lt;nav&gt;</code>, for navigation between your pages. You can have any number of <code>&lt;nav&gt;</code> elements on a page, for example, its common to have global navigation across the top (in the <code>&lt;header&gt;</code>) and local navigation in a sidebar (in an <code>&lt;aside&gt;</code> element).</p><pre><code class="language-html">&lt;nav&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/home"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/about"&gt;About&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/contact"&gt;Contact us&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+</code></pre><h4 id="footer"><strong><code>&lt;footer&gt;</code></strong></h4><p>If there is a <code>&lt;header&gt;</code> there must be a <code>&lt;footer&gt;</code>. A <code>&lt;footer&gt;</code> is generally found at the bottom of a document, a section, or an article. Just like the <code>&lt;header&gt;</code> the content is generally metainformation, such as author details, legal information, and/or links to related information. It is also valid to include <code>&lt;section&gt;</code>elements within a footer.</p><pre><code class="language-html">&lt;footer&gt;&amp;copy;Company A&lt;/footer&gt;</code></pre><h4 id="small"><strong><code>&lt;small&gt;</code></strong></h4><p>The <code>&lt;small&gt;</code> element often appears within a <code>&lt;footer&gt;</code> or <code>&lt;aside&gt;</code> element which would usually contain copyright information or legal disclaimers, and other such fine print. However, this is not intended to make the text smaller. It is just describing its content, not prescribing presentation.</p><pre><code class="language-html">&lt;footer&gt;&lt;small&gt;&amp;copy;Company A&lt;/small&gt; Date&lt;/footer&gt;</code></pre><h4 id="time"><strong><code>&lt;time&gt;</code></strong></h4><p>The <code>&lt;time&gt;</code> element allows an unambiguous ISO 8601 date to be attached to a human-readable version of that date.</p><pre><code class="language-html">&lt;time datetime="2017-10-31T11:21:00+02:00"&gt;Tuesday, 31 October 2017&lt;/time&gt;</code></pre><p>Why bother with <code>&lt;time&gt;</code>? While humans can read time that can disambiguate through context in the normal way, the computers can read the ISO 8601 date and see the date, time, and the time zone.</p><h4 id="figure-and-figcaption"><strong><code>&lt;figure&gt;</code> and <code>&lt;figcaption&gt;</code></strong></h4><p><code>&lt;figure&gt;</code> is for wrapping your image content around it, and <code>&lt;figcaption&gt;</code> is to caption your image.</p><pre><code class="language-html">&lt;figure&gt;
+  &lt;img src="https://en.wikipedia.org/wiki/File:Shadow_of_Mordor_cover_art.jpg" alt="Shadow of Mordor" /&gt;
+  &lt;figcaption&gt;Cover art for Middle-earth: Shadow of Mordor&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre><h2 id="html5-video-example"><strong>HTML5 Video Example</strong></h2><p>Before HTML5, in order to have a video play in a webpage you would need to use a plugin, like Adobe Flash Player. With the introduction of HTML5, you can now place it directly into the page itself. The HTML</p><p>To embed video file into web page, just add this code snippet and change the src of audio file.</p><pre><code class="language-html">&lt;video controls&gt;
+  &lt;source src="tutorial.ogg" type="video /ogg" /&gt;
+  &lt;source src="tutorial.mp4" type="video /mpeg" /&gt;
+  Your browser does not support the video element. Kindly,update it to latest version.
+&lt;/video&gt;
+</code></pre><p>The controls attribute includes video controls, similar to play, pause, and volume.</p><p>This feature is supported by all modern/updated browsers. However, not all support the same video file format. My recommendation for a wide range of compatibilty is MP4, as it is the most widely accepted format. There are also two other formats (WebM and Ogg) that are supported in Chrome, Firefox, and Opera.</p><p>The element enables you to indicate alternative video files which the browser may choose from. The browser will utilize the first recognize format. In HTML5, there are 3 supported video formats: MP4, WebM, and Ogg.</p><p>The text between the  tags will only be displayed in browsers that do not support the</p><p>There are several different elements of the video tag, many of these explanations are based on Mozilla’s web docs (linked below). There are even more if you click the link at the bottom.</p><h4 id="autoplay"><strong>autoplay</strong></h4><p>“autoplay” can be set to either true or false. You set it to true by adding it into the tag, if it is not present in the tag it is set to false. If set to true, the video will begin playing as soon as enough of the video has buffered for it to be able to play. Many people find autoplaying videos as disruptive or annoying so use this feature sparingly. Also note, that some mobile browsers, such as Safari for iOS, ignore this attribute.</p><pre><code class="language-html">&lt;video autoplay&gt;
+  &lt;source src="video.mp4" type="video/mp4" /&gt;
+&lt;/video&gt;
+</code></pre><h4 id="poster"><strong>poster</strong></h4><p>The “poster” attribute is the image that shows on the video until the user clicks to play it.</p><pre><code class="language-html">&lt;video poster="poster.png"&gt;
+  &lt;source src="video.mp4" type="video/mp4" /&gt;
+&lt;/video&gt;
+</code></pre><h4 id="controls"><strong>controls</strong></h4><p>The “controls” attribute can be set to true or false and will handle whether controls such as the play/pause button or volume slider appear. You set it to true by adding it into the tag, if it is not present in the tag it is set to false.</p><pre><code class="language-html">&lt;video controls&gt;
+  &lt;source src="video.mp4" type="video/mp4" /&gt;
+&lt;/video&gt;
+</code></pre><p>There are many more attributes that can be added that are optional to customize the videoplayer in the page. To learn more, click on the links below.</p><h2 id="html5-web-storage-example"><strong>HTML5 Web Storage Example</strong></h2><p>Web storage allows web applications to store up to 5MB of information in browser storage per origin (per domain and protocol).</p><h3 id="types-of-web-storage"><strong>Types of Web Storage</strong></h3><p>There are two objects for storing data on the client:</p><p><code>window.localStorage</code>: stores data with no expiration date and lives until removed.</p><pre><code class="language-javascript">// Store Item
+localStorage.setItem("foo", "bar");
+
+// Get Item
+localStorage.getItem("foo"); //returns "bar"</code></pre><p><code>window.sessionStorage</code>: stores data for one session, where data is lost when the browser / browser tab is closed.</p><pre><code class="language-javascript">// Store Item
+sessionStorage.setItem("foo", "bar");
+
+// Get Item
+sessionStorage.getItem("foo"); //returns "bar"</code></pre><p>Since the current implementation only supports string-to-string mappings, you need to serialize and de-serialize other data structures.</p><p>You can do so using JSON.stringify() and JSON.parse().</p><p>For e.g. for the given JSON</p><pre><code class="language-text">var jsonObject = { 'one': 1, 'two': 2, 'three': 3 };</code></pre><p>We first convert the JSON object to string and save in the local storage:</p><pre><code class="language-text">localStorage.setItem('jsonObjectString', JSON.stringify(jsonObject));</code></pre><p>To get the JSON object from the string stored in local storage:</p><pre><code class="language-text">var jsonObject = JSON.parse(localStorage.getItem('jsonObjectString'));</code></pre><h2 id="mailto-links-example">Mailto Links Example</h2><p>A mailto link is a kind of hyperlink (<code>&lt;a href=""&gt;&lt;/a&gt;</code>) with special parameters that lets you specify additional recipients, a subject line, and/or a body text.</p><h3 id="the-basic-syntax-with-a-recipient-is-"><strong>The basic syntax with a recipient is:</strong></h3><pre><code class="language-html">&lt;a href="mailto:friend@something.com"&gt;Some text&lt;/a&gt;</code></pre><h3 id="more-customization-"><strong>More customization!</strong></h3><h4 id="adding-a-subject-to-that-mail-"><strong>Adding a subject to that mail:</strong></h4><p>If you want to add a specific subject to that mail, be careful to add <code>%20</code> or <code>+</code> everywhere there’s a space in the subject line. An easy way to ensure that it is properly formatted is to use a <a href="https://meyerweb.com/eric/tools/dencoder/">URL Decoder / Encoder</a>.</p><h4 id="adding-body-text-"><strong>Adding body text:</strong></h4><p>Similarly, you can add a specific message in the body portion of the email: Again, spaces have to be replaced by <code>%20</code> or <code>+</code>. After the subject paramater, any additional parameter must be preceded by <code>&amp;</code></p><p>Example: Say you want users to send an email to their friends about their progress at Free Code Camp:</p><p>Address: empty</p><p>Subject: Great news</p><p>Body: I am becoming a developer</p><p>Your html link now:</p><pre><code class="language-html">&lt;a href="mailto:?subject=Great%20news&amp;body=I%20am%20becoming%20a%20developer"&gt;Send mail!&lt;/a&gt;</code></pre><p>Here, we’ve left mailto empty (<code>mailto:?</code>). This will open the user’s email client and the user will add the recipient address themselves.</p><h4 id="adding-more-recipients-"><strong>Adding more recipients:</strong></h4><p>In the same manner, you can add CC and bcc parameters. Separate each address by a comma!</p><p>Additional parameters must be preceded by <code>&amp;</code>.</p><pre><code class="language-html">&lt;a href="mailto:firstfriend@something.com?subject=Great%20news&amp;cc=secondfriend@something.com,thirdfriend@something.com&amp;bcc=fourthfriend@something.com"&gt;Send mail!&lt;/a&gt;</code></pre><h2 id="thank-you-for-using-this-html-reference-happy-coding-">Thank you for using this HTML reference. Happy coding!</h2>
+                    </div>
+                    <hr />
+
+
+                    <p class="social-row">
+
+                        If this article was helpful, <a id='tweet-btn' class='cta-button'>tweet it.</a>
+                    </p>
+
+
+                    <div class='learn-cta-row'>
+                        <p>
+                            Learn to code for free. freeCodeCamp&#x27;s open source curriculum has helped more than 40,000 people get jobs as developers. <a class="cta-button" id="learn-to-code-cta" rel="noopener noreferrer" target="_blank">Get started</a>
+                        </p>
+                    </div>
+
+                    <script>
+                        // Conditionally show comments section based on publication language setting
+                        const showCommentsList = ['zh-cn'];
+
+                        if (showCommentsList.includes(`en`)) {
+                            const hostname = window.location.hostname;
+                            const discourseEmbedMap = {
+                                'www.freecodecamp.org': {
+                                    file: 'https://forum.freecodecamp.org/srv/status',
+                                    discourseUrl: 'https://forum.freecodecamp.org/'
+                                },
+                                'chinese.freecodecamp.org': {
+                                    file: 'https://chinese.freecodecamp.org/forum/srv/status',
+                                    discourseUrl: 'https://chinese.freecodecamp.org/forum/',
+                                },
+                                'dev': {
+                                    file: 'https://forum.freecodecamp.dev/srv/status',
+                                    discourseUrl: 'https://forum.freecodecamp.dev/'
+                                },
+                            };
+                            const discourseEmbedInfo = discourseEmbedMap[hostname] ? discourseEmbedMap[hostname] : discourseEmbedMap['dev'];
+                            const { file, discourseUrl } = discourseEmbedInfo;
+
+                            function loadDiscourseComments() {
+                                var xhr = new XMLHttpRequest();
+                                var randomNum = Math.round(Math.random() * 10000);
+                                xhr.open('HEAD', file + '?rand=' + randomNum, true);
+                                xhr.send();
+                                xhr.addEventListener('readystatechange', processRequest, false);
+                                function processRequest(e) {
+                                    if (xhr.readyState == 4) {
+                                        if (xhr.status >= 200 && xhr.status < 304) {
+                                            document.getElementById('discourse-comments').innerHTML = '';
+                                            DiscourseEmbed = {
+                                                discourseUrl,
+                                                discourseEmbedUrl: 'https://www.freecodecamp.org/news/html-and-html5-example/'
+                                            };
+                                            var d = document.createElement('script');
+                                            d.type = 'text/javascript';
+                                            d.async = true;
+                                            d.src = discourseUrl + 'javascripts/embed.js';
+                                            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+
+                                            // Remove deprecated scrolling attribute and handle with embedded CSS
+                                            d.onload = () => {
+                                                const discourseEmbedFrame = document.querySelector('#discourse-embed-frame');
+                                                discourseEmbedFrame.removeAttribute('scrolling');
+                                            }
+                                        } else {
+                                            document.getElementById('discourse-comments').innerHTML =
+                                                '<div style="text-align: center;">Sorry, we could not load the comments. Please try again after some time.</div>';
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (window && window.addEventListener) {
+                                // Create comments section
+                                const commentsDivHtml = `
+          <div id='discourse-comments'>
+            <button id='trigger-load-comments'>Show comments</button>
+          </div>
+        `;
+                                const fullContentSection = document.getElementsByClassName('post-full-content')[0];
+                                fullContentSection.insertAdjacentHTML('beforeend', commentsDivHtml);
+
+                                window.addEventListener('load', function () {
+                                    document.getElementById('trigger-load-comments').onclick = loadDiscourseComments;
+                                });
+                            }
+                        }
+                    </script>
+                </section>
+
+            </article>
+        </div>
+    </main>
+
+
+
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-desc-col">
+                    <p>
+                        freeCodeCamp is a donor-supported tax-exempt 501(c)(3) nonprofit organization (United States Federal Tax Identification Number: 82-0779546)
+                    </p>
+                    <p>
+                        Our mission: to help people learn to code for free. We accomplish this by creating thousands of videos, articles, and interactive coding lessons - all freely available to the public. We also have thousands of freeCodeCamp study groups around the world.
+                    </p>
+                    <p>
+                        Donations to freeCodeCamp go toward our education initiatives and help pay for servers, services, and staff.
+                    </p>
+                    <p class="footer-donation">
+                        You can <a id='footer-donation' class='inline' rel='noopener noreferrer' target='_blank'>make a tax-deductible donation here</a>.
+                    </p>
+                </div>
+                <div class="trending-guides">
+                    <div class="col-header">Trending Guides</div>
+                    <div class="trending-guides-row">
+                        <div class="footer-col footer-col-1">
+                            <a id="article0" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article1" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article2" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article3" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article4" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article5" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article6" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article7" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article8" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article9" rel="noopener noreferrer" target="_blank"></a>
+                        </div>
+                        <div class="footer-col footer-col-2">
+                            <a id="article10" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article11" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article12" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article13" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article14" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article15" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article16" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article17" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article18" rel="noopener noreferrer" target="_blank"></a>
+                            <a id="article19" rel="noopener noreferrer" target="_blank"></a>
+                        </div>
+                        <div class="footer-col footer-col-3">
+                            <div class="footer-left">
+                                <a id="article20" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article21" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article22" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article23" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article24" rel="noopener noreferrer" target="_blank"></a>
+                            </div>
+
+                            <div class="footer-right">
+                                <a id="article25" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article26" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article27" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article28" rel="noopener noreferrer" target="_blank"></a>
+                                <a id="article29" rel="noopener noreferrer" target="_blank"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class='footer-bottom'>
+                <div class="col-header">Our Nonprofit</div>
+                <div class="footer-divider"></div>
+                <div class="our-nonprofit">
+                    <a id="about" rel="noopener noreferrer" target="_blank">About</a>
+                    <a id="alumni" rel="noopener noreferrer" target="_blank">Alumni Network</a>
+                    <a id="open-source" rel="noopener noreferrer" target="_blank">Open Source</a>
+                    <a id="shop" rel="noopener noreferrer" target="_blank">Shop</a>
+                    <a id="support" rel="noopener noreferrer" target="_blank">Support</a>
+                    <a id="sponsors" rel="noopener noreferrer" target="_blank">Sponsors</a>
+                    <a id="honesty" rel="noopener noreferrer" target="_blank">Academic Honesty</a>
+                    <a id="coc" rel="noopener noreferrer" target="_blank">Code of Conduct</a>
+                    <a id="privacy" rel="noopener noreferrer" target="_blank">Privacy Policy</a>
+                    <a id="tos" rel="noopener noreferrer" target="_blank">Terms of Service</a>
+                    <a id="copyright" rel="noopener noreferrer" target="_blank">Copyright Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+</div>
+
+<script>
+    var images = document.querySelectorAll('.kg-gallery-image img');
+    images.forEach(function (image) {
+        var container = image.closest('.kg-gallery-image');
+        var width = image.attributes.width.value;
+        var height = image.attributes.height.value;
+        var ratio = width / height;
+        container.style.flex = ratio + ' 1 0%';
+    })
+</script>
+
+<script type="text/javascript" src="/news/assets/built/lazysizes.min.js?v=f07a8cf4bd" async=""></script>
+
+<script defer type="text/javascript" src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-unescaped-markup.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-markup-templating.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-bash.min.js"></script>
+<script defer type="text/javascript" src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-c.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-clojure.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-cpp.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-csharp.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-css.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-docker.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-elixir.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-erlang.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-git.min.js"></script>
+<script defer type="text/javascript" src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-go.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-graphql.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-haskell.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-java.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-javascript.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-json.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-jsx.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-kotlin.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-lua.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-markup.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-php.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-python.min.js"></script>
+<script defer type="text/javascript" src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-r.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-ruby.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-rust.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-scala.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-sql.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-swift.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-typescript.min.js"></script>
+<script defer type="text/javascript"
+        src="https://cdn.freecodecamp.org/news-assets/prism-1-16-0/prism-yaml.min.js"></script>
+
+<script>
+    // Conditionally remove social-row based on the publication language setting
+    const hideSocialRowList = ['zh-cn'];
+    const socialRow = document.getElementsByClassName('social-row')[0];
+
+    if (hideSocialRowList.includes(`en`)) socialRow.remove();
+    else {
+        const title = `The%20Best%20HTML%20Examples%20and%20HTML5%20Examples`.replace(/'/g, '%27');
+        const twitter = ``;
+        const url = window.location;
+        const thanks = `Thank%20you%20%20for%20writing%20this%20helpful%20article.` +
+            `%0A%0A${title}%0A%0A${url}`;
+        const button = document.getElementById('tweet-btn');
+        button.addEventListener('click', () => {
+            if (twitter) {
+                window.open(`https://twitter.com/intent/tweet?text=${thanks}`, `share-twitter`, `width=550, height=235`);
+                return false;
+            }
+            else {
+                window.open(`https://twitter.com/intent/tweet?text=${title}%0A%0A${url}`, `share-twitter`, `width=550, height=235`);
+                return false;
+            }
+        });
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const learnToCodeCtaAnchorEl = document.getElementById('learn-to-code-cta');
+
+        learnToCodeCtaAnchorEl.href = main['learn-to-code-cta-url'];
+    });
+</script>
+
+<script defer type="text/javascript" src="/news/assets/built/fitvids.js?v=f07a8cf4bd"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const postContent = document.querySelector('.post-full-content');
+        if (postContent) fitVids(postContent);
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const navForumAnchorEl = document.getElementById('nav-forum');
+        const navDonateAnchorEl = document.getElementById('nav-donate');
+
+        navForumAnchorEl.href = main['forum-url'];
+        navDonateAnchorEl.href = main['donate-url'];
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bannerAnchorEl = document.getElementById('banner');
+        bannerAnchorEl.href = main['banner-url'];
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const { trending, ...otherUrls } = footer;
+        const footerDonationAnchorEl = document.getElementById('footer-donation');
+
+        Object.keys(trending).forEach(key => {
+            const anchorId = key.replace(/link|title/, '');
+            const trendingAnchorEl = document.getElementById(anchorId);
+
+            if (key.includes('link')) {
+                trendingAnchorEl.href = trending[key]
+            } else if (key.includes('title')) {
+                trendingAnchorEl.textContent = trending[key];
+            }
+        });
+
+        Object.keys(otherUrls).forEach(key => {
+            const footerAnchorEl = document.getElementById(key);
+
+            footerAnchorEl.href = otherUrls[key];
+        });
+
+        footerDonationAnchorEl.href = main['donate-url'];
+    });
+</script>
+
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5D6RKKP"
+                  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"rayId":"66e325de3c7824a1","token":"bdb993c6dde44e178aabd9555e75e4f4","version":"2021.6.0","si":10}'></script>
+</body>
+
+</html>
