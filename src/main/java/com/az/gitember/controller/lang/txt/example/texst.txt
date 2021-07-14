@@ -11,3 +11,10 @@ Letraset	sheets containing Lorem Ipsum "passa"ges", and more recen
 tly with        desktop "publi'shi'ng" software like Aldus PageMaker incl + [ adcadsc ]
 uding versions of Lorem "false" false " false " Ipsum. 23 "43" and one more " here
 "   and here """
+	tab
+    4 spaces
+        8 spaces
+a	tab
+b    4 spaces
+c        8 spaces
+

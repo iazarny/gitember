@@ -22,6 +22,7 @@ import com.az.gitember.controller.lang.scala.ScalaLexer;
 import com.az.gitember.controller.lang.swift.Swift5Lexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
+import com.az.gitember.controller.lang.xml.XMLLexer;
 import com.az.gitember.data.Is;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -101,6 +102,9 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("swift")) {
             this.lexer = new Swift5Lexer(charStream );
             this.tokenTypeAdapter = new  SwiftTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("xml", "mxml", "fxml")) {
+            this.lexer = new XMLLexer(charStream );
+            this.tokenTypeAdapter = new  XmlTokenTypeAdapter(lexer);
         } else  {
             this.lexer = new SimpleTextLexer(charStream );
             this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);
