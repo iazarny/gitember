@@ -17,6 +17,7 @@ import com.az.gitember.controller.lang.lua.LuaLexer;
 import com.az.gitember.controller.lang.pascal.pascalLexer;
 import com.az.gitember.controller.lang.py3.Python3Lexer;
 import com.az.gitember.controller.lang.ruby.CorundumLexer;
+import com.az.gitember.controller.lang.rust.RustLexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
 import com.az.gitember.data.Is;
@@ -92,6 +93,9 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("rb")) {
             this.lexer = new CorundumLexer(charStream );
             this.tokenTypeAdapter = new  RubyTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("rs")) {
+            this.lexer = new RustLexer(charStream );
+            this.tokenTypeAdapter = new  RustTokenTypeAdapter(lexer);
         } else  {
             this.lexer = new SimpleTextLexer(charStream );
             this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);

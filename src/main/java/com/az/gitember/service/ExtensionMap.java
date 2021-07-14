@@ -53,7 +53,6 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/plain", "lua", true));
         add(new ExtensionInfo("text/plain", "php", true));
         add(new ExtensionInfo("text/plain", "dart", true));
-        add(new ExtensionInfo("text/plain", "rs", true));
         add(new ExtensionInfo("text/plain", "list", true));
         add(new ExtensionInfo("text/x-log", "log", true));
         add(new ExtensionInfo("text/plain", "in", true));
