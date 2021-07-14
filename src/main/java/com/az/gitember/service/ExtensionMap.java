@@ -99,6 +99,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/x-fortran", "f90", true));
         add(new ExtensionInfo("text/x-pascal", "p", true));
         add(new ExtensionInfo("text/x-pascal", "pas", true));
+        add(new ExtensionInfo("text/x-pascal", "py", true));
         add(new ExtensionInfo("text/x-java-source", "java", true));
         add(new ExtensionInfo("text/x-java-source", "jsp", true));
         add(new ExtensionInfo("text/x-java-source", "jspx", true));

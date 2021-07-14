@@ -2,7 +2,6 @@ package com.az.gitember.controller.lang;
 
 import com.az.gitember.controller.lang.asm.MASMLexer;
 import com.az.gitember.controller.lang.basic.jvmBasicLexer;
-import com.az.gitember.controller.lang.c.CLexer;
 import com.az.gitember.controller.lang.cpp.CPP14Lexer;
 import com.az.gitember.controller.lang.cpp.CSharpLexer;
 import com.az.gitember.controller.lang.css.css3Lexer;
@@ -16,7 +15,7 @@ import com.az.gitember.controller.lang.json.JSONLexer;
 import com.az.gitember.controller.lang.kotlin.KotlinLexer;
 import com.az.gitember.controller.lang.lua.LuaLexer;
 import com.az.gitember.controller.lang.pascal.pascalLexer;
-import com.az.gitember.controller.lang.php.PhpLexer;
+import com.az.gitember.controller.lang.py3.Python3Lexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
 import com.az.gitember.data.Is;
@@ -86,9 +85,9 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("pas")) {
             this.lexer = new pascalLexer(charStream );
             this.tokenTypeAdapter = new  PascalTokenTypeAdapter(lexer);
-        } else if (Is.string(lcFileExt).in("php")) {
-            this.lexer = new PhpLexer(charStream );
-            this.tokenTypeAdapter = new  PhpTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("py")) {
+            this.lexer = new Python3Lexer(charStream );
+            this.tokenTypeAdapter = new  Python3TokenTypeAdapter(lexer);
         } else  {
             this.lexer = new SimpleTextLexer(charStream );
             this.tokenTypeAdapter = new SimpleTextTypeAdapter(lexer);

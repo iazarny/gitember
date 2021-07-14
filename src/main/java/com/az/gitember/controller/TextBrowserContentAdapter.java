@@ -208,7 +208,7 @@ public class TextBrowserContentAdapter {
 
 
     private HBox createLineNumbedNode(int lineIdx, String debugString) {
-        final String lineNumText = StringUtils.leftPad(String.valueOf(lineIdx), this.lineNumWidth, "0") + "  ";
+        final String lineNumText = StringUtils.leftPad(String.valueOf(lineIdx + 1), this.lineNumWidth, "0") + "  ";
         HBox node = createText("", lineNumText, "linenum", lineIdx, debugString, null);
         return node;
     }
@@ -230,6 +230,18 @@ public class TextBrowserContentAdapter {
                 return null;
             }
         }
+
+        /*        if (prevNode instanceof HBox) {
+            final HBox prevHBox = (HBox) prevNode;
+            final Text prevText = (Text) prevHBox.getChildren().get(0);
+            if (prevHBox.getUserData().equals(lineIdx) && !prevText.getText().startsWith("\r")) {
+                if (prevText.getStyleClass().contains(style)) {
+                    String newTExt = prevText.getText() + tokenString;
+                    prevText.setText(newTExt);
+                    return null;
+                }
+            }
+        }*/
         Text te = new Text(tokenString + debugString);
         te.setFont(FONT);
         te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
@@ -239,7 +251,7 @@ public class TextBrowserContentAdapter {
         hb.setSpacing(0);
 
         /* Fun to visualize splitting */
-        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
 
         return hb;
     }
