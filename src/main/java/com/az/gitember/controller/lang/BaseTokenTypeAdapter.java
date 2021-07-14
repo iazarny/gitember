@@ -26,6 +26,10 @@ public class BaseTokenTypeAdapter {
         return DEFAULT;
     }
 
+    public boolean skip(int tokenType) {
+        return false;
+    }
+
     public Lexer getLexer() {
         return lexer;
     }

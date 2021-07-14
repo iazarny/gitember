@@ -203,7 +203,7 @@ POWER_ASSIGN : '**=';
 IDIV_ASSIGN : '//=';
 
 SKIP_
- : ( SPACES  | LINE_JOINING ) -> skip
+ : ( SPACES |  LINE_JOINING ) -> skip
  ;
 
 UNKNOWN_CHAR
@@ -400,6 +400,6 @@ fragment ID_CONTINUE
  | UNICODE_OIDC
  ;
 
- WS
-    : [ \t\n\r] + -> skip
-    ;
+  WS
+     : [ \t\n\r] + -> skip
+     ;

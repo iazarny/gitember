@@ -1,7 +1,6 @@
 """The asyncio package, tracking PEP 3156."""
 
 import sys
-sdf sd fsd
 
 # The selectors module is in the stdlib in Python 3.4 but not in 3.3.
 # Do this first, so the other submodules can use "from . import selectors".

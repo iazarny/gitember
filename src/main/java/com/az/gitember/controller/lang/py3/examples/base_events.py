@@ -38,6 +38,7 @@ from .coroutines import coroutine
 from .log import logger
 
 
+
 __all__ = ['BaseEventLoop']
 
 
@@ -54,10 +55,6 @@ _MIN_CANCELLED_TIMER_HANDLES_FRACTION = 0.5
 _FATAL_ERROR_IGNORE = (BrokenPipeError,
                        ConnectionResetError, ConnectionAbortedError)
 
-
-_JUST_test = 22
-
-__one_more__ = []
 
 def _format_handle(handle):
     cb = handle._callback

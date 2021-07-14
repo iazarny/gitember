@@ -39,4 +39,9 @@ public class Python3TokenTypeAdapter extends BaseTokenTypeAdapter {
         }
         return super.adaptToStyleClass(tokenType);
     }
+
+    @Override
+    public boolean skip(int tokenType) {
+        return tokenType == lexer.INDENT || tokenType == lexer.NEWLINE;
+    }
 }

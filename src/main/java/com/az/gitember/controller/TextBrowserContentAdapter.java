@@ -1,5 +1,6 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.controller.lang.BaseTokenTypeAdapter;
 import com.az.gitember.controller.lang.LangResolver;
 import com.az.gitember.service.GitemberUtil;
 import javafx.scene.Node;
@@ -80,22 +81,26 @@ public class TextBrowserContentAdapter {
                 Iterator<Token> tokenIterator = tokens.iterator();
                 while (tokenIterator.hasNext()) {
                     final Token token = tokenIterator.next();
-                    final String tokenText = token.getText();
-                    final String style = langResolver.getAdapter().adaptToStyleClass(token.getType());
-                    System.out.println(lineIdx + "   " + token.getType() + " " + tokenText + "     <--" + style);
-                    safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
-                    List<String> strings = this.getLines(tokenText);
-                    if (strings.size() > 1) { //multiline token
-                        int processedLines = processMultilineToken(rez, lineIdx, originalLine, style, strings);
-                        lineIdx += processedLines;
-                        if (tokensPerLine.get(lineIdx + 1) != null) {
-                            tokens = tokensPerLine.get(lineIdx + 1);
-                            tokenIterator = tokens.iterator();
+                    final int tokenType = token.getType();
+                    final BaseTokenTypeAdapter adapter = langResolver.getAdapter();
+                    if (!adapter.skip(tokenType)) {
+                        final String tokenText = token.getText();
+                        final String style = adapter.adaptToStyleClass(tokenType);
+                        System.out.println(lineIdx + "   " + tokenType + " [" + tokenText + "]  <--" + style);
+                        safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
+                        List<String> strings = this.getLines(tokenText);
+                        if (strings.size() > 1) { //multiline token
+                            int processedLines = processMultilineToken(rez, lineIdx, originalLine, style, strings);
+                            lineIdx += processedLines;
+                            if (tokensPerLine.get(lineIdx + 1) != null) {
+                                tokens = tokensPerLine.get(lineIdx + 1);
+                                tokenIterator = tokens.iterator();
+                            }
+                        } else { //single line
+                            safeAdd(rez, createText(originalLine, tokenText, style, lineIdx, "", rez.get(rez.size() - 1)));
                         }
-                    } else { //single line
-                        safeAdd(rez, createText(originalLine, tokenText, style, lineIdx, "", rez.get(rez.size() - 1)));
+                        prevToken = token;
                     }
-                    prevToken = token;
                 }
             }
         }
@@ -219,29 +224,18 @@ public class TextBrowserContentAdapter {
      *
      * @return null is concatenated to the prev node otherwise new node.
      */
-    private HBox createText(final String lineString, final String tokenString, final String style, final int lineIdx, String debugString, final Node prevNode) {
-
+    private HBox createText(final String lineString, final String tokenStringRaw, final String style, final int lineIdx, String debugString, final Node prevNode) {
+        String tokenString = tokenStringRaw.replace("\n", "").replace("\r", "");
         if (prevNode instanceof HBox) {
             final HBox prevHBox = (HBox) prevNode;
             final Text prevText = (Text) prevHBox.getChildren().get(0);
             if (prevText.getStyleClass().contains(style)) {
                 String newTExt = prevText.getText() + tokenString;
                 prevText.setText(newTExt);
+                adjustHBoxWidth(newTExt, prevHBox);
                 return null;
             }
         }
-
-        /*        if (prevNode instanceof HBox) {
-            final HBox prevHBox = (HBox) prevNode;
-            final Text prevText = (Text) prevHBox.getChildren().get(0);
-            if (prevHBox.getUserData().equals(lineIdx) && !prevText.getText().startsWith("\r")) {
-                if (prevText.getStyleClass().contains(style)) {
-                    String newTExt = prevText.getText() + tokenString;
-                    prevText.setText(newTExt);
-                    return null;
-                }
-            }
-        }*/
         Text te = new Text(tokenString + debugString);
         te.setFont(FONT);
         te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
@@ -249,12 +243,20 @@ public class TextBrowserContentAdapter {
         HBox hb = new HBox(te);
         hb.setUserData(lineIdx);
         hb.setSpacing(0);
+        adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
-        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
-
+        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
         return hb;
     }
+
+    private void adjustHBoxWidth(String tokenString, HBox hb) {
+        double width = FONT_SYMBOL_WIDTH * tokenString.length();
+        hb.setMaxWidth(width);
+        hb.setMinWidth(width);
+        hb.setPrefWidth(width);
+    }
+
 
     private ArrayList<String> getLines(final String content) {
         return (ArrayList) new BufferedReader(new StringReader(content))
