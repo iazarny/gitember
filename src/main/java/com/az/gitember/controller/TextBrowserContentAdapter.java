@@ -63,6 +63,16 @@ public class TextBrowserContentAdapter {
         commonTokenStream.fill();
         final List<Token> parsedCode = commonTokenStream.getTokens();
 
+        /*        final List<Token> parsedCode;
+        if (Is.string(extension.toLowerCase(Locale.ROOT)).in("sql")) {
+            final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
+            commonTokenStream.fill();
+            parsedCode = commonTokenStream.getTokens();
+        } else {
+
+        }
+*/
+
         parsedCode.stream().forEach(token -> {
             List<Token> tokens = tokensPerLine.computeIfAbsent(token.getLine(), integer -> new ArrayList<>());
             tokens.add(token);
@@ -246,7 +256,7 @@ public class TextBrowserContentAdapter {
         adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
-        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
         return hb;
     }
 

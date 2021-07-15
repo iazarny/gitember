@@ -18,7 +18,7 @@ import com.az.gitember.controller.lang.pascal.pascalLexer;
 import com.az.gitember.controller.lang.py3.Python3Lexer;
 import com.az.gitember.controller.lang.ruby.CorundumLexer;
 import com.az.gitember.controller.lang.rust.RustLexer;
-import com.az.gitember.controller.lang.scala.ScalaLexer;
+import com.az.gitember.controller.lang.sql.HiveLexer;
 import com.az.gitember.controller.lang.swift.Swift5Lexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
@@ -102,6 +102,9 @@ public class LangResolver {
         } else if (Is.string(lcFileExt).in("swift")) {
             this.lexer = new Swift5Lexer(charStream );
             this.tokenTypeAdapter = new  SwiftTokenTypeAdapter(lexer);
+        } else if (Is.string(lcFileExt).in("sql")) {
+            this.lexer = new HiveLexer(charStream );
+            this.tokenTypeAdapter = new  SqlTokenTypeAdapter(lexer);
         } else if (Is.string(lcFileExt).in("xml", "mxml", "fxml")) {
             this.lexer = new XMLLexer(charStream );
             this.tokenTypeAdapter = new  XmlTokenTypeAdapter(lexer);

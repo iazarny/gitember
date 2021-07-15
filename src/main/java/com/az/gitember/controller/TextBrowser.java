@@ -28,7 +28,7 @@ public class TextBrowser implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
+        //TODO  codeArea.setTabSize(4);
     }
 
     public void setText(String text, boolean diff) {
@@ -48,7 +48,6 @@ public class TextBrowser implements Initializable {
                     long dt = System.currentTimeMillis();
                     List<Node> nodes = adapter.getText();
                     codeArea.getChildren().addAll(nodes );
-                    System.out.println(">>>>>>>>>>>>>>> " + (System.currentTimeMillis() - dt) + " nodes " + nodes.size());
                 }
         );
 

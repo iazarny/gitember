@@ -17,7 +17,6 @@ import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -87,7 +86,8 @@ public class DiffViewer implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
+        //TODO oldTextFlow.setTabSize(4);
+        //TODO newTextFlow.setTabSize(4);
 
 
 
