@@ -14,7 +14,7 @@
        <!-- <jgit.version>5.11.0.202103091610-r</jgit.version>-->
        <!-- -->
 
-        <javafx.version>15</javafx.version>
+        <javafx.version>16</javafx.version>
     </properties>
 
 

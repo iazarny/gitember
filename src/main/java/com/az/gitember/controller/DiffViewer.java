@@ -86,6 +86,7 @@ public class DiffViewer implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        //oldTextFlow.setTabSize(4);
         //TODO oldTextFlow.setTabSize(4);
         //TODO newTextFlow.setTabSize(4);
 

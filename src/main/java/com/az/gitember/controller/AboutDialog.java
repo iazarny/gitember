@@ -81,6 +81,39 @@ public class AboutDialog extends Dialog {
         Hyperlink linkedIn = new Hyperlink("Igor Azarny");
 
         grid.add(linkedIn, 1, 3);
+
+        TextArea creditsTextArea = new TextArea();
+        creditsTextArea.setEditable(false);
+        creditsTextArea.setMinWidth(250);
+        creditsTextArea.setMinHeight(100);
+        creditsTextArea.setMaxWidth(250);
+        creditsTextArea.setMaxHeight(100);
+        creditsTextArea.setText(
+                "Thanks for antlr grammar\n" +
+                        "Asm, Basic - Tom Everett <tom@khubla.com>\n" +
+                        "C - Sam Harwell\n" +
+                        "Cpp - Camilo Sanchez, Martin Mirchev\n" +
+                        "C# - Christian Wulf <chwchw@gmx.de>, Ivan Kochurkin <kvanttt@gmail.com>\n" +
+                        "Erlang - Terence Parr\n" +
+                        "Fortran - Olivier Dragon, Terence Parr\n" +
+                        "Go - Sasa Coh, Michał Błotniak, Ivan Kochurkin, kvanttt@gmail.com, Dmitry Rassadin, flipparassa@gmail.com, Martin Mirchev, mirchevmartin2203@gmail.com\n" +
+                        "Html - Tom Everett\n" +
+                        "Java - Terence Parr, Sam Harwell, Chan Chung Kwong\n" +
+                        "JavaScript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Student Main\n" +
+                        "Json - Terence Parr\n" +
+                        "Kotlin - Anastasiya Shadrina a.shadrina5@mail.ru\n" +
+                        "Lua - Kazunori Sakamoto, Alexander Alexeev\n" +
+                        "Pascal - Tom Everett\n" +
+                        "Python - Bart Kiers\n" +
+                        "Ruby - Alexander Belov\n" +
+                        "Rust - The Rust Project Developers, Student Main\n" +
+                        "Sql - Canwei He\n" +
+                        "Swift - ?\n" +
+                        "Typescript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Andrii Artiushok\n" +
+                        "Xml - Terence Parr\n"
+        );
+        grid.add(new Label("Credits to : " ), 0, 4);
+        grid.add(creditsTextArea, 1, 4);
         this.getDialogPane().setContent(grid);
         this.initOwner(App.getScene().getWindow());
 

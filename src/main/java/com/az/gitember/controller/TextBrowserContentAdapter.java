@@ -52,7 +52,8 @@ public class TextBrowserContentAdapter {
         this.leftSide = leftSide;
     }
 
-    TextBrowserContentAdapter(final String content, final String extension, final boolean rawDiff) {
+    TextBrowserContentAdapter(final String contentRaw, final String extension, final boolean rawDiff) {
+        String content = GitemberUtil.replaceTabs(contentRaw);
         this.langResolver = new LangResolver(extension, content);
         this.rawDiff = rawDiff;
         this.lines = getLines(content);
@@ -62,16 +63,6 @@ public class TextBrowserContentAdapter {
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
         final List<Token> parsedCode = commonTokenStream.getTokens();
-
-        /*        final List<Token> parsedCode;
-        if (Is.string(extension.toLowerCase(Locale.ROOT)).in("sql")) {
-            final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
-            commonTokenStream.fill();
-            parsedCode = commonTokenStream.getTokens();
-        } else {
-
-        }
-*/
 
         parsedCode.stream().forEach(token -> {
             List<Token> tokens = tokensPerLine.computeIfAbsent(token.getLine(), integer -> new ArrayList<>());
@@ -96,7 +87,7 @@ public class TextBrowserContentAdapter {
                     if (!adapter.skip(tokenType)) {
                         final String tokenText = token.getText();
                         final String style = adapter.adaptToStyleClass(tokenType);
-                        System.out.println(lineIdx + "   " + tokenType + " [" + tokenText + "]  <--" + style);
+                        //System.out.println(lineIdx + "   " + tokenType + " [" + tokenText + "]  <--" + style);
                         safeAdd(rez, createSpacesBetweenTokens(lineIdx, originalLine, prevToken, token, rez.get(rez.size() - 1)));
                         List<String> strings = this.getLines(tokenText);
                         if (strings.size() > 1) { //multiline token
@@ -248,6 +239,7 @@ public class TextBrowserContentAdapter {
         }
         Text te = new Text(tokenString + debugString);
         te.setFont(FONT);
+        //te.setTabSize(4);
         te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
         te.getStyleClass().add("kwfont");
         HBox hb = new HBox(te);
@@ -256,7 +248,7 @@ public class TextBrowserContentAdapter {
         adjustHBoxWidth(tokenString, hb);
 
         /* Fun to visualize splitting */
-        hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
+        //hb.setStyle("-fx-border-style: solid inside; -fx-border-width: 1;-fx-border-color: gray;");
         return hb;
     }
 
