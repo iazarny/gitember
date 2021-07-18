@@ -10,9 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <jgit.version>5.3.9.202012012026-r</jgit.version>
-       <!-- <jgit.version>5.11.0.202103091610-r</jgit.version>-->
-       <!-- -->
+        <jgit.version>5.11.0.202103091610-r</jgit.version>
 
         <javafx.version>16</javafx.version>
     </properties>
@@ -66,11 +64,11 @@
             <version>${jgit.version}</version>
         </dependency>
 
-        <!--<dependency>
+        <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
             <version>${jgit.version}</version>
-        </dependency>-->
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.jcraft/jsch -->
         <dependency>
