@@ -29,7 +29,6 @@ public class TextBrowser implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //TODO  codeArea.setTabSize(4);
     }
 
     public void setText(String text, boolean diff) {
@@ -41,9 +40,6 @@ public class TextBrowser implements Initializable {
         content = text;
         TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff);
 
-
-
-
         Platform.runLater(
                 () -> {
                     long dt = System.currentTimeMillis();
@@ -51,10 +47,6 @@ public class TextBrowser implements Initializable {
                     codeArea.getChildren().addAll(nodes );
                 }
         );
-
-
-
-
 
     }
 
