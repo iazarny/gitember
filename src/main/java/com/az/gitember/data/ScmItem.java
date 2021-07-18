@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparable<ScmItem> {
@@ -109,6 +110,16 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
         }
         return ret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return compareTo((ScmItem) o)== 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), commitName);
     }
 
     /**

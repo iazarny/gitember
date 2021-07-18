@@ -64,7 +64,7 @@ public class App extends Application {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
                 if (onShown && "workingcopy".equals(Context.mainPaneName.getValueSafe()) && isAllowUpdateByTime()) {
-                    Platform.runLater(() -> Context.updateStatus(null));
+                    Platform.runLater(() -> Context.updateStatusIfNeed(null));
                 }
             }
         });
