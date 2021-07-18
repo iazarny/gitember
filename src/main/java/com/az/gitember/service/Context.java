@@ -177,40 +177,36 @@ public class Context {
         updateStash();
     }
 
-    public static void updateStatus(ProgressMonitor progressMonitor) {
-        synchronized (lastUpdate) {
-            List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
-            plotCommitList.clear();
-            statusList.clear();
-            statusList.addAll(statuses);
-            lastUpdate.set(LocalDateTime.now());
-        }
+    public static synchronized void updateStatus(ProgressMonitor progressMonitor) {
+        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
+        plotCommitList.clear();
+        statusList.clear();
+        statusList.addAll(statuses);
+        lastUpdate.set(LocalDateTime.now());
     }
 
     /**
      * Update UI only when the statues are changed
      * @param progressMonitor
      */
-    public static void updateStatusIfNeed(ProgressMonitor progressMonitor) {
-        synchronized (lastUpdate) {
-            List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
-            List<ScmItem> newStatusList = new ArrayList<>(statuses);
-            boolean needupdate;
-            if (statuses.size() == statusList.size()) {
-                statusList.forEach( scmItem -> {
-                    statuses.removeIf( newScm -> newScm.equals(scmItem));
-                });
-                needupdate = !statuses.isEmpty();
-            } else {
-                needupdate = true;
-            }
-            if (needupdate) {
-                plotCommitList.clear();
-                statusList.clear();
-                statusList.addAll(newStatusList);
-            }
-            lastUpdate.set(LocalDateTime.now());
+    public static synchronized void updateStatusIfNeed(ProgressMonitor progressMonitor) {
+        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
+        List<ScmItem> newStatusList = new ArrayList<>(statuses);
+        boolean needupdate;
+        if (statuses.size() == statusList.size()) {
+            statusList.forEach( scmItem -> {
+                statuses.removeIf( newScm -> newScm.equals(scmItem));
+            });
+            needupdate = !statuses.isEmpty();
+        } else {
+            needupdate = true;
         }
+        if (needupdate) {
+            plotCommitList.clear();
+            statusList.clear();
+            statusList.addAll(newStatusList);
+        }
+        lastUpdate.set(LocalDateTime.now());
     }
 
     public static void updateWorkingBranch() {

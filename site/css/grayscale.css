@@ -154,6 +154,11 @@ a:focus {
     color: #2e7cdb;
     font-weight: bold;
   }
+  .brand-heading3 {
+    font-size: 30px;
+    color: #4b90e3;
+    font-weight: bold;
+  }
   .intro .intro-body .intro-text {
     font-size: 26px;
   }
