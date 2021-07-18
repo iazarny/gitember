@@ -26,7 +26,6 @@ public class TextBrowserContentAdapter {
 
     public static Font FONT;
     public static String FONT_NAME = "Monospace";
-    //public static String FONT_NAME = "Consolas";
     public static final double FONT_SIZE = 20;
     public static final double FONT_SYMBOL_WIDTH = 11.99;
     public static final double ROW_HEIGHT = FONT_SIZE + 4;
@@ -239,7 +238,6 @@ public class TextBrowserContentAdapter {
         }
         Text te = new Text(tokenString + debugString);
         te.setFont(FONT);
-        //te.setTabSize(4);
         te.getStyleClass().add(style); //the font background is not working so background will be added to the hbox
         te.getStyleClass().add("kwfont");
         HBox hb = new HBox(te);

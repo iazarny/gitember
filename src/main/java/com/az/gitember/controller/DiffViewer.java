@@ -84,23 +84,15 @@ public class DiffViewer implements Initializable {
         newLabel.getStyleClass().add("copy-label");
     }
 
+    //setTabSize method for text and texflow
+    //not available, so just replace int the original text tab to 4 spaces
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //oldTextFlow.setTabSize(4);
-        //TODO oldTextFlow.setTabSize(4);
-        //TODO newTextFlow.setTabSize(4);
-
-
-
     }
 
     private void init() {
-        //scene.getStylesheets().add(this.getClass().getResource(Const.DEFAULT_CSS).toExternalForm());
-        if (Context.isWindows() ) {
-            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows
-        } else {
-            fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.87; // linux
-        }
+        fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows & lin
 
         oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
