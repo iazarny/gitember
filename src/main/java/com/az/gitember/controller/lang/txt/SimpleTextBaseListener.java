@@ -11,13 +11,12 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * of the available methods.
  */
 public class SimpleTextBaseListener implements SimpleTextListener {
-	 /**
+	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void enterBool(SimpleTextParser.BoolContext ctx) { }
-
 	/**
 	 * {@inheritDoc}
 	 *

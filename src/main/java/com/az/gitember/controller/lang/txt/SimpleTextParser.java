@@ -18,8 +18,9 @@ public class SimpleTextParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		T__9=10, T__10=11, T__11=12, T__12=13, NAME=14, NUMBER=15, DOUBLE=16, 
-		EXPONENT=17, EXPONENT2=18, DOT=19, COMA=20, StringLiteral=21, WS=22;
+		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
+		T__17=18, T__18=19, NAME=20, SEMI=21, COMMA=22, DOT=23, ELLIPSIS=24, COLONCOLON=25, 
+		NUMBER=26, DOUBLE=27, EXPONENT=28, EXPONENT2=29, StringLiteral=30, WS=31;
 	public static final int
 		RULE_bool = 0, RULE_brakets = 1, RULE_math = 2;
 	private static String[] makeRuleNames() {
@@ -32,16 +33,17 @@ public class SimpleTextParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'true'", "'false'", "'{'", "'}'", "'('", "')'", "'['", "']'", 
-			"'+'", "'-'", "'*'", "'/'", "'^'", null, null, null, null, null, "'.'", 
-			"','"
+			"'+'", "'-'", "'*'", "'/'", "'^'", "'!'", "'@'", "'#'", "'$'", "'%'", 
+			"'&'", null, "';'", "','", "'.'", "'...'", "'::'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, "NAME", "NUMBER", "DOUBLE", "EXPONENT", "EXPONENT2", "DOT", 
-			"COMA", "StringLiteral", "WS"
+			null, null, null, null, null, null, null, null, "NAME", "SEMI", "COMMA", 
+			"DOT", "ELLIPSIS", "COLONCOLON", "NUMBER", "DOUBLE", "EXPONENT", "EXPONENT2", 
+			"StringLiteral", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -209,7 +211,7 @@ public class SimpleTextParser extends Parser {
 			{
 			setState(10);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__8) | (1L << T__9) | (1L << T__10) | (1L << T__11) | (1L << T__12))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__8) | (1L << T__9) | (1L << T__10) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__17) | (1L << T__18))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -231,10 +233,10 @@ public class SimpleTextParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\30\17\4\2\t\2\4\3"+
-		"\t\3\4\4\t\4\3\2\3\2\3\3\3\3\3\4\3\4\3\4\2\2\5\2\4\6\2\5\3\2\3\4\3\2\5"+
-		"\n\3\2\13\17\2\13\2\b\3\2\2\2\4\n\3\2\2\2\6\f\3\2\2\2\b\t\t\2\2\2\t\3"+
-		"\3\2\2\2\n\13\t\3\2\2\13\5\3\2\2\2\f\r\t\4\2\2\r\7\3\2\2\2\2";
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3!\17\4\2\t\2\4\3\t"+
+		"\3\4\4\t\4\3\2\3\2\3\3\3\3\3\4\3\4\3\4\2\2\5\2\4\6\2\5\3\2\3\4\3\2\5\n"+
+		"\3\2\13\25\2\13\2\b\3\2\2\2\4\n\3\2\2\2\6\f\3\2\2\2\b\t\t\2\2\2\t\3\3"+
+		"\2\2\2\n\13\t\3\2\2\13\5\3\2\2\2\f\r\t\4\2\2\r\7\3\2\2\2\2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

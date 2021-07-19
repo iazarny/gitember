@@ -1,5 +1,13 @@
+
+[]{}()
+
+!@#$%^&*()_+=
+
+, ; . :
+
+ dfghdfgh ...  sdsfd sdfg.
 k	55
-z	"when an unknown printer" took a galley of type and scrambled it to make
+z	"when an unknown printer" took a::galley of type and scrambled it to make
 Y	when an unknown printer took a galley of type and scrambled it to make
 
   a type specimen book. It * / ж * ?: !%№!%:462456!@#@#$%^%#%^&^%&**(&()_& has survived not only five    centuries, bu
@@ -13,7 +21,7 @@ uding versions of Lorem "false" false " false " Ipsum. 23 "43" and one more " he
 "   and here """
 	tab
     4 spaces
-        8 spaces
+        8 spaces 23 as d 34
 a	tab
 b    4 spaces
 c        8 spaces

@@ -22,8 +22,11 @@ public class SimpleTextTypeAdapter extends BaseTokenTypeAdapter {
         } else if (tokenType >= textLexer.T__2 && tokenType <= textLexer.T__7) {
             return BRACKET;
         } else if (tokenType >= textLexer.T__8 && tokenType <= textLexer.T__12) {
-            return SEMICOLON;        }
-        else if (tokenType == textLexer.DOT && tokenType == textLexer.COMA) {
+            return SEMICOLON;
+        } else if (tokenType >= textLexer.T__13 && tokenType <= textLexer.T__18) {
+            return SEMICOLON;
+        } else if (tokenType == textLexer.DOT || tokenType == textLexer.COMMA|| tokenType == textLexer.SEMI
+                || tokenType == textLexer.ELLIPSIS || tokenType == textLexer.COLONCOLON ) {
             return SEMICOLON;
         } else if (tokenType == textLexer.StringLiteral ) {
             return STRING;

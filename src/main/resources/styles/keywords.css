@@ -7,6 +7,10 @@
     -fx-fill: gray;
 }
 
+.debug {
+    -fx-fill: magenta;
+}
+
 .default {
     -fx-fill: #323232;
 }
@@ -16,11 +20,11 @@
 }
 
 .boolean {
-    -fx-fill: rgb(3, 66, 142);
+    -fx-fill: #05438Eff;
 }
 
 .semicolon {
-
+    -fx-fill: #030342;
 }
 
 .bracket {
