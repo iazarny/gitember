@@ -8,10 +8,12 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.lib.Ref;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
@@ -26,80 +28,54 @@ public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler imp
     @Override
     public void handle(ActionEvent event) {
 
-        try {
-
-            Task<Ref> longTask = new Task<Ref>() {
-                @Override
-                protected Ref call() throws Exception {
-                    return Context.getGitRepoService().checkoutBranch(
-                            branchItem.getFullName(),
-                            new DefaultProgressMonitor((t, d) -> {
-                                updateTitle(t);
-                                updateProgress(d, 1.0);
-                            }
-                    ));
-
-                }
-            };
-
-            launchLongTask(
-                    longTask,
-                    o -> {
-                        {
-                            try {
-                                Context.updateBranches();
-                                Context.updateWorkingBranch();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    },
-                    o -> {
-                        Context.getMain().showResult("Branch", "Checkout\n" + o.getSource().getException().getMessage(), Alert.AlertType.ERROR);
-                    }
-            );
-
-
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot checkout branch " + branchItem.getFullName() , e);
-            Context.getMain().showResult("Checkout branch",
-                    ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
-        }
-
-    }
-
-
-
-    /*@Override
-    public void handle(ActionEvent event) {
-        String branchName = Context.workingBranch.get().getRemoteMergeName();
-        RemoteRepoParameters repoParameters = new RemoteRepoParameters();
-        Task<String> longTask = new Task<String>() {
-
+        Task<Ref> longTask = new Task<Ref>() {
             @Override
-            protected String call() {
-                return Context.getGitRepoService().remoteRepositoryPull(
-                        repoParameters,
-                        branchName,
+            protected Ref call() throws Exception {
+                return Context.getGitRepoService().checkoutBranch(
+                        branchItem.getFullName(),
                         new DefaultProgressMonitor((t, d) -> {
                             updateTitle(t);
                             updateProgress(d, 1.0);
                         }
                         ));
+
             }
         };
 
-        lanchLongTask(
+        launchLongTask(
                 longTask,
                 o -> {
                     {
-                        Context.getMain().showResult("Repository", "Pull ok\n" + o.getSource().getValue(), Alert.AlertType.INFORMATION);
+                        try {
+                            Context.updateBranches();
+                            Context.updateWorkingBranch();
+                        } catch (Exception e) {
+                           log.log( Level.SEVERE, "Cannot update branches. " + ExceptionUtils.getStackTrace(e));
+                        }
+
                     }
                 },
                 o -> {
-                    Context.getMain().showResult("Repository", "Cannot pull\n" + o.getSource().getValue(), Alert.AlertType.ERROR);
+                    final Throwable e = o.getSource().getException().getCause() == null ?
+                            o.getSource().getException() : o.getSource().getException().getCause();
+                    final Level level;
+                    String message = "Cannot checkout branch " + branchItem.getFullName() ;
+
+                    if (e instanceof CheckoutConflictException) {
+                        final CheckoutConflictException cce = (CheckoutConflictException) e;
+                        final String conflictingFiles = cce.getConflictingPaths().stream().collect(Collectors.joining("\n"));
+                        level = Level.WARNING;
+                        message +=  " because of conflicts\n" + conflictingFiles;
+                    } else {
+                        level = Level.SEVERE;
+                        message = "\n" + ExceptionUtils.getStackTrace(e);
+                    }
+                    log.log(level, message);
+                    Context.getMain().showResult("Branch", message, Alert.AlertType.ERROR);
                 }
         );
-    }*/
+
+    }
+
+
 }

@@ -381,12 +381,6 @@ public class GitRepoService {
      * @return list of local branches.
      */
     public List<ScmBranch> getBranches() throws Exception {
-        /*try {
-
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot get local branches", e);
-        }
-        return Collections.emptyList();*/
         return getBranches(ListBranchCommand.ListMode.ALL,
                 Constants.R_HEADS, ScmBranch.BranchType.LOCAL);
     }
