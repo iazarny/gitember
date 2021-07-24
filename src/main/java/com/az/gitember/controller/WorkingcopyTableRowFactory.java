@@ -41,7 +41,7 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
     }
 
     @Override
-    public TableRow call(TableView param) {
+    public TableRow<ScmItem> call(TableView param) {
         return new TableRow<ScmItem>() {
 
             private String calculateStyle(final ScmItem scmItem) {
@@ -54,12 +54,9 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                         }
 
                     }
-
                 }
                 return  "";
-
             }
-
 
             @Override
             protected void updateItem(ScmItem item, boolean empty) {

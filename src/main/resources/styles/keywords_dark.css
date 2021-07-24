@@ -93,5 +93,8 @@
 .diff-line-deleted {
     -fx-background-color: #761d1d;
 }
+.diff-line-copy {
+    -fx-background-color: #1d3076;
+}
 
 

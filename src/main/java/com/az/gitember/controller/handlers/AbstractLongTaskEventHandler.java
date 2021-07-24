@@ -26,8 +26,10 @@ public class AbstractLongTaskEventHandler {
         Context.getMain().progressBar.progressProperty().bind(longTask.progressProperty());
         Context.getMain().operationName.textProperty().bind(longTask.titleProperty());
         App.getStage().getScene().setCursor(Cursor.WAIT);
-        longTask.setOnSucceeded(new LongTaskFinishHandler(App.getStage().getScene(), Context.getMain().progressBar, Context.getMain().operationName, Context.getMain().toolBar, onOk));
-        longTask.setOnFailed(new LongTaskFinishHandler(App.getStage().getScene(), Context.getMain().progressBar, Context.getMain().operationName, Context.getMain().toolBar, onError));
+        longTask.setOnSucceeded(new LongTaskFinishHandler(App.getStage().getScene(),
+                Context.getMain().progressBar, Context.getMain().operationName, Context.getMain().toolBar, onOk));
+        longTask.setOnFailed(new LongTaskFinishHandler(App.getStage().getScene(),
+                Context.getMain().progressBar, Context.getMain().operationName, Context.getMain().toolBar, onError));
         new Thread(longTask).start();
     }
 
@@ -47,12 +49,12 @@ public class AbstractLongTaskEventHandler {
                         handler.handle(event);
                     }
             );
-            log.log(Level.WARNING, "Remote repository " + repoParameters.getUrl()
+            log.log(Level.WARNING, "Repository " + repoParameters.getUrl()
                     + " authorization is failed for " + repoParameters.getUserName() + " Will try one more time", exception);
         } else {
-            Context.getMain().showResult("Repository", "Failed to push\n" + exception.getMessage(), Alert.AlertType.ERROR);
-            log.log(Level.SEVERE, "Remote repository " + repoParameters.getUrl()
-                    + " operation operation is failed for " + repoParameters.getUserName(), exception);
+            Context.getMain().showResult("Repository", "Failed \n" + exception.getMessage(), Alert.AlertType.ERROR);
+            log.log(Level.SEVERE, "Repository " + repoParameters.getUrl()
+                    + " operation is failed for " + repoParameters.getUserName(), exception); //TODO more informative
 
         }
     }

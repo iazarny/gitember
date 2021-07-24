@@ -7,3 +7,16 @@
     -fx-pref-width: 350px;
 }
 
+.diff-row-new {
+    -fx-background-color:  #97fa97;
+}
+.diff-row-modified {
+
+}
+.diff-row-deleted {
+    -fx-background-color: #fa97b3;
+}
+.diff-row-copy {
+    -fx-background-color: #97a7fa;
+}
+

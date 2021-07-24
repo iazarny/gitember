@@ -301,7 +301,51 @@ public class GitRepoService {
 
     }
 
-    public Ref checkoutRevCommit(final RevCommit revCommit, final String newBranchName, final ProgressMonitor defaultProgressMonitor) throws IOException {
+    /**
+     * Create difference between branches
+     * @param leftBranchName left branch name
+     * @param rihtBranchName right branch name
+     * @param defaultProgressMonitor optional monitor
+     * @return list of DiffEntry
+     * @throws IOException in case of errors
+     */
+    public List<DiffEntry> branchDiff(final String leftBranchName, final String rihtBranchName,
+                                      final ProgressMonitor defaultProgressMonitor) throws IOException {
+        AbstractTreeIterator oldTreeParser = prepareTreeParser(repository, leftBranchName);
+        AbstractTreeIterator newTreeParser = prepareTreeParser(repository, rihtBranchName);
+        try (Git git = new Git(repository)) {
+            try {
+                return  git.diff()
+                        .setProgressMonitor(defaultProgressMonitor)
+                        .setOldTree(oldTreeParser)
+                        .setNewTree(newTreeParser)
+                        .call();
+            } catch (GitAPIException e) {
+                throw new IOException("Cannot creat difference between " + leftBranchName + " and " + rihtBranchName, e);
+            }
+        }
+    }
+
+    private static AbstractTreeIterator prepareTreeParser(Repository repository, String ref) throws IOException {
+        // from the commit we can build the tree which allows us to construct the TreeParser
+        Ref head = repository.exactRef(ref);
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(head.getObjectId());
+            RevTree tree = walk.parseTree(commit.getTree().getId());
+
+            CanonicalTreeParser treeParser = new CanonicalTreeParser();
+            try (ObjectReader reader = repository.newObjectReader()) {
+                treeParser.reset(reader, tree.getId());
+            }
+
+            walk.dispose();
+
+            return treeParser;
+        }
+    }
+
+    public Ref checkoutRevCommit(final RevCommit revCommit, final String newBranchName,
+                                 final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             if (StringUtils.isBlank(newBranchName)) {
                 return git.checkout()

@@ -90,3 +90,6 @@
 .diff-line-deleted {
     -fx-background-color: #fa97b3;
 }
+.diff-line-copy {
+    -fx-background-color: #97a7fa;
+}

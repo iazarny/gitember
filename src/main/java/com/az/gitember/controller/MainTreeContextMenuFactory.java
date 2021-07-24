@@ -15,6 +15,8 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.List;
+
 public class MainTreeContextMenuFactory {
 
     ContextMenu createContextMenu(final ScmBranch branchItem) {
@@ -82,7 +84,29 @@ public class MainTreeContextMenuFactory {
             cm.getItems().removeAll(pullMI, pushMI);
         }
 
+        //Add diff submenu
+        int totalBranches = Context.localBrancesProperty.get().size() +
+                Context.remoteBrancesProperty.get().size();
+        if (totalBranches > 1) { // need at least 2 branches to create diff
+            Menu branchDiffMI = new Menu("Diff with");
+            fillDiff(branchDiffMI, Context.localBrancesProperty.get(), branchItem.getFullName());
+            fillDiff(branchDiffMI, Context.remoteBrancesProperty.get(), branchItem.getFullName());
+            cm.getItems().add(new SeparatorMenuItem());
+            cm.getItems().add(branchDiffMI);
+        }
         return cm;
+    }
+
+
+    private void fillDiff(Menu branchDiffMI, List<ScmBranch> scmBranches, String branchName) {
+        scmBranches.stream()
+                .filter( br -> !br.getFullName().equals(branchName))
+                .forEach(br -> {
+                    String rightBranchName = br.getFullName();
+                    MenuItem mi = new MenuItem(rightBranchName);
+                    mi.setOnAction(new BranchDiffEventHandler(branchName, rightBranchName));
+                    branchDiffMI.getItems().add(mi);
+                });
     }
 
 

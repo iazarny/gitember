@@ -110,7 +110,7 @@ public class App extends Application {
         return pair;
     }
 
-    public static Pair<Parent, Object> loadFXML(String fxml) throws IOException {
+    public static Pair<Parent, Object> loadFXML(String fxml) throws IOException { //TODO refactor handle exception here
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         Parent parent = fxmlLoader.load();
         Object controller = fxmlLoader.getController();

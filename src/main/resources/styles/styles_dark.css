@@ -9,3 +9,18 @@
     -fx-color-label-visible: #dadada;*/
 }
 
+.diff-row-new {
+    -fx-background-color:  #124e12;
+}
+.diff-row-modified {
+
+}
+.diff-row-deleted {
+    -fx-background-color: #761d1d;
+}
+.diff-row-copy {
+    -fx-background-color: #1d3076;
+}
+
+
+

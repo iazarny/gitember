@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0"
+            prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.controller.BranchDiffController">
+    <center>
+        <TableView fx:id="diffTableView"  layoutX="333.0" layoutY="152.0" prefHeight="600.0"
+                   prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <columns>
+                <TableColumn fx:id="actionTableColumn" minWidth="75.0" prefWidth="-1.0" text="Action"/>
+                <TableColumn fx:id="leftTableColumn" minWidth="300.0" prefWidth="-1.0"  />
+                <TableColumn fx:id="rightTableColumn" minWidth="300.0" prefWidth="-1.0"  />
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
