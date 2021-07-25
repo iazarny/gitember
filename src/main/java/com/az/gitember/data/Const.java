@@ -23,7 +23,7 @@ public interface Const {
         String SLL_VERIFY = "sslVerify";
     }
 
-    String APP_NAME = "Gitember 2.1";
+    String APP_NAME = "Gitember 2.2";
 
     String ICON = "/icon/GE-icon.png";
 

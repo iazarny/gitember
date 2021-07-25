@@ -27,7 +27,7 @@
 
        <TextField fx:id="newLabel" text="New Label" GridPane.columnIndex="2"  editable="false" style="-right-button-visible: false;"/>
 
-       <ScrollPane  fx:id="oldScrollPane" prefHeight="565.0" prefWidth="387.0" BorderPane.alignment="CENTER" GridPane.rowIndex="1" >
+       <ScrollPane  fx:id="oldScrollPane"  BorderPane.alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1" >
            <TextFlow fx:id="oldTextFlow"  />
        </ScrollPane>
 
@@ -36,7 +36,7 @@
        </ScrollPane>
 
       <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-background-color: background_color" />
-      <Pane  prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-background-color: background_color" />
+      <Pane                       prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-background-color: background_color" />
 
    </children>
 </GridPane>

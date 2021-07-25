@@ -38,7 +38,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.1");
+        this.setTitle("Gitember 2.2");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -66,7 +66,7 @@ public class AboutDialog extends Dialog {
         GridPane.setColumnSpan(pane, 2);
 
         grid.add(new Label("Gitember version : " ), 0, 1);
-        grid.add(new Label("2.1" ), 1, 1);
+        grid.add(new Label("2.2" ), 1, 1);
 
         grid.add(new Label("Web site : " ), 0, 2);
         Hyperlink gitember = new Hyperlink("https://github.com/iazarny/gitember");

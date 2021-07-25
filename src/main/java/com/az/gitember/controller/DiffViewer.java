@@ -1,7 +1,6 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.data.SquarePos;
-import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -12,18 +11,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.shape.*;
+import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
@@ -51,7 +56,7 @@ public class DiffViewer implements Initializable {
         this.oldText = Files.readString(Paths.get(oldFileName));
         this.newText = Files.readString(Paths.get(newFileName));
 
-        RawText oldRawTet = new RawText(oldText.getBytes(StandardCharsets.UTF_8)); //TODO use this constructor RawText(byte[] input)
+        RawText oldRawTet = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
         RawText newRawTet = new RawText(newText.getBytes(StandardCharsets.UTF_8));
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
@@ -68,6 +73,7 @@ public class DiffViewer implements Initializable {
 
         createPathElements();
         init();
+        scrollToFirstDiff();
 
     }
 
@@ -148,12 +154,10 @@ public class DiffViewer implements Initializable {
 
         int origBottomPos = origPos + origLines;
         int revBottomPos = revPos + revLines;
-        /* The first call oldTextFlow.getBoundsInParent().getMaxY() will calculate the getBoundsInParent  TODO takes  some time */
         double deltaY1 =  (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.getViewportBounds().getHeight())
                 * oldScrollPane.getVvalue();
         double deltaY2 = (newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
                 * newScrollPane.getVvalue();
-
         int border_shift = 2; //uber node and 1 node border
 
         int x1 = -1;
@@ -214,6 +218,31 @@ public class DiffViewer implements Initializable {
 
         }
     }
+
+    private int getLines(final String content) {
+        return  new BufferedReader(new StringReader(content))
+                .lines()
+                .collect(Collectors.toList()).size();
+    }
+
+
+    private void scrollToFirstDiff() {
+        int totalOldLines = getLines(oldText);
+        int totalNewLines = getLines(newText);
+        if (totalNewLines > 40 && totalOldLines > 40) {
+            //TODO collect and add to < > button navigation
+            //TODO h scroll pos as well
+            for (Edit delta : this.diffList) {
+                final int origPos = delta.getBeginA();
+                final int revPos = delta.getBeginB();
+                oldScrollPane.setVvalue( (float)origPos / (float) totalOldLines);
+                newScrollPane.setVvalue( (float)revPos / (float) totalNewLines);
+                break;
+            }
+
+        }
+    }
+
 
 
     private void createPathElements() {
