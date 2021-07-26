@@ -5,46 +5,69 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.StyledTextArea;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class TextBrowser implements Initializable {
-
-    public TextFlow codeArea;
-    public ScrollPane scrollPane;
+    public BorderPane borderPane;
+    public CodeArea codeArea;
+    public VirtualizedScrollPane scrollPane;
     private String content;
     private String fileName;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        codeArea = new CodeArea();
+        codeArea.setBackground(new Background(new BackgroundFill(Color.BLACK, new CornerRadii(2), Insets.EMPTY)));
+        scrollPane = new VirtualizedScrollPane(codeArea);
+
+
+        scrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
+            codeArea.setMinHeight(newValue.doubleValue());
+        });
+        scrollPane.widthProperty().addListener((observable, oldValue, newValue) -> {
+            codeArea.setMinWidth(newValue.doubleValue());
+        });
+        borderPane.setCenter(scrollPane);
+
     }
 
     public void setText(String text, boolean diff) {
-
-        //TODO setting to fxml
-        codeArea.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        codeArea.setMinWidth(Region.USE_PREF_SIZE);
-
         content = text;
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(content, FilenameUtils.getExtension(fileName), diff);
-
         Platform.runLater(
                 () -> {
-                    long dt = System.currentTimeMillis();
-                    List<Node> nodes = adapter.getText();
-                    codeArea.getChildren().addAll(nodes );
+                    codeArea.appendText(content);
+                    TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
+                            codeArea.getText(), FilenameUtils.getExtension(fileName), diff);
+                    codeArea.setStyleSpans(0,adapter.computeHighlighting() );
+                    codeArea.setStyle(11, Collections.singletonList("debug"));
+                    if (diff) {
+                        adapter.decorateByRawDiff().forEach( p -> {
+                            codeArea.setParagraphStyle(p.getFirst(), p.getSecond());
+                        });
+                    }
+
+                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, Collections.EMPTY_LIST));
                 }
         );
 

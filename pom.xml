@@ -142,6 +142,12 @@
             <version>2.12.1</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
+        <dependency>
+            <groupId>org.fxmisc.richtext</groupId>
+            <artifactId>richtextfx</artifactId>
+            <version>0.10.6</version>
+        </dependency>
 
 
         <!-- https://mvnrepository.com/artifact/org.jfxtras/jmetro -->

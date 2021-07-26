@@ -1548,6 +1548,6 @@ public class GitRepoService {
             "!**/src/test/**/build/\n" +
             "\n" +
             "### VS Code ###\n" +
-            ".vscode/\n";
+            ".vscode/\n\n";
 
 }

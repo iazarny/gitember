@@ -1,6 +1,6 @@
-package com.az.gitember.controller;
+package   com.az.gitember.controller; import com.az.gitember.data.SquarePos;
 
-import com.az.gitember.data.SquarePos;
+
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -278,15 +278,21 @@ public class DiffViewer implements Initializable {
         textFlow.setMinWidth(Region.USE_PREF_SIZE);
         textFlow.setLineSpacing(-2.2);
 
+        long dt = System.currentTimeMillis();
+
         TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(
                 text,
                 FilenameUtils.getExtension(fileName),
                 this.diffList,
                 leftSide  );
 
-        long dt = System.currentTimeMillis();
+        System.out.println(" " + leftSide + " adapt    ms " + (System.currentTimeMillis() - dt));
+
         List<Node> nodes =  adapter.getText();
         textFlow.getChildren().addAll( nodes );
+        System.out.println(" " + leftSide + " set text ms " + (System.currentTimeMillis() - dt));
+        textFlow.layout();
+        System.out.println(" " + leftSide + " layout ms " + (System.currentTimeMillis() - dt));
 
     }
 

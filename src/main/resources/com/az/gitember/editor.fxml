@@ -9,8 +9,10 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import javafx.scene.text.TextFlow?>
 <?import com.sun.javafx.scene.control.EmbeddedTextContextMenuContent?>
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.az.gitember.controller.TextBrowser">
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.controller.TextBrowser"
+fx:id = "borderPane">
     <top>
         <ToolBar>
             <Button text="Save"  onAction="#saveFile">
@@ -23,10 +25,7 @@
         </ToolBar>
     </top>
    <center>
-       <ScrollPane fx:id="scrollPane" BorderPane.alignment="CENTER" hbarPolicy="ALWAYS" >
-           <TextFlow fx:id="codeArea">
-           </TextFlow>
-       </ScrollPane>
+
    </center>
 
 </BorderPane>

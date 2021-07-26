@@ -7,8 +7,16 @@
     -fx-fill: gray;
 }
 
+.debug2 {
+    -fx-fill: blue;
+    -fx-background-color: gray;
+    -rtfx-background-color: red;
+}
+
 .debug {
     -fx-fill: magenta;
+    -fx-background-color: green;
+    -rtfx-background-color: cyan;
 }
 
 .default {
