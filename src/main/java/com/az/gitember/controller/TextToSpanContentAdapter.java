@@ -35,8 +35,6 @@ public class TextToSpanContentAdapter {
     private boolean rawDiff = false;
     private EditList patch = null;
     private boolean leftSide;
-    private final int maxLineLength;
-    private final int lineNumWidth;
     private final ArrayList<String> lines;
     private final LangResolver langResolver;
     private final List<Token> parsedCode;
@@ -54,12 +52,10 @@ public class TextToSpanContentAdapter {
     }
 
     TextToSpanContentAdapter(final String contentRaw, final String extension, final boolean rawDiff) {
-        content = GitemberUtil.replaceTabs(contentRaw);
+        content = contentRaw;
         this.langResolver = new LangResolver(extension, content);
         this.rawDiff = rawDiff;
         this.lines = getLines(content);
-        this.lineNumWidth = String.valueOf(lines.size()).length();
-        this.maxLineLength = Math.max(lines.stream().mapToInt(String::length).max().getAsInt(), LookAndFeelSet.DEFAULT_LINE_LENGTH);
 
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
@@ -101,57 +97,71 @@ public class TextToSpanContentAdapter {
     }
 
 
-    public List<Pair<Integer, Collection>> decorateByRawDiff() {
-        if (rawDiff) {
+    private Map<Integer, List<String>> diffDecoration = null;
+    private Map<Integer, List<String>> pathcDecoration = null;
 
-            List<Pair<Integer, Collection>> rez = new ArrayList<>();
-
-            for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-                final String line = lines.get(lineIdx);
-                final String style;
-                if (line.startsWith("+")) {
-                    style = "diff-new";
-                } else if (line.startsWith("-")) {
-                    style = "diff-deleted";
-                } else if (line.startsWith("@@")) {
-                    style = "diff-modified";
-                } else {
-                    style = null;
+    public Map<Integer, List<String>> getDiffDecoration() {
+        if (diffDecoration == null) {
+            if (rawDiff) {
+                diffDecoration = new HashMap<>();
+                for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
+                    final String line = lines.get(lineIdx);
+                    final String style;
+                    if (line.startsWith("+")) {
+                        style = "diff-new";
+                    } else if (line.startsWith("-")) {
+                        style = "diff-deleted";
+                    } else if (line.startsWith("@@")) {
+                        style = "diff-modified";
+                    } else {
+                        style = null;
+                    }
+                    if (style != null) {
+                        diffDecoration.put(lineIdx, Collections.singletonList(style));
+                    }
                 }
-                if (style != null) {
-                    rez.add(new Pair<>(lineIdx, Collections.singletonList(style)));
-                }
+            } else {
+                diffDecoration = Collections.EMPTY_MAP;
             }
-            return  rez;
         }
-        return Collections.EMPTY_LIST;
+        return  diffDecoration;
     }
 
     /**
      * Highlight new , deleted and changed lines by patch.
      */
-    private void decorateByPatch(final ArrayList<Node> rows) {
-        if (patch != null) {
-            for (Edit delta : patch) {
-                int origPos = delta.getBeginB();
-                int origLines = delta.getLengthB();
-                String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
-                if (leftSide) {
-                    origPos = delta.getBeginA();
-                    origLines = delta.getLengthA();
+    private Map<Integer, List<String>> getDecorateByPatch() {
+        if (pathcDecoration == null) {
+
+            if (patch == null) {
+                pathcDecoration = Collections.EMPTY_MAP;
+            } else {
+                pathcDecoration = new HashMap<>();
+                for (Edit delta : patch) {
+                    int origPos = delta.getBeginB();
+                    int origLines = delta.getLengthB();
+                    String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
+                    if (leftSide) {
+                        origPos = delta.getBeginA();
+                        origLines = delta.getLengthA();
+                    }
+
+                    for (int line = origPos; line < (origLines + origPos); line++) {
+                        pathcDecoration.put(line, Collections.singletonList(styleClass));
+                    }
                 }
 
-                for (int line = origPos; line < (origLines + origPos); line++) {
-                    HBox row = (HBox) rows.get(line);
-                    row.getStyleClass().add(styleClass);
-                }
             }
+
         }
+
+        return pathcDecoration;
+
     }
 
 
     private ArrayList<String> getLines(final String content) {
-        return (ArrayList) new BufferedReader(new StringReader(content))
+        return (ArrayList<String>) new BufferedReader(new StringReader(content))
                 .lines()
                 .collect(Collectors.toList());
     }

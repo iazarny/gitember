@@ -8,9 +8,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -18,6 +16,8 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,12 +36,12 @@ public class DiffViewer implements Initializable {
 
     public TextField newLabel;
     public TextField oldLabel;
-    public TextFlow oldTextFlow;
-    public TextFlow newTextFlow;
+    public CodeArea oldTextFlow;
+    public CodeArea newTextFlow;
     public Pane diffDrawPanel;
-    public Pane mainPanel;
-    public ScrollPane oldScrollPane;
-    public ScrollPane newScrollPane;
+    public GridPane mainPanel;
+    public VirtualizedScrollPane<CodeArea> oldScrollPane;
+    public VirtualizedScrollPane<CodeArea> newScrollPane;
     public RowConstraints firstRowConstraint;
     public RowConstraints secondRowConstraint;
 
@@ -94,30 +94,43 @@ public class DiffViewer implements Initializable {
     //not available, so just replace int the original text tab to 4 spaces
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //oldTextFlow.setTabSize(4);
+
+        oldTextFlow = new CodeArea();
+        oldTextFlow.setStyle("-fx-stroke: gray; -fx-background-color: blue; -fx-font: Monospace; -fx-font-size: 20;");
+
+        newTextFlow = new CodeArea();
+        newTextFlow.setStyle("-fx-color-label-visible: cyan; -fx-background-color: green; -fx-font: Monospace; -fx-font-size: 20;");
+
+        oldScrollPane = new VirtualizedScrollPane(oldTextFlow);
+        newScrollPane = new VirtualizedScrollPane(newTextFlow);
+
+        mainPanel.add(oldScrollPane, 0, 1);
+        mainPanel.add(newScrollPane, 2, 1);
+
+        HBox.setHgrow(oldScrollPane, Priority.ALWAYS);
+        HBox.setHgrow(newScrollPane, Priority.ALWAYS);
+
+
+
+
     }
 
     private void init() {
         fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows & lin
 
-        oldScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
+        oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
-
-            //In case if content higher than scroll panel
-            if (newScrollPane.getHeight() < newTextFlow.getHeight()) {
-                newScrollPane.setVvalue(new_val.doubleValue());
-
-            }
+            newScrollPane.estimatedScrollYProperty().setValue(
+                    new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
+            );
             updatePathElements();
         });
 
-        newScrollPane.vvalueProperty().addListener((ObservableValue<? extends Number> ov,
+        newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                     Number old_val, Number new_val) -> {
-            //In case if content higher than scroll panel
-            if (oldScrollPane.getHeight() < oldTextFlow.getHeight()) {
-                oldScrollPane.setVvalue(new_val.doubleValue());
-            }
-
+            oldScrollPane.estimatedScrollYProperty().setValue(
+                    new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
+            );
             updatePathElements();
         });
 
@@ -154,10 +167,16 @@ public class DiffViewer implements Initializable {
 
         int origBottomPos = origPos + origLines;
         int revBottomPos = revPos + revLines;
-        double deltaY1 =  (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.getViewportBounds().getHeight())
-                * oldScrollPane.getVvalue();
-        double deltaY2 = (newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
-                * newScrollPane.getVvalue();
+
+        System.out.println("??? " + oldTextFlow.getBoundsInParent().getMaxY()
+                + " " + oldScrollPane.estimatedScrollYProperty().getValue()
+                + " " + oldScrollPane.getHeight());
+
+        double deltaY1 = 55; /* (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.estimatedScrollYProperty().getValue())
+                * oldScrollPane.estimatedScrollYProperty().getValue() / oldScrollPane.maxHeightProperty().getValue();*/
+
+        double deltaY2 = 42 ; /*(newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
+                * newScrollPane.getVvalue();*/
         int border_shift = 2; //uber node and 1 node border
 
         int x1 = -1;
@@ -235,8 +254,8 @@ public class DiffViewer implements Initializable {
             for (Edit delta : this.diffList) {
                 final int origPos = delta.getBeginA();
                 final int revPos = delta.getBeginB();
-                oldScrollPane.setVvalue( (float)origPos / (float) totalOldLines);
-                newScrollPane.setVvalue( (float)revPos / (float) totalNewLines);
+                /*oldScrollPane.setVvalue( (float)origPos / (float) totalOldLines);
+                newScrollPane.setVvalue( (float)revPos / (float) totalNewLines);*/
                 break;
             }
 
@@ -271,16 +290,17 @@ public class DiffViewer implements Initializable {
                 x2, y2);
     }
 
-    private void setText(final TextFlow textFlow,
+    private void setText(final CodeArea textFlow,
                          final String text, final String fileName, final boolean leftSide) {
 
         textFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
         textFlow.setMinWidth(Region.USE_PREF_SIZE);
-        textFlow.setLineSpacing(-2.2);
 
-        long dt = System.currentTimeMillis();
+        textFlow.appendText(text);
 
-        TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(
+        //long dt = System.currentTimeMillis();
+
+        /*TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(
                 text,
                 FilenameUtils.getExtension(fileName),
                 this.diffList,
@@ -288,11 +308,70 @@ public class DiffViewer implements Initializable {
 
         System.out.println(" " + leftSide + " adapt    ms " + (System.currentTimeMillis() - dt));
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         List<Node> nodes =  adapter.getText();
         textFlow.getChildren().addAll( nodes );
         System.out.println(" " + leftSide + " set text ms " + (System.currentTimeMillis() - dt));
         textFlow.layout();
-        System.out.println(" " + leftSide + " layout ms " + (System.currentTimeMillis() - dt));
+        System.out.println(" " + leftSide + " layout ms " + (System.currentTimeMillis() - dt));*/
 
     }
 

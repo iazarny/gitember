@@ -52,7 +52,7 @@ public class TextBrowserContentAdapter {
     }
 
     TextBrowserContentAdapter(final String contentRaw, final String extension, final boolean rawDiff) {
-        String content = GitemberUtil.replaceTabs(contentRaw);
+        String content = contentRaw;
         this.langResolver = new LangResolver(extension, content);
         this.rawDiff = rawDiff;
         this.lines = getLines(content);

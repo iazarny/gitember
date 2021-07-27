@@ -1,36 +1,26 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
-import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.StyledTextArea;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class TextBrowser implements Initializable {
     public BorderPane borderPane;
     public CodeArea codeArea;
-    public VirtualizedScrollPane scrollPane;
+    public VirtualizedScrollPane<CodeArea> scrollPane;
     private String content;
     private String fileName;
 
@@ -38,7 +28,9 @@ public class TextBrowser implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
         codeArea = new CodeArea();
-        codeArea.setBackground(new Background(new BackgroundFill(Color.BLACK, new CornerRadii(2), Insets.EMPTY)));
+        codeArea.setStyle("-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;");
+
+
         scrollPane = new VirtualizedScrollPane(codeArea);
 
 
@@ -57,17 +49,18 @@ public class TextBrowser implements Initializable {
         Platform.runLater(
                 () -> {
                     codeArea.appendText(content);
+
                     TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
                             codeArea.getText(), FilenameUtils.getExtension(fileName), diff);
-                    codeArea.setStyleSpans(0,adapter.computeHighlighting() );
-                    codeArea.setStyle(11, Collections.singletonList("debug"));
-                    if (diff) {
-                        adapter.decorateByRawDiff().forEach( p -> {
-                            codeArea.setParagraphStyle(p.getFirst(), p.getSecond());
-                        });
-                    }
 
-                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, Collections.EMPTY_LIST));
+                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
+
+                    codeArea.setStyleSpans(0, adapter.computeHighlighting() );
+
+                    adapter.getDiffDecoration().entrySet().forEach(p -> {
+                        codeArea.setParagraphStyle(p.getKey(), p.getValue());
+                    });
+
                 }
         );
 

@@ -1,14 +1,8 @@
 .copy-label, .copy-label:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
-    /*
-    -fx-background-insets: 0px ;
 
-    -fx-padding: 0px;
-    -fx-pref-width: 350px;
-    -fx-color-label-visible: #dadada;*/
 }
-
 .diff-row-new {
     -fx-background-color:  #124e12;
 }
@@ -22,5 +16,9 @@
     -fx-background-color: #1d3076;
 }
 
-
-
+.code-area {
+    -fx-fill: #a1a1a1;
+    -fx-background-color: background_color;
+    -fx-font: Monospace;
+    -fx-font-size: 20;
+}

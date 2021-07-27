@@ -52,11 +52,11 @@
 }
 
 .comment {
-    -fx-fill: gray;
+    -fx-fill: #505050;
 }
 
 .mlcomment {
-     -fx-fill: gray;
+     -fx-fill: #505050;
  }
 
 .embeded {

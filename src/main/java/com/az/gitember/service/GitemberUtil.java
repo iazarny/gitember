@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 public class GitemberUtil {
 
-    private final static int DEFAULT_TAB_SIZE = 4;
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -97,14 +96,5 @@ public class GitemberUtil {
         stackedFontIcon.getChildren().add(fontIcon);
         return stackedFontIcon;
     }
-
-    public static String replaceTabs(String str) {
-    return  replaceTabs(str, DEFAULT_TAB_SIZE);
-    }
-
-    public static String replaceTabs(String str, int tabSize) {
-        return StringUtils.defaultIfEmpty(str, "").replace("\t", StringUtils.repeat(' ', tabSize));
-    }
-
 
 }
