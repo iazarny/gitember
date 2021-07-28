@@ -16,6 +16,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,7 @@ public class DiffViewer implements Initializable {
     private String newText = null;
     private EditList diffList = new EditList();
 
-    private double fontSize;
+    private final double fontSize = 24.0;
 
     public void setData(String oldFileName, String newFileName) throws IOException {
 
@@ -110,9 +112,6 @@ public class DiffViewer implements Initializable {
         oldScrollPane.setPrefHeight(2020);
 
         mainPanel.layout();
-
-
-        fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows & lin
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                               Number old_val, Number new_val) -> {
@@ -244,10 +243,10 @@ public class DiffViewer implements Initializable {
             //TODO h scroll pos as well
             if (!this.diffList.isEmpty()) {
                 Edit delta = this.diffList.get(0);
-                final int origPos = delta.getBeginA();
-                final int revPos = delta.getBeginB();
-                oldTextFlow.moveTo(origPos);
-                newTextFlow.moveTo(revPos);
+                final int origPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginA() - 5));
+                final int revPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() - 5));
+                oldTextFlow.moveTo(origPos, 0);
+                newTextFlow.moveTo(revPos, 0);
                 oldTextFlow.requestFollowCaret();
                 oldTextFlow.layout();
                 newTextFlow.requestFollowCaret();
@@ -295,7 +294,11 @@ public class DiffViewer implements Initializable {
 
         codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
 
-        codeArea.setStyleSpans(0, adapter.computeHighlighting());
+        StyleSpans<Collection<String>> spans = adapter.computeHighlighting();
+        if (spans != null) {
+            codeArea.setStyleSpans(0, spans);
+        }
+
 
         adapter.getDecorateByPatch().entrySet().forEach(p -> {
             codeArea.setParagraphStyle(p.getKey(), p.getValue());

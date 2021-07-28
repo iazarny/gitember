@@ -67,30 +67,35 @@ public class TextToSpanContentAdapter {
                 = new StyleSpansBuilder<>();
         int lastKwEnd = 0;
 
-        final BaseTokenTypeAdapter adapter = langResolver.getAdapter();
 
 
         final Iterator<Token> tokenIterator = parsedCode.iterator();
-        Token token = tokenIterator.next();
-        for (int i = 0; i < content.length(); i++) {
-            int startIdx = token.getStartIndex();
-            int stopIdx = token.getStopIndex() + 1;
+        // TODO looks ugly , refactor
+        if (tokenIterator.hasNext() && content.length() > 0) {
+            Token token = tokenIterator.next();
+            final BaseTokenTypeAdapter adapter = langResolver.getAdapter();
+            for (int i = 0; i < content.length(); i++) {
+                int startIdx = token.getStartIndex();
+                int stopIdx = token.getStopIndex() + 1;
 
-            if (i == token.getStartIndex()) {
-                int len = startIdx - lastKwEnd;
-                spansBuilder.add(Collections.emptyList(), len);
+                if (i == token.getStartIndex()) {
+                    int len = startIdx - lastKwEnd;
+                    spansBuilder.add(Collections.emptyList(), len);
 
-                final String style = adapter.adaptToStyleClass(token.getType());
-                spansBuilder.add(Collections.singletonList(style), stopIdx - startIdx);
-                lastKwEnd = stopIdx;
-                token = tokenIterator.next();
+                    final String style = adapter.adaptToStyleClass(token.getType());
+                    spansBuilder.add(Collections.singletonList(style), stopIdx - startIdx);
+                    lastKwEnd = stopIdx;
+                    token = tokenIterator.next();
 
-                //System.out.println(">>> " + startIdx + " " + stopIdx + "   " + (stopIdx - startIdx) + "   [" + token.getText() + "] real [" + content.substring(startIdx, stopIdx)  + "] " + style);
+                    //System.out.println(">>> " + startIdx + " " + stopIdx + "   " + (stopIdx - startIdx) + "   [" + token.getText() + "] real [" + content.substring(startIdx, stopIdx)  + "] " + style);
+                }
             }
-        }
 
-        StyleSpans<Collection<String>> rez = spansBuilder.create();
-        return rez;
+            StyleSpans<Collection<String>> rez = spansBuilder.create();
+            return rez;
+
+        }
+        return null ;
 
     }
 

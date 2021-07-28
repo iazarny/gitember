@@ -10,11 +10,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.ResourceBundle;
 
 public class TextBrowser implements Initializable {
@@ -52,12 +54,16 @@ public class TextBrowser implements Initializable {
 
                     codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
 
-                    codeArea.setStyleSpans(0, adapter.computeHighlighting() );
+                    StyleSpans<Collection<String>> spans = adapter.computeHighlighting();
+                    if (spans != null) {
+                        codeArea.setStyleSpans(0, spans);
+                    }
 
                     adapter.getDiffDecoration().entrySet().forEach(p -> {
                         codeArea.setParagraphStyle(p.getKey(), p.getValue());
                     });
-
+                    codeArea.moveTo(0, 0);
+                    codeArea.requestFollowCaret();
                 }
         );
 
