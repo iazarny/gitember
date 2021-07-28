@@ -1,19 +1,17 @@
-package   com.az.gitember.controller; import com.az.gitember.data.SquarePos;
+package com.az.gitember.controller;
 
+import com.az.gitember.data.SquarePos;
 
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.scene.text.TextFlow;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -26,13 +24,12 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
-    private final  static double VER_HEAD_HEIGHT = 25;
+    private final static double VER_HEAD_HEIGHT = 25;
 
     public TextField newLabel;
     public TextField oldLabel;
@@ -51,7 +48,7 @@ public class DiffViewer implements Initializable {
 
     private double fontSize;
 
-    public void setData(String  oldFileName, String newFileName) throws IOException {
+    public void setData(String oldFileName, String newFileName) throws IOException {
 
         this.oldText = Files.readString(Paths.get(oldFileName));
         this.newText = Files.readString(Paths.get(newFileName));
@@ -64,19 +61,13 @@ public class DiffViewer implements Initializable {
 
         diffList.addAll(diffAlgorithm.diff(comparator, oldRawTet, newRawTet));
 
-
-
-        Runnable oldRunnable = () -> {setText(oldTextFlow,  oldText, oldFileName, true);};
-        Runnable newRunnable = () -> {setText(newTextFlow,  newText, newFileName, false);};
-        Platform.runLater(oldRunnable);
-        Platform.runLater(newRunnable);
+        setText(oldTextFlow, oldText, oldFileName, true);
+        setText(newTextFlow, newText, newFileName, false);
 
         createPathElements();
-        init();
         scrollToFirstDiff();
 
     }
-
 
     public void setOldLabel(String text) {
         oldLabel.setText(text);
@@ -90,36 +81,41 @@ public class DiffViewer implements Initializable {
         newLabel.getStyleClass().add("copy-label");
     }
 
-    //setTabSize method for text and texflow
-    //not available, so just replace int the original text tab to 4 spaces
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
         oldTextFlow = new CodeArea();
-        oldTextFlow.setStyle("-fx-stroke: gray; -fx-background-color: blue; -fx-font: Monospace; -fx-font-size: 20;");
+        oldTextFlow.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+        oldTextFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        oldTextFlow.setMinWidth(Region.USE_PREF_SIZE);
+        oldTextFlow.setEditable(false);
 
         newTextFlow = new CodeArea();
-        newTextFlow.setStyle("-fx-color-label-visible: cyan; -fx-background-color: green; -fx-font: Monospace; -fx-font-size: 20;");
+        newTextFlow.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+        newTextFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        newTextFlow.setMinWidth(Region.USE_PREF_SIZE);
+        newTextFlow.setEditable(false);
 
-        oldScrollPane = new VirtualizedScrollPane(oldTextFlow);
-        newScrollPane = new VirtualizedScrollPane(newTextFlow);
+        oldScrollPane = new VirtualizedScrollPane<>(oldTextFlow);
+        newScrollPane = new VirtualizedScrollPane<>(newTextFlow);
 
         mainPanel.add(oldScrollPane, 0, 1);
         mainPanel.add(newScrollPane, 2, 1);
 
+        VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
+        VBox.setVgrow(newScrollPane, Priority.ALWAYS);
         HBox.setHgrow(oldScrollPane, Priority.ALWAYS);
         HBox.setHgrow(newScrollPane, Priority.ALWAYS);
 
+        oldScrollPane.setPrefHeight(2020);
+
+        mainPanel.layout();
 
 
-
-    }
-
-    private void init() {
         fontSize = TextBrowserContentAdapter.FONT_SIZE + 4.0; // windows & lin
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
-                                                    Number old_val, Number new_val) -> {
+                                                              Number old_val, Number new_val) -> {
             newScrollPane.estimatedScrollYProperty().setValue(
                     new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
             );
@@ -127,7 +123,7 @@ public class DiffViewer implements Initializable {
         });
 
         newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
-                                                    Number old_val, Number new_val) -> {
+                                                              Number old_val, Number new_val) -> {
             oldScrollPane.estimatedScrollYProperty().setValue(
                     new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
             );
@@ -135,11 +131,11 @@ public class DiffViewer implements Initializable {
         });
 
         newScrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater( () -> updatePathElements() );
+            Platform.runLater(() -> updatePathElements());
         });
 
         diffDrawPanel.widthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater( () -> updatePathElements() );
+            Platform.runLater(() -> updatePathElements());
         });
 
         //Fix the top of table row size
@@ -168,16 +164,11 @@ public class DiffViewer implements Initializable {
         int origBottomPos = origPos + origLines;
         int revBottomPos = revPos + revLines;
 
-        System.out.println("??? " + oldTextFlow.getBoundsInParent().getMaxY()
-                + " " + oldScrollPane.estimatedScrollYProperty().getValue()
-                + " " + oldScrollPane.getHeight());
 
-        double deltaY1 = oldScrollPane.estimatedScrollYProperty().getValue(); /* (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.estimatedScrollYProperty().getValue())
-                * oldScrollPane.estimatedScrollYProperty().getValue() / oldScrollPane.maxHeightProperty().getValue();*/
+        double deltaY1 = oldScrollPane.estimatedScrollYProperty().getValue();
 
-        double deltaY2 = newScrollPane.estimatedScrollYProperty().getValue();/*(newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
-                * newScrollPane.getVvalue();*/
-        int border_shift = 2; //uber node and 1 node border
+        double deltaY2 = newScrollPane.estimatedScrollYProperty().getValue();
+        int border_shift = 0; //uber node and 1 node border
 
         int x1 = -1;
         int y1 = (int) (origPos * fontSize - deltaY1) + border_shift;
@@ -191,7 +182,7 @@ public class DiffViewer implements Initializable {
         int x4 = x1;
         int y4 = (int) (origBottomPos * fontSize - deltaY1) + border_shift;
 
-        return new SquarePos(x1,y1,x2,y2,x3,y3,x4,y4);
+        return new SquarePos(x1, y1, x2, y2, x3, y3, x4, y4);
 
     }
 
@@ -212,7 +203,7 @@ public class DiffViewer implements Initializable {
             moveTo.setX(squarePos.getX1());
             moveTo.setY(squarePos.getY1());
 
-            CubicCurveTo ccTo =  getCubicCurveTo(squarePos.getX1(), squarePos.getY1(), squarePos.getX2(), squarePos.getY2());
+            CubicCurveTo ccTo = getCubicCurveTo(squarePos.getX1(), squarePos.getY1(), squarePos.getX2(), squarePos.getY2());
             curve0.setX(squarePos.getX2());
             curve0.setY(squarePos.getY2());
             curve0.setControlX1(ccTo.getControlX1());
@@ -224,7 +215,7 @@ public class DiffViewer implements Initializable {
             lineTo0.setX(squarePos.getX3());
             lineTo0.setY(squarePos.getY3());
 
-            ccTo =  getCubicCurveTo(squarePos.getX3(), squarePos.getY3(), squarePos.getX4(), squarePos.getY4());
+            ccTo = getCubicCurveTo(squarePos.getX3(), squarePos.getY3(), squarePos.getX4(), squarePos.getY4());
             curve1.setX(squarePos.getX4());
             curve1.setY(squarePos.getY4());
             curve1.setControlX1(ccTo.getControlX1());
@@ -239,7 +230,7 @@ public class DiffViewer implements Initializable {
     }
 
     private int getLines(final String content) {
-        return  new BufferedReader(new StringReader(content))
+        return new BufferedReader(new StringReader(content))
                 .lines()
                 .collect(Collectors.toList()).size();
     }
@@ -251,18 +242,20 @@ public class DiffViewer implements Initializable {
         if (totalNewLines > 40 && totalOldLines > 40) {
             //TODO collect and add to < > button navigation
             //TODO h scroll pos as well
-            for (Edit delta : this.diffList) {
+            if (!this.diffList.isEmpty()) {
+                Edit delta = this.diffList.get(0);
                 final int origPos = delta.getBeginA();
                 final int revPos = delta.getBeginB();
-                /*oldScrollPane.setVvalue( (float)origPos / (float) totalOldLines);
-                newScrollPane.setVvalue( (float)revPos / (float) totalNewLines);*/
-                break;
+                oldTextFlow.moveTo(origPos);
+                newTextFlow.moveTo(revPos);
+                oldTextFlow.requestFollowCaret();
+                oldTextFlow.layout();
+                newTextFlow.requestFollowCaret();
+                newTextFlow.layout();
             }
 
         }
     }
-
-
 
     private void createPathElements() {
 
@@ -290,30 +283,24 @@ public class DiffViewer implements Initializable {
                 x2, y2);
     }
 
-    private void setText(final CodeArea textFlow,
+    private void setText(final CodeArea codeArea,
                          final String text, final String fileName, final boolean leftSide) {
 
-        textFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        textFlow.setMinWidth(Region.USE_PREF_SIZE);
+        codeArea.appendText(text);
 
-        textFlow.appendText(text);
-
-        //long dt = System.currentTimeMillis();
-
-        /*TextBrowserContentAdapter adapter = new TextBrowserContentAdapter(
-                text,
-                FilenameUtils.getExtension(fileName),
+        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
+                codeArea.getText(), FilenameUtils.getExtension(fileName),
                 this.diffList,
-                leftSide  );
+                leftSide);
 
-        System.out.println(" " + leftSide + " adapt    ms " + (System.currentTimeMillis() - dt));
+        codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
 
+        codeArea.setStyleSpans(0, adapter.computeHighlighting());
 
-        List<Node> nodes =  adapter.getText();
-        textFlow.getChildren().addAll( nodes );
-        System.out.println(" " + leftSide + " set text ms " + (System.currentTimeMillis() - dt));
-        textFlow.layout();
-        System.out.println(" " + leftSide + " layout ms " + (System.currentTimeMillis() - dt));*/
+        adapter.getDecorateByPatch().entrySet().forEach(p -> {
+            codeArea.setParagraphStyle(p.getKey(), p.getValue());
+        });
+
 
     }
 

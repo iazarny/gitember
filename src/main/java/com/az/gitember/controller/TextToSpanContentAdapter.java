@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 public class TextToSpanContentAdapter {
 
     public static final double FONT_SIZE = 20;
-    public static final double FONT_SYMBOL_WIDTH = 11.99;
-    public static final double ROW_HEIGHT = FONT_SIZE + 4;
 
     private boolean rawDiff = false;
     private EditList patch = null;
@@ -130,7 +128,7 @@ public class TextToSpanContentAdapter {
     /**
      * Highlight new , deleted and changed lines by patch.
      */
-    private Map<Integer, List<String>> getDecorateByPatch() {
+    public Map<Integer, List<String>> getDecorateByPatch() {
         if (pathcDecoration == null) {
 
             if (patch == null) {

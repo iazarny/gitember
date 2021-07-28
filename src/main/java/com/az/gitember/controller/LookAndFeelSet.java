@@ -20,6 +20,8 @@ public class LookAndFeelSet {
     public static String DEFAULT_CSS = "/styles/styles.css";
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
+    public static String CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
+
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
@@ -28,6 +30,7 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
+            CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;
@@ -35,6 +38,7 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords.css";
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
+            CODE_AREA_CSS = "-fx-font: Monospace; -fx-font-size: 20;";
 
         }
     }

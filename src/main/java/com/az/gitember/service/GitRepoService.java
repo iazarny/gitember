@@ -1490,7 +1490,6 @@ public class GitRepoService {
         return new ScmItem(name, attr);
     }
 
-
     private String adaptDiffStatus(DiffEntry.ChangeType diffChangeType) {
         if (diffChangeType == DiffEntry.ChangeType.ADD) {
             return ScmItem.Status.ADDED;
@@ -1503,7 +1502,6 @@ public class GitRepoService {
         }
         return ScmItem.Status.MODIFIED;
     }
-
 
     private static synchronized void deleteOnExit(File file) {
         tempFiles.add(file);

@@ -63,25 +63,20 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
         lineNo.setStyle("-fx-background-color: background_color;");
         lineNo.setPadding(DEFAULT_INSETS);
 
-        List<String> style = textAdapter.getDiffDecoration().get(idx);
-        if (style != null) {
-            lineNo.setStyle("");
-            lineNo.getStyleClass().add(style.get(0));
-        }
+        applyStyle(lineNo, textAdapter.getDiffDecoration().get(idx));
+        applyStyle(lineNo, textAdapter.getDecorateByPatch().get(idx));
 
-        /*highlightList
-                .stream()
-                .filter(range -> idx >= range.getFirst() && idx < range.getSecond())
-                .forEach(range -> {
-                    lineNo.setBackground(DEFAULT_BACKGROUND_NEW);
-                });*/
-
-        // bind label's text to a Val that stops observing area's paragraphs
-        // when lineNo is removed from scene
 
         lineNo.textProperty().bind(formatted.conditionOnShowing(lineNo));
 
         return lineNo;
+    }
+
+    private void applyStyle(Label lineNo, List<String> style) {
+        if (style != null) {
+            lineNo.setStyle("");
+            lineNo.getStyleClass().add(style.get(0));
+        }
     }
 
     private String format(int x) {

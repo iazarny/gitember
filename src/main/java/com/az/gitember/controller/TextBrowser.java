@@ -28,12 +28,9 @@ public class TextBrowser implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
         codeArea = new CodeArea();
-        codeArea.setStyle("-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;");
-
-
+        codeArea.setEditable(false);
+        codeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
         scrollPane = new VirtualizedScrollPane(codeArea);
-
-
         scrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
             codeArea.setMinHeight(newValue.doubleValue());
         });
