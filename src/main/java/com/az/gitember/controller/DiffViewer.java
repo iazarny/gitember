@@ -172,10 +172,10 @@ public class DiffViewer implements Initializable {
                 + " " + oldScrollPane.estimatedScrollYProperty().getValue()
                 + " " + oldScrollPane.getHeight());
 
-        double deltaY1 = 55; /* (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.estimatedScrollYProperty().getValue())
+        double deltaY1 = oldScrollPane.estimatedScrollYProperty().getValue(); /* (oldTextFlow.getBoundsInParent().getMaxY()  - oldScrollPane.estimatedScrollYProperty().getValue())
                 * oldScrollPane.estimatedScrollYProperty().getValue() / oldScrollPane.maxHeightProperty().getValue();*/
 
-        double deltaY2 = 42 ; /*(newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
+        double deltaY2 = newScrollPane.estimatedScrollYProperty().getValue();/*(newTextFlow.getBoundsInParent().getMaxY()  - newScrollPane.getViewportBounds().getHeight())
                 * newScrollPane.getVvalue();*/
         int border_shift = 2; //uber node and 1 node border
 
@@ -307,64 +307,6 @@ public class DiffViewer implements Initializable {
                 leftSide  );
 
         System.out.println(" " + leftSide + " adapt    ms " + (System.currentTimeMillis() - dt));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         List<Node> nodes =  adapter.getText();
