@@ -2,6 +2,7 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
+import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
@@ -46,27 +47,27 @@ public class MainTreeChangeListener implements ChangeListener {
                 if(Context.statusList.isEmpty()) { //TODO or is changed
                     Platform.runLater( () ->   new StatusUpdateEventHandler(false).handle(null));
                 }
-            } else if (newValue.equals("stat")) {
+            } else if (newValue.equals(Const.View.STAT)) {
                 file = (String) newValue;
-            } else if (newValue.equals("statworkingprogress")) {
+            } else if (newValue.equals(Const.View.STAT_WORK_PROGRESS)) {
                 file = (String) newValue;
-            } else if (newValue.equals("statbranchlifetime")) {
+            } else if (newValue.equals(Const.View.STAT_BRANCH_LIFETOME)) {
                 file = (String) newValue;
-            } else if (newValue.equals("statbranches")) {
+            } else if (newValue.equals(Const.View.STAT_BRANCHES)) {
                 file = (String) newValue;
             } else if (newValue == Context.getMain().historyTreeItem) {
-                file = "history";
+                file = Const.View.HISTORY;
                 Context.updatePlotCommitList(ScmBranch.getNameSafe(Context.workingBranch.getValue()), true, null);
             } else if(newValue instanceof TreeItem
                     && ((TreeItem)newValue).getValue() instanceof ScmBranch) {
-                file = "history";
+                file = Const.View.HISTORY;
                 ScmBranch scmBranch = (ScmBranch)((TreeItem)newValue).getValue();
                 Context.updatePlotCommitList(ScmBranch.getNameSafe(scmBranch), false, null);
             } else if (newValue instanceof TreeItem
                     && ((TreeItem)newValue).getValue() instanceof ScmRevisionInformation
                     && ((ScmRevisionInformation)((TreeItem)newValue).getValue()).getStashIndex() >= 0
             ) {
-                file = "stash";
+                file = Const.View.STASH;
                 ScmRevisionInformation ri = (ScmRevisionInformation)((TreeItem)newValue).getValue();
                 Context.stashItemsList.clear();
                 Context.stashItemsList.addAll(ri.getAffectedItems());

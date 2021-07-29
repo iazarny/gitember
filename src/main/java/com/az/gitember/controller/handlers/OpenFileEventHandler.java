@@ -52,7 +52,12 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
                 final String text = new String(item.getBody(bodyType));
                 openFile(fileName, text,true);
             } else if (ExtensionMap.isTextExtension(item.getShortName())) {
-                final String text = new String(item.getBody(bodyType));
+                String text;
+                try {
+                    text = new String(item.getBody(bodyType));
+                } catch (Exception e) {
+                    text = "";
+                }
                 openFile(fileName, text, false);
             } else {
                 String pathToFile = item.getFilePath(bodyType).toString();
@@ -68,7 +73,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     }
 
     private void openFile(final String fileName, final String text, final boolean rawDiff) throws IOException {
-        final Pair<Parent, Object> pair = App.loadFXML("editor");
+        final Pair<Parent, Object> pair = App.loadFXML(Const.View.EDITOR);
         final Scene scene = new Scene(pair.getFirst());
         App.getjMetro().setScene(scene);
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());

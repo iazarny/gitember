@@ -3,6 +3,7 @@ package com.az.gitember.controller.handlers;
 import com.az.gitember.App;
 import com.az.gitember.controller.BranchDiffController;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.data.Const;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -12,6 +13,7 @@ import org.eclipse.jgit.diff.DiffEntry;
 
 import java.io.IOException;
 import java.util.List;
+
 
 public class BranchDiffEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
@@ -46,7 +48,7 @@ public class BranchDiffEventHandler extends AbstractLongTaskEventHandler impleme
                     List<DiffEntry> diffEntries = (List<DiffEntry>) o.getSource().getValue();
                     try {
                         BranchDiffController branchDiffController =
-                                (BranchDiffController) App.loadFXMLToNewStage("branchdiff", "Branch difference").getSecond();
+                                (BranchDiffController) App.loadFXMLToNewStage(Const.View.BRANCH_DIFF, "Branch difference").getSecond();
                         branchDiffController.setData(leftBranchName, rightBranchName, diffEntries);
                     } catch (IOException e) {
                         e.printStackTrace();

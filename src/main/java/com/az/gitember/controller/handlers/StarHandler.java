@@ -2,6 +2,7 @@ package com.az.gitember.controller.handlers;
 
 import com.az.gitember.controller.DefaultProgressMonitor;
 import com.az.gitember.controller.MainTreeChangeListener;
+import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmStat;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
@@ -45,7 +46,7 @@ public class StarHandler extends AbstractLongTaskEventHandler implements EventHa
                 longTask,
                 o -> {
                     ScmStat scmStat = (ScmStat) o.getSource().getValue();
-                    mainTreeChangeListener.changed(null, null, "stat");
+                    mainTreeChangeListener.changed(null, null, Const.View.STAT);
                     Context.scmStatProperty.setValue(scmStat);
                 },
                 o -> {

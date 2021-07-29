@@ -5,6 +5,7 @@ import com.az.gitember.controller.handlers.DiffEventHandler;
 import com.az.gitember.controller.handlers.DiffWithDiskEventHandler;
 import com.az.gitember.controller.handlers.OpenFileEventHandler;
 import com.az.gitember.data.CommitInfo;
+import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
@@ -157,7 +158,7 @@ public class HistoryDetail implements Initializable {
         Context.fileHistoryTree.setValue(treeName);
         Context.fileHistoryName.setValue(fileName);
 
-        App.loadFXMLToNewStage("filehistory", "History");
+        App.loadFXMLToNewStage(Const.View.FILE_HISTORY, "History");
 
     }
 

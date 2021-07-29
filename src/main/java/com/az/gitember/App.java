@@ -47,7 +47,7 @@ public class App extends Application {
         double width = rectangle2D.getWidth() - minus;
         double height = rectangle2D.getHeight() - minus;
 
-        scene = new Scene(loadFXML("main").getFirst(), width, height);
+        scene = new Scene(loadFXML(Const.View.MAIN).getFirst(), width, height);
         stage.setScene(scene);
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.setTitle(Const.APP_NAME);
@@ -63,7 +63,7 @@ public class App extends Application {
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
-                if (onShown && "workingcopy".equals(Context.mainPaneName.getValueSafe()) && isAllowUpdateByTime()) {
+                if (onShown && Const.View.WORKING_COPY.equals(Context.mainPaneName.getValueSafe()) && isAllowUpdateByTime()) {
                     Platform.runLater(() -> Context.updateStatusIfNeed(null));
                 }
             }

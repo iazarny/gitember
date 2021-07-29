@@ -675,6 +675,16 @@ public class GitRepoService {
     }
 
 
+    public String creaeEmptyFile(String fileName) throws IOException {
+        final String fileNameExtension = FilenameUtils.getExtension(fileName);
+        final File temp = File.createTempFile(
+                Const.TEMP_FILE_PREFIX,
+                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+        return temp.getAbsolutePath();
+    }
+
+
+
     /**
      * Save given fileName at given revision into given file name.
      *

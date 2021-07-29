@@ -14,7 +14,9 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,10 +51,22 @@ public class DiffWithDiskEventHandler implements EventHandler<ActionEvent> {
             } else {
                 sha = revision;
             }
-            final String oldFile = Context.getGitRepoService().saveFile( sha, fileName);
-            final String newFile = Path.of(Context.getProjectFolder(), item.getShortName()).toString();
+            String oldFile;
+            try {
+                oldFile = Context.getGitRepoService().saveFile( sha, fileName);
+            } catch (Exception e) {
+                oldFile = Context.getGitRepoService().creaeEmptyFile(fileName);
+            }
 
-            final Pair<Parent, Object> pair = App.loadFXMLToNewStage("diffviewer",
+            String newFile;
+            try {
+                newFile = Path.of(Context.getProjectFolder(), item.getShortName()).toString();
+                Files.readString(Paths.get(newFile));
+            } catch (Exception e) {
+                newFile = Context.getGitRepoService().creaeEmptyFile(fileName);
+            }
+
+            final Pair<Parent, Object> pair = App.loadFXMLToNewStage(Const.View.FILE_DIFF,
                     "Difference with repository version " + fileName);
             pair.getFirst().getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
             final DiffViewer diffViewer = (DiffViewer) pair.getSecond();

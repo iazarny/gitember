@@ -42,17 +42,21 @@ public class DiffEventHandler implements EventHandler<ActionEvent> {
         try {
             final String fileName = item.getShortName();
 
-            final String oldFile;
-            if (oldRev == null || ScmItem.Status.ADDED.equals(item.getAttribute().getStatus() )) {
-                final File temp = File.createTempFile(Const.TEMP_FILE_PREFIX,"empty.txt");
-                oldFile = temp.getAbsolutePath();
-            } else {
+            String oldFile;
+            try {
                 oldFile = Context.getGitRepoService().saveFile( oldRev, fileName);
+            } catch (Exception e) {
+                oldFile = Context.getGitRepoService().creaeEmptyFile(fileName);
             }
 
-            final String newFile = Context.getGitRepoService().saveFile( newRev, fileName);
+            String newFile;
+            try {
+                newFile = Context.getGitRepoService().saveFile( newRev, fileName);
+            } catch (Exception e) {
+                newFile = Context.getGitRepoService().creaeEmptyFile(fileName);
+            }
 
-            final Pair<Parent, Object> pair = App.loadFXMLToNewStage("diffviewer",
+            final Pair<Parent, Object> pair = App.loadFXMLToNewStage(Const.View.FILE_DIFF,
                     "Difference " + fileName);
             pair.getFirst().getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
             final DiffViewer diffViewer = (DiffViewer) pair.getSecond();
