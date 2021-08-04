@@ -2,9 +2,11 @@ package com.az.gitember.service;
 
 import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.LangDefinition;
+import com.az.gitember.data.ScmItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.paint.Color;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -16,6 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {
@@ -95,6 +99,23 @@ public class GitemberUtil {
         stackedFontIcon.setStyle("-fx-icon-color: text_color");
         stackedFontIcon.getChildren().add(fontIcon);
         return stackedFontIcon;
+    }
+
+    static Pattern p = Pattern.compile("(\\w+)\\s+([-|*])\\s+(.*)");
+
+    public static String [] adapt(String str) {
+
+        Matcher matcher = p.matcher(str);
+        if (matcher.matches()) {
+            String [] rez = new String[3];
+            rez[0]=matcher.group(1);
+            rez[1]=matcher.group(2);
+            rez[2]=matcher.group(3);
+            return rez;
+        }
+
+        return null;
+
     }
 
 }
