@@ -4,12 +4,15 @@ public interface Const {
 
     String TEMP_FILE_PREFIX = "gtmbr";
     String GIT_FOLDER = ".git";
+    String GIT_LFS_FOLDER = "lfs";
 
     String PROP_FOLDER = ".gitember";
     String PROP_FILE_NAME = "gitember2.json";
+    String GIT_ATTR_NAME = ".gitattributes";
+    String GIT_IGNORE_NAME = ".gitignore";
+    String GIT_README_NAME = "README.md";
 
     int SEARCH_LIMIT_CHAR = 2;
-    String DIFF_EXTENSION = "diff";
 
 
     interface Config {

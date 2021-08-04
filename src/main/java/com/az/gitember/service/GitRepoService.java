@@ -34,6 +34,7 @@ import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
@@ -51,6 +52,15 @@ import java.util.stream.Collectors;
 
 public class GitRepoService {
 
+    public static final String SMUDGE_NAME = org.eclipse.jgit.lib.Constants.BUILTIN_FILTER_PREFIX
+            + org.eclipse.jgit.lfs.lib.Constants.ATTR_FILTER_DRIVER_PREFIX
+            + org.eclipse.jgit.lib.Constants.ATTR_FILTER_TYPE_SMUDGE;
+
+    public static final String CLEAN_NAME = org.eclipse.jgit.lib.Constants.BUILTIN_FILTER_PREFIX
+            + org.eclipse.jgit.lfs.lib.Constants.ATTR_FILTER_DRIVER_PREFIX
+            + org.eclipse.jgit.lib.Constants.ATTR_FILTER_TYPE_CLEAN;
+
+
     private final static Logger log = Logger.getLogger(GitRepoService.class.getName());
 
     private final static List<File> tempFiles = new ArrayList<>();
@@ -65,7 +75,10 @@ public class GitRepoService {
      *
      * @param absPath path to repository.
      */
-    public static void createRepository(final String absPath, final boolean withReadme, final boolean withGitIgnore) throws Exception {
+    public static void createRepository(final String absPath,
+                                        final boolean withReadme,
+                                        final boolean withGitIgnore,
+                                        final boolean withLfs) throws Exception {
         try (final Git git = Git.init()
                 .setDirectory(new File(absPath))
                 .call()) {
@@ -74,19 +87,31 @@ public class GitRepoService {
                 final String readmeInitialContent = String.format(
                         "# Project %s \n\n Created at %s \n folder %s",
                         (new File(absPath)).getName(), (new Date()).toString(), absPath);
-                final Path readmePath = Paths.get(absPath + File.separator + "README.md");
+                final Path readmePath = Paths.get(absPath + File.separator + Const.GIT_README_NAME);
                 Files.write(
                         readmePath,
                         readmeInitialContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern("README.md").call();
+                git.add().addFilepattern(Const.GIT_README_NAME).call();
             }
 
             if (withGitIgnore) {
-                final Path ignorePath = Paths.get(absPath + File.separator + ".gitignore");
+                final Path ignorePath = Paths.get(absPath + File.separator + Const.GIT_IGNORE_NAME);
                 Files.write(ignorePath,
                         gitIgnoreContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(".gitignore").call();
+                git.add().addFilepattern(Const.GIT_IGNORE_NAME).call();
             }
+
+            if (withLfs) {
+                StoredConfig config = git.getRepository().getConfig();
+                config.setString("filter", "lfs", "clean", CLEAN_NAME);
+                config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
+                config.save();
+                final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
+                Files.write(attrPath,
+                        gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
+                git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+            }
+
             git.commit().setMessage("Init").call();
             log.log(Level.INFO, "Created new repository {0}", absPath);
         }
@@ -96,6 +121,18 @@ public class GitRepoService {
 
     public static void createRepository(final String absPath) throws Exception {
         createRepository(absPath, false, false);
+    }
+
+    /**
+     * Create new git repository.
+     *
+     * @param absPath path to repository.
+     */
+    public static void createRepository(final String absPath,
+                                        final boolean withReadme,
+                                        final boolean withGitIgnore) throws Exception {
+        createRepository(absPath, withReadme, withGitIgnore, false);
+
     }
 
 
@@ -303,8 +340,9 @@ public class GitRepoService {
 
     /**
      * Create difference between branches
-     * @param leftBranchName left branch name
-     * @param rihtBranchName right branch name
+     *
+     * @param leftBranchName         left branch name
+     * @param rihtBranchName         right branch name
      * @param defaultProgressMonitor optional monitor
      * @return list of DiffEntry
      * @throws IOException in case of errors
@@ -315,7 +353,7 @@ public class GitRepoService {
         AbstractTreeIterator newTreeParser = prepareTreeParser(repository, rihtBranchName);
         try (Git git = new Git(repository)) {
             try {
-                return  git.diff()
+                return git.diff()
                         .setProgressMonitor(defaultProgressMonitor)
                         .setOldTree(oldTreeParser)
                         .setNewTree(newTreeParser)
@@ -364,9 +402,9 @@ public class GitRepoService {
         } catch (Exception e) {
             throw new IOException("Cannot checkout " + revCommit, e);
         }
-   }
+    }
 
-    public Ref checkoutRevCommit(final RevCommit revCommit,  final ProgressMonitor defaultProgressMonitor) throws IOException {
+    public Ref checkoutRevCommit(final RevCommit revCommit, final ProgressMonitor defaultProgressMonitor) throws IOException {
         return checkoutRevCommit(revCommit, null, defaultProgressMonitor);
     }
 
@@ -684,6 +722,14 @@ public class GitRepoService {
     }
 
 
+    public boolean isLfsRepo(Repository repo) {
+        return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
+    }
+
+    public boolean isFileExists(String fileName) {
+        return Files.exists(Paths.get(repository.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, ""), fileName));
+    }
+
 
     /**
      * Save given fileName at given revision into given file name.
@@ -884,6 +930,60 @@ public class GitRepoService {
 
     }
 
+    public List<ScmItem> getLfsFiles() {
+
+        List<ScmItem> items = new ArrayList<>();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+
+        try  {
+
+
+            ProcessBuilder builder = FS.DETECTED.runInShell("git" , new String []{"lfs", "ls-files"});
+            int rezCode =  FS.DETECTED.runProcess(builder, outputStream, errStream, (InputStream) null);
+            if (rezCode == 0) {
+                String rawList = outputStream.toString();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //OutputStream outRedirect, OutputStream errRedirect
+
+        /*
+        // try to run git lfs install, we really don't care if it is present
+        // and/or works here (yet).
+        ProcessBuilder builder = FS.DETECTED.runInShell("git", //$NON-NLS-1$
+                repository == null ? ARGS_USER : ARGS_LOCAL);
+        if (repository != null) {
+            builder.directory(repository.isBare() ? repository.getDirectory()
+                    : repository.getWorkTree());
+        }
+        FS.DETECTED.runProcess(builder, null, null, (String) null);
+
+         */
+
+        /*
+        6515bdaf7b - aaa.bmp
+af3283aa1c - file.bmp
+49261a14bb * file.psd
+8a68e419c9 - file1111.bmp
+d4946ec4da - file2.bmp
+91343a4098 - file2.psd
+b9be2bc392 - file3.bmp
+445c58c374 - file3.psd
+363f0b11fb - file33.bmp
+3c357e1ff1 - file4.psd
+4ff6fc394d * file5.bmp
+f3a8fde404 - file55.bmp
+d1cc73e761 - file555.bmp
+6aaf05349d - zzz.bmp
+         */
+        return items;
+
+    }
+
 
     /**
      * Get revisions to visualize. Fr more detail look at
@@ -945,11 +1045,11 @@ public class GitRepoService {
 
         RevCommit plotLane = treeNameHistory.get(0);
 
-        while(plotLane.getParentCount() > 0) {
+        while (plotLane.getParentCount() > 0) {
             if (plotLane.getParentCount() > 1) {
                 // merge point
                 for (int i = 0; i < plotLane.getParentCount(); i++) {
-                    if (!treeOnlyCommits.contains( plotLane.getParent(i))) {
+                    if (!treeOnlyCommits.contains(plotLane.getParent(i))) {
                         // parent not from main tree but from branch
                         RevCommit forkPoint = findParrent(plotLane.getParent(i), treeOnlyCommits);
                         if (forkPoint != null && !tails.contains(forkPoint)) {
@@ -965,8 +1065,8 @@ public class GitRepoService {
     }
 
     public List<AverageLiveTime> calculateAverageperMonth(final List<BranchLiveTime> brandLiveTimes, final StatWPParameters params) {
-        if(params.isWorkingHours()) {
-            brandLiveTimes.stream().forEach( blt -> blt.calculateDiff() );
+        if (params.isWorkingHours()) {
+            brandLiveTimes.stream().forEach(blt -> blt.calculateDiff());
         }
         return branchLiveTimeAdapter.adapt(brandLiveTimes);
     }
@@ -1064,14 +1164,49 @@ public class GitRepoService {
                 .setProgressMonitor(progressMonitor);
         configureTransportCommand(cmd, params);
 
-        try (Git result = cmd.call()) {
+        Git result = null;
+
+        String smudge = configureLfsSupport();
+
+        try  {
+            result = cmd.call();
             String rez = result.getRepository().getDirectory().getAbsolutePath();
             log.log(Level.INFO, MessageFormat.format("Clone {0} result {1}", reporitoryUrl, rez));
         } catch (TransportException te) {
             log.log(Level.WARNING, MessageFormat.format("Clone {0} error {1}", reporitoryUrl, te.getMessage()));
             throw te;
+        } finally {
+            if (isLfsRepo(result.getRepository())) {
+                StoredConfig repoCfg = result.getRepository().getConfig();
+                repoCfg.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+                repoCfg.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+                repoCfg.save();
+                log.log(Level.INFO, MessageFormat.format("Repo {0} cionfigured with LFS support by gitember", reporitoryUrl));
+            }
+            rollbackLfsSupport(smudge);
         }
     }
+
+
+    private String configureLfsSupport() throws Exception {
+        StoredConfig config = SystemReader.getInstance().getUserConfig();
+        //String clean = config.getString("filter", "lfs", "clean");
+        String smudge  = config.getString("filter", "lfs", "smudge");
+        config.setString("filter", "lfs", "smudge", "git-lfs smudge --skip -- %f");
+        config.save();
+        return smudge;
+    }
+
+    private void rollbackLfsSupport(String smudge) throws Exception {
+        StoredConfig config = SystemReader.getInstance().getUserConfig();
+        if (smudge == null) {
+            config.unset("filter", "lfs", "clean");
+        } else {
+            config.setString("filter", "lfs", "smudge", smudge);
+        }
+        config.save();
+    }
+
 
 
     /**
@@ -1282,6 +1417,16 @@ public class GitRepoService {
         if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
             StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
             fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
+
+            //fbcOrig.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+            //fbcOrig.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+
+            /*cmd.getRepository().getConfig().setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+            cmd.getRepository().getConfig().setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+            cmd.getRepository().getConfig().save();*/
+
+
+
             fbcOrig.save();
 
         } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH) || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
@@ -1558,4 +1703,6 @@ public class GitRepoService {
             "### VS Code ###\n" +
             ".vscode/\n\n";
 
+    private static String gitAttributesContent = "*.psd filter=lfs diff=lfs merge=lfs -text\n" +
+            "*.bmp filter=lfs diff=lfs merge=lfs -text\n";
 }

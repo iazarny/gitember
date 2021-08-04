@@ -10,7 +10,9 @@ import java.io.File;
 public class InitRepoParameters {
 
     private StringProperty destinationFolder = new SimpleStringProperty("");
-    private BooleanProperty initWithFiles = new SimpleBooleanProperty(false);
+    private BooleanProperty initWithReame = new SimpleBooleanProperty(false);
+    private BooleanProperty initWithIgnore = new SimpleBooleanProperty(false);
+    private BooleanProperty initWithLfs = new SimpleBooleanProperty(false);
 
     public String getDestinationFolder() {
         return destinationFolder.get();
@@ -24,15 +26,39 @@ public class InitRepoParameters {
         this.destinationFolder.set(destinationFolder);
     }
 
-    public boolean isInitWithFiles() {
-        return initWithFiles.get();
+    public boolean isInitWithReame() {
+        return initWithReame.get();
     }
 
-    public BooleanProperty initWithFilesProperty() {
-        return initWithFiles;
+    public BooleanProperty initWithReameProperty() {
+        return initWithReame;
     }
 
-    public void setInitWithFiles(boolean initWithFiles) {
-        this.initWithFiles.set(initWithFiles);
+    public void setInitWithReame(boolean initWithReame) {
+        this.initWithReame.set(initWithReame);
+    }
+
+    public boolean isInitWithIgnore() {
+        return initWithIgnore.get();
+    }
+
+    public BooleanProperty initWithIgnoreProperty() {
+        return initWithIgnore;
+    }
+
+    public void setInitWithIgnore(boolean initWithIgnore) {
+        this.initWithIgnore.set(initWithIgnore);
+    }
+
+    public boolean isInitWithLfs() {
+        return initWithLfs.get();
+    }
+
+    public BooleanProperty initWithLfsProperty() {
+        return initWithLfs;
+    }
+
+    public void setInitWithLfs(boolean initWithLfs) {
+        this.initWithLfs.set(initWithLfs);
     }
 }

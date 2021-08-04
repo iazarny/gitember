@@ -39,7 +39,9 @@ public class CreateDialog extends Dialog<InitRepoParameters> {
         final TextField folder = new TextField();
         folder.setPromptText("Folder");
         HBox.setHgrow(folder, Priority.ALWAYS);
-        final CheckBox initWithFiles = new CheckBox();
+        final CheckBox initWithReadme = new CheckBox();
+        final CheckBox initWithIgnore = new CheckBox();
+        final CheckBox initWithLfs = new CheckBox();
 
         final Button selectFolder = new Button("...");
         final HBox folderHBox = new HBox(folder, selectFolder);
@@ -53,7 +55,11 @@ public class CreateDialog extends Dialog<InitRepoParameters> {
         grid.add(folderHBox, 1, 1);
 
         grid.add(new Label("Init with README.md : "), 0, 2);
-        grid.add(initWithFiles, 1, 2);
+        grid.add(initWithReadme, 1, 2);
+        grid.add(new Label("Init with .gitignore : "), 0, 3);
+        grid.add(initWithIgnore, 1, 3);
+        grid.add(new Label("Init with LFS : "), 0, 4);
+        grid.add(initWithLfs, 1, 4);
 
         final Node coneNodeButton = this.getDialogPane().lookupButton(createBtn);
         coneNodeButton.setDisable(true);
@@ -79,7 +85,9 @@ public class CreateDialog extends Dialog<InitRepoParameters> {
         grid.requestLayout();
 
         Bindings.bindBidirectional(folder.textProperty(), cloneParameters.destinationFolderProperty());
-        Bindings.bindBidirectional(initWithFiles.selectedProperty(), cloneParameters.initWithFilesProperty());
+        Bindings.bindBidirectional(initWithReadme.selectedProperty(), cloneParameters.initWithReameProperty());
+        Bindings.bindBidirectional(initWithIgnore.selectedProperty(), cloneParameters.initWithIgnoreProperty());
+        Bindings.bindBidirectional(initWithLfs.selectedProperty(), cloneParameters.initWithLfsProperty());
 
         this.getDialogPane().setContent(grid);
 

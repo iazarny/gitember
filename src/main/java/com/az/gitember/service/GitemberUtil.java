@@ -2,6 +2,7 @@ package com.az.gitember.service;
 
 import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.LangDefinition;
+import com.az.gitember.data.ScmItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.paint.Color;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {
@@ -95,6 +97,33 @@ public class GitemberUtil {
         stackedFontIcon.setStyle("-fx-icon-color: text_color");
         stackedFontIcon.getChildren().add(fontIcon);
         return stackedFontIcon;
+    }
+
+    /**
+     * Parse the result of "git lfs ls-files". Example
+     * 49261a14bb * file.psd      <-- file
+     * 8a68e419c9 - file1111.bmp  <-- pointer
+     * d4946ec4da - file2.bmp
+     * @param str given raw result
+     * @return list of lfs scm items
+     */
+    public static List<ScmItem> parseLfsFilesList(String str) {
+        ArrayList<String> lines = getLines(str);
+        List<ScmItem> rez = lines.stream()
+                .map(s -> { return new ScmItem("", null);})
+                .collect(Collectors.toList());
+        return rez;
+    }
+
+    private ScmItem adapt(String str) {
+        String [] parts = str.split("\\s+");
+        return new ScmItem(parts[2],null );
+    }
+
+    public static ArrayList<String> getLines(final String content) {
+        return (ArrayList<String>) new BufferedReader(new StringReader(content))
+                .lines()
+                .collect(Collectors.toList());
     }
 
 }

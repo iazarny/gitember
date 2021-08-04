@@ -272,7 +272,11 @@ public class Main implements Initializable {
         new CreateDialog("Create", "Create new repository").showAndWait().ifPresent(
                 rp -> {
                     try {
-                        Context.getGitRepoService().createRepository(rp.getDestinationFolder(), rp.isInitWithFiles(), rp.isInitWithFiles());
+                        Context.getGitRepoService().createRepository(
+                                rp.getDestinationFolder(),
+                                rp.isInitWithReame(),
+                                rp.isInitWithIgnore(),
+                                rp.isInitWithLfs());
                         log.log(Level.INFO, "New repository was created  " + rp.getDestinationFolder());
                         Context.init(rp.getDestinationFolder());
                     } catch (Exception e) {

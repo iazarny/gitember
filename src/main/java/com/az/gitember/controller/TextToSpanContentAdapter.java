@@ -53,7 +53,7 @@ public class TextToSpanContentAdapter {
         content = contentRaw;
         this.langResolver = new LangResolver(extension, content);
         this.rawDiff = rawDiff;
-        this.lines = getLines(content);
+        this.lines = GitemberUtil.getLines(content);
 
         final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
         commonTokenStream.fill();
@@ -163,11 +163,7 @@ public class TextToSpanContentAdapter {
     }
 
 
-    private ArrayList<String> getLines(final String content) {
-        return (ArrayList<String>) new BufferedReader(new StringReader(content))
-                .lines()
-                .collect(Collectors.toList());
-    }
+
 
 
 }

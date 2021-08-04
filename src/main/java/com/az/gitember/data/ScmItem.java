@@ -36,6 +36,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         String CONFLICT_BOTH_MODIFIED = "Conflict_BM"; //Exists in all stages, content conflict.
 
 
+
         String ADDED = "Added";
         String MISSED = "Missed";
         String MODIFIED = "Modified";
@@ -46,6 +47,9 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         String UNTRACKED_FOLDER = "UntrackedFolder";
 
         String RENAMED = "Renamed";
+
+        String LFS_POINTER = "lfs_pointer";
+        String LFS_FILE = "lfs_file";
     }
 
 
