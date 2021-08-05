@@ -9,18 +9,19 @@ import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -45,12 +46,14 @@ public class Workingcopy implements Initializable {
     private final static Logger log = Logger.getLogger(Workingcopy.class.getName());
 
     public TableView workingCopyTableView;
-    public TableColumn<ScmItem, Boolean> selectTableColumn;
+    public TableColumn<ScmItem, ScmItem> selectTableColumn;
     public TableColumn<ScmItem, String> itemTableColumn;
     public TableColumn<ScmItem, ScmItem> itemTableColumnColorStatus;
     public TableColumn<ScmItem, StackedFontIcon> statusTableColumn;
+    public TableColumn<ScmItem, Node> actionTableColumn;
     public Pane spacerPane;
     public TextField searchText;
+    public CheckBox checkBoxShowLfs;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -66,17 +69,17 @@ public class Workingcopy implements Initializable {
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation()));
 
         selectTableColumn.setCellValueFactory(
-                c -> new ReadOnlyBooleanWrapper(!isUnstaged(c.getValue()))
+                c -> new SimpleObjectProperty(c.getValue())
         );
 
-        selectTableColumn.setCellFactory(p -> new CheckBoxTableCell<ScmItem, Boolean>());
+        selectTableColumn.setCellFactory(new WorkingcopyTableStageCallback(    ));
 
 
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     workingCopyTableView.refresh();
                     if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
-                        Settings settings =  Context.settingsProperty.getValue();
+                        Settings settings = Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
                     }
@@ -91,34 +94,41 @@ public class Workingcopy implements Initializable {
 
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
 
-    }
+        if (Context.getGitRepoService().isLfsRepo()) {
+            checkBoxShowLfs.setVisible(true);
+            checkBoxShowLfs.selectedProperty().addListener(
+                    (observable, oldValue, newValue) -> {
+                        actionTableColumn.setVisible(newValue);
 
-
-
-    public void addItemToStageEventHandler(MouseEvent mouseEvent) {
-        if (mouseEvent.getTarget() instanceof CheckBoxTableCell) {
-            CheckBoxTableCell cell = (CheckBoxTableCell) mouseEvent.getTarget();
-            if (cell.getTableColumn() == this.selectTableColumn) {
-                stageUnstageItem((ScmItem) workingCopyTableView.getSelectionModel().getSelectedItem());
-
-            }
+                    }
+            );
         }
+
     }
 
+
+
+    private void stageUnstageItem(ScmItem item) {
+
+        new StageEventHandler(workingCopyTableView, item).handle(null);
+
+    }
 
     public void stageAllEventHandler(ActionEvent actionEvent) {
-        Context.statusList.stream()
+        /*Context.statusList.stream()
                 .filter(i -> (isUnstaged(i)))
-                .forEach(i -> stageUnstageItem(i));
-        workingCopyTableView.refresh();
+                .forEach(i -> stageUnstageItem(i));*/
+       // workingCopyTableView.refresh();
     }
 
     public void unstageAllEventHandler(ActionEvent actionEvent) {
-        Context.statusList.stream()
+        /*Context.statusList.stream()
                 .filter(i -> (!isUnstaged((ScmItem) i)))
-                .forEach(i -> stageUnstageItem((ScmItem) i));
-        workingCopyTableView.refresh();
+                .forEach(i -> stageUnstageItem((ScmItem) i));*/
+        //workingCopyTableView.refresh();
     }
+
+
 
     public void mergeEventHandler(ActionEvent actionEvent) {
 
@@ -139,8 +149,6 @@ public class Workingcopy implements Initializable {
     }
 
 
-
-
     public void stashEventHandler(ActionEvent actionEvent) throws IOException {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -149,13 +157,13 @@ public class Workingcopy implements Initializable {
         alert.setContentText("Would you like to stash changes ?");
         alert.initOwner(App.getScene().getWindow());
 
-        alert.showAndWait().ifPresent( r -> {
+        alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 try {
                     Context.getGitRepoService().stash();
                     Context.updateStash();
                 } catch (IOException e) {
-                    log.log(Level.WARNING, "Cannot stash ",  e.getMessage());
+                    log.log(Level.WARNING, "Cannot stash ", e.getMessage());
                 }
                 new StatusUpdateEventHandler(true).handle(null);
             }
@@ -176,7 +184,7 @@ public class Workingcopy implements Initializable {
         final String cfgCommitName = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
         final String cfgCommitEmail = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
         String commitName = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitName(), cfgCommitName), proj.getUserName());
-        String commitEmail = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitEmail(),cfgCommitEmail), "");
+        String commitEmail = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitEmail(), cfgCommitEmail), "");
 
         CommitDialog dialog = new CommitDialog(
                 "",
@@ -203,21 +211,11 @@ public class Workingcopy implements Initializable {
     }
 
 
-
     //-------------------------------------------------------
-    private boolean isUnstaged(ScmItem scmItem) {
-        return is(scmItem.getAttribute().getStatus()).oneOf(
-                ScmItem.Status.MODIFIED, ScmItem.Status.MISSED,
-                ScmItem.Status.CONFLICT, ScmItem.Status.UNTRACKED);
-
-    }
 
 
 
-    private void stageUnstageItem(ScmItem item) {
 
-        new StageEventHandler(workingCopyTableView, item).handle(null);
 
-    }
 
 }

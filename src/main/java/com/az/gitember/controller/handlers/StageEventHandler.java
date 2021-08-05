@@ -61,7 +61,8 @@ public class StageEventHandler implements EventHandler<ActionEvent> {
             tableView.refresh();
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot change status of {0}. {1}", new String[] {item.getShortName(), e.getMessage()});
+            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot change status of {0}. {1}", new String[] {"" + item, e.getMessage()});
         }
 
     }

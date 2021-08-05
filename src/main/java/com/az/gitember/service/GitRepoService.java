@@ -722,6 +722,10 @@ public class GitRepoService {
     }
 
 
+    public boolean isLfsRepo() {
+        return isLfsRepo(repository);
+    }
+
     public boolean isLfsRepo(Repository repo) {
         return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
     }
@@ -924,10 +928,28 @@ public class GitRepoService {
             log.log(Level.SEVERE, "Cannot get statuses", e);
         }
 
+        mergeLfs(scmItems, getLfsFiles());
+
         Collections.sort(scmItems);
 
         return scmItems;
 
+    }
+
+    List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
+        for (ScmItem scmItem : status) {
+            for (ScmItem scmItemLfs : lfs) {
+                if (scmItem.getShortName().equals(scmItemLfs.getShortName())) {
+                    scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
+                    lfs.remove(scmItemLfs);
+                    break;
+                }
+            }
+        }
+
+        status.addAll(lfs);
+
+        return  status;
     }
 
     public List<ScmItem> getLfsFiles() {
@@ -936,50 +958,22 @@ public class GitRepoService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
 
-        try  {
+        try {
 
 
-            ProcessBuilder builder = FS.DETECTED.runInShell("git" , new String []{"lfs", "ls-files"});
-            int rezCode =  FS.DETECTED.runProcess(builder, outputStream, errStream, (InputStream) null);
+            ProcessBuilder builder = FS.DETECTED.runInShell("git", new String[]{"lfs", "ls-files"});
+            builder.directory(new File(repository.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, "")));
+            int rezCode = FS.DETECTED.runProcess(builder, outputStream, errStream, (InputStream) null);
             if (rezCode == 0) {
                 String rawList = outputStream.toString();
+                items.addAll(GitemberUtil.parseLfsFilesList(rawList));
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.WARNING, "Cannot get LFS. External error [" + errStream.toString() + "]", e);
         }
 
-        //OutputStream outRedirect, OutputStream errRedirect
 
-        /*
-        // try to run git lfs install, we really don't care if it is present
-        // and/or works here (yet).
-        ProcessBuilder builder = FS.DETECTED.runInShell("git", //$NON-NLS-1$
-                repository == null ? ARGS_USER : ARGS_LOCAL);
-        if (repository != null) {
-            builder.directory(repository.isBare() ? repository.getDirectory()
-                    : repository.getWorkTree());
-        }
-        FS.DETECTED.runProcess(builder, null, null, (String) null);
-
-         */
-
-        /*
-        6515bdaf7b - aaa.bmp
-af3283aa1c - file.bmp
-49261a14bb * file.psd
-8a68e419c9 - file1111.bmp
-d4946ec4da - file2.bmp
-91343a4098 - file2.psd
-b9be2bc392 - file3.bmp
-445c58c374 - file3.psd
-363f0b11fb - file33.bmp
-3c357e1ff1 - file4.psd
-4ff6fc394d * file5.bmp
-f3a8fde404 - file55.bmp
-d1cc73e761 - file555.bmp
-6aaf05349d - zzz.bmp
-         */
         return items;
 
     }
@@ -1168,7 +1162,7 @@ d1cc73e761 - file555.bmp
 
         String smudge = configureLfsSupport();
 
-        try  {
+        try {
             result = cmd.call();
             String rez = result.getRepository().getDirectory().getAbsolutePath();
             log.log(Level.INFO, MessageFormat.format("Clone {0} result {1}", reporitoryUrl, rez));
@@ -1191,7 +1185,7 @@ d1cc73e761 - file555.bmp
     private String configureLfsSupport() throws Exception {
         StoredConfig config = SystemReader.getInstance().getUserConfig();
         //String clean = config.getString("filter", "lfs", "clean");
-        String smudge  = config.getString("filter", "lfs", "smudge");
+        String smudge = config.getString("filter", "lfs", "smudge");
         config.setString("filter", "lfs", "smudge", "git-lfs smudge --skip -- %f");
         config.save();
         return smudge;
@@ -1206,7 +1200,6 @@ d1cc73e761 - file555.bmp
         }
         config.save();
     }
-
 
 
     /**
@@ -1424,7 +1417,6 @@ d1cc73e761 - file555.bmp
             /*cmd.getRepository().getConfig().setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
             cmd.getRepository().getConfig().setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
             cmd.getRepository().getConfig().save();*/
-
 
 
             fbcOrig.save();

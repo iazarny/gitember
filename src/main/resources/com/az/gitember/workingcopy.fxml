@@ -18,9 +18,10 @@
 <?import javafx.scene.control.TextField?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.control.CheckBox?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Workingcopy">
 <center>
-    <TableView fx:id="workingCopyTableView" onMouseClicked="#addItemToStageEventHandler" prefHeight="514.0" prefWidth="500"
+    <TableView fx:id="workingCopyTableView"  prefHeight="514.0" prefWidth="500"
                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS" styleClass="noheader">
         <placeholder>
             <Label text=""/>
@@ -30,6 +31,7 @@
             <TableColumn fx:id="selectTableColumn" prefWidth="40.0" resizable="false" text="" />
             <TableColumn fx:id="statusTableColumn" prefWidth="40.00" resizable="false" style="-fx-border-width: 0; -fx-font-size: 180%;  -fx-label-padding: 12px 0px 0px 5px;" text="" />
             <TableColumn fx:id="itemTableColumn" minWidth="800" prefWidth="-1" text="File" />
+            <TableColumn fx:id="actionTableColumn" minWidth="120" prefWidth="-1" text="" visible="false" />
         </columns>
     </TableView>
 </center>
@@ -68,8 +70,11 @@
                 <Separator id="MERGEBTN"/>
                 <Button id="MERGEBTN" onAction="#refreshEventHandler" text="Refresh" />
                 <Pane id="MERGEBTN" fx:id="spacerPane"/>
+                <CheckBox id="MERGEBTN" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
+                <Label id="MERGEBTN" text="    "/>
                 <Label id="MERGEBTN" text="Search"/>
                 <TextField id="MERGEBTN" fx:id="searchText"  />
+
             </ToolBar>
 
         </HBox>

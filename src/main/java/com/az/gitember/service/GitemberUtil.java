@@ -1,11 +1,9 @@
 package com.az.gitember.service;
 
-import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.LangDefinition;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmItemAttribute;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.collections.transformation.SortedList;
-import javafx.scene.paint.Color;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -17,13 +15,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {
 
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final static Pattern lsfListLinePattern = Pattern.compile("(\\w+)\\s+([-|*])\\s+(.*)");
 
 
     public static String formatDate(Date date) {
@@ -99,6 +99,12 @@ public class GitemberUtil {
         return stackedFontIcon;
     }
 
+    public static ArrayList<String> getLines(final String content) {
+        return (ArrayList<String>) new BufferedReader(new StringReader(content))
+                .lines()
+                .collect(Collectors.toList());
+    }
+
     /**
      * Parse the result of "git lfs ls-files". Example
      * 49261a14bb * file.psd      <-- file
@@ -110,20 +116,29 @@ public class GitemberUtil {
     public static List<ScmItem> parseLfsFilesList(String str) {
         ArrayList<String> lines = getLines(str);
         List<ScmItem> rez = lines.stream()
-                .map(s -> { return new ScmItem("", null);})
+                .map(s -> adaptLsfListLine(s))
                 .collect(Collectors.toList());
         return rez;
     }
 
-    private ScmItem adapt(String str) {
-        String [] parts = str.split("\\s+");
-        return new ScmItem(parts[2],null );
+    static ScmItem adaptLsfListLine(String line) {
+        String [] parts = parseLsfListLine(line);
+        return new ScmItem(parts[2], new ScmItemAttribute()
+                .withStatus(ScmItem.Status.LFS)
+                .withSubStatus("*".equals(parts[1]) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER)
+        );
     }
 
-    public static ArrayList<String> getLines(final String content) {
-        return (ArrayList<String>) new BufferedReader(new StringReader(content))
-                .lines()
-                .collect(Collectors.toList());
+    static String [] parseLsfListLine(String str) {
+        Matcher matcher = lsfListLinePattern.matcher(str);
+        if (matcher.matches()) {
+            String [] rez = new String[3];
+            rez[0]=matcher.group(1);
+            rez[1]=matcher.group(2);
+            rez[2]=matcher.group(3);
+            return rez;
+        }
+        return null;
     }
 
 }

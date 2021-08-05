@@ -53,4 +53,9 @@ public class ScmItemAttribute {
         this.status = status;
         return this;
     }
+
+    public ScmItemAttribute withSubStatus(String substatus) {
+        this.substatus = substatus;
+        return this;
+    }
 }

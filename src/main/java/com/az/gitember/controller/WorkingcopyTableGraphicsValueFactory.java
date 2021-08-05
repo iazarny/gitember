@@ -36,6 +36,10 @@ public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<Sta
         icons.put(ScmItem.Status.CONFLICT, () -> GitemberUtil.create(new FontIcon(FontAwesome.EXCHANGE)));
         icons.put(ScmItem.Status.UNCOMMITED, () -> GitemberUtil.create(new FontIcon(FontAwesome.CHECK_SQUARE_O)));
 
+        //icons.put(ScmItem.Status.LFS_POINTER, () -> GitemberUtil.create(new FontIcon(FontAwesome.DOWNLOAD)));
+       // icons.put(ScmItem.Status.LFS_FILE, () -> GitemberUtil.create(new FontIcon(FontAwesome.FILE_PICTURE_O)));
+        icons.put(ScmItem.Status.LFS, () -> GitemberUtil.create(new FontIcon()));
+
         //Branch diff support
 
 

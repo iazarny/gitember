@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.az.gitember.service.GitemberUtil.is;
+
 public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparable<ScmItem> {
 
     public enum  BODY_TYPE {
@@ -50,6 +52,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
         String LFS_POINTER = "lfs_pointer";
         String LFS_FILE = "lfs_file";
+        String LFS = "Lfs";
     }
 
 
@@ -170,7 +173,22 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
     }
 
+    /**
+     * @return null in case of unchanged lfs
+     */
+    public Integer staged() {
+        if (ScmItem.Status.LFS.equals(getAttribute().getStatus())) {
+            return -1;
+        } else if (is(getAttribute().getStatus()).oneOf(
+                ScmItem.Status.MODIFIED, ScmItem.Status.MISSED,
+                ScmItem.Status.CONFLICT, ScmItem.Status.UNTRACKED)) {
+            return 0;
+        }
+        return 1;
+    }
 
-
-
+    @Override
+    public String toString() {
+        return getShortName() + " staged " + staged();
+    }
 }
