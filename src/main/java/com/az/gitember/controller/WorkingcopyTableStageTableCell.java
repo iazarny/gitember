@@ -6,26 +6,23 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
-import javafx.scene.layout.HBox;
 
 public class WorkingcopyTableStageTableCell extends TableCell<ScmItem, ScmItem> {
 
-    private final CheckBox checkBox = new CheckBox();
-    private final HBox hBox = new HBox();
+    private CheckBox checkBox = new CheckBox();
 
     public WorkingcopyTableStageTableCell() {
         super();
         checkBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                System.out.println("########## 1 " + getItem());
-                new StageEventHandler(getTableView(),  getItem()).handle(null);
-                System.out.println("########## 2 " + getItem());
+                if ( (getItem().staged().equals(1) && oldValue) ||  (getItem().staged().equals(0) && newValue) ) {
+                    new StageEventHandler(getTableView(),  getItem()).handle(null);
+                }
             }
         });
 
     }
-
 
     @Override
     protected void updateItem(ScmItem item, boolean empty) {
@@ -36,7 +33,8 @@ public class WorkingcopyTableStageTableCell extends TableCell<ScmItem, ScmItem> 
             setGraphic(null);
         } else {
             if (item.staged().equals(-1)) {
-                setGraphic(hBox);
+                setText(null);
+                setGraphic(null);
             } else {
                 checkBox.setSelected(item.staged().equals(1));
                 setGraphic(checkBox);

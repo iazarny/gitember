@@ -26,7 +26,7 @@ public class Stash implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         statusTableColumn.setCellValueFactory(
-                c -> new WorkingcopyTableGraphicsValueFactory(c.getValue().getAttribute().getStatus())
+                c -> new WorkingcopyTableGraphicsValueFactory(c.getValue().getAttribute().getStatus(), null)
         );
         itemTableColumn.setCellValueFactory(
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation()));

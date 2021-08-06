@@ -30,7 +30,7 @@ public class BranchDiffController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         actionTableColumn.setCellValueFactory(c ->
-                new WorkingcopyTableGraphicsValueFactory(c.getValue().getChangeType().name()));
+                new WorkingcopyTableGraphicsValueFactory(c.getValue().getChangeType().name(), null));
 
         leftTableColumn.setCellValueFactory(c -> getName(c.getValue().getOldPath()));
         rightTableColumn.setCellValueFactory(c -> getName(c.getValue().getNewPath()));

@@ -48,7 +48,7 @@ public class FileHistoryController implements Initializable {
         dateTableColumn.setCellValueFactory(c -> new SimpleObjectProperty(GitemberUtil.formatDate(c.getValue().getDate())));
 
         actionTableColumn.setCellValueFactory(c ->
-                new WorkingcopyTableGraphicsValueFactory(c.getValue().getAffectedItems().get(0).getSecond().getStatus()));
+                new WorkingcopyTableGraphicsValueFactory(c.getValue().getAffectedItems().get(0).getSecond().getStatus(), null));
 
         historyTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 

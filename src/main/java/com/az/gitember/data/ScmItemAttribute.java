@@ -58,4 +58,9 @@ public class ScmItemAttribute {
         this.substatus = substatus;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return status + " " + substatus;
+    }
 }

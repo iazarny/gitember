@@ -36,9 +36,9 @@ public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<Sta
         icons.put(ScmItem.Status.CONFLICT, () -> GitemberUtil.create(new FontIcon(FontAwesome.EXCHANGE)));
         icons.put(ScmItem.Status.UNCOMMITED, () -> GitemberUtil.create(new FontIcon(FontAwesome.CHECK_SQUARE_O)));
 
-        //icons.put(ScmItem.Status.LFS_POINTER, () -> GitemberUtil.create(new FontIcon(FontAwesome.DOWNLOAD)));
-       // icons.put(ScmItem.Status.LFS_FILE, () -> GitemberUtil.create(new FontIcon(FontAwesome.FILE_PICTURE_O)));
-        icons.put(ScmItem.Status.LFS, () -> GitemberUtil.create(new FontIcon()));
+        icons.put(ScmItem.Status.LFS_POINTER, () -> GitemberUtil.create(new FontIcon(FontAwesome.FILE_O))); //DOWNLOAD
+        icons.put(ScmItem.Status.LFS_FILE, () -> GitemberUtil.create(new FontIcon(FontAwesome.FILE_PICTURE_O)));
+        //icons.put(ScmItem.Status.LFS, () -> GitemberUtil.create(new FontIcon()));
 
         //Branch diff support
 
@@ -52,9 +52,11 @@ public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<Sta
     }
 
     private final String status;
+    private final String subStatus;
 
-    public WorkingcopyTableGraphicsValueFactory(final String status) {
+    public WorkingcopyTableGraphicsValueFactory(final String status, final String subStatus) {
         this.status = status;
+        this.subStatus = subStatus;
     }
 
     @Override
@@ -70,7 +72,7 @@ public class WorkingcopyTableGraphicsValueFactory implements ObservableValue<Sta
     @Override
     public StackedFontIcon getValue() {
         try {
-            return icons.getOrDefault(status, fontIconUnknown).call();
+            return icons.getOrDefault(status, icons.getOrDefault(subStatus, fontIconUnknown)).call();
         } catch (Exception e) {
             return null;
         }

@@ -50,7 +50,7 @@ public class Workingcopy implements Initializable {
     public TableColumn<ScmItem, String> itemTableColumn;
     public TableColumn<ScmItem, ScmItem> itemTableColumnColorStatus;
     public TableColumn<ScmItem, StackedFontIcon> statusTableColumn;
-    public TableColumn<ScmItem, Node> actionTableColumn;
+    public TableColumn<ScmItem, ScmItem> actionTableColumn;
     public Pane spacerPane;
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
@@ -59,7 +59,11 @@ public class Workingcopy implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         statusTableColumn.setCellValueFactory(
-                c -> new WorkingcopyTableGraphicsValueFactory(c.getValue().getAttribute().getStatus())
+                c -> new WorkingcopyTableGraphicsValueFactory
+                        (
+                                c.getValue().getAttribute().getStatus(),
+                                c.getValue().getAttribute().getSubstatus()
+                        )
         );
 
         itemTableColumnColorStatus.setCellValueFactory(c -> new SimpleObjectProperty(c.getValue()));
@@ -68,11 +72,11 @@ public class Workingcopy implements Initializable {
         itemTableColumn.setCellValueFactory(
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation()));
 
-        selectTableColumn.setCellValueFactory(
-                c -> new SimpleObjectProperty(c.getValue())
-        );
+        selectTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));
+        actionTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));
 
-        selectTableColumn.setCellFactory(new WorkingcopyTableStageCallback(    ));
+        selectTableColumn.setCellFactory(param -> new WorkingcopyTableStageTableCell());
+        actionTableColumn.setCellFactory(param -> new WorkingcopyTableActionTableCell());
 
 
         searchText.textProperty().addListener(
@@ -107,7 +111,6 @@ public class Workingcopy implements Initializable {
     }
 
 
-
     private void stageUnstageItem(ScmItem item) {
 
         new StageEventHandler(workingCopyTableView, item).handle(null);
@@ -115,19 +118,16 @@ public class Workingcopy implements Initializable {
     }
 
     public void stageAllEventHandler(ActionEvent actionEvent) {
-        /*Context.statusList.stream()
-                .filter(i -> (isUnstaged(i)))
-                .forEach(i -> stageUnstageItem(i));*/
-       // workingCopyTableView.refresh();
+        Context.statusList.stream()
+                .filter(i -> (i.staged().equals(0)))
+                .forEach(i -> stageUnstageItem(i));
     }
 
     public void unstageAllEventHandler(ActionEvent actionEvent) {
-        /*Context.statusList.stream()
-                .filter(i -> (!isUnstaged((ScmItem) i)))
-                .forEach(i -> stageUnstageItem((ScmItem) i));*/
-        //workingCopyTableView.refresh();
+        Context.statusList.stream()
+                .filter(i -> (i.staged().equals(1)))
+                .forEach(i -> stageUnstageItem((ScmItem) i));
     }
-
 
 
     public void mergeEventHandler(ActionEvent actionEvent) {
@@ -212,10 +212,6 @@ public class Workingcopy implements Initializable {
 
 
     //-------------------------------------------------------
-
-
-
-
 
 
 }

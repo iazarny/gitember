@@ -189,6 +189,6 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
     @Override
     public String toString() {
-        return getShortName() + " staged " + staged();
+        return getShortName() + " staged " + staged() + "  status " + getAttribute();
     }
 }

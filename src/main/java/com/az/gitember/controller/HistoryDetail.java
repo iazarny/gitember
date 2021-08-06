@@ -120,7 +120,7 @@ public class HistoryDetail implements Initializable {
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation())
         );
         actionTableColumn.setCellValueFactory(
-                c -> new WorkingcopyTableGraphicsValueFactory(c.getValue().getAttribute().getStatus())
+                c -> new WorkingcopyTableGraphicsValueFactory(c.getValue().getAttribute().getStatus(), null)
         );
 
         changedFilesListView.setOnContextMenuRequested( e-> {
