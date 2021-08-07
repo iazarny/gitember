@@ -4,42 +4,31 @@ import com.az.gitember.App;
 import com.az.gitember.control.ChangeListenerHistoryHint;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Project;
+import com.az.gitember.data.ScmFilterPredicateLfsOnOff;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
-import javafx.beans.property.*;
-import javafx.collections.ListChangeListener;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
-import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import static com.az.gitember.service.GitemberUtil.is;
 
 public class Workingcopy implements Initializable {
 
@@ -55,8 +44,12 @@ public class Workingcopy implements Initializable {
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
 
+    private FilteredList filteredList;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
+        filteredList = new FilteredList(Context.statusList);
 
         statusTableColumn.setCellValueFactory(
                 c -> new WorkingcopyTableGraphicsValueFactory
@@ -94,7 +87,7 @@ public class Workingcopy implements Initializable {
 
         workingCopyTableView.setRowFactory(new WorkingcopyTableRowFactory(this));
 
-        workingCopyTableView.setItems(Context.statusList);
+        workingCopyTableView.setItems(filteredList);
 
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
 
@@ -104,8 +97,11 @@ public class Workingcopy implements Initializable {
                     (observable, oldValue, newValue) -> {
                         actionTableColumn.setVisible(newValue);
 
+                        filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(newValue));
+
                     }
             );
+            filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(false));
         }
 
     }

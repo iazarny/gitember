@@ -1,18 +1,36 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.controller.handlers.OpenFileEventHandler;
 import com.az.gitember.data.ScmItem;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem> {
 
-    private Button downdloadBtn = new Button("Load", new FontIcon(FontAwesome.DOWNLOAD));
-    private Button openBtn = new Button("Open", new FontIcon(FontAwesome.FOLDER_OPEN));
+    private final Button downdloadBtn;
+    private final Button openBtn;
 
     public WorkingcopyTableActionTableCell() {
+
         super();
+
+        StackedFontIcon openIcon = new StackedFontIcon();
+        openIcon.getChildren().add(new FontIcon(FontAwesome.FOLDER_OPEN));
+        openIcon.setStyle("-fx-icon-color: text_color");
+
+        StackedFontIcon loadIcon = new StackedFontIcon();
+        loadIcon.getChildren().add(new FontIcon(FontAwesome.DOWNLOAD));
+        loadIcon.setStyle("-fx-icon-color: text_color");
+
+        downdloadBtn = new Button("Load", loadIcon);
+        openBtn = new Button("Open", openIcon);
+
+
+
+
     }
 
     @Override
@@ -23,11 +41,26 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
         if (empty) {
             setGraphic(null);
         } else {
+
+
+
             if (item != null && item.getAttribute() != null) {
-                if (ScmItem.Status.LFS_FILE.equals(item.getAttribute().getSubstatus())) {
-                    setGraphic(openBtn);
-                } else if (ScmItem.Status.LFS_POINTER.equals(item.getAttribute().getSubstatus())) {
-                    setGraphic(downdloadBtn);
+
+                openBtn.setOnAction(
+                        new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE)
+                );
+
+                if (ScmItem.Status.LFS.equals(item.getAttribute().getStatus())) {
+                    if (ScmItem.Status.LFS_FILE.equals(item.getAttribute().getSubstatus())) {
+                        setGraphic(openBtn);
+                    } else if (ScmItem.Status.LFS_POINTER.equals(item.getAttribute().getSubstatus())) {
+                        setGraphic(downdloadBtn);
+                    }
+
+                } else {
+                    if (ScmItem.Status.LFS_FILE.equals(item.getAttribute().getSubstatus())) {
+                        setGraphic(openBtn);
+                    }
                 }
 
             } else {

@@ -39,8 +39,11 @@ public class MainRecentProjects implements Initializable {
                                         Context.settingsProperty.getValue().getProjects().remove(p);
                                         Context.saveSettings();
                                         Context.readSettings();
-                                        Context.getMain().showResult("Cannot load project ", "Cannot load project " + p.getProjectHomeFolder() + "\n   It will be removed from the list of recent projects", Alert.AlertType.WARNING);
-                                        log.log(Level.WARNING, "Cannot load project {0}. {1}", new String[] {p.getProjectHomeFolder(), e.getMessage()});
+                                        Context.getMain().showResult("Cannot load project ", "Cannot load project "
+                                                + p.getProjectHomeFolder()
+                                                + "\n   It will be removed from the list of recent projects",
+                                                Alert.AlertType.WARNING);
+                                        log.log(Level.WARNING, "Cannot load project " + p.getProjectHomeFolder(), e);
                                     }
                                 }
                         );
