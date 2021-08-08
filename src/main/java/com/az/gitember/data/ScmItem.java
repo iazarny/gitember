@@ -130,7 +130,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
     /**
-     * Get file info.
+     * Get file path.
      * @param bodyType type
      * @return mimetype / path to file.
      * @throws IOException

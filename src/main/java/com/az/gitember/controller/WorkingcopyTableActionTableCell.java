@@ -1,5 +1,6 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.controller.handlers.LfsDownloadEventHandler;
 import com.az.gitember.controller.handlers.OpenFileEventHandler;
 import com.az.gitember.data.ScmItem;
 import javafx.scene.control.Button;
@@ -48,6 +49,10 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
 
                 openBtn.setOnAction(
                         new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE)
+                );
+
+                downdloadBtn.setOnAction(
+                        new LfsDownloadEventHandler(item)
                 );
 
                 if (ScmItem.Status.LFS.equals(item.getAttribute().getStatus())) {
