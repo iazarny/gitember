@@ -21,21 +21,15 @@ public class RevertEventHandler extends AbstractLongTaskEventHandler implements 
 
     private final static Logger log = Logger.getLogger(StageEventHandler.class.getName());
 
-    private final TableView param;
     private final ScmItem item;
     private final Stage stage;
 
-    public RevertEventHandler(TableView param, ScmItem item) {
+    public RevertEventHandler(ScmItem item) {
         this.item = item;
-        this.param = param;
         this.stage = null;
     }
 
-    public RevertEventHandler(TableView param, ScmItem item, Stage stage) {
-        this.param = param;
-        this.item = item;
-        this.stage = stage;
-    }
+
 
     @Override
     public void handle(ActionEvent event) {
@@ -52,7 +46,7 @@ public class RevertEventHandler extends AbstractLongTaskEventHandler implements 
                     Task<Void> longTask = new Task<Void>() {
                         @Override
                         protected Void call() throws Exception {
-                            Context.getGitRepoService().checkoutFile(item.getShortName(), adaptStage(stage) );
+                            Context.getGitRepoService().checkoutFile(item.getShortName(), CheckoutCommand.Stage.BASE );
                             Context.updateStatus(new DefaultProgressMonitor((t, d) -> {
                                 updateTitle(t);
                                 updateProgress(d, 1.0);
@@ -74,13 +68,13 @@ public class RevertEventHandler extends AbstractLongTaskEventHandler implements 
         }
     }
 
-    private CheckoutCommand.Stage adaptStage(Stage stage) {
+    /*private CheckoutCommand.Stage adaptStage(Stage stage) {
         if (stage == Stage.OURS) {
             return CheckoutCommand.Stage.OURS;
         } else if (stage == Stage.THEIRS) {
             return CheckoutCommand.Stage.THEIRS;
         }
         return CheckoutCommand.Stage.BASE;
-    }
+    }*/
 
 }

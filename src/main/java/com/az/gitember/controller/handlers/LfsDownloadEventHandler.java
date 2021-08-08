@@ -6,10 +6,13 @@ import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -36,21 +39,17 @@ public class LfsDownloadEventHandler implements EventHandler<ActionEvent> {
                         lfs,
                         Context.getGitRepoService().getRepository(),
                         lfsPointer);
-                System.out.println(rez);
-
-                final ScmBranch scmBranch = Context.workingBranch.get();
-               /* Context.getGitRepoService().remoteRepositoryPull2(
-                        new RemoteRepoParameters(),
-                        scmBranch.getRemoteMergeName(),
-                        scmItem.getShortName(),
-                        null
+                System.out.println(rez.iterator().next() + " " + absFilePath.toFile());
+                /*FileUtils.copyFile(
+                        rez.iterator().next().toFile(),
+                        absFilePath.toFile()
                 );*/
-
-
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            Context.getGitRepoService().checkoutFile(scmItem.getShortName(), CheckoutCommand.Stage.BASE );
         } catch (IOException e) {
             e.printStackTrace();
         }

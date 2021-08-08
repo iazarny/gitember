@@ -1168,7 +1168,7 @@ public class GitRepoService {
 
         Git result = null;
 
-        String smudge = configureLfsSupport();
+        Pair<String, String> smudgeAndClean = configureLfsSupport();
 
         try {
             result = cmd.call();
@@ -1183,26 +1183,49 @@ public class GitRepoService {
                 repoCfg.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
                 repoCfg.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
                 repoCfg.save();
-                log.log(Level.INFO, MessageFormat.format("Repo {0} cionfigured with LFS support by gitember", reporitoryUrl));
+                log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
             }
-            rollbackLfsSupport(smudge);
+            rollbackLfsSupport(smudgeAndClean);
         }
     }
 
 
-    private String configureLfsSupport() throws Exception {
+    /**
+     * Temporally configure in the user config internal LFS
+     * @return pait of smugde and clean filterf for LFS
+     * @throws Exception in case of error.
+     */
+    private Pair<String,String> configureLfsSupport() throws Exception {
         StoredConfig config = SystemReader.getInstance().getUserConfig();
-        //String clean = config.getString("filter", "lfs", "clean");
         String smudge = config.getString("filter", "lfs", "smudge");
-        config.setString("filter", "lfs", "smudge", "git-lfs smudge --skip -- %f");
+        String clean = config.getString("filter", "lfs", "clean");
+
+       // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+       // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+
+        config.unset("filter", "lfs", "smudge");
+        config.unset("filter", "lfs", "clean");
+
+        //config.setString("filter", "lfs", "smudge", "git-lfs smudge --skip -- %f");
+
         config.save();
-        return smudge;
+        return new Pair<>(smudge, clean);
     }
 
-    private void rollbackLfsSupport(String smudge) throws Exception {
+    private void rollbackLfsSupport(Pair<String, String> smudgeAndClean) throws Exception {
+        String smudge = smudgeAndClean.getFirst();
+        String clean = smudgeAndClean.getSecond();
+
         StoredConfig config = SystemReader.getInstance().getUserConfig();
-        if (smudge == null) {
+
+        if (clean == null) {
             config.unset("filter", "lfs", "clean");
+        } else {
+            config.setString("filter", "lfs", "clean", clean);
+        }
+
+        if (smudge == null) {
+            config.unset("filter", "lfs", "smudge");
         } else {
             config.setString("filter", "lfs", "smudge", smudge);
         }

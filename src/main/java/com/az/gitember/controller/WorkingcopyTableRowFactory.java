@@ -148,7 +148,7 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                     scmItemContextMenu.getItems().add(new SeparatorMenuItem());
 
                                     MenuItem revert = new MenuItem(MI_REVERT_NAME);
-                                    revert.setOnAction(new RevertEventHandler(param, item));
+                                    revert.setOnAction(new RevertEventHandler(item));
                                     revert.setGraphic(icons.get(MI_REVERT_NAME));
                                     scmItemContextMenu.getItems().add(revert);
                                 }
