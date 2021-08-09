@@ -1168,7 +1168,7 @@ public class GitRepoService {
 
         Git result = null;
 
-        Pair<String, String> smudgeAndClean = configureLfsSupport();
+        Pair<String, String> smudgeAndClean = configureLfsSupport(SystemReader.getInstance().getUserConfig());
 
         try {
             result = cmd.call();
@@ -1185,7 +1185,7 @@ public class GitRepoService {
                 repoCfg.save();
                 log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
             }
-            rollbackLfsSupport(smudgeAndClean);
+            rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndClean);
         }
     }
 
@@ -1195,8 +1195,8 @@ public class GitRepoService {
      * @return pait of smugde and clean filterf for LFS
      * @throws Exception in case of error.
      */
-    private Pair<String,String> configureLfsSupport() throws Exception {
-        StoredConfig config = SystemReader.getInstance().getUserConfig();
+    private Pair<String,String> configureLfsSupport(StoredConfig config) throws Exception {
+
         String smudge = config.getString("filter", "lfs", "smudge");
         String clean = config.getString("filter", "lfs", "clean");
 
@@ -1212,11 +1212,11 @@ public class GitRepoService {
         return new Pair<>(smudge, clean);
     }
 
-    private void rollbackLfsSupport(Pair<String, String> smudgeAndClean) throws Exception {
+    private void rollbackLfsSupport( StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
         String smudge = smudgeAndClean.getFirst();
         String clean = smudgeAndClean.getSecond();
 
-        StoredConfig config = SystemReader.getInstance().getUserConfig();
+
 
         if (clean == null) {
             config.unset("filter", "lfs", "clean");
@@ -1326,7 +1326,16 @@ public class GitRepoService {
                                        final String remoteBranch,
                                        final ProgressMonitor progressMonitor) throws Exception {
 
+        boolean lfsrepo = isLfsRepo();
+        Pair<String, String> smudgeAndCleanRepo = null;
+        Pair<String, String> smudgeAndCleanUser = null;
+
         try (Git git = new Git(repository)) {
+
+            if (lfsrepo) {
+                smudgeAndCleanRepo = configureLfsSupport(repository.getConfig());
+                smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
+            }
 
             PullCommand pullCommand = git
                     .pull()
@@ -1338,9 +1347,36 @@ public class GitRepoService {
             if (pullRez.isSuccessful()) {
                 return pullRez.getMergeResult().getMergeStatus().toString();
             }
-            return pullRez.getMergeResult().toString(); // TOD more info
+            return pullRez.getMergeResult().toString(); // TODo more info
+        } finally {
+            if (smudgeAndCleanRepo != null) {
+                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
+                 rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
+            }
         }
     }
+
+    /*
+    *
+        Pair<String, String> smudgeAndClean = configureLfsSupport();
+
+        try {
+            result = cmd.call();
+            String rez = result.getRepository().getDirectory().getAbsolutePath();
+            log.log(Level.INFO, MessageFormat.format("Clone {0} result {1}", reporitoryUrl, rez));
+        } catch (TransportException te) {
+            log.log(Level.WARNING, MessageFormat.format("Clone {0} error {1}", reporitoryUrl, te.getMessage()));
+            throw te;
+        } finally {
+            if (isLfsRepo(result.getRepository())) {
+
+                repoCfg.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+                repoCfg.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+                repoCfg.save();
+                log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
+            }
+            rollbackLfsSupport(smudgeAndClean);
+        }*/
 
     /**
      * Fetch all or particular branch.

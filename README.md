@@ -15,6 +15,12 @@ Nothing in particular, but
  * I dont like standard UX of GIT
  * Check https://www.gitgui.org/
 
+## Changes
+### 2.2
+ * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details
+ * Fast file compare. The text flow changed to rich text fx .
+ 
+
 ## Plans 
 
  * Mac M1 support
