@@ -83,7 +83,7 @@ public class GitRepoService {
      *
      * @param absPath path to repository.
      */
-    public static void createRepository(final String absPath,
+    public static Repository createRepository(final String absPath,
                                         final boolean withReadme,
                                         final boolean withGitIgnore,
                                         final boolean withLfs) throws Exception {
@@ -122,6 +122,8 @@ public class GitRepoService {
 
             git.commit().setMessage("Init").call();
             log.log(Level.INFO, "Created new repository {0}", absPath);
+            return git.getRepository();
+
         }
 
     }
@@ -157,6 +159,10 @@ public class GitRepoService {
                 .findGitDir()
                 .build();
 
+    }
+
+    public GitRepoService(final Repository repo) throws IOException {
+        this.repository = repo;
     }
 
     public GitRepoService() {
@@ -974,7 +980,7 @@ public class GitRepoService {
             int rezCode = FS.DETECTED.runProcess(builder, outputStream, errStream, (InputStream) null);
             if (rezCode == 0) {
                 String rawList = outputStream.toString();
-                items.addAll(GitemberUtil.parseLfsFilesList(rawList));
+                items.addAll(GitLfsUtil.parseLfsFilesList(rawList));
             }
 
         } catch (Exception e) {
@@ -1332,7 +1338,7 @@ public class GitRepoService {
 
         try (Git git = new Git(repository)) {
 
-            if (lfsrepo) {
+            if (lfsrepo) { //TODO check ir required=false may help
                 smudgeAndCleanRepo = configureLfsSupport(repository.getConfig());
                 smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
             }
@@ -1356,27 +1362,6 @@ public class GitRepoService {
         }
     }
 
-    /*
-    *
-        Pair<String, String> smudgeAndClean = configureLfsSupport();
-
-        try {
-            result = cmd.call();
-            String rez = result.getRepository().getDirectory().getAbsolutePath();
-            log.log(Level.INFO, MessageFormat.format("Clone {0} result {1}", reporitoryUrl, rez));
-        } catch (TransportException te) {
-            log.log(Level.WARNING, MessageFormat.format("Clone {0} error {1}", reporitoryUrl, te.getMessage()));
-            throw te;
-        } finally {
-            if (isLfsRepo(result.getRepository())) {
-
-                repoCfg.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-                repoCfg.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
-                repoCfg.save();
-                log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
-            }
-            rollbackLfsSupport(smudgeAndClean);
-        }*/
 
     /**
      * Fetch all or particular branch.

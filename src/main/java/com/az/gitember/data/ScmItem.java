@@ -154,13 +154,11 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         switch (bodyType) {
             case WORK_SPACE: {
                 final Path path = Path.of(Context.getProjectFolder(), getShortName());
-                final String mimeType = Files.probeContentType(path);
                 return Files.readAllBytes(path);
             }
             case COMMIT_VERION: {
                 String saved = Context.getGitRepoService().saveFile(getCommitName(), getShortName());
                 final Path path = Path.of(saved);
-                final String mimeType = Files.probeContentType(path);
                 return Files.readAllBytes(path);
             }
 

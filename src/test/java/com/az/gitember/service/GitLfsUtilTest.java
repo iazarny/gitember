@@ -1,11 +1,15 @@
 package com.az.gitember.service;
 
+import com.az.gitember.data.LangDefinition;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class GitemberUtilTest {
+class GitLfsUtilTest {
 
 
 

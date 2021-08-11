@@ -5,7 +5,9 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.attributes.FilterCommandRegistry;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.lfs.CleanFilter;
+import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.lib.TextProgressMonitor;
 import org.eclipse.jgit.util.SystemReader;
@@ -14,11 +16,13 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GitRepoServiceLfsTest {
 
@@ -58,7 +62,7 @@ class GitRepoServiceLfsTest {
     }
 
 
-    @Test
+   // @Test
     public void cloneRemoteLfs() throws Exception {
 
         String clonedRepoPath = Files.createTempDirectory("gitember-cloned-remote").toString();
@@ -90,13 +94,13 @@ class GitRepoServiceLfsTest {
 
     }
 
-    //@Test
+    @Test
     public void createRepositorywithLfs() throws Exception {
 
         String newRepo = Files.createTempDirectory("tmp-gtmbr-lfs").toString();
-        GitRepoService.createRepository(newRepo, true, true, true);
+        Repository repository = GitRepoService.createRepository(newRepo, true, true, true);
         GitRepoService gitRepoService = new GitRepoService(
-                Paths.get(newRepo, ".git").toString()
+                repository
         );
 
         assertEquals(3, gitRepoService.getAllFiles().size());
@@ -105,14 +109,14 @@ class GitRepoServiceLfsTest {
         for (int i = 0; i < 1024; i++) {
             stringBuilder.append("\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n");
         }
-        Files.write(Paths.get(newRepo, "a.bmp"),
+        Files.write(Paths.get(newRepo, "loremipsum.bmp"),
                 stringBuilder.toString().getBytes(), StandardOpenOption.CREATE);
 
-        DirCache dc = gitRepoService.addFileToCommitStage("a.bmp");
+        DirCache dc = gitRepoService.addFileToCommitStage("loremipsum.bmp");
         assertEquals(4, dc.getEntryCount());
 
 
-        gitRepoService.commit("Add a.bmp large file", null, null);
+        gitRepoService.commit("Add loremipsum.bmp large file", null, null);
 
 
         String clonedRepoPath = Files.createTempDirectory("gitember-cloned").toString();
@@ -126,11 +130,21 @@ class GitRepoServiceLfsTest {
                 params, new TextProgressMonitor(new PrintWriter(System.out))
         );
 
+        final Path path = Path.of(clonedRepoPath, "loremipsum.bmp");
+        byte[] fileBody =  Files.readAllBytes(path);
+        assertTrue( fileBody.length <= LfsPointer.SIZE_THRESHOLD, "Must be file pointer instead of large file" );
+
 
         try {
-            FileUtils.deleteDirectory(new File(newRepo));
+            gitRepoService.shutdown();
+            clonedRepositoryService.shutdown();
+
+            //FileUtils.deleteDirectory(new File(newRepo));
+
+           // FileUtils.deleteDirectory(new File(clonedRepoPath));
 
         } catch (Exception e) {
+           // e.printStackTrace();
 
         }
 
