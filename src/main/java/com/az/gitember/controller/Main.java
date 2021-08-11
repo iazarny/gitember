@@ -51,6 +51,9 @@ public class Main implements Initializable {
     public MenuItem compressDataMenuItem;
     public MainTreeChangeListener mainTreeChangeListener;
     public MenuItem fetchMenuItem;
+    public MenuItem lfsMenuItem;
+    public MenuItem editRawConfigMenuItem;
+    public Menu repoSettingsMenuItem;
     public Button pullBtn;
     public Button pushBtn;
     public Button fetchBtn;
@@ -116,6 +119,7 @@ public class Main implements Initializable {
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
                     fetchMenuItem.setDisable(disable);
+                    repoSettingsMenuItem.setDisable(disable);
                     statReportMenu.setDisable(newValue == null);
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);
@@ -224,6 +228,15 @@ public class Main implements Initializable {
     public void fetchHandler(ActionEvent actionEvent) {
         RemoteRepoParameters repoParameters = new RemoteRepoParameters();
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
+    }
+
+    public void editRawConfigHandler(ActionEvent actionEvent) {
+        ScmItem item = new ScmItem(".git/config", null);
+        OpenFileEventHandler handler = new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE);
+        handler.setForceText(true);
+        handler.setEditable(true);
+
+        handler.handle(actionEvent);
     }
 
 

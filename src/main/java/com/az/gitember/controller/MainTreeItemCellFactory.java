@@ -43,6 +43,9 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
 
 
                 } else if (item instanceof ScmBranch) {
+
+                    //TODO add icon if local brabch has diff by comparison with remote
+
                     final ScmBranch scmWorkingBranch = Context.workingBranch.getValue();
                     final String scmWorkingBranchName = ScmBranch.getNameSafe(scmWorkingBranch);
                     final ScmBranch scmBranch = (ScmBranch) item;

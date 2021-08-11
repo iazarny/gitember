@@ -39,6 +39,10 @@
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
+                                <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
+                                    <MenuItem text="Large file support ..."   fx:id="lfsMenuItem" disable="true"   />
+                                    <MenuItem text="Edit configuration file ..." fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
+                                </Menu>
 
                                 <SeparatorMenuItem />
                                 <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>

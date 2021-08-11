@@ -35,10 +35,20 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     private final ScmItem.BODY_TYPE bodyType;
 
+    private boolean forceText = false;
+    private boolean editble = false;
+
 
     public OpenFileEventHandler(ScmItem item, ScmItem.BODY_TYPE bodyType) {
         this.item = item;
         this.bodyType = bodyType;
+    }
+
+    public void setForceText(boolean forceText) {
+        this.forceText = forceText;
+    }
+    public void setEditable(boolean editble) {
+        this.editble = editble;
     }
 
     @Override
@@ -51,7 +61,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
             if (ScmItem.BODY_TYPE.RAW_DIFF == bodyType) {
                 final String text = new String(item.getBody(bodyType));
                 openFile(fileName, text,true);
-            } else if (ExtensionMap.isTextExtension(item.getShortName())) {
+            } else if (forceText || ExtensionMap.isTextExtension(item.getShortName())) {
                 String text;
                 try {
                     text = new String(item.getBody(bodyType));
@@ -79,6 +89,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
         final TextBrowser textBrowser = (TextBrowser)pair.getSecond();
 
+        textBrowser.enableEdit(editble);
         textBrowser.setFileName(fileName);
         textBrowser.setText(text, rawDiff);
 

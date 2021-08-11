@@ -43,6 +43,10 @@ public class TextBrowser implements Initializable {
 
     }
 
+    public void enableEdit(boolean allow) {
+        codeArea.setEditable(allow);
+    }
+
     public void setText(String text, boolean diff) {
         content = text;
         Platform.runLater(
