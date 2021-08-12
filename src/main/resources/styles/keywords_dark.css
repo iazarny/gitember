@@ -106,3 +106,20 @@
 }
 
 
+.code-area {
+    -fx-fill: #a1a1a1;
+    -fx-background-color: background_color;
+    -fx-font: Monospace;
+    -fx-font-size: 20;
+}
+
+.caret {
+    -fx-fill: #a1a1a1;
+    -fx-background-color: green;
+    -fx-font: Monospace;
+    -fx-font-size: 30;
+    -fx-border-color: cyan;
+    -fx-progress-color: red;
+    -fx-stroke: white;
+
+}

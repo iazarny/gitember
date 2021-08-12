@@ -16,9 +16,3 @@
     -fx-background-color: #1d3076;
 }
 
-.code-area {
-    -fx-fill: #a1a1a1;
-    -fx-background-color: background_color;
-    -fx-font: Monospace;
-    -fx-font-size: 20;
-}

@@ -9,6 +9,8 @@ import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.Caret;
+import org.fxmisc.richtext.CaretNode;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 
@@ -32,6 +34,7 @@ public class TextBrowser implements Initializable {
         codeArea = new CodeArea();
         codeArea.setEditable(false);
         codeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+
         scrollPane = new VirtualizedScrollPane(codeArea);
         scrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
             codeArea.setMinHeight(newValue.doubleValue());
@@ -52,6 +55,12 @@ public class TextBrowser implements Initializable {
         Platform.runLater(
                 () -> {
                     codeArea.appendText(content);
+
+
+                    codeArea.setShowCaret(Caret.CaretVisibility.ON);
+                    CaretNode cr = new CaretNode("main-caret", codeArea);
+                    codeArea.addCaret(cr);
+
 
                     TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
                             codeArea.getText(), FilenameUtils.getExtension(fileName), diff);
