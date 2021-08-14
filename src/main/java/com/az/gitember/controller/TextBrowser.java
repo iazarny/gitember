@@ -1,9 +1,11 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
@@ -17,15 +19,21 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.ResourceBundle;
 
+
+//TODO alert in case of close and text changes
 public class TextBrowser implements Initializable {
     public BorderPane borderPane;
     public CodeArea codeArea;
     public VirtualizedScrollPane<CodeArea> scrollPane;
+    public Button saveBtn;
     private String content;
     private String fileName;
+    private boolean overwrite;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -46,8 +54,24 @@ public class TextBrowser implements Initializable {
     }
 
     public void enableEdit(boolean allow) {
-        codeArea.setEditable(allow);
+        this.codeArea.setEditable(allow);
+        if (allow) {
+            saveBtn.setText("Save");
+            saveBtn.setDisable(true);
+        }
     }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    /**
+     * Force owerwrite to everwrite the same file
+     */
+    public void setForceOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
 
     public void setText(String text, boolean diff) {
 
@@ -70,7 +94,10 @@ public class TextBrowser implements Initializable {
                     codeArea.richChanges()
                             .filter(ch -> !ch.getInserted().equals(ch.getRemoved()))
                             .subscribe(change -> {
-                                codeArea.setStyleSpans(0, adapter.computeHighlighting(codeArea.getText())  );
+                                {
+                                    codeArea.setStyleSpans(0, adapter.computeHighlighting(codeArea.getText())  );
+                                    saveBtn.setDisable(false);
+                                }
                             });
 
                     adapter.getDiffDecoration(codeArea.getText()).entrySet().forEach(p -> {
@@ -86,38 +113,53 @@ public class TextBrowser implements Initializable {
 
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
 
     public void saveFile(ActionEvent actionEvent) {
 
-        FileChooser fileChooser = new FileChooser();
+        if (overwrite) {
 
-        //Set extension filter
-        FileChooser.ExtensionFilter anyFilter = new FileChooser.ExtensionFilter("Any files (*.*)", "*.*");
-        fileChooser.getExtensionFilters().add(anyFilter);
-
-        if (StringUtils.isNotBlank(FilenameUtils.getExtension(fileName))) {
-            String ext = FilenameUtils.getExtension(fileName);
-            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(ext + " files (*." + ext + ")", "*." + ext);
-            fileChooser.getExtensionFilters().add(extFilter);
-        }
-
-        fileChooser.setTitle("Save file");
-
-        //Show save file dialog
-        File file = fileChooser.showSaveDialog(App.getScene().getWindow());
-
-        if (file != null) {
-
+            String workignDir = Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(".git", "");
+            Path path = Path.of(workignDir, fileName);
             try {
-                Files.write(file.toPath(), this.content.getBytes());
+                Files.write(path, codeArea.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                saveBtn.setDisable(true);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
+        } else {
+
+
+
+            FileChooser fileChooser = new FileChooser();
+
+            //Set extension filter
+            FileChooser.ExtensionFilter anyFilter = new FileChooser.ExtensionFilter("Any files (*.*)", "*.*");
+            fileChooser.getExtensionFilters().add(anyFilter);
+
+            if (StringUtils.isNotBlank(FilenameUtils.getExtension(fileName))) {
+                String ext = FilenameUtils.getExtension(fileName);
+                FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(ext + " files (*." + ext + ")", "*." + ext);
+                fileChooser.getExtensionFilters().add(extFilter);
+            }
+
+            fileChooser.setTitle("Save file");
+
+            //Show save file dialog
+            File file = fileChooser.showSaveDialog(App.getScene().getWindow());
+
+            if (file != null) {
+
+                try {
+                    Files.write(file.toPath(), this.content.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
         }
+
 
     }
 }

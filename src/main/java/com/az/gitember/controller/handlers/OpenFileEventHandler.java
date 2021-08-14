@@ -37,7 +37,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     private boolean forceText = false;
     private boolean editble = false;
-
+    private boolean overwrite = false;
 
     public OpenFileEventHandler(ScmItem item, ScmItem.BODY_TYPE bodyType) {
         this.item = item;
@@ -47,8 +47,13 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     public void setForceText(boolean forceText) {
         this.forceText = forceText;
     }
+
     public void setEditable(boolean editble) {
         this.editble = editble;
+    }
+
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
     }
 
     @Override
@@ -90,6 +95,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         final TextBrowser textBrowser = (TextBrowser)pair.getSecond();
 
         textBrowser.enableEdit(editble);
+        textBrowser.setForceOverwrite(overwrite);
         textBrowser.setFileName(fileName);
         textBrowser.setText(text, rawDiff);
 

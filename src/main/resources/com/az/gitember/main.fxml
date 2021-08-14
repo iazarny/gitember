@@ -39,14 +39,12 @@
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
-                                <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
-                                    <MenuItem text="Large file support ..."   fx:id="lfsMenuItem" disable="true"   />
-                                    <MenuItem text="Edit configuration file ..." fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
-                                </Menu>
+                                <MenuItem text="Pull" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="pullMenuItem" disable="true"/>
+                                <MenuItem text="Push" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="puchMenuItem" disable="true"/>
+
 
                                 <SeparatorMenuItem />
-                                <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
-                                <SeparatorMenuItem mnemonicParsing="false"/>
+
                                 <Menu text="Statistic" fx:id="statReportMenu"  disable="true" >
                                     <MenuItem text="Code lines"   onAction="#createStatReport"/>
                                     <MenuItem text="Work progress ..."  onAction="#createStatReportProgress"/>
@@ -59,6 +57,19 @@
 
                                     </graphic>
                                 </Menu>
+
+                                <SeparatorMenuItem />
+                                
+                                <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
+
+
+                                <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
+                                    <MenuItem text="Large file support ..."   fx:id="lfsMenuItem" visible="false"   />
+                                    <MenuItem text="Edit configuration" fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
+                                    <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
+                                    <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
+                                </Menu>
+
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">

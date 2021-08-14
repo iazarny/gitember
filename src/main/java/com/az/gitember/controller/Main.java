@@ -2,20 +2,14 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.*;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -24,18 +18,15 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.eclipse.jgit.revplot.PlotCommit;
-import org.eclipse.jgit.revplot.PlotCommitList;
-import org.eclipse.jgit.revplot.PlotLane;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class Main implements Initializable {
 
@@ -53,6 +44,8 @@ public class Main implements Initializable {
     public MenuItem fetchMenuItem;
     public MenuItem lfsMenuItem;
     public MenuItem editRawConfigMenuItem;
+    public MenuItem editRawIgnoreMenuItem;
+    public MenuItem editRawAttrsMenuItem;
     public Menu repoSettingsMenuItem;
     public Button pullBtn;
     public Button pushBtn;
@@ -87,7 +80,7 @@ public class Main implements Initializable {
                     final ScmBranch scmBranch = Context.workingBranch.getValue();
                     final String repoState = Context.getGitRepoService().getRepository().getRepositoryState().getDescription();
                     App.getStage().setTitle(
-                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
+                            Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
                                     + ScmBranch.getNameSafe(scmBranch) + "     " + repoState);
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
@@ -123,6 +116,16 @@ public class Main implements Initializable {
                     statReportMenu.setDisable(newValue == null);
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);
+
+                    boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
+                    boolean attrFileExists = Context.getGitRepoService().isFileExists(".gitattributes");
+                    boolean ignoreFileExists = Context.getGitRepoService().isFileExists(".gitignore");
+
+                    editRawIgnoreMenuItem.setVisible(ignoreFileExists);
+                    editRawAttrsMenuItem.setVisible(attrFileExists);
+                    lfsMenuItem.setVisible(lfsRepo);
+
+
                 }
         );
 
@@ -230,13 +233,25 @@ public class Main implements Initializable {
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
     }
 
+    public void editRawAttrsHandler(ActionEvent actionEvent) {
+        edit(".gitattributes");
+    }
+
+    public void editRawIgnoreHandler(ActionEvent actionEvent) {
+        edit(".gitignore");
+    }
+
     public void editRawConfigHandler(ActionEvent actionEvent) {
-        ScmItem item = new ScmItem(".git/config", null);
+        edit(".git/config");
+    }
+
+    private void edit(String fileName) {
+        ScmItem item = new ScmItem(fileName, null);
         OpenFileEventHandler handler = new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE);
         handler.setForceText(true);
         handler.setEditable(true);
-
-        handler.handle(actionEvent);
+        handler.setOverwrite(true);
+        handler.handle(null);
     }
 
 
