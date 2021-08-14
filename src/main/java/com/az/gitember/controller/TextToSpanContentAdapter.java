@@ -28,46 +28,36 @@ import java.util.stream.Collectors;
  */
 public class TextToSpanContentAdapter {
 
-    public static final double FONT_SIZE = 20;
+    private final String extension;
 
     private boolean rawDiff = false;
     private EditList patch = null;
     private boolean leftSide;
-    private final ArrayList<String> lines;
-    private final LangResolver langResolver;
-    private final List<Token> parsedCode;
-    private final String content;
 
     /**
      * @param extension The file extension
      * @param patch     patch
      * @param leftSide  what side ro read left - old, right - new
      */
-    public TextToSpanContentAdapter(final String content, final String extension, final EditList patch, boolean leftSide) {
-        this(content, extension, false);
+    public TextToSpanContentAdapter(/*final String content,*/ final String extension, final EditList patch, boolean leftSide) {
+        this(extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
     }
 
-    TextToSpanContentAdapter(final String contentRaw, final String extension, final boolean rawDiff) {
-        content = contentRaw;
-        this.langResolver = new LangResolver(extension, content);
+    TextToSpanContentAdapter(/*final String contentRaw,*/ final String extension, final boolean rawDiff) {
         this.rawDiff = rawDiff;
-        this.lines = GitemberUtil.getLines(content);
-
-        final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
-        commonTokenStream.fill();
-        parsedCode = commonTokenStream.getTokens();
-
+        this.extension = extension;
     }
 
-    public StyleSpans<Collection<String>> computeHighlighting() {
+    public StyleSpans<Collection<String>> computeHighlighting(final String content) {
+        final LangResolver langResolver = new LangResolver(extension, content);
+        final CommonTokenStream commonTokenStream = new CommonTokenStream(langResolver.getLexer());
+        commonTokenStream.fill();
+        final List<Token> parsedCode = commonTokenStream.getTokens();
 
-        final StyleSpansBuilder<Collection<String>> spansBuilder
-                = new StyleSpansBuilder<>();
+        final StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         int lastKwEnd = 0;
-
-
 
         final Iterator<Token> tokenIterator = parsedCode.iterator();
         // TODO looks ugly , refactor
@@ -103,9 +93,10 @@ public class TextToSpanContentAdapter {
     private Map<Integer, List<String>> diffDecoration = null;
     private Map<Integer, List<String>> pathcDecoration = null;
 
-    public Map<Integer, List<String>> getDiffDecoration() {
+    public Map<Integer, List<String>> getDiffDecoration(String content) {
         if (diffDecoration == null) {
             if (rawDiff) {
+                final ArrayList<String> lines = GitemberUtil.getLines(content);;
                 diffDecoration = new HashMap<>();
                 for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
                     final String line = lines.get(lineIdx);

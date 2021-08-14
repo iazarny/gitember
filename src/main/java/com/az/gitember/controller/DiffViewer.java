@@ -287,14 +287,12 @@ public class DiffViewer implements Initializable {
 
         codeArea.appendText(text);
 
-        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
-                codeArea.getText(), FilenameUtils.getExtension(fileName),
-                this.diffList,
-                leftSide);
+        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName),
+                this.diffList,  leftSide);
 
         codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
 
-        StyleSpans<Collection<String>> spans = adapter.computeHighlighting();
+        StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
         if (spans != null) {
             codeArea.setStyleSpans(0, spans);
         }

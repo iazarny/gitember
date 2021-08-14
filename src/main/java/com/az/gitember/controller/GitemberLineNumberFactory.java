@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
@@ -43,6 +44,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
     private final Val<Integer> nParagraphs;
     private final IntFunction<String> format;
     private final int maxDigits;
+    private final StyledTextArea<?, ?> area;
 
     private GitemberLineNumberFactory(
             StyledTextArea<?, ?> area,
@@ -52,6 +54,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
         this.format = format;
         this.maxDigits = String.valueOf(nParagraphs.getOrElse(1)).length();
         this.textAdapter = textAdapter;
+        this.area = area;
     }
 
     @Override
@@ -63,7 +66,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
         lineNo.setStyle("-fx-background-color: background_color;");
         lineNo.setPadding(DEFAULT_INSETS);
 
-        applyStyle(lineNo, textAdapter.getDiffDecoration().get(idx));
+        applyStyle(lineNo, textAdapter.getDiffDecoration(area.getText()).get(idx));
         applyStyle(lineNo, textAdapter.getDecorateByPatch().get(idx));
 
 

@@ -4,13 +4,12 @@ import com.az.gitember.App;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.Caret;
-import org.fxmisc.richtext.CaretNode;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 
@@ -51,31 +50,36 @@ public class TextBrowser implements Initializable {
     }
 
     public void setText(String text, boolean diff) {
-        content = text;
+
+        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName), diff);
+        this.content = text;
+
         Platform.runLater(
                 () -> {
                     codeArea.appendText(content);
 
-
-                    codeArea.setShowCaret(Caret.CaretVisibility.ON);
-                    CaretNode cr = new CaretNode("main-caret", codeArea);
-                    codeArea.addCaret(cr);
-
-
-                    TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
-                            codeArea.getText(), FilenameUtils.getExtension(fileName), diff);
-
                     codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
 
-                    StyleSpans<Collection<String>> spans = adapter.computeHighlighting();
+                    // initial color
+                    StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
                     if (spans != null) {
                         codeArea.setStyleSpans(0, spans);
                     }
 
-                    adapter.getDiffDecoration().entrySet().forEach(p -> {
+                    //re-coloring when editing
+                    codeArea.richChanges()
+                            .filter(ch -> !ch.getInserted().equals(ch.getRemoved()))
+                            .subscribe(change -> {
+                                codeArea.setStyleSpans(0, adapter.computeHighlighting(codeArea.getText())  );
+                            });
+
+                    adapter.getDiffDecoration(codeArea.getText()).entrySet().forEach(p -> {
                         codeArea.setParagraphStyle(p.getKey(), p.getValue());
                     });
+
                     codeArea.moveTo(0, 0);
+                    codeArea.setShowCaret(Caret.CaretVisibility.ON);
+                    codeArea.setLineHighlighterOn(true);
                     codeArea.requestFollowCaret();
                 }
         );

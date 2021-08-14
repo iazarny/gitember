@@ -106,20 +106,21 @@
 }
 
 
-.code-area {
+/*.code-area {
     -fx-fill: #a1a1a1;
     -fx-background-color: background_color;
     -fx-font: Monospace;
     -fx-font-size: 20;
-}
+}*/
 
 .caret {
-    -fx-fill: #a1a1a1;
-    -fx-background-color: green;
-    -fx-font: Monospace;
-    -fx-font-size: 30;
-    -fx-border-color: cyan;
-    -fx-progress-color: red;
     -fx-stroke: white;
-
+    -fx-stroke-width: 2.0;
 }
+
+.styled-text-area .selection {
+    -fx-fill: #004f8b;
+}
+
+/*.styled-text-area .text { -fx-fill: #cddbe8; }*/
+.styled-text-area .line-highlighter { -fx-fill: #1c1f1c; }
