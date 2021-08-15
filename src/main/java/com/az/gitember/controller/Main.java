@@ -233,6 +233,11 @@ public class Main implements Initializable {
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
     }
 
+    public void largeFileSupportHandler(ActionEvent actionEvent) {
+        LFSDialog lfsDialog = new LFSDialog("LFS", "Large file support");
+        lfsDialog.showAndWait();
+    }
+
     public void editRawAttrsHandler(ActionEvent actionEvent) {
         edit(".gitattributes");
     }

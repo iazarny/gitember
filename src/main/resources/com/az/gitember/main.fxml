@@ -39,8 +39,8 @@
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
-                                <MenuItem text="Pull" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="pullMenuItem" disable="true"/>
-                                <MenuItem text="Push" accelerator="Shortcut+t" onAction="#fetchHandler" fx:id="puchMenuItem" disable="true"/>
+                                <MenuItem text="Pull" accelerator="Shortcut+lt" onAction="#fetchHandler" fx:id="pullMenuItem" disable="true"/>
+                                <MenuItem text="Push" accelerator="Shortcut+p" onAction="#fetchHandler" fx:id="puchMenuItem" disable="true"/>
 
 
                                 <SeparatorMenuItem />
@@ -59,12 +59,12 @@
                                 </Menu>
 
                                 <SeparatorMenuItem />
-                                
+
                                 <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
 
 
                                 <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
-                                    <MenuItem text="Large file support ..."   fx:id="lfsMenuItem" visible="false"   />
+                                    <MenuItem text="Large file support ..."   fx:id="lfsMenuItem"  onAction="#largeFileSupportHandler"   />
                                     <MenuItem text="Edit configuration" fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
                                     <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
