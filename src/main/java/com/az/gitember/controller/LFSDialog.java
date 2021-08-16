@@ -75,7 +75,9 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
             if (evt.getCode() == KeyCode.DELETE || evt.getCode() == KeyCode.BACK_SPACE) {
 
                 System.out.println("delete " + extension.getSelectionModel().getSelectedItem());
-
+                if (extension.getSelectionModel().getSelectedIndex() > -1) {
+                    extension.getItems().remove(extension.getSelectionModel().getSelectedIndex());
+                }
             } else if (evt.getCode() == KeyCode.INSERT) {
                 addItemAndStartEdit(extension, "");
 
@@ -107,7 +109,7 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
                 }
         );
 
-        
+
 
         this.initOwner(App.getScene().getWindow());
 
