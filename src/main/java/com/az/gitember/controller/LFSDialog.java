@@ -71,33 +71,26 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
         });
 
         extension.setOnKeyPressed(evt -> {
+            System.out.println(evt.getCode() + " " + evt.getCharacter() + " " +  evt.getText() + " " + evt);
+            if (evt.getCode() == KeyCode.DELETE || evt.getCode() == KeyCode.BACK_SPACE) {
 
-            System.out.println(extension.getSelectionModel());
+                System.out.println("delete " + extension.getSelectionModel().getSelectedItem());
 
-            if (evt.getCode() == KeyCode.DELETE) {
-                System.out.println("delete");
+            } else if (evt.getCode() == KeyCode.INSERT) {
+                addItemAndStartEdit(extension, "");
 
-
-            } else if (evt.getCode().isLetterKey()) {
-                System.out.println(" key [" + evt.getCode() + "]");
-                /*Context.branchFilter.set(event.getText());
-                localBranchesTreeItem.setExpanded(true);
-                remoteBranchesTreeItem.setExpanded(true);
-                tagsTreeItem.setEed(true);
-                new MainTreeBranchSearchHandler(App.getStage().getX() + 150, App.getStage().getY() + 120).handle(null);*/
-
+            } else if (evt.getCode() == KeyCode.DIGIT8 && evt.isShiftDown()) {
+                addItemAndStartEdit(extension, "*");
+            } else if (evt.getCode().isLetterKey() || evt.getCode().isDigitKey()) {
+                addItemAndStartEdit(extension, evt.getText());
+                System.out.println(" key [" + evt.getText() + "]");
             }
         });
 
 
-
-
         Button editButton = new Button("Add & Edit");
         editButton.setOnAction((ActionEvent event) -> {
-            extension.getItems().add("");
-            extension.scrollTo(extension.getItems().size() - 1);
-            extension.layout();
-            extension.edit(extension.getItems().size() - 1);
+            addItemAndStartEdit(extension, "");
         });
 
 
@@ -114,29 +107,18 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
                 }
         );
 
-        /*Node loginButton = this.getDialogPane().lookupButton(okButtonType);
-        loginButton.setDisable(username.textProperty().isEmpty().get());
-
-        username.textProperty().addListener((observable, oldValue, newValue) -> {
-            loginButton.setDisable(newValue.trim().isEmpty());
-        });*/
-
-
-        /*
-
-        Platform.runLater(() -> username.requestFocus());
-
-        this.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                repoInfo.setUserName(username.getText());
-                repoInfo.setUserPwd(password.getText());
-                return repoInfo;
-            }
-            return null;
-        });*/
+        
 
         this.initOwner(App.getScene().getWindow());
 
+    }
+
+    private void addItemAndStartEdit(ListView<String> extension, String text) {
+        extension.getItems().add(text);
+        extension.scrollTo(extension.getItems().size() - 1);
+        extension.layout();
+        extension.edit(extension.getItems().size() - 1);
+        extension.getSelectionModel().clearSelection();
     }
 
 
