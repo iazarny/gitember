@@ -3,21 +3,25 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.effect.MotionBlur;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.shape.ArcTo;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
+import javafx.scene.shape.*;
 
 /**
  * Created by Igor_Azarny on 28 - Jan - 2017.
  */
 public class AboutDialog extends Dialog {
+
+
+    private float CHAR_WIDTH = 100;
+    private float CHAR_HEIGHT = 133;
 
 
     private int LOGO_WIDTH = 1184;
@@ -59,28 +63,26 @@ public class AboutDialog extends Dialog {
         pane.setMinHeight(400);
         pane.setMaxWidth(400);
         pane.setMaxHeight(400);
-        pane.getChildren().add(createLogoPath());
+        pane.getChildren().addAll(createLogoPath());
 
 
         grid.add(pane, 0, 0);
         GridPane.setColumnSpan(pane, 2);
 
-        grid.add(new Label("Gitember version : " ), 0, 1);
-        grid.add(new Label("2.2" ), 1, 1);
 
-        grid.add(new Label("Web site : " ), 0, 2);
+        grid.add(new Label("Web site : " ), 0, 1);
         Hyperlink gitember = new Hyperlink("https://github.com/iazarny/gitember");
         gitember.setOnAction(
                 event1 -> {
                     App.getShell().showDocument("https://github.com/iazarny/gitember");
                 }
         );
-        grid.add(gitember, 1, 2);
+        grid.add(gitember, 1, 1);
 
-        grid.add(new Label("Author : " ), 0, 3);
+        grid.add(new Label("Author : " ), 0, 2);
         Hyperlink linkedIn = new Hyperlink("Igor Azarny");
 
-        grid.add(linkedIn, 1, 3);
+        grid.add(linkedIn, 1, 2);
 
         TextArea creditsTextArea = new TextArea();
         creditsTextArea.setEditable(false);
@@ -90,27 +92,24 @@ public class AboutDialog extends Dialog {
         creditsTextArea.setMaxHeight(100);
         creditsTextArea.setText(
                 "Thanks for antlr grammar\n" +
-                        "Asm, Basic - Tom Everett <tom@khubla.com>\n" +
-                        "C - Sam Harwell\n" +
-                        "Cpp - Camilo Sanchez, Martin Mirchev\n" +
-                        "C# - Christian Wulf <chwchw@gmx.de>, Ivan Kochurkin <kvanttt@gmail.com>\n" +
-                        "Erlang - Terence Parr\n" +
-                        "Fortran - Olivier Dragon, Terence Parr\n" +
-                        "Go - Sasa Coh, Michał Błotniak, Ivan Kochurkin, kvanttt@gmail.com, Dmitry Rassadin, flipparassa@gmail.com, Martin Mirchev, mirchevmartin2203@gmail.com\n" +
-                        "Html - Tom Everett\n" +
-                        "Java - Terence Parr, Sam Harwell, Chan Chung Kwong\n" +
-                        "JavaScript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Student Main\n" +
-                        "Json - Terence Parr\n" +
-                        "Kotlin - Anastasiya Shadrina a.shadrina5@mail.ru\n" +
-                        "Lua - Kazunori Sakamoto, Alexander Alexeev\n" +
-                        "Pascal - Tom Everett\n" +
-                        "Python - Bart Kiers\n" +
-                        "Ruby - Alexander Belov\n" +
-                        "Rust - The Rust Project Developers, Student Main\n" +
-                        "Sql - Canwei He\n" +
-                        "Swift - ?\n" +
-                        "Typescript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Andrii Artiushok\n" +
-                        "Xml - Terence Parr\n"
+                        "  Asm, Basic, Html, Pascal - Tom Everett <tom@khubla.com>\n" +
+                        "  C - Sam Harwell\n" +
+                        "  Cpp - Camilo Sanchez, Martin Mirchev\n" +
+                        "  C# - Christian Wulf <chwchw@gmx.de>, Ivan Kochurkin <kvanttt@gmail.com>\n" +
+                        "  Erlang, Xml, Json - Terence Parr\n" +
+                        "  Fortran - Olivier Dragon, Terence Parr\n" +
+                        "  Go - Sasa Coh, Michał Błotniak, Ivan Kochurkin, <kvanttt@gmail.com>, \n" +
+                        "     Dmitry Rassadin, <flipparassa@gmail.com>, Martin Mirchev, <mirchevmartin2203@gmail.com>\n" +
+                        "  Java - Terence Parr, Sam Harwell, Chan Chung Kwong\n" +
+                        "  JavaScript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Student Main\n" +
+                        "  Kotlin - Anastasiya Shadrina <a.shadrina5@mail.ru>\n" +
+                        "  Lua - Kazunori Sakamoto, Alexander Alexeev\n" +
+                        "  Python - Bart Kiers\n" +
+                        "  Ruby - Alexander Belov\n" +
+                        "  Rust - The Rust Project Developers, Student Main\n" +
+                        "  Sql - Canwei He\n" +
+                        "  Swift - ?\n" +
+                        "  Typescript - Bart Kiers, Alexandre Vitorelli, Ivan Kochurkin, Juan Alvarez, Andrii Artiushok\n"
         );
         grid.add(new Label("Credits to : " ), 0, 4);
         grid.add(creditsTextArea, 1, 4);
@@ -120,7 +119,7 @@ public class AboutDialog extends Dialog {
     }
 
 
-    private Path createLogoPath() {
+    private Path[] createLogoPath() {
 
         Path path = new Path();
 
@@ -177,6 +176,60 @@ public class AboutDialog extends Dialog {
         path.setLayoutY(-400);
         path.setLayoutX(-400);
 
+
+        Path char2_1 = getPathChar2();
+        char2_1.setLayoutX(270);
+        char2_1.setLayoutY(300);
+        applyStyle(char2_1);
+
+        Path char2_2 = getPathChar2();
+        char2_2.setLayoutX(300);
+        char2_2.setLayoutY(300);
+        applyStyle(char2_2);
+
+        Path dot = getPathCharDot();
+        dot.setLayoutX(333.5);
+        dot.setLayoutY(370);
+        applyStyle(dot);
+
+        MotionBlur mb = new MotionBlur();
+        mb.setRadius(35.0f);
+        mb.setAngle(45.0f);
+
+        char2_1.setEffect(mb);
+        char2_2.setEffect(mb);
+        dot.setEffect(mb);
+
+        return new Path [] {
+                path, char2_1,  char2_2, dot
+        };
+    }
+
+    private void applyStyle(Path dot) {
+        dot.setScaleX(.2);
+        dot.setScaleY(.2);
+        dot.setStrokeWidth(10);
+        dot.setStroke(Color.valueOf("#3c7070"));
+    }
+
+    private Path getPathCharDot() {
+        Path path = new Path();
+
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new LineTo(0,0));
+        return path;
+    }
+
+    private Path getPathChar2() {
+        Path path = new Path();
+
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new ArcTo(RADIUS, RADIUS, 0,
+                 CHAR_WIDTH , 0  , false, true));
+        path.getElements().add(new ArcTo(RADIUS, RADIUS / 1.275, 0,
+                 CHAR_WIDTH ,  30  , false, true));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(CHAR_WIDTH , CHAR_HEIGHT ));
         return path;
     }
 
