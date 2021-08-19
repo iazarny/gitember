@@ -736,7 +736,7 @@ public class GitRepoService {
     }
 
 
-    public boolean isLfsRepo() {
+    public boolean isLfsRepo() { //TODO make lazy
         return isLfsRepo(repository);
     }
 

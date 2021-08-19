@@ -2,29 +2,32 @@ package com.az.gitember.controller;
 
 
 import com.az.gitember.App;
-import com.az.gitember.controller.handlers.MainTreeBranchSearchHandler;
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.service.Context;
+import com.az.gitember.data.LfsData;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 /**
  * Created by Igor_Azarny on 25 - Dec -2016.
  */
-public class LFSDialog extends Dialog<RemoteRepoParameters> {
+public class LFSDialog extends Dialog<LfsData> {
 
-    public LFSDialog(String title, String header) {
+    private final LfsData lfsData;
+
+    public LFSDialog(String title, String header, LfsData lfsData) {
 
         super();
         this.setTitle(title);
@@ -33,48 +36,26 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         //ButtonType okButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll( ButtonType.OK, ButtonType.CANCEL);
+        this.lfsData = lfsData;
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 10, 10, 20));
-
         CheckBox lfsCombobox = new CheckBox();
         lfsCombobox.setText("Large file support");
-
         HBox.setHgrow(lfsCombobox, Priority.ALWAYS);
-
-        ObservableList<String> items = FXCollections.observableArrayList("*.bmp", "*.gif");
-
-        ListView<String> extension = new ListView(items);
+        ListView<String> extension = new ListView(lfsData.getExtentions());
         var stringTextFieldListCell = TextFieldListCell.forListView();
         extension.setEditable(true);
         extension.setCellFactory(stringTextFieldListCell);
         extension.setDisable(true);
         extension.setPrefHeight(140);
 
-
-        extension.setOnEditCommit(new EventHandler<ListView.EditEvent<String>>() {
-            @Override
-            public void handle(ListView.EditEvent<String> t) {
-                extension.getItems().set(t.getIndex(), t.getNewValue());
-                System.out.println("setOnEditCommit [" + t.getNewValue() + "]");
-            }
-
-        });
-
-        extension.setOnEditCancel(new EventHandler<ListView.EditEvent<String>>() {
-            @Override
-            public void handle(ListView.EditEvent<String> t) {
-                System.out.println("setOnEditCancel");
-            }
-        });
+        extension.setOnEditCommit(t -> extension.getItems().set(t.getIndex(), t.getNewValue()));
 
         extension.setOnKeyPressed(evt -> {
-            System.out.println(evt.getCode() + " " + evt.getCharacter() + " " +  evt.getText() + " " + evt);
             if (evt.getCode() == KeyCode.DELETE || evt.getCode() == KeyCode.BACK_SPACE) {
-
-                System.out.println("delete " + extension.getSelectionModel().getSelectedItem());
                 if (extension.getSelectionModel().getSelectedIndex() > -1) {
                     extension.getItems().remove(extension.getSelectionModel().getSelectedIndex());
                 }
@@ -85,21 +66,38 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
                 addItemAndStartEdit(extension, "*");
             } else if (evt.getCode().isLetterKey() || evt.getCode().isDigitKey()) {
                 addItemAndStartEdit(extension, evt.getText());
-                System.out.println(" key [" + evt.getText() + "]");
             }
         });
 
 
-        Button editButton = new Button("Add & Edit");
+        Button editButton = new Button();
+        StackedFontIcon plusIcon = new StackedFontIcon();
+        plusIcon.getChildren().add(new FontIcon(FontAwesome.PLUS));
+        plusIcon.setStyle("-fx-icon-color: text_color");
+        editButton.setGraphic(plusIcon  );
         editButton.setOnAction((ActionEvent event) -> {
             addItemAndStartEdit(extension, "");
         });
+        editButton.setDisable(true);
+
+
+        Pane pane = new Pane();
+        HBox.setHgrow(pane, Priority.ALWAYS);
 
 
         grid.add(lfsCombobox, 1, 0);
-        grid.add(new HBox(new Label("Files to track : "), editButton), 1, 1);
+        grid.add(new HBox(new Label("Files to track : "), pane,  editButton), 1, 1);
         grid.add(extension, 1, 2);
 
+        lfsCombobox.selectedProperty().addListener( (observable, oldValue, newValue) -> {
+            if (newValue) {
+                Platform.runLater(() -> extension.requestFocus() );
+                lfsCombobox.setDisable(newValue);
+                editButton.setDisable(!newValue);
+            }
+
+
+        });
 
         this.getDialogPane().setContent(grid);
 
@@ -108,12 +106,22 @@ public class LFSDialog extends Dialog<RemoteRepoParameters> {
                     extension.setDisable(!newValue);
                 }
         );
+        System.out.println(">>>>>>>>>>>>>>>>>> " + lfsData.lfsSupportProperty().get() );
+        Bindings.bindBidirectional( lfsCombobox.selectedProperty(), lfsData.lfsSupportProperty());
 
 
+        this.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return this.lfsData;
+            }
+            return null;
+        });
 
         this.initOwner(App.getScene().getWindow());
 
     }
+
+
 
     private void addItemAndStartEdit(ListView<String> extension, String text) {
         extension.getItems().add(text);

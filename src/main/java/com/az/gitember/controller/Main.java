@@ -2,11 +2,9 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitAttributesUtil;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -22,9 +20,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,13 +115,13 @@ public class Main implements Initializable {
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);
 
-                    boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
-                    boolean attrFileExists = Context.getGitRepoService().isFileExists(".gitattributes");
-                    boolean ignoreFileExists = Context.getGitRepoService().isFileExists(".gitignore");
+                    //boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
+                    boolean attrFileExists = Context.getGitRepoService().isFileExists(Const.GIT_ATTR_NAME);
+                    boolean ignoreFileExists = Context.getGitRepoService().isFileExists(Const.GIT_IGNORE_NAME);
 
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
                     editRawAttrsMenuItem.setVisible(attrFileExists);
-                    lfsMenuItem.setVisible(lfsRepo);
+                    //lfsMenuItem.setVisible(lfsRepo);
 
 
                 }
@@ -233,17 +231,37 @@ public class Main implements Initializable {
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
     }
 
-    public void largeFileSupportHandler(ActionEvent actionEvent) {
-        LFSDialog lfsDialog = new LFSDialog("LFS", "Large file support");
-        lfsDialog.showAndWait();
+    public void largeFileSupportHandler(ActionEvent actionEvent) throws IOException {
+        final LFSDialog lfsDialog;
+        final boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
+        final  List<String> patternsOriginal = new ArrayList<>();
+        LfsData lfsData = new LfsData();
+        lfsData.setLfsSupport(lfsRepo);
+
+        if (lfsRepo) {
+            final Path path = Path.of(Context.getProjectFolder(), Const.GIT_ATTR_NAME);
+            List<String> patterns = GitAttributesUtil.getLsfPatters(Files.readString(path));
+            patternsOriginal.addAll(patterns);
+            lfsData.getExtentions().addAll(patterns);
+        }
+
+        lfsDialog = new LFSDialog("LFS",
+                lfsRepo ? "Edit farge file support" : "Add farge file support",
+                lfsData);
+
+        lfsDialog.showAndWait().ifPresent(
+                newLfsData -> {
+                    System.out.println(">>>>>>>>>> " + newLfsData);
+                }
+        );
     }
 
     public void editRawAttrsHandler(ActionEvent actionEvent) {
-        edit(".gitattributes");
+        edit(Const.GIT_ATTR_NAME);
     }
 
     public void editRawIgnoreHandler(ActionEvent actionEvent) {
-        edit(".gitignore");
+        edit(Const.GIT_IGNORE_NAME);
     }
 
     public void editRawConfigHandler(ActionEvent actionEvent) {

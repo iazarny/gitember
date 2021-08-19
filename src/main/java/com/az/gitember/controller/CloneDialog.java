@@ -5,8 +5,6 @@ import com.az.gitember.App;
 import com.az.gitember.data.RemoteRepoParameters;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
