@@ -16,7 +16,9 @@ import org.eclipse.jgit.diff.RenameDetector;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
+import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
+import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -937,18 +939,23 @@ public class GitRepoService {
             status.getConflicting().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
             //status.getUntrackedFolders().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.ScmItemStatus.UNTRACKED_FOLDER))));
 
+            //TODO is lfs
+            mergeLfs(scmItems, getLfsFiles2(Constants.HEAD));
 
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get statuses", e);
         }
 
-        mergeLfs(scmItems, getLfsFiles());
+
+
 
         Collections.sort(scmItems);
 
         return scmItems;
 
     }
+
+
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
         for (ScmItem scmItem : status) {
@@ -966,30 +973,39 @@ public class GitRepoService {
         return  status;
     }
 
-    public List<ScmItem> getLfsFiles() {
+    public List<ScmItem> getLfsFiles2(String name) throws IOException {
+        final List<ScmItem> rez = new ArrayList<>();
 
-        List<ScmItem> items = new ArrayList<>();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+        final Ref head = repository.exactRef(name);
+        final RevWalk walk = new RevWalk(repository);
+        final RevCommit commit = walk.parseCommit(head.getObjectId());
+        final RevTree tree = commit.getTree();
+        final TreeWalk treeWalk = new TreeWalk(repository);
+        final LfsPointerFilter filter = new LfsPointerFilter();
 
-        try {
+        treeWalk.addTree(tree);
+        treeWalk.setRecursive(true);
+        treeWalk.setFilter(filter);
 
+        while (treeWalk.next()) {
+            if (treeWalk.isSubtree()) {
+                treeWalk.enterSubtree();
+            } else {
+                final String path = treeWalk.getPathString();
+                final ScmItem scmItem = new ScmItem(
+                  path,new ScmItemAttribute().withStatus(ScmItem.Status.LFS)
+                );
 
-            ProcessBuilder builder = FS.DETECTED.runInShell("git", new String[]{"lfs", "ls-files"});
-            builder.directory(new File(repository.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, "")));
-            int rezCode = FS.DETECTED.runProcess(builder, outputStream, errStream, (InputStream) null);
-            if (rezCode == 0) {
-                String rawList = outputStream.toString();
-                items.addAll(GitLfsUtil.parseLfsFilesList(rawList));
+                LfsPointer pointer = filter.getPointer();
+                System.out.println("pointer        pointerpointerpointer  " + pointer );
+                rez.add(scmItem);
             }
-
-        } catch (Exception e) {
-            log.log(Level.WARNING, "Cannot get LFS. External error [" + errStream.toString() + "]", e);
         }
+        return rez;
 
-
-        return items;
-
+        /*return new ScmItem(parts[2], new ScmItemAttribute()
+                .withStatus(ScmItem.Status.LFS)
+                .withSubStatus("*".equals(parts[1]) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER)*/
     }
 
 
