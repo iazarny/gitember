@@ -1,24 +1,26 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import org.apache.commons.io.FileUtils;
+import javafx.scene.control.Alert;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LfsDownloadEventHandler implements EventHandler<ActionEvent> {
+
+    private final static Logger log = Logger.getLogger(LfsDownloadEventHandler.class.getName());
 
     private final ScmItem scmItem;
 
@@ -29,9 +31,8 @@ public class LfsDownloadEventHandler implements EventHandler<ActionEvent> {
     @Override
     public void handle(ActionEvent event) {
 
-        //String repoPath = Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(".git", "");
         try {
-            Path absFilePath = scmItem.getFilePath(ScmItem.BODY_TYPE.WORK_SPACE);
+            final Path absFilePath = scmItem.getFilePath(ScmItem.BODY_TYPE.WORK_SPACE);
             try(FileInputStream fileInputStream = new FileInputStream(absFilePath.toFile())) {
                 LfsPointer lfsPointer = LfsPointer.parseLfsPointer(fileInputStream);
                 Lfs lfs = new Lfs(Context.getGitRepoService().getRepository());
@@ -39,23 +40,14 @@ public class LfsDownloadEventHandler implements EventHandler<ActionEvent> {
                         lfs,
                         Context.getGitRepoService().getRepository(),
                         lfsPointer);
-                System.out.println(rez.iterator().next() + " " + absFilePath.toFile());
-                /*FileUtils.copyFile(
-                        rez.iterator().next().toFile(),
-                        absFilePath.toFile()
-                );*/
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
             Context.getGitRepoService().checkoutFile(scmItem.getShortName(), CheckoutCommand.Stage.BASE );
         } catch (IOException e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot load large file  " , e);
+            Context.getMain().showResult("Cannot load large file ",
+                    ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
         }
-
-
-
 
     }
 

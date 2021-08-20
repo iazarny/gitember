@@ -232,28 +232,7 @@ public class Main implements Initializable {
     }
 
     public void largeFileSupportHandler(ActionEvent actionEvent) throws IOException {
-        final LFSDialog lfsDialog;
-        final boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
-        final  List<String> patternsOriginal = new ArrayList<>();
-        LfsData lfsData = new LfsData();
-        lfsData.setLfsSupport(lfsRepo);
-
-        if (lfsRepo) {
-            final Path path = Path.of(Context.getProjectFolder(), Const.GIT_ATTR_NAME);
-            List<String> patterns = GitAttributesUtil.getLsfPatters(Files.readString(path));
-            patternsOriginal.addAll(patterns);
-            lfsData.getExtentions().addAll(patterns);
-        }
-
-        lfsDialog = new LFSDialog("LFS",
-                lfsRepo ? "Edit farge file support" : "Add farge file support",
-                lfsData);
-
-        lfsDialog.showAndWait().ifPresent(
-                newLfsData -> {
-                    System.out.println(">>>>>>>>>> " + newLfsData);
-                }
-        );
+        new LfsSupportDialogEventHandler().handle(actionEvent);
     }
 
     public void editRawAttrsHandler(ActionEvent actionEvent) {

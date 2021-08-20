@@ -27,11 +27,10 @@ public class LFSDialog extends Dialog<LfsData> {
 
     private final LfsData lfsData;
 
-    public LFSDialog(String title, String header, LfsData lfsData) {
-
+    public LFSDialog( LfsData lfsData) {
         super();
-        this.setTitle(title);
-        this.setHeaderText(header);
+        this.setTitle("LFS");
+        this.setHeaderText(lfsData.isLfsSupport() ? "Edit farge file support" : "Add farge file support");
         //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString())); todo
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         //ButtonType okButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
@@ -80,10 +79,8 @@ public class LFSDialog extends Dialog<LfsData> {
         });
         editButton.setDisable(true);
 
-
         Pane pane = new Pane();
         HBox.setHgrow(pane, Priority.ALWAYS);
-
 
         grid.add(lfsCombobox, 1, 0);
         grid.add(new HBox(new Label("Files to track : "), pane,  editButton), 1, 1);
@@ -95,8 +92,6 @@ public class LFSDialog extends Dialog<LfsData> {
                 lfsCombobox.setDisable(newValue);
                 editButton.setDisable(!newValue);
             }
-
-
         });
 
         this.getDialogPane().setContent(grid);
@@ -106,10 +101,7 @@ public class LFSDialog extends Dialog<LfsData> {
                     extension.setDisable(!newValue);
                 }
         );
-        System.out.println(">>>>>>>>>>>>>>>>>> " + lfsData.lfsSupportProperty().get() );
         Bindings.bindBidirectional( lfsCombobox.selectedProperty(), lfsData.lfsSupportProperty());
-
-
         this.setResultConverter(dialogButton -> {
             if (dialogButton == ButtonType.OK) {
                 return this.lfsData;
