@@ -28,12 +28,12 @@ public class LfsSupportDialogEventHandler implements EventHandler<ActionEvent> {
 
     @Override
     public void handle(ActionEvent event)  {
-        final boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
+        final boolean initialLfsSupportRepo = Context.getGitRepoService().isLfsRepo();
         final List<String> patternsOriginal = new ArrayList<>();
         LfsData lfsData = new LfsData();
-        lfsData.setLfsSupport(lfsRepo);
+        lfsData.setLfsSupport(initialLfsSupportRepo);
 
-        if (lfsRepo) {
+        if (initialLfsSupportRepo) {
             List<String> patterns = GitAttributesUtil.getLsfPatters(getAttributesFileSafe());
             patternsOriginal.addAll(patterns);
             lfsData.getExtentions().addAll(patterns);
@@ -55,7 +55,9 @@ public class LfsSupportDialogEventHandler implements EventHandler<ActionEvent> {
 
                 try {
                     Files.writeString(path, origFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                    //TODO add folder  if was not present
+                    if (!initialLfsSupportRepo) {
+                        // TODO call lfs supports
+                    }
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "Cannot write lfs patterns " , e);
                     Context.getMain().showResult("Cannot wrute lfs patterns ",

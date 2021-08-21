@@ -32,6 +32,8 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
 
 
 
+
+
     }
 
     @Override
@@ -43,17 +45,17 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
             setGraphic(null);
         } else {
 
-
-
             if (item != null && item.getAttribute() != null) {
 
                 openBtn.setOnAction(
                         new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE)
                 );
 
-                downdloadBtn.setOnAction(
-                        new LfsDownloadEventHandler(item)
-                );
+                downdloadBtn.setOnAction( event -> {
+                    new LfsDownloadEventHandler(item).handle(event);
+                    item.getAttribute().setSubstatus(ScmItem.Status.LFS_FILE);
+                    getTableView().refresh();
+                });
 
                 if (ScmItem.Status.LFS.equals(item.getAttribute().getStatus())) {
                     if (ScmItem.Status.LFS_FILE.equals(item.getAttribute().getSubstatus())) {

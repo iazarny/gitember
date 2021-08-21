@@ -39,7 +39,6 @@ import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
-import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
@@ -112,14 +111,7 @@ public class GitRepoService {
             }
 
             if (withLfs) {
-                StoredConfig config = git.getRepository().getConfig();
-                config.setString("filter", "lfs", "clean", CLEAN_NAME);
-                config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
-                config.save();
-                final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
-                Files.write(attrPath,
-                        gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+                addLFSSupport(absPath, git);
             }
 
             git.commit().setMessage("Init").call();
@@ -128,6 +120,18 @@ public class GitRepoService {
 
         }
 
+    }
+
+    public static void addLFSSupport(String absPath, Git git) throws IOException, GitAPIException {
+        StoredConfig config = git.getRepository().getConfig();
+        config.setString("filter", "lfs", "clean", CLEAN_NAME);
+        config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
+        config.save();
+        final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
+        Files.write(attrPath,
+                gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
+        git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+        //TODO add lfs folder
     }
 
 
@@ -939,8 +943,10 @@ public class GitRepoService {
             status.getConflicting().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
             //status.getUntrackedFolders().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.ScmItemStatus.UNTRACKED_FOLDER))));
 
-            //TODO is lfs
-            mergeLfs(scmItems, getLfsFiles2(Constants.HEAD));
+            if (Context.getGitRepoService().isLfsRepo()) {
+                mergeLfs(scmItems, getLfsFiles(Constants.HEAD));
+            }
+
 
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get statuses", e);
@@ -973,7 +979,7 @@ public class GitRepoService {
         return  status;
     }
 
-    public List<ScmItem> getLfsFiles2(String name) throws IOException {
+    public List<ScmItem> getLfsFiles(String name) throws IOException {
         final List<ScmItem> rez = new ArrayList<>();
 
         final Ref head = repository.exactRef(name);
@@ -992,20 +998,17 @@ public class GitRepoService {
                 treeWalk.enterSubtree();
             } else {
                 final String path = treeWalk.getPathString();
+                final Path filePath = Paths.get(Context.getProjectFolder(), path);
+                final long sizeOnDisk = Files.size(filePath);
+                //final LfsPointer pointer = filter.getPointer(); //TODO deleted file
+                final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
                 final ScmItem scmItem = new ScmItem(
-                  path,new ScmItemAttribute().withStatus(ScmItem.Status.LFS)
+                  path,new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
                 );
-
-                LfsPointer pointer = filter.getPointer();
-                System.out.println("pointer        pointerpointerpointer  " + pointer );
                 rez.add(scmItem);
             }
         }
         return rez;
-
-        /*return new ScmItem(parts[2], new ScmItemAttribute()
-                .withStatus(ScmItem.Status.LFS)
-                .withSubStatus("*".equals(parts[1]) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER)*/
     }
 
 
