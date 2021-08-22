@@ -45,12 +45,12 @@
         </SplitPane>
     </center>
     <bottom>
-        <HBox id="MERGEBOX">
+        <HBox id="MERGEITEM">
 
-            <ToolBar id="MERGETB">
-                <Pane id="MERGEBTN" fx:id="spacerPane"/>
-                <Label id="MERGEBTN" text="Search"/>
-                <TextField id="MERGEBTN" fx:id="searchText"  />
+            <ToolBar id="MERGEITEM">
+                <Pane id="MERGEITEM" fx:id="spacerPane"/>
+                <Label id="MERGEITEM" text="Search"/>
+                <TextField id="MERGEITEM" fx:id="searchText"  />
             </ToolBar>
         </HBox>
     </bottom>
