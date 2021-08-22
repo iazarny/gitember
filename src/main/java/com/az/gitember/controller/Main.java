@@ -110,7 +110,7 @@ public class Main implements Initializable {
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
                     fetchMenuItem.setDisable(disable);
-                    repoSettingsMenuItem.setDisable(disable);
+                    repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);

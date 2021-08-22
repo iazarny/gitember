@@ -122,6 +122,7 @@ public class MainTreeChangeListener implements ChangeListener {
     private String MEXRGE_MENYBAR = "MERGEMBAR";
     private String MEXRGE_MENU = "MERGEMENU";
     private String MEXRGE_BTN = "MERGEBTN";
+    private String MEXRGE_ITEM = "MERGEITEM";
 
     /**
      * Undock added items.

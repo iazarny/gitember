@@ -111,7 +111,7 @@ public class GitRepoService {
             }
 
             if (withLfs) {
-                addLFSSupport(absPath, git);
+                addLFSSupport( git);
             }
 
             git.commit().setMessage("Init").call();
@@ -122,16 +122,27 @@ public class GitRepoService {
 
     }
 
-    public static void addLFSSupport(String absPath, Git git) throws IOException, GitAPIException {
+    public static void addLFSSupport(Repository repository) throws IOException, GitAPIException {
+        try (Git git = new Git(repository)) {
+            addLFSSupport(git);
+        }
+    }
+
+    public static void addLFSSupport(Git git) throws IOException, GitAPIException {
         StoredConfig config = git.getRepository().getConfig();
         config.setString("filter", "lfs", "clean", CLEAN_NAME);
         config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
         config.save();
+
+        final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
+        final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
+        final String lfsTmpPath = gitFolder + File.separator + "lfs" + File.separator + "tmp";
+
         final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
         Files.write(attrPath,
                 gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
         git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
-        //TODO add lfs folder
+        new File(lfsTmpPath).mkdirs();
     }
 
 

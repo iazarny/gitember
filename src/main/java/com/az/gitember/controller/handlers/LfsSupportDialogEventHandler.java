@@ -56,9 +56,10 @@ public class LfsSupportDialogEventHandler implements EventHandler<ActionEvent> {
                 try {
                     Files.writeString(path, origFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                     if (!initialLfsSupportRepo) {
-                        // TODO call lfs supports
+                        Context.getGitRepoService().addLFSSupport(Context.getGitRepoService().getRepository());
+                        Context.init(Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, ""));
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.log(Level.SEVERE, "Cannot write lfs patterns " , e);
                     Context.getMain().showResult("Cannot wrute lfs patterns ",
                             ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);

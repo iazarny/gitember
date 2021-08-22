@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import com.az.gitember.data.Const;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -118,7 +119,7 @@ public class TextBrowser implements Initializable {
 
         if (overwrite) {
 
-            String workignDir = Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(".git", "");
+            String workignDir = Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, "");
             Path path = Path.of(workignDir, fileName);
             try {
                 Files.write(path, codeArea.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
