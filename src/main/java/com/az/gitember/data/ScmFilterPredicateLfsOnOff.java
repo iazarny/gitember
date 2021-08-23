@@ -17,7 +17,6 @@ public class ScmFilterPredicateLfsOnOff implements Predicate {
     @Override
     public boolean test(Object o) {
         ScmItem item = (ScmItem) o;
-        System.out.println("" + filter + ' ' + item.getAttribute().getStatus());
         return filter ? true : !ScmItem.Status.LFS.equals(item.getAttribute().getStatus());
     }
 }

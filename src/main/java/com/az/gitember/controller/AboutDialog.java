@@ -176,7 +176,7 @@ public class AboutDialog extends Dialog {
         path.setLayoutY(-400);
         path.setLayoutX(-400);
 
-
+//version
         Path char2_1 = getPathChar2();
         char2_1.setLayoutX(270);
         char2_1.setLayoutY(300);

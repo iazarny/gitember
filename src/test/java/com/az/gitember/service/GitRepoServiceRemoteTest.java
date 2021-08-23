@@ -284,7 +284,7 @@ class GitRepoServiceRemoteTest {
         try {
             clonedRepositoryService.checkoutBranch("refs/remotes/origin/rbr1", "trackremotebr1", null);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
 
         assertEquals(4, clonedRepositoryService.getAllFiles("refs/heads/trackremotebr1").size());

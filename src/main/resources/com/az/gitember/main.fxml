@@ -63,6 +63,8 @@
                                 </Menu>
                                 <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
                                     <MenuItem text="Large file support ..."   fx:id="lfsMenuItem"  onAction="#largeFileSupportHandler"   />
+                                    <MenuItem text="Remote URL ..." fx:id="remoteRulMenuItem"   onAction="#remoteURLtHandler"/>
+                                    <SeparatorMenuItem/>
                                     <MenuItem text="Edit configuration" fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
                                     <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>

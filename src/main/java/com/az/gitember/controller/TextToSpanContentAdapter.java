@@ -77,7 +77,6 @@ public class TextToSpanContentAdapter {
                     lastKwEnd = stopIdx;
                     token = tokenIterator.next();
 
-                    //System.out.println(">>> " + startIdx + " " + stopIdx + "   " + (stopIdx - startIdx) + "   [" + token.getText() + "] real [" + content.substring(startIdx, stopIdx)  + "] " + style);
                 }
             }
 
@@ -86,7 +85,6 @@ public class TextToSpanContentAdapter {
 
         }
         return null ;
-
     }
 
 

@@ -24,6 +24,9 @@ Nothing in particular, but
 ## Plans 
 
  * Mac M1 support
+ * Integration with git providers, at least with github
+ * Add fuul text search 
+ 
 
 
 

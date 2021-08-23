@@ -235,6 +235,15 @@ public class Main implements Initializable {
         new LfsSupportDialogEventHandler().handle(actionEvent);
     }
 
+    public void remoteURLtHandler(ActionEvent actionEvent) throws IOException {
+        String url = Context.getGitRepoService().getRepository().getConfig().getString("remote", "origin", "url");
+        new RemoteUrlDialog("Remote URL", "Charge repository remot URL", url).showAndWait().ifPresent(
+                nreUrl -> {
+                    new SetRemoteUrlEventHandler(nreUrl).handle(actionEvent);
+                }
+        );
+    }
+
     public void editRawAttrsHandler(ActionEvent actionEvent) {
         edit(Const.GIT_ATTR_NAME);
     }

@@ -29,10 +29,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -43,6 +40,7 @@ import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1266,6 +1264,16 @@ public class GitRepoService {
             config.setString("filter", "lfs", "smudge", smudge);
         }
         config.save();
+    }
+
+
+    public void setRemoteUrl(String remoteUrl) throws Exception {
+        try (Git git = new Git(repository)) {
+            RemoteSetUrlCommand remoteSetUrlCommand = git.remoteSetUrl();
+            remoteSetUrlCommand.setRemoteUri(new URIish(remoteUrl));
+            remoteSetUrlCommand.setRemoteName("origin");
+            remoteSetUrlCommand.call();
+        }
     }
 
 

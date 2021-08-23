@@ -61,39 +61,6 @@ class GitRepoServiceLfsTest {
 
     }
 
-
-   // @Test
-    public void cloneRemoteLfs() throws Exception {
-
-        String clonedRepoPath = Files.createTempDirectory("gitember-cloned-remote").toString();
-
-        RemoteRepoParameters params = new RemoteRepoParameters();
-        params.setUrl("https://github.com/iazarny/tlfs.git");
-        params.setDestinationFolder(clonedRepoPath);
-
-
-
-        GitRepoService clonedRepositoryService = new GitRepoService(Paths.get(clonedRepoPath, ".git").toString());
-        clonedRepositoryService.cloneRepository(
-                params, new TextProgressMonitor(new PrintWriter(System.out))
-        );
-
-        System.out.println(clonedRepoPath);
-
-        //Set<String> files =  clonedRepositoryService.getAllFiles();
-        //System.out.println(files);
-
-
-
-
-        /*try {
-            FileUtils.deleteDirectory(new File(clonedRepoPath));
-
-        } catch (Exception e) {
-        }*/
-
-    }
-
     @Test
     public void createRepositorywithLfs() throws Exception {
 
