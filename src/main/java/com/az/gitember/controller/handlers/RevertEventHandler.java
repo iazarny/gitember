@@ -11,7 +11,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableView;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 

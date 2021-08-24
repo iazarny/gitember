@@ -1,19 +1,13 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 
 import java.util.List;
 

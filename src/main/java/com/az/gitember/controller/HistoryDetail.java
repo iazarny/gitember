@@ -22,7 +22,6 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;

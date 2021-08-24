@@ -13,7 +13,6 @@ import org.eclipse.jgit.revplot.PlotLane;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class Context {
@@ -30,6 +29,7 @@ public class Context {
     public static final ObjectProperty<Settings> settingsProperty = new SimpleObjectProperty<Settings>();
     public static final ObjectProperty<ScmRevisionInformation> scmRevCommitDetails = new SimpleObjectProperty<ScmRevisionInformation>();
 
+    public static final BooleanProperty lastChanges = new SimpleBooleanProperty();
     public static final StringProperty selectedTreeName = new SimpleStringProperty();
     public static final SimpleObjectProperty<LocalDateTime> lastUpdate = new SimpleObjectProperty();
 
@@ -178,7 +178,7 @@ public class Context {
     }
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
+        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
         plotCommitList.clear();
         statusList.clear();
         statusList.addAll(statuses);
@@ -190,7 +190,7 @@ public class Context {
      * @param progressMonitor
      */
     public static synchronized void updateStatusIfNeed(ProgressMonitor progressMonitor) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
+        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
         List<ScmItem> newStatusList = new ArrayList<>(statuses);
         boolean needupdate;
         if (statuses.size() == statusList.size()) {

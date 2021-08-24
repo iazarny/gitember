@@ -1,7 +1,6 @@
 package com.az.gitember.controller.lang;
 
 import com.az.gitember.controller.lang.c.CLexer;
-import com.az.gitember.controller.lang.java.Java9Lexer;
 import org.antlr.v4.runtime.Lexer;
 
 public class CTokenTypeAdapter extends BaseTokenTypeAdapter {

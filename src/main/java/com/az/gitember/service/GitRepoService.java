@@ -40,7 +40,6 @@ import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,7 +92,7 @@ public class GitRepoService {
             if (withReadme) {
                 final String readmeInitialContent = String.format(
                         "# Project %s \n\n Created at %s \n folder %s",
-                        (new File(absPath)).getName(), (new Date()).toString(), absPath);
+                        (new File(absPath)).getName(), GitemberUtil.formatDate(new Date()), absPath);
                 final Path readmePath = Paths.get(absPath + File.separator + Const.GIT_README_NAME);
                 Files.write(
                         readmePath,
@@ -176,7 +175,7 @@ public class GitRepoService {
 
     }
 
-    public GitRepoService(final Repository repo) throws IOException {
+    public GitRepoService(final Repository repo)  {
         this.repository = repo;
     }
 
@@ -255,8 +254,7 @@ public class GitRepoService {
             if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(email)) {
                 cmd.setAuthor(name, email);
             }
-            RevCommit rc = cmd.setMessage(message).call();
-            return rc;
+            return cmd.setMessage(message).call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit", e);
             throw e;
@@ -328,8 +326,8 @@ public class GitRepoService {
      * Checkout branch.
      *
      * @param name branch name.
-     * @return
-     * @throws IOException
+     * @return ref to branch
+     * @throws IOException in case of error
      */
     public Ref checkoutBranch(final String name, final ProgressMonitor defaultProgressMonitor) throws IOException {
         return checkoutBranch(name, null, defaultProgressMonitor);
@@ -340,8 +338,8 @@ public class GitRepoService {
      *
      * @param name    given parent name
      * @param newName given new branch name
-     * @return
-     * @throws IOException
+     * @return ref to branch
+     * @throws IOException in case of error
      */
     public Ref checkoutBranch(final String name, final String newName, final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
@@ -441,8 +439,8 @@ public class GitRepoService {
     /**
      * Delete local branch
      *
-     * @param name
-     * @throws IOException
+     * @param name branch name
+     * @throws IOException c
      */
     public void deleteLocalBranch(final String name) throws IOException {
         try (Git git = new Git(repository)) {
@@ -461,7 +459,7 @@ public class GitRepoService {
      *
      * @param from    branch name
      * @param message merge message
-     * @throws Exception
+     * @throws Exception   * @throws IOException in case of error
      */
     public MergeResult mergeBranch(final String from, final String message) throws Exception {
         try (Git git = new Git(repository)) {
@@ -474,8 +472,8 @@ public class GitRepoService {
 
     /**
      * @param upstream the name of the upstream branch
-     * @return
-     * @throws Exception
+     * @return rebase result
+     * @throws Exception   * @throws IOException in case of error
      */
     public RebaseResult rebaseBranch(final String upstream) throws Exception {
         try (Git git = new Git(repository)) {
@@ -532,7 +530,7 @@ public class GitRepoService {
                         i.setHead(i.getFullName().equals(head.getName()));
                         return i;
                     })
-                    .sorted((o1, o2) -> o1.getShortName().compareTo(o2.getShortName()))
+                    .sorted(Comparator.comparing(ScmBranch::getShortName))
                     .collect(Collectors.toList());
 
 
@@ -592,7 +590,7 @@ public class GitRepoService {
      *
      * @param fileName given fileName
      * @return list of revisions where file was changed.
-     * @throws Exception
+     * @throws Exception in case of errors
      */
     public List<ScmRevisionInformation> getFileHistory(final String fileName) throws Exception {
 
@@ -816,7 +814,7 @@ public class GitRepoService {
     public String getRawDiff(String revisionName,
                              String fileName) throws IOException {
 
-        String str = "";
+        String str;
 
         try (Git git = new Git(repository);) {
 
@@ -903,9 +901,9 @@ public class GitRepoService {
     /**
      * Get statuses
      *
-     * @return
+     * @return list of ScmItem
      */
-    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor) {
+    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor, boolean collectLastChanges) {
 
         final List<ScmItem> scmItems = new ArrayList<>();
         try (Git git = new Git(repository)) {
@@ -952,8 +950,12 @@ public class GitRepoService {
             status.getConflicting().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
             //status.getUntrackedFolders().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.ScmItemStatus.UNTRACKED_FOLDER))));
 
-            if (Context.getGitRepoService().isLfsRepo()) {
+            if (isLfsRepo()) {
                 mergeLfs(scmItems, getLfsFiles(Constants.HEAD));
+            }
+
+            if (collectLastChanges) {
+                enrichWithLastChangesDetail(git, scmItems);
             }
 
 
@@ -961,12 +963,27 @@ public class GitRepoService {
             log.log(Level.SEVERE, "Cannot get statuses", e);
         }
 
-
-
-
         Collections.sort(scmItems);
-
         return scmItems;
+    }
+
+    List<ScmItem> enrichWithLastChangesDetail(final Git git, final List<ScmItem> toEnrich) throws Exception {
+        for(ScmItem item : toEnrich) {
+            final LogCommand cmd = git.log()
+                    .setRevFilter(RevFilter.ALL)
+                    .setMaxCount(1)
+                    .addPath(item.getShortName());
+            final Iterable<RevCommit> lastCommitIter =  cmd.call();
+            while (lastCommitIter.iterator().hasNext()) {
+                final RevCommit revCommit = lastCommitIter.iterator().next();
+                if (revCommit != null) {
+                    item.withChanges(revCommit);
+                    break;
+                }
+            }
+
+        }
+        return toEnrich;
 
     }
 
@@ -1028,7 +1045,7 @@ public class GitRepoService {
      * @param treeName trhee name
      * @param all      to visualize with merges
      * @return PlotCommitList<PlotLane>
-     * @throws Exception
+     * @throws Exception in case of error
      */
     public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final ProgressMonitor progressMonitor) {
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
@@ -1281,9 +1298,9 @@ public class GitRepoService {
      * Push to remote repo
      *
      * @param refSpec         spec
-     * @param progressMonitor
-     * @return
-     * @throws Exception
+     * @param progressMonitor progress monitor
+     * @return string with push details
+     * @throws Exception in case of error
      */
     public String remoteRepositoryPush(final RemoteRepoParameters parameters,
                                        final RefSpec refSpec,
@@ -1500,15 +1517,6 @@ public class GitRepoService {
         if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
             StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
             fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
-
-            //fbcOrig.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-            //fbcOrig.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
-
-            /*cmd.getRepository().getConfig().setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-            cmd.getRepository().getConfig().setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
-            cmd.getRepository().getConfig().save();*/
-
-
             fbcOrig.save();
 
         } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH) || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {

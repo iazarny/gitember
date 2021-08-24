@@ -1,6 +1,5 @@
 package com.az.gitember.controller.lang;
 
-import com.az.gitember.controller.lang.c.CLexer;
 import com.az.gitember.controller.lang.cpp.CPP14Lexer;
 import org.antlr.v4.runtime.Lexer;
 

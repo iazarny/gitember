@@ -1,7 +1,6 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.data.SquarePos;
-
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;

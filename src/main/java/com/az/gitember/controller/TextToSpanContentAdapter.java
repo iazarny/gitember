@@ -2,25 +2,15 @@ package com.az.gitember.controller;
 
 import com.az.gitember.controller.lang.BaseTokenTypeAdapter;
 import com.az.gitember.controller.lang.LangResolver;
-import com.az.gitember.data.Pair;
 import com.az.gitember.service.GitemberUtil;
-import javafx.scene.Node;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**

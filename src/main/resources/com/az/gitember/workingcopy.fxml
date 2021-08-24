@@ -30,7 +30,11 @@
             <TableColumn fx:id="itemTableColumnColorStatus" prefWidth="10.00" resizable="false" text="" />
             <TableColumn fx:id="selectTableColumn" prefWidth="40.0" resizable="false" text="" />
             <TableColumn fx:id="statusTableColumn" prefWidth="40.00" resizable="false" style="-fx-border-width: 0; -fx-font-size: 180%;  -fx-label-padding: 12px 0px 0px 5px;" text="" />
-            <TableColumn fx:id="itemTableColumn" minWidth="800" prefWidth="-1" text="File" />
+            <TableColumn fx:id="itemTableColumn" minWidth="600" prefWidth="-1" text="File" />
+            <TableColumn fx:id="itemLstChangesDate" prefWidth="150" text="Changes date"  visible="false"/>
+            <TableColumn fx:id="itemLstChangesName" prefWidth="250" text="Changes"  visible="false"/>
+            <TableColumn fx:id="itemLstChangesAuthor" text="Changes author"  visible="false"/>
+
             <TableColumn fx:id="actionTableColumn" minWidth="120" prefWidth="-1" text="Action" visible="false" />
         </columns>
     </TableView>
@@ -71,6 +75,7 @@
                 <Button id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
+                <CheckBox id="MERGEITEM" fx:id="checkBoxShowLastChanges" text="Last changes" />
                 <Label id="MERGEITEM" text="    "/>
                 <Label id="MERGEITEM" text="Search"/>
                 <TextField id="MERGEITEM" fx:id="searchText"  />

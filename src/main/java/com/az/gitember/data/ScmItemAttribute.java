@@ -1,7 +1,5 @@
 package com.az.gitember.data;
 
-import java.util.List;
-
 public class ScmItemAttribute {
 
     private String name;

@@ -1,7 +1,5 @@
 package com.az.gitember.data;
 
-import java.util.Date;
-
 public class AverageLiveTime {
 
     private String date;

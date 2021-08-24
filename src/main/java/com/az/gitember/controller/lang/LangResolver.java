@@ -23,12 +23,13 @@ import com.az.gitember.controller.lang.swift.Swift5Lexer;
 import com.az.gitember.controller.lang.txt.SimpleTextLexer;
 import com.az.gitember.controller.lang.typescript.TypeScriptLexer;
 import com.az.gitember.controller.lang.xml.XMLLexer;
-import static  com.az.gitember.service.GitemberUtil.is;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
 
 import java.util.Locale;
+
+import static com.az.gitember.service.GitemberUtil.is;
 
 public class LangResolver {
 

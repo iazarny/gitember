@@ -18,7 +18,6 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

@@ -6,8 +6,8 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.util.HashMap;

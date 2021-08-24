@@ -5,8 +5,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.io.File;
-
 public class InitRepoParameters {
 
     private StringProperty destinationFolder = new SimpleStringProperty("");

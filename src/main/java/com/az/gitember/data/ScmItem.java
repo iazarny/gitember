@@ -1,18 +1,16 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
+import org.eclipse.jgit.revwalk.RevCommit;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static com.az.gitember.service.GitemberUtil.is;
 
@@ -56,6 +54,53 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
 
+    public static class Changes {
+        private String commitInfo;
+        private String commitAuthor;
+        private String commitEmail;
+        private Date date;
+
+        public  Changes(final RevCommit revCommit) {
+            this.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
+            this.setCommitAuthor(revCommit.getAuthorIdent().getName());
+            this.setCommitEmail(revCommit.getAuthorIdent().getEmailAddress());
+            this.setCommitInfo(revCommit.getShortMessage());
+        }
+
+        public String getCommitInfo() {
+            return commitInfo;
+        }
+
+        public void setCommitInfo(String commitInfo) {
+            this.commitInfo = commitInfo;
+        }
+
+        public String getCommitAuthor() {
+            return commitAuthor;
+        }
+
+        public void setCommitAuthor(String commitAuthor) {
+            this.commitAuthor = commitAuthor;
+        }
+
+        public String getCommitEmail() {
+            return commitEmail;
+        }
+
+        public void setCommitEmail(String commitEmail) {
+            this.commitEmail = commitEmail;
+        }
+
+        public Date getDate() {
+            return date;
+        }
+
+        public void setDate(Date date) {
+            this.date = date;
+        }
+    }
+
+
     private static Map<String, Integer> sortOrder = new HashMap<>();
 
     static {
@@ -72,6 +117,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
     private String commitName;
+    private Changes changes;
 
     public ScmItem(String s, ScmItemAttribute attribute, String commitName) {
         super(s, attribute);
@@ -80,6 +126,14 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
     public ScmItem(String s, ScmItemAttribute attribute) {
         this(s, attribute, null);
+    }
+
+    public Changes getChanges() {
+        return changes;
+    }
+
+    public void setChanges(Changes changes) {
+        this.changes = changes;
     }
 
     public String getShortName() {
@@ -127,6 +181,36 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), commitName);
+    }
+
+    public ScmItem withChanges(final RevCommit revCommit) {
+        if (revCommit != null) {
+            this.setChanges(new Changes(revCommit));
+        } else {
+            System.out.println("ddddddddddddddddddddddddddd");
+        }
+        return this;
+    }
+
+    public String getChangeNameSafe() {
+        if (getChanges() != null) {
+            return getChanges().getCommitInfo();
+        }
+        return "";
+    }
+
+    public String getChangeDateSafe() {
+        if (getChanges() != null) {
+            return GitemberUtil.formatDate(getChanges().getDate());
+        }
+        return "";
+    }
+
+    public String getChangeAuthorSafe() {
+        if (getChanges() != null) {
+            return getChanges().getCommitAuthor() + " " + getChanges().getCommitEmail();
+        }
+        return "";
     }
 
     /**

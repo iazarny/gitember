@@ -3,7 +3,6 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.MotionBlur;
 import javafx.scene.layout.GridPane;
@@ -12,7 +11,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.shape.*;
+import javafx.scene.shape.ArcTo;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 
 /**
  * Created by Igor_Azarny on 28 - Jan - 2017.

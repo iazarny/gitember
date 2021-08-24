@@ -3,7 +3,6 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.data.InitRepoParameters;
-import com.az.gitember.data.RemoteRepoParameters;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -13,10 +12,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 
 import java.io.File;
-import java.util.Collection;
 
 /**
  * Created by Igor_Azarny on 29 - Dec - 2016.

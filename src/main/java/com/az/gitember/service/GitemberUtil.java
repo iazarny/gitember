@@ -1,22 +1,23 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.LangDefinition;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmItemAttribute;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {

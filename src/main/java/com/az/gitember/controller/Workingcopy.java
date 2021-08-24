@@ -8,6 +8,7 @@ import com.az.gitember.data.ScmFilterPredicateLfsOnOff;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.transformation.FilteredList;
@@ -39,10 +40,15 @@ public class Workingcopy implements Initializable {
     public TableColumn<ScmItem, String> itemTableColumn;
     public TableColumn<ScmItem, ScmItem> itemTableColumnColorStatus;
     public TableColumn<ScmItem, StackedFontIcon> statusTableColumn;
+    public TableColumn<ScmItem, String> itemLstChangesName;
+    public TableColumn<ScmItem, String> itemLstChangesAuthor;
+    public TableColumn<ScmItem, String> itemLstChangesDate;
     public TableColumn<ScmItem, ScmItem> actionTableColumn;
     public Pane spacerPane;
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
+    public CheckBox checkBoxShowLastChanges;
+
 
     private FilteredList filteredList;
 
@@ -64,6 +70,39 @@ public class Workingcopy implements Initializable {
 
         itemTableColumn.setCellValueFactory(
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation()));
+
+        itemLstChangesName.setCellValueFactory(
+                c -> new SimpleStringProperty(c.getValue().getChangeNameSafe() ));
+        itemLstChangesAuthor.setCellValueFactory(
+                c -> new SimpleStringProperty(c.getValue().getChangeAuthorSafe() ));
+        itemLstChangesDate.setCellValueFactory(
+                c -> new SimpleStringProperty(c.getValue().getChangeDateSafe() ));
+
+        checkBoxShowLastChanges.selectedProperty().addListener((observable, oldValue, newValue) -> {
+
+            if(newValue) {
+                new StatusUpdateEventHandler(true, workerStateEvent -> {
+                    itemLstChangesName.setVisible(newValue);
+                    itemLstChangesAuthor.setVisible(newValue);
+                    itemLstChangesDate.setVisible(newValue);
+                }).handle(null);
+            } else {
+                itemLstChangesName.setVisible(newValue);
+                itemLstChangesAuthor.setVisible(newValue);
+                itemLstChangesDate.setVisible(newValue);
+            }
+
+
+        });
+        if (Context.lastChanges.get()) {
+            checkBoxShowLastChanges.setSelected(true);
+            itemLstChangesName.setVisible(true);
+            itemLstChangesAuthor.setVisible(true);
+            itemLstChangesDate.setVisible(true);
+
+        }
+
+        Bindings.bindBidirectional(Context.lastChanges, checkBoxShowLastChanges.selectedProperty());
 
         selectTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));
         actionTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));

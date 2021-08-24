@@ -1,21 +1,12 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.data.Pair;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyledTextArea;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.IntFunction;
 

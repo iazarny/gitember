@@ -1,7 +1,5 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.data.Const;
-import com.az.gitember.data.ScmItem;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.util.Callback;

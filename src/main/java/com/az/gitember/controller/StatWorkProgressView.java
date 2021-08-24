@@ -2,8 +2,6 @@ package com.az.gitember.controller;
 
 import com.az.gitember.service.Context;
 import javafx.fxml.Initializable;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.chart.StackedBarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.BorderPane;

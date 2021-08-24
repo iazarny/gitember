@@ -1,16 +1,13 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.DefaultProgressMonitor;
 import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.util.logging.Level;

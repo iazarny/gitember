@@ -3,7 +3,6 @@ package com.az.gitember.controller;
 import com.az.gitember.service.Context;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.StackedBarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.BorderPane;
 

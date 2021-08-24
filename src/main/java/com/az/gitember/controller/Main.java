@@ -2,9 +2,11 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.*;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.GitAttributesUtil;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -20,9 +22,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
