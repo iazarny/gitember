@@ -29,13 +29,13 @@ public class TextToSpanContentAdapter {
      * @param patch     patch
      * @param leftSide  what side ro read left - old, right - new
      */
-    public TextToSpanContentAdapter(/*final String content,*/ final String extension, final EditList patch, boolean leftSide) {
+    public TextToSpanContentAdapter(final String extension, final EditList patch, boolean leftSide) {
         this(extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
     }
 
-    TextToSpanContentAdapter(/*final String contentRaw,*/ final String extension, final boolean rawDiff) {
+    TextToSpanContentAdapter(final String extension, final boolean rawDiff) {
         this.rawDiff = rawDiff;
         this.extension = extension;
     }
@@ -136,13 +136,7 @@ public class TextToSpanContentAdapter {
             }
 
         }
-
         return pathcDecoration;
-
     }
-
-
-
-
 
 }

@@ -6,7 +6,7 @@ November, December, Gitember. Just another GIT gui client just for fun.
 
 For Linux, Windows and Mac
 
-![Gitember](site/img/portfolio/1.png)
+![Gitember](site/img/portfolio/2.png)
 
 ## Reasons to create 
 
@@ -23,10 +23,11 @@ Nothing in particular, but
 
 ## Plans 
 
- * Mac M1 support
+ * Add full text search
+ * Add search in open files
+ * Add annotation
  * Integration with git providers, at least with github
- * Add fuul text search 
- 
+
 
 
 

@@ -47,7 +47,7 @@ public class DiffViewer implements Initializable {
     private String newText = null;
     private EditList diffList = new EditList();
 
-    private final double fontSize = 24.0;
+
 
     public void setData(String oldFileName, String newFileName) throws IOException {
 
@@ -169,16 +169,16 @@ public class DiffViewer implements Initializable {
         int border_shift = 0; //uber node and 1 node border
 
         int x1 = -1;
-        int y1 = (int) (origPos * fontSize - deltaY1) + border_shift;
+        int y1 = (int) (origPos * LookAndFeelSet.FONT_SIZE - deltaY1) + border_shift;
 
         int x2 = (int) diffDrawPanel.getWidth() + 1;
-        int y2 = (int) (revPos * fontSize - deltaY2) + border_shift;
+        int y2 = (int) (revPos * LookAndFeelSet.FONT_SIZE - deltaY2) + border_shift;
 
         int x3 = x2;
-        int y3 = (int) (revBottomPos * fontSize - deltaY2) + border_shift;
+        int y3 = (int) (revBottomPos * LookAndFeelSet.FONT_SIZE - deltaY2) + border_shift;
 
         int x4 = x1;
-        int y4 = (int) (origBottomPos * fontSize - deltaY1) + border_shift;
+        int y4 = (int) (origBottomPos * LookAndFeelSet.FONT_SIZE - deltaY1) + border_shift;
 
         return new SquarePos(x1, y1, x2, y2, x3, y3, x4, y4);
 

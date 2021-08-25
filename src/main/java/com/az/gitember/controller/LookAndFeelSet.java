@@ -5,8 +5,8 @@ import jfxtras.styles.jmetro.Style;
 
 public class LookAndFeelSet {
 
+    public static final double FONT_SIZE = 24.0;
     public static int DIALOG_DEFAULT_WIDTH = 800;
-    public static int DEFAULT_LINE_LENGTH = 120;
     public static String PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
     public static Style THEME_NAME = Style.LIGHT;
     public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F); //TODO to css
@@ -21,6 +21,7 @@ public class LookAndFeelSet {
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
     public static String CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
+    public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3;";
 
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
@@ -31,6 +32,7 @@ public class LookAndFeelSet {
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
             CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
+            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #3b3b3b;";
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;
@@ -39,6 +41,7 @@ public class LookAndFeelSet {
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
             CODE_AREA_CSS = "-fx-font: Monospace; -fx-font-size: 20;";
+            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3;";
 
         }
     }

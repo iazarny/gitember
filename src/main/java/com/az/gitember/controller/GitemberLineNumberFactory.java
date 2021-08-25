@@ -54,7 +54,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
 
 
         Label lineNo = new Label();
-        lineNo.setStyle("-fx-background-color: background_color;");
+        lineNo.setStyle(LookAndFeelSet.CODE_AREA_LINE_NUM_CSS);
         lineNo.setPadding(DEFAULT_INSETS);
 
         applyStyle(lineNo, textAdapter.getDiffDecoration(area.getText()).get(idx));

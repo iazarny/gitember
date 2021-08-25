@@ -117,7 +117,6 @@ public class TextBrowser implements Initializable {
 
     public void saveFile(ActionEvent actionEvent) {
 
-
         if (overwrite) {
 
             String workignDir = Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, "");
@@ -130,8 +129,6 @@ public class TextBrowser implements Initializable {
             }
 
         } else {
-
-
 
             FileChooser fileChooser = new FileChooser();
 
