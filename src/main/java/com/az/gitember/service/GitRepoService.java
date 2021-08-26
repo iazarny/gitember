@@ -753,7 +753,7 @@ public class GitRepoService {
         return isLfsRepo(repository);
     }
 
-    public boolean isLfsRepo(Repository repo) {
+    boolean isLfsRepo(Repository repo) {
         return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
     }
 

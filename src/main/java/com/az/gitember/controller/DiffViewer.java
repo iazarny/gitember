@@ -108,7 +108,7 @@ public class DiffViewer implements Initializable {
         HBox.setHgrow(oldScrollPane, Priority.ALWAYS);
         HBox.setHgrow(newScrollPane, Priority.ALWAYS);
 
-        oldScrollPane.setPrefHeight(2020);
+        oldScrollPane.setPrefHeight(2021);
 
         mainPanel.layout();
 

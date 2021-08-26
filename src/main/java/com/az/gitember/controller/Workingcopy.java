@@ -94,6 +94,20 @@ public class Workingcopy implements Initializable {
 
 
         });
+
+        checkBoxShowLfs.setVisible(Context.lfsRepo.getValue());
+        checkBoxShowLfs.selectedProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    actionTableColumn.setVisible(newValue);
+
+                    filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(newValue));
+
+                }
+        );
+        filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(false));
+
+
+
         if (Context.lastChanges.get()) {
             checkBoxShowLastChanges.setSelected(true);
             itemLstChangesName.setVisible(true);
@@ -102,7 +116,10 @@ public class Workingcopy implements Initializable {
 
         }
 
+        checkBoxShowLfs.selectedProperty().setValue(Context.showLfsFiles.get());
+
         Bindings.bindBidirectional(Context.lastChanges, checkBoxShowLastChanges.selectedProperty());
+        Bindings.bindBidirectional(Context.showLfsFiles, checkBoxShowLfs.selectedProperty());
 
         selectTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));
         actionTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));
@@ -130,18 +147,7 @@ public class Workingcopy implements Initializable {
 
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
 
-        if (Context.getGitRepoService().isLfsRepo()) {
-            checkBoxShowLfs.setVisible(true);
-            checkBoxShowLfs.selectedProperty().addListener(
-                    (observable, oldValue, newValue) -> {
-                        actionTableColumn.setVisible(newValue);
 
-                        filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(newValue));
-
-                    }
-            );
-            filteredList.setPredicate(new ScmFilterPredicateLfsOnOff(false));
-        }
 
     }
 

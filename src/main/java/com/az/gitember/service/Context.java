@@ -30,6 +30,9 @@ public class Context {
     public static final ObjectProperty<ScmRevisionInformation> scmRevCommitDetails = new SimpleObjectProperty<ScmRevisionInformation>();
 
     public static final BooleanProperty lastChanges = new SimpleBooleanProperty();
+    public static final BooleanProperty lfsRepo = new SimpleBooleanProperty(false);
+    public static final BooleanProperty showLfsFiles = new SimpleBooleanProperty(false);
+
     public static final StringProperty selectedTreeName = new SimpleStringProperty();
     public static final SimpleObjectProperty<LocalDateTime> lastUpdate = new SimpleObjectProperty();
 
@@ -88,8 +91,6 @@ public class Context {
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
 
-
-
         String gitFolder = remoteRepoParameters.getDestinationFolder();
 
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
@@ -102,6 +103,9 @@ public class Context {
         updateBranches();
         updateTags();
         stashProperty.setValue(gitRepoService.getStashList());
+        repositoryPathProperty.setValue(gitFolder);
+        lfsRepo.setValue(getGitRepoService().isLfsRepo());
+        showLfsFiles.setValue(false);
 
         updateStatus(null);
 
@@ -125,7 +129,7 @@ public class Context {
                 }
         );
 
-        repositoryPathProperty.setValue(gitFolder);
+
     }
 
     public static void init(String gitFolder) throws Exception {

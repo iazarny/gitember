@@ -28,7 +28,7 @@ public class LfsSupportDialogEventHandler implements EventHandler<ActionEvent> {
 
     @Override
     public void handle(ActionEvent event)  {
-        final boolean initialLfsSupportRepo = Context.getGitRepoService().isLfsRepo();
+        final boolean initialLfsSupportRepo = Context.lfsRepo.getValue();
         final List<String> patternsOriginal = new ArrayList<>();
         LfsData lfsData = new LfsData();
         lfsData.setLfsSupport(initialLfsSupportRepo);

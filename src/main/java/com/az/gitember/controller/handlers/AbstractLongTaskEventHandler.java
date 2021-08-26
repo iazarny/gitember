@@ -23,7 +23,9 @@ public class AbstractLongTaskEventHandler {
 
     protected void launchLongTask(final Task longTask, final Consumer<WorkerStateEvent> onOk, final Consumer<WorkerStateEvent> onError) {
         Context.getMain().toolBar.setVisible(true);
+
         Context.getMain().progressBar.progressProperty().bind(longTask.progressProperty());
+
         Context.getMain().operationName.textProperty().bind(longTask.titleProperty());
         App.getStage().getScene().setCursor(Cursor.WAIT);
         longTask.setOnSucceeded(new LongTaskFinishHandler(App.getStage().getScene(),
