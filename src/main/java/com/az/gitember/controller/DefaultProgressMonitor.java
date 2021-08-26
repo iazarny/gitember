@@ -10,14 +10,25 @@ import java.util.function.BiConsumer;
  */
 public class DefaultProgressMonitor implements ProgressMonitor {
 
+    public enum Strategy {
+        Completed,
+        Step
+    }
+
     private final BiConsumer<String, Double> percentageCompleteConsumer;
 
     private int totalWork = Integer.MAX_VALUE;
     private int completed = 0;
     private String title;
+    private Strategy strategy = Strategy.Completed;
 
     public DefaultProgressMonitor(BiConsumer<String, Double> percentageCompleteConsumer) {
+        this(percentageCompleteConsumer, Strategy.Completed);
+    }
+
+    public DefaultProgressMonitor(BiConsumer<String, Double> percentageCompleteConsumer, Strategy strategy) {
         this.percentageCompleteConsumer = percentageCompleteConsumer;
+        this.strategy = strategy;
     }
 
     @Override
@@ -36,7 +47,13 @@ public class DefaultProgressMonitor implements ProgressMonitor {
 
     @Override
     public void update(int completed) {
-        setCompleted(completed);
+
+        if (Strategy.Completed == strategy) {
+            setCompleted(completed);
+        } else if (Strategy.Step == strategy) {
+            setStep(completed);
+        }
+
     }
 
     @Override
@@ -60,9 +77,14 @@ public class DefaultProgressMonitor implements ProgressMonitor {
     public void setCompleted(int completed) {
         this.completed = completed;
         double c = 1.0 * this.completed / totalWork;
+        if (totalWork > 0) {
+            percentageCompleteConsumer.accept(title, c);
+        }
+    }
 
-        System.out.println(">>>>>>>>>>>>> " + totalWork + " " + completed + "  " + c);
-
+    public void setStep(int completed) {
+        this.completed += completed;
+        double c = 1.0 * this.completed / totalWork;
         if (totalWork > 0) {
             percentageCompleteConsumer.accept(title, c);
         }

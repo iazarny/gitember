@@ -36,7 +36,7 @@ public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler imp
                         new DefaultProgressMonitor((t, d) -> {
                             updateTitle(t);
                             updateProgress(d, 1.0);
-                        }
+                        }, DefaultProgressMonitor.Strategy.Step
                         ));
 
             }

@@ -117,6 +117,7 @@ public class MainTreeChangeListener implements ChangeListener {
                 });
         if (pane instanceof BorderPane) {
             ((BorderPane) pane).setBottom(null);
+            ((BorderPane) pane).setTop(null);
         }
     }
 
