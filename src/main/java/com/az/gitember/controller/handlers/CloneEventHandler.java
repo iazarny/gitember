@@ -33,7 +33,7 @@ public class CloneEventHandler extends AbstractLongTaskEventHandler implements E
                         new DefaultProgressMonitor((t, d) -> {
                             updateTitle(t);
                             updateProgress(d, 1.0);
-                        })
+                        }, DefaultProgressMonitor.Strategy.Step)
                 );
                 return null;
             }

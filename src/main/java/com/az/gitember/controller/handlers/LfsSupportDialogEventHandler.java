@@ -60,8 +60,9 @@ public class LfsSupportDialogEventHandler implements EventHandler<ActionEvent> {
                         Context.init(Context.getGitRepoService().getRepository().getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, ""));
                     }
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Cannot write lfs patterns " , e);
-                    Context.getMain().showResult("Cannot wrute lfs patterns ",
+                    String msg = "Cannot write lfs patterns ";
+                    log.log(Level.SEVERE, msg , e);
+                    Context.getMain().showResult(msg,
                             ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
                 }
             }

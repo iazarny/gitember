@@ -49,7 +49,7 @@ public class RevertEventHandler extends AbstractLongTaskEventHandler implements 
                             Context.updateStatus(new DefaultProgressMonitor((t, d) -> {
                                 updateTitle(t);
                                 updateProgress(d, 1.0);
-                            }));
+                            }, DefaultProgressMonitor.Strategy.Step));
                             return null;
                         }
                     };

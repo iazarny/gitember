@@ -102,6 +102,7 @@ public class History implements Initializable {
                             hostCommitViewPanel.prefHeight(330);
                             hostCommitViewPanel.minHeight(250);
                             splitPanel.getItems().add(hostCommitViewPanel);
+                            splitPanel.setDividerPositions(0.65);
                             mainBorderPanel.layout();
                         }
                         if (newValue != null) {

@@ -42,6 +42,8 @@ public class Main implements Initializable {
     public MenuItem compressDataMenuItem;
     public MainTreeChangeListener mainTreeChangeListener;
     public MenuItem fetchMenuItem;
+    public MenuItem pullMenuItem;
+    public MenuItem puchMenuItem;
     public MenuItem lfsMenuItem;
     public MenuItem editRawConfigMenuItem;
     public MenuItem editRawIgnoreMenuItem;
@@ -94,6 +96,8 @@ public class Main implements Initializable {
                         pullBtn.setTooltip(new Tooltip("Pull " + ScmBranch.getNameExtSafe(scmBranch)));
                     }
 
+                    puchMenuItem.setDisable(pushBtn.isDisable());
+                    pullMenuItem.setDisable(pullBtn.isDisable());
 
                     fetchBtn.setTooltip(new Tooltip("Fetch all"));
 

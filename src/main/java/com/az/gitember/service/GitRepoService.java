@@ -1491,11 +1491,14 @@ public class GitRepoService {
 
             stringBuilder.append("Conflict:").append(indent).append(mergeConflicts).append("\n");
 
-            String failures = mergeResult.getFailingPaths().entrySet().stream()
-                    .map(es -> es.getKey())
-                    .collect(Collectors.joining(indent));
+            if (mergeResult.getFailingPaths() != null) {
+                String failures = mergeResult.getFailingPaths().entrySet().stream()
+                        .map(es -> es.getKey())
+                        .collect(Collectors.joining(indent));
+                stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
+            }
 
-            stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
+
 
 
         }

@@ -44,7 +44,7 @@ public class StatusUpdateEventHandler extends AbstractLongTaskEventHandler imple
                     progressMonitor = new DefaultProgressMonitor((t, d) -> {
                         updateTitle(t);
                         updateProgress(d, 1.0);
-                    });
+                    }, DefaultProgressMonitor.Strategy.Step);
                 }
 
                 Context.updateStatus(progressMonitor);

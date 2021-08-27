@@ -143,8 +143,16 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                     scmItemContextMenu.getItems().add(diff);
                                 }
 
-                                if(is(itemStatus).oneOf(ScmItem.Status.MODIFIED) ) {
-                                    scmItemContextMenu.getItems().add(new SeparatorMenuItem());
+                                if(is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.MISSED) ) {
+
+                                    //scmItemContextMenu.getItems().add(new SeparatorMenuItem());
+
+                                    /*if (!scmItemContextMenu.getItems().isEmpty()) {
+                                        if (!(scmItemContextMenu.getItems().get(scmItemContextMenu.getItems().size()) instanceof SeparatorMenuItem) ) {
+
+                                        }
+                                    }*/
+
 
                                     MenuItem revert = new MenuItem(MI_REVERT_NAME);
                                     revert.setOnAction(new RevertEventHandler(item));

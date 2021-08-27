@@ -34,14 +34,14 @@
                                 <MenuItem text="Create ..." onAction="#createRepositoryHandler"/>
                                 <SeparatorMenuItem/>
                                 <MenuItem text="Fetch" accelerator="Shortcut+T" onAction="#fetchHandler" fx:id="fetchMenuItem" disable="true"/>
-                                <MenuItem text="Pull" accelerator="Shortcut+L" onAction="#fetchHandler" fx:id="pullMenuItem" disable="true">
+                                <MenuItem text="Pull" accelerator="Shortcut+L" onAction="#pullHandler" fx:id="pullMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
                                             <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
-                                <MenuItem text="Push" accelerator="Shortcut+P" onAction="#fetchHandler" fx:id="puchMenuItem" disable="true">
+                                <MenuItem text="Push" accelerator="Shortcut+P" onAction="#pushHandler" fx:id="puchMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon rotate="-23" style="-fx-icon-color: text_color">
                                             <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>

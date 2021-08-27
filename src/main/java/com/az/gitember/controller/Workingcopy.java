@@ -167,7 +167,7 @@ public class Workingcopy implements Initializable {
     public void unstageAllEventHandler(ActionEvent actionEvent) {
         Context.statusList.stream()
                 .filter(i -> (i.staged().equals(1)))
-                .forEach(i -> stageUnstageItem((ScmItem) i));
+                .forEach(i -> stageUnstageItem(i));
     }
 
 

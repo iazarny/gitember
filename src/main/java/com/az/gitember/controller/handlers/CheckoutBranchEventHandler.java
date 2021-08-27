@@ -46,13 +46,7 @@ public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler imp
                 longTask,
                 o -> {
                     {
-                        try {
-                            Context.updateBranches();
-                            Context.updateWorkingBranch();
-                        } catch (Exception e) {
-                           log.log( Level.SEVERE, "Cannot update branches. " + ExceptionUtils.getStackTrace(e));
-                        }
-
+                        Context.updateAll();
                     }
                 },
                 o -> {

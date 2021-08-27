@@ -66,7 +66,7 @@ public class PushHandler extends AbstractLongTaskEventHandler implements EventHa
                         new DefaultProgressMonitor((t, d) -> {
                             updateTitle(t);
                             updateProgress(d, 1.0);
-                        })
+                        }, DefaultProgressMonitor.Strategy.Step)
                 );
             }
         };
