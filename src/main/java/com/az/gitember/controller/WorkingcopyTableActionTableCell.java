@@ -29,11 +29,6 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
         downdloadBtn = new Button("Load", loadIcon);
         openBtn = new Button("Open", openIcon);
 
-
-
-
-
-
     }
 
     @Override

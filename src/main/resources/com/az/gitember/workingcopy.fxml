@@ -53,18 +53,18 @@
             <ToolBar id="MERGEITEM">
                 <Separator id="MERGEITEM"/>
                 <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all">
-                    <graphic>
+                    <!--<graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">
                             <FontIcon iconLiteral="fa-arrow-circle-up" StackedFontIcon.iconSize="0.5"  />
                         </StackedFontIcon>
-                    </graphic>
+                    </graphic>-->
                 </Button>
                 <Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all">
-                    <graphic>
+                    <!--<graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">
                             <FontIcon iconLiteral="fa-arrow-circle-down" StackedFontIcon.iconSize="0.5"  />
                         </StackedFontIcon>
-                    </graphic>
+                    </graphic>-->
 
                 </Button>
                 <Separator id="MERGEITEM"/>

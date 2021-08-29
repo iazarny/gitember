@@ -145,9 +145,9 @@ public class Workingcopy implements Initializable {
 
         workingCopyTableView.setItems(filteredList);
 
+        workingCopyTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
-
-
 
     }
 
