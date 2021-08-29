@@ -1,10 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.handlers.DiffWithDiskEventHandler;
-import com.az.gitember.controller.handlers.OpenFileEventHandler;
-import com.az.gitember.controller.handlers.RevertEventHandler;
-import com.az.gitember.controller.handlers.StageEventHandler;
+import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
@@ -18,6 +15,7 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -100,53 +98,21 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
 
                                     if (possibleRevert) {
                                         MenuItem revert = new MenuItem(MI_REVERT_NAME);
-                                        revert.setOnAction(e -> {
-
-                                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                                            alert.setTitle("Please confirm");
-                                            alert.setHeaderText("Revert changes");
-                                            alert.setContentText("Do you really want to revert multiple items changes ?");
-                                            alert.initOwner(App.getScene().getWindow());
-
-                                            alert.showAndWait().ifPresent(
-                                                    r -> {
-
-                                                        if (r == ButtonType.OK) {
-                                                            for (ScmItem processItem : selecteItems) {
-                                                                new RevertEventHandler( processItem).handle(null);
-                                                            }
-                                                        }
-                                                    }
-                                            );
-
-
-                                        }  );
+                                        revert.setOnAction(new MassRevertEventHandler(selecteItems));
                                         revert.setGraphic(icons.get(MI_REVERT_NAME));
                                         scmItemContextMenu.getItems().add(revert);
                                     }
 
                                     if (possibleStage) {
                                         MenuItem stage = new MenuItem(MI_STAGE_MULTIPLE_NAME);
-                                        stage.setOnAction(e -> {
-                                            for (ScmItem processItem : selecteItems) {
-                                                if (is(processItem.getAttribute().getStatus()).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED)) {
-                                                    new StageEventHandler(getTableView(), processItem).handle(null);
-                                                }
-                                            }
-                                        });
+                                        stage.setOnAction(new MassStageEventHandler(selecteItems));
                                         stage.setGraphic(icons.get(MI_STAGE_NAME));
                                         scmItemContextMenu.getItems().add(stage);
                                     }
 
                                     if (possibleUnstage) {
                                         MenuItem unstage = new MenuItem(MI_UNSTAGE_MULTIPLE_NAME);
-                                        unstage.setOnAction(e -> {
-                                            for (ScmItem processItem : selecteItems) {
-                                                if (is(processItem.getAttribute().getStatus()).oneOf(ScmItem.Status.ADDED, ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
-                                                    new StageEventHandler(getTableView(), processItem).handle(null);
-                                                }
-                                            }
-                                        });
+                                        unstage.setOnAction(new MassResetEventHandler(selecteItems));
                                         unstage.setGraphic(icons.get(MI_UNSTAGE_NAME));
                                         scmItemContextMenu.getItems().add(unstage);
                                     }
