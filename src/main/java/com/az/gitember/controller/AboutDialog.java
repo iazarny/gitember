@@ -2,6 +2,7 @@ package com.az.gitember.controller;
 
 
 import com.az.gitember.App;
+import javafx.animation.PathTransition;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.effect.MotionBlur;
@@ -15,6 +16,7 @@ import javafx.scene.shape.ArcTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.util.Duration;
 
 /**
  * Created by Igor_Azarny on 28 - Jan - 2017.
@@ -60,12 +62,24 @@ public class AboutDialog extends Dialog {
         PasswordField password = new PasswordField();
         password.setPromptText("Password");
 
+        Path [] path = createLogoPath();
+
         Pane pane = new Pane();
         pane.setMinWidth(400);
         pane.setMinHeight(400);
         pane.setMaxWidth(400);
         pane.setMaxHeight(400);
-        pane.getChildren().addAll(createLogoPath());
+        pane.getChildren().addAll(path);
+
+
+        PathTransition pathTransition1 = new PathTransition();
+        pathTransition1.setDuration(Duration.millis(25000));
+        pathTransition1.setNode(pane);
+        pathTransition1.setPath(path[0]);
+        pathTransition1.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+        pathTransition1.setCycleCount(1);
+        pathTransition1.setAutoReverse(true);
+
 
 
         grid.add(pane, 0, 0);
@@ -117,6 +131,10 @@ public class AboutDialog extends Dialog {
         grid.add(creditsTextArea, 1, 4);
         this.getDialogPane().setContent(grid);
         this.initOwner(App.getScene().getWindow());
+
+        pane.setOnMouseClicked(event -> {
+            pathTransition1.play();
+        });
 
     }
 
@@ -201,6 +219,9 @@ public class AboutDialog extends Dialog {
         char2_1.setEffect(mb);
         char2_2.setEffect(mb);
         dot.setEffect(mb);
+
+
+
 
         return new Path [] {
                 path, char2_1,  char2_2, dot

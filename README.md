@@ -19,6 +19,9 @@ Nothing in particular, but
 ### 2.2
  * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details
  * Fast file compare. The text flow changed to rich text fx .
+ * Mass operations - delete, stage, unstage, revert
+ * Branch difference
+
  
 
 ## Plans 
@@ -27,7 +30,7 @@ Nothing in particular, but
  * Add search in open files
  * Add annotation
  * Integration with git providers, at least with github
-
+ * Branch difference item details
 
 
 

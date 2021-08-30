@@ -76,7 +76,7 @@ public class App extends Application {
         LocalDateTime lastUpdate = Context.lastUpdate.get();
         if (lastUpdate != null) {
             Duration duration = Duration.between(lastUpdate, LocalDateTime.now());
-            if (duration.toSeconds() > 15) {
+            if (duration.toSeconds() > 60) {
                 allowUpdateByTime = true;
             }
         }
