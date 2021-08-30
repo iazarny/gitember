@@ -119,27 +119,7 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
 
                                     if (possibleDelete) {
                                         MenuItem unstage = new MenuItem(MI_DELETE_NAME);
-                                        unstage.setOnAction(e -> {
-                                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                                            alert.setTitle("Please confirm");
-                                            alert.setHeaderText("Delete files");
-                                            alert.setContentText(String.format("Do you really want to delete %d items ?", selecteItems.size()));
-                                            alert.initOwner(App.getScene().getWindow());
-
-                                            alert.showAndWait().ifPresent(
-                                                    r -> {
-
-                                                        if (r == ButtonType.OK) {
-                                                            for (ScmItem processItem : selecteItems) {
-                                                                if (is(processItem.getAttribute().getStatus()).oneOf(ScmItem.Status.ADDED, ScmItem.Status.MODIFIED, ScmItem.Status.UNTRACKED)) {
-                                                                    //new RevertEventHandler( processItem).handle(null);
-                                                                }
-
-                                                            }
-                                                        }
-                                                    }
-                                            );
-                                        });
+                                        unstage.setOnAction(new MassDeleteEventHandler(selecteItems));
                                         unstage.setGraphic(icons.get(MI_DELETE_NAME));
                                         scmItemContextMenu.getItems().add(unstage);
 

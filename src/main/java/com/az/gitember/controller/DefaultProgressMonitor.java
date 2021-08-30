@@ -78,7 +78,6 @@ public class DefaultProgressMonitor implements ProgressMonitor {
         this.completed = completed;
         if (totalWork > 0) {
             double c = 1.0 * this.completed / totalWork;
-            System.out.println(">>>>>>>>>>>>> " + title + " "  + totalWork + " " + completed + "  " + c);
             percentageCompleteConsumer.accept(title, c);
         }
     }

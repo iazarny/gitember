@@ -142,6 +142,18 @@ public class GitRepoService {
         new File(lfsTmpPath).mkdirs();
     }
 
+    public void unlink(final String fileName) {
+        try (Git git = new Git(repository)) {
+            final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
+            final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
+            final Path attrPath = Paths.get(absPath , fileName);
+            Files.delete(attrPath);
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Cannot unlink ", e);
+        }
+
+    }
+
 
     public static void createRepository(final String absPath) throws Exception {
         createRepository(absPath, false, false);
@@ -222,21 +234,6 @@ public class GitRepoService {
         }
     }
 
-    /**
-     * Git reset HEAD ...
-     *
-     * @param stringList list of file to reset
-     * @throws GitAPIException in case of error
-     */
-    /*public void removeFileFromCommitStage(final List<String> stringList)  {
-        try (Git git = new Git(repository)) {
-            for (String fileName : stringList) {
-                git.reset().addPath(fileName).call();
-            }
-        } catch (GitAPIException e) {
-            log.log(Level.WARNING, "Cannot unstage ", e);
-        }
-    }*/
 
     /**
      * Rename file. Used for undo original renaming, which is happens outside of gitember
