@@ -1242,7 +1242,7 @@ public class GitRepoService {
             log.log(Level.WARNING, MessageFormat.format("Clone {0} error {1}", reporitoryUrl, te.getMessage()));
             throw te;
         } finally {
-            if (isLfsRepo(result.getRepository())) {
+            if (result != null && isLfsRepo(result.getRepository())) {
                 StoredConfig repoCfg = result.getRepository().getConfig();
                 repoCfg.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
                 repoCfg.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);

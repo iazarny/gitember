@@ -134,6 +134,7 @@ class GitRepoServiceRemoteTest {
         } catch (TransportException e) {
             assertTrue(e.getMessage().contains("not authorized"));
         } catch (Exception e) {
+            e.printStackTrace();
             fail();
         }
     }
@@ -156,6 +157,7 @@ class GitRepoServiceRemoteTest {
         } catch (TransportException te) {
             assertTrue(te.getMessage().contains("not authorized"), te.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             assertEquals("Not, expected", e.getMessage());
         }
     }
