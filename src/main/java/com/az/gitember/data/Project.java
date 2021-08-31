@@ -2,6 +2,8 @@ package com.az.gitember.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,8 +20,14 @@ public class Project implements Serializable, Comparable<Project>  {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date openTime;
     private String userName;
+
+    protected String empId;
+    @JsonDeserialize(using = MaskStringValueDeSerializer.class)
+    @JsonSerialize(using = MaskStringValueSerializer.class)
     private String userPwd;
     private String userKey;
+    @JsonDeserialize(using = MaskStringValueDeSerializer.class)
+    @JsonSerialize(using = MaskStringValueSerializer.class)
     private String keyPass;
     private String userCommitName;
     private String userCommitEmail;
