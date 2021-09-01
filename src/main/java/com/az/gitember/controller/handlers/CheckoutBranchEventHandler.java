@@ -1,6 +1,7 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
@@ -46,7 +47,15 @@ public class CheckoutBranchEventHandler extends AbstractLongTaskEventHandler imp
                 longTask,
                 o -> {
                     {
-                        Context.updateAll();
+                        try {
+                            Context.updateBranches();
+                            Context.updateWorkingBranch();
+                            if (Const.View.WORKING_COPY.equals(Context.mainPaneName.getValueSafe())) {
+                                new StatusUpdateEventHandler(true).handle(null);
+                            }
+                        } catch (Exception e) {
+                            log.log( Level.SEVERE, "Cannot update branches. " + ExceptionUtils.getStackTrace(e));
+                        }
                     }
                 },
                 o -> {
