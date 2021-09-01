@@ -186,8 +186,6 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     public ScmItem withChanges(final RevCommit revCommit) {
         if (revCommit != null) {
             this.setChanges(new Changes(revCommit));
-        } else {
-            System.out.println("ddddddddddddddddddddddddddd");
         }
         return this;
     }
