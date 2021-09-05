@@ -31,6 +31,8 @@ Nothing in particular, but
  * Add annotation
  * Integration with git providers, at least with github
  * Branch difference item details
+ * Tab support
+
 
 
 
