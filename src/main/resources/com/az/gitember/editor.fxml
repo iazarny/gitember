@@ -23,8 +23,7 @@
                 </graphic>
             </Button>
             <Pane  HBox.hgrow="ALWAYS" />
-            <Label  text="Search"/>
-            <TextField  fx:id="searchText"  />
+            <TextField  fx:id="searchText" promptText="Search" />
         </ToolBar>
     </top>
    <center>

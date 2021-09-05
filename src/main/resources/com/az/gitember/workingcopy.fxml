@@ -77,8 +77,7 @@
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLastChanges" text="Last changes" />
                 <Label id="MERGEITEM" text="    "/>
-                <Label id="MERGEITEM" text="Search"/>
-                <TextField id="MERGEITEM" fx:id="searchText"  />
+                <TextField id="MERGEITEM" fx:id="searchText" promptText="Search" />
 
             </ToolBar>
 

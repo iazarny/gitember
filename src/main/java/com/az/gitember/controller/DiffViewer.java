@@ -7,12 +7,15 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -43,10 +46,15 @@ public class DiffViewer implements Initializable {
     public VirtualizedScrollPane<CodeArea> newScrollPane;
     public RowConstraints firstRowConstraint;
     public RowConstraints secondRowConstraint;
+    public TextField searchTextOld;
+    public TextField searchTextNew;
 
     private String oldText = null;
     private String newText = null;
     private EditList diffList = new EditList();
+
+    private int oldStartIndex = -1;
+    private int newStartIndex = -1;
 
     private double fontSize ;
 
@@ -158,6 +166,17 @@ public class DiffViewer implements Initializable {
                     secondRowConstraint.setMinHeight(val);
                     secondRowConstraint.setPrefHeight(val);
 
+                }
+        );
+
+        searchTextOld.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(searchTextOld, newValue);
+                }
+        );
+        searchTextNew.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(searchTextNew, newValue);
                 }
         );
     }
@@ -315,4 +334,51 @@ public class DiffViewer implements Initializable {
     }
 
 
+    public void repeatSearch(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            if (keyEvent.getSource() == searchTextOld) {
+                oldStartIndex ++;
+                searchValue((TextField)keyEvent.getSource(), searchTextOld.getText());
+            } else {
+                newStartIndex ++;
+                searchValue((TextField)keyEvent.getSource(), searchTextNew.getText());
+            }
+        }
+    }
+
+    public void searchValue(TextField textField,  String value) {
+        final CodeArea searchCodeArea;
+        int startIndex;
+        if (textField == searchTextOld) {
+            searchCodeArea = oldTextFlow;
+            startIndex = oldStartIndex;
+        } else {
+            searchCodeArea = newTextFlow;
+            startIndex = newStartIndex;
+        }
+
+        startIndex = searchCodeArea.getText().indexOf(value, startIndex);
+        if (startIndex == -1) {
+            startIndex = searchCodeArea.getText().indexOf(value);
+        }
+
+        if ( startIndex == -1 && StringUtils.isNotBlank(value)) {
+            //return;
+
+        } else if (startIndex > -1) {
+            searchCodeArea.moveTo(startIndex);
+            searchCodeArea.selectRange(startIndex,  startIndex + value.length());
+
+        } else {
+            searchCodeArea.selectRange(0, 0);
+        }
+        searchCodeArea.requestFollowCaret();
+
+        if (textField == searchTextOld) {
+            oldStartIndex = startIndex ;
+        } else {
+            newStartIndex = startIndex;
+        }
+
+    }
 }
