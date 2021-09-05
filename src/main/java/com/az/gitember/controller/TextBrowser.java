@@ -2,11 +2,14 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.data.Const;
+import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
@@ -32,9 +35,11 @@ public class TextBrowser implements Initializable {
     public CodeArea codeArea;
     public VirtualizedScrollPane<CodeArea> scrollPane;
     public Button saveBtn;
+    public TextField searchText;
     private String content;
     private String fileName;
     private boolean overwrite;
+    private int startIndex = -1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -52,6 +57,41 @@ public class TextBrowser implements Initializable {
         });
         borderPane.setCenter(scrollPane);
 
+        searchText.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(newValue);
+                }
+        );
+
+        searchText.setOnKeyPressed(
+                evt -> {
+                    if (evt.getCode() == KeyCode.ENTER) {
+                        startIndex++;
+                        searchValue(searchText.getText());
+                    }
+                }
+        );
+
+    }
+
+    private void searchValue(String newValue) {
+        startIndex = codeArea.getText().indexOf(newValue, startIndex);
+        if (startIndex == -1) {
+            startIndex = codeArea.getText().indexOf(newValue);
+        }
+
+        if ( startIndex == -1 && StringUtils.isNotBlank(newValue)) {
+            return;
+
+        } else if (startIndex > -1) {
+            codeArea.moveTo(startIndex);
+            codeArea.selectRange(startIndex,  startIndex + newValue.length());
+
+        } else {
+            codeArea.selectRange(0, 0);
+        }
+        codeArea.requestFollowCaret();
+
     }
 
     public void enableEdit(boolean allow) {
@@ -67,7 +107,7 @@ public class TextBrowser implements Initializable {
     }
 
     /**
-     * Force owerwrite to everwrite the same file
+     * Force set flag to the same file when save command handled.
      */
     public void setForceOverwrite(boolean overwrite) {
         this.overwrite = overwrite;
@@ -158,7 +198,6 @@ public class TextBrowser implements Initializable {
             }
 
         }
-
 
     }
 }
