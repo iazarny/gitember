@@ -1051,19 +1051,29 @@ public class GitRepoService {
     }
 
 
+    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final ProgressMonitor progressMonitor) {
+        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, progressMonitor);
+        List<ScmRevisionInformation> rez = commit.stream().map( pl -> adapt(pl) ).collect(Collectors.toList());
+        rez.forEach(sri -> {
+            sri.getAffectedItems().removeIf( scmItem ->  ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
+        });
+        return rez;
+    }
+
     /**
      * Get revisions to visualize. Fr more detail look at
      * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
      *
-     * @param treeName trhee name
+     * @param treeName tree name
      * @param all      to visualize with merges
      * @return PlotCommitList<PlotLane>
      * @throws Exception in case of error
      */
     public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final ProgressMonitor progressMonitor) {
+
+
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
         try (PlotWalk revWalk = new PlotWalk(repository)) {
-
 
             final ObjectId rootId = repository.resolve(treeName);
             final RevCommit root = revWalk.parseCommit(rootId);
@@ -1100,6 +1110,8 @@ public class GitRepoService {
 
         return plotCommitList;
     }
+
+
 
     public List<AverageLiveTime> getMergedBranches(final StatWPParameters params) {
 

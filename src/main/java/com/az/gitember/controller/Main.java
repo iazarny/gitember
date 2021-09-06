@@ -2,11 +2,9 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -18,11 +16,21 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -40,6 +48,7 @@ public class Main implements Initializable {
     public ToolBar mainToolBar;
     public Menu openRecentMenuItem;
     public MenuItem compressDataMenuItem;
+    public MenuItem reindexDataMenuItem;
     public MainTreeChangeListener mainTreeChangeListener;
     public MenuItem fetchMenuItem;
     public MenuItem pullMenuItem;
@@ -115,6 +124,7 @@ public class Main implements Initializable {
                                     + ScmBranch.getNameSafe(Context.workingBranch.getValue()));
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
+                    reindexDataMenuItem.setDisable(newValue == null);
                     fetchMenuItem.setDisable(disable);
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
@@ -284,6 +294,57 @@ public class Main implements Initializable {
         );
 
     }
+
+    public void reindexDataHandler(ActionEvent actionEvent) {
+
+        try {
+            Directory memoryIndex = new NIOFSDirectory(Path.of("c:\\dev\\aaa"));
+            StandardAnalyzer analyzer = new StandardAnalyzer();
+            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
+            IndexWriter writter = new IndexWriter(memoryIndex, indexWriterConfig);
+
+            List<ScmRevisionInformation> sriList = Context.getGitRepoService().getItemsToIndex("refs/heads/master", null);
+            sriList.forEach(
+
+                    sri -> {
+                        System.out.println(sri.getRevisionFullName());
+                        sri.getAffectedItems().forEach(
+                                i -> {
+
+
+                                    try {
+                                        if (ExtensionMap.isTextExtension(i.getShortName())) {
+                                            Document document = new Document();
+                                            System.out.println("   " + i.getShortName() + " " + i.getAttribute().getStatus());
+                                            document.add(new org.apache.lucene.document.TextField("revision", i.getCommitName(), Field.Store.YES));
+                                            document.add(new org.apache.lucene.document.TextField("name", i.getShortName(), Field.Store.YES));
+
+                                            byte [] b = i.getBody(ScmItem.BODY_TYPE.COMMIT_VERION);
+                                            String body = new String(b);
+
+                                            document.add(new org.apache.lucene.document.TextField("body", body, Field.Store.YES));
+
+                                            writter.addDocument(document);
+
+                                        }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                        );
+                    }
+
+            );
+
+            writter.close();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     public void compressDataHandler(ActionEvent actionEvent) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

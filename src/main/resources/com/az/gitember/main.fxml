@@ -70,6 +70,7 @@
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
                                 </Menu>
                                 <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
+                                <MenuItem text="Reindex " fx:id="reindexDataMenuItem" disable="true" onAction="#reindexDataHandler"/>
                                 <SeparatorMenuItem />
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal"/>
                                 <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
