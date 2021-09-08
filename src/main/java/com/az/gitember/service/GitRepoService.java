@@ -1075,9 +1075,11 @@ public class GitRepoService {
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
         try (PlotWalk revWalk = new PlotWalk(repository)) {
 
-            final ObjectId rootId = repository.resolve(treeName);
-            final RevCommit root = revWalk.parseCommit(rootId);
-            revWalk.markStart(root);
+            if (treeName != null) {
+                final ObjectId rootId = repository.resolve(treeName);
+                final RevCommit root = revWalk.parseCommit(rootId);
+                revWalk.markStart(root);
+            }
 
             if (all) {
                 revWalk.setTreeFilter(TreeFilter.ALL);

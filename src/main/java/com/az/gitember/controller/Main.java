@@ -5,6 +5,7 @@ import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -297,51 +298,7 @@ public class Main implements Initializable {
 
     public void reindexDataHandler(ActionEvent actionEvent) {
 
-        try {
-            Directory memoryIndex = new NIOFSDirectory(Path.of("c:\\dev\\aaa"));
-            StandardAnalyzer analyzer = new StandardAnalyzer();
-            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-            IndexWriter writter = new IndexWriter(memoryIndex, indexWriterConfig);
-
-            List<ScmRevisionInformation> sriList = Context.getGitRepoService().getItemsToIndex("refs/heads/master", null);
-            sriList.forEach(
-
-                    sri -> {
-                        System.out.println(sri.getRevisionFullName());
-                        sri.getAffectedItems().forEach(
-                                i -> {
-
-
-                                    try {
-                                        if (ExtensionMap.isTextExtension(i.getShortName())) {
-                                            Document document = new Document();
-                                            System.out.println("   " + i.getShortName() + " " + i.getAttribute().getStatus());
-                                            document.add(new org.apache.lucene.document.TextField("revision", i.getCommitName(), Field.Store.YES));
-                                            document.add(new org.apache.lucene.document.TextField("name", i.getShortName(), Field.Store.YES));
-
-                                            byte [] b = i.getBody(ScmItem.BODY_TYPE.COMMIT_VERION);
-                                            String body = new String(b);
-
-                                            document.add(new org.apache.lucene.document.TextField("body", body, Field.Store.YES));
-
-                                            writter.addDocument(document);
-
-                                        }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                        );
-                    }
-
-            );
-
-            writter.close();
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new IndexEventHandler().handle(actionEvent);
 
     }
 
