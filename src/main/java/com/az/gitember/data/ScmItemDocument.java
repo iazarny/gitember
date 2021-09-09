@@ -3,9 +3,14 @@ package com.az.gitember.data;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
@@ -27,17 +32,13 @@ public class ScmItemDocument  {
         this.revision = item.getCommitName();
 
         if (ExtensionMap.isTextExtension(item.getShortName())) {
-            byte [] b = new byte[0];
-            try {
-                b = item.getBody(ScmItem.BODY_TYPE.COMMIT_VERION);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            body = new String(b);
+            body = getContent(item);
         } else {
-            body = "TODO apache tika";
+            body = getContentMedatada(item);
         }
     }
+
+
 
     public String getRevision() {
         return revision;
@@ -50,4 +51,40 @@ public class ScmItemDocument  {
     public String getBody() {
         return body;
     }
+
+    private String getContentMedatada(ScmItem item) {
+        AutoDetectParser parser = new AutoDetectParser();
+        BodyContentHandler handler = new BodyContentHandler();
+        Metadata metadata = new Metadata();
+        try (InputStream stream = new ByteArrayInputStream(item.getBody(ScmItem.BODY_TYPE.COMMIT_VERION))) {
+            parser.parse(stream, handler, metadata);
+            if ("text/plain".equalsIgnoreCase(metadata.get("Content-Type"))) {
+                return getContent(item);
+            } else {
+                String rez = handler.toString();
+                if (!"".equals(rez)) {
+                    System.out.println(rez);
+                }
+                return rez;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+
+    private String getContent(ScmItem item) {
+        final String body;
+        byte [] b = new byte[0];
+        try {
+            b = item.getBody(ScmItem.BODY_TYPE.COMMIT_VERION);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        body = new String(b);
+        return body;
+    }
+
 }
