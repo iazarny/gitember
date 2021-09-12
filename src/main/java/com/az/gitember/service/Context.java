@@ -7,6 +7,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.eclipse.jgit.lib.ProgressMonitor;
+import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 
@@ -63,7 +64,7 @@ public class Context {
 
     public static final ObservableList<ScmItem> statusList = FXCollections.observableList(new ArrayList<>());
     public static final ObservableList<ScmItem> stashItemsList = FXCollections.observableList(new ArrayList<>());
-    public static final ObservableList<PlotLane> plotCommitList = FXCollections.observableList(new ArrayList<>());
+    public static final ObservableList<PlotCommit> plotCommitList = FXCollections.observableList(new ArrayList<>());
 
     public static final StringProperty fileHistoryTree = new SimpleStringProperty();
     public static final StringProperty fileHistoryName = new SimpleStringProperty();
@@ -82,7 +83,8 @@ public class Context {
             new SimpleObjectProperty(null);
 
     public static StringProperty searchValue = new SimpleStringProperty();
-
+    public static final ObjectProperty<Map<String, Set<String>>> searchResult =
+            new SimpleObjectProperty(null);
 
     private static Main main;
 

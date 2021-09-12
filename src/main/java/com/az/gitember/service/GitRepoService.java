@@ -4,6 +4,8 @@ import com.az.gitember.data.*;
 import com.az.gitember.service.ssh.SshTransportConfigCallback;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -82,9 +84,9 @@ public class GitRepoService {
      * @param absPath path to repository.
      */
     public static Repository createRepository(final String absPath,
-                                        final boolean withReadme,
-                                        final boolean withGitIgnore,
-                                        final boolean withLfs) throws Exception {
+                                              final boolean withReadme,
+                                              final boolean withGitIgnore,
+                                              final boolean withLfs) throws Exception {
         try (final Git git = Git.init()
                 .setDirectory(new File(absPath))
                 .call()) {
@@ -108,7 +110,7 @@ public class GitRepoService {
             }
 
             if (withLfs) {
-                addLFSSupport( git);
+                addLFSSupport(git);
             }
 
             git.commit().setMessage("Init").call();
@@ -146,7 +148,7 @@ public class GitRepoService {
         try (Git git = new Git(repository)) {
             final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
             final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
-            final Path attrPath = Paths.get(absPath , fileName);
+            final Path attrPath = Paths.get(absPath, fileName);
             Files.delete(attrPath);
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot unlink ", e);
@@ -187,7 +189,7 @@ public class GitRepoService {
 
     }
 
-    public GitRepoService(final Repository repo)  {
+    public GitRepoService(final Repository repo) {
         this.repository = repo;
     }
 
@@ -472,7 +474,7 @@ public class GitRepoService {
      *
      * @param from    branch name
      * @param message merge message
-     * @throws Exception   * @throws IOException in case of error
+     * @throws Exception * @throws IOException in case of error
      */
     public MergeResult mergeBranch(final String from, final String message) throws Exception {
         try (Git git = new Git(repository)) {
@@ -486,7 +488,7 @@ public class GitRepoService {
     /**
      * @param upstream the name of the upstream branch
      * @return rebase result
-     * @throws Exception   * @throws IOException in case of error
+     * @throws Exception * @throws IOException in case of error
      */
     public RebaseResult rebaseBranch(final String upstream) throws Exception {
         try (Git git = new Git(repository)) {
@@ -608,6 +610,55 @@ public class GitRepoService {
     public List<ScmRevisionInformation> getFileHistory(final String fileName) throws Exception {
 
         return getFileHistory(fileName, null);
+
+    }
+
+    public Map<String, Set<String>> search(List<PlotCommit> commits, String term, boolean luceneIndexed) {
+        Map<String, Set<String>> map = new HashMap<>();
+        String searchString = term.toLowerCase();
+
+        commits.forEach(
+                plotCommit -> {
+                    if (
+                            plotCommit.getShortMessage().toLowerCase().contains(searchString)
+                                    || plotCommit.getFullMessage().toLowerCase().contains(searchString)
+                                    || plotCommit.getName().toLowerCase().contains(searchString)
+                                    || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
+                                    || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                    ) {
+
+                        Set<String> affectedFiles = map.computeIfAbsent(plotCommit.getName(), s -> {
+                            return new HashSet<String>();
+                        });
+
+                        adapt(plotCommit).getAffectedItems().stream().forEach(
+                                item -> {
+                                    if (item.getShortName().toLowerCase().contains(searchString)) {
+                                        affectedFiles.add(item.getShortName());
+                                    }
+                                }
+                        );
+
+
+                    }
+
+
+                    if (luceneIndexed) {
+                        //TODO lucene search
+
+
+                    }
+                }
+        );
+
+        return map;
+    }
+
+
+    private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
+        return prersonIndent != null
+                && (prersonIndent.getEmailAddress() != null
+                && prersonIndent.getEmailAddress().toLowerCase().contains(searchString.toLowerCase()));
 
     }
 
@@ -981,12 +1032,12 @@ public class GitRepoService {
     }
 
     List<ScmItem> enrichWithLastChangesDetail(final Git git, final List<ScmItem> toEnrich) throws Exception {
-        for(ScmItem item : toEnrich) {
+        for (ScmItem item : toEnrich) {
             final LogCommand cmd = git.log()
                     .setRevFilter(RevFilter.ALL)
                     .setMaxCount(1)
                     .addPath(item.getShortName());
-            final Iterable<RevCommit> lastCommitIter =  cmd.call();
+            final Iterable<RevCommit> lastCommitIter = cmd.call();
             while (lastCommitIter.iterator().hasNext()) {
                 final RevCommit revCommit = lastCommitIter.iterator().next();
                 if (revCommit != null) {
@@ -999,7 +1050,6 @@ public class GitRepoService {
         return toEnrich;
 
     }
-
 
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
@@ -1015,7 +1065,7 @@ public class GitRepoService {
 
         status.addAll(lfs);
 
-        return  status;
+        return status;
     }
 
     public List<ScmItem> getLfsFiles(String name) throws IOException {
@@ -1042,7 +1092,7 @@ public class GitRepoService {
                 //final LfsPointer pointer = filter.getPointer(); //TODO deleted file
                 final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
                 final ScmItem scmItem = new ScmItem(
-                  path,new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
+                        path, new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
                 );
                 rez.add(scmItem);
             }
@@ -1053,9 +1103,9 @@ public class GitRepoService {
 
     public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final ProgressMonitor progressMonitor) {
         PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, progressMonitor);
-        List<ScmRevisionInformation> rez = commit.stream().map( pl -> adapt(pl) ).collect(Collectors.toList());
+        List<ScmRevisionInformation> rez = commit.stream().map(pl -> adapt(pl)).collect(Collectors.toList());
         rez.forEach(sri -> {
-            sri.getAffectedItems().removeIf( scmItem ->  ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
+            sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
         });
         return rez;
     }
@@ -1112,7 +1162,6 @@ public class GitRepoService {
 
         return plotCommitList;
     }
-
 
 
     public List<AverageLiveTime> getMergedBranches(final StatWPParameters params) {
@@ -1270,16 +1319,17 @@ public class GitRepoService {
 
     /**
      * Temporally configure in the user config internal LFS
+     *
      * @return pait of smugde and clean filterf for LFS
      * @throws Exception in case of error.
      */
-    private Pair<String,String> configureLfsSupport(StoredConfig config) throws Exception {
+    private Pair<String, String> configureLfsSupport(StoredConfig config) throws Exception {
 
         String smudge = config.getString("filter", "lfs", "smudge");
         String clean = config.getString("filter", "lfs", "clean");
 
-       // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-       // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+        // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+        // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
 
         config.unset("filter", "lfs", "smudge");
         config.unset("filter", "lfs", "clean");
@@ -1290,10 +1340,9 @@ public class GitRepoService {
         return new Pair<>(smudge, clean);
     }
 
-    private void rollbackLfsSupport( StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
+    private void rollbackLfsSupport(StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
         String smudge = smudgeAndClean.getFirst();
         String clean = smudgeAndClean.getSecond();
-
 
 
         if (clean == null) {
@@ -1438,8 +1487,8 @@ public class GitRepoService {
             return pullRez.getMergeResult().toString(); // TODo more info
         } finally {
             if (smudgeAndCleanRepo != null) {
-                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
-                 rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
+                rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
+                rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
             }
         }
     }
@@ -1524,8 +1573,6 @@ public class GitRepoService {
                         .collect(Collectors.joining(indent));
                 stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
             }
-
-
 
 
         }

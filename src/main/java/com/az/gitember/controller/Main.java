@@ -233,13 +233,17 @@ public class Main implements Initializable {
      * @param actionEvent event
      * @throws Exception
      */
-    public void openHandler(ActionEvent actionEvent) throws Exception {
+    public void openHandler(ActionEvent actionEvent)  {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File selectedDirectory =
                 directoryChooser.showDialog(App.getStage());
         if (selectedDirectory != null) {
             String absPath = selectedDirectory.getAbsolutePath();
-            Context.init(absPath);
+            try {
+                Context.init(absPath);
+            } catch (Exception e) {
+                showResult("Error", "Cannot open repository " + absPath, Alert.AlertType.WARNING);
+            }
         }
     }
 

@@ -61,11 +61,7 @@ public class ScmItemDocument  {
             if ("text/plain".equalsIgnoreCase(metadata.get("Content-Type"))) {
                 return getContent(item);
             } else {
-                String rez = handler.toString();
-                if (!"".equals(rez)) {
-                    System.out.println(rez);
-                }
-                return rez;
+                return handler.toString() + "\n" + metadata.toString();
             }
 
         } catch (Exception e) {
