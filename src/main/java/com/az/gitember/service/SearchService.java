@@ -1,32 +1,31 @@
 package com.az.gitember.service;
 
-import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmItemDocument;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.*;
 
 public class SearchService implements  AutoCloseable {
 
     private final String indexStorageFolder;
 
-    Directory memoryIndex;
+    Directory index;
     StandardAnalyzer analyzer;
     IndexWriterConfig indexWriterConfig;
     IndexWriter writter;
+    IndexReader reader;
+    IndexSearcher searcher;
 
     public SearchService(String projectFolder)  {
         this.indexStorageFolder = getIndexStorageFolder(projectFolder);
@@ -34,29 +33,34 @@ public class SearchService implements  AutoCloseable {
         this.indexWriterConfig = new IndexWriterConfig(analyzer);
 
         try {
-            this.memoryIndex = new NIOFSDirectory(Path.of(this.indexStorageFolder));
-            this.writter = new IndexWriter(memoryIndex, indexWriterConfig);
+            this.index = new NIOFSDirectory(Path.of(this.indexStorageFolder));
+            this.writter = new IndexWriter(index, indexWriterConfig);
+            this.reader = DirectoryReader.open(index);
+            this.searcher = new IndexSearcher(reader);
+
         } catch (IOException e) {
-            this.memoryIndex = null;
+            this.index = null;
             this.writter = null;
         }
 
     }
 
 
-    public List<ScmItemDocument> search(String searchTerm) {
+    public Map<String, Set<String>> search(String searchTerm) {
+        Map<String, Set<String>> rez = new HashMap<>();
+        try {
+            Query query = new QueryParser("body", analyzer).parse(searchTerm);
 
-        /*IndexReader indexReader = DirectoryReader
-                .open(memoryIndex);
-        IndexSearcher searcher = new IndexSearcher(indexReader);
-
-
-
-        Term term = new Term("body", searchTerm);
-        Query query = new PrefixQuery(term);*/
-
-        return null;
-
+            TopDocs docs = searcher.search(query, 1024);
+            for (ScoreDoc scireDoc : docs.scoreDocs) {
+                Document doc = searcher.doc(scireDoc.doc);
+                Set<String> items = rez.computeIfAbsent(doc.get("revision") , s-> new HashSet<>());
+                items.add(doc.get("name"));
+            }
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return rez;
 
     }
 

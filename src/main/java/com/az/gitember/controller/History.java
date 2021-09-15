@@ -213,7 +213,7 @@ public class History implements Initializable {
 
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    commitsTableView.refresh();
+
                     if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue) && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
@@ -223,6 +223,7 @@ public class History implements Initializable {
                                 (List<PlotCommit>) Context.plotCommitList,
                                 newValue,
                                 Context.getCurrentProject().isIndexed()));
+                        commitsTableView.refresh();
                     }
                 }
         );

@@ -643,8 +643,11 @@ public class GitRepoService {
                     }
 
 
-                    if (luceneIndexed) {
-                        //TODO lucene search
+                    if (luceneIndexed || true) {
+                        SearchService service = new SearchService( Context.getProjectFolder() ); //TODO refactor
+                        Map<String, Set<String>> lucineMap = service.search(term);
+                        System.out.println(lucineMap);
+
 
 
                     }

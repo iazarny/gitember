@@ -1,24 +1,13 @@
 package com.az.gitember.data;
 
-import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
-import com.az.gitember.service.GitemberUtil;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
-import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import static com.az.gitember.service.GitemberUtil.is;
 
 public class ScmItemDocument  {
 
@@ -38,7 +27,11 @@ public class ScmItemDocument  {
         }
     }
 
-
+    public ScmItemDocument(String revision, String name) {
+        this.revision = revision;
+        this.name = name;
+        this.body = null;
+    }
 
     public String getRevision() {
         return revision;
