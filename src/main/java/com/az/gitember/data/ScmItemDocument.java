@@ -1,6 +1,7 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.ExtensionMap;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
@@ -58,7 +59,7 @@ public class ScmItemDocument  {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(ExceptionUtils.getMessage(e));
             return "";
         }
     }

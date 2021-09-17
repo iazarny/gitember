@@ -11,21 +11,22 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-public class SearchService implements  AutoCloseable {
+public class SearchService implements AutoCloseable {
 
     private final String indexStorageFolder;
 
     Directory index;
     StandardAnalyzer analyzer;
     IndexWriterConfig indexWriterConfig;
-    IndexWriter writter;
-    IndexReader reader;
-    IndexSearcher searcher;
+    IndexWriter writter = null;
+    IndexReader reader =  null;
+    IndexSearcher searcher=  null;
 
     public SearchService(String projectFolder)  {
         this.indexStorageFolder = getIndexStorageFolder(projectFolder);
@@ -34,14 +35,10 @@ public class SearchService implements  AutoCloseable {
 
         try {
             this.index = new NIOFSDirectory(Path.of(this.indexStorageFolder));
-            this.writter = new IndexWriter(index, indexWriterConfig);
-            this.reader = DirectoryReader.open(index);
-            this.searcher = new IndexSearcher(reader);
-
+            System.out.println("indexindexindexindex " + index);
         } catch (IOException e) {
             e.printStackTrace();
             this.index = null;
-            this.writter = null;
         }
 
     }
@@ -52,9 +49,9 @@ public class SearchService implements  AutoCloseable {
         try {
             Query query = new QueryParser("body", analyzer).parse(searchTerm);
 
-            TopDocs docs = searcher.search(query, 1024);
+            TopDocs docs = getSearcher().search(query, 1024);
             for (ScoreDoc scireDoc : docs.scoreDocs) {
-                Document doc = searcher.doc(scireDoc.doc);
+                Document doc = getSearcher().doc(scireDoc.doc);
                 Set<String> items = rez.computeIfAbsent(doc.get("revision") , s-> new HashSet<>());
                 items.add(doc.get("name"));
             }
@@ -70,27 +67,58 @@ public class SearchService implements  AutoCloseable {
         document.add(new org.apache.lucene.document.TextField("revision", scmItemDocument.getRevision(), Field.Store.YES));
         document.add(new org.apache.lucene.document.TextField("name", scmItemDocument.getName(), Field.Store.YES));
         document.add(new org.apache.lucene.document.TextField("body", scmItemDocument.getBody(), Field.Store.YES));
-        if (writter != null) {
-            try {
-                writter.addDocument(document);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            getWritter().addDocument(document);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
 
+    public synchronized IndexWriter getWritter() throws IOException {
+        if (this.writter == null) {
+            this.writter = new IndexWriter(index, indexWriterConfig);
+        }
+        return this.writter;
+    }
+
+    public synchronized IndexSearcher getSearcher() throws IOException {
+        if (this.searcher == null) {
+            this.searcher = new IndexSearcher(getReader());
+        }
+        return searcher;
+    }
+
+    public synchronized IndexReader getReader() throws IOException  {
+
+        if(this.reader == null) {
+            this.reader = DirectoryReader.open(index);
+
+        }
+        return reader;
+    }
 
     private static String getIndexStorageFolder(String projectFolder) {
         return System.getProperty("java.io.tmpdir") + File.separator
                 + "gitemberidx" + File.separator + CipherService.crypt(projectFolder,"");
     }
 
-
     @Override
-    public void close() throws Exception {
-        if (this.writter != null) {
-            writter.close();
+    public void close()  {
+        System.out.println("Close cccccccccccccccccccccccccccccccccc ");
+        try {
+            if (this.writter != null) {
+                writter.close();
+            }
+
+            if (this.reader != null) {
+                reader.close();
+            }
+            index.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
         }
     }
 }

@@ -647,11 +647,14 @@ public class GitRepoService {
                 }
         );
 
+
         if (luceneIndexed || true) {
-            System.out.println("lucineMaplucineMaplucineMap <<<<<<< " );
-            SearchService service = new SearchService( Context.getProjectFolder() ); //TODO refactor
-            Map<String, Set<String>> lucineMap = service.search(term);
-            System.out.println("lucineMaplucineMaplucineMap >>>>>>>> " + lucineMap.size());
+
+            try (SearchService service = new SearchService( Context.getProjectFolder() )) {
+                Map<String, Set<String>> lucineMap = service.search(term);
+                System.out.println("lucineMaplucineMaplucineMap >>>>>>>> " + lucineMap.size());
+
+            }
 
 
 
