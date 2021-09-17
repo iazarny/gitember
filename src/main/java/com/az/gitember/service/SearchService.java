@@ -39,6 +39,7 @@ public class SearchService implements  AutoCloseable {
             this.searcher = new IndexSearcher(reader);
 
         } catch (IOException e) {
+            e.printStackTrace();
             this.index = null;
             this.writter = null;
         }

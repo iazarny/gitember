@@ -643,16 +643,19 @@ public class GitRepoService {
                     }
 
 
-                    if (luceneIndexed || true) {
-                        SearchService service = new SearchService( Context.getProjectFolder() ); //TODO refactor
-                        Map<String, Set<String>> lucineMap = service.search(term);
-                        System.out.println(lucineMap);
 
-
-
-                    }
                 }
         );
+
+        if (luceneIndexed || true) {
+            System.out.println("lucineMaplucineMaplucineMap <<<<<<< " );
+            SearchService service = new SearchService( Context.getProjectFolder() ); //TODO refactor
+            Map<String, Set<String>> lucineMap = service.search(term);
+            System.out.println("lucineMaplucineMaplucineMap >>>>>>>> " + lucineMap.size());
+
+
+
+        }
 
         return map;
     }
