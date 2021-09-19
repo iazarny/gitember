@@ -18,7 +18,7 @@ public class ScmItemDocument  {
     private final String body;
 
     public ScmItemDocument(ScmItem item)  {
-        this.name = item.getCommitName();
+        this.name = item.getShortName();
         this.revision = item.getCommitName();
 
         if (ExtensionMap.isTextExtension(item.getShortName())) {

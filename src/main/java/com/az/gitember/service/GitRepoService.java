@@ -49,6 +49,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -614,51 +615,73 @@ public class GitRepoService {
     }
 
     public Map<String, Set<String>> search(List<PlotCommit> commits, String term, boolean luceneIndexed) {
-        Map<String, Set<String>> map = new HashMap<>();
+        Map<String, Set<String>> map = new ConcurrentHashMap<>();
         String searchString = term.toLowerCase();
 
-        commits.forEach(
-                plotCommit -> {
-                    if (
-                            plotCommit.getShortMessage().toLowerCase().contains(searchString)
-                                    || plotCommit.getFullMessage().toLowerCase().contains(searchString)
-                                    || plotCommit.getName().toLowerCase().contains(searchString)
-                                    || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
-                                    || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
-                    ) {
+        Thread threadSearch1 = new Thread(() -> {
+            commits.forEach(
+                    plotCommit -> {
+                        if (
+                                plotCommit.getShortMessage().toLowerCase().contains(searchString)
+                                        || plotCommit.getFullMessage().toLowerCase().contains(searchString)
+                                        || plotCommit.getName().toLowerCase().contains(searchString)
+                                        || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
+                                        || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                        ) {
 
-                        Set<String> affectedFiles = map.computeIfAbsent(plotCommit.getName(), s -> {
+                            Set<String> affectedFiles = map.computeIfAbsent(plotCommit.getName(), s -> {
+                                return new HashSet<String>();
+                            });
+
+                            adapt(plotCommit).getAffectedItems().stream().forEach(
+                                    item -> {
+                                        if (item.getShortName().toLowerCase().contains(searchString)) {
+                                            affectedFiles.add(item.getShortName());
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+
+        });
+
+        Thread threadSearch2 = new Thread( () -> {
+            if (luceneIndexed || true) {
+
+                Long dt = System.currentTimeMillis();
+
+                System.out.println("lucineMaplucineMaplucineMap 1 " );
+                try (SearchService service = new SearchService( Context.getProjectFolder() )) {
+                    System.out.println("lucineMaplucineMaplucineMap 2 " + (System.currentTimeMillis() - dt) );
+                    Map<String, Set<String>> lucineMap = service.search(term);
+                    System.out.println("lucineMaplucineMaplucineMap >>>>>>>> "  + (System.currentTimeMillis() - dt));
+
+
+                    lucineMap.keySet().forEach( key -> {
+                        Set<String> affectedFiles = map.computeIfAbsent(key, s -> {
                             return new HashSet<String>();
                         });
+                        affectedFiles.addAll(lucineMap.get(key));
+                        lucineMap.get(key).clear();
 
-                        adapt(plotCommit).getAffectedItems().stream().forEach(
-                                item -> {
-                                    if (item.getShortName().toLowerCase().contains(searchString)) {
-                                        affectedFiles.add(item.getShortName());
-                                    }
-                                }
-                        );
-
-
-                    }
-
-
+                    }  );
 
                 }
-        );
-
-
-        if (luceneIndexed || true) {
-
-            try (SearchService service = new SearchService( Context.getProjectFolder() )) {
-                Map<String, Set<String>> lucineMap = service.search(term);
-                System.out.println("lucineMaplucineMaplucineMap >>>>>>>> " + lucineMap.size());
-
             }
 
+        } );
 
+        threadSearch2.start();
+        threadSearch1.start();
 
+        try {
+            threadSearch2.join();
+            threadSearch1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
 
         return map;
     }
