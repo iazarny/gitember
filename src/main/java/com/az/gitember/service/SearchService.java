@@ -1,21 +1,30 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.ScmItemDocument;
+import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class SearchService implements AutoCloseable {
 
@@ -35,7 +44,6 @@ public class SearchService implements AutoCloseable {
 
         try {
             this.index = new NIOFSDirectory(Path.of(this.indexStorageFolder));
-            System.out.println("indexindexindexindex " + index);
         } catch (IOException e) {
             e.printStackTrace();
             this.index = null;
@@ -43,11 +51,26 @@ public class SearchService implements AutoCloseable {
 
     }
 
+    public void dropIndex() {
+        try {
+            FileUtils.deleteDirectory(new File(this.indexStorageFolder));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public Map<String, Set<String>> search(String searchTerm) {
         Map<String, Set<String>> rez = new HashMap<>();
         try {
             Query query = new QueryParser("body", analyzer).parse(searchTerm);
+
+
+            //Term term = new Term("body", searchTerm);
+            //Query query = new PrefixQuery(term);
+
+            //Term term = new Term("body", searchTerm);
+            //Query query = new FuzzyQuery(term);
 
             TopDocs docs = getSearcher().search(query, 1024);
             for (ScoreDoc scireDoc : docs.scoreDocs) {
@@ -60,6 +83,20 @@ public class SearchService implements AutoCloseable {
         }
         return rez;
 
+    }
+
+    public synchronized IndexSearcher getSearcher() throws IOException {
+        if (this.searcher == null) {
+            this.searcher = new IndexSearcher(getReader());
+        }
+        return searcher;
+    }
+
+    public synchronized IndexReader getReader() throws IOException  {
+        if(this.reader == null) {
+            this.reader = DirectoryReader.open(index);
+        }
+        return reader;
     }
 
     public void submitItemToReindex(ScmItemDocument scmItemDocument)  {
@@ -82,21 +119,7 @@ public class SearchService implements AutoCloseable {
         return this.writter;
     }
 
-    public synchronized IndexSearcher getSearcher() throws IOException {
-        if (this.searcher == null) {
-            this.searcher = new IndexSearcher(getReader());
-        }
-        return searcher;
-    }
 
-    public synchronized IndexReader getReader() throws IOException  {
-
-        if(this.reader == null) {
-            this.reader = DirectoryReader.open(index);
-
-        }
-        return reader;
-    }
 
     private static String getIndexStorageFolder(String projectFolder) {
         return System.getProperty("java.io.tmpdir") + File.separator

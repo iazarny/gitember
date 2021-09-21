@@ -23,6 +23,7 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -110,17 +111,22 @@ public class HistoryDetail implements Initializable {
                     if (!empty) {
                         String searchTerm = Context.searchValue.getValueSafe().toLowerCase();
 
-                        Set<String> affectedFiles = Context.searchResult.getValue().getOrDefault(
-                                Context.scmRevCommitDetails.getValue().getRevisionFullName(),
-                                Collections.EMPTY_SET
-                        );
+                        Map<String, Set<String>> searchResult = Context.searchResult.getValue();
 
-                        boolean found = item.getViewRepresentation().toLowerCase().contains(searchTerm)
-                                || affectedFiles.contains(item.getViewRepresentation());
+                        if (searchResult != null && !searchResult.isEmpty()) {
+                            Set<String> affectedFiles = searchResult.getOrDefault(
+                                    Context.scmRevCommitDetails.getValue().getRevisionFullName(),
+                                    Collections.EMPTY_SET
+                            );
+
+                            boolean found = item.getViewRepresentation().toLowerCase().contains(searchTerm)
+                                    || affectedFiles.contains(item.getViewRepresentation());
 
 
-                        if (found) {
-                            setStyle(LookAndFeelSet.FOUND_ROW);
+                            if (found) {
+                                setStyle(LookAndFeelSet.FOUND_ROW);
+                            }
+
                         }
                     }
 

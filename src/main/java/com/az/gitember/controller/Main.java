@@ -50,6 +50,7 @@ public class Main implements Initializable {
     public Menu openRecentMenuItem;
     public MenuItem compressDataMenuItem;
     public MenuItem reindexDataMenuItem;
+    public MenuItem dropIndexDataMenuItem;
     public MainTreeChangeListener mainTreeChangeListener;
     public MenuItem fetchMenuItem;
     public MenuItem pullMenuItem;
@@ -138,7 +139,9 @@ public class Main implements Initializable {
 
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
                     editRawAttrsMenuItem.setVisible(attrFileExists);
-                    //lfsMenuItem.setVisible(lfsRepo);
+
+                    dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
+
 
 
                 }
@@ -300,10 +303,29 @@ public class Main implements Initializable {
 
     }
 
+    public void dropIndexDataHandler(ActionEvent actionEvent) {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
+        alert.setTitle("Question");
+        alert.setContentText("Would you like to drop history indexes for current project ?");
+        alert.initOwner(App.getScene().getWindow());
+        alert.showAndWait().ifPresent( r -> {
+            if (r == ButtonType.OK) {
+                SearchService service = new SearchService( Context.getProjectFolder() );
+                service.dropIndex();
+                Context.getCurrentProject().setIndexed(false);
+                Context.saveSettings();
+                dropIndexDataMenuItem.setDisable(true);
+
+            }
+        });
+
+    }
+
     public void reindexDataHandler(ActionEvent actionEvent) {
-
         new IndexEventHandler().handle(actionEvent);
-
+        dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
     }
 
 

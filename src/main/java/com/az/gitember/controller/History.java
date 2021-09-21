@@ -224,6 +224,8 @@ public class History implements Initializable {
                                 newValue,
                                 Context.getCurrentProject().isIndexed()));
                         commitsTableView.refresh();
+                    } else {
+                        Context.searchResult.setValue(null);
                     }
                 }
         );

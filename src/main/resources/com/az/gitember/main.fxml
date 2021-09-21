@@ -64,14 +64,18 @@
                                 <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
                                     <MenuItem text="Large file support ..."   fx:id="lfsMenuItem"  onAction="#largeFileSupportHandler"   />
                                     <MenuItem text="Remote URL ..." fx:id="remoteRulMenuItem"   onAction="#remoteURLtHandler"/>
+                                    <MenuItem text="Index history ..." fx:id="reindexDataMenuItem" disable="true" onAction="#reindexDataHandler"/>
+                                    <MenuItem text="Drop  history index ..." fx:id="dropIndexDataMenuItem" disable="true" onAction="#dropIndexDataHandler"/>
                                     <SeparatorMenuItem/>
                                     <MenuItem text="Edit configuration" fx:id="editRawConfigMenuItem"   onAction="#editRawConfigHandler"/>
                                     <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
+                                    <SeparatorMenuItem />
+
+
+                                    <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
+
                                 </Menu>
-                                <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
-                                <MenuItem text="Reindex " fx:id="reindexDataMenuItem" disable="true" onAction="#reindexDataHandler"/>
-                                <SeparatorMenuItem />
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal"/>
                                 <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
                             </items>

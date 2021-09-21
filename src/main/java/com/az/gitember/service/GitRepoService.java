@@ -652,22 +652,23 @@ public class GitRepoService {
                 Long dt = System.currentTimeMillis();
 
                 System.out.println("lucineMaplucineMaplucineMap 1 " );
-                try (SearchService service = new SearchService( Context.getProjectFolder() )) {
-                    System.out.println("lucineMaplucineMaplucineMap 2 " + (System.currentTimeMillis() - dt) );
-                    Map<String, Set<String>> lucineMap = service.search(term);
-                    System.out.println("lucineMaplucineMaplucineMap >>>>>>>> "  + (System.currentTimeMillis() - dt));
+
+                SearchService service = getSearchService();
+
+                System.out.println("lucineMaplucineMaplucineMap 2 " + (System.currentTimeMillis() - dt) );
+                Map<String, Set<String>> lucineMap = service.search(term);
+                System.out.println("lucineMaplucineMaplucineMap >>>>>>>> "  + (System.currentTimeMillis() - dt));
 
 
-                    lucineMap.keySet().forEach( key -> {
-                        Set<String> affectedFiles = map.computeIfAbsent(key, s -> {
-                            return new HashSet<String>();
-                        });
-                        affectedFiles.addAll(lucineMap.get(key));
-                        lucineMap.get(key).clear();
+                lucineMap.keySet().forEach( key -> {
+                    Set<String> affectedFiles = map.computeIfAbsent(key, s -> {
+                        return new HashSet<String>();
+                    });
+                    affectedFiles.addAll(lucineMap.get(key));
+                    lucineMap.get(key).clear();
 
-                    }  );
+                }  );
 
-                }
             }
 
         } );
@@ -684,6 +685,16 @@ public class GitRepoService {
 
 
         return map;
+    }
+
+    SearchService service = null;
+
+    private synchronized SearchService getSearchService() {
+        if(service == null) {
+            service = new SearchService( Context.getProjectFolder() );
+        }
+
+        return service;
     }
 
 
@@ -1133,8 +1144,8 @@ public class GitRepoService {
     }
 
 
-    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final ProgressMonitor progressMonitor) {
-        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, progressMonitor);
+    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty,  final ProgressMonitor progressMonitor) {
+        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty,  progressMonitor);
         List<ScmRevisionInformation> rez = commit.stream().map(pl -> adapt(pl)).collect(Collectors.toList());
         rez.forEach(sri -> {
             sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
@@ -1151,7 +1162,7 @@ public class GitRepoService {
      * @return PlotCommitList<PlotLane>
      * @throws Exception in case of error
      */
-    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final ProgressMonitor progressMonitor) {
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final int qtyRevs, final ProgressMonitor progressMonitor) {
 
 
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
@@ -1181,7 +1192,12 @@ public class GitRepoService {
             }
 
             plotCommitList.source(revWalk);
-            plotCommitList.fillTo(Integer.MAX_VALUE);
+            if (qtyRevs == -1) {
+                plotCommitList.fillTo(Integer.MAX_VALUE);
+            } else {
+                plotCommitList.fillTo(qtyRevs);
+            }
+
             revWalk.dispose();
 
             if (progressMonitor != null) {
@@ -1201,7 +1217,7 @@ public class GitRepoService {
         final String treeNameTarget = params.getBranchName();
         final List<BranchLiveTime> brandLiveTimes = new ArrayList<>();
         final Set<RevCommit> tails = new HashSet<>();
-        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, null);
+        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, -1, null);
         final Set<RevCommit> treeOnlyCommits = getRevCommits(treeNameHistory);
 
         RevCommit plotLane = treeNameHistory.get(0);
