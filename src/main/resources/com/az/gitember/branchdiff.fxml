@@ -17,6 +17,16 @@
                 <TableColumn fx:id="leftTableColumn" minWidth="300.0" prefWidth="-1.0"  />
                 <TableColumn fx:id="rightTableColumn" minWidth="300.0" prefWidth="-1.0"  />
             </columns>
+
+            <contextMenu>
+                <ContextMenu >
+                    <items>
+                        <MenuItem fx:id="menuItemShowDiff"  mnemonicParsing="false"   onAction="#showItemDiffHandler" text="Diff"/>
+
+                    </items>
+                </ContextMenu>
+            </contextMenu>
+
         </TableView>
     </center>
 </BorderPane>

@@ -16,6 +16,10 @@ Nothing in particular, but
  * Check https://www.gitgui.org/
 
 ## Changes
+### 2.3
+ * Full text search across history
+ * Search in open files
+
 ### 2.2
  * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details
  * Fast file compare. The text flow changed to rich text fx .
@@ -26,8 +30,6 @@ Nothing in particular, but
 
 ## Plans 
 
- * Add full text search
- * Add search in open files
  * Add annotation
  * Integration with git providers, at least with github
  * Branch difference item details

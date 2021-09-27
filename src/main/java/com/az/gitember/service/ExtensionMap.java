@@ -179,18 +179,6 @@ public class ExtensionMap {
         return map.containsKey(ext);
     }
 
-    /*public static boolean isBinaryFile(final File f) throws IOException {
-        String type = Files.probeContentType(f.toPath());
-        if (type == null) {
-            return true;
-        } else if (type.startsWith("text")) {
-            return false;
-        } else {
-            //type isn't text
-            return true;
-        }
-    }*/
-
     public static String getExtension(String fileName) {
 
         char ch;
