@@ -116,12 +116,12 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         sortOrder.put(Status.UNTRACKED_FOLDER, 0);
     }
 
-    private String commitName;
+    private RevCommit revCommit;
     private Changes changes;
 
-    public ScmItem(String s, ScmItemAttribute attribute, String commitName) {
+    public ScmItem(String s, ScmItemAttribute attribute, RevCommit revCommit) {
         super(s, attribute);
-        this.commitName = commitName;
+        this.revCommit = revCommit;
     }
 
     public ScmItem(String s, ScmItemAttribute attribute) {
@@ -145,11 +145,15 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
     public String getCommitName() {
-        return commitName;
+        return revCommit.getName();
     }
 
-    public void setCommitName(String commitName) {
-        this.commitName = commitName;
+    public void setCommitName(RevCommit revCommit) {
+        this.revCommit = revCommit;
+    }
+
+    public RevCommit getRevCommit() {
+        return revCommit;
     }
 
     public String getViewRepresentation() {
@@ -180,7 +184,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), commitName);
+        return Objects.hash(super.hashCode(), revCommit);
     }
 
     public ScmItem withChanges(final RevCommit revCommit) {

@@ -132,6 +132,7 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                               Number old_val, Number new_val) -> {
+            System.out.println(" oldScrollPane Y old " + old_val + " new " + new_val);
             newScrollPane.estimatedScrollYProperty().setValue(
                     new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
             );
@@ -140,6 +141,7 @@ public class DiffViewer implements Initializable {
 
         newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                               Number old_val, Number new_val) -> {
+            System.out.println(" newScrollPane Y old " + old_val + " new " + new_val);
             oldScrollPane.estimatedScrollYProperty().setValue(
                     new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
             );
@@ -318,7 +320,7 @@ public class DiffViewer implements Initializable {
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName),
                 this.diffList,  leftSide);
 
-        codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
+        codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter, null));
 
         StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
         if (spans != null) {

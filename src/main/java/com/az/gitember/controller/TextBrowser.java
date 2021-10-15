@@ -2,18 +2,21 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.data.Const;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.blame.BlameResult;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.Caret;
 import org.fxmisc.richtext.CodeArea;
@@ -27,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.ResourceBundle;
+import java.util.function.IntFunction;
 
 
 //TODO alert in case of close and text changes
@@ -36,10 +40,14 @@ public class TextBrowser implements Initializable {
     public VirtualizedScrollPane<CodeArea> scrollPane;
     public Button saveBtn;
     public TextField searchText;
+    public CheckBox annotationCb;
     private String content;
     private String fileName;
     private boolean overwrite;
+    private boolean diff;
     private int startIndex = -1;
+    private ScmItem scmItem;
+    private TextToSpanContentAdapter adapter;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -69,6 +77,23 @@ public class TextBrowser implements Initializable {
                         startIndex++;
                         searchValue(searchText.getText());
                     }
+                }
+        );
+
+        annotationCb.selectedProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    BlameResult blameResult = null;
+                    try {
+                        if (newValue) {
+                            blameResult = Context.getGitRepoService().blame(scmItem);
+
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    codeArea.setParagraphGraphicFactory(
+                            GitemberLineNumberFactory.get(codeArea, adapter, blameResult));
+
                 }
         );
 
@@ -106,6 +131,10 @@ public class TextBrowser implements Initializable {
         this.fileName = fileName;
     }
 
+    public void setDiff(boolean diff) {
+        this.diff = diff;
+    }
+
     /**
      * Force set flag to the same file when save command handled.
      */
@@ -114,16 +143,16 @@ public class TextBrowser implements Initializable {
     }
 
 
-    public void setText(String text, boolean diff) {
+    public void setText(String text) {
 
-        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName), diff);
+        this.adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName), diff);
         this.content = text;
 
         Platform.runLater(
                 () -> {
-                    codeArea.appendText(content);
 
-                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter));
+                    codeArea.appendText(content);
+                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter, null));
 
                     // initial color
                     StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
@@ -199,5 +228,12 @@ public class TextBrowser implements Initializable {
 
         }
 
+    }
+
+    public void setScmItem(ScmItem scmItem) {
+        this.scmItem = scmItem;
+        if (scmItem != null && scmItem.getRevCommit() != null && !diff) {
+            annotationCb.setVisible(true);
+        }
     }
 }

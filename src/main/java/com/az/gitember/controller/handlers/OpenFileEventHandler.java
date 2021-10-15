@@ -28,7 +28,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(OpenFileEventHandler.class.getName());
 
-    private final ScmItem item;
+    private final ScmItem scmItem;
 
     private final ScmItem.BODY_TYPE bodyType;
 
@@ -36,8 +36,8 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     private boolean editble = false;
     private boolean overwrite = false;
 
-    public OpenFileEventHandler(ScmItem item, ScmItem.BODY_TYPE bodyType) {
-        this.item = item;
+    public OpenFileEventHandler(ScmItem scmItem, ScmItem.BODY_TYPE bodyType) {
+        this.scmItem = scmItem;
         this.bodyType = bodyType;
     }
 
@@ -56,23 +56,23 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     @Override
     public void handle(ActionEvent event) {
 
-        final String fileName = item.getShortName();
+        final String fileName = scmItem.getShortName();
 
         try {
 
             if (ScmItem.BODY_TYPE.RAW_DIFF == bodyType) {
-                final String text = new String(item.getBody(bodyType));
+                final String text = new String(scmItem.getBody(bodyType));
                 openFile(fileName, text,true);
-            } else if (forceText || ExtensionMap.isTextExtension(item.getShortName())) {
+            } else if (forceText || ExtensionMap.isTextExtension(scmItem.getShortName())) {
                 String text;
                 try {
-                    text = new String(item.getBody(bodyType));
+                    text = new String(scmItem.getBody(bodyType));
                 } catch (Exception e) {
                     text = "";
                 }
                 openFile(fileName, text, false);
             } else {
-                String pathToFile = item.getFilePath(bodyType).toString();
+                String pathToFile = scmItem.getFilePath(bodyType).toString();
                 App.getShell().showDocument(pathToFile);
             }
 
@@ -94,7 +94,9 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         textBrowser.enableEdit(editble);
         textBrowser.setForceOverwrite(overwrite);
         textBrowser.setFileName(fileName);
-        textBrowser.setText(text, rawDiff);
+        textBrowser.setScmItem(scmItem);
+        textBrowser.setDiff(rawDiff);
+        textBrowser.setText(text);
 
         final Stage editorStage = new Stage();
         editorStage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));

@@ -1724,7 +1724,7 @@ public class GitRepoService {
                     diffs.stream()
                             .map(this::adaptDiffEntry)
                             .collect(Collectors.toCollection(() -> rez));
-                    rez.forEach(scmItem -> scmItem.setCommitName(revCommit.getName()));
+                    rez.forEach(scmItem -> scmItem.setCommitName(revCommit));
 
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "Cannot collect items from rev commit", e);
@@ -1751,6 +1751,13 @@ public class GitRepoService {
 
     public ScmStat blame(final Set<String> files, final ProgressMonitor progressMonitor) throws Exception {
         return blame(files, "Blame", progressMonitor);
+    }
+
+    public BlameResult blame(ScmItem scmItem) throws Exception {
+        final BlameCommand blamer = new BlameCommand(repository);
+        blamer.setStartCommit(scmItem.getRevCommit());
+        blamer.setFilePath(scmItem.getShortName());
+        return blamer.call();
     }
 
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
