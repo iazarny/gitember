@@ -4,8 +4,6 @@ import com.az.gitember.data.*;
 import com.az.gitember.service.ssh.SshTransportConfigCallback;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -651,13 +649,10 @@ public class GitRepoService {
 
                 Long dt = System.currentTimeMillis();
 
-                System.out.println("lucineMaplucineMaplucineMap 1 " );
 
                 SearchService service = getSearchService();
 
-                System.out.println("lucineMaplucineMaplucineMap 2 " + (System.currentTimeMillis() - dt) );
                 Map<String, Set<String>> lucineMap = service.search(term);
-                System.out.println("lucineMaplucineMaplucineMap >>>>>>>> "  + (System.currentTimeMillis() - dt));
 
 
                 lucineMap.keySet().forEach( key -> {

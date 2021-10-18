@@ -62,7 +62,6 @@ public class BranchDiffController implements Initializable {
         diffTableView.setOnContextMenuRequested(
                 e -> {
                     DiffEntry entry = diffTableView.getSelectionModel().getSelectedItem();
-                    System.out.println(entry);
                     if (entry == null) {
                         menuItemShowDiff.setDisable(true);
                     } else {

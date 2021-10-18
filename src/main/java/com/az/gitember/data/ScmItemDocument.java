@@ -59,7 +59,6 @@ public class ScmItemDocument  {
             }
 
         } catch (Exception e) {
-            System.out.println(ExceptionUtils.getMessage(e));
             return "";
         }
     }

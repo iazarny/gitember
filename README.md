@@ -19,6 +19,8 @@ Nothing in particular, but
 ### 2.3
  * Full text search across history
  * Search in open files
+ * Add annotation
+ * Branch difference with item details
 
 ### 2.2
  * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details
@@ -30,12 +32,6 @@ Nothing in particular, but
 
 ## Plans 
 
- * Add annotation
  * Integration with git providers, at least with github
- * Branch difference item details
  * Tab support
-
-
-
-
 

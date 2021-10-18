@@ -21,7 +21,7 @@ public class LookAndFeelSet {
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
     public static String CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
-    public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3;";
+    public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
 
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
@@ -31,7 +31,7 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
-            CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
+            CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20; -fx-font: Monospace; -fx-font-size: 20;";
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #3b3b3b;";
         } else {
             PIECHART_LEGENF_STYLE = "";
@@ -41,7 +41,7 @@ public class LookAndFeelSet {
             DEFAULT_CSS = "/styles/styles.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
             CODE_AREA_CSS = "-fx-font: Monospace; -fx-font-size: 20;";
-            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3;";
+            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
 
         }
     }

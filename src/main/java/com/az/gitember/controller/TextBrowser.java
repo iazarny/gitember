@@ -3,7 +3,6 @@ package com.az.gitember.controller;
 import com.az.gitember.App;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -30,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.ResourceBundle;
-import java.util.function.IntFunction;
 
 
 //TODO alert in case of close and text changes

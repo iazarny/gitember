@@ -128,7 +128,6 @@ public class SearchService implements AutoCloseable {
 
     @Override
     public void close()  {
-        System.out.println("Close cccccccccccccccccccccccccccccccccc ");
         try {
             if (this.writter != null) {
                 writter.close();
