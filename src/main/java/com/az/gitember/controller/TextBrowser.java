@@ -84,7 +84,6 @@ public class TextBrowser implements Initializable {
                     try {
                         if (newValue) {
                             blameResult = Context.getGitRepoService().blame(scmItem);
-
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -122,6 +121,7 @@ public class TextBrowser implements Initializable {
         if (allow) {
             saveBtn.setText("Save");
             saveBtn.setDisable(true);
+            annotationCb.setVisible(false);
         }
     }
 
@@ -230,8 +230,5 @@ public class TextBrowser implements Initializable {
 
     public void setScmItem(ScmItem scmItem) {
         this.scmItem = scmItem;
-        if (scmItem != null && scmItem.getRevCommit() != null && !diff) {
-            annotationCb.setVisible(true);
-        }
     }
 }

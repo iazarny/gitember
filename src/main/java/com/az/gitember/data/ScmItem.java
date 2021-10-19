@@ -54,6 +54,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
 
+    //TODO eliminate this class
     public static class Changes {
         private String commitInfo;
         private String commitAuthor;

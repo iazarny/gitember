@@ -23,7 +23,7 @@
                 </graphic>
             </Button>
             <Pane  HBox.hgrow="ALWAYS" />
-            <CheckBox fx:id="annotationCb" text="Annotate" visible="false"/>
+            <CheckBox fx:id="annotationCb" text="Annotate"/>
             <TextField  fx:id="searchText" promptText="Search" />
         </ToolBar>
     </top>

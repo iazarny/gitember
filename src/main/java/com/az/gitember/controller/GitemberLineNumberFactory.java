@@ -32,11 +32,13 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
     private static int getMaxLen(BlameResult blame) {
         int maxLen = 0;
         for (int i = 0; i < blame.getResultContents().size(); i++) {
-            String line = GitemberUtil.formatDateOnly(GitemberUtil.intToDate(blame.getSourceCommit(i).getCommitTime()))
-                    + " " + blame.getSourceCommitter(i).getName();
-            int len = line.length();
-            if (len > maxLen) {
-                maxLen = len;
+            if (blame.getSourceCommit(i) != null) {
+                String line = GitemberUtil.formatDateOnly(GitemberUtil.intToDate(blame.getSourceCommit(i).getCommitTime()))
+                        + " " + blame.getSourceAuthor(i).getName();
+                int len = line.length();
+                if (len > maxLen) {
+                    maxLen = len;
+                }
             }
         }
         return maxLen;
@@ -83,7 +85,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
 
         Label lineNo = new Label();
         if (blame != null) {
-            int width = maxLen * 10;
+            int width = maxLen * 11;
             lineNo.setMaxWidth(width);
             lineNo.setMinWidth(width);
             lineNo.setPrefWidth(width);
@@ -103,8 +105,10 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
         String author = "";
         if (blame != null && blame.getResultContents() != null) {
             try {
-                author =  " " + GitemberUtil.formatDateOnly(GitemberUtil.intToDate(blame.getSourceCommit(lineIdx).getCommitTime()))
-                        + " " + blame.getSourceCommitter(lineIdx).getName();
+                if (blame.getSourceCommit(lineIdx) != null) {
+                    author =  " " + GitemberUtil.formatDateOnly(GitemberUtil.intToDate(blame.getSourceCommit(lineIdx).getCommitTime()))
+                            + " " + blame.getSourceAuthor(lineIdx).getName();
+                }
             } catch (Exception e) {}
         }
         return author;

@@ -1750,7 +1750,9 @@ public class GitRepoService {
 
     public BlameResult blame(ScmItem scmItem) throws Exception {
         final BlameCommand blamer = new BlameCommand(repository);
-        blamer.setStartCommit(scmItem.getRevCommit());
+        if (scmItem.getRevCommit() != null) {
+            blamer.setStartCommit(scmItem.getRevCommit());
+        }
         blamer.setFilePath(scmItem.getShortName());
         return blamer.call();
     }

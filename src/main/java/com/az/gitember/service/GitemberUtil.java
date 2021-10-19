@@ -24,7 +24,7 @@ public class GitemberUtil {
 
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private final static SimpleDateFormat simpleDateOnlyFormat = new SimpleDateFormat("yyyy-MMM-dd");
+    private final static SimpleDateFormat simpleDateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
 
 
 
