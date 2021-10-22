@@ -2,14 +2,17 @@ package com.az.gitember.service;
 
 import com.az.gitember.data.LangDefinition;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.scene.control.ScrollBar;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -110,6 +113,14 @@ public class GitemberUtil {
         return (ArrayList<String>) new BufferedReader(new StringReader(content))
                 .lines()
                 .collect(Collectors.toList());
+    }
+
+
+    public static Object getField(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Field privateStringField = null;
+        privateStringField = obj.getClass().getDeclaredField(fieldName);
+        privateStringField.setAccessible(true);
+        return privateStringField.get(obj);
     }
 
 

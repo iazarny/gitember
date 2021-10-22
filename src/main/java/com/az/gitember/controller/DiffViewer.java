@@ -6,6 +6,7 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -93,6 +94,8 @@ public class DiffViewer implements Initializable {
         newLabel.getStyleClass().add("copy-label");
     }
 
+    private boolean updateAllowed =  true;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
@@ -130,20 +133,39 @@ public class DiffViewer implements Initializable {
 
         mainPanel.layout();
 
+
+        try {
+            ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
+            hbar.setOnMouseEntered( e -> updateAllowed = false );
+            hbar.setOnMouseExited( e -> updateAllowed = true );
+            hbar = (ScrollBar) GitemberUtil.getField(newScrollPane, "hbar");
+            hbar.setOnMouseEntered( e -> updateAllowed = false );
+            hbar.setOnMouseExited( e -> updateAllowed = true );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                               Number old_val, Number new_val) -> {
-            newScrollPane.estimatedScrollYProperty().setValue(
-                    new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
-            );
-            updatePathElements();
+            if(updateAllowed) {
+                newScrollPane.estimatedScrollYProperty().setValue(
+                        new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
+                );
+                updatePathElements();
+            }
         });
 
         newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
                                                               Number old_val, Number new_val) -> {
-            oldScrollPane.estimatedScrollYProperty().setValue(
-                    new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
-            );
-            updatePathElements();
+            if(updateAllowed) {
+                oldScrollPane.estimatedScrollYProperty().setValue(
+                        new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
+                );
+                updatePathElements();
+            }
+
         });
 
         newScrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
