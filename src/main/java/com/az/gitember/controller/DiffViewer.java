@@ -1,5 +1,6 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.control.VirtualizedScrollPaneLeft;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -43,7 +44,7 @@ public class DiffViewer implements Initializable {
     public CodeArea newTextFlow;
     public Pane diffDrawPanel;
     public GridPane mainPanel;
-    public VirtualizedScrollPane<CodeArea> oldScrollPane;
+    public VirtualizedScrollPaneLeft<CodeArea> oldScrollPane;
     public VirtualizedScrollPane<CodeArea> newScrollPane;
     public RowConstraints firstRowConstraint;
     public RowConstraints secondRowConstraint;
@@ -118,7 +119,7 @@ public class DiffViewer implements Initializable {
         newTextFlow.setMinWidth(Region.USE_PREF_SIZE);
         newTextFlow.setEditable(false);
 
-        oldScrollPane = new VirtualizedScrollPane<>(oldTextFlow);
+        oldScrollPane = new VirtualizedScrollPaneLeft<>(oldTextFlow);
         newScrollPane = new VirtualizedScrollPane<>(newTextFlow);
 
         mainPanel.add(oldScrollPane, 0, 1);

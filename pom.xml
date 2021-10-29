@@ -179,7 +179,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.10.6</version>
+            <version>0.10.7</version>
         </dependency>
 
 
