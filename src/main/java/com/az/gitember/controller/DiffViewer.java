@@ -1,5 +1,6 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.control.DiffOverview;
 import com.az.gitember.control.VirtualizedScrollPaneLeft;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
@@ -44,6 +45,7 @@ public class DiffViewer implements Initializable {
     public CodeArea newTextFlow;
     public Pane diffDrawPanel;
     public GridPane mainPanel;
+    public DiffOverview diffOverview;
     public VirtualizedScrollPaneLeft<CodeArea> oldScrollPane;
     public VirtualizedScrollPane<CodeArea> newScrollPane;
     public RowConstraints firstRowConstraint;
@@ -67,16 +69,18 @@ public class DiffViewer implements Initializable {
         this.oldText = Files.readString(Paths.get(oldFileName));
         this.newText = Files.readString(Paths.get(newFileName));
 
-        RawText oldRawTet = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
-        RawText newRawTet = new RawText(newText.getBytes(StandardCharsets.UTF_8));
+        RawText oldRawTxt = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
+        RawText newRawTxt = new RawText(newText.getBytes(StandardCharsets.UTF_8));
 
         DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         RawTextComparator comparator = RawTextComparator.WS_IGNORE_ALL;
 
-        diffList.addAll(diffAlgorithm.diff(comparator, oldRawTet, newRawTet));
+        diffList.addAll(diffAlgorithm.diff(comparator, oldRawTxt, newRawTxt));
 
         setText(oldTextFlow, oldText, oldFileName, true);
         setText(newTextFlow, newText, newFileName, false);
+
+        diffOverview.setData(oldText, newText, diffList);
 
         createPathElements();
         scrollToFirstDiff();
@@ -121,9 +125,11 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane = new VirtualizedScrollPaneLeft<>(oldTextFlow);
         newScrollPane = new VirtualizedScrollPane<>(newTextFlow);
+        diffOverview = new DiffOverview();
 
-        mainPanel.add(oldScrollPane, 0, 1);
-        mainPanel.add(newScrollPane, 2, 1);
+        mainPanel.add(diffOverview, 0, 1);
+        mainPanel.add(oldScrollPane, 1, 1);
+        mainPanel.add(newScrollPane, 3, 1);
 
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
         VBox.setVgrow(newScrollPane, Priority.ALWAYS);

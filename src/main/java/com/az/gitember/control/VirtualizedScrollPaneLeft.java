@@ -310,15 +310,12 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
         double h = layoutHeight - hbarHeight;
 
         content.resizeRelocate(vbarWidth, 0, w, h);
-        //content.resize(w, h);
 
         hbar.setVisibleAmount(w);
         vbar.setVisibleAmount(h);
 
         if(vbarVisible) {
             vbar.resizeRelocate(0, 0, vbarWidth, h);
-            //vbar.resizeRelocate(layoutWidth - vbarWidth, 100, vbarWidth, h-100);
-            //vbar.resizeRelocate(layoutWidth - vbarWidth, 0, vbarWidth, h);
         }
 
         if(hbarVisible) {
