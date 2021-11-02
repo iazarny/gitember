@@ -44,4 +44,8 @@ public class Pair<FIRST, SECOND> implements Serializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return String.valueOf(first) + " " + String.valueOf(second);
+    }
 }

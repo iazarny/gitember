@@ -1,20 +1,16 @@
 package com.az.gitember.control;
 
+import com.az.gitember.data.Side;
 import com.az.gitember.service.GitemberUtil;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
 import org.eclipse.jgit.diff.EditList;
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.IntSupplier;
 
 /**
  * Created by Igor Azarny (iazarny@yahoo.com) on 30 - Oct - 2021
@@ -37,8 +33,8 @@ public class DiffOverview extends GridPane {
         leftPane  = new Pane();
         rightPane  = new Pane();
 
-        leftPane.setStyle("-fx-border-color: red; ");
-        rightPane.setStyle("-fx-border-color: blue; ");
+        //leftPane.setStyle("-fx-border-color: red; ");
+        //rightPane.setStyle("-fx-border-color: blue; ");
 
         addColumn(0, leftPane);
         addColumn(1, rightPane);
@@ -68,14 +64,19 @@ public class DiffOverview extends GridPane {
         this.rightText = rightText;
         this.diffList = diffList;
 
-        leftLines = GitemberUtil.getLines(leftText);
-        rightLines = GitemberUtil.getLines(rightText);
+        leftLines = GitemberUtil.getLines(leftText, diffList, Side.A).getFirst();
+        rightLines = GitemberUtil.getLines(rightText, diffList, Side.B).getFirst();
 
         fillLines(leftPane, leftLines);
-        fillLines(rightPane, leftLines);
+        fillLines(rightPane, rightLines);
 
     }
 
+    /*
+
+
+
+     */
 
     @Override
     protected void layoutChildren() {
@@ -86,10 +87,10 @@ public class DiffOverview extends GridPane {
 
         resize(layoutWidth, layoutHeight);
         leftPane.resize(layoutWidth/2, layoutHeight);
-        //rightPane.resize(layoutWidth/2, layoutHeight);
+        rightPane.resize(layoutWidth/2, layoutHeight);
 
         layoutLines(leftPane, leftLines, layoutWidth/2);
-        //layoutLines(rightPane, rightLines, layoutWidth/2);
+        layoutLines(rightPane, rightLines, layoutWidth/2);
 
     }
 
@@ -99,26 +100,26 @@ public class DiffOverview extends GridPane {
         double charWidth = 0;
         if (maxLineWidthInChar > 0) {
             charWidth = layoutWidth / maxLineWidthInChar;
-
         }
         for (int i = 0; i < pane.getChildren().size(); i++) {
-            String text =   lines.get(i);
             Line line = (Line) pane.getChildren().get(i);
-            double y = i * strokeSize;
+            String text =   lines.get(i);
+            double y = i * strokeSize + strokeSize/2;
             line.setStartY(y);
             line.setEndY(y);
             line.setStartX(0);
             line.setEndX(charWidth * text.length());
-            //line.setStrokeWidth(strokeSize);
-            line.setStrokeWidth(1);
+            //line.setStrokeWidth(Math.max(1.0, strokeSize/4));
+            line.setStrokeWidth(strokeSize);
         }
     }
 
     private void fillLines(Pane pane, Collection<String> lines) {
         for (String s: lines) {
             Line l = new Line(0,0,0,0);
-            l.setStyle("-fx-background-color: red");
-            l.getStyleClass().add("diff-row-new");
+            //l.setStyle("-fx-background-color: red");
+            //l.getStyleClass().add("diff-row-new");
+            l.setStroke(Color.RED);
             pane.getChildren().add(l);
         }
     }

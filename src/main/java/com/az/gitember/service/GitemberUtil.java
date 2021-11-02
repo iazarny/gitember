@@ -1,11 +1,12 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.LangDefinition;
+import com.az.gitember.data.Pair;
+import com.az.gitember.data.Side;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.scene.control.ScrollBar;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
-import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.eclipse.jgit.diff.EditList;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
@@ -95,10 +96,83 @@ public class GitemberUtil {
     }
 
     public static String getDiffSyleClass(Edit delta, String prefix) {
-        switch (delta.getType()) {
+        return getDiffSyleClass(delta.getType(), prefix);
+    }
+
+    public static String getDiffSyleClass(Edit.Type type, String prefix) {
+        switch (type) {
             case INSERT: return prefix + "-new";
             case DELETE: return prefix + "-deleted";
             default : return prefix + "-modified";
+        }
+    }
+
+    public static Pair<ArrayList<String>, ArrayList<Edit.Type>> getLines(final String content, final EditList diffList, final Side side) {
+        ArrayList<String> original = getLines(content);
+        ArrayList<String> lines = new ArrayList<>(original.size());
+        ArrayList<Edit.Type> types = new ArrayList<>(original.size());
+        for (int i = 0; i < original.size(); i++) {
+            Edit edit = getDiffAtLine(diffList, side, i);
+            Edit.Type replaceType = null;
+
+            if (edit != null) {
+                Edit.Type type = edit.getType();
+                if (type == Edit.Type.DELETE) {
+                    Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
+                    int emtyLineToAdd = pos.getSecond() - pos.getFirst();
+                    if (emtyLineToAdd > 0) {
+                        System.out.println("Side " +  side + " D Need to add lines " + pos);
+                        addEmptyLines(lines, types, type, emtyLineToAdd);
+                    }
+                } else if (type == Edit.Type.INSERT) {
+                    Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
+                    int emtyLineToAdd = pos.getSecond() - pos.getFirst();
+                    if (emtyLineToAdd > 0) {
+                        System.out.println("Side " +  side + " i Need to add lines " + pos);
+                        addEmptyLines(lines, types, type, emtyLineToAdd);
+                    }
+
+                 } else if (type == Edit.Type.REPLACE) {
+                    replaceType = type;
+                }
+            }
+
+            final String linetoAdd = original.get(i);
+            lines.add(linetoAdd);
+            types.add(replaceType);
+        }
+        return new Pair<>(lines, types);
+    }
+
+    private static void addEmptyLines(ArrayList<String> lines, ArrayList<Edit.Type> types, Edit.Type type, int emtyLineToAdd) {
+        for (int j = 0; j < emtyLineToAdd; j++) {
+            lines.add("");
+            types.add(type);
+        }
+    }
+
+    private static Edit getDiffAtLine(final EditList diffList, final Side side, final int lineIdx) {
+
+        for (int i = 0; i < diffList.size(); i++) {
+
+            Edit edit = diffList.get(i);
+
+            if (side == Side.A && lineIdx >= edit.getBeginA() && lineIdx <= edit.getEndA()) {
+                return edit;
+            } else if (side == Side.B && lineIdx >= edit.getBeginB() && lineIdx <= edit.getEndB()) {
+                return edit;
+            }
+
+        }
+        return  null;
+
+    }
+
+    private static Pair<Integer, Integer> getPosition(Side side, Edit edit) {
+        if (side == Side.A) {
+            return new Pair<>(edit.getBeginA(), edit.getEndA());
+        } else {
+            return new Pair<>(edit.getBeginB(), edit.getEndB());
         }
     }
 
@@ -122,7 +196,5 @@ public class GitemberUtil {
         privateStringField.setAccessible(true);
         return privateStringField.get(obj);
     }
-
-
 
 }

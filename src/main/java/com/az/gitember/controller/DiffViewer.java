@@ -132,6 +132,7 @@ public class DiffViewer implements Initializable {
         mainPanel.add(newScrollPane, 3, 1);
 
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
+        VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
         VBox.setVgrow(newScrollPane, Priority.ALWAYS);
         HBox.setHgrow(oldScrollPane, Priority.ALWAYS);
         HBox.setHgrow(newScrollPane, Priority.ALWAYS);
