@@ -111,6 +111,8 @@ public class GitemberUtil {
         ArrayList<String> original = getLines(content);
         ArrayList<String> lines = new ArrayList<>(original.size());
         ArrayList<Edit.Type> types = new ArrayList<>(original.size());
+        boolean needToAlign = false;
+        Edit editToAling = null;
         for (int i = 0; i < original.size(); i++) {
             Edit edit = getDiffAtLine(diffList, side, i);
             Edit.Type replaceType = null;
@@ -120,21 +122,34 @@ public class GitemberUtil {
                 if (type == Edit.Type.DELETE) {
                     Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
                     int emtyLineToAdd = pos.getSecond() - pos.getFirst();
-                    if (emtyLineToAdd > 0) {
-                        System.out.println("Side " +  side + " D Need to add lines " + pos);
-                        addEmptyLines(lines, types, type, emtyLineToAdd);
-                    }
+                    addEmptyLines(lines, types, type, emtyLineToAdd);
                 } else if (type == Edit.Type.INSERT) {
                     Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
                     int emtyLineToAdd = pos.getSecond() - pos.getFirst();
-                    if (emtyLineToAdd > 0) {
-                        System.out.println("Side " +  side + " i Need to add lines " + pos);
-                        addEmptyLines(lines, types, type, emtyLineToAdd);
-                    }
-
+                    addEmptyLines(lines, types, type, emtyLineToAdd);
                  } else if (type == Edit.Type.REPLACE) {
                     replaceType = type;
+                    needToAlign = true;
+                    editToAling = edit;
                 }
+            } else {
+                if (needToAlign) {
+                    Pair<Integer, Integer> posA = getPosition(Side.A, editToAling );
+                    Pair<Integer, Integer> posB = getPosition(Side.B, editToAling );
+                    int lenA = posA.getSecond() - posA.getFirst();
+                    int lenB = posB.getSecond() - posB.getFirst();
+
+                    if (side == Side.A && lenA < lenB) {
+                        addEmptyLines(lines, types, Edit.Type.EMPTY, lenB - lenA);
+                    } else if (side == Side.B && lenB < lenA) {
+                        addEmptyLines(lines, types, Edit.Type.EMPTY, lenA - lenB);
+                    }
+
+
+                    needToAlign = false;
+                    editToAling = null;
+                }
+
             }
 
             final String linetoAdd = original.get(i);
