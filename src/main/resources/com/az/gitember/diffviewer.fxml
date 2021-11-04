@@ -12,10 +12,10 @@
           fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
     
    <columnConstraints>
-      <ColumnConstraints halignment="CENTER" percentWidth="4" />
-      <ColumnConstraints percentWidth="45" />
+      <ColumnConstraints halignment="CENTER" percentWidth="24" />
+      <ColumnConstraints percentWidth="35" />
       <ColumnConstraints halignment="CENTER" percentWidth="6" />
-      <ColumnConstraints percentWidth="45" />
+      <ColumnConstraints percentWidth="35" />
    </columnConstraints>
    <rowConstraints>
       <RowConstraints fx:id="firstRowConstraint"/>

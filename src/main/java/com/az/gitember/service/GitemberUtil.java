@@ -119,14 +119,20 @@ public class GitemberUtil {
 
             if (edit != null) {
                 Edit.Type type = edit.getType();
+                Pair<Integer, Integer> posSide = getPosition(side, edit );
+                Pair<Integer, Integer> posSodeOposite = getPosition(side.opposite(), edit );
+                int emtyLineToAdd = posSodeOposite.getSecond() - posSodeOposite.getFirst();
                 if (type == Edit.Type.DELETE) {
-                    Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
-                    int emtyLineToAdd = pos.getSecond() - pos.getFirst();
                     addEmptyLines(lines, types, type, emtyLineToAdd);
+                    if  (posSide.getSecond() - posSide.getFirst() > 0 && i < posSide.getSecond()) {
+                        replaceType = type;
+                    }
                 } else if (type == Edit.Type.INSERT) {
-                    Pair<Integer, Integer> pos = getPosition(side.opposite(), edit );
-                    int emtyLineToAdd = pos.getSecond() - pos.getFirst();
                     addEmptyLines(lines, types, type, emtyLineToAdd);
+                    if  (posSide.getSecond() - posSide.getFirst() > 0 && i < posSide.getSecond()) {
+                        replaceType = type;
+                    }
+
                  } else if (type == Edit.Type.REPLACE) {
                     replaceType = type;
                     needToAlign = true;
