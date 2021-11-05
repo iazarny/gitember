@@ -20,7 +20,8 @@ Nothing in particular, but
  * Full text search across history
  * Search in open files
  * Add annotation
- * Branch difference with item details
+ * Branch differences with item details
+ * Add overview for difference component 
 
 ### 2.2
  * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details

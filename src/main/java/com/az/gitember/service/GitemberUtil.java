@@ -167,7 +167,7 @@ public class GitemberUtil {
 
     private static void addEmptyLines(ArrayList<String> lines, ArrayList<Edit.Type> types, Edit.Type type, int emtyLineToAdd) {
         for (int j = 0; j < emtyLineToAdd; j++) {
-            lines.add("");
+            lines.add(null);
             types.add(type);
         }
     }

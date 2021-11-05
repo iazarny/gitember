@@ -41,8 +41,8 @@ public class DiffViewer implements Initializable {
 
     public TextField newLabel;
     public TextField oldLabel;
-    public CodeArea oldTextFlow;
-    public CodeArea newTextFlow;
+    public CodeArea oldCodeArea;
+    public CodeArea newCodeArea;
     public Pane diffDrawPanel;
     public GridPane mainPanel;
     public DiffOverview diffOverview;
@@ -77,8 +77,8 @@ public class DiffViewer implements Initializable {
 
         diffList.addAll(diffAlgorithm.diff(comparator, oldRawTxt, newRawTxt));
 
-        setText(oldTextFlow, oldText, oldFileName, true);
-        setText(newTextFlow, newText, newFileName, false);
+        setText(oldCodeArea, oldText, oldFileName, true);
+        setText(newCodeArea, newText, newFileName, false);
 
         diffOverview.setData(oldText, newText, diffList);
 
@@ -111,20 +111,20 @@ public class DiffViewer implements Initializable {
         }
 
 
-        oldTextFlow = new CodeArea();
-        oldTextFlow.setStyle(LookAndFeelSet.CODE_AREA_CSS);
-        oldTextFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        oldTextFlow.setMinWidth(Region.USE_PREF_SIZE);
-        oldTextFlow.setEditable(false);
+        oldCodeArea = new CodeArea();
+        oldCodeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+        oldCodeArea.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        oldCodeArea.setMinWidth(Region.USE_PREF_SIZE);
+        oldCodeArea.setEditable(false);
 
-        newTextFlow = new CodeArea();
-        newTextFlow.setStyle(LookAndFeelSet.CODE_AREA_CSS);
-        newTextFlow.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        newTextFlow.setMinWidth(Region.USE_PREF_SIZE);
-        newTextFlow.setEditable(false);
+        newCodeArea = new CodeArea();
+        newCodeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+        newCodeArea.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        newCodeArea.setMinWidth(Region.USE_PREF_SIZE);
+        newCodeArea.setEditable(false);
 
-        oldScrollPane = new VirtualizedScrollPaneLeft<>(oldTextFlow);
-        newScrollPane = new VirtualizedScrollPane<>(newTextFlow);
+        oldScrollPane = new VirtualizedScrollPaneLeft<>(oldCodeArea);
+        newScrollPane = new VirtualizedScrollPane<>(newCodeArea);
         diffOverview = new DiffOverview();
 
         mainPanel.add(diffOverview, 0, 1);
@@ -153,6 +153,7 @@ public class DiffViewer implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
 
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
@@ -244,6 +245,13 @@ public class DiffViewer implements Initializable {
     }
 
     private void updatePathElements() {
+
+        diffOverview.setHiilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
+                / oldScrollPane.totalHeightEstimateProperty().getValue(),
+                oldCodeArea.heightProperty().getValue() / oldCodeArea.totalHeightEstimateProperty().getValue()
+                );
+
+
         for (int i = 0; i < diffDrawPanel.getChildren().size(); i++) {
             final Path path = (Path) diffDrawPanel.getChildren().get(i);
 
@@ -303,12 +311,12 @@ public class DiffViewer implements Initializable {
                 Edit delta = this.diffList.get(0);
                 final int origPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginA() - 5));
                 final int revPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() - 5));
-                oldTextFlow.moveTo(origPos, 0);
-                newTextFlow.moveTo(revPos, 0);
-                oldTextFlow.requestFollowCaret();
-                oldTextFlow.layout();
-                newTextFlow.requestFollowCaret();
-                newTextFlow.layout();
+                oldCodeArea.moveTo(origPos, 0);
+                newCodeArea.moveTo(revPos, 0);
+                oldCodeArea.requestFollowCaret();
+                oldCodeArea.layout();
+                newCodeArea.requestFollowCaret();
+                newCodeArea.layout();
             }
 
         }
@@ -380,10 +388,10 @@ public class DiffViewer implements Initializable {
         final CodeArea searchCodeArea;
         int startIndex;
         if (textField == searchTextOld) {
-            searchCodeArea = oldTextFlow;
+            searchCodeArea = oldCodeArea;
             startIndex = oldStartIndex;
         } else {
-            searchCodeArea = newTextFlow;
+            searchCodeArea = newCodeArea;
             startIndex = newStartIndex;
         }
 

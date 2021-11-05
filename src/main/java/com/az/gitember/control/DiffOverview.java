@@ -8,14 +8,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by Igor Azarny (iazarny@yahoo.com) on 30 - Oct - 2021
@@ -24,6 +22,8 @@ public class DiffOverview extends GridPane {
 
     private Pane leftPane;
     private Pane rightPane;
+    private Pane windowPane;
+    private Rectangle rectangle;
 
     private String leftText;
     private String rightText;
@@ -38,23 +38,32 @@ public class DiffOverview extends GridPane {
     private int leftMaxLine = 0 ;
     private int rightMaxLine = 0 ;
 
+    private double windowHeightOffset = 0 ;
+    private double windowHeight = 0 ;
+
     public DiffOverview() {
         super();
 
         leftPane  = new Pane();
         rightPane  = new Pane();
+        windowPane = new Pane();
 
-        //leftPane.setStyle("-fx-border-color: red; ");
-        //rightPane.setStyle("-fx-border-color: blue; ");
+        rectangle = new Rectangle(0,0, 220, 120);
+        rectangle.setFill(Color.rgb(200,128,228,0.50));
+
 
         addColumn(0, leftPane);
         addColumn(1, rightPane);
+        addColumn(2, windowPane);
+
 
         ColumnConstraints leftConstraints =  new ColumnConstraints();
         ColumnConstraints rightConstraints =  new ColumnConstraints();
+        ColumnConstraints windowConstraints =  new ColumnConstraints();
 
-        leftConstraints.setPercentWidth(50);
-        rightConstraints.setPercentWidth(50);
+        leftConstraints.setPercentWidth(49);
+        rightConstraints.setPercentWidth(49);
+        windowConstraints.setPercentWidth(2);
 
         leftConstraints.setFillWidth(true);
         rightConstraints.setFillWidth(true);
@@ -62,8 +71,9 @@ public class DiffOverview extends GridPane {
 
         getColumnConstraints().add(0, leftConstraints);
         getColumnConstraints().add(1, rightConstraints);
+        getColumnConstraints().add(2, windowConstraints);
 
-        //setStyle("-fx-background-color: cyan");
+        windowPane.getChildren().add(rectangle);
 
 
     }
@@ -86,12 +96,22 @@ public class DiffOverview extends GridPane {
 
     }
 
-    /*
-
-
-
+    /**
+     * Set height offset.
+     * @param offset 0..1
+     * @param size 0..1 relative height of visible content
      */
+    public void setHiilightPosSize (double offset, double size) {
+        double layoutWidth = snapSizeX(getLayoutBounds().getWidth());
+        double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
+        windowHeightOffset = layoutHeight * offset;
+        windowHeight = layoutHeight * size;
+        layoutWindow(layoutWidth, layoutHeight);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
@@ -106,10 +126,31 @@ public class DiffOverview extends GridPane {
         layoutLines(leftPane, leftLines, layoutWidth/2, leftMaxLine);
         layoutLines(rightPane, rightLines, layoutWidth/2, rightMaxLine);
 
+        layoutWindow(layoutWidth, layoutHeight);
+
     }
 
 
+    /**
+     * Move highlight rectangle to the specified vertical position and set size.
+     * @param layoutWidth
+     * @param layoutHeight
+     */
+    private void layoutWindow(double layoutWidth, double layoutHeight) {
+        rectangle.setX(-1 * layoutWidth);
+        rectangle.setWidth(layoutWidth);
 
+        rectangle.setY(windowHeightOffset);
+        rectangle.setHeight(windowHeight);
+    }
+
+    /**
+     * Depict lines of text on correc position with correct size
+     * @param pane
+     * @param lineType
+     * @param layoutWidth
+     * @param maxWidth
+     */
     private void layoutLines(Pane pane, Pair<ArrayList<String>, ArrayList<Edit.Type>> lineType, double layoutWidth, int maxWidth) {
         double strokeSize = getLineThick();
 
@@ -126,7 +167,13 @@ public class DiffOverview extends GridPane {
             line.setStartY(y);
             line.setEndY(y);
             line.setStartX(0);
-            line.setEndX(charWidth * text.length());
+
+            if (text == null) {
+                line.setEndX(charWidth * maxWidth);
+            } else {
+                line.setEndX( charWidth * text.length());
+            }
+
 
             line.setStrokeWidth(strokeSize);
             line.setStrokeLineCap(StrokeLineCap.BUTT);
@@ -138,13 +185,15 @@ public class DiffOverview extends GridPane {
         ArrayList<Edit.Type> types = linesTypes.getSecond();
         for (int i = 0; i < lines.size(); i++) {
             Line l = new Line(0,0,0,0);
-            l.setStroke(getColor(types.get(i)));
+            l.setStroke(getColor(types.get(i), lines.get(i)));
             pane.getChildren().add(l);
         }
     }
 
-    private Color getColor(Edit.Type type) {
-        if (type != null) {
+    private Color getColor(Edit.Type type, String str) {
+        if (str == null) {
+            return Color.WHITE;
+        } else if (type != null) {
             switch (type) {
                 case DELETE:
                     return Color.RED;
@@ -156,7 +205,6 @@ public class DiffOverview extends GridPane {
                     return Color.MAGENTA;
 
             }
-
         }
         return Color.LIGHTGRAY;
 
@@ -169,6 +217,6 @@ public class DiffOverview extends GridPane {
     }
 
     private int getMaxLen(ArrayList<String> lines) {
-        return  lines.stream().mapToInt( String::length).max().orElseGet(() -> 0);
+        return  lines.stream().filter( s -> s != null).mapToInt( String::length).max().orElseGet(() -> 0);
     }
 }
