@@ -13,6 +13,7 @@ import javafx.scene.shape.StrokeLineCap;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
@@ -40,6 +41,7 @@ public class DiffOverview extends GridPane {
 
     private double windowHeightOffset = 0 ;
     private double windowHeight = 0 ;
+    private double yyy = 0 ;
 
     public DiffOverview() {
         super();
@@ -94,19 +96,61 @@ public class DiffOverview extends GridPane {
         fillLines(leftPane, leftLines);
         fillLines(rightPane, rightLines);
 
+
+        setOnMousePressed(event -> {
+            //System.out.println(">>>>>>.> " + event );
+
+            if (event.getTarget() != rectangle) {
+                windowHeightOffset = event.getY() - windowHeight/2;
+                double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
+                if (windowHeightOffset + windowHeight > layoutHeight ) {
+                    windowHeightOffset = layoutHeight  - windowHeight;
+                }
+                if (windowHeightOffset < 0) {
+                    windowHeightOffset =  0;
+                }
+
+                layoutWindow();
+            }
+
+
+        });
+
+        rectangle.setOnMousePressed(event -> {
+            //System.out.println("cccccccc  " + event );
+            this.yyy = event .getY() - windowHeightOffset;
+        });
+
+        rectangle.setOnMouseDragged(event -> {
+            //System.out.println("########  " + event );
+
+            windowHeightOffset = event.getY() - yyy;
+            double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
+            if (windowHeightOffset + windowHeight > layoutHeight ) {
+                windowHeightOffset = layoutHeight  - windowHeight;
+            }
+            if (windowHeightOffset < 0) {
+                windowHeightOffset =  0;
+            }
+
+            layoutWindow();
+        });
+
     }
+
+
 
     /**
      * Set height offset.
      * @param offset 0..1
      * @param size 0..1 relative height of visible content
      */
-    public void setHiilightPosSize (double offset, double size) {
+    public void setHilightPosSize(double offset, double size) {
         double layoutWidth = snapSizeX(getLayoutBounds().getWidth());
         double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
         windowHeightOffset = layoutHeight * offset;
         windowHeight = layoutHeight * size;
-        layoutWindow(layoutWidth, layoutHeight);
+        layoutWindow();
     }
 
     /**
@@ -126,17 +170,19 @@ public class DiffOverview extends GridPane {
         layoutLines(leftPane, leftLines, layoutWidth/2, leftMaxLine);
         layoutLines(rightPane, rightLines, layoutWidth/2, rightMaxLine);
 
-        layoutWindow(layoutWidth, layoutHeight);
+        layoutWindow();
 
     }
 
 
     /**
      * Move highlight rectangle to the specified vertical position and set size.
-     * @param layoutWidth
-     * @param layoutHeight
      */
-    private void layoutWindow(double layoutWidth, double layoutHeight) {
+    private void layoutWindow() {
+
+        double layoutWidth = snapSizeX(getLayoutBounds().getWidth());
+        double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
+
         rectangle.setX(-1 * layoutWidth);
         rectangle.setWidth(layoutWidth);
 

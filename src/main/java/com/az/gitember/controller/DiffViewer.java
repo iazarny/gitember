@@ -246,7 +246,7 @@ public class DiffViewer implements Initializable {
 
     private void updatePathElements() {
 
-        diffOverview.setHiilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
+        diffOverview.setHilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
                 / oldScrollPane.totalHeightEstimateProperty().getValue(),
                 oldCodeArea.heightProperty().getValue() / oldCodeArea.totalHeightEstimateProperty().getValue()
                 );
