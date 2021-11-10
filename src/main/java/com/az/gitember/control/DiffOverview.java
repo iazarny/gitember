@@ -3,6 +3,8 @@ package com.az.gitember.control;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.Side;
 import com.az.gitember.service.GitemberUtil;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -13,8 +15,8 @@ import javafx.scene.shape.StrokeLineCap;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 /**
  * Created by Igor Azarny (iazarny@yahoo.com) on 30 - Oct - 2021
@@ -39,9 +41,13 @@ public class DiffOverview extends GridPane {
     private int leftMaxLine = 0 ;
     private int rightMaxLine = 0 ;
 
-    private double windowHeightOffset = 0 ;
+    private double windowOffset = 0;
+    private double windowOffsetPercent = 0;
+    //private DoubleProperty windowOffsetPercentProperty = new ReadOnlyDoubleWrapper(0) ;
     private double windowHeight = 0 ;
-    private double yyy = 0 ;
+    private double mousePressedInWindowY = 0 ;
+
+    private Consumer<Double> windowsChangePos = null;
 
     public DiffOverview() {
         super();
@@ -51,7 +57,7 @@ public class DiffOverview extends GridPane {
         windowPane = new Pane();
 
         rectangle = new Rectangle(0,0, 220, 120);
-        rectangle.setFill(Color.rgb(200,128,228,0.50));
+        rectangle.setFill(Color.rgb(185,185,180,0.50));
 
 
         addColumn(0, leftPane);
@@ -80,7 +86,9 @@ public class DiffOverview extends GridPane {
 
     }
 
-
+    public void setOnWindowsChangePos(Consumer<Double> windowsChangePos) {
+        this.windowsChangePos = windowsChangePos;
+    }
 
     public void setData(String leftText, String rightText, EditList diffList) {
         this.leftText = leftText;
@@ -98,46 +106,50 @@ public class DiffOverview extends GridPane {
 
 
         setOnMousePressed(event -> {
-            //System.out.println(">>>>>>.> " + event );
+            System.out.println(">>>>>>> " + event );
 
             if (event.getTarget() != rectangle) {
-                windowHeightOffset = event.getY() - windowHeight/2;
-                double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
-                if (windowHeightOffset + windowHeight > layoutHeight ) {
-                    windowHeightOffset = layoutHeight  - windowHeight;
-                }
-                if (windowHeightOffset < 0) {
-                    windowHeightOffset =  0;
-                }
-
+                double y = snapSizeY(event.getY());
+                windowOffset = adjustWindowOffesstValue( y - windowHeight/2);
+                //windowOffsetPercentProperty.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
+                windowOffsetPercent = (windowOffset / snapSizeY(getLayoutBounds().getHeight()));
                 layoutWindow();
+                if (windowsChangePos != null) {
+                    windowsChangePos.accept(windowOffsetPercent);
+                }
             }
 
 
         });
 
         rectangle.setOnMousePressed(event -> {
-            //System.out.println("cccccccc  " + event );
-            this.yyy = event .getY() - windowHeightOffset;
+            this.mousePressedInWindowY = event .getY() - windowOffset;
         });
 
         rectangle.setOnMouseDragged(event -> {
-            //System.out.println("########  " + event );
 
-            windowHeightOffset = event.getY() - yyy;
-            double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
-            if (windowHeightOffset + windowHeight > layoutHeight ) {
-                windowHeightOffset = layoutHeight  - windowHeight;
-            }
-            if (windowHeightOffset < 0) {
-                windowHeightOffset =  0;
-            }
-
+            windowOffset = (adjustWindowOffesstValue(event.getY() - mousePressedInWindowY));
+            //windowOffsetPercentProperty.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
+            windowOffsetPercent = windowOffset / snapSizeY(getLayoutBounds().getHeight());
             layoutWindow();
+            if (windowsChangePos != null) {
+                windowsChangePos.accept(windowOffsetPercent);
+            }
         });
 
     }
 
+    private double adjustWindowOffesstValue(double val) {
+        double newVal = val;
+        double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
+        if (newVal + windowHeight > layoutHeight ) {
+            newVal = layoutHeight  - windowHeight;
+        }
+        if (newVal < 0) {
+            newVal =  0;
+        }
+        return newVal;
+    }
 
 
     /**
@@ -146,9 +158,8 @@ public class DiffOverview extends GridPane {
      * @param size 0..1 relative height of visible content
      */
     public void setHilightPosSize(double offset, double size) {
-        double layoutWidth = snapSizeX(getLayoutBounds().getWidth());
         double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
-        windowHeightOffset = layoutHeight * offset;
+        windowOffset = (layoutHeight * offset);
         windowHeight = layoutHeight * size;
         layoutWindow();
     }
@@ -186,7 +197,7 @@ public class DiffOverview extends GridPane {
         rectangle.setX(-1 * layoutWidth);
         rectangle.setWidth(layoutWidth);
 
-        rectangle.setY(windowHeightOffset);
+        rectangle.setY(windowOffset);
         rectangle.setHeight(windowHeight);
     }
 
@@ -246,13 +257,15 @@ public class DiffOverview extends GridPane {
                 case INSERT:
                     return Color.GREEN;
                 case REPLACE:
-                    return Color.DARKGREY;
+                    return Color.color(0.1,0.1,0.1);
+                    //return Color.DARKGREY;
                 case EMPTY:
                     return Color.MAGENTA;
 
             }
         }
-        return Color.LIGHTGRAY;
+        //return Color.LIGHTGRAY;
+        return Color.color(0.8,0.8,0.8, 1);
 
     }
 

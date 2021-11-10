@@ -6,6 +6,7 @@ import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
@@ -60,8 +61,7 @@ public class DiffViewer implements Initializable {
     private int oldStartIndex = -1;
     private int newStartIndex = -1;
 
-    private double fontSize ;
-
+    private double fontSize;
 
 
     public void setData(String oldFileName, String newFileName) throws IOException {
@@ -99,13 +99,17 @@ public class DiffViewer implements Initializable {
         newLabel.getStyleClass().add("copy-label");
     }
 
-    private boolean updateAllowed =  true;
+    private boolean updateAllowed = true;
+    private boolean drawAllowed = true;
+
+    double oldY;
+    double newY;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        if (Context.isWindows() ) {
-            fontSize = LookAndFeelSet.FONT_SIZE ;
+        if (Context.isWindows()) {
+            fontSize = LookAndFeelSet.FONT_SIZE;
         } else {
             fontSize = LookAndFeelSet.FONT_SIZE + 1.0;
         }
@@ -144,45 +148,93 @@ public class DiffViewer implements Initializable {
 
         try {
             ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
-            hbar.setOnMouseEntered( e -> updateAllowed = false );
-            hbar.setOnMouseExited( e -> updateAllowed = true );
+            hbar.setOnMouseEntered(e -> updateAllowed = false);
+            hbar.setOnMouseExited(e -> updateAllowed = true);
             hbar = (ScrollBar) GitemberUtil.getField(newScrollPane, "hbar");
-            hbar.setOnMouseEntered( e -> updateAllowed = false );
-            hbar.setOnMouseExited( e -> updateAllowed = true );
+            hbar.setOnMouseEntered(e -> updateAllowed = false);
+            hbar.setOnMouseExited(e -> updateAllowed = true);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
+        oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
+            if (updateAllowed) {
+                oldY = new_val.doubleValue();
 
-        oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
-                                                              Number old_val, Number new_val) -> {
-            if(updateAllowed) {
-                newScrollPane.estimatedScrollYProperty().setValue(
-                        new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue()
-                );
-                updatePathElements();
+                System.out.println("zzz old 0  " + System.currentTimeMillis());
+                Double val = new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue();
+                val = oldScrollPane.snapSizeY(val);
+                if (val != newY) {
+                    newY =  val;
+                    newScrollPane.estimatedScrollYProperty().setValue(val);
+                    System.out.println("zzz old 1  " + System.currentTimeMillis());
+                }
+
+
+
             }
         });
 
-        newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,
-                                                              Number old_val, Number new_val) -> {
-            if(updateAllowed) {
-                oldScrollPane.estimatedScrollYProperty().setValue(
-                        new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue()
-                );
-                updatePathElements();
-            }
-
+        oldScrollPane.estimatedScrollYProperty().addListener(observable -> {
+            updatePathElements();
+            updateDiffOverview();
+            System.out.println("zzz old 2  " + System.currentTimeMillis());
         });
+
+        newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
+
+            if (updateAllowed) {
+                newY = new_val.doubleValue();
+                System.out.println("new new 0  " + System.currentTimeMillis());
+                Double val = new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue();
+                val = oldScrollPane.snapSizeY(val);
+                if (val != oldY) {
+                    oldScrollPane.estimatedScrollYProperty().setValue(val);
+                    System.out.println("new new 1  " + System.currentTimeMillis() + "   " + val);
+                }
+
+            }
+        });
+
+        newScrollPane.estimatedScrollYProperty().addListener(observable -> {
+            updatePathElements();
+            updateDiffOverview();
+            System.out.println("new new 2  " + System.currentTimeMillis());
+        });
+
+        diffOverview.setOnWindowsChangePos(aDouble -> {
+            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * aDouble;
+            oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
+        });
+
+        /*.windowOffsetPercentPropertyProperty().addListener(observable -> {
+            System.out.println("dddd "  + observable);
+
+            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * ((DoubleProperty)observable).get();
+            oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
+        });*/
+
+        /*diffOverview.windowOffsetPropertyProperty().addListener((observable, oldValue, newValue) -> {
+            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * newValue.doubleValue();
+            oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
+            System.out.println("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
+
+        });*/
 
         newScrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> updatePathElements());
+            Platform.runLater(() -> {
+                updatePathElements();
+                updateDiffOverview();
+            });
         });
 
         diffDrawPanel.widthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> updatePathElements());
+            Platform.runLater(() -> {
+                updatePathElements();
+                updateDiffOverview();
+            });
         });
 
         //Fix the top of table row size
@@ -196,7 +248,6 @@ public class DiffViewer implements Initializable {
                     secondRowConstraint.setMaxHeight(val);
                     secondRowConstraint.setMinHeight(val);
                     secondRowConstraint.setPrefHeight(val);
-
                 }
         );
 
@@ -209,6 +260,14 @@ public class DiffViewer implements Initializable {
                 (observable, oldValue, newValue) -> {
                     searchValue(searchTextNew, newValue);
                 }
+        );
+    }
+
+
+    private void updateDiffOverview() {
+        diffOverview.setHilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
+                        / oldScrollPane.totalHeightEstimateProperty().getValue(),
+                oldCodeArea.heightProperty().getValue() / oldCodeArea.totalHeightEstimateProperty().getValue()
         );
     }
 
@@ -245,11 +304,6 @@ public class DiffViewer implements Initializable {
     }
 
     private void updatePathElements() {
-
-        diffOverview.setHilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
-                / oldScrollPane.totalHeightEstimateProperty().getValue(),
-                oldCodeArea.heightProperty().getValue() / oldCodeArea.totalHeightEstimateProperty().getValue()
-                );
 
 
         for (int i = 0; i < diffDrawPanel.getChildren().size(); i++) {
@@ -293,6 +347,7 @@ public class DiffViewer implements Initializable {
 
         }
     }
+
 
     private int getLines(final String content) {
         return new BufferedReader(new StringReader(content))
@@ -354,7 +409,7 @@ public class DiffViewer implements Initializable {
         codeArea.appendText(text);
 
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName),
-                this.diffList,  leftSide);
+                this.diffList, leftSide);
 
         codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter, null));
 
@@ -375,16 +430,16 @@ public class DiffViewer implements Initializable {
     public void repeatSearch(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             if (keyEvent.getSource() == searchTextOld) {
-                oldStartIndex ++;
-                searchValue((TextField)keyEvent.getSource(), searchTextOld.getText());
+                oldStartIndex++;
+                searchValue((TextField) keyEvent.getSource(), searchTextOld.getText());
             } else {
-                newStartIndex ++;
-                searchValue((TextField)keyEvent.getSource(), searchTextNew.getText());
+                newStartIndex++;
+                searchValue((TextField) keyEvent.getSource(), searchTextNew.getText());
             }
         }
     }
 
-    public void searchValue(TextField textField,  String value) {
+    public void searchValue(TextField textField, String value) {
         final CodeArea searchCodeArea;
         int startIndex;
         if (textField == searchTextOld) {
@@ -400,12 +455,12 @@ public class DiffViewer implements Initializable {
             startIndex = searchCodeArea.getText().indexOf(value);
         }
 
-        if ( startIndex == -1 && StringUtils.isNotBlank(value)) {
+        if (startIndex == -1 && StringUtils.isNotBlank(value)) {
             //return;
 
         } else if (startIndex > -1) {
             searchCodeArea.moveTo(startIndex);
-            searchCodeArea.selectRange(startIndex,  startIndex + value.length());
+            searchCodeArea.selectRange(startIndex, startIndex + value.length());
 
         } else {
             searchCodeArea.selectRange(0, 0);
@@ -413,7 +468,7 @@ public class DiffViewer implements Initializable {
         searchCodeArea.requestFollowCaret();
 
         if (textField == searchTextOld) {
-            oldStartIndex = startIndex ;
+            oldStartIndex = startIndex;
         } else {
             newStartIndex = startIndex;
         }
