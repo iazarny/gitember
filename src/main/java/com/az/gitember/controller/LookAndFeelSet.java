@@ -23,6 +23,11 @@ public class LookAndFeelSet {
     public static String CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
     public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
 
+    public static Color DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
+    public static Color DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
+    public static Color DIFF_COLOR_REPLACE = Color.valueOf("#404040");
+    public static Color DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
+
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
@@ -33,6 +38,10 @@ public class LookAndFeelSet {
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
             CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20; -fx-font: Monospace; -fx-font-size: 20;";
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #3b3b3b;";
+            DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
+            DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
+            DIFF_COLOR_REPLACE = Color.valueOf("#e0e0e0");
+            DIFF_COLOR_TEXT = Color.valueOf("#000000");
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;
@@ -42,8 +51,11 @@ public class LookAndFeelSet {
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
             CODE_AREA_CSS = "-fx-font: Monospace; -fx-font-size: 20;";
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
+            DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
+            DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
+            DIFF_COLOR_REPLACE = Color.valueOf("#404040");
+            DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
 
         }
     }
-
 }

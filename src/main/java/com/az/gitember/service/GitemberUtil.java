@@ -150,8 +150,6 @@ public class GitemberUtil {
                     } else if (side == Side.B && lenB < lenA) {
                         addEmptyLines(lines, types, Edit.Type.EMPTY, lenA - lenB);
                     }
-
-
                     needToAlign = false;
                     editToAling = null;
                 }

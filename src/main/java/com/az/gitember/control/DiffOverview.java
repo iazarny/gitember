@@ -1,5 +1,6 @@
 package com.az.gitember.control;
 
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.Side;
 import com.az.gitember.service.GitemberUtil;
@@ -16,7 +17,7 @@ import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
 import java.util.ArrayList;
-import java.util.function.Consumer;
+import java.util.Objects;
 
 /**
  * Created by Igor Azarny (iazarny@yahoo.com) on 30 - Oct - 2021
@@ -42,12 +43,10 @@ public class DiffOverview extends GridPane {
     private int rightMaxLine = 0 ;
 
     private double windowOffset = 0;
-    private double windowOffsetPercent = 0;
-    //private DoubleProperty windowOffsetPercentProperty = new ReadOnlyDoubleWrapper(0) ;
+    private DoubleProperty windowOffsetPercent = new ReadOnlyDoubleWrapper(0) ;
     private double windowHeight = 0 ;
     private double mousePressedInWindowY = 0 ;
 
-    private Consumer<Double> windowsChangePos = null;
 
     public DiffOverview() {
         super();
@@ -86,8 +85,12 @@ public class DiffOverview extends GridPane {
 
     }
 
-    public void setOnWindowsChangePos(Consumer<Double> windowsChangePos) {
-        this.windowsChangePos = windowsChangePos;
+    public double getWindowOffsetPercent() {
+        return windowOffsetPercent.get();
+    }
+
+    public DoubleProperty windowOffsetPercentProperty() {
+        return windowOffsetPercent;
     }
 
     public void setData(String leftText, String rightText, EditList diffList) {
@@ -106,20 +109,12 @@ public class DiffOverview extends GridPane {
 
 
         setOnMousePressed(event -> {
-            System.out.println(">>>>>>> " + event );
-
             if (event.getTarget() != rectangle) {
                 double y = snapSizeY(event.getY());
                 windowOffset = adjustWindowOffesstValue( y - windowHeight/2);
-                //windowOffsetPercentProperty.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
-                windowOffsetPercent = (windowOffset / snapSizeY(getLayoutBounds().getHeight()));
+                windowOffsetPercent.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
                 layoutWindow();
-                if (windowsChangePos != null) {
-                    windowsChangePos.accept(windowOffsetPercent);
-                }
             }
-
-
         });
 
         rectangle.setOnMousePressed(event -> {
@@ -129,12 +124,8 @@ public class DiffOverview extends GridPane {
         rectangle.setOnMouseDragged(event -> {
 
             windowOffset = (adjustWindowOffesstValue(event.getY() - mousePressedInWindowY));
-            //windowOffsetPercentProperty.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
-            windowOffsetPercent = windowOffset / snapSizeY(getLayoutBounds().getHeight());
+            windowOffsetPercent.setValue(windowOffset / snapSizeY(getLayoutBounds().getHeight()));
             layoutWindow();
-            if (windowsChangePos != null) {
-                windowsChangePos.accept(windowOffsetPercent);
-            }
         });
 
     }
@@ -226,12 +217,10 @@ public class DiffOverview extends GridPane {
             line.setStartX(0);
 
             if (text == null) {
-                line.setEndX(charWidth * maxWidth);
+                line.setEndX(0);
             } else {
                 line.setEndX( charWidth * text.length());
             }
-
-
             line.setStrokeWidth(strokeSize);
             line.setStrokeLineCap(StrokeLineCap.BUTT);
         }
@@ -253,20 +242,16 @@ public class DiffOverview extends GridPane {
         } else if (type != null) {
             switch (type) {
                 case DELETE:
-                    return Color.RED;
+                    return LookAndFeelSet.DIFF_COLOR_DELETE;
                 case INSERT:
-                    return Color.GREEN;
+                    return LookAndFeelSet.DIFF_COLOR_INSERT;
                 case REPLACE:
-                    return Color.color(0.1,0.1,0.1);
-                    //return Color.DARKGREY;
+                    return LookAndFeelSet.DIFF_COLOR_REPLACE;
                 case EMPTY:
                     return Color.MAGENTA;
-
             }
         }
-        //return Color.LIGHTGRAY;
-        return Color.color(0.8,0.8,0.8, 1);
-
+        return LookAndFeelSet.DIFF_COLOR_TEXT;
     }
 
     private double getLineThick() {
@@ -276,6 +261,6 @@ public class DiffOverview extends GridPane {
     }
 
     private int getMaxLen(ArrayList<String> lines) {
-        return  lines.stream().filter( s -> s != null).mapToInt( String::length).max().orElseGet(() -> 0);
+        return  lines.stream().filter(Objects::nonNull).mapToInt( String::length).max().orElseGet(() -> 0);
     }
 }

@@ -102,8 +102,8 @@ public class DiffViewer implements Initializable {
     private boolean updateAllowed = true;
     private boolean drawAllowed = true;
 
-    double oldY;
-    double newY;
+    boolean oldScrolled = false;
+    boolean newScrolled = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -161,67 +161,49 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
             if (updateAllowed) {
-                oldY = new_val.doubleValue();
-
-                System.out.println("zzz old 0  " + System.currentTimeMillis());
-                Double val = new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue();
-                val = oldScrollPane.snapSizeY(val);
-                if (val != newY) {
-                    newY =  val;
+                oldScrolled = true;
+                if (!newScrolled) {
+                    Double val = oldScrollPane.snapSizeY( new_val.doubleValue() * newScrollPane.totalHeightEstimateProperty().getValue() / oldScrollPane.totalHeightEstimateProperty().getValue());
                     newScrollPane.estimatedScrollYProperty().setValue(val);
-                    System.out.println("zzz old 1  " + System.currentTimeMillis());
                 }
-
-
-
             }
         });
 
         oldScrollPane.estimatedScrollYProperty().addListener(observable -> {
-            updatePathElements();
-            updateDiffOverview();
-            System.out.println("zzz old 2  " + System.currentTimeMillis());
+            if (newScrolled && oldScrolled) {
+                updatePathElements();
+                updateDiffOverview();
+                newScrolled = oldScrolled = false;
+            }
         });
 
         newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
-
             if (updateAllowed) {
-                newY = new_val.doubleValue();
-                System.out.println("new new 0  " + System.currentTimeMillis());
-                Double val = new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue();
-                val = oldScrollPane.snapSizeY(val);
-                if (val != oldY) {
+                newScrolled = true;
+                if (!oldScrolled) {
+                    Double val = oldScrollPane.snapSizeY(new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue());
                     oldScrollPane.estimatedScrollYProperty().setValue(val);
-                    System.out.println("new new 1  " + System.currentTimeMillis() + "   " + val);
                 }
 
             }
         });
 
         newScrollPane.estimatedScrollYProperty().addListener(observable -> {
-            updatePathElements();
-            updateDiffOverview();
-            System.out.println("new new 2  " + System.currentTimeMillis());
+            if (newScrolled && oldScrolled) {
+                updatePathElements();
+                updateDiffOverview();
+                newScrolled = oldScrolled = false;
+            }
         });
 
-        diffOverview.setOnWindowsChangePos(aDouble -> {
-            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * aDouble;
+        diffOverview.windowOffsetPercentProperty().addListener((newValue) -> {
+            double perCent = diffOverview.getWindowOffsetPercent();
+            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * perCent;
+            double newScrollPanelNewVal = newScrollPane.totalHeightEstimateProperty().getValue() * perCent;
             oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
+            oldScrollPane.estimatedScrollYProperty().setValue(newScrollPanelNewVal);
+            newScrolled = oldScrolled = true;
         });
-
-        /*.windowOffsetPercentPropertyProperty().addListener(observable -> {
-            System.out.println("dddd "  + observable);
-
-            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * ((DoubleProperty)observable).get();
-            oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
-        });*/
-
-        /*diffOverview.windowOffsetPropertyProperty().addListener((observable, oldValue, newValue) -> {
-            double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * newValue.doubleValue();
-            oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
-            System.out.println("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
-
-        });*/
 
         newScrollPane.heightProperty().addListener((observable, oldValue, newValue) -> {
             Platform.runLater(() -> {
@@ -419,9 +401,7 @@ public class DiffViewer implements Initializable {
         }
 
 
-        adapter.getDecorateByPatch().entrySet().forEach(p -> {
-            codeArea.setParagraphStyle(p.getKey(), p.getValue());
-        });
+        adapter.getDecorateByPatch().forEach(codeArea::setParagraphStyle);
 
 
     }
@@ -455,10 +435,7 @@ public class DiffViewer implements Initializable {
             startIndex = searchCodeArea.getText().indexOf(value);
         }
 
-        if (startIndex == -1 && StringUtils.isNotBlank(value)) {
-            //return;
-
-        } else if (startIndex > -1) {
+        if (startIndex > -1) {
             searchCodeArea.moveTo(startIndex);
             searchCodeArea.selectRange(startIndex, startIndex + value.length());
 
