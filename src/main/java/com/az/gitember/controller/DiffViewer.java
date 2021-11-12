@@ -201,7 +201,7 @@ public class DiffViewer implements Initializable {
             double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * perCent;
             double newScrollPanelNewVal = newScrollPane.totalHeightEstimateProperty().getValue() * perCent;
             oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
-            oldScrollPane.estimatedScrollYProperty().setValue(newScrollPanelNewVal);
+            newScrollPane.estimatedScrollYProperty().setValue(newScrollPanelNewVal);
             newScrolled = oldScrolled = true;
         });
 
