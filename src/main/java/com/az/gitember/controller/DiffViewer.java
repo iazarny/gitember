@@ -10,6 +10,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -158,6 +159,8 @@ public class DiffViewer implements Initializable {
             e.printStackTrace();
         }
 
+        oldScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
             if (updateAllowed) {
@@ -184,6 +187,7 @@ public class DiffViewer implements Initializable {
                     Double val = oldScrollPane.snapSizeY(new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue());
                     oldScrollPane.estimatedScrollYProperty().setValue(val);
                 }
+                updatePathElements();
 
             }
         });
