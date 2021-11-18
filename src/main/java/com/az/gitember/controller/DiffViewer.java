@@ -1,16 +1,13 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.control.DiffOverview;
-import com.az.gitember.control.VirtualizedScrollPaneLeft;
+import com.az.gitember.control.VirtualizedOverviewScrollPane;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -20,7 +17,6 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -47,8 +43,7 @@ public class DiffViewer implements Initializable {
     public CodeArea newCodeArea;
     public Pane diffDrawPanel;
     public GridPane mainPanel;
-    public DiffOverview diffOverview;
-    public VirtualizedScrollPaneLeft<CodeArea> oldScrollPane;
+    public VirtualizedOverviewScrollPane<CodeArea> oldScrollPane;
     public VirtualizedScrollPane<CodeArea> newScrollPane;
     public RowConstraints firstRowConstraint;
     public RowConstraints secondRowConstraint;
@@ -81,7 +76,7 @@ public class DiffViewer implements Initializable {
         setText(oldCodeArea, oldText, oldFileName, true);
         setText(newCodeArea, newText, newFileName, false);
 
-        diffOverview.setData(oldText, newText, diffList);
+        oldScrollPane.getVbar().setData(oldText, newText, diffList);
 
         createPathElements();
         scrollToFirstDiff();
@@ -128,13 +123,11 @@ public class DiffViewer implements Initializable {
         newCodeArea.setMinWidth(Region.USE_PREF_SIZE);
         newCodeArea.setEditable(false);
 
-        oldScrollPane = new VirtualizedScrollPaneLeft<>(oldCodeArea);
+        oldScrollPane = new VirtualizedOverviewScrollPane<>(oldCodeArea);
         newScrollPane = new VirtualizedScrollPane<>(newCodeArea);
-        diffOverview = new DiffOverview();
 
-        mainPanel.add(diffOverview, 0, 1);
-        mainPanel.add(oldScrollPane, 1, 1);
-        mainPanel.add(newScrollPane, 3, 1);
+        mainPanel.add(oldScrollPane, 0, 1);
+        mainPanel.add(newScrollPane, 2, 1);
 
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
@@ -158,9 +151,6 @@ public class DiffViewer implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        oldScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
             if (updateAllowed) {
@@ -200,8 +190,9 @@ public class DiffViewer implements Initializable {
             }
         });
 
-        diffOverview.windowOffsetPercentProperty().addListener((newValue) -> {
-            double perCent = diffOverview.getWindowOffsetPercent();
+
+        oldScrollPane.getVbar().windowOffsetPercentProperty().addListener((newValue) -> {
+            double perCent = oldScrollPane.getVbar().getWindowOffsetPercent();
             double oldScrollPanelNewVal = oldScrollPane.totalHeightEstimateProperty().getValue() * perCent;
             double newScrollPanelNewVal = newScrollPane.totalHeightEstimateProperty().getValue() * perCent;
             oldScrollPane.estimatedScrollYProperty().setValue(oldScrollPanelNewVal);
@@ -251,7 +242,7 @@ public class DiffViewer implements Initializable {
 
 
     private void updateDiffOverview() {
-        diffOverview.setHilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
+        oldScrollPane.getVbar().setHilightPosSize(oldScrollPane.estimatedScrollYProperty().getValue()
                         / oldScrollPane.totalHeightEstimateProperty().getValue(),
                 oldCodeArea.heightProperty().getValue() / oldCodeArea.totalHeightEstimateProperty().getValue()
         );

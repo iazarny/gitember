@@ -12,10 +12,9 @@
           fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
     
    <columnConstraints>
-      <ColumnConstraints halignment="CENTER" percentWidth="4" />
-      <ColumnConstraints percentWidth="43" />
-      <ColumnConstraints halignment="CENTER" percentWidth="10" />
-      <ColumnConstraints percentWidth="43" />
+      <ColumnConstraints percentWidth="46" />
+      <ColumnConstraints halignment="CENTER" percentWidth="8" />
+      <ColumnConstraints percentWidth="46" />
    </columnConstraints>
    <rowConstraints>
       <RowConstraints fx:id="firstRowConstraint"/>
@@ -23,21 +22,23 @@
    </rowConstraints>
    <children>
 
-      <ToolBar GridPane.columnIndex="1">
+      <ToolBar GridPane.columnIndex="0">
          <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
-      <ToolBar GridPane.columnIndex="3">
+      <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
+      <Pane                       prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+
+      <ToolBar GridPane.columnIndex="2">
          <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" style="-right-button-visible: false;"/>
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
 
-      <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="1"  />
-      <Pane                       prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="0"  />
+
 
    </children>
 </GridPane>
