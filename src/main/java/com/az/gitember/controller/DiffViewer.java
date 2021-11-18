@@ -81,7 +81,8 @@ public class DiffViewer implements Initializable {
         setText(oldCodeArea, oldText, oldFileName, true);
         setText(newCodeArea, newText, newFileName, false);
 
-        diffOverview.setData(oldText, newText, diffList);
+        //diffOverview.setData(oldText, newText, diffList);
+        oldScrollPane.getVbar().setData(oldText, newText, diffList);
 
         createPathElements();
         scrollToFirstDiff();
@@ -159,7 +160,7 @@ public class DiffViewer implements Initializable {
             e.printStackTrace();
         }
 
-        oldScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        //oldScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {

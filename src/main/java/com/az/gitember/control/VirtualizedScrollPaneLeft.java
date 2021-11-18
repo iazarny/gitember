@@ -30,7 +30,7 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
     private static final PseudoClass CONTENT_FOCUSED = PseudoClass.getPseudoClass("content-focused");
 
     private final ScrollBar hbar;
-    private final ScrollBar vbar;
+    private final DiffOverviewScrollBar vbar;
     private final V content;
     private final ChangeListener<Boolean> contentFocusedListener;
     private final ChangeListener<Double> hbarValueListener;
@@ -68,7 +68,7 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
 
         // create scrollbars
         hbar = new ScrollBar();
-        vbar = new ScrollBar();
+        vbar = new DiffOverviewScrollBar();
         hbar.setOrientation(Orientation.HORIZONTAL);
         vbar.setOrientation(Orientation.VERTICAL);
 
@@ -227,6 +227,13 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
         bar.visibleProperty().unbind();
     }
 
+    private void unbindScrollBar(DiffOverviewScrollBar bar) {
+        bar.maxProperty().unbind();
+        bar.unitIncrementProperty().unbind();
+        bar.blockIncrementProperty().unbind();
+        bar.visibleProperty().unbind();
+    }
+
     @Override
     public Val<Double> totalWidthEstimateProperty() {
         return content.totalWidthEstimateProperty();
@@ -265,6 +272,10 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
     @Override
     public void scrollYToPixel(double pixel) {
         content.scrollYToPixel(pixel);
+    }
+
+    public DiffOverviewScrollBar getVbar() {
+        return vbar;
     }
 
     @Override
@@ -347,6 +358,21 @@ public class VirtualizedScrollPaneLeft<V extends Node & Virtualized> extends Reg
             protected double computeValue() {
                 double max = bar.getMax();
                 double visible = bar.getVisibleAmount();
+                return max > visible
+                        ? 16 / (max - visible) * max
+                        : 0;
+            }
+        });
+    }
+
+    private static void setupUnitIncrement(DiffOverviewScrollBar doBar) {
+        doBar.unitIncrementProperty().bind(new DoubleBinding() {
+            { bind(doBar.maxProperty(), doBar.visibleAmountProperty()); }
+
+            @Override
+            protected double computeValue() {
+                double max = doBar.getMax();
+                double visible = doBar.getVisibleAmount();
                 return max > visible
                         ? 16 / (max - visible) * max
                         : 0;
