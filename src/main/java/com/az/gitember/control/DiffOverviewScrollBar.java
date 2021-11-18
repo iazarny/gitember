@@ -7,6 +7,9 @@ import com.az.gitember.data.Side;
 import com.az.gitember.service.GitemberUtil;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.css.CssMetaData;
+import javafx.css.StyleableDoubleProperty;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.ColumnConstraints;
@@ -27,58 +30,12 @@ import java.util.Objects;
  */
 public class DiffOverviewScrollBar extends GridPane {
 
-    private ScrollBar scrollBar = new ScrollBar();
-
-    public void setOrientation(Orientation o) {
-        this.scrollBar.setOrientation(o);
-    }
-
-    public void setMin(double m) {
-        this.scrollBar.setMin(m);
-    }
-
-    public DoubleProperty maxProperty() {
-        return this.scrollBar.maxProperty();
-    }
-
-    public DoubleProperty blockIncrementProperty() {
-        return this.scrollBar.blockIncrementProperty();
-    }
-
-    public DoubleProperty visibleAmountProperty() {
-        return this.scrollBar.visibleAmountProperty();
-    }
-
-    public DoubleProperty valueProperty() {
-        return this.scrollBar.valueProperty();
-    }
-
-    public void setVisibleAmount(double d) {
-        this.scrollBar.setVisibleAmount(d);
-    }
-
-    public DoubleProperty unitIncrementProperty() {
-        return this.scrollBar.unitIncrementProperty();
-    }
-
-    public double getMax() {
-        return this.scrollBar.getMax();
-    }
-
-    public double getVisibleAmount() {
-        return this.scrollBar.getVisibleAmount();
-    }
-
-
-
-
-
-
-
-
-
-
-
+    private DoubleProperty max;
+    private DoubleProperty blockIncrement;
+    private DoubleProperty visibleAmount;
+    private DoubleProperty value;
+    private DoubleProperty unitIncrement;
+    private DoubleProperty min;
 
     private Pane leftPane;
     private Pane rightPane;
@@ -104,8 +61,93 @@ public class DiffOverviewScrollBar extends GridPane {
     private double mousePressedInWindowY = 0 ;
 
 
+    public void setMin(double m) {
+        this.minProperty().set(m);
+    }
+
+    public double getMax() {
+        return this.max == null ? 100.0D : this.max.get();
+    }
+
+    public double getVisibleAmount() {
+        return this.visibleAmount == null ? 15.0D : this.visibleAmount.get();
+    }
+
+
+    public void setVisibleAmount(double d) {
+        this.visibleAmountProperty().set(d);
+    }
+
+
+    public double getMin() {
+        return min.get();
+    }
+
+    public DoubleProperty minProperty() {
+        if (this.min == null) {
+            this.min = new SimpleDoubleProperty(this, "min");
+        }
+        return min;
+    }
+
+    public DoubleProperty maxProperty() {
+
+        if (this.max == null) {
+            this.max = new SimpleDoubleProperty(this, "max", 100.0D);
+        }
+
+        return max;
+    }
+
+    public double getBlockIncrement() {
+        return this.blockIncrement == null ? 10.0D : this.blockIncrement.get();
+    }
+
+    public DoubleProperty blockIncrementProperty() {
+        if (this.blockIncrement == null) {
+            this.blockIncrement = new SimpleDoubleProperty(10.0D);
+        }
+
+        return this.blockIncrement;
+    }
+
+    public DoubleProperty visibleAmountProperty() {
+        if (this.visibleAmount == null) {
+            this.visibleAmount = new SimpleDoubleProperty(this, "visibleAmount");
+        }
+        return visibleAmount;
+    }
+
+    public double getValue() {
+        return value.get();
+    }
+
+    public DoubleProperty valueProperty() {
+
+        if (this.value == null) {
+            this.value = new SimpleDoubleProperty(this, "value");
+        }
+
+        return value;
+    }
+
+    public double getUnitIncrement() {
+        return unitIncrement.get();
+    }
+
+    public DoubleProperty unitIncrementProperty() {
+        if (this.unitIncrement == null) {
+            unitIncrement = new SimpleDoubleProperty(1.0D);
+        }
+        return unitIncrement;
+    }
+
     public DiffOverviewScrollBar() {
         super();
+
+        setMinWidth(20);
+        setMaxWidth(60);
+        setPrefWidth(60);
 
         leftPane  = new Pane();
         rightPane  = new Pane();
@@ -115,26 +157,29 @@ public class DiffOverviewScrollBar extends GridPane {
         rectangle.setFill(Color.rgb(185,185,180,0.50));
 
 
-        addColumn(0, leftPane);
-        addColumn(1, rightPane);
-        addColumn(2, windowPane);
+        addColumn(1, leftPane);
+        addColumn(2, rightPane);
+        addColumn(3, windowPane);
 
 
+        ColumnConstraints borderConstraints =  new ColumnConstraints();
         ColumnConstraints leftConstraints =  new ColumnConstraints();
         ColumnConstraints rightConstraints =  new ColumnConstraints();
         ColumnConstraints windowConstraints =  new ColumnConstraints();
 
-        leftConstraints.setPercentWidth(49);
-        rightConstraints.setPercentWidth(49);
-        windowConstraints.setPercentWidth(2);
+        borderConstraints.setPercentWidth(5);
+        leftConstraints.setPercentWidth(45);
+        rightConstraints.setPercentWidth(45);
+        windowConstraints.setPercentWidth(5);
 
         leftConstraints.setFillWidth(true);
         rightConstraints.setFillWidth(true);
 
 
-        getColumnConstraints().add(0, leftConstraints);
-        getColumnConstraints().add(1, rightConstraints);
-        getColumnConstraints().add(2, windowConstraints);
+        getColumnConstraints().add(0, borderConstraints);
+        getColumnConstraints().add(1, leftConstraints);
+        getColumnConstraints().add(2, rightConstraints);
+        getColumnConstraints().add(3, windowConstraints);
 
         windowPane.getChildren().add(rectangle);
 
