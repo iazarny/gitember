@@ -8,7 +8,7 @@
 
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
-<GridPane fx:id="mainPanel" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
     
    <columnConstraints>
@@ -28,8 +28,8 @@
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
-      <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
-      <Pane                       prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+      <Pane fx:id="diffDrawPanel"  prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
+      <Pane                        prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
 
       <ToolBar GridPane.columnIndex="2">
          <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" style="-right-button-visible: false;"/>

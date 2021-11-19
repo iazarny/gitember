@@ -167,10 +167,10 @@ public class DiffOverviewScrollBar extends GridPane {
         ColumnConstraints rightConstraints =  new ColumnConstraints();
         ColumnConstraints windowConstraints =  new ColumnConstraints();
 
-        borderConstraints.setPercentWidth(5);
-        leftConstraints.setPercentWidth(45);
-        rightConstraints.setPercentWidth(45);
-        windowConstraints.setPercentWidth(5);
+        borderConstraints.setPercentWidth(4);
+        leftConstraints.setPercentWidth(48);
+        rightConstraints.setPercentWidth(48);
+        windowConstraints.setPercentWidth(0);
 
         leftConstraints.setFillWidth(true);
         rightConstraints.setFillWidth(true);

@@ -16,3 +16,7 @@
     -fx-background-color: #1d3076;
 }
 
+
+.root {
+    -fx-font-size: 11pt ;
+}

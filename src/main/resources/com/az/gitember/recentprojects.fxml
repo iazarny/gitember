@@ -6,20 +6,26 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.geometry.Insets?>
 <BorderPane xmlns="http://javafx.com/javafx"
+            maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.az.gitember.controller.MainRecentProjects"
             prefHeight="400.0" prefWidth="600.0">
     <top>
         <VBox fx:id="header" visible="false">
-            <Label text="Open recent project(s) ..."/>
+            <Label text="Open recent project(s) ..." style="-fx-font-size: 120%"/>
             <Separator />
         </VBox>
     </top>
     <center>
-        <VBox fx:id="recentProjects">
+        <ScrollPane fitToHeight="true" fitToWidth="true">
+            <VBox fx:id="recentProjects"  >
+                <padding><Insets top="25" right="25" bottom="25" left="25"/></padding>
 
-        </VBox>
+            </VBox>
+        </ScrollPane>
     </center>
 
 </BorderPane>

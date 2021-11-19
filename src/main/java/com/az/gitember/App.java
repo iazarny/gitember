@@ -59,6 +59,7 @@ public class App extends Application {
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         jMetro = new JMetro(LookAndFeelSet.THEME_NAME);
         jMetro.setScene(scene);
+        scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
 
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override

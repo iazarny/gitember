@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
-    private final static double VER_HEAD_HEIGHT = 25;
+    private final static double VER_HEAD_HEIGHT = 30;
 
     public TextField newLabel;
     public TextField oldLabel;
