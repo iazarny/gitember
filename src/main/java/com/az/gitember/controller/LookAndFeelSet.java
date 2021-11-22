@@ -41,7 +41,7 @@ public class LookAndFeelSet {
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
             DIFF_COLOR_REPLACE = Color.valueOf("#e0e0e0");
-            DIFF_COLOR_TEXT = Color.valueOf("#000000");
+            DIFF_COLOR_TEXT = Color.valueOf("#181818");
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;

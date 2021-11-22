@@ -19,6 +19,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.MathUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
@@ -153,28 +156,28 @@ public class DiffOverviewScrollBar extends GridPane {
         rightPane  = new Pane();
         windowPane = new Pane();
 
+        leftPane.getStyleClass().add("overview-border");
+        rightPane.getStyleClass().add("overview-border");
+
         rectangle = new Rectangle(0,0, 220, 120);
         rectangle.setFill(Color.rgb(185,185,180,0.50));
-
 
         addColumn(1, leftPane);
         addColumn(2, rightPane);
         addColumn(3, windowPane);
-
 
         ColumnConstraints borderConstraints =  new ColumnConstraints();
         ColumnConstraints leftConstraints =  new ColumnConstraints();
         ColumnConstraints rightConstraints =  new ColumnConstraints();
         ColumnConstraints windowConstraints =  new ColumnConstraints();
 
-        borderConstraints.setPercentWidth(4);
-        leftConstraints.setPercentWidth(48);
-        rightConstraints.setPercentWidth(48);
+        borderConstraints.setPercentWidth(2);
+        leftConstraints.setPercentWidth(49);
+        rightConstraints.setPercentWidth(49);
         windowConstraints.setPercentWidth(0);
 
         leftConstraints.setFillWidth(true);
         rightConstraints.setFillWidth(true);
-
 
         getColumnConstraints().add(0, borderConstraints);
         getColumnConstraints().add(1, leftConstraints);
@@ -182,8 +185,6 @@ public class DiffOverviewScrollBar extends GridPane {
         getColumnConstraints().add(3, windowConstraints);
 
         windowPane.getChildren().add(rectangle);
-
-
     }
 
     public double getWindowOffsetPercent() {
@@ -264,14 +265,15 @@ public class DiffOverviewScrollBar extends GridPane {
         super.layoutChildren();
 
         double layoutWidth = snapSizeX(getLayoutBounds().getWidth());
+        double layoutWidthHalf = layoutWidth/2;
         double layoutHeight = snapSizeY(getLayoutBounds().getHeight());
 
         resize(layoutWidth, layoutHeight);
-        leftPane.resize(layoutWidth/2, layoutHeight);
-        rightPane.resize(layoutWidth/2, layoutHeight);
+        leftPane.resize(layoutWidthHalf, layoutHeight);
+        rightPane.resize(layoutWidthHalf, layoutHeight);
 
-        layoutLines(leftPane, leftLines, layoutWidth/2, leftMaxLine);
-        layoutLines(rightPane, rightLines, layoutWidth/2, rightMaxLine);
+        layoutLines(leftPane, leftLines,  leftMaxLine > 0 ? layoutWidthHalf / leftMaxLine : 0);
+        layoutLines(rightPane, rightLines,  leftMaxLine > 0 ? layoutWidthHalf / rightMaxLine : 0);
 
         layoutWindow();
 
@@ -297,33 +299,22 @@ public class DiffOverviewScrollBar extends GridPane {
      * Depict lines of text on correc position with correct size
      * @param pane
      * @param lineType
-     * @param layoutWidth
-     * @param maxWidth
+     * @param charWidth with if sinlge char in px
      */
-    private void layoutLines(Pane pane, Pair<ArrayList<String>, ArrayList<Edit.Type>> lineType, double layoutWidth, int maxWidth) {
-        double strokeSize = getLineThick();
-
-        double charWidth = 0;
-        if (maxWidth > 0) {
-            charWidth = layoutWidth / maxWidth;
-        }
+    private void layoutLines(Pane pane, Pair<ArrayList<String>, ArrayList<Edit.Type>> lineType, double charWidth) {
+        final double strokeSize = getLineThick();
         for (int i = 0; i < pane.getChildren().size(); i++) {
-            Line line = (Line) pane.getChildren().get(i);
-
-            String text =   lineType.getFirst().get(i);
-
-            double y = i * strokeSize + strokeSize/2;
-            line.setStartY(y);
-            line.setEndY(y);
-            line.setStartX(0);
-
-            if (text == null) {
-                line.setEndX(0);
-            } else {
+            final String text =   lineType.getFirst().get(i);
+            if (text != null && text.length() > 0) {
+                final Line line = (Line) pane.getChildren().get(i);
+                final double y = i * strokeSize + strokeSize/2;
+                line.setStartY(y);
+                line.setEndY(y);
+                line.setStartX(1);
                 line.setEndX( charWidth * text.length());
+                line.setStrokeWidth(strokeSize);
             }
-            line.setStrokeWidth(strokeSize);
-            line.setStrokeLineCap(StrokeLineCap.BUTT);
+
         }
     }
 
@@ -331,8 +322,9 @@ public class DiffOverviewScrollBar extends GridPane {
         ArrayList<String> lines = linesTypes.getFirst();
         ArrayList<Edit.Type> types = linesTypes.getSecond();
         for (int i = 0; i < lines.size(); i++) {
-            Line l = new Line(0,0,0,0);
+            Line l = new Line(-10000,0,-10000,0);
             l.setStroke(getColor(types.get(i), lines.get(i)));
+            l.setStrokeLineCap(StrokeLineCap.BUTT);
             pane.getChildren().add(l);
         }
     }
