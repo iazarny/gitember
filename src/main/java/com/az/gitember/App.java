@@ -55,7 +55,7 @@ public class App extends Application {
 
         App.stage = stage;
         App.app = this;
-        Context.updateSettings(Context.getSettingService().read());
+        Context.readSettings();
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         jMetro = new JMetro(LookAndFeelSet.THEME_NAME);
         jMetro.setScene(scene);

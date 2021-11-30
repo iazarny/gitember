@@ -645,27 +645,15 @@ public class GitRepoService {
         });
 
         Thread threadSearch2 = new Thread( () -> {
-            if (luceneIndexed || true) {
-
-                Long dt = System.currentTimeMillis();
-
-
+            if (luceneIndexed) {
                 SearchService service = getSearchService();
-
                 Map<String, Set<String>> lucineMap = service.search(term);
-
-
                 lucineMap.keySet().forEach( key -> {
-                    Set<String> affectedFiles = map.computeIfAbsent(key, s -> {
-                        return new HashSet<String>();
-                    });
+                    Set<String> affectedFiles = map.computeIfAbsent(key, s -> new HashSet<String>());
                     affectedFiles.addAll(lucineMap.get(key));
                     lucineMap.get(key).clear();
-
                 }  );
-
             }
-
         } );
 
         threadSearch2.start();

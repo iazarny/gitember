@@ -115,7 +115,7 @@ public class Context {
         project.setOpenTime(new Date());
         project.setProjectHomeFolder(gitFolder);
         project.setUserName(remoteRepoParameters.getUserName());
-        project.setUserPwd(remoteRepoParameters.getUserPwd()); //TODO encrypt passwords
+        project.setUserPwd(remoteRepoParameters.getUserPwd());
         project.setUserKey(remoteRepoParameters.getPathToKey());
         project.setKeyPass(remoteRepoParameters.getKeyPassPhrase());
 
@@ -154,10 +154,6 @@ public class Context {
         return rez;
     }
 
-    public static void readSettings() {
-        Settings settings = settingService.read();
-        settingsProperty.setValue(settings);
-    }
 
     public static void updatePlotCommitList(final String treeName, final boolean allHistory, final ProgressMonitor progressMonitor) {
 
@@ -165,7 +161,7 @@ public class Context {
 
         plotCommitList.clear();
 
-        plotCommitList.addAll((Collection) plotCommits);
+        plotCommitList.addAll(plotCommits);
 
         selectedTreeName.set(treeName);
     }
@@ -250,7 +246,8 @@ public class Context {
                 .collect(Collectors.toList()));
     }
 
-    public static void updateSettings(Settings settings) {
+    public static void readSettings() {
+        Settings settings = settingService.read();
         settingsProperty.setValue(settings);
     }
 
