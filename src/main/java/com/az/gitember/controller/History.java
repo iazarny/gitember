@@ -128,8 +128,8 @@ public class History implements Initializable {
                     return new TableRow<PlotCommit>() {
                         private String calculateStyle(final PlotCommit plotCommit) {
                             String searchString = searchText.getText();
-                            if (plotCommit != null && searchString != null && searchString.length() > Const.SEARCH_LIMIT_CHAR) {
-                                if (Context.searchResult.getValue().containsKey(plotCommit.getName())) {
+                            if (plotCommit != null && searchString != null && Context.searchResult.getValue() != null) {
+                                if (searchString.length() > Const.SEARCH_LIMIT_CHAR && Context.searchResult.getValue().containsKey(plotCommit.getName())) {
                                     return LookAndFeelSet.FOUND_ROW;
                                 }
                             }
