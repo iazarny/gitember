@@ -20,3 +20,12 @@
     -fx-background-color: #97a7fa;
 }
 
+
+.root {
+    -fx-font-size: 11pt ;
+}
+
+
+.overview-border {
+    -fx-border-color: white;
+}

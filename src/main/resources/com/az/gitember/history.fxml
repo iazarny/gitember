@@ -49,8 +49,7 @@
 
             <ToolBar id="MERGEITEM">
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
-                <Label id="MERGEITEM" text="Search"/>
-                <TextField id="MERGEITEM" fx:id="searchText"  />
+                <TextField id="MERGEITEM" fx:id="searchText" promptText="Search" />
             </ToolBar>
         </HBox>
     </bottom>

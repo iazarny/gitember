@@ -31,6 +31,7 @@ public class Project implements Serializable, Comparable<Project>  {
     private String keyPass;
     private String userCommitName;
     private String userCommitEmail;
+    private boolean indexed;
 
 
     public Project() {
@@ -39,6 +40,14 @@ public class Project implements Serializable, Comparable<Project>  {
     public Project(String projectHomeFolder, Date openTime) {
         this.projectHomeFolder = projectHomeFolder;
         this.openTime = openTime;
+    }
+
+    public boolean isIndexed() {
+        return indexed;
+    }
+
+    public void setIndexed(boolean indexed) {
+        this.indexed = indexed;
     }
 
     public String getUserCommitName() {

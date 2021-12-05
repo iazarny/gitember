@@ -47,6 +47,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -82,9 +83,9 @@ public class GitRepoService {
      * @param absPath path to repository.
      */
     public static Repository createRepository(final String absPath,
-                                        final boolean withReadme,
-                                        final boolean withGitIgnore,
-                                        final boolean withLfs) throws Exception {
+                                              final boolean withReadme,
+                                              final boolean withGitIgnore,
+                                              final boolean withLfs) throws Exception {
         try (final Git git = Git.init()
                 .setDirectory(new File(absPath))
                 .call()) {
@@ -108,7 +109,7 @@ public class GitRepoService {
             }
 
             if (withLfs) {
-                addLFSSupport( git);
+                addLFSSupport(git);
             }
 
             git.commit().setMessage("Init").call();
@@ -146,7 +147,7 @@ public class GitRepoService {
         try (Git git = new Git(repository)) {
             final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
             final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
-            final Path attrPath = Paths.get(absPath , fileName);
+            final Path attrPath = Paths.get(absPath, fileName);
             Files.delete(attrPath);
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot unlink ", e);
@@ -187,7 +188,7 @@ public class GitRepoService {
 
     }
 
-    public GitRepoService(final Repository repo)  {
+    public GitRepoService(final Repository repo) {
         this.repository = repo;
     }
 
@@ -472,7 +473,7 @@ public class GitRepoService {
      *
      * @param from    branch name
      * @param message merge message
-     * @throws Exception   * @throws IOException in case of error
+     * @throws Exception * @throws IOException in case of error
      */
     public MergeResult mergeBranch(final String from, final String message) throws Exception {
         try (Git git = new Git(repository)) {
@@ -486,7 +487,7 @@ public class GitRepoService {
     /**
      * @param upstream the name of the upstream branch
      * @return rebase result
-     * @throws Exception   * @throws IOException in case of error
+     * @throws Exception * @throws IOException in case of error
      */
     public RebaseResult rebaseBranch(final String upstream) throws Exception {
         try (Git git = new Git(repository)) {
@@ -608,6 +609,82 @@ public class GitRepoService {
     public List<ScmRevisionInformation> getFileHistory(final String fileName) throws Exception {
 
         return getFileHistory(fileName, null);
+
+    }
+
+    public Map<String, Set<String>> search(List<PlotCommit> commits, String term, boolean luceneIndexed) {
+        Map<String, Set<String>> map = new ConcurrentHashMap<>();
+        String searchString = term.toLowerCase();
+
+        Thread threadSearch1 = new Thread(() -> {
+            commits.forEach(
+                    plotCommit -> {
+                        if (
+                                plotCommit.getShortMessage().toLowerCase().contains(searchString)
+                                        || plotCommit.getFullMessage().toLowerCase().contains(searchString)
+                                        || plotCommit.getName().toLowerCase().contains(searchString)
+                                        || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
+                                        || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                        ) {
+
+                            Set<String> affectedFiles = map.computeIfAbsent(plotCommit.getName(), s -> {
+                                return new HashSet<String>();
+                            });
+
+                            adapt(plotCommit).getAffectedItems().stream().forEach(
+                                    item -> {
+                                        if (item.getShortName().toLowerCase().contains(searchString)) {
+                                            affectedFiles.add(item.getShortName());
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+
+        });
+
+        Thread threadSearch2 = new Thread( () -> {
+            if (luceneIndexed) {
+                SearchService service = getSearchService();
+                Map<String, Set<String>> lucineMap = service.search(term);
+                lucineMap.keySet().forEach( key -> {
+                    Set<String> affectedFiles = map.computeIfAbsent(key, s -> new HashSet<String>());
+                    affectedFiles.addAll(lucineMap.get(key));
+                    lucineMap.get(key).clear();
+                }  );
+            }
+        } );
+
+        threadSearch2.start();
+        threadSearch1.start();
+
+        try {
+            threadSearch2.join();
+            threadSearch1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        return map;
+    }
+
+    SearchService service = null;
+
+    private synchronized SearchService getSearchService() {
+        if(service == null) {
+            service = new SearchService( Context.getProjectFolder() );
+        }
+
+        return service;
+    }
+
+
+    private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
+        return prersonIndent != null
+                && (prersonIndent.getEmailAddress() != null
+                && prersonIndent.getEmailAddress().toLowerCase().contains(searchString.toLowerCase()));
 
     }
 
@@ -981,12 +1058,12 @@ public class GitRepoService {
     }
 
     List<ScmItem> enrichWithLastChangesDetail(final Git git, final List<ScmItem> toEnrich) throws Exception {
-        for(ScmItem item : toEnrich) {
+        for (ScmItem item : toEnrich) {
             final LogCommand cmd = git.log()
                     .setRevFilter(RevFilter.ALL)
                     .setMaxCount(1)
                     .addPath(item.getShortName());
-            final Iterable<RevCommit> lastCommitIter =  cmd.call();
+            final Iterable<RevCommit> lastCommitIter = cmd.call();
             while (lastCommitIter.iterator().hasNext()) {
                 final RevCommit revCommit = lastCommitIter.iterator().next();
                 if (revCommit != null) {
@@ -999,7 +1076,6 @@ public class GitRepoService {
         return toEnrich;
 
     }
-
 
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
@@ -1015,7 +1091,7 @@ public class GitRepoService {
 
         status.addAll(lfs);
 
-        return  status;
+        return status;
     }
 
     public List<ScmItem> getLfsFiles(String name) throws IOException {
@@ -1042,7 +1118,7 @@ public class GitRepoService {
                 //final LfsPointer pointer = filter.getPointer(); //TODO deleted file
                 final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
                 final ScmItem scmItem = new ScmItem(
-                  path,new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
+                        path, new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
                 );
                 rez.add(scmItem);
             }
@@ -1051,23 +1127,35 @@ public class GitRepoService {
     }
 
 
+    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty,  final ProgressMonitor progressMonitor) {
+        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty,  progressMonitor);
+        List<ScmRevisionInformation> rez = commit.stream().map(pl -> adapt(pl)).collect(Collectors.toList());
+        rez.forEach(sri -> {
+            sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
+        });
+        return rez;
+    }
+
     /**
      * Get revisions to visualize. Fr more detail look at
      * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
      *
-     * @param treeName trhee name
+     * @param treeName tree name
      * @param all      to visualize with merges
      * @return PlotCommitList<PlotLane>
      * @throws Exception in case of error
      */
-    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final ProgressMonitor progressMonitor) {
+    public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final int qtyRevs, final ProgressMonitor progressMonitor) {
+
+
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
         try (PlotWalk revWalk = new PlotWalk(repository)) {
 
-
-            final ObjectId rootId = repository.resolve(treeName);
-            final RevCommit root = revWalk.parseCommit(rootId);
-            revWalk.markStart(root);
+            if (treeName != null) {
+                final ObjectId rootId = repository.resolve(treeName);
+                final RevCommit root = revWalk.parseCommit(rootId);
+                revWalk.markStart(root);
+            }
 
             if (all) {
                 revWalk.setTreeFilter(TreeFilter.ALL);
@@ -1087,7 +1175,12 @@ public class GitRepoService {
             }
 
             plotCommitList.source(revWalk);
-            plotCommitList.fillTo(Integer.MAX_VALUE);
+            if (qtyRevs == -1) {
+                plotCommitList.fillTo(Integer.MAX_VALUE);
+            } else {
+                plotCommitList.fillTo(qtyRevs);
+            }
+
             revWalk.dispose();
 
             if (progressMonitor != null) {
@@ -1101,12 +1194,13 @@ public class GitRepoService {
         return plotCommitList;
     }
 
+
     public List<AverageLiveTime> getMergedBranches(final StatWPParameters params) {
 
         final String treeNameTarget = params.getBranchName();
         final List<BranchLiveTime> brandLiveTimes = new ArrayList<>();
         final Set<RevCommit> tails = new HashSet<>();
-        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, null);
+        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, -1, null);
         final Set<RevCommit> treeOnlyCommits = getRevCommits(treeNameHistory);
 
         RevCommit plotLane = treeNameHistory.get(0);
@@ -1256,16 +1350,17 @@ public class GitRepoService {
 
     /**
      * Temporally configure in the user config internal LFS
+     *
      * @return pait of smugde and clean filterf for LFS
      * @throws Exception in case of error.
      */
-    private Pair<String,String> configureLfsSupport(StoredConfig config) throws Exception {
+    private Pair<String, String> configureLfsSupport(StoredConfig config) throws Exception {
 
         String smudge = config.getString("filter", "lfs", "smudge");
         String clean = config.getString("filter", "lfs", "clean");
 
-       // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-       // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
+        // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
+        // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
 
         config.unset("filter", "lfs", "smudge");
         config.unset("filter", "lfs", "clean");
@@ -1276,10 +1371,9 @@ public class GitRepoService {
         return new Pair<>(smudge, clean);
     }
 
-    private void rollbackLfsSupport( StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
+    private void rollbackLfsSupport(StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
         String smudge = smudgeAndClean.getFirst();
         String clean = smudgeAndClean.getSecond();
-
 
 
         if (clean == null) {
@@ -1424,8 +1518,8 @@ public class GitRepoService {
             return pullRez.getMergeResult().toString(); // TODo more info
         } finally {
             if (smudgeAndCleanRepo != null) {
-                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
-                 rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
+                rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
+                rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
             }
         }
     }
@@ -1510,8 +1604,6 @@ public class GitRepoService {
                         .collect(Collectors.joining(indent));
                 stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
             }
-
-
 
 
         }
@@ -1615,7 +1707,7 @@ public class GitRepoService {
                     diffs.stream()
                             .map(this::adaptDiffEntry)
                             .collect(Collectors.toCollection(() -> rez));
-                    rez.forEach(scmItem -> scmItem.setCommitName(revCommit.getName()));
+                    rez.forEach(scmItem -> scmItem.setCommitName(revCommit));
 
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "Cannot collect items from rev commit", e);
@@ -1642,6 +1734,15 @@ public class GitRepoService {
 
     public ScmStat blame(final Set<String> files, final ProgressMonitor progressMonitor) throws Exception {
         return blame(files, "Blame", progressMonitor);
+    }
+
+    public BlameResult blame(ScmItem scmItem) throws Exception {
+        final BlameCommand blamer = new BlameCommand(repository);
+        if (scmItem.getRevCommit() != null) {
+            blamer.setStartCommit(scmItem.getRevCommit());
+        }
+        blamer.setFilePath(scmItem.getShortName());
+        return blamer.call();
     }
 
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {

@@ -7,6 +7,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.eclipse.jgit.lib.ProgressMonitor;
+import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 
@@ -63,7 +64,7 @@ public class Context {
 
     public static final ObservableList<ScmItem> statusList = FXCollections.observableList(new ArrayList<>());
     public static final ObservableList<ScmItem> stashItemsList = FXCollections.observableList(new ArrayList<>());
-    public static final ObservableList<PlotLane> plotCommitList = FXCollections.observableList(new ArrayList<>());
+    public static final ObservableList<PlotCommit> plotCommitList = FXCollections.observableList(new ArrayList<>());
 
     public static final StringProperty fileHistoryTree = new SimpleStringProperty();
     public static final StringProperty fileHistoryName = new SimpleStringProperty();
@@ -82,7 +83,8 @@ public class Context {
             new SimpleObjectProperty(null);
 
     public static StringProperty searchValue = new SimpleStringProperty();
-
+    public static final ObjectProperty<Map<String, Set<String>>> searchResult =
+            new SimpleObjectProperty(null);
 
     private static Main main;
 
@@ -113,7 +115,7 @@ public class Context {
         project.setOpenTime(new Date());
         project.setProjectHomeFolder(gitFolder);
         project.setUserName(remoteRepoParameters.getUserName());
-        project.setUserPwd(remoteRepoParameters.getUserPwd()); //TODO encrypt passwords
+        project.setUserPwd(remoteRepoParameters.getUserPwd());
         project.setUserKey(remoteRepoParameters.getPathToKey());
         project.setKeyPass(remoteRepoParameters.getKeyPassPhrase());
 
@@ -152,18 +154,14 @@ public class Context {
         return rez;
     }
 
-    public static void readSettings() {
-        Settings settings = settingService.read();
-        settingsProperty.setValue(settings);
-    }
 
     public static void updatePlotCommitList(final String treeName, final boolean allHistory, final ProgressMonitor progressMonitor) {
 
-        final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, progressMonitor);
+        final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
 
         plotCommitList.clear();
 
-        plotCommitList.addAll((Collection) plotCommits);
+        plotCommitList.addAll(plotCommits);
 
         selectedTreeName.set(treeName);
     }
@@ -248,7 +246,8 @@ public class Context {
                 .collect(Collectors.toList()));
     }
 
-    public static void updateSettings(Settings settings) {
+    public static void readSettings() {
+        Settings settings = settingService.read();
         settingsProperty.setValue(settings);
     }
 

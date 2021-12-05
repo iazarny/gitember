@@ -4,27 +4,41 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.HBox?>
 
 <?import javafx.scene.control.TextField?>
-<GridPane fx:id="mainPanel" prefHeight="600.0" prefWidth="860.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+<?import javafx.scene.control.ToolBar?>
+<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
     
    <columnConstraints>
-      <ColumnConstraints percentWidth="45" />
-      <ColumnConstraints halignment="CENTER" percentWidth="10" />
-      <ColumnConstraints percentWidth="45" />
+      <ColumnConstraints percentWidth="46" />
+      <ColumnConstraints halignment="CENTER" percentWidth="8" />
+      <ColumnConstraints percentWidth="46" />
    </columnConstraints>
    <rowConstraints>
       <RowConstraints fx:id="firstRowConstraint"/>
       <RowConstraints fx:id="secondRowConstraint"/>
    </rowConstraints>
    <children>
-       <TextField fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
 
-       <TextField fx:id="newLabel" text="New Label" GridPane.columnIndex="2"  editable="false" style="-right-button-visible: false;"/>
+      <ToolBar GridPane.columnIndex="0">
+         <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
+         <Pane  HBox.hgrow="ALWAYS" />
+         <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
+      </ToolBar>
 
-      <Pane fx:id="diffDrawPanel" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-background-color: background_color" />
-      <Pane                       prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-background-color: background_color" />
+      <Pane fx:id="diffDrawPanel"  prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
+      <Pane                        prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+
+      <ToolBar GridPane.columnIndex="2">
+         <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" style="-right-button-visible: false;"/>
+         <Pane  HBox.hgrow="ALWAYS" />
+         <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />
+      </ToolBar>
+
+
+
 
    </children>
 </GridPane>

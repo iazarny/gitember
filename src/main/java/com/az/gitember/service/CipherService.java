@@ -21,7 +21,7 @@ public class CipherService {
     private final static Logger log = Logger.getLogger(CipherService.class.getName());
     private final static String aesPrefix = "//AES//";
 
-    private final static  byte[] key = "0123456789fast11".getBytes();
+    private final static byte[] key = "0123456789fast11".getBytes();
     private static Cipher cipher;
     private static Cipher decipher;
     private static SecretKeySpec keySpec;
@@ -32,7 +32,7 @@ public class CipherService {
             decipher = Cipher.getInstance("AES");
             keySpec = new SecretKeySpec(key, "AES");
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot init aes provider" , e);
+            log.log(Level.SEVERE, "Cannot init aes provider", e);
         }
     }
 
@@ -53,6 +53,11 @@ public class CipherService {
     }
 
     public static String crypt(String str) {
+        return crypt(str, aesPrefix);
+
+    }
+
+    public static String crypt(String str, String withPrefix) {
         if (str == null) {
             return null;
         } else if (str.startsWith(aesPrefix)) {
@@ -60,16 +65,16 @@ public class CipherService {
         } else {
             try {
                 cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-                byte [] toCrypt = str.getBytes();
+                byte[] toCrypt = str.getBytes();
                 if (toCrypt.length == 0) {
                     return "";
 
                 } else {
                     byte[] encryptedData = cipher.doFinal(toCrypt);
-                    return aesPrefix + Hex.encodeHexString(encryptedData);
+                    return withPrefix + Hex.encodeHexString(encryptedData);
 
                 }
-            } catch ( Exception e) {
+            } catch (Exception e) {
                 return str;
             }
         }

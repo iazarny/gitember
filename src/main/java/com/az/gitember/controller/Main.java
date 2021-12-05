@@ -2,11 +2,10 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -18,11 +17,21 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -40,6 +49,8 @@ public class Main implements Initializable {
     public ToolBar mainToolBar;
     public Menu openRecentMenuItem;
     public MenuItem compressDataMenuItem;
+    public MenuItem reindexDataMenuItem;
+    public MenuItem dropIndexDataMenuItem;
     public MainTreeChangeListener mainTreeChangeListener;
     public MenuItem fetchMenuItem;
     public MenuItem pullMenuItem;
@@ -115,6 +126,7 @@ public class Main implements Initializable {
                                     + ScmBranch.getNameSafe(Context.workingBranch.getValue()));
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
+                    reindexDataMenuItem.setDisable(newValue == null);
                     fetchMenuItem.setDisable(disable);
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
@@ -127,7 +139,9 @@ public class Main implements Initializable {
 
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
                     editRawAttrsMenuItem.setVisible(attrFileExists);
-                    //lfsMenuItem.setVisible(lfsRepo);
+
+                    dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
+
 
 
                 }
@@ -222,13 +236,17 @@ public class Main implements Initializable {
      * @param actionEvent event
      * @throws Exception
      */
-    public void openHandler(ActionEvent actionEvent) throws Exception {
+    public void openHandler(ActionEvent actionEvent)  {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File selectedDirectory =
                 directoryChooser.showDialog(App.getStage());
         if (selectedDirectory != null) {
             String absPath = selectedDirectory.getAbsolutePath();
-            Context.init(absPath);
+            try {
+                Context.init(absPath);
+            } catch (Exception e) {
+                showResult("Error", "Cannot open repository " + absPath, Alert.AlertType.WARNING);
+            }
         }
     }
 
@@ -284,6 +302,32 @@ public class Main implements Initializable {
         );
 
     }
+
+    public void dropIndexDataHandler(ActionEvent actionEvent) {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
+        alert.setTitle("Question");
+        alert.setContentText("Would you like to drop history indexes for current project ?");
+        alert.initOwner(App.getScene().getWindow());
+        alert.showAndWait().ifPresent( r -> {
+            if (r == ButtonType.OK) {
+                SearchService service = new SearchService( Context.getProjectFolder() );
+                service.dropIndex();
+                Context.getCurrentProject().setIndexed(false);
+                Context.saveSettings();
+                dropIndexDataMenuItem.setDisable(true);
+
+            }
+        });
+
+    }
+
+    public void reindexDataHandler(ActionEvent actionEvent) {
+        new IndexEventHandler().handle(actionEvent);
+        dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
+    }
+
 
     public void compressDataHandler(ActionEvent actionEvent) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

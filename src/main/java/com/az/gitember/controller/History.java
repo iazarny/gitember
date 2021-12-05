@@ -27,6 +27,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -125,30 +126,11 @@ public class History implements Initializable {
         commitsTableView.setRowFactory(
                 tr -> {
                     return new TableRow<PlotCommit>() {
-
-                        private String calculateStyle(final PlotCommit scmItem) {
+                        private String calculateStyle(final PlotCommit plotCommit) {
                             String searchString = searchText.getText();
-
-                            if (scmItem != null && searchString != null && searchString.length() > Const.SEARCH_LIMIT_CHAR) {
-                                searchString = searchString.toLowerCase();
-                                if (scmItem.getShortMessage().toLowerCase().contains(searchString)
-                                        || scmItem.getFullMessage().toLowerCase().contains(searchString)
-                                        || scmItem.getName().toLowerCase().contains(searchString)
-                                        || prersonIndentContains(scmItem.getCommitterIdent(), searchString)
-                                        || prersonIndentContains(scmItem.getAuthorIdent(), searchString)
-                                        ||
-
-                                        Context.getGitRepoService().getScmItems(scmItem, null).stream()
-                                                .map(s -> s.getShortName())
-                                                .collect(Collectors.joining(","))
-                                                .toLowerCase().contains(searchString)
-
-
-                                ) {
-
-
+                            if (plotCommit != null && searchString != null && Context.searchResult.getValue() != null) {
+                                if (searchString.length() > Const.SEARCH_LIMIT_CHAR && Context.searchResult.getValue().containsKey(plotCommit.getName())) {
                                     return LookAndFeelSet.FOUND_ROW;
-
                                 }
                             }
                             return "";
@@ -231,12 +213,19 @@ public class History implements Initializable {
 
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    commitsTableView.refresh();
-                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+
+                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue) && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
                         Context.searchValue.setValue(newValue);
+                        Context.searchResult.setValue(Context.getGitRepoService().search(
+                                (List<PlotCommit>) Context.plotCommitList,
+                                newValue,
+                                Context.getCurrentProject().isIndexed()));
+                        commitsTableView.refresh();
+                    } else {
+                        Context.searchResult.setValue(null);
                     }
                 }
         );
@@ -248,12 +237,7 @@ public class History implements Initializable {
 
     }
 
-    private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
-        return prersonIndent != null
-                && (prersonIndent.getEmailAddress() != null
-                && prersonIndent.getEmailAddress().toLowerCase().contains(searchString.toLowerCase()));
 
-    }
 
 
     public void checkoutMenuItemClickHandler(ActionEvent actionEvent) {

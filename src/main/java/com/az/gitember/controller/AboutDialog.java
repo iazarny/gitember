@@ -46,7 +46,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.2");
+        this.setTitle("Gitember 2.3");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -202,29 +202,27 @@ public class AboutDialog extends Dialog {
         char2_1.setLayoutY(300);
         applyStyle(char2_1);
 
-        Path char2_2 = getPathChar2();
-        char2_2.setLayoutX(300);
-        char2_2.setLayoutY(300);
-        applyStyle(char2_2);
+        Path char2_3 = getPathChar3();
+        char2_3.setLayoutX(300);
+        char2_3.setLayoutY(300);
+        applyStyle(char2_3);
 
         Path dot = getPathCharDot();
         dot.setLayoutX(333.5);
-        dot.setLayoutY(370);
+        dot.setLayoutY(380 );
         applyStyle(dot);
 
-        MotionBlur mb = new MotionBlur();
+        /*MotionBlur mb = new MotionBlur();
         mb.setRadius(35.0f);
         mb.setAngle(45.0f);
 
         char2_1.setEffect(mb);
         char2_2.setEffect(mb);
-        dot.setEffect(mb);
-
-
+        dot.setEffect(mb);*/
 
 
         return new Path [] {
-                path, char2_1,  char2_2, dot
+                path, char2_1,  char2_3, dot
         };
     }
 
@@ -247,12 +245,41 @@ public class AboutDialog extends Dialog {
         Path path = new Path();
 
         path.getElements().add(new MoveTo(   0,       0 ));
-        path.getElements().add(new ArcTo(RADIUS, RADIUS, 0,
-                 CHAR_WIDTH , 0  , false, true));
-        path.getElements().add(new ArcTo(RADIUS, RADIUS / 1.275, 0,
-                 CHAR_WIDTH ,  30  , false, true));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT/2 ));
         path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
         path.getElements().add(new LineTo(CHAR_WIDTH , CHAR_HEIGHT ));
+        return path;
+    }
+
+    private Path getPathChar3() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(0 , CHAR_HEIGHT ));
+        return path;
+    }
+
+    private Path getPathChar4() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new MoveTo(   CHAR_WIDTH,       0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
+        return path;
+    }
+
+    private Path getPathChar5() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   CHAR_WIDTH,       0 ));
+        path.getElements().add(new LineTo(0  , 0 ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(   CHAR_WIDTH,       CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
         return path;
     }
 

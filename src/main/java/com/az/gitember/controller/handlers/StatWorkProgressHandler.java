@@ -38,7 +38,7 @@ public class StatWorkProgressHandler extends AbstractLongTaskEventHandler implem
                         params -> {
 
                             final PlotCommitList<PlotLane> allCommits = Context.getGitRepoService().getCommitsByTree(
-                                    params.getBranchName(),false,null);
+                                    params.getBranchName(),false, -1,null);
 
                             final PlotCommitList<PlotLane> lastCommitPerMonth = new PlotCommitList<>();
                             final PlotCommitList<PlotLane> src = selectLastCommitInMonth(allCommits);
