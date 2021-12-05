@@ -22,12 +22,16 @@ import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  * JavaFX App
  */
 public class App extends Application {
+
+    private final static Logger log = Logger.getLogger(App.class.getName());
 
     private static Scene scene;
     private static Stage stage;
@@ -64,32 +68,27 @@ public class App extends Application {
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
-                if (onShown && Const.View.WORKING_COPY.equals(Context.mainPaneName.getValueSafe()) && isAllowUpdateByTime()) {
+                if (onShown
+                        && Const.View.WORKING_COPY.equals(Context.mainPaneName.getValueSafe())
+                        && isAllowUpdateByTime()) {
                     Platform.runLater(() -> Context.updateStatusIfNeed(null));
                 }
             }
         });
 
+        stage.setOnCloseRequest(
+                event -> {
+                    Platform.exit();
+                }
+        );
     }
 
-    private boolean isAllowUpdateByTime() {
-        boolean allowUpdateByTime = false;
-        LocalDateTime lastUpdate = Context.lastUpdate.get();
-        if (lastUpdate != null) {
-            Duration duration = Duration.between(lastUpdate, LocalDateTime.now());
-            if (duration.toSeconds() > 60) {
-                allowUpdateByTime = true;
-            }
-        }
-        return allowUpdateByTime;
-    }
 
     @Override
     public void stop() throws Exception {
-
+        log.log(Level.INFO, "Gitemeber is stopped");
         Context.saveSettings();
         Context.getGitRepoService().shutdown();
-
         super.stop();
     }
 
@@ -134,5 +133,18 @@ public class App extends Application {
 
         launch();
     }
+
+    private boolean isAllowUpdateByTime() {
+        boolean allowUpdateByTime = false;
+        LocalDateTime lastUpdate = Context.lastUpdate.get();
+        if (lastUpdate != null) {
+            Duration duration = Duration.between(lastUpdate, LocalDateTime.now());
+            if (duration.toSeconds() > 60) {
+                allowUpdateByTime = true;
+            }
+        }
+        return allowUpdateByTime;
+    }
+
 
 }
