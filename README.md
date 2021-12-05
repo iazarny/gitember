@@ -17,9 +17,9 @@ Nothing in particular, but
 
 ## Changes
 ### 2.3
- * Full text search across history
+ * Full text search across history, including binary files
  * Search in open files
- * Add annotation
+ * Add change annotation
  * Branch differences with item details
  * Add overview for difference component 
 
@@ -34,5 +34,5 @@ Nothing in particular, but
 ## Plans 
 
  * Integration with git providers, at least with github
- * Tab support
+ * Tabs support
 
