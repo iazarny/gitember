@@ -85,6 +85,11 @@
                                 <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
                             </items>
                         </Menu>
+
+                        <Menu fx:id="gitLabMenu" visible="false" text="GitLab">
+                            <MenuItem  text="Issues" onAction="#gitlabIssues"/>
+                        </Menu>
+
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem text="Check for update" onAction="#checkForUpdate"/>

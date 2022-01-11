@@ -132,6 +132,9 @@ public class Context {
         );
 
 
+        getMain().postInit();
+
+
     }
 
     public static void init(String gitFolder) throws Exception {

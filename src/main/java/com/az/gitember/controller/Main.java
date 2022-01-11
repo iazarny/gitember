@@ -65,6 +65,7 @@ public class Main implements Initializable {
     public TreeItem localBranchesTreeItem;
     public TreeItem remoteBranchesTreeItem;
     public TreeItem tagsTreeItem;
+    public Menu gitLabMenu;
 
 
     /**
@@ -240,6 +241,23 @@ public class Main implements Initializable {
                 showResult("Error", "Cannot open repository " + absPath, Alert.AlertType.WARNING);
             }
         }
+    }
+
+    public void postInit() {
+        //TODO resolve provider
+
+        gitLabMenu.setVisible(false);
+
+        final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
+
+        if (remUrl != null && remUrl.contains(Const.Provider.GITLAB)) {
+
+        }
+
+        gitLabMenu.setVisible(true);
+
+
+
     }
 
     public void fetchHandler(ActionEvent actionEvent) {
@@ -495,4 +513,10 @@ public class Main implements Initializable {
                 }
         );
     }
+
+    public void gitlabIssues(ActionEvent actionEvent) {
+        System.out.println();
+    }
+
+
 }

@@ -41,6 +41,10 @@ public interface Const {
         String WORKING_COPY = "workingcopy";
     }
 
+    interface Provider {
+        String GITLAB = "gitlab";
+    }
+
     String APP_NAME = "Gitember 2.3";
 
     String ICON = "/icon/GE-icon.png";
