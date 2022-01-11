@@ -1,7 +1,7 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.controller.DefaultProgressMonitor;
-import com.az.gitember.controller.IntegerlDialog;
+import com.az.gitember.controller.IntegerDialog;
 import com.az.gitember.data.ScmItemDocument;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
@@ -10,7 +10,6 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.text.MessageFormat;
@@ -27,9 +26,9 @@ public class IndexEventHandler extends AbstractLongTaskEventHandler implements E
     @Override
     public void handle(ActionEvent event) {
 
-        IntegerlDialog integerlDialog = new IntegerlDialog("Index repository history " , "Limit revisions to reindex", "Quantiy", 100);
+        IntegerDialog integerDialog = new IntegerDialog("Index repository history " , "Limit revisions to reindex", "Quantiy", 100);
 
-        integerlDialog.showAndWait().ifPresent( r -> {
+        integerDialog.showAndWait().ifPresent(r -> {
 
 
             Task<Void> longTask = new Task<Void>() {

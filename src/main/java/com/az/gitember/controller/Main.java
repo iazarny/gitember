@@ -2,9 +2,12 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.*;
+import com.az.gitember.controller.handlers.gitlab.SetAccessTokenEventHandler;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -17,21 +20,11 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -143,7 +136,6 @@ public class Main implements Initializable {
                     dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
 
 
-
                 }
         );
 
@@ -236,7 +228,7 @@ public class Main implements Initializable {
      * @param actionEvent event
      * @throws Exception
      */
-    public void openHandler(ActionEvent actionEvent)  {
+    public void openHandler(ActionEvent actionEvent) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File selectedDirectory =
                 directoryChooser.showDialog(App.getStage());
@@ -261,7 +253,8 @@ public class Main implements Initializable {
 
     public void remoteURLtHandler(ActionEvent actionEvent) throws IOException {
         String url = Context.getGitRepoService().getRepository().getConfig().getString("remote", "origin", "url");
-        new RemoteUrlDialog("Remote URL", "Charge repository remot URL", url).showAndWait().ifPresent(
+        new StringDialog("Remote URL", "Charge repository remote URL",
+                "Remote URL", url).showAndWait().ifPresent(
                 nreUrl -> {
                     new SetRemoteUrlEventHandler(nreUrl).handle(actionEvent);
                 }
@@ -310,9 +303,9 @@ public class Main implements Initializable {
         alert.setTitle("Question");
         alert.setContentText("Would you like to drop history indexes for current project ?");
         alert.initOwner(App.getScene().getWindow());
-        alert.showAndWait().ifPresent( r -> {
+        alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
-                SearchService service = new SearchService( Context.getProjectFolder() );
+                SearchService service = new SearchService(Context.getProjectFolder());
                 service.dropIndex();
                 Context.getCurrentProject().setIndexed(false);
                 Context.saveSettings();
@@ -487,5 +480,19 @@ public class Main implements Initializable {
         alert.initOwner(App.getScene().getWindow());
         alert.showAndWait();
 
+    }
+
+
+    public void gitlabAccessTokenHandler(ActionEvent actionEvent) {
+        String accessToken = StringUtils.defaultIfBlank(
+                Context.settingsProperty.get().getGitlabSettings().getAccessToken(),
+                ""
+        );
+        new StringDialog("Access token", "Charge gitlab access token",
+                "Token", accessToken).showAndWait().ifPresent(
+                newToken -> {
+                    new SetAccessTokenEventHandler(newToken).handle(actionEvent);
+                }
+        );
     }
 }

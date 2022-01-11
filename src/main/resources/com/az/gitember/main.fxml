@@ -76,7 +76,12 @@
                                     <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
 
                                 </Menu>
-                                <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal"/>
+
+                                <Menu text="Gitlab">
+                                    <MenuItem text="Access token"  onAction="#gitlabAccessTokenHandler"   />
+                                </Menu>
+
+                                <MenuItem onAction="#openGitTerminalActionHandler" text="Terminal"/>
                                 <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
                             </items>
                         </Menu>

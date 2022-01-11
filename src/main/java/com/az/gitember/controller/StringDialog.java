@@ -12,23 +12,24 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-public class RemoteUrlDialog extends Dialog<String> {
+public class StringDialog extends Dialog<String> {
 
-    private TextField remoteUrl;
-    private StringProperty remoteUrlProperty = new SimpleStringProperty();
+    private TextField valueTextField;
+    private StringProperty valueProperty = new SimpleStringProperty();
 
-    public RemoteUrlDialog(final String title,
-                           final String header,
-                           final String currentRemoteUrl
+    public StringDialog(final String title,
+                        final String header,
+                        final String valueName,
+                        final String valueToEdit
     ) {
 
         super();
         this.setTitle(title);
         this.setHeaderText(header);
         this.getDialogPane().getStyleClass().add("text-input-dialog");
-        this.remoteUrlProperty.setValue(currentRemoteUrl);
+        this.valueProperty.setValue(valueToEdit);
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        this.remoteUrl = new TextField();
+        this.valueTextField = new TextField();
 
         GridPane grid = new GridPane();
         //grid.setGridLinesVisible(true);
@@ -36,21 +37,21 @@ public class RemoteUrlDialog extends Dialog<String> {
         grid.setVgap(20);
         grid.setPadding(new Insets(20, 20, 20, 20));
 
-        grid.add(new Label("Remote URL"), 0, 0);
-        grid.add(remoteUrl, 1, 0);
+        grid.add(new Label(valueName), 0, 0);
+        grid.add(valueTextField, 1, 0);
 
-        remoteUrl.setPrefWidth(400);
+        valueTextField.setPrefWidth(400);
 
-        Bindings.bindBidirectional(remoteUrl.textProperty(), remoteUrlProperty);
+        Bindings.bindBidirectional(valueTextField.textProperty(), valueProperty);
 
         this.getDialogPane().setContent(grid);
         grid.requestLayout();
 
-        Platform.runLater(() -> remoteUrl.requestFocus());
+        Platform.runLater(() -> valueTextField.requestFocus());
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == ButtonType.OK) {
-                return remoteUrlProperty.getValueSafe();
+                return valueProperty.getValueSafe();
             }
             return null;
         });

@@ -25,6 +25,8 @@ public class Settings {
 
     private String theme;
 
+    private GitlabSettings gitlabSettings = new GitlabSettings();
+
     public TreeSet<Project> getProjects() {
         return projects;
     }
@@ -55,5 +57,16 @@ public class Settings {
 
     public void setTheme(String theme) {
         this.theme = theme;
+    }
+
+    public GitlabSettings getGitlabSettings() {
+        if (gitlabSettings == null) {
+            gitlabSettings = new GitlabSettings();
+        }
+        return gitlabSettings;
+    }
+
+    public void setGitlabSettings(GitlabSettings gitlabSettings) {
+        this.gitlabSettings = gitlabSettings;
     }
 }

@@ -11,14 +11,14 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.control.*;
 
-public class IntegerlDialog extends Dialog<Integer> {
+public class IntegerDialog extends Dialog<Integer> {
 
     private TextField integerField;
 
-    public IntegerlDialog(final String title,
-                          final String header,
-                          final String fieldName,
-                          final int currentValue
+    public IntegerDialog(final String title,
+                         final String header,
+                         final String fieldName,
+                         final int currentValue
     ) {
 
         super();
