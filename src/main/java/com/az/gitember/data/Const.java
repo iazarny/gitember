@@ -39,6 +39,10 @@ public interface Const {
         String STAT_BRANCH_LIFETOME = "statbranchlifetime";
         String STAT_BRANCHES = "statbranches";
         String WORKING_COPY = "workingcopy";
+
+        interface GitLab {
+            String ISSUES_VIEW = "issues";
+        }
     }
 
     interface Provider {

@@ -2,8 +2,10 @@ package com.az.gitember.service;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import java.net.MalformedURLException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class GitemberUtilTest {
 
@@ -23,5 +25,18 @@ class GitemberUtilTest {
 
         assertNull(GitLfsUtil.parseLsfListLine("1   dqw qwd   2"));
         assertNull(GitLfsUtil.parseLsfListLine("dqw qwd - asd"));
+    }
+
+    @Test
+    void getServer() throws MalformedURLException {
+        assertEquals("https://gitlab.com", GitemberUtil.getServer("git@gitlab.com:azarny1/learn-gitlab.git"));
+        assertEquals("http://www.gitgui.org", GitemberUtil.getServer("http://www.gitgui.org/ctx/project.git"));
+    }
+
+    @Test
+    void lstContains() {
+        List<String> lst = List.of("One", "Two");
+        assertTrue(GitemberUtil.lstContains(lst, "oNe"));
+        assertTrue(!GitemberUtil.lstContains(lst, "Three"));
     }
 }

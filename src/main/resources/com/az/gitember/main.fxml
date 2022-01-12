@@ -6,7 +6,8 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import com.az.gitember.controller.MainTreeItemCellFactory?>
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Main" style="-fx-background-color: background_color;">
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.controller.Main" style="-fx-background-color: background_color;">
     <top>
         <VBox>
             <children>

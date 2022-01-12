@@ -14,14 +14,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {
@@ -52,6 +51,7 @@ public class GitemberUtil {
         }
         return mimeType;
     }
+
 
 
     public static IsClass is(String str) {
@@ -215,5 +215,27 @@ public class GitemberUtil {
         privateStringField.setAccessible(true);
         return privateStringField.get(obj);
     }
+
+    public static String getServer(final String projectRemoteUrl) {
+        try {
+            return urlSanityCheck(projectRemoteUrl);
+        } catch (MalformedURLException e) {
+            return  null;
+        }
+    }
+
+    public static String urlSanityCheck(final String projectRemoteUrl) throws MalformedURLException {
+        String adjustedurl = projectRemoteUrl;
+        if (adjustedurl.startsWith("git@")) {
+            adjustedurl = "https://" + adjustedurl.substring("git@".length(), adjustedurl.indexOf(":"));
+        }
+        URL url = new URL(adjustedurl);
+        return url.getProtocol() + "://" +url.getHost();
+    }
+
+    public static boolean lstContains(List<String> list, String val) {
+        return !list.stream().filter(s -> s.equalsIgnoreCase(val)).findFirst().isEmpty();
+    }
+
 
 }

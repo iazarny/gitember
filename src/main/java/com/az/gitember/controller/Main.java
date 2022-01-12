@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.gitlab.IssuesController;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.controller.handlers.gitlab.SetAccessTokenEventHandler;
 import com.az.gitember.data.Const;
@@ -8,6 +9,7 @@ import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -20,9 +22,13 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.IssuesApi;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Optional;
@@ -503,7 +509,7 @@ public class Main implements Initializable {
 
     public void gitlabAccessTokenHandler(ActionEvent actionEvent) {
         String accessToken = StringUtils.defaultIfBlank(
-                Context.settingsProperty.get().getGitlabSettings().getAccessToken(),
+                getAccessToken(),
                 ""
         );
         new StringDialog("Access token", "Charge gitlab access token",
@@ -516,6 +522,42 @@ public class Main implements Initializable {
 
     public void gitlabIssues(ActionEvent actionEvent) {
         System.out.println();
+        if (gitlabSanityCheck()) {
+            try {
+
+
+                IssuesController issuesController =
+                        (IssuesController) App.loadFXMLToNewStage(Const.View.GitLab.ISSUES_VIEW, "Issues").getSecond();
+
+
+            } catch (Exception e) {
+                showResult("Error", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    private boolean gitlabSanityCheck() {
+        if (!StringUtils.isNotBlank(getAccessToken())) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
+            alert.setTitle("Warning");
+            alert.setContentText("Pleas provide gitlab access token");
+            alert.initOwner(App.getScene().getWindow());
+            alert.showAndWait();
+            return false;
+        }
+        String projUrl= Context.getGitRepoService().getRepositoryRemoteUrl();
+        try {
+            GitemberUtil.urlSanityCheck(projUrl);
+        } catch (MalformedURLException e) {
+            log.log(Level.WARNING, "Cannot get api url for project " +  projUrl, e);
+            showResult("Error", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
+        }
+        return true;
+    }
+
+    private String getAccessToken() {
+        return Context.settingsProperty.get().getGitlabSettings().getAccessToken();
     }
 
 

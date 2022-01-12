@@ -1,6 +1,5 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
@@ -15,7 +14,6 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
