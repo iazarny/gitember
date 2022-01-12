@@ -42,6 +42,7 @@ public interface Const {
 
         interface GitLab {
             String ISSUES_VIEW = "issues";
+            String ISSUE_DETAILS_VIEW = "issuedetails";
         }
     }
 

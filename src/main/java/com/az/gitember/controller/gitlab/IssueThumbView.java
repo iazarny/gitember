@@ -1,11 +1,19 @@
 package com.az.gitember.controller.gitlab;
 
+import com.az.gitember.App;
+import com.az.gitember.data.Const;
+import com.az.gitember.service.Context;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gitlab4j.api.models.Issue;
+
+import java.io.IOException;
 
 public class IssueThumbView extends VBox {
 
@@ -16,40 +24,45 @@ public class IssueThumbView extends VBox {
     public IssueThumbView(Issue issue) {
         this.issue = issue;
 
-        Label issueTitleLabel  =new Label("#" + issue.getIid() + " " + issue.getTitle());
+        Hyperlink issueTitleLabel  = new Hyperlink("#" + issue.getIid() + " " + issue.getTitle());
         issueTitleLabel.setWrapText(true);
 
         tagsHBox = new HBox();
-        //tagsHBox.setStyle("-fx-padding: 5px");
         tagsHBox.setStyle("-fx-spacing: 10");
         issue.getLabels().stream().forEach(
                 tag -> {
                     Label tagLabel = new Label(tag);
-
-                    setStyle("-fx-padding: 5px; -fx-background-color: green");
-
-                    tagsHBox.getChildren().add(tagLabel);
+                    HBox bg = new HBox(tagLabel);
+                    bg.setStyle("-fx-padding: 5px; -fx-background-color: yellow");
+                    tagsHBox.getChildren().add(bg);
                 }
         );
 
         idHBox= new HBox();
         idHBox.setStyle("-fx-spacing: 10");
-        idHBox.getChildren().add(new Label(issue.getIid().toString()));
-        Region region = new Region();
-        HBox.setHgrow(region, Priority.ALWAYS);
-        idHBox.getChildren().add(region);
-        idHBox.getChildren().add(new Label(issue.getAuthor().getName()));
+        if (issue.getAssignee() != null) {
+            idHBox.getChildren().add(new Label(issue.getAssignee().getName()));
+        }
 
+        this.getChildren().addAll(issueTitleLabel, tagsHBox, idHBox );
 
-        this.getChildren().addAll(issueTitleLabel, tagsHBox );
-        //this.getChildren().addAll(new Label(issue.getAuthor().getName()) );
-
-        setStyle("-fx-padding: 5px; -fx-background-color: darkgray");
-
-        //setMinHeight(100);
-        //setPrefHeight(100);
+        setStyle("-fx-padding: 5px; -fx-background-color: #121212");
 
         setSpacing(10);
+
+
+
+        issueTitleLabel.setOnAction(actionEvent -> {
+            Context.getMain().showResult("adscadscasdcsadcsadc ", this.issue.toString(),
+                    Alert.AlertType.WARNING);
+
+            try {
+                IssueDetailController controller =
+                        (IssueDetailController) App.loadFXMLToNewStage(Const.View.GitLab.ISSUE_DETAILS_VIEW, "Issue details").getSecond();
+            } catch (Exception e) {
+               Context.getMain().showResult("Error", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
+            }
+        });
 
     }
 

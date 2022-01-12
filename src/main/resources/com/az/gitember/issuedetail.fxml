@@ -6,9 +6,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea"
+<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea"
           xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.az.gitember.controller.gitlab.IssuesController"
+          fx:controller="com.az.gitember.controller.gitlab.IssueDetailController"
           style="-fx-background-color: background_color">
 
     <columnConstraints>
