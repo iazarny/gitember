@@ -6,31 +6,46 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.az.gitember.controller.gitlab.IssuesController" style="-fx-background-color: background_color">
+<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="com.az.gitember.controller.gitlab.IssuesController"
+          style="-fx-background-color: background_color">
 
     <columnConstraints>
-        <ColumnConstraints percentWidth="34" />
-        <ColumnConstraints percentWidth="33" />
-        <ColumnConstraints percentWidth="33" />
+        <ColumnConstraints percentWidth="1"/>
+        <ColumnConstraints percentWidth="32"/>
+        <ColumnConstraints percentWidth="1"/>
+        <ColumnConstraints percentWidth="32"/>
+        <ColumnConstraints percentWidth="1"/>
+        <ColumnConstraints percentWidth="32"/>
+        <ColumnConstraints percentWidth="1"/>
     </columnConstraints>
 
-    <ToolBar GridPane.columnIndex="0">
-        <TextField prefWidth="280"  text="Open"  editable="false" style="-right-button-visible: false;"/>
+    <HBox GridPane.columnIndex="1">
+        <Label  text="Open"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="+"/>
+    </HBox>
+    <ToolBar GridPane.columnIndex="3">
+        <TextField prefWidth="280" text="Todo" editable="false" style="-right-button-visible: false;"/>
     </ToolBar>
-    <ToolBar GridPane.columnIndex="1">
-        <TextField prefWidth="280"  text="Todo"  editable="false" style="-right-button-visible: false;"/>
-    </ToolBar>
-    <ToolBar GridPane.columnIndex="2">
-        <TextField prefWidth="280"  text="Closed"  editable="false" style="-right-button-visible: false;"/>
+    <ToolBar GridPane.columnIndex="5">
+        <TextField prefWidth="280" text="Closed" editable="false" style="-right-button-visible: false;"/>
     </ToolBar>
 
-    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" fx:id="openHBox">
-    </VBox>
-    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1"  fx:id="todoHBox">
-    </VBox>
-    <VBox GridPane.columnIndex="2" GridPane.rowIndex="1"  fx:id="closedHBox">
-    </VBox>
+    <ScrollPane GridPane.columnIndex="1" GridPane.rowIndex="1" fitToHeight="true" fitToWidth="true">
+        <VBox fx:id="openHBox">
+        </VBox>
+
+    </ScrollPane>
+    <ScrollPane GridPane.columnIndex="3" GridPane.rowIndex="1" fitToHeight="true" fitToWidth="true">
+        <VBox  fx:id="todoHBox">
+        </VBox>
+    </ScrollPane>
+    <ScrollPane GridPane.columnIndex="5" GridPane.rowIndex="1"  fitToHeight="true" fitToWidth="true">
+        <VBox fx:id="closedHBox">
+        </VBox>
+    </ScrollPane>
 
 
 </GridPane>

@@ -47,23 +47,22 @@ public class IssuesController  implements Initializable {
         allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.OPENED
                 && GitemberUtil.lstContains(issue.getLabels(), "to do"); } ).forEach( i -> {todoIssues.add(i);});
 
-        openIssues.stream().forEach(
-                i -> {
+       // openHBox.setSpacing(10);
+        openHBox.setStyle("-fx-spacing: 10");
+        openIssues.stream().forEach(i -> {
+            openHBox.getChildren().add(new IssueThumbView(i));
+        });
 
-                    openHBox.getChildren().add(new IssueThumbView(i));
+        //.setSpacing(10);
+        todoHBox.setStyle("-fx-spacing: 10");
+        todoIssues.stream().forEach(i -> {
+            todoHBox.getChildren().add(new IssueThumbView(i));
+        });
 
-                    /*try {
-                        Pair<Parent, Object> thumbPair = App.loadFXMLToNewStage(Const.View.GitLab.ISSUE_THUMB_VIEW, "");
-                        IssueThumbController thumbController = (IssueThumbController) thumbPair.getSecond();
-                        Parent thumbParent = thumbPair.getFirst();
-                        openHBox.getChildren().add(thumbParent);
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }*/
-
-                }
-        );
+        closedHBox.setStyle("-fx-spacing: 10");
+        closedIssues.stream().forEach(i -> {
+            closedHBox.getChildren().add(new IssueThumbView(i));
+        });
 
     }
 
