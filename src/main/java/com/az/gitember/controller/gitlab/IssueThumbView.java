@@ -17,7 +17,7 @@ import java.io.IOException;
 
 public class IssueThumbView extends VBox {
 
-    private Issue issue;
+    private final Issue issue;
     private HBox tagsHBox;
     private HBox idHBox;
 
@@ -33,7 +33,7 @@ public class IssueThumbView extends VBox {
                 tag -> {
                     Label tagLabel = new Label(tag);
                     HBox bg = new HBox(tagLabel);
-                    bg.setStyle("-fx-padding: 5px; -fx-background-color: yellow");
+                    bg.setStyle("-fx-padding: 5px; -fx-background-color: #40400f");
                     tagsHBox.getChildren().add(bg);
                 }
         );
@@ -50,15 +50,12 @@ public class IssueThumbView extends VBox {
 
         setSpacing(10);
 
-
-
         issueTitleLabel.setOnAction(actionEvent -> {
-            Context.getMain().showResult("adscadscasdcsadcsadc ", this.issue.toString(),
-                    Alert.AlertType.WARNING);
 
             try {
                 IssueDetailController controller =
                         (IssueDetailController) App.loadFXMLToNewStage(Const.View.GitLab.ISSUE_DETAILS_VIEW, "Issue details").getSecond();
+                controller.setIssue(issue);
             } catch (Exception e) {
                Context.getMain().showResult("Error", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
             }

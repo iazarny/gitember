@@ -46,13 +46,9 @@ public class BranchDiffEventHandler extends AbstractLongTaskEventHandler impleme
                 longTask,
                 o -> {
                     List<DiffEntry> diffEntries = (List<DiffEntry>) o.getSource().getValue();
-                    try {
-                        BranchDiffController branchDiffController =
-                                (BranchDiffController) App.loadFXMLToNewStage(Const.View.BRANCH_DIFF, "Branch difference").getSecond();
-                        branchDiffController.setData(leftBranchName, rightBranchName, diffEntries);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    BranchDiffController branchDiffController =
+                            (BranchDiffController) App.loadFXMLToNewStage(Const.View.BRANCH_DIFF, "Branch difference").getSecond();
+                    branchDiffController.setData(leftBranchName, rightBranchName, diffEntries);
                 },
                 o -> Context.getMain(). showResult("Branch difference", "Failed to create difference between "
                         + leftBranchName + " and " + rightBranchName, Alert.AlertType.ERROR)

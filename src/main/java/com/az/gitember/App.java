@@ -96,7 +96,7 @@ public class App extends Application {
         return App.app.getHostServices();
     }
 
-    public static Pair<Parent, Object> loadFXMLToNewStage(final String fxmlFileName, final String windowTitle) throws IOException {
+    public static Pair<Parent, Object> loadFXMLToNewStage(final String fxmlFileName, final String windowTitle) {
         final Pair<Parent, Object> pair = loadFXML(fxmlFileName);
         final Stage newStage = new Stage();
         final Scene newScene = new Scene(pair.getFirst());
@@ -110,11 +110,17 @@ public class App extends Application {
         return pair;
     }
 
-    public static Pair<Parent, Object> loadFXML(String fxml) throws IOException { //TODO refactor handle exception here
+    public static Pair<Parent, Object> loadFXML(String fxml) { //TODO refactor handle exception here
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        Parent parent = fxmlLoader.load();
-        Object controller = fxmlLoader.getController();
-        return new Pair<>(parent, controller);
+        try {
+            Parent parent = fxmlLoader.load();
+            Object controller = fxmlLoader.getController();
+            return new Pair<>(parent, controller);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static Stage getStage() {

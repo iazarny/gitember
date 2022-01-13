@@ -1,64 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea"
-          xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.az.gitember.controller.gitlab.IssueDetailController"
-          style="-fx-background-color: background_color">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0"
+      fx:controller="com.az.gitember.controller.gitlab.IssueDetailController"
+      prefWidth="605.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <ToolBar>
+            <items>
+                <Label text="Label"/>
+            </items>
+        </ToolBar>
+        <TextArea prefHeight="200.0" prefWidth="200.0"/>
+        <ToolBar prefHeight="40.0" prefWidth="200.0"/>
+        <ToolBar prefHeight="40.0" prefWidth="200.0"/>
+        <ScrollPane>
+            <content>
+                <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="1">
+                    <children>
 
-    <columnConstraints>
-        <ColumnConstraints percentWidth="1"/>
-        <ColumnConstraints percentWidth="32"/>
-        <ColumnConstraints percentWidth="1"/>
-        <ColumnConstraints percentWidth="32"/>
-        <ColumnConstraints percentWidth="1"/>
-        <ColumnConstraints percentWidth="32"/>
-        <ColumnConstraints percentWidth="1"/>
-    </columnConstraints>
+                        <HBox prefHeight="100.0" prefWidth="384.0">
+                            <children>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Label"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Milestone"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Time tracking"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Due date"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+
+                            </children>
+                        </HBox>
+
+                        <HBox prefHeight="100.0" prefWidth="384.0">
+                            <children>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Label"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Milestone"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Time tracking"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                    <children>
+                                        <Label text="Due date"/>
+                                        <ComboBox prefWidth="150.0"/>
+                                    </children>
+                                </VBox>
+
+                            </children>
+                        </HBox>
 
 
-    <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="7" >
-        <Label  text="Search"/>
-        <TextField />
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="S"/>
-    </HBox>
+                    </children>
+                </VBox>
 
 
-    <HBox GridPane.columnIndex="1" GridPane.rowIndex="1">
-        <Label  text="Open"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+"/>
-    </HBox>
-    <HBox GridPane.columnIndex="3" GridPane.rowIndex="1">
-        <Label  text="To do"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+"/>
-    </HBox>
-    <HBox GridPane.columnIndex="5" GridPane.rowIndex="1">
-        <Label  text="Closed"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+"/>
-    </HBox>
-
-    <ScrollPane GridPane.columnIndex="1" GridPane.rowIndex="2" fitToHeight="true" fitToWidth="true">
-        <VBox fx:id="openHBox">
-        </VBox>
-
-    </ScrollPane>
-    <ScrollPane GridPane.columnIndex="3" GridPane.rowIndex="2" fitToHeight="true" fitToWidth="true">
-        <VBox  fx:id="todoHBox">
-        </VBox>
-    </ScrollPane>
-    <ScrollPane GridPane.columnIndex="5" GridPane.rowIndex="2"  fitToHeight="true" fitToWidth="true">
-        <VBox fx:id="closedHBox">
-        </VBox>
-    </ScrollPane>
-
-
-</GridPane>
+            </content>
+        </ScrollPane>
+    </children>
+</VBox>
