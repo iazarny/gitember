@@ -1,4 +1,4 @@
-package com.az.gitember.controller.gitlab;
+package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
 import com.az.gitember.data.Const;
@@ -7,13 +7,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gitlab4j.api.models.Issue;
-
-import java.io.IOException;
 
 public class IssueThumbView extends VBox {
 

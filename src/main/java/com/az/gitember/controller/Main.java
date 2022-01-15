@@ -1,7 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.gitlab.IssuesController;
+import com.az.gitember.gitlab.IssuesController;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.controller.handlers.gitlab.SetAccessTokenEventHandler;
 import com.az.gitember.data.Const;
@@ -22,9 +22,6 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.IssuesApi;
 
 import java.io.File;
 import java.io.IOException;

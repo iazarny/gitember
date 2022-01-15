@@ -1,4 +1,4 @@
-package com.az.gitember.service;
+package com.az.gitember.gitlab;
 
 import org.gitlab4j.api.GitLabApi;
 

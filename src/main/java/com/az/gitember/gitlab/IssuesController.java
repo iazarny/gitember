@@ -1,16 +1,10 @@
-package com.az.gitember.controller.gitlab;
+package com.az.gitember.gitlab;
 
-import com.az.gitember.App;
-import com.az.gitember.controller.HistoryDetail;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.Pair;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
@@ -18,7 +12,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.IssuesApi;
 import org.gitlab4j.api.models.Issue;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
