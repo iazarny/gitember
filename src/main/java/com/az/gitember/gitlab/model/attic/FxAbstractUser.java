@@ -1,4 +1,4 @@
-package com.az.gitember.gitlab.model;
+package com.az.gitember.gitlab.model.attic;
 
 import javafx.beans.property.*;
 import org.gitlab4j.api.models.AbstractUser;

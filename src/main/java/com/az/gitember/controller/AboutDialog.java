@@ -46,7 +46,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.3");
+        this.setTitle("Gitember 2.4");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -202,10 +202,16 @@ public class AboutDialog extends Dialog {
         char2_1.setLayoutY(300);
         applyStyle(char2_1);
 
-        Path char2_3 = getPathChar3();
+/*        Path char2_3 = getPathChar3();
         char2_3.setLayoutX(300);
         char2_3.setLayoutY(300);
-        applyStyle(char2_3);
+        applyStyle(char2_3);*/
+
+
+        Path char2_4 = getPathChar4();
+        char2_4.setLayoutX(300);
+        char2_4.setLayoutY(300);
+        applyStyle(char2_4);
 
         Path dot = getPathCharDot();
         dot.setLayoutX(333.5);
@@ -222,7 +228,7 @@ public class AboutDialog extends Dialog {
 
 
         return new Path [] {
-                path, char2_1,  char2_3, dot
+                path, char2_1,  char2_4, dot
         };
     }
 
