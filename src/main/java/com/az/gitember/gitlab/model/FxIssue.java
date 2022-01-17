@@ -48,6 +48,46 @@ public class FxIssue {
     private ObjectProperty<Issue.TaskCompletionStatus> taskCompletionStatus = new SimpleObjectProperty<>();
 
 
+    public FxIssue(final Issue issue) {
+        this.assignee.setValue(issue.getAssignee());
+        this.assignees.setAll(issue.getAssignees());
+        this.author.setValue(issue.getAuthor());
+        this.confidential.setValue(issue.getConfidential());
+        this.createdAt.setValue(issue.getCreatedAt());
+        this.updatedAt.setValue(issue.getUpdatedAt());
+        this.closedAt.setValue(issue.getClosedAt());
+        this.closedBy.setValue(issue.getClosedBy());
+        this.description.setValue(issue.getDescription());
+        this.dueDate.setValue(issue.getDueDate());
+        this.actualId.setValue(issue.getActualId().asText());
+        this.externalId.setValue(issue.getExternalId());
+        this.id.setValue(issue.getId());
+        this.iid.setValue(issue.getIid());
+        this.issueLinkId.setValue(issue.getIssueLinkId());
+        this.labels.setAll(issue.getLabels());
+        this.milestone.setValue(issue.getMilestone());
+        this.projectId.setValue(issue.getProjectId());
+        this.state.setValue(issue.getState());
+        this.subscribed.setValue(issue.getSubscribed());
+        this.title.setValue(issue.getTitle());
+        this.userNotesCount.setValue(issue.getUserNotesCount());
+        this.webUrl.setValue(issue.getWebUrl());
+        this.weight.setValue(issue.getWeight());
+        this.discussionLocked.setValue(issue.getDiscussionLocked());
+        this.timeStats.setValue(issue.getTimeStats());
+        this.upvotes.setValue(issue.getUpvotes());
+        this.downvotes.setValue(issue.getDownvotes());
+        this.mergeRequestsCount.setValue(issue.getMergeRequestsCount());
+        this.hasTasks.setValue(issue.getHasTasks());
+        this.taskStatus.setValue(issue.getTaskStatus());
+        this.taskCompletionStatus.setValue(issue.getTaskCompletionStatus());
+
+
+    }
+
+    public FxIssue() {
+    }
+
     public Assignee getAssignee() {
         return assignee.get();
     }

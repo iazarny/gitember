@@ -68,8 +68,10 @@ public class IssuesController  implements Initializable {
             setAllIssues(issuesApi.getIssues());
         } catch (GitLabApiException e) {
             e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
     }
+
 
     private String getAccessToken() {
         return Context.settingsProperty.get().getGitlabSettings().getAccessToken();
