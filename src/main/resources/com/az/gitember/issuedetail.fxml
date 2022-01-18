@@ -9,9 +9,13 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.DatePicker?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0"
       fx:controller="com.az.gitember.gitlab.IssueDetailController"
-      prefWidth="605.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+      prefWidth="1024" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <ToolBar>
             <items>
@@ -19,35 +23,52 @@
                 <Label fx:id="titleLabel" text="Label"/>
             </items>
         </ToolBar>
-        <TextArea prefHeight="200.0" prefWidth="200.0"/>
-        <ToolBar prefHeight="40.0" prefWidth="200.0"/>
-        <ToolBar prefHeight="40.0" prefWidth="200.0"/>
+        <TextArea />
+        <ToolBar style="-fx-background-color: magenta">
+            <Label text="Author"/>
+            <TextField fx:id="authorText" text="author"/>
+            <Region minWidth="40"/>
+
+            <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
+            <Region minWidth="40"/>
+
+            <Label text="Created"/>
+            <DatePicker fx:id="createdAtDatePicker"/>
+            <Region minWidth="40"/>
+
+            <Label text="Updated"/>
+            <DatePicker fx:id="updatedAtDatePicker"/>
+            <Region minWidth="40"/>
+
+        </ToolBar>
+        <ToolBar style="-fx-background-color: cyan"/>
+        <ToolBar style="-fx-background-color: #a89201"/>
         <ScrollPane>
             <content>
-                <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="1">
+                <VBox  GridPane.rowIndex="1">
                     <children>
 
                         <HBox prefHeight="100.0" prefWidth="384.0">
                             <children>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
-                                        <Label text="Label"/>
-                                        <ComboBox prefWidth="150.0"/>
+                                        <Label text="Assignees"/>
+                                        <ComboBox fx:id="assigneeCmb" prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Milestone"/>
                                         <ComboBox prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Time tracking"/>
                                         <ComboBox prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Due date"/>
                                         <ComboBox prefWidth="150.0"/>
@@ -59,25 +80,25 @@
 
                         <HBox prefHeight="100.0" prefWidth="384.0">
                             <children>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Label"/>
                                         <ComboBox prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Milestone"/>
                                         <ComboBox prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Time tracking"/>
                                         <ComboBox prefWidth="150.0"/>
                                     </children>
                                 </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0">
+                                <VBox >
                                     <children>
                                         <Label text="Due date"/>
                                         <ComboBox prefWidth="150.0"/>

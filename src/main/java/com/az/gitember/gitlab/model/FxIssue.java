@@ -6,6 +6,8 @@ import javafx.collections.ObservableList;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.models.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -13,10 +15,10 @@ public class FxIssue {
 
     private ObjectProperty<Assignee> assignee = new SimpleObjectProperty<>();
     private ObservableList<Assignee> assignees = FXCollections.observableArrayList(new ArrayList<>());
-    private ObjectProperty<Author> author = new SimpleObjectProperty<>();
+    private StringProperty author = new SimpleStringProperty();
     private BooleanProperty confidential = new SimpleBooleanProperty();
-    private ObjectProperty<Date> createdAt = new SimpleObjectProperty<>();
-    private ObjectProperty<Date> updatedAt = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDate> createdAt = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDate> updatedAt = new SimpleObjectProperty<>();
     private ObjectProperty<Date> closedAt = new SimpleObjectProperty<>();
     private ObjectProperty<User> closedBy = new SimpleObjectProperty<>();
     private StringProperty description = new SimpleStringProperty();
@@ -51,10 +53,11 @@ public class FxIssue {
     public FxIssue(final Issue issue) {
         this.assignee.setValue(issue.getAssignee());
         this.assignees.setAll(issue.getAssignees());
-        this.author.setValue(issue.getAuthor());
+        this.author.setValue(issue.getAuthor().getName());
+
         this.confidential.setValue(issue.getConfidential());
-        this.createdAt.setValue(issue.getCreatedAt());
-        this.updatedAt.setValue(issue.getUpdatedAt());
+        this.createdAt.setValue(issue.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        this.updatedAt.setValue(issue.getUpdatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         this.closedAt.setValue(issue.getClosedAt());
         this.closedBy.setValue(issue.getClosedBy());
         this.description.setValue(issue.getDescription());
@@ -108,15 +111,15 @@ public class FxIssue {
         this.assignees = assignees;
     }
 
-    public Author getAuthor() {
+    public String getAuthor() {
         return author.get();
     }
 
-    public ObjectProperty<Author> authorProperty() {
+    public StringProperty authorProperty() {
         return author;
     }
 
-    public void setAuthor(Author author) {
+    public void setAuthor(String author) {
         this.author.set(author);
     }
 
@@ -132,27 +135,27 @@ public class FxIssue {
         this.confidential.set(confidential);
     }
 
-    public Date getCreatedAt() {
+    public LocalDate getCreatedAt() {
         return createdAt.get();
     }
 
-    public ObjectProperty<Date> createdAtProperty() {
+    public ObjectProperty<LocalDate> createdAtProperty() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDate createdAt) {
         this.createdAt.set(createdAt);
     }
 
-    public Date getUpdatedAt() {
+    public LocalDate getUpdatedAt() {
         return updatedAt.get();
     }
 
-    public ObjectProperty<Date> updatedAtProperty() {
+    public ObjectProperty<LocalDate> updatedAtProperty() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDate updatedAt) {
         this.updatedAt.set(updatedAt);
     }
 

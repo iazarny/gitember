@@ -145,10 +145,10 @@ public class AboutDialog extends Dialog {
 
         path.setStrokeWidth(45);
 
-        path.setStroke(javafx.scene.paint.Color.valueOf("#808080"));
+        path.setStroke(javafx.scene.paint.Color.valueOf("#2020ea"));
         Stop[] stops = new Stop[] {
-                new Stop(0d, javafx.scene.paint.Color.valueOf("#17e8ab")),
-                new Stop(1d, javafx.scene.paint.Color.valueOf("#88cdeb"))};
+                new Stop(0d, javafx.scene.paint.Color.valueOf("#DCC000")),
+                new Stop(1d, javafx.scene.paint.Color.valueOf("#A89201"))};
         LinearGradient lg1 = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         path.setFill(lg1);
 
