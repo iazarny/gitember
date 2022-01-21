@@ -2,8 +2,11 @@ package com.az.gitember.gitlab;
 
 import com.az.gitember.gitlab.model.FxIssue;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import org.gitlab4j.api.models.Assignee;
 import org.gitlab4j.api.models.Issue;
@@ -20,6 +23,16 @@ public class IssueDetailController implements Initializable {
     public CheckBox confidentialCheckBox;
     public DatePicker createdAtDatePicker;
     public DatePicker updatedAtDatePicker;
+    public DatePicker dueDatePicker;
+    public DatePicker closeDatePicker;
+    public TextField closedByText;
+    public Label closeDatePickerLabel;
+    public Label closedByLabel;
+    public TextArea description;
+    public TextField externalIdText;
+    public Label externalIdLabel;
+    public Label stateLabel;
+    public HBox tagsHBox;
     private FxIssue fxIssue;
 
     @Override
@@ -48,6 +61,29 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(confidentialCheckBox.selectedProperty(), fxIssue.confidentialProperty());
         Bindings.bindBidirectional(createdAtDatePicker.valueProperty(), fxIssue.createdAtProperty());
         Bindings.bindBidirectional(updatedAtDatePicker.valueProperty(), fxIssue.updatedAtProperty());
+        Bindings.bindBidirectional(dueDatePicker.valueProperty(), fxIssue.dueDateProperty());
+        Bindings.bindBidirectional(closeDatePicker.valueProperty(), fxIssue.closedAtProperty());
+        Bindings.bindBidirectional(closedByText.textProperty(), fxIssue.closedByProperty());
+        Bindings.bindBidirectional(description.textProperty(), fxIssue.descriptionProperty());
+        Bindings.bindBidirectional(numLabel.textProperty(), fxIssue.iidProperty());
+        Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
+        Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
+        fxIssue.getLabels().addListener(
+                new ListChangeListener<String>() {
+                    @Override
+                    public void onChanged(Change<? extends String> c) {
+                        System.out.println(c);
+                    }
+                }
+        );
+        fxIssue.getLabels().stream().forEach(
+                s -> {
+                    tagsHBox.getChildren().add(
+                            new HBox(new Label(s))
+                    );
+                }
+        );
+
 
 
 

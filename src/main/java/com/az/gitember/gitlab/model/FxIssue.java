@@ -9,7 +9,6 @@ import org.gitlab4j.api.models.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class FxIssue {
 
@@ -19,34 +18,35 @@ public class FxIssue {
     private BooleanProperty confidential = new SimpleBooleanProperty();
     private ObjectProperty<LocalDate> createdAt = new SimpleObjectProperty<>();
     private ObjectProperty<LocalDate> updatedAt = new SimpleObjectProperty<>();
-    private ObjectProperty<Date> closedAt = new SimpleObjectProperty<>();
-    private ObjectProperty<User> closedBy = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDate> closedAt = new SimpleObjectProperty<>();
+    private StringProperty closedBy = new SimpleStringProperty();
     private StringProperty description = new SimpleStringProperty();
-    private ObjectProperty<Date> dueDate= new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDate> dueDate = new SimpleObjectProperty<>();
 
     private StringProperty actualId = new SimpleStringProperty();
     private StringProperty externalId = new SimpleStringProperty();
     private IntegerProperty id = new SimpleIntegerProperty();
 
-    private IntegerProperty iid = new SimpleIntegerProperty();
+    private StringProperty iid = new SimpleStringProperty();
     private IntegerProperty issueLinkId = new SimpleIntegerProperty();
     private ObservableList<String> labels = FXCollections.observableArrayList();
-    private ObjectProperty<Milestone> milestone= new SimpleObjectProperty<>();
+    private StringProperty milestone = new SimpleStringProperty();
     private IntegerProperty projectId = new SimpleIntegerProperty();
-    private ObjectProperty<Constants.IssueState> state= new SimpleObjectProperty<>();
+    private StringProperty state = new SimpleStringProperty();
     private BooleanProperty subscribed = new SimpleBooleanProperty();
-    private StringProperty title= new SimpleStringProperty();
+    private StringProperty title = new SimpleStringProperty();
     private IntegerProperty userNotesCount = new SimpleIntegerProperty();
-    private StringProperty webUrl= new SimpleStringProperty();
+    private StringProperty webUrl = new SimpleStringProperty();
     private IntegerProperty weight = new SimpleIntegerProperty();
     private BooleanProperty discussionLocked = new SimpleBooleanProperty();
+
     private ObjectProperty<TimeStats> timeStats = new SimpleObjectProperty();
 
     private IntegerProperty upvotes = new SimpleIntegerProperty();
     private IntegerProperty downvotes = new SimpleIntegerProperty();
     private IntegerProperty mergeRequestsCount = new SimpleIntegerProperty();
     private BooleanProperty hasTasks = new SimpleBooleanProperty();
-    private StringProperty taskStatus= new SimpleStringProperty();
+    private StringProperty taskStatus = new SimpleStringProperty();
     private ObjectProperty<Issue.TaskCompletionStatus> taskCompletionStatus = new SimpleObjectProperty<>();
 
 
@@ -56,21 +56,36 @@ public class FxIssue {
         this.author.setValue(issue.getAuthor().getName());
 
         this.confidential.setValue(issue.getConfidential());
-        this.createdAt.setValue(issue.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        this.updatedAt.setValue(issue.getUpdatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        this.closedAt.setValue(issue.getClosedAt());
-        this.closedBy.setValue(issue.getClosedBy());
+        if (issue.getCreatedAt() != null) {
+            this.createdAt.setValue(issue.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        }
+        if (issue.getUpdatedAt() != null) {
+            this.updatedAt.setValue(issue.getUpdatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        }
+        if (issue.getClosedAt() != null) {
+            this.closedAt.setValue(issue.getClosedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        }
+        if (issue.getClosedBy() != null) {
+            this.closedBy.setValue(issue.getClosedBy().getName());
+        }
+
+
         this.description.setValue(issue.getDescription());
-        this.dueDate.setValue(issue.getDueDate());
+        if (issue.getDueDate() != null) {
+            this.dueDate.setValue(issue.getDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        }
         this.actualId.setValue(issue.getActualId().asText());
         this.externalId.setValue(issue.getExternalId());
         this.id.setValue(issue.getId());
-        this.iid.setValue(issue.getIid());
+        this.iid.setValue(issue.getIid().toString());
         this.issueLinkId.setValue(issue.getIssueLinkId());
         this.labels.setAll(issue.getLabels());
-        this.milestone.setValue(issue.getMilestone());
+
+        if (issue.getMilestone() != null) {
+            this.milestone.setValue(issue.getMilestone().getTitle());
+        }
         this.projectId.setValue(issue.getProjectId());
-        this.state.setValue(issue.getState());
+        this.state.setValue(issue.getState().toString());
         this.subscribed.setValue(issue.getSubscribed());
         this.title.setValue(issue.getTitle());
         this.userNotesCount.setValue(issue.getUserNotesCount());
@@ -159,27 +174,27 @@ public class FxIssue {
         this.updatedAt.set(updatedAt);
     }
 
-    public Date getClosedAt() {
+    public LocalDate getClosedAt() {
         return closedAt.get();
     }
 
-    public ObjectProperty<Date> closedAtProperty() {
+    public ObjectProperty<LocalDate> closedAtProperty() {
         return closedAt;
     }
 
-    public void setClosedAt(Date closedAt) {
+    public void setClosedAt(LocalDate closedAt) {
         this.closedAt.set(closedAt);
     }
 
-    public User getClosedBy() {
+    public String getClosedBy() {
         return closedBy.get();
     }
 
-    public ObjectProperty<User> closedByProperty() {
+    public StringProperty closedByProperty() {
         return closedBy;
     }
 
-    public void setClosedBy(User closedBy) {
+    public void setClosedBy(String closedBy) {
         this.closedBy.set(closedBy);
     }
 
@@ -195,15 +210,15 @@ public class FxIssue {
         this.description.set(description);
     }
 
-    public Date getDueDate() {
+    public LocalDate getDueDate() {
         return dueDate.get();
     }
 
-    public ObjectProperty<Date> dueDateProperty() {
+    public ObjectProperty<LocalDate> dueDateProperty() {
         return dueDate;
     }
 
-    public void setDueDate(Date dueDate) {
+    public void setDueDate(LocalDate dueDate) {
         this.dueDate.set(dueDate);
     }
 
@@ -243,15 +258,15 @@ public class FxIssue {
         this.id.set(id);
     }
 
-    public int getIid() {
+    public String getIid() {
         return iid.get();
     }
 
-    public IntegerProperty iidProperty() {
+    public StringProperty iidProperty() {
         return iid;
     }
 
-    public void setIid(int iid) {
+    public void setIid(String iid) {
         this.iid.set(iid);
     }
 
@@ -275,15 +290,15 @@ public class FxIssue {
         this.labels = labels;
     }
 
-    public Milestone getMilestone() {
+    public String getMilestone() {
         return milestone.get();
     }
 
-    public ObjectProperty<Milestone> milestoneProperty() {
+    public StringProperty milestoneProperty() {
         return milestone;
     }
 
-    public void setMilestone(Milestone milestone) {
+    public void setMilestone(String milestone) {
         this.milestone.set(milestone);
     }
 
@@ -299,15 +314,15 @@ public class FxIssue {
         this.projectId.set(projectId);
     }
 
-    public Constants.IssueState getState() {
+    public String getState() {
         return state.get();
     }
 
-    public ObjectProperty<Constants.IssueState> stateProperty() {
+    public StringProperty stateProperty() {
         return state;
     }
 
-    public void setState(Constants.IssueState state) {
+    public void setState(String state) {
         this.state.set(state);
     }
 
