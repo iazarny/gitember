@@ -40,7 +40,9 @@ public class FxIssue {
     private IntegerProperty weight = new SimpleIntegerProperty();
     private BooleanProperty discussionLocked = new SimpleBooleanProperty();
 
-    private ObjectProperty<TimeStats> timeStats = new SimpleObjectProperty();
+
+    private StringProperty estimated = new SimpleStringProperty();
+    private StringProperty sppend = new SimpleStringProperty();
 
     private IntegerProperty upvotes = new SimpleIntegerProperty();
     private IntegerProperty downvotes = new SimpleIntegerProperty();
@@ -92,7 +94,15 @@ public class FxIssue {
         this.webUrl.setValue(issue.getWebUrl());
         this.weight.setValue(issue.getWeight());
         this.discussionLocked.setValue(issue.getDiscussionLocked());
-        this.timeStats.setValue(issue.getTimeStats());
+        if (issue.getTimeStats() != null) {
+            if (issue.getTimeStats().getHumanTotalTimeSpent() != null) {
+                this.sppend.setValue("" + issue.getTimeStats().getHumanTotalTimeSpent().getSeconds());
+            }
+            if (issue.getTimeStats().getHumanTimeEstimate() != null) {
+                this.sppend.setValue("" + issue.getTimeStats().getHumanTimeEstimate().getSeconds());
+            }
+        }
+
         this.upvotes.setValue(issue.getUpvotes());
         this.downvotes.setValue(issue.getDownvotes());
         this.mergeRequestsCount.setValue(issue.getMergeRequestsCount());
@@ -398,16 +408,28 @@ public class FxIssue {
         this.discussionLocked.set(discussionLocked);
     }
 
-    public TimeStats getTimeStats() {
-        return timeStats.get();
+    public String getEstimated() {
+        return estimated.get();
     }
 
-    public ObjectProperty<TimeStats> timeStatsProperty() {
-        return timeStats;
+    public StringProperty estimatedProperty() {
+        return estimated;
     }
 
-    public void setTimeStats(TimeStats timeStats) {
-        this.timeStats.set(timeStats);
+    public void setEstimated(String estimated) {
+        this.estimated.set(estimated);
+    }
+
+    public String getSppend() {
+        return sppend.get();
+    }
+
+    public StringProperty sppendProperty() {
+        return sppend;
+    }
+
+    public void setSppend(String sppend) {
+        this.sppend.set(sppend);
     }
 
     public int getUpvotes() {

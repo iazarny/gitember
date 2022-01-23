@@ -33,6 +33,12 @@ public class IssueDetailController implements Initializable {
     public Label externalIdLabel;
     public Label stateLabel;
     public HBox tagsHBox;
+    public Label estimatedLabel;
+    public TextField estimatedText;
+    public Label spendLabel;
+    public TextField spendText;
+    public Label milestoneLabel;
+    public ComboBox milestoneCmb;
     private FxIssue fxIssue;
 
     @Override
@@ -76,16 +82,19 @@ public class IssueDetailController implements Initializable {
                     }
                 }
         );
+
+        tagsHBox.setStyle("-fx-spacing: 10");
         fxIssue.getLabels().stream().forEach(
                 s -> {
-                    tagsHBox.getChildren().add(
-                            new HBox(new Label(s))
-                    );
+                    Label tagLabel = new Label(s);
+                    HBox bg = new HBox(tagLabel);
+                    bg.setStyle("-fx-padding: 5px; -fx-background-color: #40400f");
+                    tagsHBox.getChildren().add(bg);
                 }
         );
 
-
-
+        Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
+        Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
 
 
         Bindings.bindBidirectional(titleLabel.textProperty(), fxIssue.titleProperty());

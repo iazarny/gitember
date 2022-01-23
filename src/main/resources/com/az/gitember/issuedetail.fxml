@@ -68,6 +68,14 @@
                 <ComboBox fx:id="milestoneCmb"/>
                 <Region minWidth="40" />
 
+                <Label fx:id="estimatedLabel" text="Estimated" />
+                <TextField fx:id="estimatedText" text="#" />
+                <Region minWidth="40" />
+
+                <Label fx:id="spendLabel" text="Spend" />
+                <TextField fx:id="spendText" text="#" />
+                <Region minWidth="40" />
+
 
             </items>
         </ToolBar>
