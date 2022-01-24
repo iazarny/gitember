@@ -9,12 +9,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.LabelsApi;
-import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Assignee;
 import org.gitlab4j.api.models.Issue;
+import org.gitlab4j.api.models.Project;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -108,14 +106,19 @@ public class IssueDetailController implements Initializable {
         addTag.setOnAction(event -> {
             System.out.println("new tag " + newTag.getText());
             GitLabApi glApi = Context.getGitLabApi();
-            ProjectApi projectApi = new ProjectApi(glApi);
             LabelsApi labelsApi = new LabelsApi(glApi);
+            ProjectApi projectApi  = new ProjectApi(glApi);
             org.gitlab4j.api.models.Label newLabelToAdd = new org.gitlab4j.api.models.Label();
             newLabelToAdd.setName(newTag.getText());
             newLabelToAdd.setColor("#AA8080");
             //projectApi.getP
             try {
-                labelsApi.createProjectLabel(Context.getGitRepoService().getRepositoryRemoteUrl(), newLabelToAdd);
+                Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
+                Project project = projectApi.getProject(projectIdOrPath);
+                //IssuesApi iapi = null;
+                //GroupApi gapi = null;
+                labelsApi.createProjectLabel(project.getId(), newLabelToAdd);
+
             } catch (GitLabApiException e) {
                 e.printStackTrace();
             }

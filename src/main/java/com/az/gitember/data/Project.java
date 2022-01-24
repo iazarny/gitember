@@ -33,6 +33,8 @@ public class Project implements Serializable, Comparable<Project>  {
     private String userCommitEmail;
     private boolean indexed;
     private String provider;
+    private String gitLabProjectId;
+
 
 
     public Project() {
@@ -51,6 +53,13 @@ public class Project implements Serializable, Comparable<Project>  {
         this.provider = provider;
     }
 
+    public String getGitLabProjectId() {
+        return gitLabProjectId;
+    }
+
+    public void setGitLabProjectId(String gitLabProjectId) {
+        this.gitLabProjectId = gitLabProjectId;
+    }
 
     public boolean isIndexed() {
         return indexed;

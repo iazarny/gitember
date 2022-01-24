@@ -69,6 +69,8 @@ public class Main implements Initializable {
     public TreeItem remoteBranchesTreeItem;
     public TreeItem tagsTreeItem;
     public Menu gitLabMenu;
+    public MenuItem editGitLabProjectIdMenuItem;
+    public SeparatorMenuItem providerSeparator;
 
 
     /**
@@ -248,19 +250,16 @@ public class Main implements Initializable {
 
     public void postInit() {
         //TODO resolve provider
-
         gitLabMenu.setVisible(false);
-
+        editGitLabProjectIdMenuItem.setVisible(false);
+        providerSeparator.setVisible(false);
         final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
 
         if (remUrl != null && remUrl.contains(Const.Provider.GITLAB)) {
-
+            gitLabMenu.setVisible(true);
+            editGitLabProjectIdMenuItem.setVisible(true);
+            providerSeparator.setVisible(true);
         }
-
-        gitLabMenu.setVisible(true);
-
-
-
     }
 
     public void fetchHandler(ActionEvent actionEvent) {
@@ -516,6 +515,21 @@ public class Main implements Initializable {
                 }
         );
     }
+
+    public void gitlabProjectIdHandler(ActionEvent actionEvent) {
+        String projectId = StringUtils.defaultIfBlank(
+                Context.getCurrentProject().getGitLabProjectId(),
+                ""
+        );
+        new StringDialog("Project id", "Edit gitlab project id",
+                "Project id", projectId).showAndWait().ifPresent(
+                newProjectId -> {
+                    Context.getCurrentProject().setGitLabProjectId(newProjectId);
+                    Context.saveSettings();
+                }
+        );
+    }
+
 
     public void gitlabIssues(ActionEvent actionEvent) {
         System.out.println();
