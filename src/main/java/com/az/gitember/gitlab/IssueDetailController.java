@@ -1,6 +1,7 @@
 package com.az.gitember.gitlab;
 
 import com.az.gitember.gitlab.model.FxIssue;
+import com.az.gitember.service.Context;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.Initializable;
@@ -8,6 +9,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.LabelsApi;
+import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.Assignee;
 import org.gitlab4j.api.models.Issue;
 
@@ -39,6 +44,8 @@ public class IssueDetailController implements Initializable {
     public TextField spendText;
     public Label milestoneLabel;
     public ComboBox milestoneCmb;
+    public Button addTag;
+    public TextField newTag;
     private FxIssue fxIssue;
 
     @Override
@@ -74,14 +81,6 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(numLabel.textProperty(), fxIssue.iidProperty());
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
-        fxIssue.getLabels().addListener(
-                new ListChangeListener<String>() {
-                    @Override
-                    public void onChanged(Change<? extends String> c) {
-                        System.out.println(c);
-                    }
-                }
-        );
 
         tagsHBox.setStyle("-fx-spacing: 10");
         fxIssue.getLabels().stream().forEach(
@@ -95,9 +94,32 @@ public class IssueDetailController implements Initializable {
 
         Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
-
-
         Bindings.bindBidirectional(titleLabel.textProperty(), fxIssue.titleProperty());
+
+        fxIssue.getLabels().addListener(
+                new ListChangeListener<String>() {
+                    @Override
+                    public void onChanged(Change<? extends String> c) {
+                        System.out.println(c);
+                    }
+                }
+        );
+
+        addTag.setOnAction(event -> {
+            System.out.println("new tag " + newTag.getText());
+            GitLabApi glApi = Context.getGitLabApi();
+            ProjectApi projectApi = new ProjectApi(glApi);
+            LabelsApi labelsApi = new LabelsApi(glApi);
+            org.gitlab4j.api.models.Label newLabelToAdd = new org.gitlab4j.api.models.Label();
+            newLabelToAdd.setName(newTag.getText());
+            newLabelToAdd.setColor("#AA8080");
+            //projectApi.getP
+            try {
+                labelsApi.createProjectLabel(Context.getGitRepoService().getRepositoryRemoteUrl(), newLabelToAdd);
+            } catch (GitLabApiException e) {
+                e.printStackTrace();
+            }
+        });
 
     }
 

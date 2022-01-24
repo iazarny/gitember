@@ -10,6 +10,7 @@ import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
+import org.gitlab4j.api.GitLabApi;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -88,6 +89,8 @@ public class Context {
 
     private static Main main;
 
+    private static GitLabApi gitLabApi;
+
 
 
 
@@ -133,6 +136,7 @@ public class Context {
 
 
         getMain().postInit();
+        gitLabApi = null;
 
 
     }
@@ -281,4 +285,14 @@ public class Context {
     public static boolean isWindows() {
         return (OS.contains("win"));
     }
+
+    public static GitLabApi getGitLabApi() {
+        if (gitLabApi == null) {
+            String accessToken = Context.settingsProperty.get().getGitlabSettings().getAccessToken();
+            String url = GitemberUtil.getServer(Context.getGitRepoService().getRepositoryRemoteUrl());
+            gitLabApi = new GitLabApi(url, accessToken);
+        }
+        return gitLabApi;
+    }
+
 }

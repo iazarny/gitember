@@ -62,7 +62,7 @@ public class IssuesController  implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        GitLabApi glAp = new GitLabApi(GitemberUtil.getServer(Context.getGitRepoService().getRepositoryRemoteUrl()), getAccessToken());
+        GitLabApi glAp = Context.getGitLabApi();
         IssuesApi issuesApi = glAp.getIssuesApi();
         try {
             setAllIssues(issuesApi.getIssues());
@@ -73,7 +73,5 @@ public class IssuesController  implements Initializable {
     }
 
 
-    private String getAccessToken() {
-        return Context.settingsProperty.get().getGitlabSettings().getAccessToken();
-    }
+
 }

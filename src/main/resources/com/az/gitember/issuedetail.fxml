@@ -83,79 +83,22 @@
         <ToolBar>
             <items>
                 <HBox fx:id="tagsHBox"/>
-                <Region minWidth="40"/>
+                <TextField fx:id="newTag" text="" />
+
                 <Button fx:id="addTag" text="+"/>
+                <Region minWidth="40"/>
 
             </items>
         </ToolBar>
         <ScrollPane>
             <content>
-                <VBox VBox.vgrow="ALWAYS" GridPane.rowIndex="1" >
-                    <children>
+                <ToolBar>
+                    <items>
+                        <Label text="Assignees" />
+                        <ComboBox fx:id="assigneeCmb"  />
+                    </items>
+                </ToolBar>
 
-                        <HBox >
-                            <children>
-                                <VBox>
-                                    <children>
-                                        <Label text="Assignees" />
-                                        <ComboBox fx:id="assigneeCmb"  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Milestone" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Time tracking" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Due date" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-
-                            </children>
-                        </HBox>
-
-                        <HBox prefHeight="100.0" prefWidth="384.0">
-                            <children>
-                                <VBox>
-                                    <children>
-                                        <Label text="Label" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Milestone" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Time tracking" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-                                <VBox>
-                                    <children>
-                                        <Label text="Due date" />
-                                        <ComboBox  />
-                                    </children>
-                                </VBox>
-
-                            </children>
-                        </HBox>
-
-
-                    </children>
-                </VBox>
 
 
             </content>
