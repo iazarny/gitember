@@ -115,7 +115,7 @@ public class IssueDetailController implements Initializable {
             try {
                 Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
                 Project project = projectApi.getProject(projectIdOrPath);
-                //IssuesApi iapi = null;
+                IssuesApi iapi = null;
                 //GroupApi gapi = null;
                 labelsApi.createProjectLabel(project.getId(), newLabelToAdd);
 

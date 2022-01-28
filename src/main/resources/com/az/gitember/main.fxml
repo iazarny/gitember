@@ -72,16 +72,11 @@
                                     <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
                                     <SeparatorMenuItem />
-                                    <MenuItem text="Gitlab project id" fx:id="editGitLabProjectIdMenuItem"   onAction="#gitlabProjectIdHandler" visible="false"/>
-                                    <SeparatorMenuItem fx:id="providerSeparator" visible="false"/>
+
 
 
                                     <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
 
-                                </Menu>
-
-                                <Menu text="Gitlab">
-                                    <MenuItem text="Access token"  onAction="#gitlabAccessTokenHandler"   />
                                 </Menu>
 
                                 <MenuItem onAction="#openGitTerminalActionHandler" text="Terminal"/>
@@ -90,7 +85,10 @@
                         </Menu>
 
                         <Menu fx:id="gitLabMenu" visible="false" text="GitLab">
-                            <MenuItem  text="Issues" onAction="#gitlabIssues"/>
+                            <MenuItem  text="Issues ..." onAction="#gitlabIssues"/>
+                            <MenuItem text="Gitlab project id ..." fx:id="editGitLabProjectIdMenuItem"   onAction="#gitlabProjectIdHandler"/>
+                            <SeparatorMenuItem />
+                            <MenuItem text="Access token ..."  onAction="#gitlabAccessTokenHandler"   />
                         </Menu>
 
                         <Menu mnemonicParsing="false" text="Help">

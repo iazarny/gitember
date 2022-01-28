@@ -70,7 +70,6 @@ public class Main implements Initializable {
     public TreeItem tagsTreeItem;
     public Menu gitLabMenu;
     public MenuItem editGitLabProjectIdMenuItem;
-    public SeparatorMenuItem providerSeparator;
 
 
     /**
@@ -251,14 +250,9 @@ public class Main implements Initializable {
     public void postInit() {
         //TODO resolve provider
         gitLabMenu.setVisible(false);
-        editGitLabProjectIdMenuItem.setVisible(false);
-        providerSeparator.setVisible(false);
         final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
-
         if (remUrl != null && remUrl.contains(Const.Provider.GITLAB)) {
             gitLabMenu.setVisible(true);
-            editGitLabProjectIdMenuItem.setVisible(true);
-            providerSeparator.setVisible(true);
         }
     }
 
