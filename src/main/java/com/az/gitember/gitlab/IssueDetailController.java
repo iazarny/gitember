@@ -15,7 +15,12 @@ import org.gitlab4j.api.models.Issue;
 import org.gitlab4j.api.models.Project;
 
 import java.net.URL;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class IssueDetailController implements Initializable {
 
@@ -105,19 +110,28 @@ public class IssueDetailController implements Initializable {
 
         addTag.setOnAction(event -> {
             System.out.println("new tag " + newTag.getText());
-            GitLabApi glApi = Context.getGitLabApi();
-            LabelsApi labelsApi = new LabelsApi(glApi);
-            ProjectApi projectApi  = new ProjectApi(glApi);
+
+
+
             org.gitlab4j.api.models.Label newLabelToAdd = new org.gitlab4j.api.models.Label();
             newLabelToAdd.setName(newTag.getText());
             newLabelToAdd.setColor("#AA8080");
-            //projectApi.getP
             try {
                 Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
-                Project project = projectApi.getProject(projectIdOrPath);
-                IssuesApi iapi = null;
-                //GroupApi gapi = null;
-                labelsApi.createProjectLabel(project.getId(), newLabelToAdd);
+
+                Project project = getProjectApi().getProject(projectIdOrPath);
+
+                //
+                List<org.gitlab4j.api.models.Label> allProjectLabels = getLabelsApi().getProjectLabels(projectIdOrPath);
+                if (allProjectLabels.stream().filter( l -> l.getName().equalsIgnoreCase(newLabelToAdd.getName())).findFirst().isEmpty()) {
+                    getLabelsApi().createProjectLabel(project.getId(), newLabelToAdd);
+                }
+                if (fxIssue.getLabels().stream().filter( s->s.equalsIgnoreCase(newLabelToAdd.getName())).findFirst().isEmpty()) {
+                    //iapi.updateIssue(projectIdOrPath, fxIssue.getId(), )
+                    fxIssue.getLabels().add(newLabelToAdd.getName());
+                    updateIssue();
+                }
+
 
             } catch (GitLabApiException e) {
                 e.printStackTrace();
@@ -125,5 +139,70 @@ public class IssueDetailController implements Initializable {
         });
 
     }
+
+    private void updateIssue() {
+        Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
+        List<Integer> assigneeIds = new ArrayList<>();
+        fxIssue.getAssignees().forEach( a -> assigneeIds.add(a.getId()));
+        String labels = fxIssue.getLabels().stream().collect(Collectors.joining(","));
+        Date dueDate = null;
+        Integer mileStone = null;
+        if (fxIssue.getMilestone() != null) {
+            mileStone = Integer.parseInt(fxIssue.getMilestone());
+        }
+
+
+        try {
+            Issue issue = getIssuesApi().updateIssue(
+                    projectIdOrPath,
+                    fxIssue.getId(),
+                    fxIssue.getTitle(),
+                    fxIssue.getDescription(),
+                    fxIssue.isConfidential(),
+                    assigneeIds,
+                    mileStone,
+                    labels,
+                    Constants.StateEvent.REOPEN,
+                    new Date(),
+                    dueDate
+            );
+            System.out.println(issue);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private ProjectApi projectApi = null;
+    private IssuesApi issuesApi = null;
+    private LabelsApi labelsApi = null;
+
+    private LabelsApi getLabelsApi() {
+        if (labelsApi == null) {
+            GitLabApi glApi = Context.getGitLabApi();
+            labelsApi = new LabelsApi(glApi);
+        }
+        return labelsApi;
+    }
+
+    private IssuesApi getIssuesApi() {
+        if (issuesApi == null) {
+            GitLabApi glApi = Context.getGitLabApi();
+            issuesApi = new IssuesApi(glApi);
+        }
+        return issuesApi;
+    }
+
+    private ProjectApi getProjectApi() {
+        if (projectApi == null) {
+            GitLabApi glApi = Context.getGitLabApi();
+
+            projectApi  = new ProjectApi(glApi);
+        }
+        return projectApi;
+    }
+
+
+
+
 
 }
