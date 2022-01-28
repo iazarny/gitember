@@ -47,7 +47,7 @@
         <ToolBar style="-fx-background-color: cyan">
 
             <Label text="Due date" />
-            <DatePicker fx:id="dueDatePicker" prefWidth="150" />
+            <DatePicker fx:id="dueDatePicker" prefWidth="150"/>
             <Region minWidth="40" />
 
             <Label fx:id="closeDatePickerLabel" text="Closed" />

@@ -93,12 +93,8 @@ public class IssueDetailController implements Initializable {
         numLabel.textProperty().setValue(String.valueOf(fxIssue.iidProperty()));
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
-
         tagsHBox.setStyle("-fx-spacing: 10");
-       
-
         GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
-
         Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
         Bindings.bindBidirectional(titleLabel.textProperty(), fxIssue.titleProperty());
@@ -107,14 +103,21 @@ public class IssueDetailController implements Initializable {
                 new ListChangeListener<String>() {
                     @Override
                     public void onChanged(Change<? extends String> c) {
-                        System.out.println(c);
+                        GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
                     }
                 }
         );
 
+        dueDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            updateIssue();
+        });
+
+
 
 
     }
+
+
 
     private void updateIssue() {
         Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
@@ -142,7 +145,7 @@ public class IssueDetailController implements Initializable {
                     new Date(),
                     dueDate
             );
-            System.out.println(issue);
+            fxIssue.init(issue);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -167,6 +170,8 @@ public class IssueDetailController implements Initializable {
                 fxIssue.getLabels().add(newLabel);
                 updateIssue();
             }
+
+            newTag.setText("");
 
         } catch (GitLabApiException e) {
             e.printStackTrace();

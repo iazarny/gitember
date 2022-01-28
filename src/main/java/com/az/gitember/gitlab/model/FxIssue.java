@@ -53,6 +53,13 @@ public class FxIssue {
 
 
     public FxIssue(final Issue issue) {
+        init(issue);
+    }
+
+    public FxIssue() {
+    }
+
+    public void init(Issue issue) {
         this.assignee.setValue(issue.getAssignee());
         this.assignees.setAll(issue.getAssignees());
         this.author.setValue(issue.getAuthor().getName());
@@ -109,12 +116,9 @@ public class FxIssue {
         this.hasTasks.setValue(issue.getHasTasks());
         this.taskStatus.setValue(issue.getTaskStatus());
         this.taskCompletionStatus.setValue(issue.getTaskCompletionStatus());
-
-
     }
 
-    public FxIssue() {
-    }
+
 
     public Assignee getAssignee() {
         return assignee.get();

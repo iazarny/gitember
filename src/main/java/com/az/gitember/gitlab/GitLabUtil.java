@@ -10,6 +10,7 @@ import java.util.List;
 public class GitLabUtil {
 
     static void fillContainerWithLabels(Pane container, List<org.gitlab4j.api.models.Label> projectLabels, List<String> issueLabels) {
+        container.getChildren().clear();
         issueLabels.stream().forEach(
                 tag -> {
                     Label tagLabel = new Label(tag);
