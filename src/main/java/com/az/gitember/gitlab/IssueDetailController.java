@@ -81,7 +81,7 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(closeDatePicker.valueProperty(), fxIssue.closedAtProperty());
         Bindings.bindBidirectional(closedByText.textProperty(), fxIssue.closedByProperty());
         Bindings.bindBidirectional(description.textProperty(), fxIssue.descriptionProperty());
-        Bindings.bindBidirectional(numLabel.textProperty(), fxIssue.iidProperty());
+        numLabel.textProperty().setValue(String.valueOf(fxIssue.iidProperty()));
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
 
@@ -155,7 +155,7 @@ public class IssueDetailController implements Initializable {
         try {
             Issue issue = getIssuesApi().updateIssue(
                     projectIdOrPath,
-                    fxIssue.getId(),
+                    fxIssue.getIid(),
                     fxIssue.getTitle(),
                     fxIssue.getDescription(),
                     fxIssue.isConfidential(),

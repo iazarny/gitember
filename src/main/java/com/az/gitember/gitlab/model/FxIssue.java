@@ -27,7 +27,7 @@ public class FxIssue {
     private StringProperty externalId = new SimpleStringProperty();
     private IntegerProperty id = new SimpleIntegerProperty();
 
-    private StringProperty iid = new SimpleStringProperty();
+    private IntegerProperty iid = new SimpleIntegerProperty();
     private IntegerProperty issueLinkId = new SimpleIntegerProperty();
     private ObservableList<String> labels = FXCollections.observableArrayList();
     private StringProperty milestone = new SimpleStringProperty();
@@ -79,7 +79,7 @@ public class FxIssue {
         this.actualId.setValue(issue.getActualId().asText());
         this.externalId.setValue(issue.getExternalId());
         this.id.setValue(issue.getId());
-        this.iid.setValue(issue.getIid().toString());
+        this.iid.setValue(issue.getIid());
         this.issueLinkId.setValue(issue.getIssueLinkId());
         this.labels.setAll(issue.getLabels());
 
@@ -268,15 +268,15 @@ public class FxIssue {
         this.id.set(id);
     }
 
-    public String getIid() {
+    public int getIid() {
         return iid.get();
     }
 
-    public StringProperty iidProperty() {
+    public IntegerProperty iidProperty() {
         return iid;
     }
 
-    public void setIid(String iid) {
+    public void setIid(int iid) {
         this.iid.set(iid);
     }
 
