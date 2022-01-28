@@ -286,13 +286,6 @@ public class Context {
         return (OS.contains("win"));
     }
 
-    public static GitLabApi getGitLabApi() {
-        if (gitLabApi == null) {
-            String accessToken = Context.settingsProperty.get().getGitlabSettings().getAccessToken();
-            String url = GitemberUtil.getServer(Context.getGitRepoService().getRepositoryRemoteUrl());
-            gitLabApi = new GitLabApi(url, accessToken);
-        }
-        return gitLabApi;
-    }
+
 
 }

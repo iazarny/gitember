@@ -4,6 +4,7 @@ import com.az.gitember.data.LangDefinition;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.Side;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.scene.paint.Color;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
@@ -237,5 +238,11 @@ public class GitemberUtil {
         return !list.stream().filter(s -> s.equalsIgnoreCase(val)).findFirst().isEmpty();
     }
 
+    public static String toRGBCode( Color color )    {
+        return String.format( "#%02X%02X%02X",
+                (int)( color.getRed() * 255 ),
+                (int)( color.getGreen() * 255 ),
+                (int)( color.getBlue() * 255 ) );
+    }
 
 }

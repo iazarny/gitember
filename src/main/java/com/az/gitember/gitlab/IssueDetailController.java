@@ -1,9 +1,12 @@
 package com.az.gitember.gitlab;
 
 import com.az.gitember.gitlab.model.FxIssue;
+import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -23,6 +26,8 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class IssueDetailController implements Initializable {
+
+
 
     public Label numLabel;
     public Label titleLabel;
@@ -49,15 +54,19 @@ public class IssueDetailController implements Initializable {
     public ComboBox milestoneCmb;
     public Button addTag;
     public TextField newTag;
+    public ColorPicker tagColorPicker;
     private FxIssue fxIssue;
+    private GitLabProject gitLabProject;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         System.out.println(fxIssue);
     }
 
-    public void setIssue(final Issue issue) {
+    public void setIssue(final GitLabProject gitLabProject, final Issue issue) {
         this.fxIssue = new FxIssue(issue);
+        this.gitLabProject = gitLabProject;
 
         assigneeCmb.setItems(fxIssue.getAssignees());
         assigneeCmb.setConverter(new StringConverter<Assignee>() {
@@ -86,14 +95,9 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
 
         tagsHBox.setStyle("-fx-spacing: 10");
-        fxIssue.getLabels().stream().forEach(
-                s -> {
-                    Label tagLabel = new Label(s);
-                    HBox bg = new HBox(tagLabel);
-                    bg.setStyle("-fx-padding: 5px; -fx-background-color: #40400f");
-                    tagsHBox.getChildren().add(bg);
-                }
-        );
+       
+
+        GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
 
         Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
@@ -108,35 +112,7 @@ public class IssueDetailController implements Initializable {
                 }
         );
 
-        addTag.setOnAction(event -> {
-            System.out.println("new tag " + newTag.getText());
 
-
-
-            org.gitlab4j.api.models.Label newLabelToAdd = new org.gitlab4j.api.models.Label();
-            newLabelToAdd.setName(newTag.getText());
-            newLabelToAdd.setColor("#AA8080");
-            try {
-                Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
-
-                Project project = getProjectApi().getProject(projectIdOrPath);
-
-                //
-                List<org.gitlab4j.api.models.Label> allProjectLabels = getLabelsApi().getProjectLabels(projectIdOrPath);
-                if (allProjectLabels.stream().filter( l -> l.getName().equalsIgnoreCase(newLabelToAdd.getName())).findFirst().isEmpty()) {
-                    getLabelsApi().createProjectLabel(project.getId(), newLabelToAdd);
-                }
-                if (fxIssue.getLabels().stream().filter( s->s.equalsIgnoreCase(newLabelToAdd.getName())).findFirst().isEmpty()) {
-                    //iapi.updateIssue(projectIdOrPath, fxIssue.getId(), )
-                    fxIssue.getLabels().add(newLabelToAdd.getName());
-                    updateIssue();
-                }
-
-
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        });
 
     }
 
@@ -153,7 +129,7 @@ public class IssueDetailController implements Initializable {
 
 
         try {
-            Issue issue = getIssuesApi().updateIssue(
+            Issue issue = gitLabProject.getIssuesApi().updateIssue(
                     projectIdOrPath,
                     fxIssue.getIid(),
                     fxIssue.getTitle(),
@@ -172,36 +148,30 @@ public class IssueDetailController implements Initializable {
         }
     }
 
-    private ProjectApi projectApi = null;
-    private IssuesApi issuesApi = null;
-    private LabelsApi labelsApi = null;
 
-    private LabelsApi getLabelsApi() {
-        if (labelsApi == null) {
-            GitLabApi glApi = Context.getGitLabApi();
-            labelsApi = new LabelsApi(glApi);
+
+
+
+    public void addTag(ActionEvent actionEvent) {
+        String newLabel = newTag.getText();
+
+        try {
+
+            if (gitLabProject.getProjectLabels().stream().filter( l -> l.getName().equalsIgnoreCase(newLabel)).findFirst().isEmpty()) {
+                org.gitlab4j.api.models.Label newLabelToAdd = new org.gitlab4j.api.models.Label();
+                newLabelToAdd.setName(newLabel);
+                newLabelToAdd.setColor(GitemberUtil.toRGBCode(tagColorPicker.getValue()));
+                gitLabProject.getLabelsApi().createProjectLabel(gitLabProject.getProject().getId(), newLabelToAdd);
+            }
+            if (fxIssue.getLabels().stream().filter( s->s.equalsIgnoreCase(newLabel)).findFirst().isEmpty()) {
+                fxIssue.getLabels().add(newLabel);
+                updateIssue();
+            }
+
+        } catch (GitLabApiException e) {
+            e.printStackTrace();
         }
-        return labelsApi;
     }
-
-    private IssuesApi getIssuesApi() {
-        if (issuesApi == null) {
-            GitLabApi glApi = Context.getGitLabApi();
-            issuesApi = new IssuesApi(glApi);
-        }
-        return issuesApi;
-    }
-
-    private ProjectApi getProjectApi() {
-        if (projectApi == null) {
-            GitLabApi glApi = Context.getGitLabApi();
-
-            projectApi  = new ProjectApi(glApi);
-        }
-        return projectApi;
-    }
-
-
 
 
 

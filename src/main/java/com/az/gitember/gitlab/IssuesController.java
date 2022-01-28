@@ -1,5 +1,6 @@
 package com.az.gitember.gitlab;
 
+import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.collections.FXCollections;
@@ -24,6 +25,7 @@ public class IssuesController  implements Initializable {
     public VBox openHBox;
     public VBox todoHBox;
     public VBox closedHBox;
+    private GitLabProject gitLabProject;
 
 
     private List<Issue> allIssues;
@@ -43,35 +45,32 @@ public class IssuesController  implements Initializable {
        // openHBox.setSpacing(10);
         openHBox.setStyle("-fx-spacing: 10");
         openIssues.stream().forEach(i -> {
-            openHBox.getChildren().add(new IssueThumbView(i));
+            openHBox.getChildren().add(new IssueThumbView(gitLabProject, i));
         });
 
         //.setSpacing(10);
         todoHBox.setStyle("-fx-spacing: 10");
         todoIssues.stream().forEach(i -> {
-            todoHBox.getChildren().add(new IssueThumbView(i));
+            todoHBox.getChildren().add(new IssueThumbView(gitLabProject, i));
         });
 
         closedHBox.setStyle("-fx-spacing: 10");
         closedIssues.stream().forEach(i -> {
-            closedHBox.getChildren().add(new IssueThumbView(i));
+            closedHBox.getChildren().add(new IssueThumbView(gitLabProject, i));
         });
 
     }
 
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        GitLabApi glAp = Context.getGitLabApi();
-        IssuesApi issuesApi = glAp.getIssuesApi();
+
+        gitLabProject = new GitLabProject(Context.getCurrentProject().getGitLabProjectId());
         try {
-            setAllIssues(issuesApi.getIssues());
+            setAllIssues(gitLabProject.getIssuesApi().getIssues());
         } catch (GitLabApiException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
     }
-
-
 
 }

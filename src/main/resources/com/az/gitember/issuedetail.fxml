@@ -15,6 +15,7 @@
 <?import javafx.scene.text.TextFlow?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0" prefWidth="1024" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.gitlab.IssueDetailController">
     <children>
         <ToolBar>
@@ -82,11 +83,13 @@
 
         <ToolBar>
             <items>
+                <Label text="Labels" />
                 <HBox fx:id="tagsHBox"/>
+                <Region minWidth="40" />
+                <Label text="Add new" />
                 <TextField fx:id="newTag" text="" />
-
-                <Button fx:id="addTag" text="+"/>
-                <Region minWidth="40"/>
+                <ColorPicker fx:id="tagColorPicker" />
+                <Button fx:id="addTag" text="+" onAction="#addTag"/>
 
             </items>
         </ToolBar>
