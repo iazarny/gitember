@@ -1,7 +1,9 @@
 package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.Const;
+import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import javafx.scene.Node;
@@ -19,7 +21,7 @@ import java.util.List;
 
 public class IssueThumbView extends VBox {
 
-    private final Issue issue;
+    private final FxIssue fxissue;
     private final GitLabProject glProject;
 
     private HBox tagsHBox;
@@ -28,27 +30,27 @@ public class IssueThumbView extends VBox {
 
 
 
-    public IssueThumbView(final GitLabProject glProject , final Issue issue) {
-        this.issue = issue;
+    public IssueThumbView(final GitLabProject glProject , final FxIssue fxissue) {
+        this.fxissue = fxissue;
         this.glProject = glProject;
 
-        Hyperlink issueTitleLabel  = new Hyperlink("#" + issue.getIid() + " " + issue.getTitle());
+        Hyperlink issueTitleLabel  = new Hyperlink("#" + fxissue.getIid() + " " + fxissue.getTitle());
         issueTitleLabel.setWrapText(true);
 
         tagsHBox = new HBox();
         tagsHBox.setStyle("-fx-spacing: 10");
-        GitLabUtil.fillContainerWithLabels(tagsHBox, glProject.getProjectLabels(), issue.getLabels());
+        GitLabUtil.fillContainerWithLabels(tagsHBox, glProject.getProjectLabels(), fxissue.getLabels());
 
 
         idHBox= new HBox();
         idHBox.setStyle("-fx-spacing: 10");
-        if (issue.getAssignee() != null) {
-            idHBox.getChildren().add(new Label(issue.getAssignee().getName()));
+        if (fxissue.getAssignee() != null) {
+            idHBox.getChildren().add(new Label(fxissue.getAssignee().getName()));
         }
 
         this.getChildren().addAll(issueTitleLabel, tagsHBox, idHBox );
 
-        setStyle("-fx-padding: 5px; -fx-background-color: #121212");
+        setStyle(LookAndFeelSet.ISSUE_THUMB_STTYLE);
 
         setSpacing(10);
 
@@ -57,7 +59,7 @@ public class IssueThumbView extends VBox {
             try {
                 IssueDetailController controller =
                         (IssueDetailController) App.loadFXMLToNewStage(Const.View.GitLab.ISSUE_DETAILS_VIEW, "Issue details").getSecond();
-                controller.setIssue(glProject, issue);
+                controller.setIssue(glProject, fxissue);
             } catch (Exception e) {
                Context.getMain().showResult("Error", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
             }

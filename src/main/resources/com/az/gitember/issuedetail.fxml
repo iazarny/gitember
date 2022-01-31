@@ -16,66 +16,77 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ColorPicker?>
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0" prefWidth="1024" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.gitlab.IssueDetailController">
+<?import javafx.scene.control.Hyperlink?>
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0"
+      prefWidth="1024" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.az.gitember.gitlab.IssueDetailController">
     <children>
         <ToolBar>
             <items>
-                <Label fx:id="numLabel" text="#" />
-                <Label fx:id="titleLabel" text="Label" />
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="stateLabel" text="state" />
+                <Hyperlink fx:id="numHyperlink" text="#" />
+
+                <TextField fx:id="titleText" HBox.hgrow="ALWAYS"/>
+
+                <Label text="Author"/>
+                <Label fx:id="authorLabel" text="author"/>
+                <Region minWidth="40"/>
+
+                <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
+                <Region minWidth="40"/>
+
+                <Label fx:id="stateLabel" text="state"/>
             </items>
         </ToolBar>
-        <TextArea fx:id="description" />
+        <TextArea fx:id="description"/>
         <ToolBar style="-fx-background-color: magenta">
-            <Label text="Author" />
-            <TextField fx:id="authorText" text="author" />
-            <Region minWidth="40" />
 
-            <CheckBox fx:id="confidentialCheckBox" text="Confidential" />
-            <Region minWidth="40" />
 
-            <Label text="Created" />
-            <DatePicker fx:id="createdAtDatePicker" prefWidth="150" />
-            <Region minWidth="40" />
+            <Label fx:id="milestoneLabel" text="Milestone"/>
+            <ComboBox fx:id="milestoneCmb"/>
+            <Region minWidth="40"/>
 
-            <Label text="Updated" />
-            <DatePicker fx:id="updatedAtDatePicker" prefWidth="150" />
-            <Region minWidth="40" />
+            <Label text="Due date"/>
+            <DatePicker fx:id="dueDatePicker" prefWidth="140"            />
+            <Region minWidth="40"/>
 
         </ToolBar>
         <ToolBar style="-fx-background-color: cyan">
 
-            <Label text="Due date" />
-            <DatePicker fx:id="dueDatePicker" prefWidth="150"/>
-            <Region minWidth="40" />
+            <Label text="Created"/>
+            <DatePicker fx:id="createdAtDatePicker" prefWidth="140" editable="false"/>
+            <Region minWidth="40"/>
 
-            <Label fx:id="closeDatePickerLabel" text="Closed" />
-            <DatePicker fx:id="closeDatePicker" prefWidth="150" />
-            <Region minWidth="40" />
+            <Label text="Updated"/>
+            <DatePicker fx:id="updatedAtDatePicker" prefWidth="140"
+                        editable="false"/>
+            <Region minWidth="40"/>
 
-            <Label fx:id="closedByLabel" text="by" />
-            <TextField fx:id="closedByText" text="closed by" />
-            <Region minWidth="40" />
+
+
+            <Label fx:id="closeDatePickerLabel" text="Closed"/>
+            <DatePicker fx:id="closeDatePicker" prefWidth="140"            />
+            <Region minWidth="40"/>
+
+            <Label fx:id="closedByLabel" text="by"/>
+            <TextField fx:id="closedByText" text="closed by"/>
+            <Region minWidth="40"/>
 
         </ToolBar>
         <ToolBar>
             <items>
-                <Label fx:id="externalIdLabel" text="External id" />
-                <TextField fx:id="externalIdText" text="#" />
-                <Region minWidth="40" />
+                <Label fx:id="externalIdLabel" text="External id"/>
+                <TextField fx:id="externalIdText" text="#"/>
+                <Region minWidth="40"/>
 
-                <Label fx:id="milestoneLabel" text="Milestone" />
-                <ComboBox fx:id="milestoneCmb"/>
-                <Region minWidth="40" />
 
-                <Label fx:id="estimatedLabel" text="Estimated" />
-                <TextField fx:id="estimatedText" text="#" />
-                <Region minWidth="40" />
 
-                <Label fx:id="spendLabel" text="Spend" />
-                <TextField fx:id="spendText" text="#" />
-                <Region minWidth="40" />
+                <Label fx:id="estimatedLabel" text="Estimated"/>
+                <TextField fx:id="estimatedText" text="#"/>
+                <Region minWidth="40"/>
+
+                <Label fx:id="spendLabel" text="Spend"/>
+                <TextField fx:id="spendText" text="#"/>
+                <Region minWidth="40"/>
 
 
             </items>
@@ -83,12 +94,12 @@
 
         <ToolBar>
             <items>
-                <Label text="Labels" />
+                <Label text="Labels"/>
                 <HBox fx:id="tagsHBox"/>
-                <Region minWidth="40" />
-                <Label text="Add new" />
-                <TextField fx:id="newTag" text="" />
-                <ColorPicker fx:id="tagColorPicker" />
+                <Region minWidth="40"/>
+                <Label text="Add new"/>
+                <TextField fx:id="newTag" text=""/>
+                <ColorPicker fx:id="tagColorPicker"/>
                 <Button fx:id="addTag" text="+" onAction="#addTag"/>
 
             </items>
@@ -97,11 +108,10 @@
             <content>
                 <ToolBar>
                     <items>
-                        <Label text="Assignees" />
-                        <ComboBox fx:id="assigneeCmb"  />
+                        <Label text="Assignees"/>
+                        <ComboBox fx:id="assigneeCmb"/>
                     </items>
                 </ToolBar>
-
 
 
             </content>

@@ -1,5 +1,6 @@
 package com.az.gitember.gitlab;
 
+import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class IssuesController  implements Initializable {
 
@@ -28,18 +30,18 @@ public class IssuesController  implements Initializable {
     private GitLabProject gitLabProject;
 
 
-    private List<Issue> allIssues;
-    private ObservableList<Issue> openIssues =  FXCollections.observableList(new ArrayList<>());
-    private ObservableList<Issue> todoIssues = FXCollections.observableList(new ArrayList<>());
-    private ObservableList<Issue> closedIssues =  FXCollections.observableList(new ArrayList<>());
+    private List<FxIssue> allIssues;
+    private ObservableList<FxIssue> openIssues =  FXCollections.observableList(new ArrayList<>());
+    private ObservableList<FxIssue> todoIssues = FXCollections.observableList(new ArrayList<>());
+    private ObservableList<FxIssue> closedIssues =  FXCollections.observableList(new ArrayList<>());
 
-    public void setAllIssues(List<Issue> allIssues) {
+    public void setAllIssues(List<FxIssue> allIssues) {
         this.allIssues = allIssues;
-        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.CLOSED; } ).forEach( i -> {closedIssues.add(i);});
-        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.REOPENED; } ).forEach( i -> {openIssues.add(i);});
-        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.OPENED
+        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.CLOSED.toValue(); } ).forEach( i -> {closedIssues.add(i);});
+        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.REOPENED.toValue(); } ).forEach( i -> {openIssues.add(i);});
+        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.OPENED.toValue()
                 && !GitemberUtil.lstContains(issue.getLabels(), "to do"); } ).forEach( i -> {openIssues.add(i);});
-        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.OPENED
+        allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.OPENED.toValue()
                 && GitemberUtil.lstContains(issue.getLabels(), "to do"); } ).forEach( i -> {todoIssues.add(i);});
 
        // openHBox.setSpacing(10);
@@ -66,7 +68,9 @@ public class IssuesController  implements Initializable {
 
         gitLabProject = new GitLabProject(Context.getCurrentProject().getGitLabProjectId());
         try {
-            setAllIssues(gitLabProject.getIssuesApi().getIssues());
+            List<FxIssue> fxissues = gitLabProject.getIssuesApi().getIssues().stream()
+                    .map( i -> new FxIssue(i)).collect(Collectors.toList());
+            setAllIssues(fxissues);
         } catch (GitLabApiException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());

@@ -28,6 +28,8 @@ public class LookAndFeelSet {
     public static Color DIFF_COLOR_REPLACE = Color.valueOf("#404040");
     public static Color DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
 
+    public static String ISSUE_THUMB_STTYLE = "-fx-padding: 5px; -fx-background-color: #fafafa";
+
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
@@ -42,6 +44,7 @@ public class LookAndFeelSet {
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
             DIFF_COLOR_REPLACE = Color.valueOf("#e0e0e0");
             DIFF_COLOR_TEXT = Color.valueOf("#181818");
+            ISSUE_THUMB_STTYLE = "-fx-padding: 5px; -fx-background-color: black";
         } else {
             PIECHART_LEGENF_STYLE = "";
             THEME_NAME = Style.LIGHT;
@@ -55,6 +58,7 @@ public class LookAndFeelSet {
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
             DIFF_COLOR_REPLACE = Color.valueOf("#404040");
             DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
+            ISSUE_THUMB_STTYLE = "-fx-padding: 5px; -fx-background-color: white";
 
         }
     }

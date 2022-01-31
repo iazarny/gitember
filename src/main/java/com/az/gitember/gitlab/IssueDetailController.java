@@ -1,5 +1,6 @@
 package com.az.gitember.gitlab;
 
+import com.az.gitember.App;
 import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
@@ -19,20 +20,22 @@ import org.gitlab4j.api.models.Project;
 
 import java.net.URL;
 import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class IssueDetailController implements Initializable {
 
 
 
-    public Label numLabel;
-    public Label titleLabel;
+    public Hyperlink numHyperlink;
+    public TextField titleText;
     public ComboBox<Assignee> assigneeCmb;
-    public TextField authorText;
+    public Label authorLabel;
     public CheckBox confidentialCheckBox;
     public DatePicker createdAtDatePicker;
     public DatePicker updatedAtDatePicker;
@@ -64,8 +67,8 @@ public class IssueDetailController implements Initializable {
         System.out.println(fxIssue);
     }
 
-    public void setIssue(final GitLabProject gitLabProject, final Issue issue) {
-        this.fxIssue = new FxIssue(issue);
+    public void setIssue(final GitLabProject gitLabProject, final FxIssue fxissue) {
+        this.fxIssue = fxissue;
         this.gitLabProject = gitLabProject;
 
         assigneeCmb.setItems(fxIssue.getAssignees());
@@ -82,7 +85,7 @@ public class IssueDetailController implements Initializable {
         });
 
         Bindings.bindBidirectional(assigneeCmb.valueProperty(), fxIssue.assigneeProperty());
-        Bindings.bindBidirectional(authorText.textProperty(), fxIssue.authorProperty());
+        Bindings.bindBidirectional(authorLabel.textProperty(), fxIssue.authorProperty());
         Bindings.bindBidirectional(confidentialCheckBox.selectedProperty(), fxIssue.confidentialProperty());
         Bindings.bindBidirectional(createdAtDatePicker.valueProperty(), fxIssue.createdAtProperty());
         Bindings.bindBidirectional(updatedAtDatePicker.valueProperty(), fxIssue.updatedAtProperty());
@@ -90,25 +93,32 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(closeDatePicker.valueProperty(), fxIssue.closedAtProperty());
         Bindings.bindBidirectional(closedByText.textProperty(), fxIssue.closedByProperty());
         Bindings.bindBidirectional(description.textProperty(), fxIssue.descriptionProperty());
-        numLabel.textProperty().setValue(String.valueOf(fxIssue.iidProperty()));
+        numHyperlink.textProperty().setValue(String.valueOf(fxIssue.getIid()));
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
         tagsHBox.setStyle("-fx-spacing: 10");
         GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
         Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
-        Bindings.bindBidirectional(titleLabel.textProperty(), fxIssue.titleProperty());
+        Bindings.bindBidirectional(titleText.textProperty(), fxIssue.titleProperty());
+
+        numHyperlink.setOnAction(event -> {
+            App.getShell().showDocument(fxissue.getWebUrl() );
+        });
 
         fxIssue.getLabels().addListener(
-                new ListChangeListener<String>() {
-                    @Override
-                    public void onChanged(Change<? extends String> c) {
-                        GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
-                    }
-                }
+                (ListChangeListener<String>) c -> GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels())
         );
 
         dueDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            updateIssue();
+        });
+
+        confidentialCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            updateIssue();
+        });
+
+        titleText.textProperty().addListener((observable, oldValue, newValue) -> {
             updateIssue();
         });
 
@@ -125,6 +135,9 @@ public class IssueDetailController implements Initializable {
         fxIssue.getAssignees().forEach( a -> assigneeIds.add(a.getId()));
         String labels = fxIssue.getLabels().stream().collect(Collectors.joining(","));
         Date dueDate = null;
+        if(fxIssue.getDueDate() != null) {
+            dueDate = Date.from(fxIssue.getDueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
         Integer mileStone = null;
         if (fxIssue.getMilestone() != null) {
             mileStone = Integer.parseInt(fxIssue.getMilestone());
@@ -135,15 +148,15 @@ public class IssueDetailController implements Initializable {
             Issue issue = gitLabProject.getIssuesApi().updateIssue(
                     projectIdOrPath,
                     fxIssue.getIid(),
-                    fxIssue.getTitle(),
+                    fxIssue.getTitle(), //
                     fxIssue.getDescription(),
-                    fxIssue.isConfidential(),
+                    fxIssue.isConfidential(), //
                     assigneeIds,
                     mileStone,
-                    labels,
+                    labels, //
                     Constants.StateEvent.REOPEN,
                     new Date(),
-                    dueDate
+                    dueDate //
             );
             fxIssue.init(issue);
         } catch (Exception e) {
