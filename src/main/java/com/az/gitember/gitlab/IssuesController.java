@@ -9,10 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.VBox;
 import org.gitlab4j.api.Constants;
-import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.IssuesApi;
-import org.gitlab4j.api.models.Issue;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -21,14 +18,13 @@ import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+
 public class IssuesController  implements Initializable {
 
     private final static Logger log = Logger.getLogger(IssuesController.class.getName());
     public VBox openHBox;
     public VBox todoHBox;
     public VBox closedHBox;
-    private GitLabProject gitLabProject;
-
 
     private List<FxIssue> allIssues;
     private ObservableList<FxIssue> openIssues =  FXCollections.observableList(new ArrayList<>());
@@ -36,6 +32,7 @@ public class IssuesController  implements Initializable {
     private ObservableList<FxIssue> closedIssues =  FXCollections.observableList(new ArrayList<>());
 
     public void setAllIssues(List<FxIssue> allIssues) {
+        final GitLabProject gitLabProject = Context.getGitLabProject();
         this.allIssues = allIssues;
         allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.CLOSED.toValue(); } ).forEach( i -> {closedIssues.add(i);});
         allIssues.stream().filter( issue -> { return issue.getState() == Constants.IssueState.REOPENED.toValue(); } ).forEach( i -> {openIssues.add(i);});
@@ -66,10 +63,9 @@ public class IssuesController  implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        gitLabProject = new GitLabProject(Context.getCurrentProject().getGitLabProjectId());
         try {
-            List<FxIssue> fxissues = gitLabProject.getIssuesApi().getIssues().stream()
-                    .map( i -> new FxIssue(i)).collect(Collectors.toList());
+            List<FxIssue> fxissues = Context.getGitLabProject().getIssuesApi().getIssues().stream()
+                    .map(FxIssue::new).collect(Collectors.toList());
             setAllIssues(fxissues);
         } catch (GitLabApiException e) {
             e.printStackTrace();

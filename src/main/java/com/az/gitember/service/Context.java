@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.controller.Main;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
+import com.az.gitember.gitlab.model.GitLabProject;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -89,7 +90,7 @@ public class Context {
 
     private static Main main;
 
-    private static GitLabApi gitLabApi;
+    private static GitLabProject gitLabProject;
 
 
 
@@ -104,6 +105,7 @@ public class Context {
 
 
         gitRepoService = new GitRepoService(gitFolder);
+        gitLabProject = null;
 
         updateBranches();
         updateTags();
@@ -135,10 +137,21 @@ public class Context {
         );
 
 
-        getMain().postInit();
-        gitLabApi = null;
 
 
+        final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
+        initGitProviderIntegration(remUrl);
+
+
+    }
+
+    private static void initGitProviderIntegration(String remUrl) {
+        final boolean allowGitLab = remUrl != null && remUrl.contains(Const.Provider.GITLAB);
+        getMain().postInit(allowGitLab);
+        if (allowGitLab) {
+            gitLabProject = new GitLabProject(Context.getCurrentProject().getGitLabProjectId());
+
+        }
     }
 
     public static void init(String gitFolder) throws Exception {
@@ -161,6 +174,9 @@ public class Context {
         return rez;
     }
 
+    public static GitLabProject getGitLabProject() {
+        return gitLabProject;
+    }
 
     public static void updatePlotCommitList(final String treeName, final boolean allHistory, final ProgressMonitor progressMonitor) {
 

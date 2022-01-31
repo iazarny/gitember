@@ -8,6 +8,7 @@ import com.az.gitember.data.Const;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.SearchService;
@@ -247,13 +248,8 @@ public class Main implements Initializable {
         }
     }
 
-    public void postInit() {
-        //TODO resolve provider
-        gitLabMenu.setVisible(false);
-        final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
-        if (remUrl != null && remUrl.contains(Const.Provider.GITLAB)) {
-            gitLabMenu.setVisible(true);
-        }
+    public void postInit(boolean allowgitLab) {
+        gitLabMenu.setVisible(allowgitLab);
     }
 
     public void fetchHandler(ActionEvent actionEvent) {

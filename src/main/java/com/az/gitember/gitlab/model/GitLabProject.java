@@ -17,6 +17,7 @@ public class GitLabProject {
     private ProjectApi projectApi = null;
     private IssuesApi issuesApi = null;
     private LabelsApi labelsApi = null;
+    private MilestonesApi milestonesApi = null;
     private Project project= null;
 
     private List<Label> allProjectLabelsCache  = null;
@@ -48,6 +49,14 @@ public class GitLabProject {
         return gitLabApi;
     }
 
+    public MilestonesApi getMilestonesApi() {
+        if (milestonesApi == null) {
+            GitLabApi glApi =getGitLabApi();
+            milestonesApi = new MilestonesApi(glApi);
+
+        }
+        return milestonesApi;
+    }
 
     public LabelsApi getLabelsApi() {
         if (labelsApi == null) {
