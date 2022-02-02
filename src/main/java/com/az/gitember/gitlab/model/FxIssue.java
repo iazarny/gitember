@@ -30,7 +30,7 @@ public class FxIssue {
     private IntegerProperty iid = new SimpleIntegerProperty();
     private IntegerProperty issueLinkId = new SimpleIntegerProperty();
     private ObservableList<String> labels = FXCollections.observableArrayList();
-    private StringProperty milestone = new SimpleStringProperty();
+    private ObjectProperty<Milestone> milestone = new SimpleObjectProperty<>();
     private IntegerProperty projectId = new SimpleIntegerProperty();
     private StringProperty state = new SimpleStringProperty();
     private BooleanProperty subscribed = new SimpleBooleanProperty();
@@ -91,7 +91,7 @@ public class FxIssue {
         this.labels.setAll(issue.getLabels());
 
         if (issue.getMilestone() != null) {
-            this.milestone.setValue(issue.getMilestone().getTitle());
+            this.milestone.setValue(issue.getMilestone());
         }
         this.projectId.setValue(issue.getProjectId());
         this.state.setValue(issue.getState().toString());
@@ -304,15 +304,15 @@ public class FxIssue {
         this.labels = labels;
     }
 
-    public String getMilestone() {
+    public Milestone getMilestone() {
         return milestone.get();
     }
 
-    public StringProperty milestoneProperty() {
+    public ObjectProperty<Milestone> milestoneProperty() {
         return milestone;
     }
 
-    public void setMilestone(String milestone) {
+    public void setMilestone(Milestone milestone) {
         this.milestone.set(milestone);
     }
 

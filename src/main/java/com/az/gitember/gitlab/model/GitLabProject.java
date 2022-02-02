@@ -4,6 +4,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Label;
+import org.gitlab4j.api.models.Milestone;
 import org.gitlab4j.api.models.Project;
 
 import java.util.ArrayList;
@@ -18,9 +19,11 @@ public class GitLabProject {
     private IssuesApi issuesApi = null;
     private LabelsApi labelsApi = null;
     private MilestonesApi milestonesApi = null;
+    private UserApi userApi = null;
     private Project project= null;
 
     private List<Label> allProjectLabelsCache  = null;
+    private List<Milestone> allProjectMilestone  = null;
 
     public GitLabProject(Object projectIdOrPath) {
         this.projectIdOrPath = projectIdOrPath;
@@ -34,7 +37,21 @@ public class GitLabProject {
                 allProjectLabelsCache = new ArrayList<>();
             }
         }
+
+
         return allProjectLabelsCache;
+    }
+
+    public List<Milestone> getMilestones() {
+        if (allProjectMilestone == null) {
+            try {
+                allProjectMilestone = getMilestonesApi().getMilestones(projectIdOrPath);
+            } catch (GitLabApiException e) {
+                allProjectMilestone =  new ArrayList<>();
+            }
+        }
+
+        return allProjectMilestone;
     }
 
     private GitLabApi gitLabApi = null;
@@ -53,7 +70,6 @@ public class GitLabProject {
         if (milestonesApi == null) {
             GitLabApi glApi =getGitLabApi();
             milestonesApi = new MilestonesApi(glApi);
-
         }
         return milestonesApi;
     }
@@ -87,6 +103,13 @@ public class GitLabProject {
             projectApi  = new ProjectApi(glApi);
         }
         return projectApi;
+    }
+
+    public UserApi getUserApi() {
+        if (userApi == null) {
+            userApi = getGitLabApi().getUserApi();
+        }
+        return  userApi;
     }
 
 }

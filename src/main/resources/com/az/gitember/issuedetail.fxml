@@ -23,84 +23,81 @@
     <children>
         <ToolBar>
             <items>
-                <Hyperlink fx:id="numHyperlink" text="#" />
-
+                <Hyperlink fx:id="numHyperlink" text="#"/>
                 <TextField fx:id="titleText" HBox.hgrow="ALWAYS"/>
-
-                <Label text="Author"/>
-                <Label fx:id="authorLabel" text="author"/>
-                <Region minWidth="40"/>
-
-                <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
-                <Region minWidth="40"/>
-
+                <Label fx:id="milestoneLabel" text="Milestone"/>
+                <ComboBox fx:id="milestoneCmb"/>
+                <Label text="Due date"/>
+                <DatePicker fx:id="dueDatePicker" prefWidth="140"/>
                 <Label fx:id="stateLabel" text="state"/>
             </items>
         </ToolBar>
-        <TextArea fx:id="description"/>
-        <ToolBar style="-fx-background-color: magenta">
-
-
-            <Label fx:id="milestoneLabel" text="Milestone"/>
-            <ComboBox fx:id="milestoneCmb"/>
-            <Region minWidth="40"/>
-
-            <Label text="Due date"/>
-            <DatePicker fx:id="dueDatePicker" prefWidth="140"            />
-            <Region minWidth="40"/>
-
-        </ToolBar>
-        <ToolBar style="-fx-background-color: cyan">
-
+        <ToolBar>
             <Label text="Created"/>
-            <DatePicker fx:id="createdAtDatePicker" prefWidth="140" editable="false"/>
-            <Region minWidth="40"/>
-
-            <Label text="Updated"/>
-            <DatePicker fx:id="updatedAtDatePicker" prefWidth="140"
-                        editable="false"/>
-            <Region minWidth="40"/>
-
-
-
-            <Label fx:id="closeDatePickerLabel" text="Closed"/>
-            <DatePicker fx:id="closeDatePicker" prefWidth="140"            />
-            <Region minWidth="40"/>
-
-            <Label fx:id="closedByLabel" text="by"/>
-            <TextField fx:id="closedByText" text="closed by"/>
-            <Region minWidth="40"/>
+            <Label fx:id="authorLabel" text="author"/>
+            <Label fx:id="createdAtDateLabel"/>
+            <Region minWidth="40"  HBox.hgrow="ALWAYS"/>
+            <Label text="Assignees"/>
+            <ComboBox fx:id="assigneeCmb"/>
 
         </ToolBar>
+        <TextArea fx:id="description"/>
+
         <ToolBar>
             <items>
-                <Label fx:id="externalIdLabel" text="External id"/>
-                <TextField fx:id="externalIdText" text="#"/>
-                <Region minWidth="40"/>
-
 
 
                 <Label fx:id="estimatedLabel" text="Estimated"/>
-                <TextField fx:id="estimatedText" text="#"/>
+                <TextField fx:id="estimatedText" text="#" prefWidth="140"/>
                 <Region minWidth="40"/>
 
                 <Label fx:id="spendLabel" text="Spend"/>
-                <TextField fx:id="spendText" text="#"/>
+                <TextField fx:id="spendText" text="#" prefWidth="140"/>
                 <Region minWidth="40"/>
+
+                <Label fx:id="externalIdLabel" text="External id"/>
+                <TextField fx:id="externalIdText" text="#" prefWidth="140"/>
+                <Region minWidth="40"/>
+
+                <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
+                <Region minWidth="40" HBox.hgrow="ALWAYS"/>
+
+                <ToolBar  maxWidth="30" prefWidth="30">
+
+                    <Label text="Updated"/>
+                    <DatePicker fx:id="updatedAtDatePicker" prefWidth="140"
+                                editable="false"/>
+                    <Region minWidth="40"/>
+
+
+                    <Label fx:id="closeDatePickerLabel" text="Closed"/>
+                    <DatePicker fx:id="closeDatePicker" prefWidth="140"/>
+                    <Region minWidth="40"/>
+
+                    <Label fx:id="closedByLabel" text="by"/>
+                    <TextField fx:id="closedByText" text="closed by" prefWidth="140"/>
+
+                </ToolBar>
 
 
             </items>
         </ToolBar>
+
 
         <ToolBar>
             <items>
                 <Label text="Labels"/>
                 <HBox fx:id="tagsHBox"/>
                 <Region minWidth="40"/>
-                <Label text="Add new"/>
-                <TextField fx:id="newTag" text=""/>
-                <ColorPicker fx:id="tagColorPicker"/>
-                <Button fx:id="addTag" text="+" onAction="#addTag"/>
+
+                <ToolBar  maxWidth="30" prefWidth="30">
+                    <Label text="Assign label"/>
+                    <TextField fx:id="newTag" text="" prefWidth="140"/>
+                    <ColorPicker fx:id="tagColorPicker" prefWidth="140"/>
+                    <Button fx:id="addTag" text="Add label" onAction="#addTag"/>
+                </ToolBar>
+
+
 
             </items>
         </ToolBar>
@@ -108,8 +105,32 @@
             <content>
                 <ToolBar>
                     <items>
-                        <Label text="Assignees"/>
-                        <ComboBox fx:id="assigneeCmb"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
+                    </items>
+                </ToolBar>
+                <ToolBar>
+                    <items>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
+                    </items>
+                </ToolBar>
+                <ToolBar>
+                    <items>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
                     </items>
                 </ToolBar>
 
