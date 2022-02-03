@@ -11,16 +11,14 @@ import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.gitlab4j.api.*;
-import org.gitlab4j.api.models.Assignee;
-import org.gitlab4j.api.models.Issue;
-import org.gitlab4j.api.models.Milestone;
-import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.*;
 
 import java.net.URL;
 import java.sql.Timestamp;
@@ -37,7 +35,7 @@ public class IssueDetailController implements Initializable {
 
     public Hyperlink numHyperlink;
     public TextField titleText;
-    public ComboBox<Assignee> assigneeCmb;
+    public ComboBox<Member> assigneeCmb;
     public Label authorLabel;
     public CheckBox confidentialCheckBox;
     public Label createdAtDateLabel;
@@ -48,14 +46,14 @@ public class IssueDetailController implements Initializable {
     public Label closeDatePickerLabel;
     public Label closedByLabel;
     public TextArea description;
-    public TextField externalIdText;
+    public Label externalIdText;
     public Label externalIdLabel;
     public Label stateLabel;
     public HBox tagsHBox;
     public Label estimatedLabel;
-    public TextField estimatedText;
+    public Label estimatedText;
     public Label spendLabel;
-    public TextField spendText;
+    public Label spendText;
     public Label milestoneLabel;
     public ComboBox<Milestone> milestoneCmb;
     public Button addTag;
@@ -97,32 +95,44 @@ public class IssueDetailController implements Initializable {
 
 
         assigneeCmb.setCellFactory(
-                new Callback<ListView<Assignee>, ListCell<Assignee>>() {
+                new Callback<ListView<Member>, ListCell<Member>>() {
                     @Override
-                    public ListCell<Assignee> call(ListView<Assignee> param) {
-                        return new ListCell<Assignee>() {
+                    public ListCell<Member> call(ListView<Member> param) {
+                        return new ListCell<Member>() {
                             @Override
-                            protected void updateItem(Assignee assignee, boolean empty) {
+                            protected void updateItem(Member assignee, boolean empty) {
                                 super.updateItem(assignee, empty);
-                                setText(empty ? "" : assignee.getName());
+                                setText(empty ? "" : assignee.getName() + " (" + assignee.getUsername() + ")");
                             }
                         };
                     }
                 }
         );
-        assigneeCmb.setConverter(new StringConverter<Assignee>() {
+
+        assigneeCmb.setConverter(new StringConverter<Member>() {
             @Override
-            public String toString(Assignee object) {
+            public String toString(Member object) {
                 return object.getName();
             }
 
             @Override
-            public Assignee fromString(String string) {
+            public Member fromString(String string) {
                 return assigneeCmb.getItems().stream().filter(a -> a.getName().equals(string)).findFirst().orElse(null);
             }
         });
-        //assigneeCmb.setItems(FXCollections.observableList(gitLabProject.getUserApi().getActiveUsers()));
-        //assigneeCmb.setValue(); //!!!!!!!!!!
+
+        assigneeCmb.setItems(FXCollections.observableList(gitLabProject.getActiveUsers()));
+        if (fxIssue.getAssignee() != null) {
+            gitLabProject.getActiveUsers().stream().filter( m -> m.getName().equals(fxIssue.getAssignee().getName()) ).findFirst().ifPresent( member -> {
+                assigneeCmb.setValue(member);
+            });
+        }
+        assigneeCmb.valueProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    updateIssue();
+                }
+        );
+
 
         milestoneCmb.setCellFactory(
                 new Callback<ListView<Milestone>, ListCell<Milestone>>() {
@@ -194,7 +204,9 @@ public class IssueDetailController implements Initializable {
     private void updateIssue() {
         Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
         List<Integer> assigneeIds = new ArrayList<>();
-        fxIssue.getAssignees().forEach(a -> assigneeIds.add(a.getId()));
+        if (assigneeCmb.getValue() != null) {
+            assigneeIds.add(assigneeCmb.getValue().getId());
+        }
         String labels = fxIssue.getLabels().stream().collect(Collectors.joining(","));
         Date dueDate = null;
         if (fxIssue.getDueDate() != null) {
@@ -213,11 +225,11 @@ public class IssueDetailController implements Initializable {
                     fxIssue.getTitle(), //
                     fxIssue.getDescription(),
                     fxIssue.isConfidential(), //
-                    assigneeIds,
+                    assigneeIds,//
                     mileStoneInteger, //
                     labels, //
                     Constants.StateEvent.REOPEN,
-                    new Date(),
+                    new Date(), //
                     dueDate //
             );
             fxIssue.init(issue);

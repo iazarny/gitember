@@ -3,9 +3,7 @@ package com.az.gitember.gitlab.model;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.gitlab4j.api.*;
-import org.gitlab4j.api.models.Label;
-import org.gitlab4j.api.models.Milestone;
-import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +22,23 @@ public class GitLabProject {
 
     private List<Label> allProjectLabelsCache  = null;
     private List<Milestone> allProjectMilestone  = null;
+    private List<Member> allProjectUsers  = null;
 
     public GitLabProject(Object projectIdOrPath) {
         this.projectIdOrPath = projectIdOrPath;
+    }
+
+
+    public List<Member> getActiveUsers() {
+
+        if (allProjectUsers == null) {
+            try {
+                allProjectUsers = getProjectApi().getAllMembers(projectIdOrPath);
+            } catch (GitLabApiException e) {
+                allProjectUsers = new ArrayList<>();
+            }
+        }
+        return allProjectUsers;
     }
 
     public List<Label> getProjectLabels()  {

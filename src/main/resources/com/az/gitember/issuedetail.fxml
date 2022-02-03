@@ -48,15 +48,15 @@
 
 
                 <Label fx:id="estimatedLabel" text="Estimated"/>
-                <TextField fx:id="estimatedText" text="#" prefWidth="140"/>
+                <Label fx:id="estimatedText" text="#" prefWidth="140"/>
                 <Region minWidth="40"/>
 
                 <Label fx:id="spendLabel" text="Spend"/>
-                <TextField fx:id="spendText" text="#" prefWidth="140"/>
+                <Label fx:id="spendText" text="#" prefWidth="140"/>
                 <Region minWidth="40"/>
 
                 <Label fx:id="externalIdLabel" text="External id"/>
-                <TextField fx:id="externalIdText" text="#" prefWidth="140"/>
+                <Label fx:id="externalIdText" text="#" prefWidth="140"/>
                 <Region minWidth="40"/>
 
                 <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
@@ -96,43 +96,43 @@
                     <ColorPicker fx:id="tagColorPicker" prefWidth="140"/>
                     <Button fx:id="addTag" text="Add label" onAction="#addTag"/>
                 </ToolBar>
-
-
-
             </items>
         </ToolBar>
-        <ScrollPane>
+        <ScrollPane fitToHeight="true" fitToWidth="true">
             <content>
-                <ToolBar>
-                    <items>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                    </items>
-                </ToolBar>
-                <ToolBar>
-                    <items>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                    </items>
-                </ToolBar>
-                <ToolBar>
-                    <items>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                        <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                        <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                    </items>
-                </ToolBar>
+                <VBox>
+                    <ToolBar>
+                        <items>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
+                        </items>
+                    </ToolBar>
+                    <ToolBar>
+                        <items>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
+                        </items>
+                    </ToolBar>
+                    <ToolBar>
+                        <items>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
+                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
+                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
+                        </items>
+                    </ToolBar>
+                </VBox>
+
 
 
             </content>
