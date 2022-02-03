@@ -8,6 +8,7 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -67,9 +68,10 @@ public class IssueDetailController implements Initializable {
     public Button addSpendTimeBtn;
 
 
-    private FxIssue fxIssue;
     private GitLabProject gitLabProject;
 
+    private FxIssue fxIssue;
+    private ObservableList<Note> notes = FXCollections.observableArrayList(new ArrayList<>());
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -79,6 +81,13 @@ public class IssueDetailController implements Initializable {
     public void setIssue(final GitLabProject gitLabProject, final FxIssue fxissue) {
         this.fxIssue = fxissue;
         this.gitLabProject = gitLabProject;
+
+        Runnable runnable = () -> {
+            notes.setAll(gitLabProject.getNotes(fxIssue.getIid()));
+            System.out.println("------------------------------------------------");
+        };
+
+        new Thread(runnable).start();
 
 
 
@@ -208,6 +217,12 @@ public class IssueDetailController implements Initializable {
         titleText.textProperty().addListener((observable, oldValue, newValue) -> {
             updateIssue();
         });
+
+
+
+
+
+
 
 
     }

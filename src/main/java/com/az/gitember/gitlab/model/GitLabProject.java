@@ -6,7 +6,9 @@ import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GitLabProject {
 
@@ -14,6 +16,7 @@ public class GitLabProject {
     private final Object projectIdOrPath;
 
     private ProjectApi projectApi = null;
+    private NotesApi notesApi = null;
     private DiscussionsApi discussionsApi = null;
     private IssuesApi issuesApi = null;
     private LabelsApi labelsApi = null;
@@ -142,4 +145,32 @@ public class GitLabProject {
         }
         return discussionsApi;
     }
+
+    public List<Discussion> getDiscussion(Integer issueIid) {
+        try {
+            return getDiscussionsApi().getIssueDiscussions(projectIdOrPath, issueIid);
+        } catch (GitLabApiException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public NotesApi getNotesApi() {
+        if (notesApi == null) {
+            notesApi = getGitLabApi().getNotesApi();
+        }
+        return notesApi;
+    }
+
+    public List<Note> getNotes(Integer issueIid) {
+        try {
+            return getNotesApi().getIssueNotes(projectIdOrPath, issueIid)
+                    .stream()
+                    .filter( n -> !n.getSystem())
+                    .collect(Collectors.toList());
+        } catch (GitLabApiException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+
 }
