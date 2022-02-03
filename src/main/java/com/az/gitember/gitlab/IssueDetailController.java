@@ -17,6 +17,8 @@ import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.*;
 
@@ -59,6 +61,12 @@ public class IssueDetailController implements Initializable {
     public Button addTag;
     public TextField newTag;
     public ColorPicker tagColorPicker;
+    public TextField addSpendTimeText;
+    public TextField setEstimatedTextText;
+    public Button setEstimatedTimeBtn;
+    public Button addSpendTimeBtn;
+
+
     private FxIssue fxIssue;
     private GitLabProject gitLabProject;
 
@@ -89,8 +97,12 @@ public class IssueDetailController implements Initializable {
         Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
         tagsHBox.setStyle("-fx-spacing: 10");
         GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
+        Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
+        externalIdLabel.setVisible(StringUtils.isNoneEmpty(fxIssue.getExternalId()));
+        externalIdText.setVisible(StringUtils.isNoneEmpty(fxIssue.getExternalId()));
         Bindings.bindBidirectional(estimatedText.textProperty(), fxIssue.estimatedProperty());
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
+
         Bindings.bindBidirectional(titleText.textProperty(), fxIssue.titleProperty());
 
 
@@ -258,9 +270,29 @@ public class IssueDetailController implements Initializable {
             newTag.setText("");
 
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            Context.getMain().showResult("Error",
+                    "Cannot add issue label " + ExceptionUtils.getMessage(e), Alert.AlertType.ERROR);
         }
     }
 
 
+    public void addSpendTime(ActionEvent actionEvent) {
+        try {
+            Issue updated = gitLabProject.addSpendTime(fxIssue.getIid(), addSpendTimeText.getText());
+            fxIssue.init(updated);
+        } catch (GitLabApiException e) {
+            Context.getMain().showResult("Error",
+                    "Cannot add time " + ExceptionUtils.getMessage(e), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void setEstimatedTime(ActionEvent actionEvent) {
+        try {
+            Issue updated = gitLabProject.  setEstimatedTime(fxIssue.getIid(), setEstimatedTextText.getText());
+            fxIssue.init(updated);
+        } catch (GitLabApiException e) {
+            Context.getMain().showResult("Error",
+                    "Cannot set estimated time " + ExceptionUtils.getMessage(e), Alert.AlertType.ERROR);
+        }
+    }
 }

@@ -48,15 +48,26 @@
 
 
                 <Label fx:id="estimatedLabel" text="Estimated"/>
-                <Label fx:id="estimatedText" text="#" prefWidth="140"/>
+                <Label fx:id="estimatedText" text=""/>
+                <ToolBar  maxWidth="30" prefWidth="30">
+                    <TextField fx:id="setEstimatedTextText" prefWidth="140" promptText="Human readable format, e.g. 3h30m"/>
+                    <Button fx:id="setEstimatedTimeBtn"  text="+" onAction="#setEstimatedTime"/>
+                </ToolBar>
                 <Region minWidth="40"/>
 
                 <Label fx:id="spendLabel" text="Spend"/>
-                <Label fx:id="spendText" text="#" prefWidth="140"/>
+                <Label fx:id="spendText" text="#" />
+                <ToolBar  maxWidth="30" prefWidth="30">
+                    <TextField fx:id="addSpendTimeText" prefWidth="140" promptText="Human readable format, e.g. 3h30m"/>
+                    <Button fx:id="addSpendTimeBtn"  text="+" onAction="#addSpendTime"/>
+                </ToolBar>
                 <Region minWidth="40"/>
 
+
                 <Label fx:id="externalIdLabel" text="External id"/>
-                <Label fx:id="externalIdText" text="#" prefWidth="140"/>
+                <Label fx:id="externalIdText" text="" prefWidth="140"/>
+
+
                 <Region minWidth="40"/>
 
                 <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>

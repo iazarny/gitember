@@ -1,5 +1,6 @@
 package com.az.gitember.gitlab.model;
 
+import com.az.gitember.service.GitemberUtil;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -103,10 +104,10 @@ public class FxIssue {
         this.discussionLocked.setValue(issue.getDiscussionLocked());
         if (issue.getTimeStats() != null) {
             if (issue.getTimeStats().getHumanTotalTimeSpent() != null) {
-                this.sppend.setValue("" + issue.getTimeStats().getHumanTotalTimeSpent().getSeconds());
+                this.sppend.setValue(issue.getTimeStats().getHumanTotalTimeSpent().toString());
             }
             if (issue.getTimeStats().getHumanTimeEstimate() != null) {
-                this.sppend.setValue("" + issue.getTimeStats().getHumanTimeEstimate().getSeconds());
+                this.estimated.setValue(issue.getTimeStats().getHumanTimeEstimate().toString());
             }
         }
 

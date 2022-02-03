@@ -14,6 +14,7 @@ public class GitLabProject {
     private final Object projectIdOrPath;
 
     private ProjectApi projectApi = null;
+    private DiscussionsApi discussionsApi = null;
     private IssuesApi issuesApi = null;
     private LabelsApi labelsApi = null;
     private MilestonesApi milestonesApi = null;
@@ -28,6 +29,17 @@ public class GitLabProject {
         this.projectIdOrPath = projectIdOrPath;
     }
 
+
+    public Issue setEstimatedTime(Integer issueIid, String spendTime) throws GitLabApiException {
+        getIssuesApi().estimateTime(projectIdOrPath, issueIid, spendTime);
+        return getIssuesApi().getIssue(projectIdOrPath, issueIid);
+    }
+
+
+    public Issue addSpendTime(Integer issueIid, String spendTime) throws GitLabApiException {
+        getIssuesApi().addSpentTime(projectIdOrPath, issueIid, spendTime);
+        return getIssuesApi().getIssue(projectIdOrPath, issueIid);
+    }
 
     public List<Member> getActiveUsers() {
 
@@ -124,4 +136,10 @@ public class GitLabProject {
         return  userApi;
     }
 
+    public DiscussionsApi getDiscussionsApi() {
+        if (discussionsApi == null) {
+            discussionsApi = getGitLabApi().getDiscussionsApi();
+        }
+        return discussionsApi;
+    }
 }
