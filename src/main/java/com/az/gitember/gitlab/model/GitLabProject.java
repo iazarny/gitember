@@ -148,7 +148,10 @@ public class GitLabProject {
 
     public List<Discussion> getDiscussion(Integer issueIid) {
         try {
-            return getDiscussionsApi().getIssueDiscussions(projectIdOrPath, issueIid);
+            return getDiscussionsApi().getIssueDiscussions(projectIdOrPath, issueIid)
+                    .stream()
+                    .filter( d -> !d.getNotes().get(0).getSystem())
+                    .collect(Collectors.toList());
         } catch (GitLabApiException e) {
             return Collections.EMPTY_LIST;
         }

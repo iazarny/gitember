@@ -1,6 +1,7 @@
 package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.DefaultProgressMonitor;
 import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
@@ -9,6 +10,7 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -27,10 +29,7 @@ import org.gitlab4j.api.models.*;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -73,7 +72,7 @@ public class IssueDetailController implements Initializable {
     private GitLabProject gitLabProject;
 
     private FxIssue fxIssue;
-    private ObservableList<Note> notes = FXCollections.observableArrayList(new ArrayList<>());
+    private ObservableList<Discussion> notes = FXCollections.observableArrayList(new ArrayList<>());
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -191,14 +190,21 @@ public class IssueDetailController implements Initializable {
                 }
         );
 
-        notes.addListener(new ListChangeListener<Note>() {
+        notes.addListener(new ListChangeListener<Discussion>() {
             @Override
-            public void onChanged(Change<? extends Note> change) {
+            public void onChanged(Change<? extends Discussion> change) {
                 notes.stream().forEach(
-                        n -> {
+                        d -> {
+                            Note n = d.getNotes().get(0);
                             comments.getChildren().add(
-                                    new Label(n.getAuthor().getName() + " " + n.getBody())
+                                    new CommentView(n, true)
                             );
+                            for (int i = 1; i < d.getNotes().size(); i++) {
+                                Note c = d.getNotes().get(i);
+                                comments.getChildren().add(
+                                        new CommentView(c, false)
+                                );
+                            }
                         }
                 );
             }
@@ -226,19 +232,32 @@ public class IssueDetailController implements Initializable {
         });
 
 
-        Runnable runnable = () -> {
+
+        /*Runnable runnable = () -> {
             notes.setAll(gitLabProject.getNotes(fxIssue.getIid()));
             System.out.println("------------------------------------------------");
         };
 
-        new Thread(runnable).start();
+        new Thread(runnable).start();*/
 
+        Task<List<Discussion>> longTask = new Task<List<Discussion>>() {
+            @Override
+            protected List<Discussion> call() throws Exception {
 
+                return gitLabProject.getDiscussion(fxIssue.getIid());
+            }
 
+        };
 
+        longTask.setOnFailed(event -> {
+            notes.clear();
+        });
 
+        longTask.setOnSucceeded(event -> {
+            notes.setAll((Collection<? extends Discussion>) event.getSource().getValue());
+        });
 
-
+        new Thread(longTask).start();
 
     }
 
