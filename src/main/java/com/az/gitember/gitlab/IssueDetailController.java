@@ -14,6 +14,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -66,6 +67,7 @@ public class IssueDetailController implements Initializable {
     public TextField setEstimatedTextText;
     public Button setEstimatedTimeBtn;
     public Button addSpendTimeBtn;
+    public VBox comments;
 
 
     private GitLabProject gitLabProject;
@@ -82,12 +84,7 @@ public class IssueDetailController implements Initializable {
         this.fxIssue = fxissue;
         this.gitLabProject = gitLabProject;
 
-        Runnable runnable = () -> {
-            notes.setAll(gitLabProject.getNotes(fxIssue.getIid()));
-            System.out.println("------------------------------------------------");
-        };
 
-        new Thread(runnable).start();
 
 
 
@@ -194,8 +191,18 @@ public class IssueDetailController implements Initializable {
                 }
         );
 
-
-
+        notes.addListener(new ListChangeListener<Note>() {
+            @Override
+            public void onChanged(Change<? extends Note> change) {
+                notes.stream().forEach(
+                        n -> {
+                            comments.getChildren().add(
+                                    new Label(n.getAuthor().getName() + " " + n.getBody())
+                            );
+                        }
+                );
+            }
+        });
 
 
         numHyperlink.setOnAction(event -> {
@@ -217,6 +224,14 @@ public class IssueDetailController implements Initializable {
         titleText.textProperty().addListener((observable, oldValue, newValue) -> {
             updateIssue();
         });
+
+
+        Runnable runnable = () -> {
+            notes.setAll(gitLabProject.getNotes(fxIssue.getIid()));
+            System.out.println("------------------------------------------------");
+        };
+
+        new Thread(runnable).start();
 
 
 

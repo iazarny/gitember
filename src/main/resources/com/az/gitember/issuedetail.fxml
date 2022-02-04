@@ -111,37 +111,8 @@
         </ToolBar>
         <ScrollPane fitToHeight="true" fitToWidth="true">
             <content>
-                <VBox>
-                    <ToolBar>
-                        <items>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                        </items>
-                    </ToolBar>
-                    <ToolBar>
-                        <items>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                        </items>
-                    </ToolBar>
-                    <ToolBar>
-                        <items>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="vvvvvvvvvvvvvvvvvvvvv"/>
-                            <Label text="ccccccccccccccccccccccccccccccccccccccccccccccc"/>
-                            <Label text="bbbbbbbbbbbbbbbbbbbbbbbbb"/>
-                        </items>
-                    </ToolBar>
+                <VBox fx:id="comments">
+
                 </VBox>
 
 
