@@ -2,6 +2,7 @@ package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.TextAreaDialog;
 import com.az.gitember.data.Const;
 import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
@@ -12,7 +13,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Note;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
@@ -70,6 +70,7 @@ public class CommentView extends VBox {
             currentUserName = Context.getGitLabProject().getGitLabApi().getUserApi().getCurrentUser().getUsername();
             if (note.getAuthor().getUsername().trim().equals(currentUserName)) {
                 Button editBtn = new Button("Edit");
+
                 StackedFontIcon replyIcon = new StackedFontIcon();
                 replyIcon.getChildren().add(new FontIcon(FontAwesome.EDIT));
                 replyIcon.setStyle("-fx-icon-color: text_color");
@@ -91,6 +92,14 @@ public class CommentView extends VBox {
             replyIcon.setStyle("-fx-icon-color: text_color");
             replyBtn.setGraphic(replyIcon);
             head.getChildren().add(replyBtn);
+
+            replyBtn.setOnAction(event -> {
+                TextAreaDialog textAreaDialog = new TextAreaDialog("");
+                textAreaDialog.showAndWait().ifPresent( note -> {
+                    System.out.println(note);
+                });
+
+            });
         }
     }
 
