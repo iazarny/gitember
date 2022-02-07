@@ -2,10 +2,12 @@ package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.TextAreaDialog;
 import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -67,6 +69,7 @@ public class IssueDetailController implements Initializable {
     public Button setEstimatedTimeBtn;
     public Button addSpendTimeBtn;
     public VBox comments;
+    public Button addNewNoteBtn;
 
 
     private GitLabProject gitLabProject;
@@ -195,14 +198,15 @@ public class IssueDetailController implements Initializable {
             public void onChanged(Change<? extends Discussion> change) {
                 notes.stream().forEach(
                         d -> {
+
                             Note n = d.getNotes().get(0);
                             comments.getChildren().add(
-                                    new CommentView(n, true)
+                                    new CommentView(fxissue.getIid(), d.getId(), n, true)
                             );
                             for (int i = 1; i < d.getNotes().size(); i++) {
                                 Note c = d.getNotes().get(i);
                                 comments.getChildren().add(
-                                        new CommentView(c, false)
+                                        new CommentView(fxissue.getIid(), d.getId(), c, false)
                                 );
                             }
                         }
@@ -232,18 +236,14 @@ public class IssueDetailController implements Initializable {
         });
 
 
+        fetchNotes();
 
-        /*Runnable runnable = () -> {
-            notes.setAll(gitLabProject.getNotes(fxIssue.getIid()));
-            System.out.println("------------------------------------------------");
-        };
+    }
 
-        new Thread(runnable).start();*/
-
+    private void fetchNotes() {
         Task<List<Discussion>> longTask = new Task<List<Discussion>>() {
             @Override
             protected List<Discussion> call() throws Exception {
-
                 return gitLabProject.getDiscussion(fxIssue.getIid());
             }
 
@@ -254,11 +254,11 @@ public class IssueDetailController implements Initializable {
         });
 
         longTask.setOnSucceeded(event -> {
+            notes.clear();
             notes.setAll((Collection<? extends Discussion>) event.getSource().getValue());
         });
 
         new Thread(longTask).start();
-
     }
 
 
@@ -343,5 +343,26 @@ public class IssueDetailController implements Initializable {
             Context.getMain().showResult("Error",
                     "Cannot set estimated time " + ExceptionUtils.getMessage(e), Alert.AlertType.ERROR);
         }
+    }
+
+    public void addNewNote(ActionEvent actionEvent) {
+        TextAreaDialog textAreaDialog = new TextAreaDialog("");
+        //textAreaDialog.initOwner(getScene().getWindow()); //TODO
+        textAreaDialog.showAndWait().ifPresent( body -> {
+            try {
+                Discussion discussion = gitLabProject.createIssueDiscussion(fxIssue.getIid(), body);
+                Note n = discussion.getNotes().get(0);
+                CommentView cv =  new CommentView(fxIssue.getIid(), discussion.getId(), n, true);
+                //todo index comments.getChildren().add();
+                comments.getChildren().add(
+                        cv
+                );
+                Platform.runLater( () -> cv.requestFocus());
+            } catch (GitLabApiException e) {
+                Context.getMain().showResult("Error",
+                        "Cannot create new discussion thread " + ExceptionUtils.getMessage(e), Alert.AlertType.ERROR);
+            }
+        });
+
     }
 }

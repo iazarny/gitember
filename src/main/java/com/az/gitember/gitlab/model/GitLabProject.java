@@ -7,8 +7,11 @@ import org.gitlab4j.api.models.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.az.gitember.service.Context.getGitLabProject;
 
 public class GitLabProject {
 
@@ -32,6 +35,33 @@ public class GitLabProject {
         this.projectIdOrPath = projectIdOrPath;
     }
 
+
+
+    public Discussion createIssueDiscussion(Integer issueId, String body) throws GitLabApiException {
+        return getDiscussionsApi().createIssueDiscussion(
+                projectIdOrPath,
+                issueId,
+                body,
+                new Date());
+    }
+
+    public Note addIssueThreadNote(Integer issueId, String discussionId, String body) throws GitLabApiException {
+        return getDiscussionsApi().addIssueThreadNote(
+                projectIdOrPath,
+                issueId,
+                discussionId,
+                body,
+                new Date());
+    }
+
+    public Note modifyIssueThreadNote(Integer issueId, String discussionId, Integer noteId, String body) throws GitLabApiException {
+        return getDiscussionsApi().modifyIssueThreadNote(
+                projectIdOrPath,
+                issueId,
+                discussionId,
+                noteId,
+                body);
+    }
 
     public Issue setEstimatedTime(Integer issueIid, String spendTime) throws GitLabApiException {
         getIssuesApi().estimateTime(projectIdOrPath, issueIid, spendTime);

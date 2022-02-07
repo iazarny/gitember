@@ -21,8 +21,21 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 public class CommentView extends VBox {
 
+    private final Integer issueId;
+    private final String discussionId;
+    private final Note note;
+    private final TextArea comment;
+
     private final String SPACES = "   ";
-    public CommentView(final Note note, final boolean parent) {
+
+
+    public CommentView(final Integer issueId, final String discussionId, final Note note, final boolean parent) {
+
+        this.issueId = issueId;
+        this.discussionId = discussionId;
+        this.note = note;
+
+
 
         if (parent) {
             this.getChildren().add(new HBox(new Label(SPACES)));
@@ -43,7 +56,9 @@ public class CommentView extends VBox {
         addEditButton(head, note);
         head.getChildren().add(new Label(SPACES));
 
-        TextArea comment = new TextArea(note.getBody());
+        this.comment = new TextArea(note.getBody());
+        this.comment.setMinHeight(75);
+        this.comment.setPrefHeight(150);
         HBox.setHgrow(comment, Priority.ALWAYS);
 
         HBox body = new HBox();
@@ -76,6 +91,20 @@ public class CommentView extends VBox {
                 replyIcon.setStyle("-fx-icon-color: text_color");
                 editBtn.setGraphic(replyIcon);
                 head.getChildren().add(editBtn);
+
+                editBtn.setOnAction(event -> {
+                    TextAreaDialog textAreaDialog = new TextAreaDialog(note.getBody());
+                    textAreaDialog.initOwner(CommentView.this.getScene().getWindow());
+                    textAreaDialog.showAndWait().ifPresent( body -> {
+                        try {
+                            Context.getGitLabProject().modifyIssueThreadNote(issueId, discussionId, note.getId(),  body);
+                            comment.setText(body);
+                        } catch (GitLabApiException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                });
+
             }
         } catch (GitLabApiException e) {
             e.printStackTrace();
@@ -95,10 +124,15 @@ public class CommentView extends VBox {
 
             replyBtn.setOnAction(event -> {
                 TextAreaDialog textAreaDialog = new TextAreaDialog("");
-                textAreaDialog.showAndWait().ifPresent( note -> {
-                    System.out.println(note);
-                });
+                textAreaDialog.initOwner(CommentView.this.getScene().getWindow());
+                textAreaDialog.showAndWait().ifPresent( body -> {
+                    try {
+                        Context.getGitLabProject().addIssueThreadNote(issueId, discussionId,  body);
 
+                    } catch (GitLabApiException e) {
+                        e.printStackTrace();
+                    }
+                });
             });
         }
     }

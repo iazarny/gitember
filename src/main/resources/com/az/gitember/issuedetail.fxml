@@ -41,7 +41,7 @@
             <ComboBox fx:id="assigneeCmb"/>
 
         </ToolBar>
-        <TextArea fx:id="description"/>
+        <TextArea fx:id="description" minHeight="300" prefHeight="400"/>
 
         <ToolBar>
             <items>
@@ -107,6 +107,9 @@
                     <ColorPicker fx:id="tagColorPicker" prefWidth="140"/>
                     <Button fx:id="addTag" text="Add label" onAction="#addTag"/>
                 </ToolBar>
+                <Region minWidth="40" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="addNewNoteBtn"  text="Add note" onAction="#addNewNote"/>
+
             </items>
         </ToolBar>
         <ScrollPane fitToHeight="true" fitToWidth="true">
@@ -114,9 +117,6 @@
                 <VBox fx:id="comments">
 
                 </VBox>
-
-
-
             </content>
         </ScrollPane>
     </children>
