@@ -522,7 +522,6 @@ public class Main implements Initializable {
 
 
     public void gitlabIssues(ActionEvent actionEvent) {
-        System.out.println();
         if (gitlabSanityCheck()) {
             try {
 

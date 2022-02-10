@@ -2,6 +2,7 @@ package com.az.gitember.gitlab;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.PostInitializable;
 import com.az.gitember.controller.TextAreaDialog;
 import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
@@ -15,11 +16,13 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.ObjectUtils;
@@ -30,13 +33,16 @@ import org.gitlab4j.api.models.*;
 
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.MessageFormat;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class IssueDetailController implements Initializable {
+public class IssueDetailController implements PostInitializable {
 
+    private final static Logger log = Logger.getLogger(IssueDetailController.class.getName());
 
     public Hyperlink numHyperlink;
     public TextField titleText;
@@ -76,18 +82,12 @@ public class IssueDetailController implements Initializable {
 
     private FxIssue fxIssue;
     private ObservableList<Discussion> notes = FXCollections.observableArrayList(new ArrayList<>());
+    private Stage stage;
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        System.out.println(fxIssue);
-    }
 
     public void setIssue(final GitLabProject gitLabProject, final FxIssue fxissue) {
         this.fxIssue = fxissue;
         this.gitLabProject = gitLabProject;
-
-
-
 
 
         authorLabel.textProperty().setValue(fxIssue.getAuthor());
@@ -200,15 +200,16 @@ public class IssueDetailController implements Initializable {
                         d -> {
 
                             Note n = d.getNotes().get(0);
-                            comments.getChildren().add(
-                                    new CommentView(fxissue.getIid(), d.getId(), n, true)
-                            );
+                            CommentView parentCommentView =  new CommentView(fxissue.getIid(), d.getId(), n, true);
+                            comments.getChildren().add(   parentCommentView     );
                             for (int i = 1; i < d.getNotes().size(); i++) {
                                 Note c = d.getNotes().get(i);
                                 comments.getChildren().add(
                                         new CommentView(fxissue.getIid(), d.getId(), c, false)
                                 );
                             }
+                            parentCommentView.setIdxToAddNote(comments.getChildren().size());
+                            parentCommentView.setParentChldren(comments.getChildren());
                         }
                 );
             }
@@ -240,7 +241,14 @@ public class IssueDetailController implements Initializable {
 
     }
 
+    @Override
+    public void postInitialize(Stage stage) {
+        this.stage = stage;
+    }
+
     private void fetchNotes() {
+        stage.getScene().setCursor(Cursor.WAIT);
+
         Task<List<Discussion>> longTask = new Task<List<Discussion>>() {
             @Override
             protected List<Discussion> call() throws Exception {
@@ -250,12 +258,16 @@ public class IssueDetailController implements Initializable {
         };
 
         longTask.setOnFailed(event -> {
+            log.log(Level.WARNING,
+                    MessageFormat.format("Cannot fetch issue " + fxIssue.getIid() +" notes", event.getSource().getException()));
             notes.clear();
+            stage.getScene().setCursor(Cursor.DEFAULT);
         });
 
         longTask.setOnSucceeded(event -> {
             notes.clear();
             notes.setAll((Collection<? extends Discussion>) event.getSource().getValue());
+            stage.getScene().setCursor(Cursor.DEFAULT);
         });
 
         new Thread(longTask).start();
@@ -263,40 +275,64 @@ public class IssueDetailController implements Initializable {
 
 
     private void updateIssue() {
-        Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId();
+
+        stage.getScene().setCursor(Cursor.WAIT);
+
+        Object projectIdOrPath = Context.getCurrentProject().getGitLabProjectId(); //TODO get via gitlab project
+
         List<Integer> assigneeIds = new ArrayList<>();
         if (assigneeCmb.getValue() != null) {
             assigneeIds.add(assigneeCmb.getValue().getId());
         }
         String labels = fxIssue.getLabels().stream().collect(Collectors.joining(","));
-        Date dueDate = null;
-        if (fxIssue.getDueDate() != null) {
-            dueDate = Date.from(fxIssue.getDueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-        }
-        Integer mileStoneInteger = null;
-        if (fxIssue.getMilestone() != null) {
-            mileStoneInteger = fxIssue.getMilestone().getId();
-        }
 
 
-        try {
-            Issue issue = gitLabProject.getIssuesApi().updateIssue(
-                    projectIdOrPath,
-                    fxIssue.getIid(),
-                    fxIssue.getTitle(), //
-                    fxIssue.getDescription(),
-                    fxIssue.isConfidential(), //
-                    assigneeIds,//
-                    mileStoneInteger, //
-                    labels, //
-                    Constants.StateEvent.REOPEN,
-                    new Date(), //
-                    dueDate //
-            );
-            fxIssue.init(issue);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        Task<Issue> longTask = new Task<Issue>() {
+            @Override
+            protected Issue call() throws Exception {
+
+                Date dueDate = null;
+                if (fxIssue.getDueDate() != null) {
+                    dueDate = Date.from(fxIssue.getDueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+                }
+
+
+                Integer mileStoneInteger = null;
+                if (fxIssue.getMilestone() != null) {
+                    mileStoneInteger = fxIssue.getMilestone().getId();
+                }
+
+                return gitLabProject.getIssuesApi().updateIssue(
+                        projectIdOrPath,
+                        fxIssue.getIid(),
+                        fxIssue.getTitle(),
+                        fxIssue.getDescription(),
+                        fxIssue.isConfidential(),
+                        assigneeIds,
+                        mileStoneInteger,
+                        labels,
+                        Constants.StateEvent.REOPEN,
+                        new Date(),
+                        dueDate
+                );
+            }
+
+        };
+
+        longTask.setOnFailed(event -> {
+            log.log(Level.WARNING,
+                    MessageFormat.format("Get gitlab issues error", event.getSource().getException()));
+            stage.getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        longTask.setOnSucceeded(event -> {
+            fxIssue.init((Issue) event.getSource().getValue());
+            stage.getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        new Thread(longTask).start();
+
     }
 
 
@@ -353,7 +389,6 @@ public class IssueDetailController implements Initializable {
                 Discussion discussion = gitLabProject.createIssueDiscussion(fxIssue.getIid(), body);
                 Note n = discussion.getNotes().get(0);
                 CommentView cv =  new CommentView(fxIssue.getIid(), discussion.getId(), n, true);
-                //todo index comments.getChildren().add();
                 comments.getChildren().add(
                         cv
                 );

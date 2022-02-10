@@ -8,18 +8,16 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.TextFlow?>
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.Hyperlink?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="574.0"
       prefWidth="1024" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.az.gitember.gitlab.IssueDetailController">
+      fx:controller="com.az.gitember.gitlab.IssueDetailController" style="-fx-background-color: background_color;">
     <children>
         <ToolBar>
             <items>
@@ -36,22 +34,41 @@
             <Label text="Created"/>
             <Label fx:id="authorLabel" text="author"/>
             <Label fx:id="createdAtDateLabel"/>
+            <Region minWidth="40"/>
+            <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
+
             <Region minWidth="40"  HBox.hgrow="ALWAYS"/>
             <Label text="Assignees"/>
             <ComboBox fx:id="assigneeCmb"/>
+            <Region minWidth="40"  />
+            <ToolBar  maxWidth="30" prefWidth="30">
+
+                <Label text="Updated"/>
+                <DatePicker fx:id="updatedAtDatePicker" prefWidth="140"
+                            editable="false"/>
+                <Region minWidth="40"/>
+
+
+                <Label fx:id="closeDatePickerLabel" text="Closed"/>
+                <DatePicker fx:id="closeDatePicker" prefWidth="140"/>
+                <Region minWidth="40"/>
+
+                <Label fx:id="closedByLabel" text="by"/>
+                <TextField fx:id="closedByText" text="closed by" prefWidth="140"/>
+
+            </ToolBar>
 
         </ToolBar>
-        <TextArea fx:id="description" minHeight="300" prefHeight="400"/>
+        <TextArea fx:id="description" minHeight="200" prefHeight="300"/>
 
         <ToolBar>
             <items>
-
 
                 <Label fx:id="estimatedLabel" text="Estimated"/>
                 <Label fx:id="estimatedText" text=""/>
                 <ToolBar  maxWidth="30" prefWidth="30">
                     <TextField fx:id="setEstimatedTextText" prefWidth="140" promptText="Human readable format, e.g. 3h30m"/>
-                    <Button fx:id="setEstimatedTimeBtn"  text="+" onAction="#setEstimatedTime"/>
+                    <Button fx:id="setEstimatedTimeBtn"  text="Set" onAction="#setEstimatedTime"/>
                 </ToolBar>
                 <Region minWidth="40"/>
 
@@ -59,44 +76,10 @@
                 <Label fx:id="spendText" text="#" />
                 <ToolBar  maxWidth="30" prefWidth="30">
                     <TextField fx:id="addSpendTimeText" prefWidth="140" promptText="Human readable format, e.g. 3h30m"/>
-                    <Button fx:id="addSpendTimeBtn"  text="+" onAction="#addSpendTime"/>
+                    <Button fx:id="addSpendTimeBtn"  text="Add" onAction="#addSpendTime"/>
                 </ToolBar>
                 <Region minWidth="40"/>
 
-
-                <Label fx:id="externalIdLabel" text="External id"/>
-                <Label fx:id="externalIdText" text="" prefWidth="140"/>
-
-
-                <Region minWidth="40"/>
-
-                <CheckBox fx:id="confidentialCheckBox" text="Confidential"/>
-                <Region minWidth="40" HBox.hgrow="ALWAYS"/>
-
-                <ToolBar  maxWidth="30" prefWidth="30">
-
-                    <Label text="Updated"/>
-                    <DatePicker fx:id="updatedAtDatePicker" prefWidth="140"
-                                editable="false"/>
-                    <Region minWidth="40"/>
-
-
-                    <Label fx:id="closeDatePickerLabel" text="Closed"/>
-                    <DatePicker fx:id="closeDatePicker" prefWidth="140"/>
-                    <Region minWidth="40"/>
-
-                    <Label fx:id="closedByLabel" text="by"/>
-                    <TextField fx:id="closedByText" text="closed by" prefWidth="140"/>
-
-                </ToolBar>
-
-
-            </items>
-        </ToolBar>
-
-
-        <ToolBar>
-            <items>
                 <Label text="Labels"/>
                 <HBox fx:id="tagsHBox"/>
                 <Region minWidth="40"/>
@@ -107,11 +90,19 @@
                     <ColorPicker fx:id="tagColorPicker" prefWidth="140"/>
                     <Button fx:id="addTag" text="Add label" onAction="#addTag"/>
                 </ToolBar>
+
+                <Region minWidth="40"/>
+
+                <Label fx:id="externalIdLabel" text="External id"/>
+                <Label fx:id="externalIdText"  prefWidth="140"/>
+
                 <Region minWidth="40" HBox.hgrow="ALWAYS"/>
                 <Button fx:id="addNewNoteBtn"  text="Add note" onAction="#addNewNote"/>
 
+
             </items>
         </ToolBar>
+
         <ScrollPane fitToHeight="true" fitToWidth="true">
             <content>
                 <VBox fx:id="comments">

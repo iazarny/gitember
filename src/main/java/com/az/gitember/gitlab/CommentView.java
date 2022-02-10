@@ -8,6 +8,8 @@ import com.az.gitember.gitlab.model.FxIssue;
 import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -25,8 +27,9 @@ public class CommentView extends VBox {
     private final String discussionId;
     private final Note note;
     private final TextArea comment;
-
     private final String SPACES = "   ";
+    private Integer idxToAddNote = null;
+    private ObservableList<Node> parentChildren;
 
 
     public CommentView(final Integer issueId, final String discussionId, final Note note, final boolean parent) {
@@ -34,8 +37,6 @@ public class CommentView extends VBox {
         this.issueId = issueId;
         this.discussionId = discussionId;
         this.note = note;
-
-
 
         if (parent) {
             this.getChildren().add(new HBox(new Label(SPACES)));
@@ -78,6 +79,16 @@ public class CommentView extends VBox {
 
 
     }
+
+    public void setIdxToAddNote(Integer idxToAddNote) {
+        this.idxToAddNote = idxToAddNote;
+    }
+
+    public void setParentChldren(ObservableList<Node> parentChildren) {
+        this.parentChildren = parentChildren;
+
+    }
+
 
     private void addEditButton(HBox head, final Note note) {
         String currentUserName = null;
@@ -127,7 +138,12 @@ public class CommentView extends VBox {
                 textAreaDialog.initOwner(CommentView.this.getScene().getWindow());
                 textAreaDialog.showAndWait().ifPresent( body -> {
                     try {
-                        Context.getGitLabProject().addIssueThreadNote(issueId, discussionId,  body);
+                        Note note = Context.getGitLabProject().addIssueThreadNote(issueId, discussionId,  body);
+                        parentChildren.add(
+                                idxToAddNote,
+                                new CommentView(issueId, discussionId, note, false)
+                                );
+                        idxToAddNote++;
 
                     } catch (GitLabApiException e) {
                         e.printStackTrace();
@@ -136,6 +152,5 @@ public class CommentView extends VBox {
             });
         }
     }
-
 
 }

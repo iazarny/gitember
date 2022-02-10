@@ -107,8 +107,8 @@ public class History implements Initializable {
                             mainBorderPanel.layout();
                         }
                         if (newValue != null) {
-                            Context.scmRevCommitDetails.setValue(Context.getGitRepoService().adapt(newValue));
                             final Parent commitView = App.loadFXML(Const.View.HISTORY_DETAIL).getFirst();
+                            Context.scmRevCommitDetails.setValue(Context.getGitRepoService().adapt(newValue));
                             hostCommitViewPanel.getChildren().clear();
                             hostCommitViewPanel.getChildren().add(commitView);
                         }

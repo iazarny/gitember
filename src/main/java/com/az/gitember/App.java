@@ -1,6 +1,7 @@
 package com.az.gitember;
 
 import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.PostInitializable;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
 import com.az.gitember.service.Context;
@@ -107,6 +108,12 @@ public class App extends Application {
         newStage.show();
         newStage.setTitle(windowTitle);
         newScene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
+
+
+        if (pair.getSecond() instanceof PostInitializable) {
+            ((PostInitializable) pair.getSecond()).postInitialize(newStage);
+        }
+
         return pair;
     }
 
@@ -115,6 +122,7 @@ public class App extends Application {
         try {
             Parent parent = fxmlLoader.load();
             Object controller = fxmlLoader.getController();
+
             return new Pair<>(parent, controller);
         } catch (IOException e) {
             e.printStackTrace();

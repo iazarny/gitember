@@ -47,16 +47,16 @@
     </HBox>
 
     <ScrollPane GridPane.columnIndex="1" GridPane.rowIndex="2" fitToHeight="true" fitToWidth="true">
-        <VBox fx:id="openHBox">
+        <VBox fx:id="openHBox" style="-fx-spacing: 10">
         </VBox>
 
     </ScrollPane>
     <ScrollPane GridPane.columnIndex="3" GridPane.rowIndex="2" fitToHeight="true" fitToWidth="true">
-        <VBox  fx:id="todoHBox">
+        <VBox  fx:id="todoHBox" style="-fx-spacing: 10">
         </VBox>
     </ScrollPane>
     <ScrollPane GridPane.columnIndex="5" GridPane.rowIndex="2"  fitToHeight="true" fitToWidth="true">
-        <VBox fx:id="closedHBox">
+        <VBox fx:id="closedHBox" style="-fx-spacing: 10">
         </VBox>
     </ScrollPane>
 
