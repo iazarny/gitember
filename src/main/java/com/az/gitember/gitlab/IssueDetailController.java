@@ -10,6 +10,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -59,7 +60,7 @@ public class IssueDetailController implements PostInitializable {
     public TextArea description;
     public Label externalIdText;
     public Label externalIdLabel;
-    public Label stateLabel;
+    public Button stateBtn;
     public HBox tagsHBox;
     public Label estimatedLabel;
     public Label estimatedText;
@@ -67,7 +68,7 @@ public class IssueDetailController implements PostInitializable {
     public Label spendText;
     public Label milestoneLabel;
     public ComboBox<Milestone> milestoneCmb;
-    public Button addTag;
+    public Button addTagBtn;
     public TextField newTag;
     public ColorPicker tagColorPicker;
     public TextField addSpendTimeText;
@@ -102,8 +103,8 @@ public class IssueDetailController implements PostInitializable {
         Bindings.bindBidirectional(description.textProperty(), fxIssue.descriptionProperty());
         numHyperlink.textProperty().setValue(String.valueOf(fxIssue.getIid()));
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
-        Bindings.bindBidirectional(stateLabel.textProperty(), fxIssue.stateProperty());
-        tagsHBox.setStyle("-fx-spacing: 10");
+        Bindings.bindBidirectional(stateBtn
+                .textProperty(), fxIssue.stateProperty());
         GitLabUtil.fillContainerWithLabels(tagsHBox, gitLabProject.getProjectLabels(), fxIssue.getLabels());
         Bindings.bindBidirectional(externalIdText.textProperty(), fxIssue.externalIdProperty());
         externalIdLabel.setVisible(StringUtils.isNoneEmpty(fxIssue.getExternalId()));
@@ -112,6 +113,25 @@ public class IssueDetailController implements PostInitializable {
         Bindings.bindBidirectional(spendText.textProperty(), fxIssue.sppendProperty());
 
         Bindings.bindBidirectional(titleText.textProperty(), fxIssue.titleProperty());
+
+        titleText.editableProperty().bind(fxissue.stateOpenProperty());
+        milestoneCmb.disableProperty().bind(fxissue.stateOpenProperty().not());
+        dueDatePicker.disableProperty().bind(fxissue.stateOpenProperty().not());
+        confidentialCheckBox.disableProperty().bind(fxissue.stateOpenProperty().not());
+        assigneeCmb.disableProperty().bind(fxissue.stateOpenProperty().not());
+        description.editableProperty().bind(fxissue.stateOpenProperty());
+        addNewNoteBtn.disableProperty().bind(fxissue.stateOpenProperty().not());
+        addSpendTimeBtn.disableProperty().bind(fxissue.stateOpenProperty().not());
+        setEstimatedTimeBtn.disableProperty().bind(fxissue.stateOpenProperty().not());
+        addTagBtn.disableProperty().bind(fxissue.stateOpenProperty().not());
+        setEstimatedTextText.disableProperty().bind(fxissue.stateOpenProperty().not());
+        addSpendTimeText.disableProperty().bind(fxissue.stateOpenProperty().not());
+        newTag.disableProperty().bind(fxissue.stateOpenProperty().not());
+        tagColorPicker.disableProperty().bind(fxissue.stateOpenProperty().not());
+        closeDatePicker.disableProperty().bind(fxissue.stateOpenProperty().not());
+        closedByText.editableProperty().bind(fxissue.stateOpenProperty());
+
+
 
 
         assigneeCmb.setCellFactory(
@@ -200,12 +220,12 @@ public class IssueDetailController implements PostInitializable {
                         d -> {
 
                             Note n = d.getNotes().get(0);
-                            CommentView parentCommentView =  new CommentView(fxissue.getIid(), d.getId(), n, true);
+                            CommentView parentCommentView =  new CommentView(fxissue.getIid(), d.getId(), n, true, fxIssue.isStateOpen());
                             comments.getChildren().add(   parentCommentView     );
                             for (int i = 1; i < d.getNotes().size(); i++) {
                                 Note c = d.getNotes().get(i);
                                 comments.getChildren().add(
-                                        new CommentView(fxissue.getIid(), d.getId(), c, false)
+                                        new CommentView(fxissue.getIid(), d.getId(), c, false, fxIssue.isStateOpen())
                                 );
                             }
                             parentCommentView.setIdxToAddNote(comments.getChildren().size());
@@ -388,7 +408,7 @@ public class IssueDetailController implements PostInitializable {
             try {
                 Discussion discussion = gitLabProject.createIssueDiscussion(fxIssue.getIid(), body);
                 Note n = discussion.getNotes().get(0);
-                CommentView cv =  new CommentView(fxIssue.getIid(), discussion.getId(), n, true);
+                CommentView cv =  new CommentView(fxIssue.getIid(), discussion.getId(), n, true, fxIssue.isStateOpen());
                 comments.getChildren().add(
                         cv
                 );

@@ -34,6 +34,7 @@ public class FxIssue {
     private ObjectProperty<Milestone> milestone = new SimpleObjectProperty<>();
     private IntegerProperty projectId = new SimpleIntegerProperty();
     private StringProperty state = new SimpleStringProperty();
+    private BooleanProperty stateOpen = new SimpleBooleanProperty();
     private BooleanProperty subscribed = new SimpleBooleanProperty();
     private StringProperty title = new SimpleStringProperty();
     private IntegerProperty userNotesCount = new SimpleIntegerProperty();
@@ -96,6 +97,7 @@ public class FxIssue {
         }
         this.projectId.setValue(issue.getProjectId());
         this.state.setValue(issue.getState().toString());
+        this.stateOpen.setValue(Constants.IssueState.CLOSED != issue.getState());
         this.subscribed.setValue(issue.getSubscribed());
         this.title.setValue(issue.getTitle());
         this.userNotesCount.setValue(issue.getUserNotesCount());
@@ -120,6 +122,17 @@ public class FxIssue {
     }
 
 
+    public boolean isStateOpen() {
+        return stateOpen.get();
+    }
+
+    public BooleanProperty stateOpenProperty() {
+        return stateOpen;
+    }
+
+    public void setStateOpen(boolean stateOpen) {
+        this.stateOpen.set(stateOpen);
+    }
 
     public Assignee getAssignee() {
         return assignee.get();

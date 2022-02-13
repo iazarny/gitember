@@ -27,7 +27,7 @@
                 <ComboBox fx:id="milestoneCmb"/>
                 <Label text="Due date"/>
                 <DatePicker fx:id="dueDatePicker" prefWidth="140"/>
-                <Label fx:id="stateLabel" text="state"/>
+                <Button fx:id="stateBtn" text="state"/>
             </items>
         </ToolBar>
         <ToolBar>
@@ -50,11 +50,11 @@
 
 
                 <Label fx:id="closeDatePickerLabel" text="Closed"/>
-                <DatePicker fx:id="closeDatePicker" prefWidth="140"/>
+                <DatePicker fx:id="closeDatePicker" editable="false" prefWidth="140"/>
                 <Region minWidth="40"/>
 
                 <Label fx:id="closedByLabel" text="by"/>
-                <TextField fx:id="closedByText" text="closed by" prefWidth="140"/>
+                <TextField fx:id="closedByText" text="closed by" editable="false" prefWidth="140"/>
 
             </ToolBar>
 
@@ -81,14 +81,14 @@
                 <Region minWidth="40"/>
 
                 <Label text="Labels"/>
-                <HBox fx:id="tagsHBox"/>
+                <HBox fx:id="tagsHBox" style="-fx-spacing: 10"/>
                 <Region minWidth="40"/>
 
                 <ToolBar  maxWidth="30" prefWidth="30">
                     <Label text="Assign label"/>
                     <TextField fx:id="newTag" text="" prefWidth="140"/>
                     <ColorPicker fx:id="tagColorPicker" prefWidth="140"/>
-                    <Button fx:id="addTag" text="Add label" onAction="#addTag"/>
+                    <Button fx:id="addTagBtn" text="Add label" onAction="#addTag"/>
                 </ToolBar>
 
                 <Region minWidth="40"/>

@@ -35,7 +35,9 @@ public class GitLabProject {
         this.projectIdOrPath = projectIdOrPath;
     }
 
-
+    public Object getProjectIdOrPath() {
+        return projectIdOrPath;
+    }
 
     public Discussion createIssueDiscussion(Integer issueId, String body) throws GitLabApiException {
         return getDiscussionsApi().createIssueDiscussion(

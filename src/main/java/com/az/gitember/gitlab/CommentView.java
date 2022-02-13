@@ -1,16 +1,13 @@
 package com.az.gitember.gitlab;
 
-import com.az.gitember.App;
-import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.controller.TextAreaDialog;
-import com.az.gitember.data.Const;
-import com.az.gitember.gitlab.model.FxIssue;
-import com.az.gitember.gitlab.model.GitLabProject;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -28,15 +25,17 @@ public class CommentView extends VBox {
     private final Note note;
     private final TextArea comment;
     private final String SPACES = "   ";
+    private final boolean editable;
     private Integer idxToAddNote = null;
     private ObservableList<Node> parentChildren;
 
 
-    public CommentView(final Integer issueId, final String discussionId, final Note note, final boolean parent) {
+    public CommentView(final Integer issueId, final String discussionId, final Note note, final boolean parent, final boolean editable) {
 
         this.issueId = issueId;
         this.discussionId = discussionId;
         this.note = note;
+        this.editable = editable;
 
         if (parent) {
             this.getChildren().add(new HBox(new Label(SPACES)));
@@ -73,7 +72,9 @@ public class CommentView extends VBox {
             body.getChildren().add(new Label(" "));
         }
 
-        this.getChildren().addAll(head, body);
+
+
+        this.getChildren().addAll(head, body, new Label(" "));
 
         this.setStyle("-fx-border-width : 1 ; ");
 
@@ -102,7 +103,7 @@ public class CommentView extends VBox {
                 replyIcon.setStyle("-fx-icon-color: text_color");
                 editBtn.setGraphic(replyIcon);
                 head.getChildren().add(editBtn);
-
+                editBtn.setDisable(!editable);
                 editBtn.setOnAction(event -> {
                     TextAreaDialog textAreaDialog = new TextAreaDialog(note.getBody());
                     textAreaDialog.initOwner(CommentView.this.getScene().getWindow());
@@ -132,6 +133,7 @@ public class CommentView extends VBox {
             replyIcon.setStyle("-fx-icon-color: text_color");
             replyBtn.setGraphic(replyIcon);
             head.getChildren().add(replyBtn);
+            replyBtn.setDisable(!editable);
 
             replyBtn.setOnAction(event -> {
                 TextAreaDialog textAreaDialog = new TextAreaDialog("");
@@ -141,7 +143,7 @@ public class CommentView extends VBox {
                         Note note = Context.getGitLabProject().addIssueThreadNote(issueId, discussionId,  body);
                         parentChildren.add(
                                 idxToAddNote,
-                                new CommentView(issueId, discussionId, note, false)
+                                new CommentView(issueId, discussionId, note, false, editable)
                                 );
                         idxToAddNote++;
 
