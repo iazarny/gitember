@@ -1,8 +1,11 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.controller.handlers.OpenFileEventHandler;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -30,5 +33,10 @@ public class Stash implements Initializable {
         itemTableColumn.setCellValueFactory(
                 c -> new SimpleStringProperty(c.getValue().getViewRepresentation()));
         workingCopyTableView.setItems(Context.stashItemsList);
+    }
+
+    public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
+        final ScmItem scmItem = (ScmItem) this.workingCopyTableView.getSelectionModel().getSelectedItem();
+        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
     }
 }

@@ -436,29 +436,7 @@ public class Main implements Initializable {
 
 
     public static Optional<ButtonType> showResult(final String title, final String text, final Alert.AlertType alertTypet) {
-        Alert alert = new Alert(alertTypet);
-        alert.setTitle(title);
-        alert.initOwner(App.getScene().getWindow());
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
-
-        if (Alert.AlertType.ERROR == alertTypet || StringUtils.countMatches(text, "\n") > 7) {
-            TextArea textArea = new TextArea(text);
-            textArea.setEditable(false);
-            textArea.setWrapText(true);
-            GridPane gridPane = new GridPane();
-            gridPane.setMaxWidth(Double.MAX_VALUE);
-            gridPane.add(textArea, 0, 0);
-            GridPane.setHgrow(textArea, Priority.ALWAYS);
-            GridPane.setFillWidth(textArea, true);
-
-            alert.getDialogPane().setContent(gridPane);
-
-            log.log(Level.WARNING, text);
-        } else {
-            alert.setContentText(text);
-        }
-        return alert.showAndWait();
+        return new ResultDialog(title, text, alertTypet).showAndWait();
     }
 
     public TreeView getMainTreeView() {
@@ -488,4 +466,6 @@ public class Main implements Initializable {
         alert.showAndWait();
 
     }
+
+
 }

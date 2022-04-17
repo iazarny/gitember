@@ -17,7 +17,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
@@ -160,7 +159,7 @@ public class HistoryDetail implements Initializable {
 
     public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERION).handle(actionEvent);
+        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
     }
 
     public void openRawDiff(ActionEvent actionEvent) {

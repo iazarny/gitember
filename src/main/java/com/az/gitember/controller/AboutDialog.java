@@ -46,7 +46,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.3");
+        this.setTitle("Gitember 2.4");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -145,10 +145,10 @@ public class AboutDialog extends Dialog {
 
         path.setStrokeWidth(45);
 
-        path.setStroke(javafx.scene.paint.Color.valueOf("#808080"));
+        path.setStroke(javafx.scene.paint.Color.valueOf("#2020ea"));
         Stop[] stops = new Stop[] {
-                new Stop(0d, javafx.scene.paint.Color.valueOf("#17e8ab")),
-                new Stop(1d, javafx.scene.paint.Color.valueOf("#88cdeb"))};
+                new Stop(0d, javafx.scene.paint.Color.valueOf("#DCC000")),
+                new Stop(1d, javafx.scene.paint.Color.valueOf("#A89201"))};
         LinearGradient lg1 = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         path.setFill(lg1);
 
@@ -202,10 +202,16 @@ public class AboutDialog extends Dialog {
         char2_1.setLayoutY(300);
         applyStyle(char2_1);
 
-        Path char2_3 = getPathChar3();
+/*        Path char2_3 = getPathChar3();
         char2_3.setLayoutX(300);
         char2_3.setLayoutY(300);
-        applyStyle(char2_3);
+        applyStyle(char2_3);*/
+
+
+        Path char2_4 = getPathChar4();
+        char2_4.setLayoutX(300);
+        char2_4.setLayoutY(300);
+        applyStyle(char2_4);
 
         Path dot = getPathCharDot();
         dot.setLayoutX(333.5);
@@ -222,7 +228,7 @@ public class AboutDialog extends Dialog {
 
 
         return new Path [] {
-                path, char2_1,  char2_3, dot
+                path, char2_1,  char2_4, dot
         };
     }
 

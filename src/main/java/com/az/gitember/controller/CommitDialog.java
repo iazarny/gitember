@@ -29,7 +29,7 @@ public class CommitDialog extends Dialog<String> {
 
     private final GridPane grid;
     private final Label label;
-    private final TextArea textField;
+    private final TextArea textArea;
     private final String defaultValue;
 
     private final Label userNameLbl;
@@ -83,11 +83,11 @@ public class CommitDialog extends Dialog<String> {
         this.hideUser = hideUser;
 
         // -- textfield
-        this.textField = new TextArea(defaultValue);//new TextArea(defaultValue);
+        this.textArea = new TextArea(defaultValue);//new TextArea(defaultValue);
 
-        this.textField.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(textField, Priority.ALWAYS);
-        GridPane.setFillWidth(textField, true);
+        this.textArea.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane.setFillWidth(textArea, true);
 
         // -- label
         label = new Label(dialogPane.getContentText());
@@ -122,14 +122,14 @@ public class CommitDialog extends Dialog<String> {
 
         updateGrid();
 
-        Platform.runLater(() -> textField.requestFocus());
+        Platform.runLater(() -> textArea.requestFocus());
 
         setResultConverter((dialogButton) -> {
             ButtonBar.ButtonData data = dialogButton == null ? null : dialogButton.getButtonData();
-            return data == ButtonBar.ButtonData.OK_DONE ? textField.getText() : null;
+            return data == ButtonBar.ButtonData.OK_DONE ? textArea.getText() : null;
         });
 
-        changeListenerHistoryHint = new ChangeListenerHistoryHint(textField, Context.settingsProperty.getValue().getCommitMsg());
+        changeListenerHistoryHint = new ChangeListenerHistoryHint(textArea, Context.settingsProperty.getValue().getCommitMsg());
 
         this.initOwner(App.getScene().getWindow());
     }
@@ -146,7 +146,7 @@ public class CommitDialog extends Dialog<String> {
      * Returns the {@link TextField} used within this dialog.
      */
     public final TextArea getEditor() {
-        return textField;
+        return textArea;
     }
 
     /**
@@ -176,7 +176,7 @@ public class CommitDialog extends Dialog<String> {
         grid.getChildren().clear();
 
         grid.add(label, 0, 0);
-        grid.add(textField, 1, 0);
+        grid.add(textArea, 1, 0);
 
         if (!hideUser) {
             grid.add(userNameLbl, 0, 1);
@@ -189,7 +189,7 @@ public class CommitDialog extends Dialog<String> {
 
         getDialogPane().setContent(grid);
 
-        Platform.runLater(() -> textField.requestFocus());
+        Platform.runLater(() -> textArea.requestFocus());
     }
 
 

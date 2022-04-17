@@ -18,7 +18,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
 
     public enum  BODY_TYPE {
         WORK_SPACE,
-        COMMIT_VERION,
+        COMMIT_VERSION,
         RAW_DIFF;
     }
 
@@ -227,7 +227,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
             case WORK_SPACE: {
                 return Path.of(Context.getProjectFolder(), getShortName());
             }
-            case COMMIT_VERION: {
+            case COMMIT_VERSION: {
                 String saved = Context.getGitRepoService().saveFile(getCommitName(), getShortName());
                 return Path.of(saved);
             }
@@ -243,7 +243,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
                 final Path path = Path.of(Context.getProjectFolder(), getShortName());
                 return Files.readAllBytes(path);
             }
-            case COMMIT_VERION: {
+            case COMMIT_VERSION: {
                 String saved = Context.getGitRepoService().saveFile(getCommitName(), getShortName());
                 final Path path = Path.of(saved);
                 return Files.readAllBytes(path);

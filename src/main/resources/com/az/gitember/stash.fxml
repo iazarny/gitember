@@ -6,13 +6,25 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.MenuItem?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Stash">
 <center>
     <TableView fx:id="workingCopyTableView"  prefHeight="514.0" prefWidth="500" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="statusTableColumn" prefWidth="40.00" resizable="false" style="-fx-border-width: 0; -fx-font-size: 180%;  -fx-label-padding: 12px 0px 0px 5px;" text="" />
+            <TableColumn fx:id="statusTableColumn"  style="-fx-border-width: 0; -fx-font-size: 180%;  -fx-label-padding: 12px 0px 0px 5px;" text="" />
             <TableColumn fx:id="itemTableColumn" minWidth="800" prefWidth="-1" text="File" />
         </columns>
+
+        <contextMenu>
+            <ContextMenu fx:id="scmItemContextMenu">
+                <items>
+                    <MenuItem fx:id="openFileMenuItem"   onAction="#openItemMenuItemClickHandler" text="Open"/>
+
+                </items>
+            </ContextMenu>
+        </contextMenu>
+
     </TableView>
 </center>
     <bottom>
