@@ -8,21 +8,27 @@
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0"
             prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.controller.BranchDiffController">
+    <top>
+        <ToolBar>
+            <Pane HBox.hgrow="ALWAYS"></Pane>
+            <TextField fx:id="searchText" promptText="Search" />
+        </ToolBar>
+
+    </top>
     <center>
         <TableView fx:id="diffTableView"  layoutX="333.0" layoutY="152.0" prefHeight="600.0"
                    prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" fixedCellSize="40">
             <columns>
-                <TableColumn fx:id="actionTableColumn" minWidth="75.0" prefWidth="-1.0" text="Action"/>
-                <TableColumn fx:id="leftTableColumn" minWidth="300.0" prefWidth="-1.0"  />
-                <TableColumn fx:id="rightTableColumn" minWidth="300.0" prefWidth="-1.0"  />
+                <TableColumn fx:id="actionTableColumn" prefWidth="${diffTableView.width * 0.04}"/>
+                <TableColumn fx:id="leftTableColumn"  minWidth="300.0" prefWidth="${diffTableView.width * 0.48}"  />
+                <TableColumn fx:id="rightTableColumn" minWidth="300.0" prefWidth="${diffTableView.width * 0.48}"  />
             </columns>
 
             <contextMenu>
                 <ContextMenu >
                     <items>
                         <MenuItem fx:id="menuItemShowDiff"  mnemonicParsing="false"   onAction="#showItemDiffHandler" text="Diff"/>
-
                     </items>
                 </ContextMenu>
             </contextMenu>
