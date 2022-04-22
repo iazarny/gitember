@@ -4,6 +4,7 @@ import com.az.gitember.App;
 import com.az.gitember.control.ChangeListenerHistoryHint;
 import com.az.gitember.controller.handlers.CheckoutRevisionhEventHandler;
 import com.az.gitember.data.Const;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -11,6 +12,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,6 +22,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CherryPickResult;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -244,6 +248,31 @@ public class History implements Initializable {
 
         new CheckoutRevisionhEventHandler((RevCommit) commitsTableView.getSelectionModel().getSelectedItem(), null).handle(actionEvent);
 
+
+    }
+
+    public void cherryPickMenuItemClickHandler(ActionEvent actionEvent) {
+
+        final RevCommit revCommit = (RevCommit) commitsTableView.getSelectionModel().getSelectedItem();
+
+        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Cherry pick");
+        alert.setContentText("Do you really want to apply changes from \n"
+                + revCommit.getId() + "\n"
+                + revCommit.getShortMessage() + " commit ?");
+        alert.initOwner(App.getScene().getWindow());
+
+        alert.showAndWait().ifPresent( r-> {
+
+            try {
+                CherryPickResult cherryPickResult = Context.getGitRepoService().cherryPick(revCommit);
+            } catch (IOException e) {
+                Context.getMain().showResult("Cherry pick is failed ",
+                        ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
+            }
+
+        } );
 
     }
 

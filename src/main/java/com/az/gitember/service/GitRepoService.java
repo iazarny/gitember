@@ -20,6 +20,7 @@ import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -827,6 +828,22 @@ public class GitRepoService {
                 throw new IOException("Cannot checkout " + fileName, e);
             }
         }
+    }
+
+    public CherryPickResult cherryPick(RevCommit revCommit) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                CherryPickCommand cherryPickCommand = git.cherryPick()
+                        .include(revCommit)
+                        .setNoCommit(true)
+                        .setStrategy(MergeStrategy.RECURSIVE);
+                return cherryPickCommand.call();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot cherry pick   " + revCommit, e);
+                throw new IOException("Cannot cherry pick " + revCommit, e);
+            }
+        }
+
     }
 
 
@@ -1912,4 +1929,6 @@ public class GitRepoService {
 
     private static String gitAttributesContent = "*.psd filter=lfs diff=lfs merge=lfs -text\n" +
             "*.bmp filter=lfs diff=lfs merge=lfs -text\n";
+
+
 }

@@ -123,6 +123,7 @@ public class Context {
         settingsProperty.get().getProjects().add(project);
         saveSettings();
 
+        getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
         branchFilter.addListener(
                 (observable, oldValue, newValue) -> {

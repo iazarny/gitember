@@ -35,6 +35,7 @@
                                 <items>
                                     <MenuItem  mnemonicParsing="false"  onAction="#checkoutMenuItemClickHandler" text="Checkout" />
                                     <MenuItem  mnemonicParsing="false"  onAction="#checkoutAsMenuItemClickHandler" text="Checkout as ..." />
+                                    <MenuItem  mnemonicParsing="false"  onAction="#cherryPickMenuItemClickHandler" text="Cherry pick ..." />
                                 </items>
                             </ContextMenu>
                         </contextMenu>
