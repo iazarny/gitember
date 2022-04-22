@@ -32,13 +32,10 @@ public class MassDeleteEventHandler extends AbstractLongTaskEventHandler impleme
     public void handle(ActionEvent event) {
 
 
-
-
-
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Please confirm");
-        alert.setHeaderText("Dangerous !!! Delete files !!!");
-        alert.setContentText(String.format("Do you really want to delete %d items ?", selecteItems.size()));
+        alert.setTitle("Dangerous. Please confirm");
+        alert.setHeaderText("Delete files !");
+        alert.setContentText(String.format("Do you really want to delete %d item(s) ?", selecteItems.size()));
         alert.initOwner(App.getScene().getWindow());
 
         alert.showAndWait().ifPresent(

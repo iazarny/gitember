@@ -259,17 +259,22 @@ public class History implements Initializable {
         alert.setTitle("Please confirm");
         alert.setHeaderText("Cherry pick");
         alert.setContentText("Do you really want to apply changes from \n"
-                + revCommit.getId() + "\n"
-                + revCommit.getShortMessage() + " commit ?");
+                + revCommit.getName() + " ?");
         alert.initOwner(App.getScene().getWindow());
+        alert.setWidth(alert.getWidth() * 2);
+        alert.setHeight(alert.getHeight() * 1.5);
 
         alert.showAndWait().ifPresent( r-> {
 
             try {
-                CherryPickResult cherryPickResult = Context.getGitRepoService().cherryPick(revCommit);
+                if (r == ButtonType.OK) {
+                    CherryPickResult cherryPickResult = Context.getGitRepoService().cherryPick(revCommit);
+                }
             } catch (IOException e) {
                 Context.getMain().showResult("Cherry pick is failed ",
                         ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
+            } finally {
+                Context.updateStatus(null);
             }
 
         } );

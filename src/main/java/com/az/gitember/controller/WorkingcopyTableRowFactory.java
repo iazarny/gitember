@@ -14,10 +14,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -144,17 +141,21 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
         final String itemStatus = item.getAttribute().getStatus();
         scmItemContextMenu.getItems().clear();
 
+
+
         if (is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED)) {
             MenuItem stage = new MenuItem(MI_STAGE_NAME);
-
             stage.setOnAction(new StageEventHandler(param, item));
-/*
-            stage.setOnAction(e -> {
-                new StageEventHandler(param, item).handle(null);
-            });
-*/
             stage.setGraphic(icons.get(MI_STAGE_NAME));
             scmItemContextMenu.getItems().add(stage);
+
+        }
+
+        if (is(itemStatus).oneOf(ScmItem.Status.UNTRACKED)) {
+            MenuItem unstage = new MenuItem(MI_DELETE_NAME);
+            unstage.setOnAction(new MassDeleteEventHandler(Collections.singletonList(item)));
+            unstage.setGraphic(icons.get(MI_DELETE_NAME));
+            scmItemContextMenu.getItems().add(unstage);
         }
 
         if (is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
@@ -234,7 +235,7 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
     public static String MI_UNSTAGE_MULTIPLE_NAME = "Unstage items";
     public static String MI_STAGE_NAME = "Stage item";
     public static String MI_STAGE_MULTIPLE_NAME = "Stage items";
-    public static String MI_DELETE_NAME = "Phisical delete ... ";
+    public static String MI_DELETE_NAME = "Physical delete ... ";
 
     static {
         icons.put(MI_OPEN_NAME, GitemberUtil.create(new FontIcon(FontAwesome.FOLDER_OPEN)));
