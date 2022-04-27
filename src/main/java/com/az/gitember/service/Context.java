@@ -84,8 +84,10 @@ public class Context {
 
     public static StringProperty searchValue = new SimpleStringProperty();
     public static final ObjectProperty<Map<String, Set<String>>> searchResult =
-            new SimpleObjectProperty(null);
+            new SimpleObjectProperty(Collections.EMPTY_MAP);
 
+    public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
+            new HashMap<>();
     private static Main main;
 
 
@@ -101,6 +103,7 @@ public class Context {
 
 
         gitRepoService = new GitRepoService(gitFolder);
+        scmRevisionInformationCache.clear();
 
         updateBranches();
         updateTags();
@@ -110,6 +113,7 @@ public class Context {
         showLfsFiles.setValue(false);
 
         updateStatus(null);
+
 
         Project project = new Project();
         project.setOpenTime(new Date());
@@ -131,6 +135,13 @@ public class Context {
                     filterTags();
                 }
         );
+
+        //just fill the cache
+        new Thread(() -> {
+            gitRepoService.getCommitsByTree(null, true, 100, null).stream().forEach(
+                    s -> gitRepoService.adapt(s, null)
+            );
+        }).start();
 
 
     }

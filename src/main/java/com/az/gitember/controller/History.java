@@ -30,10 +30,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -132,8 +129,9 @@ public class History implements Initializable {
                     return new TableRow<PlotCommit>() {
                         private String calculateStyle(final PlotCommit plotCommit) {
                             String searchString = searchText.getText();
-                            if (plotCommit != null && searchString != null && Context.searchResult.getValue() != null) {
-                                if (searchString.length() > Const.SEARCH_LIMIT_CHAR && Context.searchResult.getValue().containsKey(plotCommit.getName())) {
+                            if (isSearchEligible(plotCommit, searchString)) {
+                                Map<String, Set<String>> map = Context.searchResult.getValue();
+                                if (map != null && map.containsKey(plotCommit.getName()) ) {
                                     return LookAndFeelSet.FOUND_ROW;
                                 }
                             }
@@ -144,6 +142,13 @@ public class History implements Initializable {
                         protected void updateItem(PlotCommit item, boolean empty) {
                             super.updateItem(item, empty);
                             setStyle(calculateStyle(item));
+                        }
+
+                        private boolean isSearchEligible(PlotCommit plotCommit, String searchString) {
+                            return plotCommit != null
+                                    && plotCommit.getName() != null
+                                    && searchString != null
+                                    && searchString.length() > Const.SEARCH_LIMIT_CHAR;
                         }
                     };
                 }
@@ -218,7 +223,8 @@ public class History implements Initializable {
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
 
-                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue) && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
+                    if ( newValue != null
+                            && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
