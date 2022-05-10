@@ -12,6 +12,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
@@ -145,12 +146,29 @@ public class DiffViewer implements Initializable {
         try {
             ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
             hbar.addEventHandler(MouseEvent.ANY,      event -> {
-                updateAllowed = MouseEvent.MOUSE_RELEASED == event.getEventType();
+
+                if (MouseEvent.DRAG_DETECTED == event.getEventType()
+                        || (MouseEvent.MOUSE_ENTERED == event.getEventType())
+                        || (MouseEvent.MOUSE_MOVED == event.getEventType())) {
+                    updateAllowed = false;
+                } else if (MouseEvent.MOUSE_RELEASED == event.getEventType()
+                    || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
+                    updateAllowed = true;
+                }
+
             });
+
 
             hbar = (ScrollBar) GitemberUtil.getField(newScrollPane, "hbar");
             hbar.addEventHandler(MouseEvent.ANY,      event -> {
-                updateAllowed = MouseEvent.MOUSE_RELEASED == event.getEventType();
+                if (MouseEvent.DRAG_DETECTED == event.getEventType()
+                        || (MouseEvent.MOUSE_ENTERED == event.getEventType())
+                        || (MouseEvent.MOUSE_MOVED == event.getEventType())) {
+                    updateAllowed = false;
+                } else if (MouseEvent.MOUSE_RELEASED == event.getEventType()
+                        || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
+                    updateAllowed = true;
+                }
             });
 
         } catch (Exception e) {
