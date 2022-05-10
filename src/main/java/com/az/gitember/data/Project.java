@@ -116,7 +116,7 @@ public class Project implements Serializable, Comparable<Project>  {
 
     @Override
     public int compareTo(Project o) {
-        return o.getProjectHomeFolder().compareTo(this.getProjectHomeFolder());
+        return this.getProjectHomeFolder().toLowerCase().compareTo(o.getProjectHomeFolder().toLowerCase());
     }
 
     @Override

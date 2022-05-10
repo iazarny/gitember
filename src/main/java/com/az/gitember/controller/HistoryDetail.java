@@ -107,6 +107,7 @@ public class HistoryDetail implements Initializable {
                 @Override
                 protected void updateItem(ScmItem item, boolean empty) {
                     super.updateItem(item, empty);
+                    String style = "";
                     if (!empty) {
                         String searchTerm = Context.searchValue.getValueSafe().toLowerCase();
 
@@ -123,11 +124,13 @@ public class HistoryDetail implements Initializable {
 
 
                             if (found) {
-                                setStyle(LookAndFeelSet.FOUND_ROW);
+                                style = LookAndFeelSet.FOUND_ROW;
+
                             }
 
                         }
                     }
+                    setStyle(style);
 
                 }
             };

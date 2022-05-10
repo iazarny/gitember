@@ -48,19 +48,6 @@
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
-                                <SeparatorMenuItem />
-                                <Menu text="Statistic" fx:id="statReportMenu"  disable="true" >
-                                    <MenuItem text="Code lines"   onAction="#createStatReport"/>
-                                    <MenuItem text="Work progress ..."  onAction="#createStatReportProgress"/>
-                                    <MenuItem text="Branch live time ..."   onAction="#createStatReportBranchTime"/>
-                                    <MenuItem text="Branches ..."   onAction="#createStatReportBranches"/>
-                                    <graphic>
-                                        <StackedFontIcon style="-fx-icon-color: text_color">
-                                            <FontIcon iconLiteral="fa-bar-chart" StackedFontIcon.iconSize="0.5"  />
-                                        </StackedFontIcon>
-
-                                    </graphic>
-                                </Menu>
                                 <Menu text="Settings" fx:id="repoSettingsMenuItem"  disable="true">
                                     <MenuItem text="Large file support ..."   fx:id="lfsMenuItem"  onAction="#largeFileSupportHandler"   />
                                     <MenuItem text="Remote URL ..." fx:id="remoteRulMenuItem"   onAction="#remoteURLtHandler"/>
@@ -71,15 +58,26 @@
                                     <MenuItem text="Edit .gitignore" fx:id="editRawIgnoreMenuItem"   onAction="#editRawIgnoreHandler" visible="false"/>
                                     <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"   onAction="#editRawAttrsHandler" visible="false"/>
                                     <SeparatorMenuItem />
-
-
                                     <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true" onAction="#compressDataHandler"/>
-
                                 </Menu>
                                 <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler" text="Terminal"/>
                                 <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
                             </items>
                         </Menu>
+
+                        <Menu text="Statistic" fx:id="statReportMenu"  disable="true"  visible="false">
+                            <MenuItem text="Code lines"   onAction="#createStatReport"/>
+                            <MenuItem text="Work progress ..."  onAction="#createStatReportProgress"/>
+                            <MenuItem text="Branch live time ..."   onAction="#createStatReportBranchTime"/>
+                            <MenuItem text="Branches ..."   onAction="#createStatReportBranches"/>
+                            <!--graphic>
+                                <StackedFontIcon style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-bar-chart" StackedFontIcon.iconSize="0.5"  />
+                                </StackedFontIcon>
+
+                            </graphic-->
+                        </Menu>
+
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem text="Check for update" onAction="#checkForUpdate"/>

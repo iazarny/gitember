@@ -2,36 +2,24 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.*;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -130,6 +118,7 @@ public class Main implements Initializable {
                     fetchMenuItem.setDisable(disable);
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
+                    statReportMenu.setVisible(newValue != null);
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);
 

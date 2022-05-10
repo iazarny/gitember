@@ -629,7 +629,7 @@ public class GitRepoService {
                                         || plotCommit.getName().toLowerCase().contains(searchString)
                                         || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
                                         || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
-                                        || affectedItems.stream().filter(scmItem -> scmItem.getShortName().toLowerCase().contains(searchString)).findAny().isPresent()
+                                        || affectedItems.stream().anyMatch(scmItem -> scmItem.getShortName().toLowerCase().contains(searchString))
                         ) {
 
                             Set<String> affectedFiles = searchResultMap.computeIfAbsent(plotCommit.getName(), s -> new HashSet<String>());
@@ -653,12 +653,17 @@ public class GitRepoService {
                 try {
                     Map<String, Set<String>> lucineMap = service.search(term);
                     lucineMap.keySet().forEach(key -> {
-                        Set<String> affectedFiles = searchResultMap.computeIfAbsent(key, s -> new HashSet<String>());
+                        Set<String> affectedFiles = searchResultMap.computeIfAbsent(key, s -> new HashSet<>());
                         affectedFiles.addAll(lucineMap.get(key));
                         lucineMap.get(key).clear();
                     });
                 } catch (RuntimeException ex) {
                     log.log(Level.WARNING, "Cannot perform lucene search operation ", ex);
+                    log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
+
+                    getSearchService().dropIndex();
+                    Context.getCurrentProject().setIndexed(false);
+                    Context.saveSettings();
                 }
 
             }

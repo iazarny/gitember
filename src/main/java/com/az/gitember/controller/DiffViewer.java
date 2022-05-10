@@ -6,11 +6,13 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
@@ -142,11 +144,14 @@ public class DiffViewer implements Initializable {
 
         try {
             ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
-            hbar.setOnMouseEntered(e -> updateAllowed = false);
-            hbar.setOnMouseExited(e -> updateAllowed = true);
+            hbar.addEventHandler(MouseEvent.ANY,      event -> {
+                updateAllowed = MouseEvent.MOUSE_RELEASED == event.getEventType();
+            });
+
             hbar = (ScrollBar) GitemberUtil.getField(newScrollPane, "hbar");
-            hbar.setOnMouseEntered(e -> updateAllowed = false);
-            hbar.setOnMouseExited(e -> updateAllowed = true);
+            hbar.addEventHandler(MouseEvent.ANY,      event -> {
+                updateAllowed = MouseEvent.MOUSE_RELEASED == event.getEventType();
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
