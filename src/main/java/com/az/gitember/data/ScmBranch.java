@@ -25,6 +25,8 @@ public class ScmBranch {
     private boolean head;
     private String remoteName;
     private String remoteMergeName;
+    private int aheadCount = 0;
+    private int behindCount = 0;
 
     private final BranchType branchType;
     private final String sha;
@@ -54,6 +56,15 @@ public class ScmBranch {
         this.fullName = fullName;
         this.branchType = branchType;
         this.sha = sha;
+    }
+
+    public ScmBranch(String shortName, String fullName, BranchType branchType, String sha, int aheadCount, int behindCount) {
+        this.shortName = shortName;
+        this.fullName = fullName;
+        this.branchType = branchType;
+        this.sha = sha;
+        this.aheadCount = aheadCount;
+        this.behindCount = behindCount;
     }
 
 
@@ -101,7 +112,12 @@ public class ScmBranch {
         if (getRemoteMergeName() == null ) {
             return  getShortName();
         } else {
-            return getShortName() + " (" + getRemoteMergeName() + ")";
+            return String.format("%s%s (%s%s)",
+                    getShortName(),
+                    aheadCount > 0 ? "[" + aheadCount + "]" : "",
+                    getRemoteMergeName(),
+                    behindCount > 0 ? " [" + behindCount + "]" : ""
+            );
         }
     }
 

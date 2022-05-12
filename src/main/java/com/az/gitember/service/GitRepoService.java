@@ -534,13 +534,7 @@ public class GitRepoService {
             List<ScmBranch> rez = branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix) || ("HEAD".equals(r.getName()) && Constants.R_HEADS.equals(prefix)))
-                    .map(r -> new ScmBranch(
-                            "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
-                            r.getName(),
-                            branchType,
-                            r.getObjectId().getName()
-
-                    ))
+                    .map(r -> getScmBranch(prefix, branchType, r))
                     .map(i -> {
                         i.setHead(i.getFullName().equals(head.getName()));
                         return i;
@@ -559,6 +553,30 @@ public class GitRepoService {
             }
             return rez;
         }
+    }
+
+    private ScmBranch getScmBranch(String prefix, ScmBranch.BranchType branchType, Ref r) {
+        int aheadCount = 0;
+        int behindCount = 0;
+
+        try {
+            BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, r.getName());
+            if (trackingStatus != null) {
+                aheadCount = trackingStatus.getAheadCount();
+                behindCount = trackingStatus.getBehindCount();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return new ScmBranch(
+                "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
+                r.getName(),
+                branchType,
+                r.getObjectId().getName(),
+                aheadCount,
+                behindCount
+        );
     }
 
     private void checkIsTrackingRemoteBranch(Config cfg, ScmBranch item) {
@@ -1670,7 +1688,6 @@ public class GitRepoService {
         }
         return CheckoutCommand.Stage.BASE;
     }
-
 
 
     public ScmRevisionInformation adapt(final RevCommit revCommit) {
