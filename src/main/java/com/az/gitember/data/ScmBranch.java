@@ -112,9 +112,9 @@ public class ScmBranch {
         if (getRemoteMergeName() == null ) {
             return  getShortName();
         } else {
-            return String.format("%s%s (%s%s)",
+            return String.format("%s%s(%s%s)",
                     getShortName(),
-                    aheadCount > 0 ? "[" + aheadCount + "]" : "",
+                    aheadCount > 0 ? " [" + aheadCount + "]" : "",
                     getRemoteMergeName(),
                     behindCount > 0 ? " [" + behindCount + "]" : ""
             );

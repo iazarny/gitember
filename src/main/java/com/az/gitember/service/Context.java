@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.controller.Main;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -230,11 +231,20 @@ public class Context {
     }
 
     public static void updateBranches() throws Exception {
+
+
+
         localBranchesRaw.clear();
         localBranchesRaw.addAll(gitRepoService.getBranches());
         remoteBranchesRaw.clear();
         remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
+
+        localBrancesProperty.setValue(Collections.emptyList());
+        remoteBrancesProperty.setValue(Collections.emptyList());
+        
         filterBranches();
+        //localBrancesProperty.setValue(localBranchesRaw);
+        //remoteBrancesProperty.setValue(remoteBranchesRaw);
     }
 
     public static void filterBranches()  {
