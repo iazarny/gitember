@@ -241,7 +241,7 @@ public class Context {
 
         localBrancesProperty.setValue(Collections.emptyList());
         remoteBrancesProperty.setValue(Collections.emptyList());
-        
+
         filterBranches();
         //localBrancesProperty.setValue(localBranchesRaw);
         //remoteBrancesProperty.setValue(remoteBranchesRaw);
