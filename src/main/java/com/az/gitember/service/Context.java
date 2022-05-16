@@ -182,7 +182,7 @@ public class Context {
 
     public static void updateAll() {
         new StatusUpdateEventHandler(true).handle(null);
-        updateWorkingBranch();
+
         try {
             updateBranches();
         } catch (Exception e) {
@@ -230,21 +230,18 @@ public class Context {
         );
     }
 
-    public static void updateBranches() throws Exception {
-
-
-
+    public static void updateBranches()  {
         localBranchesRaw.clear();
-        localBranchesRaw.addAll(gitRepoService.getBranches());
-        remoteBranchesRaw.clear();
-        remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
-
-        //localBrancesProperty.setValue(Collections.emptyList());
-        //remoteBrancesProperty.setValue(Collections.emptyList());
-
-        filterBranches();
-        //localBrancesProperty.setValue(localBranchesRaw);
-        //remoteBrancesProperty.setValue(remoteBranchesRaw);
+        try {
+            localBranchesRaw.addAll(gitRepoService.getBranches());
+            remoteBranchesRaw.clear();
+            remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
+            localBrancesProperty.setValue(localBranchesRaw);
+            remoteBrancesProperty.setValue(remoteBranchesRaw);
+            filterBranches();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void filterBranches()  {
