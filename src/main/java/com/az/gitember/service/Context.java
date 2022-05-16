@@ -239,8 +239,8 @@ public class Context {
         remoteBranchesRaw.clear();
         remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
 
-        localBrancesProperty.setValue(Collections.emptyList());
-        remoteBrancesProperty.setValue(Collections.emptyList());
+        //localBrancesProperty.setValue(Collections.emptyList());
+        //remoteBrancesProperty.setValue(Collections.emptyList());
 
         filterBranches();
         //localBrancesProperty.setValue(localBranchesRaw);
