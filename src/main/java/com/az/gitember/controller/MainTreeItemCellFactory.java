@@ -4,12 +4,18 @@ package com.az.gitember.controller;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
+import javafx.scene.effect.Effect;
+import javafx.scene.effect.Glow;
+import javafx.scene.effect.MotionBlur;
 import javafx.util.Callback;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
+
+import java.util.Optional;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -67,7 +73,7 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                         setGraphic(stackedFontIcon);
                     }
 
-                    setText(scmBranch.getNameExt());
+
 
                     String cellStyle = "";
                     if (scmWorkingBranchName.equalsIgnoreCase(scmBranch.getFullName())) {
@@ -78,9 +84,13 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                         cellStyle += "-fx-background-color: alternate_row_color;";
                     }
 
+                    setText(scmBranch.getNameExt());
                     setStyle(cellStyle);
-
-
+                    setEllipsisString("...");
+                    setEffect(new MotionBlur(1, 3));
+                    getScmBranchTooltip(scmBranch).ifPresent(
+                            t -> setTooltip(new Tooltip(t))
+                    );
 
                 } else if (item instanceof ScmRevisionInformation) {
                     final ScmRevisionInformation ri = (ScmRevisionInformation) item;
@@ -91,6 +101,21 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                 }
             }
         }
+    }
+
+    private Optional<String> getScmBranchTooltip(ScmBranch scmBranch) {
+        String tooltip = null;
+        if (scmBranch.getAheadCount() > 0) {
+            tooltip = String.format("%s ahead of %s on %d commit(s)", scmBranch.getShortName(), scmBranch.getRemoteMergeName(), scmBranch.getAheadCount() );
+        }
+        if (scmBranch.getBehindCount() > 0) {
+            if (scmBranch.getAheadCount() > 0) {
+                tooltip += String.format(" and behind on %d", scmBranch.getBehindCount());
+            } else {
+                tooltip = String.format("%s behind of %s on %d commit(s)", scmBranch.getShortName(), scmBranch.getRemoteMergeName(), scmBranch.getBehindCount());
+            }
+        }
+        return Optional.ofNullable(tooltip);
     }
 
 
