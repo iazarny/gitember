@@ -86,9 +86,7 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
 
                     setText(scmBranch.getNameExt());
                     setStyle(cellStyle);
-                    setEllipsisString("...");
-                    setEffect(new MotionBlur(1, 3));
-                    getScmBranchTooltip(scmBranch).ifPresent(
+                    scmBranch.getScmBranchTooltip().ifPresent(
                             t -> setTooltip(new Tooltip(t))
                     );
 
@@ -103,20 +101,7 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
         }
     }
 
-    private Optional<String> getScmBranchTooltip(ScmBranch scmBranch) {
-        String tooltip = null;
-        if (scmBranch.getAheadCount() > 0) {
-            tooltip = String.format("%s ahead of %s on %d commit(s)", scmBranch.getShortName(), scmBranch.getRemoteMergeName(), scmBranch.getAheadCount() );
-        }
-        if (scmBranch.getBehindCount() > 0) {
-            if (scmBranch.getAheadCount() > 0) {
-                tooltip += String.format(" and behind on %d", scmBranch.getBehindCount());
-            } else {
-                tooltip = String.format("%s behind of %s on %d commit(s)", scmBranch.getShortName(), scmBranch.getRemoteMergeName(), scmBranch.getBehindCount());
-            }
-        }
-        return Optional.ofNullable(tooltip);
-    }
+
 
 
     @Override

@@ -89,6 +89,8 @@ public class Context {
 
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new HashMap<>();
+
+
     private static Main main;
 
 
