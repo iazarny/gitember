@@ -36,7 +36,7 @@ public class LookAndFeelSet {
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
-            CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20; -fx-font: Monospace; -fx-font-size: 20;";
+            CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20; ";
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #3b3b3b;";
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");

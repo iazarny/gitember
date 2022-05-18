@@ -55,14 +55,14 @@
                 <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all">
                     <!--<graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">
-                            <FontIcon iconLiteral="fa-arrow-circle-up" StackedFontIcon.iconSize="0.5"  />
+                            <FontIcon iconLiteral="fa-arrow-circle-up" iconSize="24"  />
                         </StackedFontIcon>
                     </graphic>-->
                 </Button>
                 <Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all">
                     <!--<graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">
-                            <FontIcon iconLiteral="fa-arrow-circle-down" StackedFontIcon.iconSize="0.5"  />
+                            <FontIcon iconLiteral="fa-arrow-circle-down" iconSize="24"  />
                         </StackedFontIcon>
                     </graphic>-->
 

@@ -236,6 +236,7 @@ public class History implements Initializable {
                         commitsTableView.refresh();
                     } else {
                         Context.searchResult.setValue(null);
+                        commitsTableView.refresh();
                     }
                 }
         );

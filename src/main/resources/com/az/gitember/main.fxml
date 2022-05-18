@@ -17,7 +17,7 @@
                                 <MenuItem accelerator="Shortcut+O" onAction="#openHandler" text="Open ...">
                                     <graphic>
                                         <StackedFontIcon style="-fx-icon-color: text_color">
-                                            <FontIcon iconLiteral="fa-folder-open" StackedFontIcon.iconSize="0.5" />
+                                            <FontIcon iconLiteral="fa-folder-open"  />
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
@@ -27,7 +27,7 @@
                                 <MenuItem text="Clone ..." onAction="#cloneHandler">
                                     <graphic>
                                         <StackedFontIcon style="-fx-icon-color: text_color">
-                                            <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5" />
+                                            <FontIcon iconLiteral="fa-clone"  />
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
@@ -37,14 +37,14 @@
                                 <MenuItem text="Pull" accelerator="Shortcut+L" onAction="#pullHandler" fx:id="pullMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
-                                            <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
+                                            <FontIcon iconLiteral="fa-reply" />
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
                                 <MenuItem text="Push" accelerator="Shortcut+P" onAction="#pushHandler" fx:id="puchMenuItem" disable="true">
                                     <graphic>
                                         <StackedFontIcon rotate="-23" style="-fx-icon-color: text_color">
-                                            <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
+                                            <FontIcon iconLiteral="fa-mail-forward" />
                                         </StackedFontIcon>
                                     </graphic>
                                 </MenuItem>
@@ -72,7 +72,7 @@
                             <MenuItem text="Branches ..."   onAction="#createStatReportBranches"/>
                             <!--graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-bar-chart" StackedFontIcon.iconSize="0.5"  />
+                                    <FontIcon iconLiteral="fa-bar-chart" iconSize="24"  />
                                 </StackedFontIcon>
 
                             </graphic-->
@@ -97,7 +97,7 @@
                     <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
                         <graphic>
                             <StackedFontIcon style="-fx-icon-color: text_color">
-                                <FontIcon iconLiteral="fa-folder-open" StackedFontIcon.iconSize="0.5"  />
+                                <FontIcon iconLiteral="fa-folder-open" iconSize="24"  />
                             </StackedFontIcon>
                         </graphic>
                     </Button>
@@ -105,7 +105,7 @@
                     <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler" text="Clone"  >
                         <graphic>
                             <StackedFontIcon style="-fx-icon-color: text_color">
-                                <FontIcon iconLiteral="fa-clone" StackedFontIcon.iconSize="0.5" />
+                                <FontIcon iconLiteral="fa-clone" iconSize="24" />
                             </StackedFontIcon>
                         </graphic>
                     </Button>
@@ -113,19 +113,40 @@
                     <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/>
                     <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull">
                         <graphic>
-                            <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
-                                <FontIcon iconLiteral="fa-reply" StackedFontIcon.iconSize="0.5"/>
-                            </StackedFontIcon>
+                            <HBox>
+                                <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-reply" iconSize="24"/>
+                                </StackedFontIcon>
+                                <!--Just for space between icon and text-->
+                                <StackedFontIcon visible="false"  alignment="TOP_RIGHT" style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
+                                    <Label style="-fx-font-size: 10; -fx-font: Monospace; " text="9 "/>
+                                </StackedFontIcon>
+                            </HBox>
+
                         </graphic>
                     </Button>
                     <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push">
                         <graphic>
-                            <StackedFontIcon rotate="-23" style="-fx-icon-color: text_color">
-                                <FontIcon iconLiteral="fa-mail-forward" StackedFontIcon.iconSize="0.5"/>
-                            </StackedFontIcon>
+                            <HBox>
+                                <StackedFontIcon   rotate="-23" style="-fx-icon-color: text_color">
+                                    <FontIcon iconLiteral="fa-mail-forward" iconSize="24" />
+                                </StackedFontIcon>
+                                <VBox>
+                                    <StackedFontIcon visible="false"  alignment="TOP_RIGHT" style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
+                                        <Label style="-fx-font-size: 10; -fx-font: Monospace; " text="9 "/>
+                                    </StackedFontIcon>
+                                    <StackedFontIcon visible="false"  alignment="TOP_RIGHT" style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
+                                        <Label style="-fx-font-size: 10; -fx-font: Monospace; " text="1 "/>
+                                    </StackedFontIcon>
+
+                                </VBox>
+                            </HBox>
+
                         </graphic>
                     </Button>
-
 
                 </ToolBar>
 

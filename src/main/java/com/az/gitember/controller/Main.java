@@ -79,10 +79,9 @@ public class Main implements Initializable {
                 (observableValue, oldValue, newValue) -> {
                     final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
                     final ScmBranch scmBranch = Context.workingBranch.getValue();
-                    final String repoState = Context.getGitRepoService().getRepository().getRepositoryState().getDescription();
                     App.getStage().setTitle(
                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
-                                    + ScmBranch.getNameSafe(scmBranch) + "     " + repoState);
+                                    + ScmBranch.getNameSafe(scmBranch));
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
 
@@ -109,9 +108,10 @@ public class Main implements Initializable {
                 {
                     String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
 
+                    final ScmBranch scmBranch = Context.workingBranch.getValue();
                     App.getStage().setTitle(
                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
-                                    + ScmBranch.getNameSafe(Context.workingBranch.getValue()));
+                                    + ScmBranch.getNameSafe(scmBranch));
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
                     reindexDataMenuItem.setDisable(newValue == null);
