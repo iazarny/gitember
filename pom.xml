@@ -10,7 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <jgit.version>5.12.0.202106070339-r</jgit.version>
+        <jgit.version>6.6.1.202309021850-r</jgit.version>
 
         <javafx.version>17.0.1</javafx.version>
     </properties>
