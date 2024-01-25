@@ -3,7 +3,7 @@ package com.az.gitember.controller.lang;
 import com.az.gitember.controller.lang.asm.MASMLexer;
 import com.az.gitember.controller.lang.basic.jvmBasicLexer;
 import com.az.gitember.controller.lang.cpp.CPP14Lexer;
-import com.az.gitember.controller.lang.cpp.CSharpLexer;
+import com.az.gitember.controller.lang.csharp.CSharpLexer;
 import com.az.gitember.controller.lang.css.css3Lexer;
 import com.az.gitember.controller.lang.erlang.ErlangLexer;
 import com.az.gitember.controller.lang.fortran.Fortran77Lexer;

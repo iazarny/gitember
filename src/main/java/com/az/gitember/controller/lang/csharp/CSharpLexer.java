@@ -1,5 +1,5 @@
 // Generated from CSharpLexer.g4 by ANTLR 4.9.2
-package com.az.gitember.controller.lang.cpp;
+package com.az.gitember.controller.lang.csharp;
 import java.util.Stack;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
