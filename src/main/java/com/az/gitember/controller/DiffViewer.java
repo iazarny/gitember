@@ -1,6 +1,7 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.control.VirtualizedOverviewScrollPane;
+import com.az.gitember.controller.handlers.EscEventHandler;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -19,6 +20,8 @@ import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.stage.Stage;
+
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -38,7 +41,7 @@ import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
-    private final static double VER_HEAD_HEIGHT = 30;
+	private final static double VER_HEAD_HEIGHT = 30;
 
     public TextField newLabel;
     public TextField oldLabel;
@@ -140,6 +143,7 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane.setPrefHeight(2021);
 
+		mainPanel.addEventHandler(KeyEvent.KEY_PRESSED, new EscEventHandler(mainPanel));
         mainPanel.layout();
 
 
