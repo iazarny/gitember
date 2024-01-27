@@ -12,7 +12,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <jgit.version>5.12.0.202106070339-r</jgit.version>
 
-        <javafx.version>17.0.1</javafx.version>
+        <javafx.version>17.0.2</javafx.version>
     </properties>
 
 
@@ -56,8 +56,14 @@
         <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>12.3.1</version>
+        </dependency>        <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
+
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-fontawesome-pack</artifactId>
-            <version>11.5.0</version>
+            <version>12.3.1</version>
         </dependency>
 	
 
@@ -66,7 +72,7 @@
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-javafx</artifactId>
-            <version>11.5.0</version>
+            <version>12.3.1</version>
         </dependency>
 
 

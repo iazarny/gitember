@@ -1,9 +1,12 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
@@ -28,19 +31,30 @@ public class MainRecentProjects implements Initializable {
                     p-> {
 
                         Hyperlink projectNameHl = new Hyperlink (p.getProjectHomeFolder().replace(".git", ""));
-                        projectNameHl.getStyleClass().add("projectlink"); //TODO
+                        projectNameHl.getStyleClass().add("projectlink");
                         recentProjects.getChildren().add(projectNameHl);
+
+
+                        MenuItem menuItem = new MenuItem();
+                        menuItem.setText("Remove from list");
+                        menuItem.setOnAction(event -> {
+                            removeProjectFromList(p);
+                            recentProjects.getChildren().remove(projectNameHl);
+                        });
+                        ContextMenu contextMenu = new ContextMenu();
+                        contextMenu.getItems().add(menuItem);
+
+                        projectNameHl.setContextMenu(contextMenu);
+
                         projectNameHl.setOnAction(
                                 event -> {
                                     try {
                                         Context.init(p.getProjectHomeFolder());
                                     } catch (Exception e) {
-                                        Context.settingsProperty.getValue().getProjects().remove(p);
-                                        Context.saveSettings();
-                                        Context.readSettings();
+                                        removeProjectFromList(p);
                                         Context.getMain().showResult("Cannot load project ", "Cannot load project "
-                                                + p.getProjectHomeFolder()
-                                                + "\n   It will be removed from the list of recent projects",
+                                                        + p.getProjectHomeFolder()
+                                                        + "\n   It will be removed from the list of recent projects",
                                                 Alert.AlertType.WARNING);
                                         log.log(Level.WARNING, "Cannot load project " + p.getProjectHomeFolder(), e);
                                     }
@@ -51,5 +65,11 @@ public class MainRecentProjects implements Initializable {
             );
         });
 
+    }
+
+    private void removeProjectFromList(Project p) {
+        Context.settingsProperty.getValue().getProjects().remove(p);
+        Context.saveSettings();
+        Context.readSettings();
     }
 }

@@ -17,7 +17,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
@@ -108,6 +107,7 @@ public class HistoryDetail implements Initializable {
                 @Override
                 protected void updateItem(ScmItem item, boolean empty) {
                     super.updateItem(item, empty);
+                    String style = "";
                     if (!empty) {
                         String searchTerm = Context.searchValue.getValueSafe().toLowerCase();
 
@@ -124,11 +124,13 @@ public class HistoryDetail implements Initializable {
 
 
                             if (found) {
-                                setStyle(LookAndFeelSet.FOUND_ROW);
+                                style = LookAndFeelSet.FOUND_ROW;
+
                             }
 
                         }
                     }
+                    setStyle(style);
 
                 }
             };
@@ -160,7 +162,7 @@ public class HistoryDetail implements Initializable {
 
     public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERION).handle(actionEvent);
+        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
     }
 
     public void openRawDiff(ActionEvent actionEvent) {

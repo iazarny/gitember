@@ -2,10 +2,7 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.DiffEventHandler;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.Pair;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmItemAttribute;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,6 +13,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
+import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -37,13 +35,18 @@ public class BranchDiffController implements Initializable {
 
     private final static Logger log = Logger.getLogger(BranchDiffController.class.getName());
 
+    private final ObservableList<DiffEntry> observableDiffEntry = FXCollections.observableList(new ArrayList<>());
+    private final BranchDiffCellFactory branchDiffCellFactoryLeft = new BranchDiffCellFactory(true);
+    private final BranchDiffCellFactory branchDiffCellFactoryRight = new BranchDiffCellFactory(false);
+
     public TableView<DiffEntry> diffTableView;
     public TableColumn<DiffEntry, StackedFontIcon> actionTableColumn;
-    public TableColumn<DiffEntry, String> leftTableColumn;
-    public TableColumn<DiffEntry, String> rightTableColumn;
+    public TableColumn<DiffEntry, DiffEntry> leftTableColumn;
+    public TableColumn<DiffEntry, DiffEntry> rightTableColumn;
 
-    private final ObservableList<DiffEntry> observableDiffEntry = FXCollections.observableList(new ArrayList<>());
+
     public MenuItem menuItemShowDiff;
+    public TextField searchText;
     private Ref leftHead = null;
     private Ref rightHead = null;
     private String leftBranchName;
@@ -54,11 +57,15 @@ public class BranchDiffController implements Initializable {
         actionTableColumn.setCellValueFactory(c ->
                 new WorkingcopyTableGraphicsValueFactory(c.getValue().getChangeType().name(), null));
 
-        leftTableColumn.setCellValueFactory(c -> getName(c.getValue().getOldPath()));
-        rightTableColumn.setCellValueFactory(c -> getName(c.getValue().getNewPath()));
+        leftTableColumn.setCellValueFactory(c -> new SimpleObjectProperty(c.getValue()));
+        leftTableColumn.setCellFactory( c-> branchDiffCellFactoryLeft.call(c) );
+
+        rightTableColumn.setCellValueFactory(c -> new SimpleObjectProperty(c.getValue()));
+        rightTableColumn.setCellFactory( c-> branchDiffCellFactoryRight.call(c) );
 
         diffTableView.setItems(observableDiffEntry);
-        diffTableView.setRowFactory(new BranchDiffTableRowFactory());
+        diffTableView.setRowFactory(new BranchDiffTableRowFactory(searchText));
+
         diffTableView.setOnContextMenuRequested(
                 e -> {
                     DiffEntry entry = diffTableView.getSelectionModel().getSelectedItem();
@@ -73,6 +80,13 @@ public class BranchDiffController implements Initializable {
                     }
                 }
         );
+
+        searchText.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    diffTableView.refresh();
+                }
+        );
+
     }
 
     public void setData(String leftBranchName, String rightBranchName, List<DiffEntry> diffEntries) {

@@ -1,21 +1,27 @@
 package com.az.gitember.controller;
 
 import com.az.gitember.control.VirtualizedOverviewScrollPane;
+import com.az.gitember.controller.handlers.EscEventHandler;
 import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.stage.Stage;
+
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -35,7 +41,7 @@ import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
-    private final static double VER_HEAD_HEIGHT = 30;
+	private final static double VER_HEAD_HEIGHT = 30;
 
     public TextField newLabel;
     public TextField oldLabel;
@@ -137,16 +143,37 @@ public class DiffViewer implements Initializable {
 
         oldScrollPane.setPrefHeight(2021);
 
+		mainPanel.addEventHandler(KeyEvent.KEY_PRESSED, new EscEventHandler(mainPanel));
         mainPanel.layout();
 
 
         try {
             ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
-            hbar.setOnMouseEntered(e -> updateAllowed = false);
-            hbar.setOnMouseExited(e -> updateAllowed = true);
+            hbar.addEventHandler(MouseEvent.ANY,      event -> {
+
+                if (MouseEvent.DRAG_DETECTED == event.getEventType()
+                        || (MouseEvent.MOUSE_ENTERED == event.getEventType())
+                        || (MouseEvent.MOUSE_MOVED == event.getEventType())) {
+                    updateAllowed = false;
+                } else if (MouseEvent.MOUSE_RELEASED == event.getEventType()
+                    || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
+                    updateAllowed = true;
+                }
+
+            });
+
+
             hbar = (ScrollBar) GitemberUtil.getField(newScrollPane, "hbar");
-            hbar.setOnMouseEntered(e -> updateAllowed = false);
-            hbar.setOnMouseExited(e -> updateAllowed = true);
+            hbar.addEventHandler(MouseEvent.ANY,      event -> {
+                if (MouseEvent.DRAG_DETECTED == event.getEventType()
+                        || (MouseEvent.MOUSE_ENTERED == event.getEventType())
+                        || (MouseEvent.MOUSE_MOVED == event.getEventType())) {
+                    updateAllowed = false;
+                } else if (MouseEvent.MOUSE_RELEASED == event.getEventType()
+                        || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
+                    updateAllowed = true;
+                }
+            });
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -116,7 +116,7 @@ public class FileHistoryController implements Initializable {
 
         final ScmRevisionInformation revInfo = (ScmRevisionInformation) this.historyTableView.getSelectionModel().getSelectedItem();
         final ScmItem scmItem = revInfo.getAffectedItems().get(0);
-        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERION).handle(actionEvent);
+        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
 
     }
 

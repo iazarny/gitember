@@ -1,5 +1,7 @@
 package com.az.gitember.data;
 
+import java.util.Optional;
+
 /**
  * Created by Igor Azarny on 03 - Dec - 2016
  */
@@ -25,6 +27,8 @@ public class ScmBranch {
     private boolean head;
     private String remoteName;
     private String remoteMergeName;
+    private int aheadCount = 0;
+    private int behindCount = 0;
 
     private final BranchType branchType;
     private final String sha;
@@ -40,20 +44,54 @@ public class ScmBranch {
 
     public static String getNameExtSafe(ScmBranch scmBranch) {
         if (scmBranch != null) {
-            if (scmBranch.getRemoteMergeName() == null ) {
-                return scmBranch.getShortName();
-            } else {
-                return scmBranch.getShortName() + " (" + scmBranch.getRemoteMergeName() + ")";
-            }
+            return  scmBranch.getNameExt();
         }
         return "";
+
     }
+
+    public String getNameExt() {
+        if (getRemoteMergeName() == null ) {
+            return  getShortName();
+        } else {
+            return String.format("%s %s",
+                    getShortName(),
+                    getRemoteMergeName()
+            );
+        }
+    }
+
+    public Optional<String> getScmBranchTooltip() {
+        String tooltip = null;
+        if (getAheadCount() > 0) {
+            tooltip = String.format("%s ahead of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getAheadCount() );
+        }
+        if (getBehindCount() > 0) {
+            if (getAheadCount() > 0) {
+                tooltip += String.format(" and behind on %d", getBehindCount());
+            } else {
+                tooltip = String.format("%s behind of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getBehindCount());
+            }
+        }
+        return Optional.ofNullable(tooltip);
+    }
+
+
 
     public ScmBranch(String shortName, String fullName, BranchType branchType, String sha) {
         this.shortName = shortName;
         this.fullName = fullName;
         this.branchType = branchType;
         this.sha = sha;
+    }
+
+    public ScmBranch(String shortName, String fullName, BranchType branchType, String sha, int aheadCount, int behindCount) {
+        this.shortName = shortName;
+        this.fullName = fullName;
+        this.branchType = branchType;
+        this.sha = sha;
+        this.aheadCount = aheadCount;
+        this.behindCount = behindCount;
     }
 
 
@@ -97,13 +135,15 @@ public class ScmBranch {
         return sha;
     }
 
-    public String getNameExt() {
-        if (getRemoteMergeName() == null ) {
-            return  getShortName();
-        } else {
-            return getShortName() + " (" + getRemoteMergeName() + ")";
-        }
+    public int getAheadCount() {
+        return aheadCount;
     }
+
+    public int getBehindCount() {
+        return behindCount;
+    }
+
+
 
     @Override
     public String toString() {

@@ -46,7 +46,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.3");
+        this.setTitle("Gitember 2.4");
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -55,12 +55,6 @@ public class AboutDialog extends Dialog {
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 10, 10, 20));
-
-        TextField username = new TextField();
-        username.setPromptText("Username");
-
-        PasswordField password = new PasswordField();
-        password.setPromptText("Password");
 
         Path [] path = createLogoPath();
 
@@ -145,10 +139,10 @@ public class AboutDialog extends Dialog {
 
         path.setStrokeWidth(45);
 
-        path.setStroke(javafx.scene.paint.Color.valueOf("#808080"));
+        path.setStroke(javafx.scene.paint.Color.valueOf("#2020ea"));
         Stop[] stops = new Stop[] {
-                new Stop(0d, javafx.scene.paint.Color.valueOf("#17e8ab")),
-                new Stop(1d, javafx.scene.paint.Color.valueOf("#88cdeb"))};
+                new Stop(0d, javafx.scene.paint.Color.valueOf("#DCC000")),
+                new Stop(1d, javafx.scene.paint.Color.valueOf("#A89201"))};
         LinearGradient lg1 = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         path.setFill(lg1);
 
@@ -197,32 +191,32 @@ public class AboutDialog extends Dialog {
         path.setLayoutX(-400);
 
 //version
-        Path char2_1 = getPathChar2();
-        char2_1.setLayoutX(270);
-        char2_1.setLayoutY(300);
-        applyStyle(char2_1);
-
-        Path char2_3 = getPathChar3();
-        char2_3.setLayoutX(300);
-        char2_3.setLayoutY(300);
-        applyStyle(char2_3);
+        Path char2 = getPathChar2();
+        char2.setLayoutX(270);
+        char2.setLayoutY(300);
+        applyStyle(char2);
 
         Path dot = getPathCharDot();
         dot.setLayoutX(333.5);
         dot.setLayoutY(380 );
         applyStyle(dot);
 
-        /*MotionBlur mb = new MotionBlur();
-        mb.setRadius(35.0f);
-        mb.setAngle(45.0f);
+        Path char3 = getPathChar3();
+        char3.setLayoutX(300);
+        char3.setLayoutY(300);
+        applyStyle(char3);
 
-        char2_1.setEffect(mb);
-        char2_2.setEffect(mb);
-        dot.setEffect(mb);*/
+        Path char5 = getPathChar5();
+        char5.setLayoutX(330);
+        char5.setLayoutY(300);
+        applyStyle(char5);
+
+
+
 
 
         return new Path [] {
-                path, char2_1,  char2_3, dot
+                path, char2, dot, char3, char5,
         };
     }
 

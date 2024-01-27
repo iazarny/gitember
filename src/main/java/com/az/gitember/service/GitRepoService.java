@@ -20,6 +20,7 @@ import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -533,13 +534,7 @@ public class GitRepoService {
             List<ScmBranch> rez = branchLst
                     .stream()
                     .filter(r -> r.getName().startsWith(prefix) || ("HEAD".equals(r.getName()) && Constants.R_HEADS.equals(prefix)))
-                    .map(r -> new ScmBranch(
-                            "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
-                            r.getName(),
-                            branchType,
-                            r.getObjectId().getName()
-
-                    ))
+                    .map(r -> getScmBranch(prefix, branchType, r))
                     .map(i -> {
                         i.setHead(i.getFullName().equals(head.getName()));
                         return i;
@@ -558,6 +553,30 @@ public class GitRepoService {
             }
             return rez;
         }
+    }
+
+    private ScmBranch getScmBranch(String prefix, ScmBranch.BranchType branchType, Ref r) {
+        int aheadCount = 0;
+        int behindCount = 0;
+
+        try {
+            BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, r.getName());
+            if (trackingStatus != null) {
+                aheadCount = trackingStatus.getAheadCount();
+                behindCount = trackingStatus.getBehindCount();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return new ScmBranch(
+                "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
+                r.getName(),
+                branchType,
+                r.getObjectId().getName(),
+                aheadCount,
+                behindCount
+        );
     }
 
     private void checkIsTrackingRemoteBranch(Config cfg, ScmBranch item) {
@@ -613,25 +632,27 @@ public class GitRepoService {
     }
 
     public Map<String, Set<String>> search(List<PlotCommit> commits, String term, boolean luceneIndexed) {
-        Map<String, Set<String>> map = new ConcurrentHashMap<>();
+        Map<String, Set<String>> searchResultMap = new ConcurrentHashMap<>();
         String searchString = term.toLowerCase();
 
         Thread threadSearch1 = new Thread(() -> {
             commits.forEach(
                     plotCommit -> {
+
+                        final List<ScmItem> affectedItems = adapt(plotCommit).getAffectedItems();
+
                         if (
                                 plotCommit.getShortMessage().toLowerCase().contains(searchString)
                                         || plotCommit.getFullMessage().toLowerCase().contains(searchString)
                                         || plotCommit.getName().toLowerCase().contains(searchString)
                                         || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
                                         || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                                        || affectedItems.stream().anyMatch(scmItem -> scmItem.getShortName().toLowerCase().contains(searchString))
                         ) {
 
-                            Set<String> affectedFiles = map.computeIfAbsent(plotCommit.getName(), s -> {
-                                return new HashSet<String>();
-                            });
+                            Set<String> affectedFiles = searchResultMap.computeIfAbsent(plotCommit.getName(), s -> new HashSet<String>());
 
-                            adapt(plotCommit).getAffectedItems().stream().forEach(
+                            affectedItems.stream().forEach(
                                     item -> {
                                         if (item.getShortName().toLowerCase().contains(searchString)) {
                                             affectedFiles.add(item.getShortName());
@@ -644,17 +665,27 @@ public class GitRepoService {
 
         });
 
-        Thread threadSearch2 = new Thread( () -> {
+        Thread threadSearch2 = new Thread(() -> {
             if (luceneIndexed) {
                 SearchService service = getSearchService();
-                Map<String, Set<String>> lucineMap = service.search(term);
-                lucineMap.keySet().forEach( key -> {
-                    Set<String> affectedFiles = map.computeIfAbsent(key, s -> new HashSet<String>());
-                    affectedFiles.addAll(lucineMap.get(key));
-                    lucineMap.get(key).clear();
-                }  );
+                try {
+                    Map<String, Set<String>> lucineMap = service.search(term);
+                    lucineMap.keySet().forEach(key -> {
+                        Set<String> affectedFiles = searchResultMap.computeIfAbsent(key, s -> new HashSet<>());
+                        affectedFiles.addAll(lucineMap.get(key));
+                        lucineMap.get(key).clear();
+                    });
+                } catch (RuntimeException ex) {
+                    log.log(Level.WARNING, "Cannot perform lucene search operation ", ex);
+                    log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
+
+                    getSearchService().dropIndex();
+                    Context.getCurrentProject().setIndexed(false);
+                    Context.saveSettings();
+                }
+
             }
-        } );
+        });
 
         threadSearch2.start();
         threadSearch1.start();
@@ -666,15 +697,14 @@ public class GitRepoService {
             e.printStackTrace();
         }
 
-
-        return map;
+        return searchResultMap;
     }
 
     SearchService service = null;
 
     private synchronized SearchService getSearchService() {
-        if(service == null) {
-            service = new SearchService( Context.getProjectFolder() );
+        if (service == null) {
+            service = new SearchService(Context.getProjectFolder());
         }
 
         return service;
@@ -827,6 +857,22 @@ public class GitRepoService {
                 throw new IOException("Cannot checkout " + fileName, e);
             }
         }
+    }
+
+    public CherryPickResult cherryPick(RevCommit revCommit) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                CherryPickCommand cherryPickCommand = git.cherryPick()
+                        .include(revCommit)
+                        .setNoCommit(true)
+                        .setStrategy(MergeStrategy.RECURSIVE);
+                return cherryPickCommand.call();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot cherry pick   " + revCommit, e);
+                throw new IOException("Cannot cherry pick " + revCommit, e);
+            }
+        }
+
     }
 
 
@@ -1127,9 +1173,9 @@ public class GitRepoService {
     }
 
 
-    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty,  final ProgressMonitor progressMonitor) {
-        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty,  progressMonitor);
-        List<ScmRevisionInformation> rez = commit.stream().map(pl -> adapt(pl)).collect(Collectors.toList());
+    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty, final ProgressMonitor progressMonitor) {
+        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty, progressMonitor);
+        List<ScmRevisionInformation> rez = commit.stream().map(this::adapt).collect(Collectors.toList());
         rez.forEach(sri -> {
             sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
         });
@@ -1143,7 +1189,6 @@ public class GitRepoService {
      * @param treeName tree name
      * @param all      to visualize with merges
      * @return PlotCommitList<PlotLane>
-     * @throws Exception in case of error
      */
     public PlotCommitList<PlotLane> getCommitsByTree(final String treeName, final boolean all, final int qtyRevs, final ProgressMonitor progressMonitor) {
 
@@ -1226,7 +1271,7 @@ public class GitRepoService {
 
     public List<AverageLiveTime> calculateAverageperMonth(final List<BranchLiveTime> brandLiveTimes, final StatWPParameters params) {
         if (params.isWorkingHours()) {
-            brandLiveTimes.stream().forEach(blt -> blt.calculateDiff());
+            brandLiveTimes.stream().forEach(BranchLiveTime::calculateDiff);
         }
         return branchLiveTimeAdapter.adapt(brandLiveTimes);
     }
@@ -1649,7 +1694,6 @@ public class GitRepoService {
         return adapt(revCommit, null);
     }
 
-
     /**
      * Adapt given rev commit to <code>ScmRevisionInformation</code>
      *
@@ -1658,31 +1702,36 @@ public class GitRepoService {
      * @return instance of {@link ScmRevisionInformation}
      */
     public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName) {
-        final ScmRevisionInformation info = new ScmRevisionInformation();
-        info.setShortMessage(revCommit.getShortMessage());
-        info.setFullMessage(revCommit.getFullMessage());
-        info.setRevisionFullName(revCommit.getName());
-        info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-        info.setAuthorName(revCommit.getAuthorIdent().getName());
-        info.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
-        info.setParents(
-                Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
-        );
-        if (revCommit instanceof PlotCommit) {
-            ArrayList<String> refs = new ArrayList<>();
-            for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
-                if (revCommit != null && ((PlotCommit) revCommit).getRef(i) != null && ((PlotCommit) revCommit).getRef(i).getName() != null) {
-                    refs.add(
-                            ((PlotCommit) revCommit).getRef(i).getName()
-                    );
 
+        return Context.scmRevisionInformationCache.computeIfAbsent(revCommit.getId().toString(), s -> {
+            final ScmRevisionInformation info = new ScmRevisionInformation();
+            info.setShortMessage(revCommit.getShortMessage());
+            info.setFullMessage(revCommit.getFullMessage());
+            info.setRevisionFullName(revCommit.getName());
+            info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
+            info.setAuthorName(revCommit.getAuthorIdent().getName());
+            info.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
+            info.setParents(
+                    Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
+            );
+            if (revCommit instanceof PlotCommit) {
+                ArrayList<String> refs = new ArrayList<>();
+                for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
+                    if (revCommit != null && ((PlotCommit) revCommit).getRef(i) != null && ((PlotCommit) revCommit).getRef(i).getName() != null) {
+                        refs.add(
+                                ((PlotCommit) revCommit).getRef(i).getName()
+                        );
+
+                    }
                 }
-            }
-            info.setRef(refs);
+                info.setRef(refs);
 
-        }
-        info.setAffectedItems(getScmItems(revCommit, fileName));
-        return info;
+            }
+            info.setAffectedItems(getScmItems(revCommit, fileName));
+            return info;
+        });
+
+
     }
 
     /**
@@ -1912,4 +1961,6 @@ public class GitRepoService {
 
     private static String gitAttributesContent = "*.psd filter=lfs diff=lfs merge=lfs -text\n" +
             "*.bmp filter=lfs diff=lfs merge=lfs -text\n";
+
+
 }

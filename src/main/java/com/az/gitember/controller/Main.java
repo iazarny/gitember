@@ -2,36 +2,24 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.*;
+import com.az.gitember.data.Const;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -91,10 +79,9 @@ public class Main implements Initializable {
                 (observableValue, oldValue, newValue) -> {
                     final String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
                     final ScmBranch scmBranch = Context.workingBranch.getValue();
-                    final String repoState = Context.getGitRepoService().getRepository().getRepositoryState().getDescription();
                     App.getStage().setTitle(
                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
-                                    + ScmBranch.getNameSafe(scmBranch) + "     " + repoState);
+                                    + ScmBranch.getNameSafe(scmBranch));
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
 
@@ -121,15 +108,17 @@ public class Main implements Initializable {
                 {
                     String remUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
 
+                    final ScmBranch scmBranch = Context.workingBranch.getValue();
                     App.getStage().setTitle(
                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
-                                    + ScmBranch.getNameSafe(Context.workingBranch.getValue()));
+                                    + ScmBranch.getNameSafe(scmBranch));
                     boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
                     reindexDataMenuItem.setDisable(newValue == null);
                     fetchMenuItem.setDisable(disable);
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
+                    statReportMenu.setVisible(newValue != null);
                     fetchBtn.setDisable(disable);
                     repoTreeView.setDisable(false);
 
@@ -261,7 +250,7 @@ public class Main implements Initializable {
 
     public void remoteURLtHandler(ActionEvent actionEvent) throws IOException {
         String url = Context.getGitRepoService().getRepository().getConfig().getString("remote", "origin", "url");
-        new RemoteUrlDialog("Remote URL", "Charge repository remot URL", url).showAndWait().ifPresent(
+        new RemoteUrlDialog("Remote URL", "Charge repository remote URL", url).showAndWait().ifPresent(
                 nreUrl -> {
                     new SetRemoteUrlEventHandler(nreUrl).handle(actionEvent);
                 }
@@ -436,29 +425,7 @@ public class Main implements Initializable {
 
 
     public static Optional<ButtonType> showResult(final String title, final String text, final Alert.AlertType alertTypet) {
-        Alert alert = new Alert(alertTypet);
-        alert.setTitle(title);
-        alert.initOwner(App.getScene().getWindow());
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
-
-        if (Alert.AlertType.ERROR == alertTypet || StringUtils.countMatches(text, "\n") > 7) {
-            TextArea textArea = new TextArea(text);
-            textArea.setEditable(false);
-            textArea.setWrapText(true);
-            GridPane gridPane = new GridPane();
-            gridPane.setMaxWidth(Double.MAX_VALUE);
-            gridPane.add(textArea, 0, 0);
-            GridPane.setHgrow(textArea, Priority.ALWAYS);
-            GridPane.setFillWidth(textArea, true);
-
-            alert.getDialogPane().setContent(gridPane);
-
-            log.log(Level.WARNING, text);
-        } else {
-            alert.setContentText(text);
-        }
-        return alert.showAndWait();
+        return new ResultDialog(title, text, alertTypet).showAndWait();
     }
 
     public TreeView getMainTreeView() {
@@ -488,4 +455,6 @@ public class Main implements Initializable {
         alert.showAndWait();
 
     }
+
+
 }

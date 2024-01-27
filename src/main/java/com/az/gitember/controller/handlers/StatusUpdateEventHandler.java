@@ -48,6 +48,7 @@ public class StatusUpdateEventHandler extends AbstractLongTaskEventHandler imple
                 }
 
                 Context.updateStatus(progressMonitor);
+
                 return null;
             }
         };

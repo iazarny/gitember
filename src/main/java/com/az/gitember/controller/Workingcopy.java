@@ -245,6 +245,7 @@ public class Workingcopy implements Initializable {
                 Context.settingsProperty.getValue().getCommitMsg().add(r);
                 Context.getGitRepoService().commit(r, dialog.getUserName(), dialog.getUserEmail());
                 new StatusUpdateEventHandler(true).handle(null);
+                Context.updateBranches();
             } catch (GitAPIException e) {
                 Context.getMain().showResult("Commit error", e.getMessage(), Alert.AlertType.ERROR);
             }

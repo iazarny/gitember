@@ -4,6 +4,7 @@ import com.az.gitember.App;
 import com.az.gitember.control.ChangeListenerHistoryHint;
 import com.az.gitember.controller.handlers.CheckoutRevisionhEventHandler;
 import com.az.gitember.data.Const;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -11,6 +12,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,16 +22,15 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CherryPickResult;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -128,8 +129,9 @@ public class History implements Initializable {
                     return new TableRow<PlotCommit>() {
                         private String calculateStyle(final PlotCommit plotCommit) {
                             String searchString = searchText.getText();
-                            if (plotCommit != null && searchString != null && Context.searchResult.getValue() != null) {
-                                if (searchString.length() > Const.SEARCH_LIMIT_CHAR && Context.searchResult.getValue().containsKey(plotCommit.getName())) {
+                            if (isSearchEligible(plotCommit, searchString)) {
+                                Map<String, Set<String>> map = Context.searchResult.getValue();
+                                if (map != null && map.containsKey(plotCommit.getName()) ) {
                                     return LookAndFeelSet.FOUND_ROW;
                                 }
                             }
@@ -140,6 +142,13 @@ public class History implements Initializable {
                         protected void updateItem(PlotCommit item, boolean empty) {
                             super.updateItem(item, empty);
                             setStyle(calculateStyle(item));
+                        }
+
+                        private boolean isSearchEligible(PlotCommit plotCommit, String searchString) {
+                            return plotCommit != null
+                                    && plotCommit.getName() != null
+                                    && searchString != null
+                                    && searchString.length() > Const.SEARCH_LIMIT_CHAR;
                         }
                     };
                 }
@@ -214,7 +223,8 @@ public class History implements Initializable {
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
 
-                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue) && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
+                    if ( newValue != null
+                            && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
@@ -226,6 +236,7 @@ public class History implements Initializable {
                         commitsTableView.refresh();
                     } else {
                         Context.searchResult.setValue(null);
+                        commitsTableView.refresh();
                     }
                 }
         );
@@ -244,6 +255,36 @@ public class History implements Initializable {
 
         new CheckoutRevisionhEventHandler((RevCommit) commitsTableView.getSelectionModel().getSelectedItem(), null).handle(actionEvent);
 
+
+    }
+
+    public void cherryPickMenuItemClickHandler(ActionEvent actionEvent) {
+
+        final RevCommit revCommit = (RevCommit) commitsTableView.getSelectionModel().getSelectedItem();
+
+        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Please confirm");
+        alert.setHeaderText("Cherry pick");
+        alert.setContentText("Do you really want to apply changes from \n"
+                + revCommit.getName() + " ?");
+        alert.initOwner(App.getScene().getWindow());
+        alert.setWidth(alert.getWidth() * 2);
+        alert.setHeight(alert.getHeight() * 1.5);
+
+        alert.showAndWait().ifPresent( r-> {
+
+            try {
+                if (r == ButtonType.OK) {
+                    CherryPickResult cherryPickResult = Context.getGitRepoService().cherryPick(revCommit);
+                }
+            } catch (IOException e) {
+                Context.getMain().showResult("Cherry pick is failed ",
+                        ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
+            } finally {
+                Context.updateStatus(null);
+            }
+
+        } );
 
     }
 

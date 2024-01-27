@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 public class MainTreeChangeListener implements ChangeListener {
 
     private final static Logger log = Logger.getLogger(MainTreeChangeListener.class.getName());
-    private final static String MEXRGE_ITEM = "MERGEITEM";
+    private final static String MERGE_ITEM = "MERGEITEM";
 
     @Override
     public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
@@ -99,17 +99,17 @@ public class MainTreeChangeListener implements ChangeListener {
             nodes = FXCollections.emptyObservableList();
         }
 
-       nodes.filtered(n -> n instanceof HBox &&  MEXRGE_ITEM.equalsIgnoreCase(n.getId()))
+       nodes.filtered(n -> n instanceof HBox &&  MERGE_ITEM.equalsIgnoreCase(n.getId()))
                 .forEach(n -> {
                     ((HBox) n).getChildrenUnmodifiable().forEach(
                             mbi -> {
-                                if (mbi instanceof ToolBar && MEXRGE_ITEM.equalsIgnoreCase(mbi.getId())) {
+                                if (mbi instanceof ToolBar && MERGE_ITEM.equalsIgnoreCase(mbi.getId())) {
                                     Context.getMain().mainToolBar.getItems().addAll(((ToolBar) mbi).getItems());
-                                } else if (mbi instanceof MenuBar &&  MEXRGE_ITEM.equalsIgnoreCase(mbi.getId())) {
+                                } else if (mbi instanceof MenuBar &&  MERGE_ITEM.equalsIgnoreCase(mbi.getId())) {
                                     ((MenuBar) mbi).getMenus()
-                                            .filtered(menu -> MEXRGE_ITEM.equalsIgnoreCase(menu.getId()))
+                                            .filtered(menu -> MERGE_ITEM.equalsIgnoreCase(menu.getId()))
                                             .forEach(
-                                                    mm -> Context.getMain().mainMenuBar.getMenus().add(1, mm)
+                                                    mm -> Context.getMain().mainMenuBar.getMenus().add(2, mm)
                                             );
                                 }
                             }
@@ -127,8 +127,8 @@ public class MainTreeChangeListener implements ChangeListener {
      * Undock added items.
      */
     private void unmergeMenu() {
-        Context.getMain().mainMenuBar.getMenus().removeIf(menu -> MEXRGE_ITEM.equals(menu.getId()));
-        Context.getMain().mainToolBar.getItems().removeIf(node -> MEXRGE_ITEM.equals(node.getId()));
+        Context.getMain().mainMenuBar.getMenus().removeIf(menu -> MERGE_ITEM.equals(menu.getId()));
+        Context.getMain().mainToolBar.getItems().removeIf(node -> MERGE_ITEM.equals(node.getId()));
     }
 
 }

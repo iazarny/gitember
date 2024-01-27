@@ -1,7 +1,6 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.ExtensionMap;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
@@ -50,7 +49,7 @@ public class ScmItemDocument  {
         AutoDetectParser parser = new AutoDetectParser();
         BodyContentHandler handler = new BodyContentHandler();
         Metadata metadata = new Metadata();
-        try (InputStream stream = new ByteArrayInputStream(item.getBody(ScmItem.BODY_TYPE.COMMIT_VERION))) {
+        try (InputStream stream = new ByteArrayInputStream(item.getBody(ScmItem.BODY_TYPE.COMMIT_VERSION))) {
             parser.parse(stream, handler, metadata);
             if ("text/plain".equalsIgnoreCase(metadata.get("Content-Type"))) {
                 return getContent(item);
@@ -68,7 +67,7 @@ public class ScmItemDocument  {
         final String body;
         byte [] b = new byte[0];
         try {
-            b = item.getBody(ScmItem.BODY_TYPE.COMMIT_VERION);
+            b = item.getBody(ScmItem.BODY_TYPE.COMMIT_VERSION);
         } catch (IOException e) {
             e.printStackTrace();
         }

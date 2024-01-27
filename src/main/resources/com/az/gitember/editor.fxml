@@ -18,7 +18,7 @@
             <Button text="Save as ..." fx:id="saveBtn" onAction="#saveFile">
                 <graphic>
                     <StackedFontIcon style="-fx-icon-color: text_color">
-                        <FontIcon iconLiteral="fa-download" />
+                        <FontIcon iconLiteral="fa-download" iconSize="24" />
                     </StackedFontIcon>
                 </graphic>
             </Button>

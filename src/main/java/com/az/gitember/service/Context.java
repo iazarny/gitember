@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.controller.Main;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -84,7 +85,11 @@ public class Context {
 
     public static StringProperty searchValue = new SimpleStringProperty();
     public static final ObjectProperty<Map<String, Set<String>>> searchResult =
-            new SimpleObjectProperty(null);
+            new SimpleObjectProperty(Collections.EMPTY_MAP);
+
+    public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
+            new HashMap<>();
+
 
     private static Main main;
 
@@ -101,6 +106,7 @@ public class Context {
 
 
         gitRepoService = new GitRepoService(gitFolder);
+        scmRevisionInformationCache.clear();
 
         updateBranches();
         updateTags();
@@ -110,6 +116,7 @@ public class Context {
         showLfsFiles.setValue(false);
 
         updateStatus(null);
+
 
         Project project = new Project();
         project.setOpenTime(new Date());
@@ -123,6 +130,7 @@ public class Context {
         settingsProperty.get().getProjects().add(project);
         saveSettings();
 
+        getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
         branchFilter.addListener(
                 (observable, oldValue, newValue) -> {
@@ -130,6 +138,13 @@ public class Context {
                     filterTags();
                 }
         );
+
+        //just fill the cache
+        new Thread(() -> {
+            gitRepoService.getCommitsByTree(null, true, 100, null).stream().forEach(
+                    s -> gitRepoService.adapt(s, null)
+            );
+        }).start();
 
 
     }
@@ -169,7 +184,7 @@ public class Context {
 
     public static void updateAll() {
         new StatusUpdateEventHandler(true).handle(null);
-        updateWorkingBranch();
+
         try {
             updateBranches();
         } catch (Exception e) {
@@ -217,12 +232,18 @@ public class Context {
         );
     }
 
-    public static void updateBranches() throws Exception {
+    public static void updateBranches()  {
         localBranchesRaw.clear();
-        localBranchesRaw.addAll(gitRepoService.getBranches());
-        remoteBranchesRaw.clear();
-        remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
-        filterBranches();
+        try {
+            localBranchesRaw.addAll(gitRepoService.getBranches());
+            remoteBranchesRaw.clear();
+            remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
+            localBrancesProperty.setValue(localBranchesRaw);
+            remoteBrancesProperty.setValue(remoteBranchesRaw);
+            filterBranches();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void filterBranches()  {
