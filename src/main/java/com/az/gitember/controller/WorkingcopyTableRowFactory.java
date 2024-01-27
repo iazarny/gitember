@@ -1,6 +1,5 @@
 package com.az.gitember.controller;
 
-import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
@@ -59,6 +58,12 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                 super.updateItem(item, empty);
                 setStyle(calculateStyle(item));
                 if (!empty) {
+
+                	setOnMouseClicked(event -> {
+                		if (event.getClickCount() == 2) {
+                			new DiffWithDiskEventHandler(item).handle(event);
+                        }
+                	});
 
                     setContextMenu(scmItemContextMenu);
                     setOnContextMenuRequested(
@@ -213,7 +218,7 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
             //scmItemContextMenu.getItems().add(history);
 
             MenuItem diff = new MenuItem(MI_DIFF_REPO);
-            diff.setOnAction(new DiffWithDiskEventHandler(item));
+            diff.setOnAction(e -> new DiffWithDiskEventHandler(item).handle(e));
             diff.setGraphic(icons.get(MI_DIFF_REPO));
             scmItemContextMenu.getItems().add(diff);
         }
