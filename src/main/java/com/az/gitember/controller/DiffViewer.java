@@ -113,7 +113,7 @@ public class DiffViewer implements Initializable {
         if (Context.isWindows()) {
             fontSize = LookAndFeelSet.FONT_SIZE;
         } else {
-            fontSize = LookAndFeelSet.FONT_SIZE + 2.0; //Mac silicon ok
+            fontSize = LookAndFeelSet.FONT_SIZE ;//+ 0.6; //Mac silicon ok
         }
 
 

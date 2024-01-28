@@ -87,7 +87,6 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     private void openFile(final String fileName, final String text, final boolean rawDiff) throws IOException {
         final Pair<Parent, Object> pair = App.loadFXML(Const.View.EDITOR);
         final Scene scene = new Scene(pair.getFirst());
-        App.getjMetro().setScene(scene);
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
         final TextBrowser textBrowser = (TextBrowser)pair.getSecond();
 

@@ -82,11 +82,11 @@
                             <items>
                                 <MenuItem text="Check for update" onAction="#checkForUpdate"/>
                                 <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
-                                <Menu text="Style">
+                                <!--Menu text="Style">
                                     <MenuItem text="Light" onAction="#setThemeLight"/>
                                     <MenuItem text="Dark" onAction="#setThemeDark"/>
 
-                                </Menu>
+                                </Menu-->
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About" onAction="#aboutHandler"/>
                             </items>
