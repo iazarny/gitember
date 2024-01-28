@@ -1,8 +1,11 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.Context;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ConfigConstants;
 
 import java.io.File;
 
@@ -12,7 +15,8 @@ public class RemoteRepoParameters {
     private StringProperty userPwd = new SimpleStringProperty("");
     private StringProperty url = new SimpleStringProperty("");
     private StringProperty destinationFolder = new SimpleStringProperty("");
-    private StringProperty pathToKey = new SimpleStringProperty(System.getProperty("user.home")
+    private StringProperty pathToKey = new SimpleStringProperty(
+            System.getProperty("user.home")
             + File.separator
             + ".ssh"
             + File.separator
@@ -93,11 +97,17 @@ public class RemoteRepoParameters {
 
 
     public RemoteRepoParameters(Project project) {
+
+        final Config gitConfig = Context.getGitRepoService().getRepository().getConfig();
+        final String url = gitConfig.getString(ConfigConstants.CONFIG_REMOTE_SECTION,
+                "origin",
+                ConfigConstants.CONFIG_KEY_URL);
+
         this.userName.setValue(project.getUserName());
         this.userPwd.setValue(project.getUserPwd());
-        this.pathToKey.setValue(project.getKeyPass());
+        this.pathToKey.setValue(project.getUserKey());
         this.keyPassPhrase.setValue(project.getKeyPass());
-        //this.url.setValue(project.);
+        this.url.setValue(url);
 
     }
 
