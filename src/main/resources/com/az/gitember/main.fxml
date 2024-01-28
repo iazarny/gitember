@@ -85,7 +85,6 @@
                                 <!--Menu text="Style">
                                     <MenuItem text="Light" onAction="#setThemeLight"/>
                                     <MenuItem text="Dark" onAction="#setThemeDark"/>
-
                                 </Menu-->
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About" onAction="#aboutHandler"/>
