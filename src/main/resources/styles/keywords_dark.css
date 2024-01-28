@@ -96,7 +96,7 @@
     -fx-background-color:  #124e12;
 }
 .diff-line-modified {
-    -fx-background-color:#505050;
+   -fx-background-color:#505050;
 }
 .diff-line-deleted {
     -fx-background-color: #761d1d;

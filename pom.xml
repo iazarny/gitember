@@ -12,7 +12,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <jgit.version>5.12.0.202106070339-r</jgit.version>
 
-        <javafx.version>17.0.2</javafx.version>
+        <javafx.version>20.0.2</javafx.version>
     </properties>
 
 
@@ -185,7 +185,8 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.11.2</version>
+            <version>0.10.9</version>
+            <!--<version>0.11.2</version>-->
         </dependency>
 
 
@@ -333,6 +334,7 @@
                     </execution>
                 </executions>
             </plugin>-->
+
         </plugins>
     </build>
 </project>

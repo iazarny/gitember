@@ -47,7 +47,6 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                 workingcopy.searchText.getText().toLowerCase())) {
                             return LookAndFeelSet.FOUND_ROW;
                         }
-
                     }
                 }
                 return "";

@@ -225,14 +225,28 @@ public class History implements Initializable {
 
                     if ( newValue != null
                             && newValue .length() > Const.SEARCH_LIMIT_CHAR ) {
+
+                        Map<String, Set<String>> searchRez = Context.getGitRepoService().search(
+                                (List<PlotCommit>) Context.plotCommitList,
+                                newValue,
+                                Context.getCurrentProject().isIndexed());
+
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);
                         Context.searchValue.setValue(newValue);
-                        Context.searchResult.setValue(Context.getGitRepoService().search(
-                                (List<PlotCommit>) Context.plotCommitList,
-                                newValue,
-                                Context.getCurrentProject().isIndexed()));
+                        Context.searchResult.setValue(searchRez);
+
+                        Iterator<PlotCommit> commits = Context.plotCommitList.iterator();
+                        int idx = 0;
+                        while (commits.hasNext()) {
+                            PlotCommit commit = commits.next();
+                            if (searchRez.containsKey(commit.getName())) {
+                                commitsTableView.scrollTo(idx);
+                                break;
+                            }
+                            idx++;
+                        }
                         commitsTableView.refresh();
                     } else {
                         Context.searchResult.setValue(null);

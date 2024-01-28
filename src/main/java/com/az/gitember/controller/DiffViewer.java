@@ -113,7 +113,7 @@ public class DiffViewer implements Initializable {
         if (Context.isWindows()) {
             fontSize = LookAndFeelSet.FONT_SIZE;
         } else {
-            fontSize = LookAndFeelSet.FONT_SIZE + 1.0;
+            fontSize = LookAndFeelSet.FONT_SIZE + 2.0; //Mac silicon ok
         }
 
 
@@ -277,13 +277,13 @@ public class DiffViewer implements Initializable {
 
     private SquarePos getDiffPos(Edit delta) {
 
-        final int origPos = delta.getBeginA();
-        final int origLines = delta.getLengthA();
-        final int revPos = delta.getBeginB();
-        final int revLines = delta.getLengthB();
+        final int leftPos = delta.getBeginA();
+        final int leftLines = delta.getLengthA();
+        final int rightPos = delta.getBeginB();
+        final int rightLines = delta.getLengthB();
 
-        int origBottomPos = origPos + origLines;
-        int revBottomPos = revPos + revLines;
+        int origBottomPos = leftPos + leftLines;
+        int revBottomPos = rightPos + rightLines;
 
 
         double deltaY1 = oldScrollPane.estimatedScrollYProperty().getValue();
@@ -291,11 +291,12 @@ public class DiffViewer implements Initializable {
         double deltaY2 = newScrollPane.estimatedScrollYProperty().getValue();
         int border_shift = 0; //uber node and 1 node border
 
+
         int x1 = -1;
-        int y1 = (int) (origPos * fontSize - deltaY1) + border_shift;
+        int y1 = (int) (leftPos * fontSize - deltaY1) + border_shift;
 
         int x2 = (int) diffDrawPanel.getWidth() + 1;
-        int y2 = (int) (revPos * fontSize - deltaY2) + border_shift;
+        int y2 = (int) (rightPos * fontSize - deltaY2) + border_shift;
 
         int x3 = x2;
         int y3 = (int) (revBottomPos * fontSize - deltaY2) + border_shift;
@@ -412,19 +413,19 @@ public class DiffViewer implements Initializable {
 
         codeArea.appendText(text);
 
-        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(FilenameUtils.getExtension(fileName),
+        TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
+                FilenameUtils.getExtension(fileName),
                 this.diffList, leftSide);
 
-        codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter, null));
+        codeArea.setParagraphGraphicFactory(
+                GitemberLineNumberFactory.get(codeArea, adapter, null));
 
         StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
         if (spans != null) {
             codeArea.setStyleSpans(0, spans);
         }
 
-
         adapter.getDecorateByPatch().forEach(codeArea::setParagraphStyle);
-
 
     }
 
