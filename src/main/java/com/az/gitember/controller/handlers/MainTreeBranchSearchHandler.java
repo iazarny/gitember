@@ -72,7 +72,6 @@ public class MainTreeBranchSearchHandler implements EventHandler<ActionEvent> {
         toolStage.setX(posX);
         toolStage.setY(posY);
 
-        App.getjMetro().setScene(toolScene);
         toolStage.setScene(toolScene);
         toolStage.initOwner(App.getScene().getWindow());
         toolStage.setAlwaysOnTop(true);

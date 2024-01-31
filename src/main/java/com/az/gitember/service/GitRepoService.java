@@ -1672,9 +1672,11 @@ public class GitRepoService {
             fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
             fbcOrig.save();
 
-        } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH) || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
+        } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
+                || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
             cmd.setTransportConfigCallback(
-                    new SshTransportConfigCallback(params.getPathToKey(), params.getKeyPassPhrase())
+                    new SshTransportConfigCallback(params.getPathToKey(),
+                            params.getKeyPassPhrase())
             );
         }
 

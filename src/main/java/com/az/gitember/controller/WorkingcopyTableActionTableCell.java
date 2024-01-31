@@ -10,7 +10,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem> {
-
     private final Button downdloadBtn;
     private final Button openBtn;
 
@@ -72,6 +71,5 @@ public class WorkingcopyTableActionTableCell extends TableCell<ScmItem, ScmItem>
         }
 
     }
-
 
 }

@@ -1,14 +1,12 @@
 package com.az.gitember.controller;
 
 import javafx.scene.paint.Color;
-import jfxtras.styles.jmetro.Style;
 
 public class LookAndFeelSet {
 
     public static final double FONT_SIZE = 24.0;
     public static int DIALOG_DEFAULT_WIDTH = 800;
     public static String PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
-    public static Style THEME_NAME = Style.LIGHT;
     public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F); //TODO to css
     public static final Color[] historyPlotCommitRenderedColors = new Color[]{
             Color.rgb(255, 0, 0), Color.rgb(0, 255, 0), Color.rgb(229, 229, 0), Color.rgb(177, 178, 255), Color.rgb(255, 0, 255), Color.rgb(0, 255, 255),
@@ -31,7 +29,6 @@ public class LookAndFeelSet {
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
-            THEME_NAME = Style.DARK;
             BRANCH_NAME_COLOR = Color.LIGHTGRAY;
             KEYWORDS_CSS = "/styles/keywords_dark.css";
             DEFAULT_CSS = "/styles/styles_dark.css";
@@ -44,7 +41,6 @@ public class LookAndFeelSet {
             DIFF_COLOR_TEXT = Color.valueOf("#181818");
         } else {
             PIECHART_LEGENF_STYLE = "";
-            THEME_NAME = Style.LIGHT;
             BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F);
             KEYWORDS_CSS = "/styles/keywords.css";
             DEFAULT_CSS = "/styles/styles.css";

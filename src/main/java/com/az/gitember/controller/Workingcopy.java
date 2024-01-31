@@ -3,10 +3,7 @@ package com.az.gitember.controller;
 import com.az.gitember.App;
 import com.az.gitember.control.ChangeListenerHistoryHint;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.Project;
-import com.az.gitember.data.ScmFilterPredicateLfsOnOff;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.Settings;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
@@ -27,6 +24,7 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,8 +128,28 @@ public class Workingcopy implements Initializable {
 
         searchText.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
+                    //select row if search text is found
+                    Iterator<ScmItem> iter = filteredList.iterator();
+                    int firstFoundIdx = 0;
+                    while ((iter.hasNext())) {
+                        ScmItem item = iter.next();
+                        if (searchText.getText() != null
+                                && searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
+                            if (item.getShortName().toLowerCase().contains(
+                                    searchText.getText().toLowerCase())) {
+                                //workingCopyTableView.getSelectionModel().clearAndSelect(firstFoundIdx);
+                                //workingCopyTableView.getSelectionModel().focus(firstFoundIdx);
+                                workingCopyTableView.scrollTo(firstFoundIdx);
+                                break;
+                            }
+                        }
+                        firstFoundIdx++;
+                    }
                     workingCopyTableView.refresh();
-                    if (oldValue != null && newValue != null && newValue.length() > oldValue.length() && newValue.contains(oldValue)) {
+
+                    if (oldValue != null && newValue != null
+                            && newValue.length() > oldValue.length()
+                            && newValue.contains(oldValue)) {
                         Settings settings = Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
                         settings.getSearchTerms().add(newValue);

@@ -1,5 +1,9 @@
 package com.az.gitember;
 
+import atlantafx.base.theme.CupertinoLight;
+import atlantafx.base.theme.NordLight;
+import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
@@ -16,7 +20,6 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.io.IOException;
@@ -36,11 +39,12 @@ public class App extends Application {
     private static Scene scene;
     private static Stage stage;
     private static App app;
-    private static JMetro jMetro;
 
 
     @Override
     public void start(Stage stage) throws IOException {
+
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
         LogManager.getLogManager().readConfiguration(App.class.getResourceAsStream("/log.properties"));
         (new WindowCacheConfig()).install();
@@ -61,8 +65,6 @@ public class App extends Application {
         App.app = this;
         Context.readSettings();
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
-        jMetro = new JMetro(LookAndFeelSet.THEME_NAME);
-        jMetro.setScene(scene);
         scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
 
         stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
@@ -100,7 +102,6 @@ public class App extends Application {
         final Pair<Parent, Object> pair = loadFXML(fxmlFileName);
         final Stage newStage = new Stage();
         final Scene newScene = new Scene(pair.getFirst());
-        jMetro.setScene(newScene);
 
         newStage.getIcons().add(new Image(App.class.getResourceAsStream(Const.ICON)));
         newStage.setScene(newScene);
@@ -125,9 +126,6 @@ public class App extends Application {
         return scene;
     }
 
-    public static JMetro getjMetro() {
-        return jMetro;
-    }
 
     public static void main(String[] args) {
 
