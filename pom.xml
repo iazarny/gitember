@@ -10,7 +10,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <jgit.version>5.12.0.202106070339-r</jgit.version>
+        <jgit.version>6.8.0.202311291450-r</jgit.version>
+        <apache.tika.version>1.28.5</apache.tika.version>
 
         <javafx.version>20.0.2</javafx.version>
     </properties>
@@ -22,13 +23,13 @@
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.27</version>
+            <version>${apache.tika.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.tika/tika-parsers -->
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers</artifactId>
-            <version>1.27</version>
+            <version>${apache.tika.version}</version>
         </dependency>
 
 
@@ -102,6 +103,11 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>${jgit.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit.ssh.apache</artifactId>
+            <version>${jgit.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
@@ -139,7 +145,7 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
@@ -150,12 +156,12 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
             <classifier>linux</classifier>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
-            <classifier>mac</classifier>
+            <classifier>mac-aarch64</classifier>
         </dependency>
 
 
@@ -236,6 +242,7 @@
             <version>${jgit.version}</version>
             <scope>test</scope>
         </dependency>
+
 
     </dependencies>
     <build>

@@ -18,6 +18,8 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
 
+import static com.az.gitember.data.Const.APP_NAME;
+
 /**
  * Created by Igor_Azarny on 28 - Jan - 2017.
  */
@@ -46,7 +48,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super();
-        this.setTitle("Gitember 2.4");
+        this.setTitle(APP_NAME);
 
         this.getDialogPane().getStyleClass().add("text-input-dialog");
         this.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
@@ -201,22 +203,13 @@ public class AboutDialog extends Dialog {
         dot.setLayoutY(380 );
         applyStyle(dot);
 
-        Path char3 = getPathChar3();
-        char3.setLayoutX(300);
-        char3.setLayoutY(300);
-        applyStyle(char3);
-
         Path char5 = getPathChar5();
-        char5.setLayoutX(330);
+        char5.setLayoutX(300);
         char5.setLayoutY(300);
         applyStyle(char5);
 
-
-
-
-
         return new Path [] {
-                path, char2, dot, char3, char5,
+                path, char2, dot,  char5,
         };
     }
 

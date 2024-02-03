@@ -3,7 +3,6 @@ package com.az.gitember.service;
 import com.az.gitember.controller.Main;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
-import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -123,7 +122,6 @@ public class Context {
         project.setProjectHomeFolder(gitFolder);
         project.setUserName(remoteRepoParameters.getUserName());
         project.setUserPwd(remoteRepoParameters.getUserPwd());
-        project.setUserKey(remoteRepoParameters.getPathToKey());
         project.setKeyPass(remoteRepoParameters.getKeyPassPhrase());
 
         updateWorkingBranch();
@@ -298,5 +296,9 @@ public class Context {
 
     public static boolean isWindows() {
         return (OS.contains("win"));
+    }
+
+    public static boolean isMac() {
+        return (OS.contains("mac"));
     }
 }

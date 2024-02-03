@@ -22,13 +22,6 @@ import java.util.Collection;
  */
 public class CloneDialog extends Dialog<RemoteRepoParameters> {
 
-    private Label pathToKeyLabel;
-    private TextField pathToKey;
-    private Button selectPathToKeyBtn;
-
-    private final Label passphrazeLabel;
-    private final PasswordField passphraze;
-
     private final Label httpLoginLabel;
     private final TextField httpLogin;
 
@@ -68,14 +61,6 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
         Button selectFolder = new Button("...");
         HBox folderHBox = new HBox(folder, selectFolder);
 
-        pathToKeyLabel = new Label("Key path : ");
-        selectPathToKeyBtn = new Button("...");
-        pathToKey = new TextField();
-        HBox.setHgrow(pathToKey, Priority.ALWAYS);
-        HBox keyHBox = new HBox(pathToKey, selectPathToKeyBtn);
-
-        passphrazeLabel = new Label("Key passphrase");
-        passphraze = new PasswordField();
 
 
         httpLoginLabel = new Label("Login");
@@ -107,23 +92,8 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
                 }
         );
 
-        selectPathToKeyBtn.setOnAction(
-                event -> {
-                    final FileChooser fileChooser = new FileChooser();
-                    fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-                    final File selectedFile =
-                            fileChooser.showOpenDialog(App.getStage());
-                    if (selectedFile != null) {
-                        pathToKey.setText(selectedFile.getAbsolutePath());
-                    }
-                }
-        );
 
-        grid.add(pathToKeyLabel, 0, 2);
-        grid.add(keyHBox, 1, 2);
 
-        grid.add(passphrazeLabel, 0, 3);
-        grid.add(passphraze, 1, 3);
 
         grid.add(httpLoginLabel, 0, 2);
         grid.add(httpLogin, 1, 2);
@@ -133,11 +103,6 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
 
         grid.requestLayout();
 
-        pathToKeyLabel.setVisible(false);
-        pathToKey.setVisible(false);
-        passphrazeLabel.setVisible(false);
-        passphraze.setVisible(false);
-        selectPathToKeyBtn.setVisible(false);
 
         httpLoginLabel.setVisible(false);
         httpLogin.setVisible(false);
@@ -161,11 +126,6 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
                 httpSectionVisible = false;
             }
 
-            pathToKeyLabel.setVisible(gitSectionVisible);
-            pathToKey.setVisible(gitSectionVisible);
-            passphrazeLabel.setVisible(gitSectionVisible);
-            passphraze.setVisible(gitSectionVisible);
-            selectPathToKeyBtn.setVisible(gitSectionVisible);
 
             httpLoginLabel.setVisible(httpSectionVisible);
             httpLogin.setVisible(httpSectionVisible);
@@ -178,8 +138,6 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
 
         Bindings.bindBidirectional(repositoryURL.textProperty(), cloneParameters.urlProperty());
         Bindings.bindBidirectional(folder.textProperty(), cloneParameters.destinationFolderProperty());
-        Bindings.bindBidirectional(pathToKey.textProperty(), cloneParameters.pathToKeyProperty());
-        Bindings.bindBidirectional(passphraze.textProperty(), cloneParameters.keyPassPhraseProperty());
         Bindings.bindBidirectional(httpLogin.textProperty(), cloneParameters.userNameProperty());
         Bindings.bindBidirectional(httpPpassword.textProperty(), cloneParameters.userPwdProperty());
 
@@ -194,24 +152,7 @@ public class CloneDialog extends Dialog<RemoteRepoParameters> {
             return null;
         });
 
-
         this.initOwner(App.getScene().getWindow());
-        /*App.getScene().getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
-        repositoryURL.focusedProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
-            {
-                if (newPropertyValue)
-                {
-                    repositoryURL.getParent().setStyle("-fx-background-color: lightblue;");
-                }
-                else
-                {
-                    repositoryURL.setStyle("-fx-background-color: red;");
-                }
-            }
-        });*/
 
     }
 }

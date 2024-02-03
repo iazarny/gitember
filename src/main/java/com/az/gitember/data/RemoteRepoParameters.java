@@ -15,12 +15,7 @@ public class RemoteRepoParameters {
     private StringProperty userPwd = new SimpleStringProperty("");
     private StringProperty url = new SimpleStringProperty("");
     private StringProperty destinationFolder = new SimpleStringProperty("");
-    private StringProperty pathToKey = new SimpleStringProperty(
-            System.getProperty("user.home")
-            + File.separator
-            + ".ssh"
-            + File.separator
-            + "id_rsa");
+
     private StringProperty keyPassPhrase = new SimpleStringProperty("");
 
     public String getUrl() {
@@ -45,18 +40,6 @@ public class RemoteRepoParameters {
 
     public void setDestinationFolder(String destinationFolder) {
         this.destinationFolder.set(destinationFolder);
-    }
-
-    public String getPathToKey() {
-        return pathToKey.get();
-    }
-
-    public StringProperty pathToKeyProperty() {
-        return pathToKey;
-    }
-
-    public void setPathToKey(String pathToKey) {
-        this.pathToKey.set(pathToKey);
     }
 
     public String getKeyPassPhrase() {
@@ -105,7 +88,6 @@ public class RemoteRepoParameters {
 
         this.userName.setValue(project.getUserName());
         this.userPwd.setValue(project.getUserPwd());
-        this.pathToKey.setValue(project.getUserKey());
         this.keyPassPhrase.setValue(project.getKeyPass());
         this.url.setValue(url);
 
@@ -123,7 +105,6 @@ public class RemoteRepoParameters {
                 ", userPwd=" + (StringUtils.isBlank(userPwd.getValue()) ? "none" : "set") +
                 ", url=" + url +
                 ", destinationFolder=" + destinationFolder +
-                ", pathToKey=" + pathToKey +
                 ", keyPassPhrase=" + keyPassPhrase +
                 '}';
     }

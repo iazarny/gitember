@@ -41,7 +41,7 @@ public interface Const {
         String WORKING_COPY = "workingcopy";
     }
 
-    String APP_NAME = "Gitember 2.35";
+    String APP_NAME = "Gitember 2.5";
 
     String ICON = "/icon/GE-icon.png";
 

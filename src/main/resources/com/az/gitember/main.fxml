@@ -6,7 +6,9 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import com.az.gitember.controller.MainTreeItemCellFactory?>
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Main" style="-fx-background-color: background_color;">
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.az.gitember.controller.Main">
     <top>
         <VBox>
             <children>
@@ -82,10 +84,10 @@
                             <items>
                                 <MenuItem text="Check for update" onAction="#checkForUpdate"/>
                                 <MenuItem text="Create bug report" onAction="#createBugReportHandler"/>
-                                <!--Menu text="Style">
+                                <Menu text="Style">
                                     <MenuItem text="Light" onAction="#setThemeLight"/>
                                     <MenuItem text="Dark" onAction="#setThemeDark"/>
-                                </Menu-->
+                                </Menu>
                                 <SeparatorMenuItem mnemonicParsing="false"/>
                                 <MenuItem text="About" onAction="#aboutHandler"/>
                             </items>

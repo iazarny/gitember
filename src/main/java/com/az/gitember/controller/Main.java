@@ -72,6 +72,9 @@ public class Main implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
         Context.setMain(this);
+        if (Context.isMac()) {
+            mainMenuBar.setUseSystemMenuBar(true);
+        }
 
         mainTreeChangeListener = new MainTreeChangeListener();
 
@@ -371,7 +374,7 @@ public class Main implements Initializable {
         try {
             Runtime rt = Runtime.getRuntime();
             Process process = rt.exec(
-                    Context.isWindows() ? new String[]{"cmd", "/c", "start"} : new String[]{"bash"},
+                    Context.isWindows() ? new String[]{"cmd", "/c", "start"} : new String[]{"open", "/bin/bash"},
                     null,
                     new File(
                             Context.getProjectFolder().isEmpty() ?

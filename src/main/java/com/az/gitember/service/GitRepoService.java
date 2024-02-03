@@ -1,7 +1,6 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.*;
-import com.az.gitember.service.ssh.SshTransportConfigCallback;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.*;
@@ -31,12 +30,16 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.*;
+import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
@@ -1674,10 +1677,45 @@ public class GitRepoService {
 
         } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
                 || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
+            /*cmd.setTransportConfigCallback(
+                    new SshTransportConfigCallback(
+                            params.getPathToKey(),
+                            params.getKeyPassPhrase()
+                    )
+            );*/
+
+            File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
+
+            SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
+                    .setPreferredAuthentications("publickey")
+                    .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
+                    .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp) {
+                        @Override
+                        protected char[] getPassword(URIish uri, String message) {
+                            return "".toCharArray();//passphrase.toCharArray();
+                        }
+                    }).build(null);
+
             cmd.setTransportConfigCallback(
-                    new SshTransportConfigCallback(params.getPathToKey(),
-                            params.getKeyPassPhrase())
-            );
+                    transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
+
+
+
+            /*TransportCommand<T, C> transportCommand = <Any Transport command in JGIT>;
+File sshDir = new File(FS.DETECTED.userHome(), File.separator+SSH_DIR);
+      SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder().setPreferredAuthentications("publickey")
+        .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
+        .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp)
+        {
+          @Override
+          protected char[] getPassword(URIish uri, String message)
+          {
+            return passphrase.toCharArray();
+          }
+        }).build(null);
+ transportCommand.setTransportConfigCallback(
+    transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));*/
+
         }
 
     }

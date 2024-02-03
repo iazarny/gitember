@@ -89,4 +89,9 @@ public class DefaultProgressMonitor implements ProgressMonitor {
             percentageCompleteConsumer.accept(title, c);
         }
     }
+
+    @Override
+    public void showDuration(boolean b) {
+
+    }
 }

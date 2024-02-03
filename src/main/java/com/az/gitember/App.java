@@ -44,7 +44,13 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 
-        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        Context.readSettings();
+
+        if ("Dark".equals(Context.settingsProperty.get().getTheme())) {
+            Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+        } else {
+            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        }
 
         LogManager.getLogManager().readConfiguration(App.class.getResourceAsStream("/log.properties"));
         (new WindowCacheConfig()).install();
@@ -63,7 +69,7 @@ public class App extends Application {
 
         App.stage = stage;
         App.app = this;
-        Context.readSettings();
+
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
 
