@@ -21,27 +21,39 @@
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="400.0" />
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints minHeight="20.0" prefHeight="20.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="20.0" prefHeight="30.0" vgrow="NEVER" />
-                <RowConstraints minHeight="20.0" prefHeight="30.0" vgrow="NEVER" />
-                <RowConstraints minHeight="20.0" prefHeight="30.0" valignment="TOP" vgrow="SOMETIMES" />
+                <RowConstraints   vgrow="SOMETIMES" />
+                <RowConstraints   vgrow="NEVER" />
+                <RowConstraints   vgrow="NEVER" />
+                <RowConstraints   valignment="TOP" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <Label text="Message:" />
-                <Label text="Author:" GridPane.rowIndex="1" />
-                <Label text="Date:" GridPane.rowIndex="3" />
-                <Label text="SHA:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                <Label text="Refs:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                <Label text="Parent:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-                <TextField fx:id="msgLbl" text="" GridPane.columnIndex="1" GridPane.columnSpan="3" editable="false"  style="-right-button-visible: false;" />
-                <TextField fx:id="authorLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" editable="false"  style="-right-button-visible: false;"/>
-                <TextField fx:id="dateLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="3"  editable="false"  style="-right-button-visible: false;"/>
-                <TextField fx:id="shaLbl" alignment="CENTER_RIGHT" text="shaLbl" GridPane.columnIndex="3" GridPane.rowIndex="2"  editable="false"  style="-right-button-visible: false;"/>
-                <TextField fx:id="refsLbl" alignment="CENTER_RIGHT"  text="" GridPane.columnIndex="3" GridPane.rowIndex="1"  editable="false"  style="-right-button-visible: false;"/>
-                <TextField fx:id="parentLbl" alignment="CENTER_RIGHT"  text="" GridPane.columnIndex="3" GridPane.rowIndex="3"  editable="false"  style="-right-button-visible: false;"/>
-                <Label text="Email:" GridPane.rowIndex="2" />
-                <TextField fx:id="emailLbl" text="" GridPane.columnIndex="1" GridPane.rowIndex="2"  editable="false"  style="-right-button-visible: false;"/>
+                <Label text="Message:" />
+                <TextField fx:id="msgLbl"  GridPane.columnIndex="1" GridPane.columnSpan="5" editable="false" />
+
+                <Label text="Author:"         GridPane.columnIndex="0" GridPane.rowIndex="1"   />
+                <TextField fx:id="authorLbl"  GridPane.columnIndex="1" GridPane.rowIndex="1" editable="false"  />
+
+                <Label text="Email:"         GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <TextField fx:id="emailLbl"  GridPane.columnIndex="3" GridPane.rowIndex="1"  editable="false"  />
+
+
+                <Label text="Date:"         GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                <TextField fx:id="dateLbl" alignment="CENTER_RIGHT" GridPane.columnIndex="5" GridPane.rowIndex="1"  editable="false"  />
+
+
+                <Label text="Refs:"                                   GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <TextField fx:id="refsLbl"    GridPane.columnIndex="1" GridPane.rowIndex="2"  editable="false"  />
+
+
+                <Label text="SHA:"                                  GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                <TextField fx:id="shaLbl"   GridPane.columnIndex="3" GridPane.rowIndex="2"  editable="false"  />
+
+
+                <Label text="Parent:"                                   GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                <TextField fx:id="parentLbl" alignment="CENTER_RIGHT"   GridPane.columnIndex="5" GridPane.rowIndex="2"  editable="false"  />
+
+
             </children>
             <BorderPane.margin>
                 <Insets left="5.0" top="5.0" />
@@ -52,7 +64,7 @@
     <center>
         <TableView fx:id="changedFilesListView"   AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <columns>
-                <TableColumn fx:id="actionTableColumn" prefWidth="40.0" style="-fx-font-size: 120%;  -fx-label-padding: 2px 0px 0px 5px" text="" />
+                <TableColumn fx:id="actionTableColumn" prefWidth="40.0" style="-fx-font-size: 120%;  -fx-label-padding: 2px 0px 0px 5px"  />
                 <TableColumn fx:id="fileTableColumn" prefWidth="840.00" text="File" />
             </columns>
             <contextMenu>

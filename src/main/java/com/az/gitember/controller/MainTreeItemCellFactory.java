@@ -7,16 +7,10 @@ import com.az.gitember.service.Context;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
-import javafx.scene.effect.Effect;
-import javafx.scene.effect.Glow;
-import javafx.scene.effect.MotionBlur;
 import javafx.util.Callback;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
-import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
-
-import java.util.Optional;
 
 /**
  * Created by Igor_Azarny on 03 - Dec - 2016
@@ -75,7 +69,6 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                     }
 
 
-
                     String cellStyle = "";
                     if (scmWorkingBranchName.equalsIgnoreCase(scmBranch.getFullName())) {
                         cellStyle += "-fx-font-weight: bold;";
@@ -101,8 +94,6 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
             }
         }
     }
-
-
 
 
     @Override

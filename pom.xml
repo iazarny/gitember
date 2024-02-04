@@ -54,13 +54,6 @@
         </dependency>
 
 
-        <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
-        <dependency>
-            <groupId>org.kordamp.ikonli</groupId>
-            <artifactId>ikonli-fontawesome5-pack</artifactId>
-            <version>12.3.1</version>
-        </dependency>        <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
-
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-fontawesome-pack</artifactId>
@@ -145,24 +138,24 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <!--<dependency>
+        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
             <classifier>win</classifier>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
             <classifier>linux</classifier>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
             <classifier>mac-aarch64</classifier>
-        </dependency>
+        </dependency-->
 
 
 
