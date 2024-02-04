@@ -9,7 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
 <GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.az.gitember.controller.DiffViewer" style="-fx-background-color: background_color">
+          fx:controller="com.az.gitember.controller.DiffViewer" >
     
    <columnConstraints>
       <ColumnConstraints percentWidth="46" />
@@ -23,7 +23,7 @@
    <children>
 
       <ToolBar GridPane.columnIndex="0">
-         <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" style="-right-button-visible: false;"/>
+         <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" />
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
@@ -32,7 +32,7 @@
       <Pane                        prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
 
       <ToolBar GridPane.columnIndex="2">
-         <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" style="-right-button-visible: false;"/>
+         <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" />
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>

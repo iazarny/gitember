@@ -3,11 +3,9 @@ package com.az.gitember.controller;
 import com.az.gitember.control.VirtualizedOverviewScrollPane;
 import com.az.gitember.controller.handlers.EscEventHandler;
 import com.az.gitember.data.SquarePos;
-import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
@@ -20,7 +18,6 @@ import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.stage.Stage;
 
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
@@ -110,12 +107,7 @@ public class DiffViewer implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        if (Context.isWindows()) {
-            fontSize = LookAndFeelSet.FONT_SIZE;
-        } else {
-            fontSize = LookAndFeelSet.FONT_SIZE ;//+ 0.6; //Mac silicon ok
-        }
-
+        fontSize = LookAndFeelSet.FONT_SIZE;
 
         oldCodeArea = new CodeArea();
         oldCodeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);

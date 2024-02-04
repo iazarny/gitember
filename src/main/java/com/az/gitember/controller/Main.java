@@ -76,6 +76,7 @@ public class Main implements Initializable {
             mainMenuBar.setUseSystemMenuBar(true);
         }
 
+
         mainTreeChangeListener = new MainTreeChangeListener();
 
         Context.workingBranch.addListener(
