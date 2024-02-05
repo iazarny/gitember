@@ -176,14 +176,14 @@ public class CommitDialog extends Dialog<String> {
         grid.getChildren().clear();
 
         grid.add(label, 0, 0);
-        grid.add(textArea, 1, 0);
+        grid.add(textArea, 0, 1);
 
         if (!hideUser) {
-            grid.add(userNameLbl, 0, 1);
-            grid.add(userNameTxt, 1, 1);
+            grid.add(userNameLbl, 0, 2);
+            grid.add(userNameTxt, 0, 3);
 
-            grid.add(userEmailLbl, 0, 2);
-            grid.add(userEmailTxt, 1, 2);
+            grid.add(userEmailLbl, 0, 4);
+            grid.add(userEmailTxt, 0, 5);
         }
 
 
