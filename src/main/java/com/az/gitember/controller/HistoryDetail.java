@@ -129,6 +129,16 @@ public class HistoryDetail implements Initializable {
                             }
 
                         }
+
+                        setOnMouseClicked(event -> {
+                            if (event.getClickCount() == 2) {
+                                //new DiffWithDiskEventHandler(item).handle(event);
+                                openDiffFileVersion(null);
+                            }
+                        });
+
+
+
                     }
                     setStyle(style);
 
