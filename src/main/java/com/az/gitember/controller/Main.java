@@ -95,7 +95,13 @@ public class Main implements Initializable {
                     if (pullBtn.isDisable()) {
                         pullBtn.setTooltip(new Tooltip());
                     } else {
-                        pullBtn.setTooltip(new Tooltip("Pull " + ScmBranch.getNameExtSafe(scmBranch)));
+                        //pullBtn.setTooltip(new Tooltip("Pull " + ScmBranch.getNameExtSafe(scmBranch)));
+                        pullBtn.setTooltip(new Tooltip());
+                        scmBranch.getScmBranchTooltip().ifPresent(
+                                t -> {
+                                    pullBtn.setTooltip(new Tooltip(t));
+                                }
+                        );
                     }
 
                     puchMenuItem.setDisable(pushBtn.isDisable());
