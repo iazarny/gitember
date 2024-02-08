@@ -59,12 +59,6 @@
             <artifactId>ikonli-fontawesome-pack</artifactId>
             <version>12.3.1</version>
         </dependency>
-        <dependency>
-            <groupId>com.sshtools</groupId>
-            <artifactId>icon-generator-javafx</artifactId>
-            <version>1.4.3</version>
-        </dependency>
-
 
         <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
         <dependency>

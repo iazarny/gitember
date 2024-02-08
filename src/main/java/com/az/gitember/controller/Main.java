@@ -15,6 +15,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +62,10 @@ public class Main implements Initializable {
     public TreeItem localBranchesTreeItem;
     public TreeItem remoteBranchesTreeItem;
     public TreeItem tagsTreeItem;
+    public Label aheadIconQty;
+    public Label behindIconQty;
+    public StackedFontIcon aheadIcon;
+    public StackedFontIcon behindIcon;
 
 
     /**
@@ -88,14 +94,11 @@ public class Main implements Initializable {
                                     + ScmBranch.getNameSafe(scmBranch));
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
-
-
                     pullBtn.setDisable(remUrl == null || newValue.getRemoteMergeName() == null);
 
                     if (pullBtn.isDisable()) {
                         pullBtn.setTooltip(new Tooltip());
                     } else {
-                        //pullBtn.setTooltip(new Tooltip("Pull " + ScmBranch.getNameExtSafe(scmBranch)));
                         pullBtn.setTooltip(new Tooltip());
                         scmBranch.getScmBranchTooltip().ifPresent(
                                 t -> {
@@ -106,8 +109,14 @@ public class Main implements Initializable {
 
                     puchMenuItem.setDisable(pushBtn.isDisable());
                     pullMenuItem.setDisable(pullBtn.isDisable());
-
                     fetchBtn.setTooltip(new Tooltip("Fetch all"));
+
+                    int aheadQty = scmBranch.getAheadCount();
+                    int behindQty = scmBranch.getBehindCount();
+                    aheadIconQty.setText(String.valueOf(aheadQty));
+                    behindIconQty.setText(String.valueOf(behindQty));
+                    aheadIcon.setVisible(aheadQty > 0);
+                    behindIcon.setVisible(behindQty > 0);
 
 
                 }

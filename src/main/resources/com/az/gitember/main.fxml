@@ -119,9 +119,8 @@
                                     <FontIcon iconLiteral="fa-reply" iconSize="24"/>
                                 </StackedFontIcon>
                                 <!--Just for space between icon and text-->
-                                <StackedFontIcon visible="false"  alignment="TOP_RIGHT" style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
-                                    <Label style="-fx-font-size: 10; -fx-font: Monospace; " text="  "/>
+                                <StackedFontIcon fx:id="behindIcon" visible="false" alignment="TOP_RIGHT" style="-fx-icon-color: text_color">
+                                    <Label fx:id="behindIconQty" style="-fx-font-size: 10; -fx-font: Monospace; " text="9"/>
                                 </StackedFontIcon>
                             </HBox>
 
@@ -135,13 +134,9 @@
                                 </StackedFontIcon>
                                 <VBox >
                                     <StackedFontIcon fx:id="aheadIcon" visible="false" alignment="TOP_RIGHT"  style="-fx-icon-color: text_color">
-                                        <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
                                         <Label fx:id="aheadIconQty" style="-fx-font-size: 10; -fx-font: Monospace; " text="9 "/>
                                     </StackedFontIcon>
-                                    <StackedFontIcon fx:id="behindIcon" visible="false" alignment="BOTTOM_RIGHT" style="-fx-icon-color: text_color">
-                                        <FontIcon iconLiteral="fa-circle-thin" iconSize="14"/>
-                                        <Label fx:id="behindIconQty" style="-fx-font-size: 10; -fx-font: Monospace; " text="9"/>
-                                    </StackedFontIcon>
+
 
                                 </VBox>
                             </HBox>
