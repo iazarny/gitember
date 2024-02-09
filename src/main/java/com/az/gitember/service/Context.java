@@ -228,6 +228,7 @@ public class Context {
         workingBranch.setValue(
                 localBrancesProperty.get().stream().filter(ScmBranch::isHead).findFirst().orElse(null)
         );
+        getMain().updateButtonUI();
     }
 
     public static void updateBranches()  {
