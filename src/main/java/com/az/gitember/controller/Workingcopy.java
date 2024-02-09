@@ -270,6 +270,4 @@ public class Workingcopy implements Initializable {
         Context.getMain().updateButtonUI();
     }
 
-
-
 }
