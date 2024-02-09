@@ -23,7 +23,7 @@ public class LookAndFeelSet {
 
     public static Color DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
     public static Color DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
-    public static Color DIFF_COLOR_REPLACE = Color.valueOf("#404040");
+    public static Color DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
     public static Color DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
 
     public static void init(String themeMode) {
@@ -37,7 +37,7 @@ public class LookAndFeelSet {
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #505050;";
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
-            DIFF_COLOR_REPLACE = Color.valueOf("#e0e0e0");
+            DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
             DIFF_COLOR_TEXT = Color.valueOf("#505050");
         } else {
             PIECHART_LEGENF_STYLE = "";
@@ -49,7 +49,7 @@ public class LookAndFeelSet {
             CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
-            DIFF_COLOR_REPLACE = Color.valueOf("#404040");
+            DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
             DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
 
         }

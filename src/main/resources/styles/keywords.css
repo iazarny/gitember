@@ -67,12 +67,12 @@
 .diff-path-new {
     -fx-stroke-width: 0.5;
     -fx-stroke: #d1e8d1;
-    -fx-fill:  #97fa97;
+    -fx-fill:  #a5f1a5;
 }
 .diff-path-modified {
     -fx-stroke-width: 0.5;
-    -fx-stroke: #e5e5e5;
-    -fx-fill: #cdcdcd;
+    -fx-stroke: #e5e5fa;
+    -fx-fill: #cdcdf0;
 }
 
 .diff-path-deleted {
@@ -82,10 +82,10 @@
 }
 
 .diff-line-new {
-    -fx-background-color:  #97fa97;
+    -fx-background-color: #a5f1a5;
 }
 .diff-line-modified {
-    -fx-background-color: #cdcdcd;
+    -fx-background-color: #cdcdf0;
 }
 .diff-line-deleted {
     -fx-background-color: #fa97b3;
