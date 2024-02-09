@@ -94,15 +94,30 @@ public class Main implements Initializable {
                                     + ScmBranch.getNameSafe(scmBranch));
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
-                    pullBtn.setDisable(remUrl == null || newValue.getRemoteMergeName() == null);
+                    if (!pushBtn.isDisable()) {
+                        scmBranch.getScmBranchTooltip().ifPresent(
+                                t -> {
+                                    pullBtn.setTooltip(
+                                            new Tooltip(
+                                                    "Push " + ScmBranch.getNameExtSafe(scmBranch)
+                                                    + ". " + t
+                                            )
+                                    );
+                                }
+                        );
+                    }
 
-                    if (pullBtn.isDisable()) {
-                        pullBtn.setTooltip(new Tooltip());
-                    } else {
+
+                    pullBtn.setDisable(remUrl == null || newValue.getRemoteMergeName() == null);
+                    pullBtn.setTooltip(new Tooltip());
+                    if (!pullBtn.isDisable()) {
                         pullBtn.setTooltip(new Tooltip());
                         scmBranch.getScmBranchTooltip().ifPresent(
                                 t -> {
-                                    pullBtn.setTooltip(new Tooltip(t));
+                                    pullBtn.setTooltip(new Tooltip(
+                                            "Pull " + ScmBranch.getNameExtSafe(scmBranch)
+                                                    + ". " + t
+                                    ));
                                 }
                         );
                     }

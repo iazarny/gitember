@@ -217,22 +217,22 @@ public class Workingcopy implements Initializable {
 
     public void mergeEventHandler(ActionEvent actionEvent) {
         new MergeBranchEventHandler(null).handle(actionEvent);
-        Context.getMain().updateButtonUI();
+        Context.updateWorkingBranch();
     }
 
     public void rebaseEventHandler(ActionEvent actionEvent) {
         new RebaseBranchEventHandler(null).handle(actionEvent);
-        Context.getMain().updateButtonUI();
+        Context.updateWorkingBranch();
     }
 
     public void checkoutEventHandler(ActionEvent actionEvent) {
         new CheckoutEventHandler().handle(actionEvent);
-        Context.getMain().updateButtonUI();
+        Context.updateWorkingBranch();
     }
 
     public void refreshEventHandler(ActionEvent actionEvent) {
         Context.updateAll();
-        Context.getMain().updateButtonUI();
+        Context.updateWorkingBranch();
     }
 
     public void commitEventHandler(ActionEvent actionEvent) {
@@ -267,7 +267,7 @@ public class Workingcopy implements Initializable {
                 Context.getMain().showResult("Commit error", e.getMessage(), Alert.AlertType.ERROR);
             }
         });
-        Context.getMain().updateButtonUI();
+        Context.updateWorkingBranch();
     }
 
 }
