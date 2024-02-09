@@ -111,7 +111,7 @@ public class Main implements Initializable {
                     pullMenuItem.setDisable(pullBtn.isDisable());
                     fetchBtn.setTooltip(new Tooltip("Fetch all"));
 
-                    updateButtonUI(scmBranch);
+                    updateButtonUI();
 
 
                 }
@@ -232,7 +232,8 @@ public class Main implements Initializable {
         });
     }
 
-    private void updateButtonUI(ScmBranch scmBranch) {
+    public void updateButtonUI() {
+        ScmBranch scmBranch = Context.workingBranch.getValue();
         int aheadQty = scmBranch.getAheadCount();
         int behindQty = scmBranch.getBehindCount();
         aheadIconQty.setText(String.valueOf(aheadQty));
@@ -266,7 +267,7 @@ public class Main implements Initializable {
         RemoteRepoParameters repoParameters = new RemoteRepoParameters();
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
         final ScmBranch scmBranch = Context.workingBranch.get();
-        updateButtonUI(scmBranch);
+        updateButtonUI();
     }
 
     public void largeFileSupportHandler(ActionEvent actionEvent) throws IOException {
@@ -361,14 +362,14 @@ public class Main implements Initializable {
     public void pullHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PullHandler(scmBranch).handle(actionEvent);
-        updateButtonUI(scmBranch);
+        updateButtonUI();
 
     }
 
     public void pushHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PushHandler(scmBranch).handle(actionEvent);
-        updateButtonUI(scmBranch);
+        updateButtonUI();
     }
 
     public void createRepositoryHandler(ActionEvent actionEvent) {
