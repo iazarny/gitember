@@ -111,12 +111,7 @@ public class Main implements Initializable {
                     pullMenuItem.setDisable(pullBtn.isDisable());
                     fetchBtn.setTooltip(new Tooltip("Fetch all"));
 
-                    int aheadQty = scmBranch.getAheadCount();
-                    int behindQty = scmBranch.getBehindCount();
-                    aheadIconQty.setText(String.valueOf(aheadQty));
-                    behindIconQty.setText(String.valueOf(behindQty));
-                    aheadIcon.setVisible(aheadQty > 0);
-                    behindIcon.setVisible(behindQty > 0);
+                    updateButtonUI(scmBranch);
 
 
                 }
@@ -237,6 +232,15 @@ public class Main implements Initializable {
         });
     }
 
+    private void updateButtonUI(ScmBranch scmBranch) {
+        int aheadQty = scmBranch.getAheadCount();
+        int behindQty = scmBranch.getBehindCount();
+        aheadIconQty.setText(String.valueOf(aheadQty));
+        behindIconQty.setText(String.valueOf(behindQty));
+        aheadIcon.setVisible(aheadQty > 0);
+        behindIcon.setVisible(behindQty > 0);
+    }
+
 
     /**
      * Open repository.
@@ -261,6 +265,8 @@ public class Main implements Initializable {
     public void fetchHandler(ActionEvent actionEvent) {
         RemoteRepoParameters repoParameters = new RemoteRepoParameters();
         new FetchEventHandler(repoParameters, null).handle(actionEvent);
+        final ScmBranch scmBranch = Context.workingBranch.get();
+        updateButtonUI(scmBranch);
     }
 
     public void largeFileSupportHandler(ActionEvent actionEvent) throws IOException {
@@ -355,13 +361,14 @@ public class Main implements Initializable {
     public void pullHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PullHandler(scmBranch).handle(actionEvent);
+        updateButtonUI(scmBranch);
 
     }
 
     public void pushHandler(ActionEvent actionEvent) {
-
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PushHandler(scmBranch).handle(actionEvent);
+        updateButtonUI(scmBranch);
     }
 
     public void createRepositoryHandler(ActionEvent actionEvent) {
