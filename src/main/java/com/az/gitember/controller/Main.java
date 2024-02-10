@@ -378,6 +378,7 @@ public class Main implements Initializable {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PullHandler(scmBranch).handle(actionEvent);
         Context.updateWorkingBranch();
+        updateButtonUI();
 
     }
 
@@ -385,6 +386,7 @@ public class Main implements Initializable {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PushHandler(scmBranch).handle(actionEvent);
         Context.updateWorkingBranch();
+        updateButtonUI();
     }
 
     public void createRepositoryHandler(ActionEvent actionEvent) {
