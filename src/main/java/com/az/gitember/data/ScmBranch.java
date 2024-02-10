@@ -61,6 +61,23 @@ public class ScmBranch {
         }
     }
 
+
+
+    public Optional<String> getScmBranchPushTooltip() {
+        String tooltip = null;
+        if (getAheadCount() > 0) {
+            tooltip = String.format("%s ahead of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getAheadCount() );
+        }
+        return Optional.ofNullable(tooltip);
+    }
+    public Optional<String> getScmBranchPullTooltip() {
+        String tooltip = null;
+        if (getBehindCount() > 0) {
+            tooltip = String.format("%s behind of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getBehindCount());
+        }
+        return Optional.ofNullable(tooltip);
+    }
+
     public Optional<String> getScmBranchTooltip() {
         String tooltip = null;
         if (getAheadCount() > 0) {

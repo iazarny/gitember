@@ -95,9 +95,9 @@ public class Main implements Initializable {
                     pushBtn.setDisable(remUrl == null || false);
                     pushBtn.setTooltip(new Tooltip("Push " + ScmBranch.getNameExtSafe(scmBranch)));
                     if (!pushBtn.isDisable()) {
-                        scmBranch.getScmBranchTooltip().ifPresent(
+                        scmBranch.getScmBranchPushTooltip().ifPresent(
                                 t -> {
-                                    pullBtn.setTooltip(
+                                    pushBtn.setTooltip(
                                             new Tooltip(
                                                     "Push " + ScmBranch.getNameExtSafe(scmBranch)
                                                     + ". " + t
@@ -109,10 +109,9 @@ public class Main implements Initializable {
 
 
                     pullBtn.setDisable(remUrl == null || newValue.getRemoteMergeName() == null);
-                    pullBtn.setTooltip(new Tooltip());
+                    pullBtn.setTooltip(new Tooltip("Pull " + ScmBranch.getNameExtSafe(scmBranch)));
                     if (!pullBtn.isDisable()) {
-                        pullBtn.setTooltip(new Tooltip());
-                        scmBranch.getScmBranchTooltip().ifPresent(
+                        scmBranch.getScmBranchPullTooltip().ifPresent(
                                 t -> {
                                     pullBtn.setTooltip(new Tooltip(
                                             "Pull " + ScmBranch.getNameExtSafe(scmBranch)
@@ -124,6 +123,7 @@ public class Main implements Initializable {
 
                     puchMenuItem.setDisable(pushBtn.isDisable());
                     pullMenuItem.setDisable(pullBtn.isDisable());
+
                     fetchBtn.setTooltip(new Tooltip("Fetch all"));
 
                     updateButtonUI();
