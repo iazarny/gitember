@@ -85,7 +85,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
 
         Label lineNo = new Label();
         if (blame != null) {
-            int width = maxLen * 11;
+            int width = maxLen * 20;
             lineNo.setMaxWidth(width);
             lineNo.setMinWidth(width);
             lineNo.setPrefWidth(width);
@@ -106,7 +106,8 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
         if (blame != null && blame.getResultContents() != null) {
             try {
                 if (blame.getSourceCommit(lineIdx) != null) {
-                    author =  " " + GitemberUtil.formatDateOnly(GitemberUtil.intToDate(blame.getSourceCommit(lineIdx).getCommitTime()))
+                    author =  " " + GitemberUtil.formatDateOnlyShort(
+                            GitemberUtil.intToDate(blame.getSourceCommit(lineIdx).getCommitTime()))
                             + " " + blame.getSourceAuthor(lineIdx).getName();
                 }
             } catch (Exception e) {}

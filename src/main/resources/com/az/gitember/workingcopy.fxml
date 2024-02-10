@@ -53,31 +53,17 @@
             </MenuBar>
             <ToolBar id="MERGEITEM">
                 <Separator id="MERGEITEM"/>
-                <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all">
-                    <!--<graphic>
-                        <StackedFontIcon style="-fx-icon-color: text_color">
-                            <FontIcon iconLiteral="fa-arrow-circle-up" iconSize="24"  />
-                        </StackedFontIcon>
-                    </graphic>-->
-                </Button>
-                <Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all">
-                    <!--<graphic>
-                        <StackedFontIcon style="-fx-icon-color: text_color">
-                            <FontIcon iconLiteral="fa-arrow-circle-down" iconSize="24"  />
-                        </StackedFontIcon>
-                    </graphic>-->
-
-                </Button>
+                <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all"/>
+                <Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all"/>
                 <Separator id="MERGEITEM"/>
                 <Button id="MERGEITEM" onAction="#mergeEventHandler" text="Merge" />
                 <Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" />
                 <Button id="MERGEITEM" onAction="#commitEventHandler" text="Commit" />
-                <Separator id="MERGEITEM"/>
                 <Button id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLastChanges" text="Last changes" />
-                <Label id="MERGEITEM" text="    "/>
+
                 <TextField id="MERGEITEM" fx:id="searchText" promptText="Search" />
 
             </ToolBar>

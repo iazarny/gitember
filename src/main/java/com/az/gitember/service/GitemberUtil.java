@@ -29,8 +29,13 @@ public class GitemberUtil {
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final static SimpleDateFormat simpleDateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final static SimpleDateFormat shortDateOnlyFormat = new SimpleDateFormat("MMM dd HH:mm");
 
 
+
+    public static String formatDateOnlyShort(Date date) {
+        return shortDateOnlyFormat.format(date);
+    }
 
     public static String formatDateOnly(Date date) {
         return simpleDateOnlyFormat.format(date);
@@ -42,7 +47,6 @@ public class GitemberUtil {
 
     public static Date intToDate(int time) {
         return new Date(1000L * time);
-        //https://stackoverflow.com/questions/12608610/how-do-you-get-the-author-date-and-commit-date-from-a-jgit-revcommit
     }
 
     public static String getMimeType(Path path) throws IOException {
