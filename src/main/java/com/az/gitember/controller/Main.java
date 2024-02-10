@@ -377,6 +377,7 @@ public class Main implements Initializable {
     public void pullHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PullHandler(scmBranch).handle(actionEvent);
+        Context.updateAll();
         Context.updateWorkingBranch();
         updateButtonUI();
 
@@ -385,6 +386,7 @@ public class Main implements Initializable {
     public void pushHandler(ActionEvent actionEvent) {
         final ScmBranch scmBranch = Context.workingBranch.get();
         new PushHandler(scmBranch).handle(actionEvent);
+        Context.updateAll();
         Context.updateWorkingBranch();
         updateButtonUI();
     }
