@@ -35,3 +35,7 @@
     -fx-pref-height: 0;
     -fx-min-height: 0;
 }
+
+.alternate_row_color {
+    -fx-background-color: #dddddd;
+}

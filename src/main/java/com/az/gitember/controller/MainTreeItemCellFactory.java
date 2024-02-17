@@ -75,7 +75,9 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                     }
 
                     if (Context.selectedTreeName.getValueSafe().equals(scmBranch.getFullName())) {
-                        cellStyle += "-fx-background-color: alternate_row_color;";
+                        getStyleClass().add("alternate_row_color");
+                    } else {
+                        getStyleClass().remove("alternate_row_color");
                     }
 
                     setText(scmBranch.getNameExt());
