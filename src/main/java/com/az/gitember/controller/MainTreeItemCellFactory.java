@@ -76,12 +76,6 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                             t -> setTooltip(new Tooltip(t))
                     );
 
-
-
-                    System.out.println(scmWorkingBranchName);
-                    System.out.println(scmBranch.getFullName());
-                    System.out.println();
-
                 } else if (item instanceof ScmRevisionInformation) {
                     final ScmRevisionInformation ri = (ScmRevisionInformation) item;
                     setText(ri.getNameExt());
