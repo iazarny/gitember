@@ -28,12 +28,10 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                 setText(null);
                 setContextMenu(null);
                 setGraphic(null);
-                setStyle("");
             } else {
                 if (item instanceof String) {
                     setText(item.toString());
                     setGraphic(getTreeItem().getGraphic());
-                    setStyle("");
                     if ("Remote branches".equals(item)) {
                         setContextMenu(contextMenuFactory.createSearchContextMenu());
                     } else if ("Local branches".equals(item)) {
@@ -45,7 +43,7 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
 
                 } else if (item instanceof ScmBranch) {
 
-                    //TODO add icon if local brabch has diff by comparison with remote
+                    //TODO add icon if local branch has diff by comparison with remote
 
                     final ScmBranch scmWorkingBranch = Context.workingBranch.getValue();
                     final String scmWorkingBranchName = ScmBranch.getNameSafe(scmWorkingBranch);
@@ -58,7 +56,12 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                     stackedFontIcon.setStyle("-fx-icon-color: text_color");
 
                     if (scmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
-                        stackedFontIcon.getChildren().add(new FontIcon(FontAwesome.CODE_FORK));
+                        if (scmWorkingBranchName.equalsIgnoreCase(scmBranch.getFullName())) {
+                           setStyle("-fx-font-size: 110%;");
+                           stackedFontIcon.getChildren().add(new FontIcon(FontAwesome.CHECK_SQUARE_O));
+                        } else {
+                            stackedFontIcon.getChildren().add(new FontIcon(FontAwesome.CODE_FORK));
+                        }
                         setGraphic(stackedFontIcon);
                     } else if (scmBranch.getBranchType() == ScmBranch.BranchType.REMOTE) {
                         stackedFontIcon.getChildren().add(new FontIcon(FontAwesome.CODE_FORK));
@@ -68,23 +71,16 @@ public class MainTreeItemCellFactory implements Callback<TreeView<Object>, TreeC
                         setGraphic(stackedFontIcon);
                     }
 
-
-                    String cellStyle = "";
-                    if (scmWorkingBranchName.equalsIgnoreCase(scmBranch.getFullName())) {
-                        cellStyle += "-fx-font-weight: bold;";
-                    }
-
-                    if (Context.selectedTreeName.getValueSafe().equals(scmBranch.getFullName())) {
-                        getStyleClass().add("alternate_row_color");
-                    } else {
-                        getStyleClass().remove("alternate_row_color");
-                    }
-
                     setText(scmBranch.getNameExt());
-                    setStyle(cellStyle);
                     scmBranch.getScmBranchTooltip().ifPresent(
                             t -> setTooltip(new Tooltip(t))
                     );
+
+
+
+                    System.out.println(scmWorkingBranchName);
+                    System.out.println(scmBranch.getFullName());
+                    System.out.println();
 
                 } else if (item instanceof ScmRevisionInformation) {
                     final ScmRevisionInformation ri = (ScmRevisionInformation) item;

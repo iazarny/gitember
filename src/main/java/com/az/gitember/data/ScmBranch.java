@@ -54,7 +54,7 @@ public class ScmBranch {
         if (getRemoteMergeName() == null ) {
             return  getShortName();
         } else {
-            return String.format("%s %s",
+            return String.format("%s -> %s",
                     getShortName(),
                     getRemoteMergeName()
             );
