@@ -2,6 +2,7 @@ package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.Main;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
@@ -76,8 +77,10 @@ public class PushHandler extends AbstractLongTaskEventHandler implements EventHa
                 o -> {
                     Context.saveSettings();
                     Context.updateAll();
-                    Context.getMain().showResult("Repository",
-                            "Repository push " + scmBranch.getRemoteMergeName() + " \n" + longTask.getValue(), Alert.AlertType.INFORMATION);
+                    Context.updateWorkingBranch();
+                    Main.showResult("Repository",
+                            "Repository push " + scmBranch.getRemoteMergeName() + " \n"
+                                    + longTask.getValue(), Alert.AlertType.INFORMATION);
                     log.log(Level.INFO, "Push  ok " + scmBranch);
                 },
                 o -> {

@@ -6,9 +6,12 @@ import com.az.gitember.data.SquarePos;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToolBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -33,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -48,17 +53,22 @@ public class DiffViewer implements Initializable {
     public GridPane mainPanel;
     public VirtualizedOverviewScrollPane<CodeArea> oldScrollPane;
     public VirtualizedScrollPane<CodeArea> newScrollPane;
-    public RowConstraints firstRowConstraint;
-    public RowConstraints secondRowConstraint;
     public TextField searchTextOld;
     public TextField searchTextNew;
+    public ToolBar navBar;
+    public Button prevBtn;
+    public Button nextBtn;
 
     private String oldText = null;
     private String newText = null;
+
+    private String oldFileName;
+    private String newFileName;
     private EditList diffList = new EditList();
 
     private int oldStartIndex = -1;
     private int newStartIndex = -1;
+    private int currentDiff = -1;
 
     private double fontSize;
 
@@ -67,6 +77,9 @@ public class DiffViewer implements Initializable {
 
         this.oldText = Files.readString(Paths.get(oldFileName));
         this.newText = Files.readString(Paths.get(newFileName));
+
+        this.oldFileName = oldFileName;
+        this.newFileName = newFileName;
 
         RawText oldRawTxt = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
         RawText newRawTxt = new RawText(newText.getBytes(StandardCharsets.UTF_8));
@@ -233,19 +246,7 @@ public class DiffViewer implements Initializable {
             });
         });
 
-        //Fix the top of table row size
-        firstRowConstraint.setMaxHeight(VER_HEAD_HEIGHT);
-        firstRowConstraint.setMinHeight(VER_HEAD_HEIGHT);
-        firstRowConstraint.setPrefHeight(VER_HEAD_HEIGHT);
 
-        mainPanel.heightProperty().addListener(
-                (observable, oldValue, newValue) -> {
-                    double val = newValue.doubleValue() - VER_HEAD_HEIGHT;
-                    secondRowConstraint.setMaxHeight(val);
-                    secondRowConstraint.setMinHeight(val);
-                    secondRowConstraint.setPrefHeight(val);
-                }
-        );
 
         searchTextOld.textProperty().addListener(
                 (observable, oldValue, newValue) -> {
@@ -257,6 +258,8 @@ public class DiffViewer implements Initializable {
                     searchValue(searchTextNew, newValue);
                 }
         );
+
+        navBar.toFront();
     }
 
 
@@ -357,22 +360,51 @@ public class DiffViewer implements Initializable {
         int totalOldLines = getLines(oldText);
         int totalNewLines = getLines(newText);
         if (totalNewLines > 40 && totalOldLines > 40) {
-            //TODO collect and add to < > button navigation
-            //TODO h scroll pos as well
             if (!this.diffList.isEmpty()) {
-                Edit delta = this.diffList.get(0);
-                final int origPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginA() - 5));
-                final int revPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() - 5));
-                oldCodeArea.moveTo(origPos, 0);
-                newCodeArea.moveTo(revPos, 0);
-                oldCodeArea.requestFollowCaret();
-                oldCodeArea.layout();
-                newCodeArea.requestFollowCaret();
-                newCodeArea.layout();
+                currentDiff = 0;
+                scrollToDiff(true);
             }
-
         }
     }
+
+    private void scrollToDiff(boolean forward) {
+        Edit delta = this.diffList.get(currentDiff);
+        final int origPos;
+        final int revPos;
+        if (forward) {
+            origPos = Math.max(0, Math.min(delta.getEndA(), delta.getEndB() ) - 5);
+            revPos = Math.max(0, Math.min(delta.getEndA(), delta.getEndB() ) -5);
+
+        } else {
+            origPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() )  + 5);
+            revPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() ) + 5);
+        }
+
+        System.out.println("origPos " + origPos + " revPos " + revPos);
+        System.out.println("delta.getBeginA() " + delta.getBeginA() + " delta.getBeginB() " + delta.getBeginB());
+        System.out.println("delta.getEndA() " + delta.getEndA() + " delta.getEndB() " + delta.getEndB());
+
+
+
+        oldCodeArea.moveTo(origPos, 0);
+        newCodeArea.moveTo(revPos, 0);
+        oldCodeArea.requestFollowCaret();
+        oldCodeArea.layout();
+        newCodeArea.requestFollowCaret();
+        newCodeArea.layout();
+        updateButtonState();
+
+        //highlight active diff
+        for (int i = 0; i <diffDrawPanel.getChildren().size(); i++) {
+            diffDrawPanel.getChildren().get(i).getStyleClass().remove("diff-active");
+        }
+        diffDrawPanel.getChildren().get(currentDiff).getStyleClass().add("diff-active");
+
+        setText(oldCodeArea, oldText, oldFileName, true, currentDiff);
+        setText(newCodeArea, newText, newFileName, false, currentDiff);
+
+    }
+
 
     private void createPathElements() {
 
@@ -402,22 +434,30 @@ public class DiffViewer implements Initializable {
 
     private void setText(final CodeArea codeArea,
                          final String text, final String fileName, final boolean leftSide) {
+        setText(codeArea,text,fileName,leftSide,-1);
+    }
+
+    private void setText(final CodeArea codeArea,
+                         final String text, final String fileName,
+                         final boolean leftSide,
+                         final int activeParagrah) {
 
         codeArea.appendText(text);
 
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
                 FilenameUtils.getExtension(fileName),
-                this.diffList, leftSide);
-
-        codeArea.setParagraphGraphicFactory(
-                GitemberLineNumberFactory.get(codeArea, adapter, null));
+                this.diffList, leftSide, activeParagrah);
 
         StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
         if (spans != null) {
             codeArea.setStyleSpans(0, spans);
         }
 
-        adapter.getDecorateByPatch().forEach(codeArea::setParagraphStyle);
+        Map<Integer, List<String>> decoration = adapter.getDecorateByPatch(activeParagrah);
+        decoration.forEach(codeArea::setParagraphStyle);
+
+        codeArea.setParagraphGraphicFactory(
+                GitemberLineNumberFactory.get(codeArea, adapter, null, activeParagrah));
 
     }
 
@@ -465,5 +505,27 @@ public class DiffViewer implements Initializable {
             newStartIndex = startIndex;
         }
 
+    }
+
+    public void prevHandler(ActionEvent actionEvent) {
+        if (0 < currentDiff) {
+            currentDiff--;
+
+        }
+        scrollToDiff(true);
+    }
+
+    public void nextHandler(ActionEvent actionEvent) {
+        if ((this.diffList.size() - 1) > currentDiff) {
+            currentDiff++;
+
+        }
+        scrollToDiff(false);
+    }
+
+    private void updateButtonState() {
+        System.out.println("currentDiff " + currentDiff + " size " + this.diffList.size());
+        prevBtn.setDisable(currentDiff <= 0);
+        nextBtn.setDisable((this.diffList.size() - 1) <= currentDiff);
     }
 }

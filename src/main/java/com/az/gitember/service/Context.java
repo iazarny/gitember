@@ -1,5 +1,6 @@
 package com.az.gitember.service;
 
+import com.az.gitember.controller.BranchDiffController;
 import com.az.gitember.controller.Main;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
@@ -14,9 +15,13 @@ import org.eclipse.jgit.revplot.PlotLane;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class Context {
+
+    private final static Logger log = Logger.getLogger(Context.class.getName());
 
     private final static String OS = System.getProperty("os.name").toLowerCase();
 
@@ -233,15 +238,15 @@ public class Context {
 
     public static void updateBranches()  {
         localBranchesRaw.clear();
+        remoteBranchesRaw.clear();
         try {
             localBranchesRaw.addAll(gitRepoService.getBranches());
-            remoteBranchesRaw.clear();
             remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
             localBrancesProperty.setValue(localBranchesRaw);
             remoteBrancesProperty.setValue(remoteBranchesRaw);
             filterBranches();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot updatre branch information" );
         }
     }
 

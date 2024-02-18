@@ -89,7 +89,7 @@ public class TextBrowser implements Initializable {
                         e.printStackTrace();
                     }
                     codeArea.setParagraphGraphicFactory(
-                            GitemberLineNumberFactory.get(codeArea, adapter, blameResult));
+                            GitemberLineNumberFactory.get(codeArea, adapter, blameResult, -1));
 
                 }
         );
@@ -150,7 +150,9 @@ public class TextBrowser implements Initializable {
                 () -> {
 
                     codeArea.appendText(content);
-                    codeArea.setParagraphGraphicFactory(GitemberLineNumberFactory.get(codeArea, adapter, null));
+                    codeArea.setParagraphGraphicFactory(
+                            GitemberLineNumberFactory.get(codeArea, adapter, null,-1)
+                    );
 
                     // initial color
                     StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());

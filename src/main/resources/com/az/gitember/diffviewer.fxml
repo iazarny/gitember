@@ -3,11 +3,12 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.HBox?>
-
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Button?>
 <GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="com.az.gitember.controller.DiffViewer" >
     
@@ -16,10 +17,7 @@
       <ColumnConstraints halignment="CENTER" percentWidth="8" />
       <ColumnConstraints percentWidth="46" />
    </columnConstraints>
-   <rowConstraints>
-      <RowConstraints fx:id="firstRowConstraint"/>
-      <RowConstraints fx:id="secondRowConstraint"/>
-   </rowConstraints>
+
    <children>
 
       <ToolBar GridPane.columnIndex="0">
@@ -28,8 +26,27 @@
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
-      <Pane fx:id="diffDrawPanel"  prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
-      <Pane                        prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+      <ToolBar fx:id="navBar"  GridPane.columnIndex="1">
+         <Button fx:id="prevBtn"  mnemonicParsing="false" onAction="#prevHandler">
+            <graphic>
+               <HBox>
+                  <StackedFontIcon style="-fx-icon-color: text_color">
+                     <FontIcon iconLiteral="fa-step-backward" iconSize="24"/>
+                  </StackedFontIcon>
+               </HBox>
+            </graphic>
+         </Button>
+         <Pane  HBox.hgrow="ALWAYS" />
+         <Button fx:id="nextBtn"  mnemonicParsing="false" onAction="#nextHandler">
+            <graphic>
+               <HBox>
+                  <StackedFontIcon style="-fx-icon-color: text_color">
+                     <FontIcon iconLiteral="fa-step-forward" iconSize="24"/>
+                  </StackedFontIcon>
+               </HBox>
+            </graphic>
+         </Button>
+      </ToolBar>
 
       <ToolBar GridPane.columnIndex="2">
          <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" />
@@ -37,8 +54,8 @@
          <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
-
-
+      <Pane fx:id="diffDrawPanel"  prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
+      <Pane                        prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
 
    </children>
 </GridPane>

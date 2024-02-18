@@ -20,6 +20,9 @@
     -fx-background-color: #97a7fa;
 }
 
+.diff-active {
+    -fx-effect: dropshadow(three-pass-box, grey, 10, 0, 0, 10);
+}
 
 .root {
     -fx-font-size: 12pt ;

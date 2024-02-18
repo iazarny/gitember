@@ -49,7 +49,10 @@ public class PullHandler extends AbstractLongTaskEventHandler implements EventHa
                     {
                         Context.saveSettings();
                         Context.updateAll();
-                        Context.getMain().showResult("Repository", "Pull ok\n" + o.getSource().getValue(), Alert.AlertType.INFORMATION);
+                        Context.updateWorkingBranch();
+                        Context.getMain().showResult("Repository",
+                                "Pull ok\n" + o.getSource().getValue(),
+                                Alert.AlertType.INFORMATION);
                     }
                 },
                 o -> {

@@ -23,16 +23,18 @@ public class TextToSpanContentAdapter {
     private boolean rawDiff = false;
     private EditList patch = null;
     private boolean leftSide;
+    private int activeParagraph;
 
     /**
      * @param extension The file extension
      * @param patch     patch
      * @param leftSide  what side ro read left - old, right - new
      */
-    public TextToSpanContentAdapter(final String extension, final EditList patch, boolean leftSide) {
+    public TextToSpanContentAdapter(final String extension, final EditList patch, boolean leftSide, int activeParagraph) {
         this(extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
+        this.activeParagraph = activeParagraph;
     }
 
     TextToSpanContentAdapter(final String extension, final boolean rawDiff) {
@@ -112,14 +114,16 @@ public class TextToSpanContentAdapter {
     /**
      * Highlight new , deleted and changed lines by patch.
      */
-    public Map<Integer, List<String>> getDecorateByPatch() {
-        if (pathcDecoration == null) {
+
+    public Map<Integer, List<String>> getDecorateByPatch(int activeParagraph) {
+        if (pathcDecoration == null || activeParagraph > -1) {
 
             if (patch == null) {
                 pathcDecoration = Collections.EMPTY_MAP;
             } else {
                 pathcDecoration = new HashMap<>();
-                for (Edit delta : patch) {
+                for (int i = 0; i < patch.size(); i++) {
+                    Edit delta = patch.get(i);
                     int origPos = delta.getBeginB();
                     int origLines = delta.getLengthB();
                     String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
@@ -129,12 +133,15 @@ public class TextToSpanContentAdapter {
                     }
 
                     for (int line = origPos; line < (origLines + origPos); line++) {
-                        pathcDecoration.put(line, Collections.singletonList(styleClass));
+                        if (activeParagraph == i) {
+                            pathcDecoration.put(line, List.of(styleClass, "diff-active"));
+                        } else {
+                            pathcDecoration.put(line, Collections.singletonList(styleClass));
+                        }
                     }
+
                 }
-
             }
-
         }
         return pathcDecoration;
     }
