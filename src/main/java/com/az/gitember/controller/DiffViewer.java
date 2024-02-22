@@ -380,12 +380,6 @@ public class DiffViewer implements Initializable {
             revPos = Math.max(0, Math.min(delta.getBeginA(), delta.getBeginB() ) + 5);
         }
 
-        System.out.println("origPos " + origPos + " revPos " + revPos);
-        System.out.println("delta.getBeginA() " + delta.getBeginA() + " delta.getBeginB() " + delta.getBeginB());
-        System.out.println("delta.getEndA() " + delta.getEndA() + " delta.getEndB() " + delta.getEndB());
-
-
-
         oldCodeArea.moveTo(origPos, 0);
         newCodeArea.moveTo(revPos, 0);
         oldCodeArea.requestFollowCaret();
@@ -442,6 +436,8 @@ public class DiffViewer implements Initializable {
                          final boolean leftSide,
                          final int activeParagrah) {
 
+        long st = System.currentTimeMillis();
+
         codeArea.appendText(text);
 
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
@@ -459,6 +455,49 @@ public class DiffViewer implements Initializable {
         codeArea.setParagraphGraphicFactory(
                 GitemberLineNumberFactory.get(codeArea, adapter, null, activeParagrah));
 
+
+    }
+    TextToSpanContentAdapter leftAdapter;
+    TextToSpanContentAdapter rightAdapter;
+
+    private void setText2(final CodeArea codeArea,
+                         final String text, final String fileName,
+                         final boolean leftSide,
+                         final int activeParagrah) {
+        long st = System.currentTimeMillis();
+
+        TextToSpanContentAdapter adapter;
+        if (leftSide) {
+            if (leftAdapter == null) {
+                leftAdapter = new TextToSpanContentAdapter(
+                        FilenameUtils.getExtension(fileName),
+                        this.diffList, leftSide, activeParagrah);
+                codeArea.appendText(text);
+            }
+            adapter = leftAdapter;
+        } else {
+            if(rightAdapter == null) {
+                rightAdapter = new TextToSpanContentAdapter(
+                        FilenameUtils.getExtension(fileName),
+                        this.diffList, leftSide, activeParagrah);
+                codeArea.appendText(text);
+            }
+            adapter = rightAdapter;
+        }
+
+
+
+        StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
+
+        if (spans != null) {
+            codeArea.setStyleSpans(0, spans);
+        }
+
+        Map<Integer, List<String>> decoration = adapter.getDecorateByPatch(activeParagrah);
+        decoration.forEach(codeArea::setParagraphStyle);
+
+        codeArea.setParagraphGraphicFactory(
+                GitemberLineNumberFactory.get(codeArea, adapter, null, activeParagrah));
     }
 
 

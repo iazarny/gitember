@@ -23,18 +23,19 @@ public class TextToSpanContentAdapter {
     private boolean rawDiff = false;
     private EditList patch = null;
     private boolean leftSide;
-    private int activeParagraph;
+
+    private StyleSpans<Collection<String>> highlightingByKeywords = null;
 
     /**
      * @param extension The file extension
      * @param patch     patch
      * @param leftSide  what side ro read left - old, right - new
      */
-    public TextToSpanContentAdapter(final String extension, final EditList patch, boolean leftSide, int activeParagraph) {
+    public TextToSpanContentAdapter(final String extension, final EditList patch,
+                                    boolean leftSide, int activeParagraph) {
         this(extension, false);
         this.patch = patch;
         this.leftSide = leftSide;
-        this.activeParagraph = activeParagraph;
     }
 
     TextToSpanContentAdapter(final String extension, final boolean rawDiff) {
@@ -54,27 +55,27 @@ public class TextToSpanContentAdapter {
         final Iterator<Token> tokenIterator = parsedCode.iterator();
         // TODO looks ugly , refactor
         if (tokenIterator.hasNext() && content.length() > 0) {
-            Token token = tokenIterator.next();
-            final BaseTokenTypeAdapter adapter = langResolver.getAdapter();
-            for (int i = 0; i < content.length(); i++) {
-                int startIdx = token.getStartIndex();
-                int stopIdx = token.getStopIndex() + 1;
+            if (highlightingByKeywords == null) {
+                Token token = tokenIterator.next();
+                final BaseTokenTypeAdapter adapter = langResolver.getAdapter();
+                for (int i = 0; i < content.length(); i++) {
+                    int startIdx = token.getStartIndex();
+                    int stopIdx = token.getStopIndex() + 1;
 
-                if (i == token.getStartIndex()) {
-                    int len = startIdx - lastKwEnd;
-                    spansBuilder.add(Collections.emptyList(), len);
+                    if (i == token.getStartIndex()) {
+                        int len = startIdx - lastKwEnd;
+                        spansBuilder.add(Collections.emptyList(), len);
 
-                    final String style = adapter.adaptToStyleClass(token.getType());
-                    spansBuilder.add(Collections.singletonList(style), stopIdx - startIdx);
-                    lastKwEnd = stopIdx;
-                    token = tokenIterator.next();
+                        final String style = adapter.adaptToStyleClass(token.getType());
+                        spansBuilder.add(Collections.singletonList(style), stopIdx - startIdx);
+                        lastKwEnd = stopIdx;
+                        token = tokenIterator.next();
 
+                    }
                 }
+                highlightingByKeywords = spansBuilder.create();
             }
-
-            StyleSpans<Collection<String>> rez = spansBuilder.create();
-            return rez;
-
+            return highlightingByKeywords;
         }
         return null ;
     }
