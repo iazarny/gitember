@@ -1,10 +1,23 @@
 #!/bin/sh
+mkdir app
+mv target/gitember-2.5-spring-boot.jar app
 
-jpackage --verbose --input shade/  --name Gitember2 --vendor "Igor Azarny"  --main-jar gitember.jar  --app-version 2.5   --main-class com.az.gitember.GitemberLauncher   --type "dmg"     --icon src/main/resources/icon/gitember.icns
-#jpackage --verbose --input build   --name i2Brain                           --main-jar i2brain.jar   --app-version 3.3.2                             --type app-image --runtime-image ./smalljre
-mv Gitember2-1.0.dmg Gitember2.dmg
+jpackage \
+   --input app/  --name Gitember2 --vendor "Igor Azarny" \
+   --main-jar gitember-2.5-spring-boot.jar  --app-version 2.5 \
+   --icon src/main/resources/icon/gitember.icns \
+   --type "dmg" \
+   --mac-sign \
+   --mac-package-signing-prefix "com.az.gitember" \
+   --mac-signing-key-user-name "Igor Azarny (3........8)"
 
+mv Gitember2-2.5.dmg Gitember2.5.dmg
 
-#export PATH="/Users/ec2-user/jdk-16.0.1.jdk/Contents/Home/bin:/Users/ec2-user/apache-maven-3.8.1/bin:$PATH"
+# .dmg signing is required for notarization.
+codesign --timestamp -s "3H6449CVS8" "Gitember2.5.dmg"
 
+####### notarization #######
+xcrun notarytool submit "Gitember2.5.dmg" --wait --keychain-profile "Igor Azarny"
+xcrun stapler staple "Gitember2.5.dmg"
+spctl -a -t open --context context:primary-signature -vv "Gitember2.5.dmg"
 
