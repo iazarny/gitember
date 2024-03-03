@@ -8,7 +8,7 @@ For Linux, Windows and Mac
 
 Downloads
  * [Windows](https://drive.google.com/file/d/1c29rI7pPHz5MEOmpAfvpALbdYhFL8EJx/view?usp=drive_link)
- * [Mac](https://drive.google.com/file/d/1pW94F78nA0rfq46BrMGNBHzVAVgSuWVh/view?usp=drive_link)
+ * [Mac M1](https://drive.google.com/file/d/1pW94F78nA0rfq46BrMGNBHzVAVgSuWVh/view?usp=drive_link)
  
 
 ![Mac Version](site/img/portfolio/mac25.png)
