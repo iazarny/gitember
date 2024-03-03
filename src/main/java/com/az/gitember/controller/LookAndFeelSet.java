@@ -38,7 +38,7 @@ public class LookAndFeelSet {
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
             DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
-            DIFF_COLOR_TEXT = Color.valueOf("#505050");
+            DIFF_COLOR_TEXT = Color.valueOf("#303030");
         } else {
             PIECHART_LEGENF_STYLE = "";
             BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F);

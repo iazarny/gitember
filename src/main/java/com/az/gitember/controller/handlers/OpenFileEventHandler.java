@@ -72,8 +72,13 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
                 }
                 openFile(fileName, text, false);
             } else {
-                String pathToFile = scmItem.getFilePath(bodyType).toString();
-                App.getShell().showDocument(pathToFile);
+                try {
+                    String pathToFile = scmItem.getFilePath(bodyType).toString();
+                    App.getShell().showDocument(pathToFile);
+                } catch (IllegalStateException e) {
+                    log.warning(fileName + " " +e.toString());
+                }
+
             }
 
         } catch (IOException ex) {

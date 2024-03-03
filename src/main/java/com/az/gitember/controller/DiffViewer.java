@@ -23,6 +23,7 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.*;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -436,9 +437,9 @@ public class DiffViewer implements Initializable {
                          final boolean leftSide,
                          final int activeParagrah) {
 
-        long st = System.currentTimeMillis();
-
-        codeArea.appendText(text);
+        if (StringUtils.isEmpty(codeArea.getText())) {
+            codeArea.appendText(text);
+        }
 
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
                 FilenameUtils.getExtension(fileName),
@@ -563,7 +564,6 @@ public class DiffViewer implements Initializable {
     }
 
     private void updateButtonState() {
-        System.out.println("currentDiff " + currentDiff + " size " + this.diffList.size());
         prevBtn.setDisable(currentDiff <= 0);
         nextBtn.setDisable((this.diffList.size() - 1) <= currentDiff);
     }

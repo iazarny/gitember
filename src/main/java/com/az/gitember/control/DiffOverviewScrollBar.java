@@ -289,7 +289,7 @@ public class DiffOverviewScrollBar extends GridPane {
     }
 
     /**
-     * Depict lines of text on correc position with correct size
+     * Depict lines of text on correct position with correct size
      * @param pane
      * @param lineType
      * @param charWidth with if sinlge char in px

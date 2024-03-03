@@ -227,10 +227,12 @@ public class HistoryDetail implements Initializable {
     }
 
     public void openDiffFileVersion(ActionEvent actionEvent) {
-        final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
-        final String sha = scmInfo.getRevisionFullName();
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final DiffWithDiskEventHandler eventHandler = new DiffWithDiskEventHandler(scmItem, sha);
-        eventHandler.handle(actionEvent);
+        if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
+            openDiffPrevVersion(actionEvent);
+        } else {
+            new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+        }
+
     }
 }
