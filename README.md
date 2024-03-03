@@ -1,10 +1,18 @@
-# Geetember 2
+# Geetember 2.5
 ---
 Has been renamed from Gitember. Just another GIT gui client just for fun. 
 
 ## Multiplatform GUI for GIT
 
 For Linux, Windows and Mac
+
+Downloads
+ * [Windows](https://drive.google.com/file/d/1c29rI7pPHz5MEOmpAfvpALbdYhFL8EJx/view?usp=drive_link)
+ * [Mac](https://drive.google.com/file/d/1pW94F78nA0rfq46BrMGNBHzVAVgSuWVh/view?usp=drive_link)
+ 
+
+![Mac Version](site/img/portfolio/mac25.png)
+
 
 ![Geetember](site/img/portfolio/2.png)
 
@@ -16,6 +24,12 @@ Nothing in particular, but
  * Check https://www.geetember.org/
 
 ## Changes
+
+### 2.5 
+ * Diff viewer has been updated
+ * UI changes
+ * Added support for Ed25519
+ * Mac M1 silicon support
 
 ### 2.35
  * Minor changes , related to search 
