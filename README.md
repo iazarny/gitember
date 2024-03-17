@@ -7,8 +7,8 @@ Has been renamed from Gitember. Just another GIT gui client just for fun.
 For Linux, Windows and Mac
 
 Downloads
- * [Windows](https://drive.google.com/file/d/1c29rI7pPHz5MEOmpAfvpALbdYhFL8EJx/view?usp=drive_link)
- * [Mac M1](https://drive.google.com/file/d/1pW94F78nA0rfq46BrMGNBHzVAVgSuWVh/view?usp=drive_link)
+ * [Windows](http://gitgui.org/Gitember2.5.msi)
+ * [Mac M1](http://gitgui.org/Gitember2.5.dmg)
  
 
 ![Mac Version](site/img/portfolio/mac25.png)
