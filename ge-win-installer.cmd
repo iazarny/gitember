@@ -1,3 +1,5 @@
+mvn clean install -DskipTests
+
 mkdir app
 
 move target\gitember-2.5-spring-boot.jar app
