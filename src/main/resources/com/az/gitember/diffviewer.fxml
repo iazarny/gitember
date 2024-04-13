@@ -14,8 +14,8 @@
     
    <columnConstraints>
       <ColumnConstraints percentWidth="46" />
-      <ColumnConstraints halignment="CENTER" percentWidth="8" />
-      <ColumnConstraints percentWidth="46" />
+      <ColumnConstraints halignment="CENTER" percentWidth="9" />
+      <ColumnConstraints percentWidth="45" />
    </columnConstraints>
 
    <children>

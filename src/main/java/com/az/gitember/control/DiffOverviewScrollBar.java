@@ -15,11 +15,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.text.Text;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
 import java.util.ArrayList;
 import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * By Igor Azarny iazarny@yahoo.com 14-Nov-2021
@@ -142,8 +145,8 @@ public class DiffOverviewScrollBar extends GridPane {
         super();
 
         setMinWidth(20);
-        setMaxWidth(60);
-        setPrefWidth(60);
+        setMaxWidth(120);
+        setPrefWidth(120);
 
         leftPane  = new Pane();
         rightPane  = new Pane();
@@ -292,20 +295,35 @@ public class DiffOverviewScrollBar extends GridPane {
      * Depict lines of text on correct position with correct size
      * @param pane
      * @param lineType
-     * @param charWidth with if sinlge char in px
+     * @param charWidth with if single char in px
      */
     private void layoutLines(Pane pane, Pair<ArrayList<String>, ArrayList<Edit.Type>> lineType, double charWidth) {
         final double strokeSize = getLineThick();
+        final double lineWidth = Math.min(0.8 * getLineThick(), 3);
         for (int i = 0; i < pane.getChildren().size(); i++) {
             final String text =   lineType.getFirst().get(i);
-            if (text != null && text.length() > 0) {
+            if (StringUtils.isNotBlank(text)) {
+
                 final Line line = (Line) pane.getChildren().get(i);
                 final double y = i * strokeSize + strokeSize/2;
                 line.setStartY(y);
                 line.setEndY(y);
-                line.setStartX(1);
-                line.setEndX( charWidth * text.length());
-                line.setStrokeWidth(strokeSize);
+
+
+                double shift = charWidth * GitemberUtil.countWhiteCharFromStart(text);
+                line.setStartX(shift);
+                line.setEndX( shift + charWidth * StringUtils.trimToEmpty(text).length() );
+
+                line.setStrokeWidth(lineWidth);
+
+
+
+                /*final Text t = (Text) pane.getChildren().get(i);
+                final double y = i * strokeSize + strokeSize/2;
+                t.setY(y);
+                t.setX(1);
+                t.setStyle("-fx-font: 1 arial;");*/
+
             }
 
         }
@@ -315,10 +333,14 @@ public class DiffOverviewScrollBar extends GridPane {
         ArrayList<String> lines = linesTypes.getFirst();
         ArrayList<Edit.Type> types = linesTypes.getSecond();
         for (int i = 0; i < lines.size(); i++) {
-            Line l = new Line(-10000,0,-10000,0);
-            l.setStroke(getColor(types.get(i), lines.get(i)));
+
+            final String text = lines.get(i);
+
+            final Line l = new Line(-10000,0,-10000,0);
+            l.setStroke(getColor(types.get(i), text));
             l.setStrokeLineCap(StrokeLineCap.BUTT);
             pane.getChildren().add(l);
+
         }
     }
 
@@ -351,3 +373,5 @@ public class DiffOverviewScrollBar extends GridPane {
     }
 
 }
+
+

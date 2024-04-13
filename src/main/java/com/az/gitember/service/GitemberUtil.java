@@ -176,18 +176,20 @@ public class GitemberUtil {
 
     private static Edit getDiffAtLine(final EditList diffList, final Side side, final int lineIdx) {
 
+        Edit editRez = null;
+
         for (int i = 0; i < diffList.size(); i++) {
 
             Edit edit = diffList.get(i);
 
-            if (side == Side.A && lineIdx >= edit.getBeginA() && lineIdx <= edit.getEndA()) {
-                return edit;
-            } else if (side == Side.B && lineIdx >= edit.getBeginB() && lineIdx <= edit.getEndB()) {
-                return edit;
+            if (side == Side.A && lineIdx >= edit.getBeginA() && lineIdx < edit.getEndA()) {
+                editRez = edit;
+            } else if (side == Side.B && lineIdx >= edit.getBeginB() && lineIdx < edit.getEndB()) {
+                editRez = edit;
             }
 
         }
-        return  null;
+        return editRez;
 
     }
 
@@ -218,6 +220,19 @@ public class GitemberUtil {
         privateStringField = obj.getClass().getDeclaredField(fieldName);
         privateStringField.setAccessible(true);
         return privateStringField.get(obj);
+    }
+
+    public static int countWhiteCharFromStart(String str) {
+        int rez  = 0;
+        if (StringUtils.isNotEmpty(str)) {
+            for(int i = 0 ; i < str.length(); i++) {
+                if (!(str.charAt(i) == ' ' || str.charAt(i) == '\t')) {
+                    break;
+                }
+                rez++;
+            }
+        }
+        return rez;
     }
 
 }

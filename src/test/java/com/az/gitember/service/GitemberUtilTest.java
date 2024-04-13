@@ -24,4 +24,13 @@ class GitemberUtilTest {
         assertNull(GitLfsUtil.parseLsfListLine("1   dqw qwd   2"));
         assertNull(GitLfsUtil.parseLsfListLine("dqw qwd - asd"));
     }
+
+    @Test
+    void countWhiteCharFromStart() {
+        assertEquals(0, GitemberUtil.countWhiteCharFromStart(null));
+        assertEquals(0, GitemberUtil.countWhiteCharFromStart(""));
+        assertEquals(0, GitemberUtil.countWhiteCharFromStart("aaa"));
+        assertEquals(1, GitemberUtil.countWhiteCharFromStart(" -"));
+        assertEquals(10, GitemberUtil.countWhiteCharFromStart("          1"));
+    }
 }
