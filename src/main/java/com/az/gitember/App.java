@@ -62,6 +62,7 @@ public class App extends Application {
         double height = rectangle2D.getHeight() - minus;
 
         scene = new Scene(loadFXML(Const.View.MAIN).getFirst(), width, height);
+        stage.setMaximized(true);
         stage.setScene(scene);
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.setTitle(Const.APP_NAME);
