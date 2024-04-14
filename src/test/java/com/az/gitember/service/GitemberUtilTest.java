@@ -33,4 +33,14 @@ class GitemberUtilTest {
         assertEquals(1, GitemberUtil.countWhiteCharFromStart(" -"));
         assertEquals(10, GitemberUtil.countWhiteCharFromStart("          1"));
     }
+
+    @Test
+    void getFolderName() {
+        assertEquals("", GitemberUtil.getFolderName(null));
+        assertEquals("abc", GitemberUtil.getFolderName("abc"));
+        assertEquals("abc", GitemberUtil.getFolderName("/abc"));
+        assertEquals("abc", GitemberUtil.getFolderName("/abc/"));
+        assertEquals("abc", GitemberUtil.getFolderName("/abc/.git"));
+        assertEquals("abc", GitemberUtil.getFolderName("abc/.git"));
+    }
 }

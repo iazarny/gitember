@@ -95,6 +95,7 @@
                     </menus>
                 </MenuBar>
                 <ToolBar fx:id="mainToolBar" >
+                    <ComboBox fx:id="projectsCmb" onAction="#reopenProject" />
                     <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
                         <graphic>
                             <StackedFontIcon style="-fx-icon-color: text_color">

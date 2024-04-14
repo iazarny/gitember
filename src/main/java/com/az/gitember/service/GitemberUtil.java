@@ -11,6 +11,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
@@ -233,6 +234,17 @@ public class GitemberUtil {
             }
         }
         return rez;
+    }
+
+    public static String getFolderName(String fullPath) {
+        if (fullPath != null) {
+            String tmp =  fullPath.replace(".git", "")
+                    .replace("/", File.separator)
+                    .replace("\\", File.separator);
+            Path tmpPath = Path.of(tmp);
+            return tmpPath.getNameCount() > 0 ? tmpPath.getName(tmpPath.getNameCount() - 1).toString() : "";
+        }
+        return "";
     }
 
 }

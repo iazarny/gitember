@@ -126,6 +126,9 @@ public class Project implements Serializable, Comparable<Project>  {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         return ((Project)obj).getProjectHomeFolder().equals(getProjectHomeFolder());
     }
 }

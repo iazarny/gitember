@@ -2,18 +2,19 @@ package com.az.gitember.controller;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.RemoteRepoParameters;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
+import javafx.util.Callback;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
@@ -50,6 +51,7 @@ public class Main implements Initializable {
     public MenuItem editRawIgnoreMenuItem;
     public MenuItem editRawAttrsMenuItem;
     public Menu repoSettingsMenuItem;
+    public ComboBox<Project> projectsCmb;
     public Button pullBtn;
     public Button pushBtn;
     public Button fetchBtn;
@@ -100,7 +102,7 @@ public class Main implements Initializable {
                                     pushBtn.setTooltip(
                                             new Tooltip(
                                                     "Push " + ScmBranch.getNameExtSafe(scmBranch)
-                                                    + ". " + t
+                                                            + ". " + t
                                             )
                                     );
                                 }
@@ -159,7 +161,6 @@ public class Main implements Initializable {
                     editRawAttrsMenuItem.setVisible(attrFileExists);
 
                     dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
-
 
 
                 }
@@ -229,7 +230,30 @@ public class Main implements Initializable {
             openRecentMenuItem.setDisable(Context.settingsProperty.get().getProjects().size() < 1);
         });
 
+        Context.settingsProperty.addListener(observable -> {
+            boolean visible = Context.settingsProperty.getValue().getProjects().size() > 1;
+            projectsCmb.setPromptText(visible ? "Select a project" : "");
+            projectsCmb.setMaxWidth(visible ? Region.USE_COMPUTED_SIZE : 1);
+            projectsCmb.setPrefWidth(visible ? Region.USE_COMPUTED_SIZE : 1);
+            projectsCmb.setVisible(visible);
+            projectsCmb.getItems().clear();
+            projectsCmb.getItems().addAll(Context.settingsProperty.getValue().getProjects());
+        });
+
+        projectsCmb.setCellFactory(new ProjectCellFactory());
+        projectsCmb.setConverter(new ProjectConverter());
+        projectsCmb.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Project>() {
+            @Override
+            public void changed(ObservableValue<? extends Project> observableValue,
+                                Project project, Project t1) {
+
+                System.out.println(project + " " + t1);
+
+            }
+        });
+
         Context.readSettings();
+
 
         repoTreeView.getSelectionModel().selectedItemProperty().addListener(mainTreeChangeListener);
 
@@ -264,7 +288,7 @@ public class Main implements Initializable {
      * @param actionEvent event
      * @throws Exception
      */
-    public void openHandler(ActionEvent actionEvent)  {
+    public void openHandler(ActionEvent actionEvent) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File selectedDirectory =
                 directoryChooser.showDialog(App.getStage());
@@ -340,9 +364,9 @@ public class Main implements Initializable {
         alert.setTitle("Question");
         alert.setContentText("Would you like to drop history indexes for current project ?");
         alert.initOwner(App.getScene().getWindow());
-        alert.showAndWait().ifPresent( r -> {
+        alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
-                SearchService service = new SearchService( Context.getProjectFolder() );
+                SearchService service = new SearchService(Context.getProjectFolder());
                 service.dropIndex();
                 Context.getCurrentProject().setIndexed(false);
                 Context.saveSettings();
@@ -496,4 +520,6 @@ public class Main implements Initializable {
     }
 
 
+    public void reopenProject(ActionEvent actionEvent) {
+    }
 }

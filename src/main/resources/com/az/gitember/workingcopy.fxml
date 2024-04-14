@@ -54,10 +54,10 @@
             <ToolBar id="MERGEITEM">
                 <Separator id="MERGEITEM"/>
                 <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all"/>
-                <Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all"/>
+                <!--Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all"/-->
                 <Separator id="MERGEITEM"/>
                 <Button id="MERGEITEM" onAction="#mergeEventHandler" text="Merge" />
-                <Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" />
+                <!--Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" /-->
                 <Button id="MERGEITEM" onAction="#commitEventHandler" text="Commit" />
                 <Button id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
