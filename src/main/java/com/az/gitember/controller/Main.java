@@ -126,7 +126,7 @@ public class Main implements Initializable {
                     puchMenuItem.setDisable(pushBtn.isDisable());
                     pullMenuItem.setDisable(pullBtn.isDisable());
 
-                    fetchBtn.setTooltip(new Tooltip("Fetch all"));
+                   /* fetchBtn.setTooltip(new Tooltip("Fetch all"));*/
 
                     updateButtonUI();
 
@@ -150,7 +150,7 @@ public class Main implements Initializable {
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
                     statReportMenu.setVisible(newValue != null);
-                    fetchBtn.setDisable(disable);
+                    /*fetchBtn.setDisable(disable);*/
                     repoTreeView.setDisable(false);
 
                     //boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
@@ -245,9 +245,16 @@ public class Main implements Initializable {
         projectsCmb.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Project>() {
             @Override
             public void changed(ObservableValue<? extends Project> observableValue,
-                                Project project, Project t1) {
+                                Project oldProject, Project newProject) {
 
-                System.out.println(project + " " + t1);
+
+                try {
+                    Context.init(newProject.getProjectHomeFolder());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+
 
             }
         });

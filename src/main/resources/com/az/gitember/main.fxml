@@ -112,7 +112,7 @@
                         </graphic>
                     </Button>
                     <Separator/>
-                    <Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/>
+                    <!--Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/-->
                     <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull">
                         <graphic>
                             <HBox>

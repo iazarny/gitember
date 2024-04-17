@@ -19,6 +19,7 @@
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Tooltip?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.az.gitember.controller.Workingcopy">
 <center>
     <TableView fx:id="workingCopyTableView"  prefHeight="514.0" prefWidth="500"
@@ -53,13 +54,36 @@
             </MenuBar>
             <ToolBar id="MERGEITEM">
                 <Separator id="MERGEITEM"/>
-                <Button id="MERGEITEM" onAction="#stageAllEventHandler" text="Stage all"/>
-                <!--Button id="MERGEITEM" onAction="#unstageAllEventHandler" text="Unstage all"/-->
+                <Button id="MERGEITEM" onAction="#stageAllEventHandler">
+                    <tooltip><Tooltip text="Stage all" /></tooltip>
+                    <graphic>
+                        <StackedFontIcon style="-fx-icon-color: text_color">
+                            <FontIcon iconLiteral="fa-plus"  />
+                        </StackedFontIcon>
+                    </graphic>
+                </Button>
+                <Button id="MERGEITEM" onAction="#unstageAllEventHandler" >
+                    <tooltip><Tooltip text="Unstage all" /></tooltip>
+                    <graphic>
+                        <StackedFontIcon style="-fx-icon-color: text_color">
+                            <FontIcon iconLiteral="fa-minus"  />
+                        </StackedFontIcon>
+                    </graphic>
+                </Button>
                 <Separator id="MERGEITEM"/>
-                <Button id="MERGEITEM" onAction="#mergeEventHandler" text="Merge" />
-                <!--Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" /-->
+                <Button id="MERGEITEM" onAction="#mergeEventHandler" text="Merge">
+
+                </Button>
+                <Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" />
                 <Button id="MERGEITEM" onAction="#commitEventHandler" text="Commit" />
-                <Button id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
+                <Button id="MERGEITEM" onAction="#refreshEventHandler">
+                    <tooltip><Tooltip text="Refresh" /></tooltip>
+                    <graphic>
+                        <StackedFontIcon style="-fx-icon-color: text_color">
+                            <FontIcon iconLiteral="fa-refresh"  />
+                        </StackedFontIcon>
+                    </graphic>
+                </Button>
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLastChanges" text="Last changes" />
