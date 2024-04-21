@@ -208,6 +208,19 @@ public class GitRepoService {
         cleanUpTempFiles();
     }
 
+    public String  createDiff() {
+        try (Git git = new Git(repository)) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(4098);
+            git.diff().setOutputStream( bos ).call();
+            return  bos.toString();
+        } catch (GitAPIException e) {
+
+            log.log(Level.WARNING, "Cannot create diff", e);
+            return e.getMessage();
+
+        }
+    }
+
 
     /**
      * Add file to stage before commit.
@@ -1698,23 +1711,6 @@ public class GitRepoService {
 
             cmd.setTransportConfigCallback(
                     transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
-
-
-
-            /*TransportCommand<T, C> transportCommand = <Any Transport command in JGIT>;
-File sshDir = new File(FS.DETECTED.userHome(), File.separator+SSH_DIR);
-      SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder().setPreferredAuthentications("publickey")
-        .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
-        .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp)
-        {
-          @Override
-          protected char[] getPassword(URIish uri, String message)
-          {
-            return passphrase.toCharArray();
-          }
-        }).build(null);
- transportCommand.setTransportConfigCallback(
-    transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));*/
 
         }
 

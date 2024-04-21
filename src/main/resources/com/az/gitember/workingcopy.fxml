@@ -50,6 +50,7 @@
                     <MenuItem id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase ..." />
                     <MenuItem id="MERGEITEM" onAction="#commitEventHandler" text="Commit ..." />
                     <MenuItem id="MERGEITEM" onAction="#stashEventHandler" text="Stash ..." />
+                    <MenuItem id="MERGEITEM" onAction="#createDiffEventHandler" text="Create diff" />
                 </Menu>
             </MenuBar>
             <ToolBar id="MERGEITEM">

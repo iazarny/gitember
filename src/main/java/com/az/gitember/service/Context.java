@@ -15,6 +15,7 @@ import org.eclipse.jgit.revplot.PlotLane;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -92,7 +93,7 @@ public class Context {
             new SimpleObjectProperty(Collections.EMPTY_MAP);
 
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
-            new HashMap<>();
+            new ConcurrentHashMap<>();
 
 
     private static Main main;
@@ -135,6 +136,7 @@ public class Context {
 
         getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
+        getMain().projectsCmb.getSelectionModel().select(project);
         branchFilter.addListener(
                 (observable, oldValue, newValue) -> {
                     filterBranches();

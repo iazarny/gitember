@@ -47,9 +47,11 @@ public class MainTreeChangeListener implements ChangeListener {
         String file = null;
         try {
             if (newValue == Context.getMain().workingCopyTreeItem) {
-                file = "workingcopy";
+                file = Const.View.WORKING_COPY;
                 if(Context.statusList.isEmpty()) { //TODO or is changed
-                    Platform.runLater( () ->   new StatusUpdateEventHandler(false).handle(null));
+                    Platform.runLater(
+                            () -> new StatusUpdateEventHandler(false).handle(null)
+                    );
                 }
             } else if (newValue.equals(Const.View.STAT)) {
                 file = (String) newValue;

@@ -6,6 +6,7 @@ import com.az.gitember.controller.TextBrowser;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmItemAttribute;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import javafx.event.ActionEvent;
@@ -32,6 +33,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     private final ScmItem.BODY_TYPE bodyType;
 
+    private final String  diff;
     private boolean forceText = false;
     private boolean editble = false;
     private boolean overwrite = false;
@@ -39,6 +41,13 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
     public OpenFileEventHandler(ScmItem scmItem, ScmItem.BODY_TYPE bodyType) {
         this.scmItem = scmItem;
         this.bodyType = bodyType;
+        this.diff = null;
+    }
+
+    public OpenFileEventHandler(String diff) {
+        this.scmItem = new ScmItem("Difference", null);
+        this.bodyType = null;
+        this.diff = diff;
     }
 
     public void setForceText(boolean forceText) {
@@ -60,9 +69,11 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
         try {
 
-            if (ScmItem.BODY_TYPE.RAW_DIFF == bodyType) {
+            if (diff != null  && bodyType == null) {
+                openFile(fileName, diff,true, false);
+            } else if (ScmItem.BODY_TYPE.RAW_DIFF == bodyType) {
                 final String text = new String(scmItem.getBody(bodyType));
-                openFile(fileName, text,true);
+                openFile(fileName, text,true, false);
             } else if (forceText || ExtensionMap.isTextExtension(scmItem.getShortName())) {
                 String text;
                 try {
@@ -89,7 +100,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     }
 
-    private void openFile(final String fileName, final String text, final boolean rawDiff) throws IOException {
+    private void openFile(final String fileName, final String text, final boolean rawDiff, final boolean annotate) throws IOException {
         final Pair<Parent, Object> pair = App.loadFXML(Const.View.EDITOR);
         final Scene scene = new Scene(pair.getFirst());
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
@@ -101,12 +112,17 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         textBrowser.setScmItem(scmItem);
         textBrowser.setDiff(rawDiff);
         textBrowser.setText(text);
+        textBrowser.annotationCb.setVisible(annotate);
 
         final Stage editorStage = new Stage();
         editorStage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         editorStage.setScene(scene);
         editorStage.setTitle(fileName);
         editorStage.show();
+    }
+
+    private void openFile(final String fileName, final String text, final boolean rawDiff) throws IOException {
+        openFile(fileName, text, rawDiff, true);
     }
 
 }

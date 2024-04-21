@@ -15,12 +15,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
@@ -189,9 +192,6 @@ public class Workingcopy implements Initializable {
     }
 
 
-
-
-
     public void stashEventHandler(ActionEvent actionEvent) throws IOException {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -211,8 +211,6 @@ public class Workingcopy implements Initializable {
                 new StatusUpdateEventHandler(true).handle(null);
             }
         });
-
-
     }
 
     public void mergeEventHandler(ActionEvent actionEvent) {
@@ -233,6 +231,12 @@ public class Workingcopy implements Initializable {
     public void refreshEventHandler(ActionEvent actionEvent) {
         Context.updateAll();
         Context.updateWorkingBranch();
+    }
+
+
+    public void createDiffEventHandler(ActionEvent actionEvent) {
+        String diff = Context.getGitRepoService().createDiff();
+        new OpenFileEventHandler(diff).handle(actionEvent);
     }
 
     public void commitEventHandler(ActionEvent actionEvent) {

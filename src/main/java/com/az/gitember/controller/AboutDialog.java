@@ -5,7 +5,9 @@ import com.az.gitember.App;
 import javafx.animation.PathTransition;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.effect.MotionBlur;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -208,8 +210,18 @@ public class AboutDialog extends Dialog {
         char5.setLayoutY(300);
         applyStyle(char5);
 
+        Path dot2 = getPathCharDot();
+        dot2.setLayoutX(370);
+        dot2.setLayoutY(380 );
+        applyStyle(dot2);
+
+        Path char1 = getPathChar1();
+        char1.setLayoutX(380);
+        char1.setLayoutY(300);
+        applyStyle(char1);
+
         return new Path [] {
-                path, char2, dot,  char5,
+                path, char2, dot,  char5, dot2, char1,
         };
     }
 
@@ -217,7 +229,8 @@ public class AboutDialog extends Dialog {
         dot.setScaleX(.2);
         dot.setScaleY(.2);
         dot.setStrokeWidth(10);
-        dot.setStroke(Color.valueOf("#3c7070"));
+        dot.setStroke(Color.valueOf("#8080DA"));
+
     }
 
     private Path getPathCharDot() {
@@ -225,6 +238,14 @@ public class AboutDialog extends Dialog {
 
         path.getElements().add(new MoveTo(   0,       0 ));
         path.getElements().add(new LineTo(0,0));
+        return path;
+    }
+
+    private Path getPathChar1() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   0,       0 ));
+
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
         return path;
     }
 
