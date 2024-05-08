@@ -16,19 +16,17 @@
 <BorderPane fx:id="mainBorderPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="-1" prefWidth="600.0"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
             xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.az.gitember.controller.History">
+            fx:controller="com.az.gitember.module.history.HistoryController">
     <center>
         <SplitPane fx:id="splitPanel" orientation="VERTICAL">
             <AnchorPane fx:id="hostHistoryViewPanel"  minHeight="150" minWidth="0.0" maxHeight="Infinity" prefHeight="500.0" prefWidth="820.0" >
                 <children>
                     <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <columns>
-                            <TableColumn fx:id="laneTableColumn" sortable="false" prefWidth="200.0" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
-                            <TableColumn fx:id="messageTableColumn" sortable="false"  text="Message" />
-                            <TableColumn fx:id="authorTableColumn" sortable="false"  text="Author" />
-                            <TableColumn fx:id="dateTableColumn" sortable="false"  text="Date" />
-                            <TableColumn fx:id="shaTableColumn" sortable="false"  text="Sha" />
-                            <TableColumn fx:id="refTableColumn" sortable="false"  text="Ref" />
+                            <TableColumn fx:id="laneTableColumn" sortable="false" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
+                            <TableColumn fx:id="authorTableColumn" sortable="false" prefWidth="300" maxWidth="300" text="Author" />
+                            <TableColumn fx:id="dateTableColumn" sortable="false" prefWidth="180" maxWidth="180" text="Date" />
+                            <TableColumn fx:id="shaTableColumn" sortable="false" prefWidth="400" maxWidth="400" text="Sha" />
                         </columns>
                         <contextMenu>
                             <ContextMenu>
