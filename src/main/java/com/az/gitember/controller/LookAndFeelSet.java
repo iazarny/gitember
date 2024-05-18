@@ -6,7 +6,7 @@ public class LookAndFeelSet {
 
     public static final double FONT_SIZE = 24.0;
     public static int DIALOG_DEFAULT_WIDTH = 800;
-    public static String PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
+    public static String PIECHART_LEGENF_STYLE = "";
     public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F); //TODO to css
     public static final Color[] historyPlotCommitRenderedColors = new Color[]{
             Color.rgb(255, 0, 0), Color.rgb(0, 255, 0), Color.rgb(229, 229, 0), Color.rgb(177, 178, 255), Color.rgb(255, 0, 255), Color.rgb(0, 255, 255),
@@ -18,13 +18,17 @@ public class LookAndFeelSet {
     public static String DEFAULT_CSS = "/styles/styles.css";
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
 
-    public static String CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black; -fx-font: Monospace; -fx-font-size: 20;";
+    public static String CODE_AREA_CSS =  "-fx-font: Monospace; -fx-font-size: 20;";
     public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
 
     public static Color DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
     public static Color DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
     public static Color DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
-    public static Color DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
+    public static Color DIFF_COLOR_TEXT =  Color.valueOf("#e0e0e0");
+    public static String HISTORY_LABEL_BOX_CSS = "-fx-padding: 0 4px; -fx-background-color: #d1e7dd; -fx-border-color: #a3cfbb; -fx-spacing: 10px; -fx-border-radius: 4px; -fx-background-radius: 4px";
+    public static String HISTORY_LABEL_BOX_TXT_CSS = "-fx-text-fill: #0a3622; -fx-font-size: 14px;";
+    public static String HISTORY_BOX_CSS = "-fx-background-color: transparent";
+    public static String HISTORY_BOX_TXT_CSS = "";
 
     public static void init(String themeMode) {
         if ("Dark".equalsIgnoreCase(themeMode)) {
@@ -39,19 +43,10 @@ public class LookAndFeelSet {
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
             DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
             DIFF_COLOR_TEXT = Color.valueOf("#303030");
-        } else {
-            PIECHART_LEGENF_STYLE = "";
-            BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F);
-            KEYWORDS_CSS = "/styles/keywords.css";
-            DEFAULT_CSS = "/styles/styles.css";
-            FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
-            CODE_AREA_CSS = "-fx-font: Monospace; -fx-font-size: 20;";
-            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color; -fx-text-fill: #b3b3b3; -fx-font: Monospace; -fx-font-size: 20;";
-            DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
-            DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
-            DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
-            DIFF_COLOR_TEXT = Color.valueOf("#e0e0e0");
-
+            HISTORY_LABEL_BOX_CSS = "-fx-padding: 0 4px; -fx-background-color: #404040; -fx-border-color: #a3cfbb; -fx-spacing: 10px; -fx-border-radius: 4px; -fx-background-radius: 4px";
+            HISTORY_LABEL_BOX_TXT_CSS = "-fx-text-fill: #0a3622; -fx-font-size: 16px;";
+            HISTORY_BOX_CSS = "-fx-background-color: transparent";
+            HISTORY_BOX_TXT_CSS = "-fx-font-size: 14pt";
         }
     }
 }

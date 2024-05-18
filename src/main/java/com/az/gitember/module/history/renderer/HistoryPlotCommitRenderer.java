@@ -25,10 +25,10 @@ public class HistoryPlotCommitRenderer extends AbstractPlotRenderer<PlotLane, Co
     @Override
     protected int drawLabel(int x, int y, Ref ref) {
         var hbox = new HBox();
-        hbox.setStyle("-fx-padding: 0 4px; -fx-background-color: #d1e7dd; -fx-border-color: #a3cfbb; -fx-spacing: 10px; -fx-border-radius: 4px; -fx-background-radius: 4px");
+        hbox.setStyle(LookAndFeelSet.HISTORY_LABEL_BOX_CSS);
 
         var txtNum = new Text(ref.getName());
-        txtNum.setStyle("-fx-text-fill: #0a3622; -fx-font-size: 14px;");
+        txtNum.setStyle(LookAndFeelSet.HISTORY_LABEL_BOX_TXT_CSS);
         hbox.getChildren().add(txtNum);
 
         // Little hack - Node.snapshot evaluate CSS only if attached to Scene
@@ -46,11 +46,11 @@ public class HistoryPlotCommitRenderer extends AbstractPlotRenderer<PlotLane, Co
     @Override
     protected void drawText(String msg, int x, int y) {
         var hbox = new HBox();
-        hbox.setStyle("-fx-background-color: transparent");
+        hbox.setStyle(LookAndFeelSet.HISTORY_BOX_CSS);
         hbox.setPadding(new Insets(0, 8, 0, 8));
 
         var txtNum = new Text(msg);
-//        txtNum.setStyle(LookAndFeelSet.DEFAULT_CSS);
+        txtNum.setStyle(LookAndFeelSet.HISTORY_BOX_TXT_CSS);
         hbox.getChildren().add(txtNum);
 
         // Little hack - Node.snapshot evaluate CSS only if attached to Scene
