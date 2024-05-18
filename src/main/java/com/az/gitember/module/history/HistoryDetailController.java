@@ -1,8 +1,9 @@
-package com.az.gitember.controller;
+package com.az.gitember.module.history;
 
 import com.az.gitember.App;
+import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.WorkingcopyTableGraphicsValueFactory;
 import com.az.gitember.controller.handlers.DiffEventHandler;
-import com.az.gitember.controller.handlers.DiffWithDiskEventHandler;
 import com.az.gitember.controller.handlers.OpenFileEventHandler;
 import com.az.gitember.data.CommitInfo;
 import com.az.gitember.data.Const;
@@ -28,9 +29,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class HistoryDetail implements Initializable {
+public class HistoryDetailController implements Initializable {
 
-    private final static Logger log = Logger.getLogger(HistoryDetail.class.getName());
+    private final static Logger log = Logger.getLogger(HistoryDetailController.class.getName());
 
     @FXML
     public Menu stashMenu;

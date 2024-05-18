@@ -29,8 +29,8 @@ public interface Const {
         String FILE_DIFF = "diffviewer";
         String EDITOR = "editor";
         String FILE_HISTORY = "filehistory";
-        String HISTORY = "history";
-        String HISTORY_DETAIL = "historydetail";
+        String HISTORY = "module/history/history";
+        String HISTORY_DETAIL = "module/history/history-detail";
         String MAIN = "main";
 
         String STASH = "stash";
