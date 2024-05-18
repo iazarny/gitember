@@ -196,32 +196,32 @@ public class AboutDialog extends Dialog {
 
 //version
         Path char2 = getPathChar2();
-        char2.setLayoutX(270);
+        char2.setLayoutX(250);
         char2.setLayoutY(300);
         applyStyle(char2);
 
         Path dot = getPathCharDot();
-        dot.setLayoutX(333.5);
+        dot.setLayoutX(313.5);
         dot.setLayoutY(380 );
         applyStyle(dot);
 
         Path char5 = getPathChar5();
-        char5.setLayoutX(300);
+        char5.setLayoutX(280);
         char5.setLayoutY(300);
         applyStyle(char5);
 
         Path dot2 = getPathCharDot();
-        dot2.setLayoutX(370);
-        dot2.setLayoutY(380 );
+        dot2.setLayoutX(350);
+        dot2.setLayoutY(380);
         applyStyle(dot2);
 
-        Path char1 = getPathChar1();
-        char1.setLayoutX(380);
-        char1.setLayoutY(300);
-        applyStyle(char1);
+        Path char2_2 = getPathChar2();
+        char2_2.setLayoutX(320);
+        char2_2.setLayoutY(300);
+        applyStyle(char2_2);
 
         return new Path [] {
-                path, char2, dot,  char5, dot2, char1,
+                path, char2, dot,  char5, dot2, char2_2,
         };
     }
 
