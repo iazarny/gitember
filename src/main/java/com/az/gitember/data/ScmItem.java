@@ -53,54 +53,9 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         String LFS = "Lfs";
     }
 
-
-    //TODO eliminate this class
-    public static class Changes {
-        private String commitInfo;
-        private String commitAuthor;
-        private String commitEmail;
-        private Date date;
-
-        public  Changes(final RevCommit revCommit) {
-            this.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-            this.setCommitAuthor(revCommit.getAuthorIdent().getName());
-            this.setCommitEmail(revCommit.getAuthorIdent().getEmailAddress());
-            this.setCommitInfo(revCommit.getShortMessage());
-        }
-
-        public String getCommitInfo() {
-            return commitInfo;
-        }
-
-        public void setCommitInfo(String commitInfo) {
-            this.commitInfo = commitInfo;
-        }
-
-        public String getCommitAuthor() {
-            return commitAuthor;
-        }
-
-        public void setCommitAuthor(String commitAuthor) {
-            this.commitAuthor = commitAuthor;
-        }
-
-        public String getCommitEmail() {
-            return commitEmail;
-        }
-
-        public void setCommitEmail(String commitEmail) {
-            this.commitEmail = commitEmail;
-        }
-
-        public Date getDate() {
-            return date;
-        }
-
-        public void setDate(Date date) {
-            this.date = date;
-        }
-    }
-
+    private String changeName = "";
+    private Date changeDate;
+    private String changeAuthor = "";
 
     private static Map<String, Integer> sortOrder = new HashMap<>();
 
@@ -118,7 +73,6 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
     }
 
     private RevCommit revCommit;
-    private Changes changes;
 
     public ScmItem(String s, ScmItemAttribute attribute, RevCommit revCommit) {
         super(s, attribute);
@@ -129,12 +83,18 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         this(s, attribute, null);
     }
 
-    public Changes getChanges() {
-        return changes;
+    public void setChangeAuthor(String changeAuthor) {
+        this.changeAuthor = changeAuthor;
+
     }
 
-    public void setChanges(Changes changes) {
-        this.changes = changes;
+
+    public void setChangeDate(Date changeDate) {
+        this.changeDate = changeDate;
+    }
+
+    public void setChangeName(String changeName) {
+        this.changeName = changeName;
     }
 
     public String getShortName() {
@@ -188,32 +148,19 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         return Objects.hash(super.hashCode(), revCommit);
     }
 
-    public ScmItem withChanges(final RevCommit revCommit) {
-        if (revCommit != null) {
-            this.setChanges(new Changes(revCommit));
-        }
-        return this;
-    }
-
     public String getChangeNameSafe() {
-        if (getChanges() != null) {
-            return getChanges().getCommitInfo();
-        }
-        return "";
+        return changeName;
     }
 
     public String getChangeDateSafe() {
-        if (getChanges() != null) {
-            return GitemberUtil.formatDate(getChanges().getDate());
+        if (changeDate != null) {
+            return GitemberUtil.formatDate(changeDate);
         }
         return "";
     }
 
     public String getChangeAuthorSafe() {
-        if (getChanges() != null) {
-            return getChanges().getCommitAuthor() + " " + getChanges().getCommitEmail();
-        }
-        return "";
+        return changeAuthor;
     }
 
     /**

@@ -213,7 +213,6 @@ public class Context {
      */
     public static synchronized void updateStatusIfNeed(ProgressMonitor progressMonitor) {
         List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
-        List<ScmItem> newStatusList = new ArrayList<>(statuses);
         boolean needupdate;
         if (statuses.size() == statusList.size()) {
             statusList.forEach( scmItem -> {
@@ -224,9 +223,7 @@ public class Context {
             needupdate = true;
         }
         if (needupdate) {
-            plotCommitList.clear();
-            statusList.clear();
-            statusList.addAll(newStatusList);
+            updateStatus(progressMonitor);
         }
         lastUpdate.set(LocalDateTime.now());
     }

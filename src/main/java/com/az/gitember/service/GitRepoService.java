@@ -1129,7 +1129,9 @@ public class GitRepoService {
             while (lastCommitIter.iterator().hasNext()) {
                 final RevCommit revCommit = lastCommitIter.iterator().next();
                 if (revCommit != null) {
-                    item.withChanges(revCommit);
+                    item.setChangeDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
+                    item.setChangeAuthor(revCommit.getAuthorIdent().getName() + " <" + revCommit.getAuthorIdent().getEmailAddress() + ">");
+                    item.setChangeName  (revCommit.getShortMessage());
                     break;
                 }
             }
