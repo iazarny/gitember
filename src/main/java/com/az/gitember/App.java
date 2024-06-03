@@ -20,6 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.io.IOException;
@@ -66,6 +67,7 @@ public class App extends Application {
         stage.setScene(scene);
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.setTitle(Const.APP_NAME);
+        //stage.initStyle(StageStyle.UNDECORATED);
         stage.show();
 
         App.stage = stage;
@@ -91,6 +93,8 @@ public class App extends Application {
                 }
         );
     }
+
+
 
 
     @Override

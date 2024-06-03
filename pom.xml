@@ -13,7 +13,7 @@
         <jgit.version>6.8.0.202311291450-r</jgit.version>
         <apache.tika.version>1.28.5</apache.tika.version>
         <slf4j.version>2.0.11</slf4j.version>
-        <javafx.version>20.0.2</javafx.version>
+        <javafx.version>22.0.1</javafx.version>
     </properties>
 
 

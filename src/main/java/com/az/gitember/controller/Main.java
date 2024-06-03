@@ -14,9 +14,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
-import javafx.util.Callback;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.kordamp.ikonli.javafx.FontIcon;
+import javafx.scene.input.MouseEvent;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.File;
@@ -68,6 +67,9 @@ public class Main implements Initializable {
     public Label behindIconQty;
     public StackedFontIcon aheadIcon;
     public StackedFontIcon behindIcon;
+
+    private double xOffset = 0;
+    private double yOffset = 0;
 
 
     /**
@@ -525,6 +527,18 @@ public class Main implements Initializable {
         alert.showAndWait();
 
     }
+    
+       public void mainBarMousePressed(MouseEvent mouseEvent) {
+                    // Add dragging functionality
+                    xOffset = mouseEvent.getSceneX();
+                    yOffset = mouseEvent.getSceneY();
+                }
+    public void mainBarMouseDragged(MouseEvent mouseEvent) {
+                    App.getStage().setX(mouseEvent.getScreenX() - xOffset);
+                    App.getStage().setY(mouseEvent.getScreenY() - yOffset);
+                }
+    public void mainBarMouseClicked(MouseEvent mouseEvent) {
+                }
 
 
     public void reopenProject(ActionEvent actionEvent) {

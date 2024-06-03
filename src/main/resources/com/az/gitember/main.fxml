@@ -94,7 +94,10 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-                <ToolBar fx:id="mainToolBar" >
+                    <ToolBar fx:id="mainToolBar"
+                                             onMousePressed="#mainBarMousePressed"
+                                             onMouseDragged="#mainBarMouseDragged"
+                                             onMouseClicked="#mainBarMouseClicked">
                     <ComboBox fx:id="projectsCmb" onAction="#reopenProject" />
                     <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler" text="Open">
                         <graphic>
