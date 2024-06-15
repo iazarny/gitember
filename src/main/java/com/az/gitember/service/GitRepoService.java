@@ -492,11 +492,14 @@ public class GitRepoService {
      * @param message merge message
      * @throws Exception * @throws IOException in case of error
      */
-    public MergeResult mergeBranch(final String from, final String message) throws Exception {
+    public MergeResult mergeBranch(final String from, final String message,
+                                   boolean squash, MergeCommand.FastForwardMode mode) throws Exception {
         try (Git git = new Git(repository)) {
             return git.merge()
                     .include(repository.exactRef(from))
                     .setMessage(message)
+                    .setSquash(squash)
+                    .setFastForward(mode)
                     .call();
         }
     }

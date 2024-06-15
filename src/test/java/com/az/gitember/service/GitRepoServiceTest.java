@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.ScmStat;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.lib.EmptyProgressMonitor;
 import org.eclipse.jgit.lib.Ref;
@@ -216,7 +217,7 @@ class GitRepoServiceTest {
 
         gitRepoService.checkoutBranch(FN_MASTER, null);
         assertEquals(0, gitRepoService.getAllFiles(FN_MASTER).size());
-        gitRepoService.mergeBranch(FN_BR1, "Merger from br1 to master");
+        gitRepoService.mergeBranch(FN_BR1, "Merger from br1 to master", true, MergeCommand.FastForwardMode.FF);
         assertEquals(1, gitRepoService.getAllFiles().size());
     }
 

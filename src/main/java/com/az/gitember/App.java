@@ -11,13 +11,21 @@ import com.az.gitember.service.Context;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -40,6 +48,7 @@ public class App extends Application {
     private static Scene scene;
     private static Stage stage;
     private static App app;
+    private static ReadOnlyBooleanProperty isFocused;
 
 
     @Override
@@ -62,16 +71,18 @@ public class App extends Application {
         double width = rectangle2D.getWidth() - minus;
         double height = rectangle2D.getHeight() - minus;
 
+        App.isFocused = stage.focusedProperty();
+        App.stage = stage;
+        App.app = this;
+
         scene = new Scene(loadFXML(Const.View.MAIN).getFirst(), width, height);
+        scene.setFill(Color.TRANSPARENT);
         stage.setMaximized(true);
         stage.setScene(scene);
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.setTitle(Const.APP_NAME);
-        //stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.TRANSPARENT);
         stage.show();
-
-        App.stage = stage;
-        App.app = this;
 
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
@@ -92,8 +103,88 @@ public class App extends Application {
                     Platform.exit();
                 }
         );
+
+
+
+        ResizeHelper.addResizeListener(stage);
     }
 
+
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+
+    //@Override
+    public void _start(Stage primaryStage) {
+        primaryStage.initStyle(StageStyle.TRANSPARENT);  // Remove title bar and borders
+
+
+        // Create custom title bar
+        HBox titleBar = createCustomTitleBar(primaryStage);
+        titleBar.setStyle(
+                "-fx-background-radius: 10; " +
+                "-fx-border-radius: 10; " +
+                "-fx-border-width: 2; "
+        );
+
+        BorderPane root = new BorderPane();
+        root.setTop(titleBar);
+        root.setCenter(new Label("Hello, Unified Window!"));
+        root.setStyle("-fx-background-size: 1200 900; " +
+                "-fx-background-radius: 10; " +
+                "-fx-border-radius: 10; " +
+                "-fx-border-width: 2; "
+        );
+
+        Scene scene = new Scene(root, 800, 600);
+        scene.setFill(Color.TRANSPARENT);
+
+        // Add dragging functionality to the title bar
+        titleBar.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+
+        titleBar.setOnMouseDragged(event -> {
+            primaryStage.setX(event.getScreenX() - xOffset);
+            primaryStage.setY(event.getScreenY() - yOffset);
+        });
+
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        ResizeHelper.addResizeListener(primaryStage);
+    }
+
+    private HBox createCustomTitleBar(Stage primaryStage) {
+        HBox titleBar = new HBox();
+        titleBar.setPadding(new Insets(10));
+        titleBar.setAlignment(Pos.CENTER_LEFT);
+        titleBar.setStyle("-fx-background-color: #2C3E50;");
+
+        // Standard window buttons
+        Button closeButton = new Button("✕");
+        closeButton.setOnAction(event -> primaryStage.close());
+
+        Button minimizeButton = new Button("—");
+        minimizeButton.setOnAction(event -> primaryStage.setIconified(true));
+
+        Button maximizeButton = new Button("❐");
+        maximizeButton.setOnAction(event -> {
+            primaryStage.setMaximized(!primaryStage.isMaximized());
+        });
+
+        // Custom buttons
+        Button customButton1 = new Button("Custom 1");
+        customButton1.setOnAction(event -> System.out.println("Custom Button 1 pressed"));
+
+        Button customButton2 = new Button("Custom 2");
+        customButton2.setOnAction(event -> System.out.println("Custom Button 2 pressed"));
+
+        titleBar.getChildren().addAll(closeButton, minimizeButton, maximizeButton, customButton1, customButton2);
+
+        return titleBar;
+    }
 
 
 
@@ -135,6 +226,10 @@ public class App extends Application {
 
     public static Scene getScene() {
         return scene;
+    }
+
+    public static ReadOnlyBooleanProperty getIsFocused() {
+        return isFocused;
     }
 
 

@@ -33,6 +33,7 @@ public class ResultDialog extends Dialog {
         gridPane.setMaxWidth(Double.MAX_VALUE);
         gridPane.add(textArea, 0, 0);
 
+        dialogPane.setMinHeight(250);
         dialogPane.setContent(gridPane);
         dialogPane.getButtonTypes().addAll(ButtonType.OK);
 

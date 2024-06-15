@@ -10,12 +10,20 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.DirectoryChooser;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import javafx.scene.input.MouseEvent;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.File;
@@ -67,6 +75,14 @@ public class Main implements Initializable {
     public Label behindIconQty;
     public StackedFontIcon aheadIcon;
     public StackedFontIcon behindIcon;
+    public Menu branchMenu;
+    public Button mergeBtn;
+    public Button rebaseBtn;
+    public Button commitBtn;
+    public BorderPane mainBorderPane;
+    public Circle macCloseBtn;
+    public Circle macMinimizeBtn;
+    public Circle macMaximizeBtn;
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -80,6 +96,10 @@ public class Main implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
+        mainBorderPane.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5; -fx-border-color: white;");
+        // mainToolBar.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5; ");
+        //toolBar.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5;");
 
         Context.setMain(this);
         if (Context.isMac()) {
@@ -124,15 +144,11 @@ public class Main implements Initializable {
                                 }
                         );
                     }
-
-                    puchMenuItem.setDisable(pushBtn.isDisable());
-                    pullMenuItem.setDisable(pullBtn.isDisable());
-
-                   /* fetchBtn.setTooltip(new Tooltip("Fetch all"));*/
-
+                    branchMenu.setVisible(true);
+                    mergeBtn.setDisable(false);
+                    //rebaseBtn.setDisable(false);
+                    commitBtn.setDisable(false);
                     updateButtonUI();
-
-
                 }
         );
 
@@ -145,23 +161,16 @@ public class Main implements Initializable {
                     App.getStage().setTitle(
                             Const.APP_NAME + " " + Context.repositoryPathProperty.getValueSafe() + " " + (remUrl == null ? "" : remUrl) + " "
                                     + ScmBranch.getNameSafe(scmBranch));
-                    boolean disable = remUrl == null;
                     compressDataMenuItem.setDisable(newValue == null);
                     reindexDataMenuItem.setDisable(newValue == null);
-                    fetchMenuItem.setDisable(disable);
                     repoSettingsMenuItem.setDisable(false);
                     statReportMenu.setDisable(newValue == null);
                     statReportMenu.setVisible(newValue != null);
-                    /*fetchBtn.setDisable(disable);*/
                     repoTreeView.setDisable(false);
-
-                    //boolean lfsRepo = Context.getGitRepoService().isLfsRepo();
                     boolean attrFileExists = Context.getGitRepoService().isFileExists(Const.GIT_ATTR_NAME);
                     boolean ignoreFileExists = Context.getGitRepoService().isFileExists(Const.GIT_IGNORE_NAME);
-
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
                     editRawAttrsMenuItem.setVisible(attrFileExists);
-
                     dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
 
 
@@ -248,24 +257,17 @@ public class Main implements Initializable {
             @Override
             public void changed(ObservableValue<? extends Project> observableValue,
                                 Project oldProject, Project newProject) {
-
-
                 try {
                     Context.init(newProject.getProjectHomeFolder());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-
-
-
             }
         });
 
         Context.readSettings();
 
-
         repoTreeView.getSelectionModel().selectedItemProperty().addListener(mainTreeChangeListener);
-
 
         //search on letter only to not react on Alt, Ctrl, etc
         repoTreeView.setOnKeyPressed(event -> {
@@ -275,7 +277,19 @@ public class Main implements Initializable {
                 remoteBranchesTreeItem.setExpanded(true);
                 tagsTreeItem.setExpanded(true);
                 new MainTreeBranchSearchHandler(App.getStage().getX() + 150, App.getStage().getY() + 120).handle(null);
+            }
+        });
 
+        App.getIsFocused().addListener((observable, oldValue, newValue) -> {
+            System.out.println("Focus changed: " + newValue);
+            if(newValue) {
+                macCloseBtn.setFill(Color.RED);
+                macMinimizeBtn.setFill(Color.YELLOW);
+                macMaximizeBtn.setFill(Color.GREEN);
+            } else {
+                macCloseBtn.setFill(Color.GRAY);
+                macMinimizeBtn.setFill(Color.GRAY);
+                macMaximizeBtn.setFill(Color.GRAY);
             }
         });
     }
@@ -417,6 +431,56 @@ public class Main implements Initializable {
         new PushHandler(scmBranch).handle(actionEvent);
     }
 
+    public void checkoutEventHandler(ActionEvent actionEvent) {
+        new CheckoutEventHandler().handle(actionEvent);
+        Context.updateWorkingBranch();
+    }
+
+    public void mergeEventHandler(ActionEvent actionEvent) {
+        new MergeBranchEventHandler(null).handle(actionEvent);
+        Context.updateWorkingBranch();
+    }
+
+    public void rebaseEventHandler(ActionEvent actionEvent) {
+        new RebaseBranchEventHandler(null).handle(actionEvent);
+        Context.updateWorkingBranch();
+    }
+
+    public void commitEventHandler(ActionEvent actionEvent) {
+
+        final Project proj = Context.getCurrentProject();
+        final Config gitConfig = Context.getGitRepoService().getRepository().getConfig();
+        final String cfgCommitName = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
+        final String cfgCommitEmail = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
+        String commitName = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitName(), cfgCommitName), proj.getUserName());
+        String commitEmail = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitEmail(), cfgCommitEmail), "");
+
+        CommitDialog dialog = new CommitDialog(
+                "",
+                commitName,
+                commitEmail,
+                false,
+                Collections.EMPTY_LIST
+
+        );
+        dialog.showAndWait().ifPresent(r -> {
+            if (!commitEmail.equals(dialog.getUserName()) && !commitEmail.equalsIgnoreCase(dialog.getUserEmail())) {
+                proj.setUserCommitName(dialog.getUserName());
+                proj.setUserCommitEmail(dialog.getUserEmail());
+                Context.saveSettings();
+            }
+            try {
+                Context.settingsProperty.getValue().getCommitMsg().add(r);
+                Context.getGitRepoService().commit(r, dialog.getUserName(), dialog.getUserEmail());
+                new StatusUpdateEventHandler(true).handle(null);
+                Context.updateBranches();
+            } catch (GitAPIException e) {
+                Context.getMain().showResult("Commit error", e.getMessage(), Alert.AlertType.ERROR);
+            }
+        });
+        Context.updateWorkingBranch();
+    }
+
     public void createRepositoryHandler(ActionEvent actionEvent) {
 
         new CreateDialog("Create", "Create new repository").showAndWait().ifPresent(
@@ -527,20 +591,41 @@ public class Main implements Initializable {
         alert.showAndWait();
 
     }
-    
-       public void mainBarMousePressed(MouseEvent mouseEvent) {
-                    // Add dragging functionality
-                    xOffset = mouseEvent.getSceneX();
-                    yOffset = mouseEvent.getSceneY();
-                }
-    public void mainBarMouseDragged(MouseEvent mouseEvent) {
-                    App.getStage().setX(mouseEvent.getScreenX() - xOffset);
-                    App.getStage().setY(mouseEvent.getScreenY() - yOffset);
-                }
-    public void mainBarMouseClicked(MouseEvent mouseEvent) {
-                }
 
 
     public void reopenProject(ActionEvent actionEvent) {
+    }
+
+    public void mainBarMousePressed(MouseEvent mouseEvent) {
+        // Add dragging functionality
+        xOffset = mouseEvent.getSceneX();
+        yOffset = mouseEvent.getSceneY();
+    }
+
+    public void mainBarMouseDragged(MouseEvent mouseEvent) {
+        App.getStage().setX(mouseEvent.getScreenX() - xOffset);
+        App.getStage().setY(mouseEvent.getScreenY() - yOffset);
+    }
+
+    public void mainBarMouseClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getClickCount() == 2) {
+            javafx.stage.Stage stage = App.getStage();
+            stage.setMaximized(!stage.isMaximized() );
+        }
+    }
+
+
+    public void closeHandler(MouseEvent mouseEvent) {
+        Platform.exit();
+    }
+
+    public void minimizeHandler(MouseEvent mouseEvent) {
+        javafx.stage.Stage stage = App.getStage();
+        stage.setIconified(!stage.isIconified());
+    }
+
+    public void maximizeHandler(MouseEvent mouseEvent) {
+        javafx.stage.Stage stage = App.getStage();
+        stage.setFullScreen(!stage.isFullScreen());
     }
 }

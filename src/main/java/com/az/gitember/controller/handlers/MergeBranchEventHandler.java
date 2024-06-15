@@ -34,17 +34,19 @@ public class MergeBranchEventHandler implements EventHandler<ActionEvent> {
         new MergeDialog(branches, preselectedBranch)
                 .showAndWait()
                 .ifPresent(
-                        pair -> {
+                        dialogRes -> {
                             try {
                                 MergeResult mergeResult = Context.getGitRepoService().mergeBranch(
-                                        pair.getFirst(),
-                                        pair.getSecond()
+                                        dialogRes.getBranchName(),
+                                        dialogRes.getCommitMessage(),
+                                        dialogRes.isSquash(),
+                                        dialogRes.getFastForwardMode()
                                 );
                                 String msg = Context.getGitRepoService().getMessage(mergeResult);
                                 Context.getMain().showResult("Merge result", msg, Alert.AlertType.INFORMATION);
 
                             } catch (Exception e) {
-                                log.log(Level.SEVERE, "Cannot merge " + pair.getFirst(), e);
+                                log.log(Level.SEVERE, "Cannot merge " + dialogRes.getBranchName(), e);
                                 Context.getMain().showResult("Merge result", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
                             }
                         }

@@ -49,8 +49,6 @@ public class Workingcopy implements Initializable {
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
     public CheckBox checkBoxShowLastChanges;
-
-
     private FilteredList filteredList;
 
     @Override
@@ -213,20 +211,9 @@ public class Workingcopy implements Initializable {
         });
     }
 
-    public void mergeEventHandler(ActionEvent actionEvent) {
-        new MergeBranchEventHandler(null).handle(actionEvent);
-        Context.updateWorkingBranch();
-    }
 
-    public void rebaseEventHandler(ActionEvent actionEvent) {
-        new RebaseBranchEventHandler(null).handle(actionEvent);
-        Context.updateWorkingBranch();
-    }
 
-    public void checkoutEventHandler(ActionEvent actionEvent) {
-        new CheckoutEventHandler().handle(actionEvent);
-        Context.updateWorkingBranch();
-    }
+
 
     public void refreshEventHandler(ActionEvent actionEvent) {
         Context.updateAll();
@@ -239,39 +226,6 @@ public class Workingcopy implements Initializable {
         new OpenFileEventHandler(diff).handle(actionEvent);
     }
 
-    public void commitEventHandler(ActionEvent actionEvent) {
 
-        final Project proj = Context.getCurrentProject();
-        final Config gitConfig = Context.getGitRepoService().getRepository().getConfig();
-        final String cfgCommitName = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
-        final String cfgCommitEmail = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);
-        String commitName = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitName(), cfgCommitName), proj.getUserName());
-        String commitEmail = StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(proj.getUserCommitEmail(), cfgCommitEmail), "");
-
-        CommitDialog dialog = new CommitDialog(
-                "",
-                commitName,
-                commitEmail,
-                false,
-                Collections.EMPTY_LIST
-
-        );
-        dialog.showAndWait().ifPresent(r -> {
-            if (!commitEmail.equals(dialog.getUserName()) && !commitEmail.equalsIgnoreCase(dialog.getUserEmail())) {
-                proj.setUserCommitName(dialog.getUserName());
-                proj.setUserCommitEmail(dialog.getUserEmail());
-                Context.saveSettings();
-            }
-            try {
-                Context.settingsProperty.getValue().getCommitMsg().add(r);
-                Context.getGitRepoService().commit(r, dialog.getUserName(), dialog.getUserEmail());
-                new StatusUpdateEventHandler(true).handle(null);
-                Context.updateBranches();
-            } catch (GitAPIException e) {
-                Context.getMain().showResult("Commit error", e.getMessage(), Alert.AlertType.ERROR);
-            }
-        });
-        Context.updateWorkingBranch();
-    }
 
 }

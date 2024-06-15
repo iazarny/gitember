@@ -45,10 +45,7 @@
         <HBox id="MERGEITEM">
             <MenuBar id="MERGEITEM">
                 <Menu id="MERGEITEM"  text="Working copy">
-                    <MenuItem id="MERGEITEM" onAction="#checkoutEventHandler" text="Checkout ..." />
-                    <MenuItem id="MERGEITEM" onAction="#mergeEventHandler" text="Merge ..." />
-                    <MenuItem id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase ..." />
-                    <MenuItem id="MERGEITEM" onAction="#commitEventHandler" text="Commit ..." />
+                    <MenuItem id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
                     <MenuItem id="MERGEITEM" onAction="#stashEventHandler" text="Stash ..." />
                     <MenuItem id="MERGEITEM" onAction="#createDiffEventHandler" text="Create diff" />
                 </Menu>
@@ -72,11 +69,6 @@
                     </graphic>
                 </Button>
                 <Separator id="MERGEITEM"/>
-                <Button id="MERGEITEM" onAction="#mergeEventHandler" text="Merge">
-
-                </Button>
-                <Button id="MERGEITEM" onAction="#rebaseEventHandler" text="Rebase" />
-                <Button id="MERGEITEM" onAction="#commitEventHandler" text="Commit" />
                 <Button id="MERGEITEM" onAction="#refreshEventHandler">
                     <tooltip><Tooltip text="Refresh" /></tooltip>
                     <graphic>
