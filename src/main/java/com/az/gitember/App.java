@@ -26,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -53,6 +54,9 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+
+        Font font = Font.loadFont(App.class.getResourceAsStream("/sourcesanspro/SourceSansPro-Regular.otf"), 40);
+        System.out.println("Font " + font.getName());
 
         Context.readSettings();
 
@@ -104,87 +108,11 @@ public class App extends Application {
                 }
         );
 
-
-
         ResizeHelper.addResizeListener(stage);
     }
 
 
 
-    private double xOffset = 0;
-    private double yOffset = 0;
-
-    //@Override
-    public void _start(Stage primaryStage) {
-        primaryStage.initStyle(StageStyle.TRANSPARENT);  // Remove title bar and borders
-
-
-        // Create custom title bar
-        HBox titleBar = createCustomTitleBar(primaryStage);
-        titleBar.setStyle(
-                "-fx-background-radius: 10; " +
-                "-fx-border-radius: 10; " +
-                "-fx-border-width: 2; "
-        );
-
-        BorderPane root = new BorderPane();
-        root.setTop(titleBar);
-        root.setCenter(new Label("Hello, Unified Window!"));
-        root.setStyle("-fx-background-size: 1200 900; " +
-                "-fx-background-radius: 10; " +
-                "-fx-border-radius: 10; " +
-                "-fx-border-width: 2; "
-        );
-
-        Scene scene = new Scene(root, 800, 600);
-        scene.setFill(Color.TRANSPARENT);
-
-        // Add dragging functionality to the title bar
-        titleBar.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-
-        titleBar.setOnMouseDragged(event -> {
-            primaryStage.setX(event.getScreenX() - xOffset);
-            primaryStage.setY(event.getScreenY() - yOffset);
-        });
-
-
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        ResizeHelper.addResizeListener(primaryStage);
-    }
-
-    private HBox createCustomTitleBar(Stage primaryStage) {
-        HBox titleBar = new HBox();
-        titleBar.setPadding(new Insets(10));
-        titleBar.setAlignment(Pos.CENTER_LEFT);
-        titleBar.setStyle("-fx-background-color: #2C3E50;");
-
-        // Standard window buttons
-        Button closeButton = new Button("✕");
-        closeButton.setOnAction(event -> primaryStage.close());
-
-        Button minimizeButton = new Button("—");
-        minimizeButton.setOnAction(event -> primaryStage.setIconified(true));
-
-        Button maximizeButton = new Button("❐");
-        maximizeButton.setOnAction(event -> {
-            primaryStage.setMaximized(!primaryStage.isMaximized());
-        });
-
-        // Custom buttons
-        Button customButton1 = new Button("Custom 1");
-        customButton1.setOnAction(event -> System.out.println("Custom Button 1 pressed"));
-
-        Button customButton2 = new Button("Custom 2");
-        customButton2.setOnAction(event -> System.out.println("Custom Button 2 pressed"));
-
-        titleBar.getChildren().addAll(closeButton, minimizeButton, maximizeButton, customButton1, customButton2);
-
-        return titleBar;
-    }
 
 
 

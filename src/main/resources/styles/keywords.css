@@ -1,11 +1,3 @@
-.kwfont {
-    -fx-font-size: 20;
-    -fx-font-family: "Monospace";
-}
-
-.linenum {
-    -fx-fill: gray;
-}
 
 .debug {
     -fx-fill: magenta;
@@ -24,15 +16,15 @@
 }
 
 .semicolon {
-    -fx-fill: #6060fa;
+    -fx-fill: #21215d;
 }
 
 .bracket {
-    -fx-fill: #6060fa;
+    -fx-fill: #162e48;
 }
 
 .digit {
-    -fx-fill: #1070d5;
+    -fx-fill: #031d3d;
 }
 
 .string {
@@ -113,3 +105,8 @@
 
 /*.styled-text-area .text { -fx-fill: #cddbe8; }*/
 .styled-text-area .line-highlighter { -fx-fill: #bdd2bd; }
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('/sourcesanspro/SourceSansPro-Regular.otf');
+}

@@ -44,8 +44,6 @@ import java.util.stream.Collectors;
 
 public class DiffViewer implements Initializable {
 
-	private final static double VER_HEAD_HEIGHT = 30;
-
     public TextField newLabel;
     public TextField oldLabel;
     public CodeArea oldCodeArea;
@@ -113,8 +111,6 @@ public class DiffViewer implements Initializable {
     }
 
     private boolean updateAllowed = true;
-    private boolean drawAllowed = true;
-
     boolean oldScrolled = false;
     boolean newScrolled = false;
 
@@ -461,45 +457,7 @@ public class DiffViewer implements Initializable {
     TextToSpanContentAdapter leftAdapter;
     TextToSpanContentAdapter rightAdapter;
 
-    private void setText2(final CodeArea codeArea,
-                         final String text, final String fileName,
-                         final boolean leftSide,
-                         final int activeParagrah) {
-        long st = System.currentTimeMillis();
 
-        TextToSpanContentAdapter adapter;
-        if (leftSide) {
-            if (leftAdapter == null) {
-                leftAdapter = new TextToSpanContentAdapter(
-                        FilenameUtils.getExtension(fileName),
-                        this.diffList, leftSide, activeParagrah);
-                codeArea.appendText(text);
-            }
-            adapter = leftAdapter;
-        } else {
-            if(rightAdapter == null) {
-                rightAdapter = new TextToSpanContentAdapter(
-                        FilenameUtils.getExtension(fileName),
-                        this.diffList, leftSide, activeParagrah);
-                codeArea.appendText(text);
-            }
-            adapter = rightAdapter;
-        }
-
-
-
-        StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
-
-        if (spans != null) {
-            codeArea.setStyleSpans(0, spans);
-        }
-
-        Map<Integer, List<String>> decoration = adapter.getDecorateByPatch(activeParagrah);
-        decoration.forEach(codeArea::setParagraphStyle);
-
-        codeArea.setParagraphGraphicFactory(
-                GitemberLineNumberFactory.get(codeArea, adapter, null, activeParagrah));
-    }
 
 
     public void repeatSearch(KeyEvent keyEvent) {
@@ -563,8 +521,10 @@ public class DiffViewer implements Initializable {
         scrollToDiff(false);
     }
 
+
     private void updateButtonState() {
         prevBtn.setDisable(currentDiff <= 0);
-        nextBtn.setDisable((this.diffList.size() - 1) <= currentDiff);
+        nextBtn.setDisable( ( this.diffList.size() - 1)
+                <= currentDiff );
     }
 }
