@@ -12,35 +12,35 @@
 }
 
 .default {
-    -fx-fill: #323232;
+    -fx-fill: #404040;
 }
 
 .keyword {
-    -fx-fill: darkblue;
+    -fx-fill: #2020fa;
 }
 
 .boolean {
-    -fx-fill: #05438Eff;
+    -fx-fill: #0BCEF1;
 }
 
 .semicolon {
-    -fx-fill: #030342;
+    -fx-fill: #6060fa;
 }
 
 .bracket {
-    -fx-fill: darkblue;
+    -fx-fill: #6060fa;
 }
 
 .digit {
-    -fx-fill: blue;
+    -fx-fill: #1070d5;
 }
 
 .string {
-    -fx-fill: darkgreen;
+    -fx-fill: green;
 }
 
 .string3 {
-    -fx-fill: green;
+    -fx-fill: #0de30d;
 }
 
 .comment {

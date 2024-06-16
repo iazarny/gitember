@@ -20,11 +20,11 @@
 }
 
 .default {
-    -fx-fill: #bababa;
+    -fx-fill: #545454;
 }
 
 .keyword {
-    -fx-fill: #e09e15;
+    -fx-fill: #65bd5b;
 }
 
 .boolean {
@@ -44,7 +44,7 @@
 }
 
 .string {
-    -fx-fill: #049204;
+    -fx-fill: #20da20;
 }
 
 .string3 {
@@ -52,11 +52,11 @@
 }
 
 .comment {
-    -fx-fill: #505050;
+    -fx-fill: #a0a0a0;
 }
 
 .mlcomment {
-     -fx-fill: #505050;
+     -fx-fill: #a0a0a0;
  }
 
 .embeded {
