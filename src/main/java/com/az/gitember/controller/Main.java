@@ -3,6 +3,9 @@ package com.az.gitember.controller;
 import com.az.gitember.App;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.*;
+import com.az.gitember.os.IconFactory;
+import com.az.gitember.os.ProxyIconFactory;
+import com.az.gitember.os.mac.IconFactoryImpl;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
@@ -12,6 +15,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
@@ -80,12 +85,14 @@ public class Main implements Initializable {
     public Button rebaseBtn;
     public Button commitBtn;
     public BorderPane mainBorderPane;
-    public Circle macCloseBtn;
-    public Circle macMinimizeBtn;
-    public Circle macMaximizeBtn;
+    public ImageView macCloseImgView;
+    public ImageView macMinimizeImgView;
+    public ImageView macMaximizeImgView;
 
     private double xOffset = 0;
     private double yOffset = 0;
+
+    private IconFactory factory = new ProxyIconFactory();
 
 
     /**
@@ -97,9 +104,6 @@ public class Main implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        mainBorderPane.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5; -fx-border-color: white;");
-        // mainToolBar.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5; ");
-        //toolBar.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 5;");
 
         Context.setMain(this);
         if (Context.isMac()) {
@@ -280,19 +284,10 @@ public class Main implements Initializable {
             }
         });
 
-        App.getIsFocused().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Focus changed: " + newValue);
-            if(newValue) {
-                macCloseBtn.setFill(Color.RED);
-                macMinimizeBtn.setFill(Color.YELLOW);
-                macMaximizeBtn.setFill(Color.GREEN);
-            } else {
-                macCloseBtn.setFill(Color.GRAY);
-                macMinimizeBtn.setFill(Color.GRAY);
-                macMaximizeBtn.setFill(Color.GRAY);
-            }
-        });
+        onFocusSubscribe();
     }
+
+
 
     public void updateButtonUI() {
         ScmBranch scmBranch = Context.workingBranch.getValue();
@@ -627,5 +622,38 @@ public class Main implements Initializable {
     public void maximizeHandler(MouseEvent mouseEvent) {
         javafx.stage.Stage stage = App.getStage();
         stage.setFullScreen(!stage.isFullScreen());
+    }
+
+    private void onFocusSubscribe() {
+        App.getIsFocused().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+                macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+                macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+            } else {
+                macCloseImgView.setImage( factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+                macMinimizeImgView.setImage( factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+                macMaximizeImgView.setImage( factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+            }
+        });
+    }
+
+    public void winIconMouseEnter(MouseEvent mouseEvent) {
+        macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
+        macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
+        macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
+    }
+
+    public void winIconMouseExit(MouseEvent mouseEvent) {
+        if (App.getStage().isFocused()) {
+            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+        } else {
+            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+
+        }
     }
 }

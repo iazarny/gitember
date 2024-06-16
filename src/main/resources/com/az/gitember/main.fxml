@@ -8,10 +8,13 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.controller.Main"
             fx:id="mainBorderPane"
+            style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 1; -fx-border-color: darkgray;"
 >
     <top>
         <VBox>
@@ -20,7 +23,9 @@
                 <ToolBar fx:id="mainToolBar"
                          onMousePressed="#mainBarMousePressed"
                          onMouseDragged="#mainBarMouseDragged"
-                         onMouseClicked="#mainBarMouseClicked">
+                         onMouseClicked="#mainBarMouseClicked"
+                         style="-fx-background-radius: 10; "
+                >
                     <HBox>
                         <MenuBar fx:id="mainMenuBar">
                             <menus>
@@ -52,7 +57,8 @@
                                                       onAction="#largeFileSupportHandler"/>
                                             <MenuItem text="Remote URL ..." fx:id="remoteRulMenuItem"
                                                       onAction="#remoteURLtHandler"/>
-                                            <MenuItem text="Index history ..." fx:id="reindexDataMenuItem" disable="true"
+                                            <MenuItem text="Index history ..." fx:id="reindexDataMenuItem"
+                                                      disable="true"
                                                       onAction="#reindexDataHandler"/>
                                             <MenuItem text="Drop  history index ..." fx:id="dropIndexDataMenuItem"
                                                       disable="true" onAction="#dropIndexDataHandler"/>
@@ -64,17 +70,20 @@
                                             <MenuItem text="Edit .gitattributes" fx:id="editRawAttrsMenuItem"
                                                       onAction="#editRawAttrsHandler" visible="false"/>
                                             <SeparatorMenuItem/>
-                                            <MenuItem text="Compress database ..." fx:id="compressDataMenuItem" disable="true"
+                                            <MenuItem text="Compress database ..." fx:id="compressDataMenuItem"
+                                                      disable="true"
                                                       onAction="#compressDataHandler"/>
                                         </Menu>
                                         <Menu text="Statistic" fx:id="statReportMenu" disable="true" visible="false">
                                             <MenuItem text="Code lines" onAction="#createStatReport"/>
                                             <MenuItem text="Work progress ..." onAction="#createStatReportProgress"/>
-                                            <MenuItem text="Branch live time ..." onAction="#createStatReportBranchTime"/>
+                                            <MenuItem text="Branch live time ..."
+                                                      onAction="#createStatReportBranchTime"/>
                                             <MenuItem text="Branches ..." onAction="#createStatReportBranches"/>
 
                                         </Menu>
-                                        <MenuItem fx:id="openGitTerminalMenuItem" onAction="#openGitTerminalActionHandler"
+                                        <MenuItem fx:id="openGitTerminalMenuItem"
+                                                  onAction="#openGitTerminalActionHandler"
                                                   text="Terminal"/>
                                         <SeparatorMenuItem/>
                                         <MenuItem accelerator="Shortcut+Q" onAction="#exitActionHandler" text="Exit"/>
@@ -99,12 +108,11 @@
                                             </StackedFontIcon>
                                         </graphic>
                                     </MenuItem>
-                                    <MenuItem onAction="#checkoutEventHandler" text="Checkout ..." />
-                                    <MenuItem onAction="#mergeEventHandler" text="Merge ..." />
-                                    <MenuItem onAction="#rebaseEventHandler" text="Rebase ..." />
-                                    <MenuItem onAction="#commitEventHandler" text="Commit ..." />
+                                    <MenuItem onAction="#checkoutEventHandler" text="Checkout ..."/>
+                                    <MenuItem onAction="#mergeEventHandler" text="Merge ..."/>
+                                    <MenuItem onAction="#rebaseEventHandler" text="Rebase ..."/>
+                                    <MenuItem onAction="#commitEventHandler" text="Commit ..."/>
                                 </Menu>
-
 
 
                                 <Menu mnemonicParsing="false" text="Help">
@@ -121,19 +129,29 @@
                                 </Menu>
                             </menus>
                         </MenuBar>
-                        <HBox style="-fx-padding: 10 30 0 0;">
-                            <Circle fx:id="macCloseBtn"   radius="6.5" onMouseClicked="#closeHandler"/>
-                            <Label text="  "/>
-                            <Circle fx:id="macMinimizeBtn" fill="yellow"  radius="6.5" onMouseClicked="#minimizeHandler"/>
-                            <Label text="  "/>
-                            <Circle fx:id="macMaximizeBtn"  radius="6.5" onMouseClicked="#maximizeHandler"/>
+                        <HBox style="-fx-padding: 10 30 0 0;" spacing="8">
+                            <ImageView fx:id="macCloseImgView"
+                                       onMouseEntered="#winIconMouseEnter"
+                                       onMouseExited="#winIconMouseExit"
+                                       onMouseClicked="#closeHandler"
+                            />
+                            <ImageView fx:id="macMinimizeImgView"
+                                       onMouseEntered="#winIconMouseEnter"
+                                       onMouseExited="#winIconMouseExit"
+                                       onMouseClicked="#minimizeHandler"
+                            />
+                            <ImageView fx:id="macMaximizeImgView"
+                                       onMouseEntered="#winIconMouseEnter"
+                                       onMouseExited="#winIconMouseExit"
+                                       onMouseClicked="#maximizeHandler"
+                            />
                         </HBox>
 
 
-
-
                         <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler">
-                            <tooltip><Tooltip text="Open local repository" /></tooltip>
+                            <tooltip>
+                                <Tooltip text="Open local repository"/>
+                            </tooltip>
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
                                     <FontIcon iconLiteral="fa-folder-open" iconSize="24"/>
@@ -141,7 +159,9 @@
                             </graphic>
                         </Button>
                         <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneHandler">
-                            <tooltip><Tooltip text="Clone repository" /></tooltip>
+                            <tooltip>
+                                <Tooltip text="Clone repository"/>
+                            </tooltip>
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
                                     <FontIcon iconLiteral="fa-clone" iconSize="24"/>
@@ -151,7 +171,8 @@
                         <ComboBox fx:id="projectsCmb" onAction="#reopenProject"/>
 
                         <!--Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/-->
-                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler" text="Pull">
+                        <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
+                                text="Pull">
                             <graphic>
                                 <HBox>
                                     <StackedFontIcon rotate="-45" style="-fx-icon-color: text_color">
@@ -167,7 +188,8 @@
 
                             </graphic>
                         </Button>
-                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler" text="Push">
+                        <Button fx:id="pushBtn" disable="true" mnemonicParsing="false" onAction="#pushHandler"
+                                text="Push">
                             <graphic>
                                 <HBox>
                                     <StackedFontIcon rotate="-23" style="-fx-icon-color: text_color">
@@ -188,22 +210,22 @@
                         </Button>
                         <Button fx:id="mergeBtn" disable="true" onAction="#mergeEventHandler" text="Merge">
                             <tooltip>
-                                <Tooltip text="Merge branches" />
+                                <Tooltip text="Merge branches"/>
                             </tooltip>
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="codicon-git-merge" iconSize="24"  />
+                                    <FontIcon iconLiteral="codicon-git-merge" iconSize="24"/>
                                 </StackedFontIcon>
                             </graphic>
                         </Button>
 
                         <Button fx:id="commitBtn" disable="true" onAction="#commitEventHandler" text="Commit">
                             <tooltip>
-                                <Tooltip text="Commit" />
+                                <Tooltip text="Commit"/>
                             </tooltip>
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="codicon-git-commit" iconSize="24"  />
+                                    <FontIcon iconLiteral="codicon-git-commit" iconSize="24"/>
                                 </StackedFontIcon>
                             </graphic>
                         </Button>
@@ -290,7 +312,6 @@
             <ProgressBar fx:id="progressBar" maxWidth="3000.0" minWidth="300.0" progress="0.0" HBox.hgrow="ALWAYS"/>
 
         </ToolBar>
-
 
 
     </bottom>

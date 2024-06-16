@@ -42,3 +42,7 @@
 .alternate_row_color {
     -fx-background-color: #dddddd;
 }
+
+.projectlink {
+    -fx-padding: 10 10 10 10;
+}
