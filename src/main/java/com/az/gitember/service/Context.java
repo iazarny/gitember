@@ -102,6 +102,8 @@ public class Context {
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
 
+        long dt = System.currentTimeMillis();
+
         String gitFolder = remoteRepoParameters.getDestinationFolder();
 
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
@@ -135,7 +137,7 @@ public class Context {
 
         getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
-        getMain().projectsCmb.getSelectionModel().select(project);
+        //getMain().projectsCmb.getSelectionModel().select(project);
         branchFilter.addListener(
                 (observable, oldValue, newValue) -> {
                     filterBranches();

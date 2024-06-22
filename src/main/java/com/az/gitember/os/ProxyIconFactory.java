@@ -17,15 +17,17 @@ public class ProxyIconFactory implements IconFactory {
     public ProxyIconFactory() {
         if(Context.isMac()) {
             delegate = new com.az.gitember.os.mac.IconFactoryImpl();
+        } else if (Context.isWindows()) {
+            delegate = new com.az.gitember.os.win.IconFactoryImpl();
         }
     }
 
     @Override
-    public Image createImage(WinIconType type, WinIconMode mode, Theme theme) {
-        String key = "" + type + mode + theme;
+    public Image createImage(WinIconType type, WinIconMode mode, Theme theme, boolean isAppMaximised) {
+        String key = "" + type + mode + theme + isAppMaximised;
         return cache.computeIfAbsent(
                 key,
-                k -> delegate.createImage(type, mode, theme)
+                k -> delegate.createImage(type, mode, theme, isAppMaximised)
         );
     }
 }

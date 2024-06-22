@@ -49,7 +49,8 @@ public class RecentProjectsController implements Initializable {
                         projectNameHl.setOnAction(
                                 event -> {
                                     try {
-                                        Context.init(p.getProjectHomeFolder());
+                                        //Context.init(p.getProjectHomeFolder(), getClass().getName());
+                                        Context.getMain().projectsCmb.getSelectionModel().select(p);
                                     } catch (Exception e) {
                                         removeProjectFromList(p);
                                         Context.getMain().showResult("Cannot load project ", "Cannot load project "

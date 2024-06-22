@@ -10,7 +10,7 @@
             fx:controller="com.az.gitember.controller.branchdiff.BranchDiffController">
     <top>
         <ToolBar>
-            <Pane HBox.hgrow="ALWAYS"></Pane>
+            <Pane HBox.hgrow="ALWAYS"/>
             <TextField fx:id="searchText" promptText="Search" />
         </ToolBar>
 

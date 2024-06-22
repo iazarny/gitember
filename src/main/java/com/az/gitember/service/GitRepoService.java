@@ -1101,6 +1101,7 @@ public class GitRepoService {
      */
     public List<ScmItem> getStatuses(ProgressMonitor progressMonitor, boolean collectLastChanges) {
 
+
         final List<ScmItem> scmItems = new ArrayList<>();
         try (Git git = new Git(repository)) {
 
@@ -1116,7 +1117,7 @@ public class GitRepoService {
             tw.addTree(revCommitHead.getTree());
             tw.addTree(new FileTreeIterator(repository));
             RenameDetector rd = new RenameDetector(repository);
-            rd.addAll(DiffEntry.scan(tw));
+            rd.addAll(DiffEntry.scan(tw)); // TODO need to speedup , or add monitor
             List<DiffEntry> lde = rd.compute(tw.getObjectReader(), null);
             for (DiffEntry de : lde) {
                 if (de.getScore() >= rd.getRenameScore()) {

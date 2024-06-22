@@ -15,7 +15,7 @@ public class IconFactoryImpl implements IconFactory {
     private static double height = 13.3;
 
     @Override
-    public Image createImage(IconFactory.WinIconType type, IconFactory.WinIconMode mode, IconFactory.Theme theme) {
+    public Image createImage(IconFactory.WinIconType type, IconFactory.WinIconMode mode, IconFactory.Theme theme, boolean isAppMaximised) {
 
         Canvas cnv = new Canvas(width, height);
         GraphicsContext gc = cnv.getGraphicsContext2D();

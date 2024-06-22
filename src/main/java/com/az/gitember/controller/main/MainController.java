@@ -18,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
@@ -85,6 +86,9 @@ public class MainController implements Initializable {
     public ImageView macCloseImgView;
     public ImageView macMinimizeImgView;
     public ImageView macMaximizeImgView;
+    public HBox winControlBar;
+    public HBox toolBarContainer;
+    public HBox menuContainer;
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -105,8 +109,18 @@ public class MainController implements Initializable {
         Context.setMain(this);
         if (Context.isMac()) {
             mainMenuBar.setUseSystemMenuBar(true);
+        } else if (Context.isWindows()) {
+            toolBarContainer.getChildren().remove(winControlBar);
+            menuContainer.getChildren().add(winControlBar);
+            winControlBar.getStyleClass().clear();
+            winControlBar.getStyleClass().addAll(mainMenuBar.getStyleClass());
+            winControlBar.setSpacing(1);
+            winControlBar.setStyle("-fx-padding: 10 0 0 20;");
+            winControlBar.getChildren().remove(macMaximizeImgView);
+            winControlBar.getChildren().add(macMaximizeImgView);
+            winControlBar.getChildren().remove(macCloseImgView);
+            winControlBar.getChildren().add(macCloseImgView);
         }
-
 
         mainTreeChangeListener = new MainTreeChangeListener();
 
@@ -224,12 +238,16 @@ public class MainController implements Initializable {
                         mi.setOnAction(
                                 event -> {
                                     try {
-                                        Context.init(o.getProjectHomeFolder());
+                                        //Context.init(o.getProjectHomeFolder(), getClass().getName() + "#openRecent");
+                                        projectsCmb.getSelectionModel().select(o);
                                     } catch (Exception e) {
                                         Context.settingsProperty.getValue().getProjects().remove(o);
                                         Context.saveSettings();
                                         Context.readSettings();
-                                        Context.getMain().showResult("Cannot load project ", "Cannot load project " + o.getProjectHomeFolder() + "\n   It will be removed from the list of recent projects", Alert.AlertType.WARNING);
+                                        Context.getMain().showResult("Cannot load project ",
+                                                "Cannot load project " + o.getProjectHomeFolder()
+                                                        + "\n   It will be removed from the list of recent projects",
+                                                Alert.AlertType.WARNING);
 
                                         log.log(Level.WARNING, "Cannot load project {0}. {1}", new String[]{o.getProjectHomeFolder(), e.getMessage()});
                                     }
@@ -239,7 +257,7 @@ public class MainController implements Initializable {
                         openRecentMenuItem.getItems().add(mi);
                     }
             );
-            openRecentMenuItem.setDisable(Context.settingsProperty.get().getProjects().size() < 1);
+            openRecentMenuItem.setDisable(Context.settingsProperty.get().getProjects().isEmpty());
         });
 
         Context.settingsProperty.addListener(observable -> {
@@ -283,7 +301,6 @@ public class MainController implements Initializable {
 
         onFocusSubscribe();
     }
-
 
 
     public void updateButtonUI() {
@@ -602,7 +619,8 @@ public class MainController implements Initializable {
     public void mainBarMouseClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getClickCount() == 2) {
             javafx.stage.Stage stage = App.getStage();
-            stage.setMaximized(!stage.isMaximized() );
+            stage.setMaximized(!stage.isMaximized());
+            winIconMouseExit(mouseEvent);
         }
     }
 
@@ -618,39 +636,63 @@ public class MainController implements Initializable {
 
     public void maximizeHandler(MouseEvent mouseEvent) {
         javafx.stage.Stage stage = App.getStage();
-        stage.setFullScreen(!stage.isFullScreen());
+        if (Context.isMac()) {
+            stage.setFullScreen(!stage.isFullScreen());
+        } else if (Context.isWindows()) {
+            stage.setMaximized(!stage.isMaximized());
+        }
+
     }
 
     private void onFocusSubscribe() {
         App.getIsFocused().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
-                macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
-                macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+                macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
+                macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
+                macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
             } else {
-                macCloseImgView.setImage( factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
-                macMinimizeImgView.setImage( factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
-                macMaximizeImgView.setImage( factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+                macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
+                macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
+                macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
             }
         });
     }
 
     public void winIconMouseEnter(MouseEvent mouseEvent) {
-        macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
-        macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
-        macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.HOVER, IconFactory.Theme.DARK));
+        if (Context.isWindows()) {
+            if (mouseEvent.getTarget() == macCloseImgView) {
+                macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+            } else if (mouseEvent.getTarget() == macMinimizeImgView) {
+                macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+            } else if (mouseEvent.getTarget() == macMaximizeImgView) {
+                macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+            }
+        } else {
+            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
+        }
+
     }
 
     public void winIconMouseExit(MouseEvent mouseEvent) {
         if (App.getStage().isFocused()) {
-            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
-            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
-            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, IconFactory.Theme.DARK));
+            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
+            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
+            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
         } else {
-            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
-            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
-            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, IconFactory.Theme.DARK));
+            macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
+            macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
+            macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
 
         }
+    }
+
+    private IconFactory.Theme getTheme() {
+        if ("Dark".equalsIgnoreCase(Context.settingsProperty.get().getTheme())) {
+            return IconFactory.Theme.DARK;
+
+        }
+        return IconFactory.Theme.WHITE;
     }
 }

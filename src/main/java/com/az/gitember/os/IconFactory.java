@@ -23,7 +23,9 @@ public interface IconFactory {
 
     Image createImage(IconFactory.WinIconType type,
                       IconFactory.WinIconMode mode,
-                      IconFactory.Theme theme);
+                      IconFactory.Theme theme,
+                      boolean isAppMaximised
+    );
 
 
 
