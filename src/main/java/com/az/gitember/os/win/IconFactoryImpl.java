@@ -80,10 +80,10 @@ public class IconFactoryImpl implements IconFactory {
                 gc.fillRect(0,0, cnv.getWidth(), cnv.getHeight());
                 gc.setLineWidth(1);
                 gc.strokeRect(centerx -sizex , centery -sizey + deltay,
-                        centerx -2, centery);
+                        centerx -2, centery - 1);
                 gc.setLineWidth(2);
                 gc.strokeLine(centerx - sizex + 1, centery - sizey + deltay,
-                        centerx + sizex - 1 , centery - sizey + deltay);
+                        centerx + sizex  , centery - sizey + deltay);
                 if (isAppMaximised) {
                     gc.setLineWidth(1);
                     gc.strokeLine(centerx - sizex + 2, centery - sizey ,

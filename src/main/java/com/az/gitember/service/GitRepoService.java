@@ -1116,7 +1116,11 @@ public class GitRepoService {
             tw.setRecursive(false);
             tw.addTree(revCommitHead.getTree());
             tw.addTree(new FileTreeIterator(repository));
-            RenameDetector rd = new RenameDetector(repository);
+
+
+            long dt  = System.currentTimeMillis();
+
+/*            RenameDetector rd = new RenameDetector(repository);
             rd.addAll(DiffEntry.scan(tw)); // TODO need to speedup , or add monitor
             List<DiffEntry> lde = rd.compute(tw.getObjectReader(), null);
             for (DiffEntry de : lde) {
@@ -1126,7 +1130,9 @@ public class GitRepoService {
                     filter.add(de.getOldPath());
                     filter.add(de.getNewPath());
                 }
-            }
+            }*/
+
+            System.out.println("Step " + (dt - System.currentTimeMillis()));
 
             status.getRemoved().forEach(item -> {
                         if (!filter.contains(item)) {
