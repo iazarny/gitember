@@ -1,7 +1,6 @@
 package com.az.gitember.service;
 
-import com.az.gitember.controller.BranchDiffController;
-import com.az.gitember.controller.Main;
+import com.az.gitember.controller.main.MainController;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
 import javafx.beans.property.*;
@@ -96,7 +95,7 @@ public class Context {
             new ConcurrentHashMap<>();
 
 
-    private static Main main;
+    private static MainController main;
 
 
 
@@ -175,7 +174,16 @@ public class Context {
     }
 
 
-    public static void updatePlotCommitList(final String treeName, final boolean allHistory, final ProgressMonitor progressMonitor) {
+    private static String lastTreeName;
+    private static boolean lastAllHistory;
+
+    public static void updatePlotCommitList(final ProgressMonitor progressMonitor) {
+        updatePlotCommitList(lastTreeName, lastAllHistory, progressMonitor);
+    }
+
+    public static void updatePlotCommitList(final String treeName,
+                                            final boolean allHistory,
+                                            final ProgressMonitor progressMonitor) {
 
         final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
 
@@ -184,6 +192,10 @@ public class Context {
         plotCommitList.addAll(plotCommits);
 
         selectedTreeName.set(treeName);
+
+        lastTreeName = treeName;
+
+        lastAllHistory = allHistory;
     }
 
 
@@ -287,11 +299,11 @@ public class Context {
         return settingService;
     }
 
-    public static Main getMain() {
+    public static MainController getMain() {
         return main;
     }
 
-    public static void setMain(Main main) {
+    public static void setMain(MainController main) {
         Context.main = main;
     }
 

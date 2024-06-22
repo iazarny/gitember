@@ -10,7 +10,7 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Button?>
 <GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.az.gitember.controller.DiffViewer" >
+          fx:controller="com.az.gitember.controller.diff.DiffController" >
     
    <columnConstraints>
       <ColumnConstraints percentWidth="46" />

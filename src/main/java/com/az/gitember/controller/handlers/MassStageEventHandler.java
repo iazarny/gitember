@@ -1,6 +1,6 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.common.DefaultProgressMonitor;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
@@ -9,7 +9,6 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 

@@ -2,11 +2,10 @@ package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.LookAndFeelSet;
-import com.az.gitember.controller.TextBrowser;
+import com.az.gitember.controller.editor.EditorController;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmItemAttribute;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import javafx.event.ActionEvent;
@@ -104,7 +103,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         final Pair<Parent, Object> pair = App.loadFXML(Const.View.EDITOR);
         final Scene scene = new Scene(pair.getFirst());
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
-        final TextBrowser textBrowser = (TextBrowser)pair.getSecond();
+        final EditorController textBrowser = (EditorController)pair.getSecond();
 
         textBrowser.enableEdit(editble);
         textBrowser.setForceOverwrite(overwrite);

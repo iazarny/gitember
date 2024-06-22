@@ -1,7 +1,7 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.LoginDialog;
+import com.az.gitember.dialog.LoginDialog;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;

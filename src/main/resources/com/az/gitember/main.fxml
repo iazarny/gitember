@@ -4,27 +4,23 @@
 <?import javafx.scene.layout.*?>
 
 <?import org.kordamp.ikonli.javafx.*?>
-<?import com.az.gitember.controller.MainTreeItemCellFactory?>
-<?import javafx.scene.shape.Circle?>
-<?import javafx.scene.shape.Line?>
-<?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.image.Image?>
+<?import com.az.gitember.controller.main.MainTreeItemCellFactory?>
 <?import javafx.scene.image.ImageView?>
 <BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.az.gitember.controller.Main"
+            fx:controller="com.az.gitember.controller.main.MainController"
             fx:id="mainBorderPane"
-            style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 1; -fx-border-color: darkgray;"
+            style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 3; -fx-border-color: transparent;"
 >
     <top>
-        <VBox>
+        <VBox  >
             <children>
 
                 <ToolBar fx:id="mainToolBar"
                          onMousePressed="#mainBarMousePressed"
                          onMouseDragged="#mainBarMouseDragged"
                          onMouseClicked="#mainBarMouseClicked"
-                         style="-fx-background-radius: 10; "
+                         style="-fx-background-radius: 10;"
                 >
                     <HBox>
                         <MenuBar fx:id="mainMenuBar">
@@ -129,7 +125,7 @@
                                 </Menu>
                             </menus>
                         </MenuBar>
-                        <HBox style="-fx-padding: 10 30 0 0;" spacing="8">
+                        <HBox style="-fx-padding: 10 20 0 0;" spacing="8">
                             <ImageView fx:id="macCloseImgView"
                                        onMouseEntered="#winIconMouseEnter"
                                        onMouseExited="#winIconMouseExit"
@@ -146,8 +142,6 @@
                                        onMouseClicked="#maximizeHandler"
                             />
                         </HBox>
-
-
                         <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openHandler">
                             <tooltip>
                                 <Tooltip text="Open local repository"/>

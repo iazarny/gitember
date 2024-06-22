@@ -1,6 +1,6 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.DefaultProgressMonitor;
+import com.az.gitember.controller.common.DefaultProgressMonitor;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;

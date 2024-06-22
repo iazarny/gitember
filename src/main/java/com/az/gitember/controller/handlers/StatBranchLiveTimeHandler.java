@@ -1,7 +1,7 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.MainTreeChangeListener;
-import com.az.gitember.controller.StatWPDialog;
+import com.az.gitember.controller.main.MainTreeChangeListener;
+import com.az.gitember.dialog.StatWPDialog;
 import com.az.gitember.data.AverageLiveTime;
 import com.az.gitember.service.Context;
 import javafx.event.ActionEvent;

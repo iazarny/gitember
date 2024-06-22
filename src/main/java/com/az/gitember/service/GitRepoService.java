@@ -788,9 +788,13 @@ public class GitRepoService {
      *
      * @throws IOException in case of error.
      */
-    public void stash() throws IOException {
+    public void stash(String msg) throws IOException {
         try (Git git = new Git(repository)) {
-            git.stashCreate().call();
+            StashCreateCommand cmd = git.stashCreate();
+            if (StringUtils.isNotBlank(msg)) {
+                cmd.setWorkingDirectoryMessage(msg);
+            }
+            cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot stash", e);
             throw new IOException(e.getMessage(), e.getCause());
@@ -892,6 +896,43 @@ public class GitRepoService {
             }
         }
 
+    }
+
+    /**
+     * Reset branch to given commit.
+     * @param revCommit
+     * @throws IOException
+     */
+    public Ref resetBranch(RevCommit revCommit, ResetCommand.ResetType mode, ProgressMonitor defaultProgressMonitor) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                ResetCommand cmd = git.reset()
+                        .setRef(revCommit.getName())
+                        .setProgressMonitor(defaultProgressMonitor)
+                        .setMode(mode);
+                return cmd.call();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot reset to" + revCommit, e);
+                throw new IOException("Cannot reset to" + revCommit, e);
+            }
+        }
+    }
+
+    public List<Ref> revertCommit(RevCommit revCommit, ProgressMonitor defaultProgressMonitor) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                RevertCommand revertCommand = git.revert()
+                        .setProgressMonitor(defaultProgressMonitor)
+                        .include(revCommit);
+                revertCommand.call();
+
+                return revertCommand.getRevertedRefs();
+
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot revert " + revCommit, e);
+                throw new IOException("Cannot revert " + revCommit, e);
+            }
+        }
     }
 
 

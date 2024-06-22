@@ -1,6 +1,6 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.LFSDialog;
+import com.az.gitember.dialog.LFSDialog;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.LfsData;
 import com.az.gitember.service.Context;

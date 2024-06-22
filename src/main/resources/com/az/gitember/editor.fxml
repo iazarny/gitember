@@ -12,7 +12,7 @@
 <?import javafx.scene.control.CheckBox?>
 <BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.az.gitember.controller.TextBrowser" fx:id = "borderPane">
+            fx:controller="com.az.gitember.controller.editor.EditorController" fx:id = "borderPane">
     <top>
         <ToolBar>
             <Button text="Save as ..." fx:id="saveBtn" onAction="#saveFile">

@@ -1,10 +1,8 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.DefaultProgressMonitor;
-import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.common.DefaultProgressMonitor;
 import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.Stage;
 import com.az.gitember.service.Context;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;

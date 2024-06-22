@@ -1,7 +1,7 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.DefaultProgressMonitor;
-import com.az.gitember.controller.MainTreeChangeListener;
+import com.az.gitember.controller.common.DefaultProgressMonitor;
+import com.az.gitember.controller.main.MainTreeChangeListener;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmStat;
 import com.az.gitember.service.Context;

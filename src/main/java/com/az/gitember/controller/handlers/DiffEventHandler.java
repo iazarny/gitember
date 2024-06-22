@@ -1,7 +1,7 @@
 package com.az.gitember.controller.handlers;
 
 import com.az.gitember.App;
-import com.az.gitember.controller.DiffViewer;
+import com.az.gitember.controller.diff.DiffController;
 import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
@@ -56,7 +56,7 @@ public class DiffEventHandler implements EventHandler<ActionEvent> {
             final Pair<Parent, Object> pair = App.loadFXMLToNewStage(Const.View.FILE_DIFF,
                     "Difference " + fileName);
             pair.getFirst().getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
-            final DiffViewer diffViewer = (DiffViewer) pair.getSecond();
+            final DiffController diffViewer = (DiffController) pair.getSecond();
             diffViewer.setData(oldFile, newFile);
             diffViewer.setOldLabel(oldRev);
             diffViewer.setNewLabel(newRev);

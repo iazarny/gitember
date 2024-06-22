@@ -6,9 +6,11 @@ import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.ScmStat;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.lib.EmptyProgressMonitor;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,7 +43,10 @@ class GitRepoServiceTest {
     private static final String README_FILE2_BODY = "readme too";
     private static final String README_FILE3_BODY = "HAL9000";
     private static final String README_FILE4_BODY = "Bender";
-    private static final String COMMIT_MSG = "Some commit msg";
+    private static final String COMMIT_MSG0 = "Some commit msg";
+    private static final String COMMIT_MSG1 = "Some commit msg 1";
+    private static final String COMMIT_MSG2 = "Some commit msg 2";
+    private static final String COMMIT_MSG3 = "Some commit msg 3";
 
     private String tmpGitProject = null;
     private Path tmpGitProjectPath = null;
@@ -59,11 +65,11 @@ class GitRepoServiceTest {
     @org.junit.jupiter.api.AfterEach
     void tearDown() throws Exception {
         gitRepoService.shutdown();
-        try {
+        /*try {
             FileUtils.deleteDirectory(new File(tmpGitProject));
         } catch (Exception e) {
 
-        }
+        }*/
 
     }
 
@@ -131,8 +137,8 @@ class GitRepoServiceTest {
         DirCache dc = gitRepoService.addFileToCommitStage(README_FILE_TOO);
         assertEquals(1, dc.getEntryCount());
 
-        RevCommit rc = gitRepoService.commit(COMMIT_MSG, null, null);
-        assertEquals(COMMIT_MSG, rc.getShortMessage());
+        RevCommit rc = gitRepoService.commit(COMMIT_MSG0, null, null);
+        assertEquals(COMMIT_MSG0, rc.getShortMessage());
     }
 
     @Test
@@ -143,7 +149,7 @@ class GitRepoServiceTest {
                     README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
             gitRepoService.addFileToCommitStage(README_FILE_TOO + i);
         }
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         assertEquals(100, gitRepoService.getAllFiles().size());
     }
 
@@ -262,7 +268,7 @@ class GitRepoServiceTest {
                 "".getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE_TOO);
         gitRepoService.addFileToCommitStage(IGNORE_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
 
         Files.write(Paths.get(tmpGitProject, README_FILE_TOO),
                 "\n readme changes 0".getBytes(), StandardOpenOption.APPEND);
@@ -282,7 +288,7 @@ class GitRepoServiceTest {
 
         assertEquals("Benders added in read me", lst.get(0).getShortMessage());
         assertEquals("Changes in read me", lst.get(1).getShortMessage());
-        assertEquals(COMMIT_MSG, lst.get(2).getShortMessage());
+        assertEquals(COMMIT_MSG0, lst.get(2).getShortMessage());
 
         lst = gitRepoService.getFileHistory(IGNORE_FILE);
         assertEquals(2, lst.size());
@@ -293,7 +299,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         gitRepoService.createTag("t0");
         gitRepoService.createTag("t00");
         Files.write(Paths.get(tmpGitProject, README_FILE),
@@ -313,7 +319,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         CommitInfo ci = gitRepoService.getHead();
         assertNotNull(ci);
         assertEquals("refs/heads/master", ci.getName());
@@ -324,7 +330,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
 
         Path readmePath = Paths.get(tmpGitProject, README_FILE);
         List<ScmRevisionInformation> lst = gitRepoService.getStashList();
@@ -335,13 +341,13 @@ class GitRepoServiceTest {
                 "\n readme changes 0".getBytes(), StandardOpenOption.APPEND);
         byte[] readmeBytesChanged0 = Files.readAllBytes(readmePath);
         assertNotEquals(readmeBytesOriginal.length, readmeBytesChanged0.length);
-        gitRepoService.stash();
+        gitRepoService.stash(null);
 
         Files.write(readmePath,
                 "\n readme changes 1".getBytes(), StandardOpenOption.APPEND);
         byte[] readmeBytesChanged1 = Files.readAllBytes(readmePath);
         assertNotEquals(readmeBytesOriginal.length, readmeBytesChanged1.length);
-        gitRepoService.stash();
+        gitRepoService.stash("Whatever");
 
         lst = gitRepoService.getStashList();
         assertEquals(2, lst.size());
@@ -362,17 +368,17 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        RevCommit rc0 = gitRepoService.commit(COMMIT_MSG, null, null);
+        RevCommit rc0 = gitRepoService.commit(COMMIT_MSG0, null, null);
 
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE2),
                 README_FILE2_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE2);
-        RevCommit rc1 = gitRepoService.commit(COMMIT_MSG, null, null);
+        RevCommit rc1 = gitRepoService.commit(COMMIT_MSG0, null, null);
 
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE3),
                 README_FILE3_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE3);
-        RevCommit rc2 = gitRepoService.commit(COMMIT_MSG, null, null);
+        RevCommit rc2 = gitRepoService.commit(COMMIT_MSG0, null, null);
 
         gitRepoService.checkoutBranch(FN_MASTER, "br1", null);
         assertEquals(2, gitRepoService.getBranches().size());
@@ -380,7 +386,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE4),
                 README_FILE4_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE4);
-        RevCommit rc3 = gitRepoService.commit(COMMIT_MSG, null, null);
+        RevCommit rc3 = gitRepoService.commit(COMMIT_MSG0, null, null);
 
         gitRepoService.checkoutRevCommit(rc0, null);
         assertEquals(1, gitRepoService.getAllFiles().size());
@@ -405,7 +411,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         Path readmePath = Paths.get(tmpGitProject, README_FILE);
 
         byte[] readmeBytesOriginal = Files.readAllBytes(readmePath);
@@ -426,7 +432,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         Files.write(Paths.get(tmpGitProject, README_FILE),
                 "\n HAL9000".getBytes(), StandardOpenOption.APPEND);
         gitRepoService.addFileToCommitStage(README_FILE);
@@ -452,7 +458,7 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         assertEquals(1, gitRepoService.getAllFiles(FN_MASTER).size());
         gitRepoService.removeFile(README_FILE);
         gitRepoService.commit("Removed md", null, null);
@@ -465,9 +471,72 @@ class GitRepoServiceTest {
         Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
                 README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
         gitRepoService.addFileToCommitStage(README_FILE);
-        gitRepoService.commit(COMMIT_MSG, null, null);
+        gitRepoService.commit(COMMIT_MSG0, null, null);
         gitRepoService.compressDatabase(null);
         assertTrue(true);
+
+    }
+
+    @Test
+    public void resetBranchTest() throws Exception {
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
+                README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE);
+        RevCommit rc0 = gitRepoService.commit(COMMIT_MSG0, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE2),
+                README_FILE2_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE2);
+        RevCommit rc1 = gitRepoService.commit(COMMIT_MSG1, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE3),
+                README_FILE3_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE3);
+        RevCommit rc2 = gitRepoService.commit(COMMIT_MSG2, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE4),
+                README_FILE4_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE4);
+        RevCommit rc3 = gitRepoService.commit(COMMIT_MSG3, null, null);
+        assertEquals(gitRepoService.getHead().getSha(), rc3.getName());
+
+        System.out.println("Reset to rc1 " + rc1.getName());
+        gitRepoService.resetBranch(rc1, ResetCommand.ResetType.HARD, null);
+
+
+        assertEquals(gitRepoService.getHead().getSha(), rc1.getName());
+
+    }
+
+    @Test
+    public void revertCommitTest() throws Exception {
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE),
+                README_FILE_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE);
+        RevCommit rc0 = gitRepoService.commit(COMMIT_MSG0, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE2),
+                README_FILE2_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE2);
+        RevCommit rc1 = gitRepoService.commit(COMMIT_MSG1, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE3),
+                README_FILE3_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE3);
+        RevCommit rc2 = gitRepoService.commit(COMMIT_MSG2, null, null);
+
+        Files.write(Paths.get(tmpGitProjectPath.toString(), README_FILE4),
+                README_FILE4_BODY.getBytes(), StandardOpenOption.CREATE);
+        gitRepoService.addFileToCommitStage(README_FILE4);
+        RevCommit rc3 = gitRepoService.commit(COMMIT_MSG3, null, null);
+
+        assertEquals(4, gitRepoService.getAllFiles().size());
+
+        List<Ref> refs = gitRepoService.revertCommit(rc0, null);
+
+        assertEquals(3, gitRepoService.getAllFiles().size());
+        assertEquals(1, refs.size());
+
 
     }
 

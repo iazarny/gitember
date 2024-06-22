@@ -1,6 +1,6 @@
 package com.az.gitember.controller.handlers;
 
-import com.az.gitember.controller.MergeDialog;
+import com.az.gitember.dialog.MergeDialog;
 import com.az.gitember.service.Context;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
