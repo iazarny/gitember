@@ -1,5 +1,6 @@
 package com.az.gitember.controller;
 
+import com.az.gitember.service.Context;
 import javafx.scene.paint.Color;
 
 public class LookAndFeelSet {
@@ -32,9 +33,12 @@ public class LookAndFeelSet {
     public static String RESULT_WARNING = "-fx-text-fill: #1a1919; -fx-background-color: #d7d7ea";
     public static String RESULT_ERROR = "-fx-text-fill: #1a1919; -fx-background-color: #EADFE2";
 
-    public static final double FONT_SIZE = 23.0;
+    public static double FONT_SIZE = 23.0;
 
     public static void init(String themeMode) {
+        if (Context.isWindows()) {
+            LookAndFeelSet.FONT_SIZE = 27.0;
+        }
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
             BRANCH_NAME_COLOR = Color.LIGHTGRAY;
