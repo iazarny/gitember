@@ -21,7 +21,7 @@ Downloads
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
  * I dont like standard UX of GIT
- * Check https://www.gitgui.org
+ * Check http://www.gitgui.org
 
 ## Changes
 
