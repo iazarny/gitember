@@ -11,19 +11,22 @@ Downloads
  * [Mac M1](http://gitgui.org/Gitember2.5.dmg)
  
 
-![Mac Version](site/img/portfolio/mac25.png)
+![Mac Version](site/assets/img/gallery/gallery-1.png)
 
 
-![Geetember](site/img/portfolio/2.png)
+![Gitember](site/assets/img/gallery/gallery-4.png)
 
 ## Reasons to create 
 
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
  * I dont like standard UX of GIT
- * Check https://www.geetember.org/
+ * Check https://www.gitgui.org
 
 ## Changes
+
+### 2.5.3
+* Significant UI / UX changes 
 
 ### 2.5 
  * Diff viewer has been updated
