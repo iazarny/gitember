@@ -65,11 +65,11 @@ class GitRepoServiceTest {
     @org.junit.jupiter.api.AfterEach
     void tearDown() throws Exception {
         gitRepoService.shutdown();
-        /*try {
+        try {
             FileUtils.deleteDirectory(new File(tmpGitProject));
         } catch (Exception e) {
 
-        }*/
+        }
 
     }
 
@@ -223,7 +223,8 @@ class GitRepoServiceTest {
 
         gitRepoService.checkoutBranch(FN_MASTER, null);
         assertEquals(0, gitRepoService.getAllFiles(FN_MASTER).size());
-        gitRepoService.mergeBranch(FN_BR1, "Merger from br1 to master", true, MergeCommand.FastForwardMode.FF);
+        gitRepoService.mergeBranch(FN_BR1, "Merger from br1 to master", false,
+                MergeCommand.FastForwardMode.FF);
         assertEquals(1, gitRepoService.getAllFiles().size());
     }
 

@@ -2,194 +2,379 @@
 <html lang="en">
 
 <head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Git gui client gitember. Free git tool. ">
-    <meta name="author" content="Igor Azarny">
+  <title>Avilon Bootstrap Template</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
 
-    <title>Gitember - git gui</title>
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-    <!-- Bootstrap Core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
 
-    <!-- Custom Fonts -->
-    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet"
-          type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
 
-    <!-- Theme CSS -->
-    <link href="css/grayscale.css" rel="stylesheet">
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-    <!-- jQuery -->
-    <script src="vendor/jquery/jquery.js"></script>
-
-    <!-- fotorama.css & fotorama.js. -->
-    <link href="fotorama/fotorama.css" rel="stylesheet">
-    <!-- 3 KB -->
-    <script src="fotorama/fotorama.js"></script>
-    <link rel="stylesheet" href="css/custom.css">
+  <!-- =======================================================
+  * Template Name: Avilon
+  * Template URL: https://bootstrapmade.com/avilon-bootstrap-landing-page-template/
+  * Updated: Mar 17 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
 </head>
 
-<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+<body>
 
-<!-- Navigation -->
-<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
-                Menu <i class="fa fa-bars"></i>
-            </button>
-            <a class="navbar-brand page-scroll" href="#page-top">
-                <i class="fa fa-play-circle"></i> <span class="light">Gitember</span>
-            </a>
-        </div>
+  <!-- ======= Header ======= -->
+  <header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
 
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
-            <ul class="nav navbar-nav">
-                <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
-                <li class="hidden">
-                    <a href="#page-top"></a>
-                </li>
-                <li>
-                    <a class="page-scroll" href="#features">Features</a>
-                </li>
-                <li>
-                    <a class="page-scroll" href="#screen">Screens</a>
-                </li>
-                <li>
-                    <a class="page-scroll" href="#contact">Contact</a>
-                </li>
-            </ul>
-        </div>
-        <!-- /.navbar-collapse -->
+      <div id="logo">
+        <h1><a href="index.html">Gitember</a></h1>
+        <!-- Uncomment below if you prefer to use an image logo -->
+        <!-- <a href="index.html"><img src="assets/img/logo.png" alt=""></a> -->
+      </div>
+
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
+          <li><a class="nav-link scrollto" href="#features">Features</a></li>
+          <li><a class="nav-link scrollto" href="#gallery">Gallery</a></li>
+          <li><a class="nav-link scrollto" href="#download">Download</a></li>
+          <li><a class="nav-link scrollto" href="#download">Contact</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
     </div>
-    <!-- /.container -->
-</nav>
+  </header><!-- End Header -->
 
-<!-- Intro Header -->
-<header class="intro">
-    <div class="intro-body">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-8 col-md-offset-2">
-                    <p class="brand-heading2">Gitember&nbsp;v2.5</p>
-                    <p class="intro-text">
-                        Cross platform graphical user interface for GIT.
-                    </p>
-                    <p>V2.5.1 Apr-2024</p>
-                    <table style="">
-                        <tr>
-                            <td>
-                                <a href="http://gitgui.org/Gitember2.5.msi" class="btn btn-default btn-lg">
-                                    <i class="fa fa-windows" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Windows msi</span>
-                                </a>
-                            </td>
-                            <td>&nbsp;</td>
-                            <td>
-                                <a href="http://gitgui.org/Gitember2.5.dmg" class="btn btn-default btn-lg">
-                                    <i class="fa fa-apple" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Mac OS M1 dmg</span>
-                                </a>
-                            </td>
-                            <td>&nbsp;</td>
-                            <td>
-                                <a href="https://github.com/iazarny/gitember" class="btn btn-default btn-lg">
-                                    <i class="fa fa-github" style="font-size: 32px">&nbsp;</i><span style="font-size: 24px">Source code</span>
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
+  <!-- ======= Hero Section ======= -->
+  <section id="hero">
+
+    <div class="hero-text" data-aos="zoom-out">
+      <h2>Welcome to Gitember</h2>
+      <p>Cross platform graphical user interface for GIT.</p>
+      <p>V 2.5.3 Jun 2024</p>
+      <a href="#download" class="btn-get-started scrollto">Download</a>
+    </div>
 
 
+    <div class="product-screens">
 
-                    <br>
-                    <a href="#screen" class="btn btn-circle page-scroll">
-                        <i class="fa fa-angle-double-down animated"></i>
-                    </a>
-                </div>
+      <div class="product-screen-1" data-aos="fade-up" data-aos-delay="400" >
+        <img src="assets/img/product-screen-1.png" alt="" >
+      </div>
+
+      <div class="product-screen-2" data-aos="fade-up" data-aos-delay="200" >
+        <img src="assets/img/product-screen-2.png" alt="" style="transform: translateX(-150px); ">
+      </div>
+
+      <div class="product-screen-3" data-aos="fade-up">
+        <img src="assets/img/product-screen-3.png" alt="" style="transform: translateX(-300px); ">
+      </div>
+
+    </div>
+
+  </section><!-- End Hero Section -->
+
+  <main id="main">
+
+    
+
+    <!-- ======= Featuress Section ======= -->
+    <section id="features">
+      <div class="container" data-aos="fade-up">
+
+        <div class="row">
+
+          <div class="col-lg-12">
+            <div class="section-header">
+              <h3 class="section-title">Product Featuress</h3>
+              <span class="section-divider"></span>
             </div>
+          </div>
+
+          
+
+          <div class="col-lg-2 col-md-2 features-img">
+            
+          </div>
+
+          <div class="col-lg-8 col-md-7 ">
+
+            <div class="row">
+
+              <div class="col-lg-6 col-md-6 box" data-aos="fade-up">
+                <div class="icon"><i class="bi bi-briefcase"></i></div>
+                <h4 class="title"><a href="">The main features of git are support</a></h4>
+                <p class="description">
+                  Clone, pull, push, fetch, branch, etc are support. Large file support (LFS).  
+                  Git gui client for Windows, Mac & Linux. Free and open source. 
+                  Suitable for beginners and professionals
+                    </p>
+              </div>
+              <div class="col-lg-6 col-md-6 box" data-aos="fade-up">
+                <div class="icon"><i class="bi bi-card-checklist"></i></div>
+                <h4 class="title"><a href="">Statistics</a></h4>
+                <p class="description">
+                  Statistics report to track project activities, code lines, branches
+                  
+                </p>
+              </div>
+              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" dat-aos-delay="100">
+                <div class="icon"><i class="bi bi-binoculars"></i></div>
+                <h4 class="title"><a href="">Search</a></h4>
+                <p class="description">
+                  
+                  Search in the history and file bodies, including different file formats, commit messages, tags and branches
+                
+                </p>
+              </div>
+              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon"><i class="bi bi-brightness-high"></i></div>
+                <h4 class="title"><a href="">Detail</a></h4>
+                <p class="description">
+                  View revision, revision difference. 
+                  Project and file history and commit details. Extremely good file difference tool
+                </p>
+              </div>
+            </div>
+
+          </div>
+
         </div>
-    </div>
-</header>
 
-<section id="features" class="container content-section ">
-    <div class="container" >
-        <div class="list-group">
-            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Multiplatform</h5>
-                </div>
-                <p class="mb-1">Git gui client for Windows, Mac & Linux. Free and open source. Suitable for beginners and professionals</p>
-            </a>
-            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">All main git features are support</h5>
-                </div>
-                <p class="mb-1">Clone, pull, push, fetch, branch, etc are support. Large file support (LFS). Search in the history, commit messages, tags and branches</p>
-            </a>
-            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Statistics</h5>
-                </div>
-                <p class="mb-1">Statistics report to track project activities, code lines, branches</p>
-            </a>
-            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start ">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Detail</h5>
-                </div>
-                <p class="mb-1">View revision, revision difference. Project and file history and commit details. Extremely good file difference tool</p>
-            </a>
+      </div>
+
+    </section><!-- End Featuress Section -->
+
+    <!-- ======= Advanced Featuress Section ======= -->
+    <section id="advanced-features">
+
+      <div class="features-row section-bg" data-aos="fade-up">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <img class="advanced-feature-img-right wow fadeInRight" src="assets/img/advanced-feature-1.png" alt="">
+              <div>
+                <h2>Advanced search</h2>
+                <p>Girember's advanced search option offers robust capabilities for thorough and efficient 
+                  exploration of historical commits within file bodies. This feature stands out by allowing users to perform deep searches not only within text-based files but also across a wide range of popular file formats. 
+                  These include, but are not limited to, graphics, office documents, drawings, and more.</p>
+
+                <p>
+                  Comprehensive File Format Support. 
+                  <ul>
+                    <li>Text Files: Search through plain text files and source code with ease.</li>
+                    <li>Graphics: Index and search through graphic files including PNG, JPEG, GIF, and SVG.</li>
+                    <li>Office Documents: Seamlessly search within Microsoft Office documents (Word, Excel, PowerPoint) and other office formats like PDFs and OpenOffice files.</li>
+                    <li>Drawings: Navigate through CAD drawings and other technical illustration formats.</li>
+                  </ul>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-row" data-aos="fade-up">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <img class="advanced-feature-img-left" src="assets/img/advanced-feature-2.png" alt="">
+              <div>
+                <h2>File Difference Tool</h2>
+                <p>Diff File Viewer
+                  <ul>
+                    <li>Unified Diff: Displays changes inline within a single column, highlighting additions and deletions.</li>
+                    <li>Context Diff: Provides context around changes, showing a few lines before and after the modified sections to give a clearer picture of the changes.</li>
+                    <li>Side-by-Side Diff: Presents changes in a dual-pane view, where the original file is on one side and the modified file on the other, making it easier to compare line-by-line.</li>
+                  </ul>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- End Advanced Featuress Section -->
+       </section>
+
+
+    
+
+    
+
+    <!-- ======= Gallery Section ======= -->
+    <section id="gallery">
+      <div class="container-fluid" data-aos="fade-up">
+        <div class="section-header">
+          <h3 class="section-title">Gallery</h3>
+          <span class="section-divider"></span>
         </div>
 
-    </div>
+        <div class="row g-0">
 
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-1.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-1.png" alt="">
+              </a>
+            </div>
+          </div>
 
-</section>
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-2.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-2.png" alt="">
+              </a>
+            </div>
+          </div>
 
-<section id="screen" class=" content-section text-center">
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-3.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-3.png" alt="">
+              </a>
+            </div>
+          </div>
 
-    <div class="fotorama" data-nav="thumbs" data-transition="crossfade" data-fit="contain" data-autoplay="4000"
-         data-maxheight="80%">
-        <img src="img/portfolio/mac25-2.png">
-        <img src="img/portfolio/2.png">
-        <img src="img/portfolio/4.png">
-        <img src="img/portfolio/6.png">
-        <img src="img/portfolio/7.png">
-        <img src="img/portfolio/10.png">
-        <img src="img/portfolio/mac25.png">
-    </div>
-</section>
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-4.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-4.png" alt="">
+              </a>
+            </div>
+          </div>
 
-<!-- Contact Section -->
-<section id="contact" class="container content-section text-center">
-    <div class="row">
-        <div class="col-lg-8 col-lg-offset-2">
-            <h2>Contact</h2>
-            <p><a href="mailto:iazarny@yahoo.com">Igor Azarny</a></p>
-            <p><a href="https://github.com/iazarny/gitember/issues">github</a></p>
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-5.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-5.png" alt="">
+              </a>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="gallery-item">
+              <a href="assets/img/gallery/gallery-6.png" data-gall="portfolioGallery" class="gallery-lightbox">
+                <img src="assets/img/gallery/gallery-6.png" alt="">
+              </a>
+            </div>
+          </div>
+
         </div>
+
+      </div>
+    </section><!-- End Gallery Section -->
+
+
+    
+    <!-- Download section-->
+    <section id="download">
+      <div class="container" data-aos="fade-up">
+        <div class="row">
+        
+        <div class="container-fluid" data-aos="fade-up" style="margin-top: 50px; margin-bottom: 50px;">
+          <div class="section-header">
+            <h3 class="section-title">Download</h3>
+            <span class="section-divider"></span>
+          </div>
+          </div>
+        </div>
+        <div class="row g-0">
+
+          <div class="col-lg-3 col-md-3">
+
+          </div>
+
+          <div class="col-lg-6 col-md-6">
+            <div>
+              <ul style="list-style-type: none;">
+                 <li>
+                    <a href="http://gitgui.org/Gitember2.5.msi"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows MSI </span></a>
+                  </li>
+                  <li>
+                    <a href="http://gitgui.org/Gitember2.5.dmg"><span style="font-size: 36px;"><i class="bi bi-apple"></i> Apple silicon DMG </span></a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/iazarny/gitember"><span style="font-size: 36px;"><i class="bi bi-github"></i> Source code </span></a>
+                  </li>
+
+              </ul>
+              
+             
+            </div>
+            <p style="text-align: center;">
+              <br><br><br><br><br>
+              Mail <a href="mailto:iazarny@yahoo.com">Igor Azarny</a></p>
+
+          </div>
+
+        </div>
+        <div class="row g-0">&nbsp;</div>
+        <div class="row g-0">&nbsp;</div>
+        <div class="row g-0">&nbsp;</div>
+        <div class="row g-0">&nbsp;</div>
+        <div class="row g-0">&nbsp;</div>
+
+      </div>
+
+    </section><!-- End Download Section -->
+
+
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6 text-lg-start text-center">
+          <div class="copyright">
+            &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+          </div>
+          <div class="credits">
+            <!--
+            All the links in the footer should remain intact.
+            You can delete the links only if you purchased the pro version.
+            Licensing information: https://bootstrapmade.com/license/
+            Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/buy/?theme=Avilon
+          -->
+            Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+            <a href="#intro" class="scrollto">Home</a>
+
+          </nav>
+        </div>
+      </div>
     </div>
-</section>
+  </footer><!-- End  Footer -->
 
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-chevron-up"></i></a>
 
-<!-- Bootstrap Core JavaScript -->
-<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
 
-<!-- Plugin JavaScript -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
-
-<!-- Theme JavaScript -->
-<script src="js/grayscale.min.js"></script>
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
 
 </body>
 
