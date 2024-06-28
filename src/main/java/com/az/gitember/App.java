@@ -20,6 +20,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -30,6 +31,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.io.IOException;
@@ -56,7 +58,6 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
 
         Font font = Font.loadFont(App.class.getResourceAsStream("/sourcesanspro/SourceSansPro-Regular.otf"), 40);
-        System.out.println("Font " + font.getName());
 
         Context.readSettings();
 
@@ -111,11 +112,6 @@ public class App extends Application {
         ResizeHelper.addResizeListener(stage);
     }
 
-
-
-
-
-
     @Override
     public void stop() throws Exception {
         log.log(Level.INFO, "Gitemeber is stopped");
@@ -128,24 +124,32 @@ public class App extends Application {
         return App.app.getHostServices();
     }
 
-    public static Pair<Parent, Object> loadFXMLToNewStage(final String fxmlFileName, final String windowTitle) throws IOException {
+    public static Pair<Parent, Object> loadFXMLToNewStage(final String fxmlFileName, final String windowTitle)  {
         final Pair<Parent, Object> pair = loadFXML(fxmlFileName);
+        Window currentWindow = scene.getWindow();
         final Stage newStage = new Stage();
         final Scene newScene = new Scene(pair.getFirst());
-
         newStage.getIcons().add(new Image(App.class.getResourceAsStream(Const.ICON)));
         newStage.setScene(newScene);
+        newScene.getWindow().setX(currentWindow.getX() + 50);
+        newScene.getWindow().setY(currentWindow.getY() + 50);
         newStage.show();
         newStage.setTitle(windowTitle);
         newScene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
         return pair;
     }
 
-    public static Pair<Parent, Object> loadFXML(String fxml) throws IOException { //TODO refactor handle exception here
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        Parent parent = fxmlLoader.load();
-        Object controller = fxmlLoader.getController();
-        return new Pair<>(parent, controller);
+    public static Pair<Parent, Object> loadFXML(String fxml)  { //TODO refactor handle exception here
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
+            Parent parent = fxmlLoader.load();
+            Object controller = fxmlLoader.getController();
+            return new Pair<>(parent, controller);
+        } catch (Exception e) {
+            Context.getMain().showResult("Cannot load FXML", e.getMessage(), Alert.AlertType.ERROR);
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static Stage getStage() {

@@ -32,6 +32,7 @@ public class LookAndFeelSet {
     public static String HISTORY_BOX_TXT_CSS = "";
     public static String RESULT_WARNING = "-fx-text-fill: #1a1919; -fx-background-color: #d7d7ea";
     public static String RESULT_ERROR = "-fx-text-fill: #1a1919; -fx-background-color: #EADFE2";
+    public static String TOOL_BAR_CSS = "-fx-background-radius: 10; -fx-background-color: linear-gradient(to right, skyblue, aquamarine );";
 
     public static double FONT_SIZE = 23.0;
 

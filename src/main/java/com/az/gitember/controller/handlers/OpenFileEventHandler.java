@@ -15,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -101,6 +102,7 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
 
     private void openFile(final String fileName, final String text, final boolean rawDiff, final boolean annotate) throws IOException {
         final Pair<Parent, Object> pair = App.loadFXML(Const.View.EDITOR);
+        final Window currentWindow = App.getScene().getWindow();
         final Scene scene = new Scene(pair.getFirst());
         scene.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
         final EditorController textBrowser = (EditorController)pair.getSecond();
@@ -116,6 +118,8 @@ public class OpenFileEventHandler implements EventHandler<ActionEvent> {
         final Stage editorStage = new Stage();
         editorStage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         editorStage.setScene(scene);
+        scene.getWindow().setX(currentWindow.getX() + 300);
+        scene.getWindow().setY(currentWindow.getY() + 300);
         editorStage.setTitle(fileName);
         editorStage.show();
     }

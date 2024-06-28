@@ -501,7 +501,6 @@ class GitRepoServiceTest {
         RevCommit rc3 = gitRepoService.commit(COMMIT_MSG3, null, null);
         assertEquals(gitRepoService.getHead().getSha(), rc3.getName());
 
-        System.out.println("Reset to rc1 " + rc1.getName());
         gitRepoService.resetBranch(rc1, ResetCommand.ResetType.HARD, null);
 
 

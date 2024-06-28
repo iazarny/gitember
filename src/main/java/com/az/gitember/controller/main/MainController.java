@@ -16,10 +16,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -89,6 +87,8 @@ public class MainController implements Initializable {
     public HBox winControlBar;
     public HBox toolBarContainer;
     public HBox menuContainer;
+    public VBox mainPaneTop;
+    public Button branchBtn;
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -109,7 +109,13 @@ public class MainController implements Initializable {
         Context.setMain(this);
         if (Context.isMac()) {
             mainMenuBar.setUseSystemMenuBar(true);
+            menuContainer.getChildren().remove(mainMenuBar);
+            mainPaneTop.getChildren().add(mainMenuBar);
+            mainPaneTop.getChildren().remove(menuContainer);
+
         } else if (Context.isWindows()) {
+            mainBorderPane.getChildren().remove(mainMenuBar);
+            menuContainer.getChildren().add(mainMenuBar);
             toolBarContainer.getChildren().remove(winControlBar);
             menuContainer.getChildren().add(winControlBar);
             winControlBar.getStyleClass().clear();
@@ -161,7 +167,7 @@ public class MainController implements Initializable {
                     }
                     branchMenu.setVisible(true);
                     mergeBtn.setDisable(false);
-                    //rebaseBtn.setDisable(false);
+                    branchBtn.setDisable(false);
                     commitBtn.setDisable(false);
                     updateButtonUI();
                 }
@@ -442,6 +448,13 @@ public class MainController implements Initializable {
 
     public void checkoutEventHandler(ActionEvent actionEvent) {
         new CheckoutEventHandler().handle(actionEvent);
+        Context.updateAll();
+        Context.updateWorkingBranch();
+    }
+
+    public void branchEventHandler(ActionEvent actionEvent) {
+        final ScmBranch scmWorkingBranch = Context.workingBranch.getValue();
+        new CreateBranchEventHandler (scmWorkingBranch.getFullName()).handle(actionEvent);
         Context.updateWorkingBranch();
     }
 
@@ -513,10 +526,26 @@ public class MainController implements Initializable {
 
 
     public void openGitTerminalActionHandler(ActionEvent actionEvent) {
+        String [] cmd;
+        if (Context.isWindows()) {
+            cmd  = new String[] {"cmd", "/c", "start"};
+        } else if (Context.isMac()) {
+
+            cmd = new String[]{
+                    "osascript",
+                    "-e",
+                    "tell application \"Terminal\" to activate", // Bring Terminal to the foreground
+                    "-e",
+                    "tell application \"Terminal\" to do script \"zsh\"" // Start zsh shell
+            };
+        } else {
+            cmd = new String[]{"open", "/bin/bash"};
+        }
+
         try {
             Runtime rt = Runtime.getRuntime();
             Process process = rt.exec(
-                    Context.isWindows() ? new String[]{"cmd", "/c", "start"} : new String[]{"open", "/bin/bash"},
+                    cmd,
                     null,
                     new File(
                             Context.getProjectFolder().isEmpty() ?
@@ -694,5 +723,9 @@ public class MainController implements Initializable {
 
         }
         return IconFactory.Theme.WHITE;
+    }
+
+    public void keyPressedHandler(KeyEvent keyEvent) {
+        System.out.println(keyEvent);
     }
 }

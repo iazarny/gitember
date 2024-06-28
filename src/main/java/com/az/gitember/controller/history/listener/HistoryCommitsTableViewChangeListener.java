@@ -38,15 +38,10 @@ public class HistoryCommitsTableViewChangeListener implements ChangeListener<Plo
             mainBorderPanel.layout();
         }
         if (newValue != null) {
-            try {
-                Context.scmRevCommitDetails.setValue(Context.getGitRepoService().adapt(newValue));
-                final Parent commitView = App.loadFXML(Const.View.HISTORY_DETAIL).getFirst();
-                hostCommitViewPanel.getChildren().clear();
-                hostCommitViewPanel.getChildren().add(commitView);
-            } catch (IOException e) {
-                // TODO: Log
-                e.printStackTrace();
-            }
+            Context.scmRevCommitDetails.setValue(Context.getGitRepoService().adapt(newValue));
+            final Parent commitView = App.loadFXML(Const.View.HISTORY_DETAIL).getFirst();
+            hostCommitViewPanel.getChildren().clear();
+            hostCommitViewPanel.getChildren().add(commitView);
         }
     }
 }

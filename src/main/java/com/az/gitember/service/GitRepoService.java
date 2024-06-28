@@ -209,9 +209,15 @@ public class GitRepoService {
     }
 
     public String  createDiff() {
+        return createDiff(null, null);
+    }
+
+    public String  createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
         try (Git git = new Git(repository)) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(4098);
-            git.diff().setOutputStream( bos ).call();
+            git.diff()
+                    .setOutputStream( bos )
+                    .call();
             return  bos.toString();
         } catch (GitAPIException e) {
 
@@ -1008,11 +1014,11 @@ public class GitRepoService {
      * @return absolute path to saved diff file
      */
     public String getRawDiff(String revisionName,
-                             String fileName) throws IOException {
+                             String fileName) {
 
         String str;
 
-        try (Git git = new Git(repository);) {
+        try (Git git = new Git(repository)) {
 
             final ObjectId objId = repository.resolve(revisionName);
             final RevCommit root = new PlotWalk(repository).parseCommit(objId);
@@ -1021,7 +1027,7 @@ public class GitRepoService {
 
             OutputStream out = new ByteArrayOutputStream();
             DiffCommand diff = git.diff()
-                    .setPathFilter(PathFilter.create(fileName))
+                    .setPathFilter(StringUtils.isNotBlank(fileName) ? PathFilter.create(fileName) : TreeFilter.ALL)
                     .setOutputStream(out)
                     .setSourcePrefix("old:")
                     .setDestinationPrefix("new:")
@@ -1029,8 +1035,8 @@ public class GitRepoService {
                     .setOldTree(getTreeIterator(repository, parent.name()));
             diff.call();
             str = out.toString();
-        } catch (GitAPIException e) {
-            throw new IOException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return str;
     }
@@ -1116,23 +1122,6 @@ public class GitRepoService {
             tw.setRecursive(false);
             tw.addTree(revCommitHead.getTree());
             tw.addTree(new FileTreeIterator(repository));
-
-
-            long dt  = System.currentTimeMillis();
-
-/*            RenameDetector rd = new RenameDetector(repository);
-            rd.addAll(DiffEntry.scan(tw)); // TODO need to speedup , or add monitor
-            List<DiffEntry> lde = rd.compute(tw.getObjectReader(), null);
-            for (DiffEntry de : lde) {
-                if (de.getScore() >= rd.getRenameScore()) {
-                    scmItems.add(new ScmItem(de.getNewPath(),
-                            new ScmItemAttribute().withStatus(ScmItem.Status.RENAMED).withOldName(de.getOldPath())));
-                    filter.add(de.getOldPath());
-                    filter.add(de.getNewPath());
-                }
-            }*/
-
-            System.out.println("Step " + (dt - System.currentTimeMillis()));
 
             status.getRemoved().forEach(item -> {
                         if (!filter.contains(item)) {

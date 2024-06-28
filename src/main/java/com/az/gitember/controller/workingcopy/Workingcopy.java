@@ -16,6 +16,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
@@ -44,8 +46,16 @@ public class Workingcopy implements Initializable {
     public CheckBox checkBoxShowLastChanges;
     private FilteredList filteredList;
 
+    private String headSha = "HEAD";
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
+        try {
+            headSha = Context.getGitRepoService().getHead().getSha();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         filteredList = new FilteredList(Context.statusList);
 
@@ -131,8 +141,6 @@ public class Workingcopy implements Initializable {
                                 && searchText.getText().length() > Const.SEARCH_LIMIT_CHAR) {
                             if (item.getShortName().toLowerCase().contains(
                                     searchText.getText().toLowerCase())) {
-                                //workingCopyTableView.getSelectionModel().clearAndSelect(firstFoundIdx);
-                                //workingCopyTableView.getSelectionModel().focus(firstFoundIdx);
                                 workingCopyTableView.scrollTo(firstFoundIdx);
                                 break;
                             }
@@ -153,7 +161,9 @@ public class Workingcopy implements Initializable {
 
         new ChangeListenerHistoryHint(searchText, Context.settingsProperty.getValue().getSearchTerms());
 
-        workingCopyTableView.setRowFactory(new WorkingcopyTableRowFactory(this));
+
+
+        workingCopyTableView.setRowFactory(new WorkingcopyTableRowFactory(this, headSha));
 
         workingCopyTableView.setItems(filteredList);
 
@@ -203,62 +213,16 @@ public class Workingcopy implements Initializable {
                         }
                 );
 
-
-        /*
-        *         new MergeDialog(branches, preselectedBranch)
-                .showAndWait()
-                .ifPresent(
-                        dialogRes -> {
-                            try {
-                                MergeResult mergeResult = Context.getGitRepoService().mergeBranch(
-                                        dialogRes.getBranchName(),
-                                        dialogRes.getCommitMessage(),
-                                        dialogRes.isSquash(),
-                                        dialogRes.getFastForwardMode()
-                                );
-                                String msg = Context.getGitRepoService().getMessage(mergeResult);
-                                Context.getMain().showResult("Merge result", msg, Alert.AlertType.INFORMATION);
-
-                            } catch (Exception e) {
-                                log.log(Level.SEVERE, "Cannot merge " + dialogRes.getBranchName(), e);
-                                Context.getMain().showResult("Merge result", ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
-                            }
-                        }
-                );*/
-        /*Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setWidth(LookAndFeelSet.DIALOG_DEFAULT_WIDTH);
-        alert.setTitle("Question");
-        alert.setContentText("Would you like to stash changes ?");
-        alert.initOwner(App.getScene().getWindow());
-
-        alert.showAndWait().ifPresent(r -> {
-            if (r == ButtonType.OK) {
-                try {
-                    Context.getGitRepoService().stash();
-                    Context.updateStash();
-                } catch (IOException e) {
-                    log.log(Level.WARNING, "Cannot stash ", e.getMessage());
-                }
-                new StatusUpdateEventHandler(true).handle(null);
-            }
-        });*/
     }
-
-
-
-
 
     public void refreshEventHandler(ActionEvent actionEvent) {
         Context.updateAll();
         Context.updateWorkingBranch();
     }
 
-
     public void createDiffEventHandler(ActionEvent actionEvent) {
         String diff = Context.getGitRepoService().createDiff();
         new OpenFileEventHandler(diff).handle(actionEvent);
     }
-
-
 
 }

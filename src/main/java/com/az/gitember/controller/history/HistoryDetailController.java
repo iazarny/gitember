@@ -2,30 +2,43 @@ package com.az.gitember.controller.history;
 
 import com.az.gitember.App;
 import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.common.GitemberLineNumberFactory;
+import com.az.gitember.controller.common.TextToSpanContentAdapter;
+import com.az.gitember.controller.editor.EditorController;
+import com.az.gitember.controller.handlers.ShowHistoryEventHandler;
 import com.az.gitember.controller.workingcopy.WorkingcopyTableGraphicsValueFactory;
 import com.az.gitember.controller.handlers.DiffEventHandler;
 import com.az.gitember.controller.handlers.OpenFileEventHandler;
-import com.az.gitember.data.CommitInfo;
-import com.az.gitember.data.Const;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+import javafx.stage.Window;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.Caret;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -39,6 +52,10 @@ public class HistoryDetailController implements Initializable {
     public MenuItem diffWithPrevVersionMenuItem;
     public MenuItem diffWithCurrentVersionMenuItem;
     public MenuItem diffWithDiskVersionMenuItem;
+    public Tab rawDiffTab;
+    public Tab mainTab;
+    public CodeArea codeArea;
+    public TextField searchText;
 
     @FXML
     private TextField msgLbl;
@@ -73,7 +90,7 @@ public class HistoryDetailController implements Initializable {
     @FXML
     private ContextMenu scmItemContextMenu;
 
-
+    private int startIndex = -1;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
@@ -169,6 +186,12 @@ public class HistoryDetailController implements Initializable {
 
         }  );
 
+        searchText.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(newValue);
+                }
+        );
+
     }
 
     public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
@@ -183,16 +206,8 @@ public class HistoryDetailController implements Initializable {
 
     public void fileHistoryItemMenuItemClickHandler(ActionEvent actionEvent) throws IOException {
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
-        final String sha = scmInfo.getRevisionFullName();
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final String treeName = Context.getGitRepoService().getBranchName(sha);
-        final String fileName = scmItem.getShortName();
-
-        Context.fileHistoryTree.setValue(treeName);
-        Context.fileHistoryName.setValue(fileName);
-
-        App.loadFXMLToNewStage(Const.View.FILE_HISTORY, "History");
-
+        new ShowHistoryEventHandler(scmInfo.getRevisionFullName(), scmItem).handle(actionEvent);
     }
 
     public void openDiffPrevVersion(ActionEvent actionEvent) {
@@ -236,4 +251,74 @@ public class HistoryDetailController implements Initializable {
         }
 
     }
+
+    public void tabSelectionChanged(Event event) {
+
+        if (rawDiffTab.isSelected()) {
+
+            TextToSpanContentAdapter adapter =
+                    new TextToSpanContentAdapter(FilenameUtils.getExtension("rawDiff.txt"), true);
+
+            codeArea.appendText(Context.getGitRepoService().getRawDiff(
+                  Context.scmRevCommitDetails.get().getRevisionFullName(),
+                null));
+
+            codeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
+            codeArea
+                    .getScene()
+                    .getStylesheets()
+                    .add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
+            codeArea.setParagraphGraphicFactory(
+                    GitemberLineNumberFactory.get(codeArea, adapter, null, -1));
+
+            StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
+            if (spans != null) {
+                codeArea.setStyleSpans(0, spans);
+            }
+
+            adapter.getDiffDecoration(codeArea.getText()).entrySet().forEach(p -> {
+                codeArea.setParagraphStyle(p.getKey(), p.getValue());
+            });
+
+            codeArea.moveTo(0, 0);
+            codeArea.setShowCaret(Caret.CaretVisibility.ON);
+            codeArea.setLineHighlighterOn(true);
+            codeArea.requestFollowCaret();
+
+        }
+    }
+
+
+    public void nextSearch(KeyEvent evt) {
+        if (evt.getCode() == KeyCode.ENTER) {
+            startIndex++;
+            searchValue(searchText.getText());
+        }
+    }
+
+    private void searchValue(String newValue) {
+        startIndex = codeArea.getText().indexOf(newValue, startIndex);
+        if (startIndex == -1) {
+            startIndex = codeArea.getText().indexOf(newValue);
+        }
+
+        if ( startIndex == -1 && StringUtils.isNotBlank(newValue)) {
+            return;
+
+        } else if (startIndex > -1) {
+            codeArea.moveTo(startIndex);
+            codeArea.selectRange(startIndex,  startIndex + newValue.length());
+
+        } else {
+            codeArea.selectRange(0, 0);
+        }
+        codeArea.requestFollowCaret();
+
+    }
+
+    public void saveFile(ActionEvent actionEvent) {
+    }
+
+
+
 }

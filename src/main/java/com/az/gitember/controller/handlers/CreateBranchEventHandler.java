@@ -18,10 +18,11 @@ public class CreateBranchEventHandler implements EventHandler<ActionEvent> {
 
     private final static Logger log = Logger.getLogger(CreateBranchEventHandler.class.getName());
 
-    private final ScmBranch branchItem;
+    private final String branchName;
 
-    public CreateBranchEventHandler(ScmBranch branchItem) {
-        this.branchItem = branchItem;
+    public CreateBranchEventHandler(String branchName) {
+        this.branchName = branchName;
+
     }
 
     @Override
@@ -37,13 +38,13 @@ public class CreateBranchEventHandler implements EventHandler<ActionEvent> {
         if (dialogResult.isPresent()) {
             try {
                 Ref ref = Context.getGitRepoService().createBranch(
-                        branchItem.getFullName(),
+                        branchName,
                         dialogResult.get());
                 Context.updateBranches();
                 Context.getGitRepoService().checkoutBranch(ref.getName(), null);
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Cannot create new local branch " +
-                        dialogResult.get() + " from " + branchItem.getFullName(), e);
+                        dialogResult.get() + " from " + branchName, e);
                 Context.getMain().showResult("Create new branch",
                         ExceptionUtils.getRootCause(e).getMessage(), Alert.AlertType.ERROR);
             }

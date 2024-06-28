@@ -42,3 +42,45 @@
 .projectlink {
     -fx-padding: 10 10 10 10;
 }
+
+.tool-bar {
+    -fx-background-radius: 10;
+    -fx-background-color: linear-gradient(to right, #0e9a9a, rgba(15, 51, 51, 0.67));
+}
+
+.main-border-pane {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 3;
+    -fx-border-color: transparent;
+}
+
+.main-pane-top {
+    -fx-background-color: linear-gradient(to right, #0e9a9a, rgba(15, 51, 51, 0.67));
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.table-view {
+    -fx-background-color: transparent;
+}
+
+.table-view .table-cell{
+    -fx-border-color: transparent;
+    -fx-padding: 2 0 2 10px;
+}
+
+.table-row-cell: odd{
+    -fx-background-color: transparent;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+.table-row-cell: even{
+    -fx-background-color: transparent;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+.table-row-cell:filled:selected {
+    -fx-background-color: #444444;
+    -fx-text-fill: white;
+}

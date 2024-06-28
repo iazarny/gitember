@@ -9,7 +9,7 @@
             prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.controller.branchdiff.BranchDiffController">
     <top>
-        <ToolBar>
+        <ToolBar style="-fx-background-color: transparent">
             <Pane HBox.hgrow="ALWAYS"/>
             <TextField fx:id="searchText" promptText="Search" />
         </ToolBar>

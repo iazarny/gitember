@@ -28,7 +28,7 @@ public class MainTreeContextMenuFactory {
         checkoutMI.setOnAction(new CheckoutBranchEventHandler(branchItem));
 
         MenuItem branchMI = new MenuItem("Create branch ...");
-        branchMI.setOnAction( new CreateBranchEventHandler(branchItem) );
+        branchMI.setOnAction( new CreateBranchEventHandler(branchItem.getFullName()) );
 
 
         MenuItem deleteMI = new MenuItem("Delete "+ branchItem.getShortName() + "...");

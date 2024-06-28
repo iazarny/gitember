@@ -9,9 +9,10 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Button?>
-<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+<GridPane fx:id="mainPanel" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/8.0.172-ea"
+          xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="com.az.gitember.controller.diff.DiffController" >
-    
+
    <columnConstraints>
       <ColumnConstraints percentWidth="46" />
       <ColumnConstraints halignment="CENTER" percentWidth="9" />
@@ -20,13 +21,13 @@
 
    <children>
 
-      <ToolBar GridPane.columnIndex="0">
+      <ToolBar GridPane.columnIndex="0" style="-fx-background-color: transparent">
          <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" />
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
 
-      <ToolBar fx:id="navBar"  GridPane.columnIndex="1">
+      <ToolBar fx:id="navBar"  GridPane.columnIndex="1" style="-fx-background-color: transparent">
          <Button fx:id="prevBtn"  mnemonicParsing="false" onAction="#prevHandler">
             <graphic>
                <HBox>
@@ -48,7 +49,7 @@
          </Button>
       </ToolBar>
 
-      <ToolBar GridPane.columnIndex="2">
+      <ToolBar GridPane.columnIndex="2" style="-fx-background-color: transparent">
          <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" />
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />

@@ -10,20 +10,19 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.az.gitember.controller.main.MainController"
             fx:id="mainBorderPane"
-            style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 3; -fx-border-color: transparent;"
+            styleClass="main-border-pane"
+            onKeyTyped="#keyPressedHandler"
 >
     <top>
-        <VBox>
+
+        <VBox fx:id="mainPaneTop" styleClass="main-pane-top">
             <children>
                 <HBox fx:id="menuContainer">
-
-
                     <MenuBar fx:id="mainMenuBar"
                              onMousePressed="#mainBarMousePressed"
                              onMouseDragged="#mainBarMouseDragged"
                              onMouseClicked="#mainBarMouseClicked"
-                             HBox.hgrow="ALWAYS"
-                    >
+                             HBox.hgrow="ALWAYS">
                         <menus>
                             <Menu text="Repo">
                                 <items>
@@ -125,17 +124,16 @@
                             </Menu>
                         </menus>
                     </MenuBar>
-
                 </HBox>
 
                 <ToolBar fx:id="mainToolBar"
                          onMousePressed="#mainBarMousePressed"
                          onMouseDragged="#mainBarMouseDragged"
                          onMouseClicked="#mainBarMouseClicked"
-                         style="-fx-background-radius: 10;"
+                         styleClass="tool-bar"
                 >
                     <HBox fx:id="toolBarContainer">
-                        <HBox fx:id="winControlBar" style="-fx-padding: 10 20 0 0;" spacing="8">
+                        <HBox fx:id="winControlBar" style="-fx-padding: 10 20 0 13;" spacing="8">
                             <ImageView fx:id="macCloseImgView"
                                        onMouseEntered="#winIconMouseEnter"
                                        onMouseExited="#winIconMouseExit"
@@ -172,7 +170,7 @@
                                 </StackedFontIcon>
                             </graphic>
                         </Button>
-                        <ComboBox fx:id="projectsCmb" onAction="#reopenProject"/>
+                        <ComboBox fx:id="projectsCmb" onAction="#reopenProject" />
 
                         <!--Button fx:id="fetchBtn" disable="true" mnemonicParsing="false" onAction="#fetchHandler" text="Fetch"/-->
                         <Button fx:id="pullBtn" disable="true" mnemonicParsing="false" onAction="#pullHandler"
@@ -222,6 +220,16 @@
                                 </StackedFontIcon>
                             </graphic>
                         </Button>
+                        <Button fx:id="branchBtn" disable="true" onAction="#branchEventHandler" text="Branch">
+                            <tooltip>
+                                <Tooltip text="Create branch"/>
+                            </tooltip>
+                            <graphic>
+                                <StackedFontIcon  style="-fx-icon-color: text_color" >
+                                    <FontIcon iconLiteral="fa-code-fork" iconSize="24"/>
+                                </StackedFontIcon>
+                            </graphic>
+                        </Button>
 
                         <Button fx:id="commitBtn" disable="true" onAction="#commitEventHandler" text="Commit">
                             <tooltip>
@@ -245,11 +253,13 @@
     <left>
     </left>
     <center>
+        <SplitPane orientation="HORIZONTAL" dividerPositions="0.16"
+                   style="-fx-padding: 10 20 0 13;"
+        >
 
-        <SplitPane orientation="HORIZONTAL" dividerPositions="0.16">
 
-
-            <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true">
+            <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true"
+                      style="-fx-padding: 10 20 0 13; -fx-border-color: transparent">
                 <cellFactory>
                     <MainTreeItemCellFactory/>
                 </cellFactory>
@@ -266,21 +276,21 @@
                         <TreeItem fx:id="historyTreeItem" value="History">
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-code-fork"/>
+                                    <FontIcon iconLiteral="fa-history"/>
                                 </StackedFontIcon>
                             </graphic>
                         </TreeItem>
                         <TreeItem fx:id="localBranchesTreeItem" value="Local branches">
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-share-alt"/>
+                                    <FontIcon iconLiteral="fa-code-fork"/>
                                 </StackedFontIcon>
                             </graphic>
                         </TreeItem>
                         <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
                             <graphic>
                                 <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-share-alt"/>
+                                    <FontIcon iconLiteral="fa-code-fork"/>
                                 </StackedFontIcon>
                             </graphic>
                         </TreeItem>

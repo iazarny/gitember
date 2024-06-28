@@ -44,8 +44,17 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/plain", "scala", true));
         add(new ExtensionInfo("text/plain", "sc", true));
         add(new ExtensionInfo("text/plain", "swift", true));
+
         add(new ExtensionInfo("text/plain", "bas", true));
         add(new ExtensionInfo("text/plain", "vb", true));
+        add(new ExtensionInfo("text/plain", "vba", true));
+        add(new ExtensionInfo("text/plain", "vbs", true));
+        add(new ExtensionInfo("text/plain", "vbscript", true));
+        add(new ExtensionInfo("text/plain", "vbe", true));
+        add(new ExtensionInfo("text/plain", "wsf", true));
+        add(new ExtensionInfo("text/plain", "wsc", true));
+
+
         add(new ExtensionInfo("text/plain", "md", true));
         add(new ExtensionInfo("text/plain", "go", true));
         add(new ExtensionInfo("text/plain", "golang", true));
@@ -158,8 +167,13 @@ public class ExtensionMap {
         add(new ExtensionInfo("image/x-xpixmap", "xpm", true));
         add(new ExtensionInfo("message/rfc822", "eml", true));
         add(new ExtensionInfo("message/rfc822", "mime", true));
-        add(new ExtensionInfo("application/dif+xml", "dif", true));
-        add(new ExtensionInfo("application/dif+xml", "diff", true));
+        add(new ExtensionInfo("text/x-patch", "dif", true));
+        add(new ExtensionInfo("text/x-patch", "diff", true));
+        add(new ExtensionInfo("text/x-patch", "patch", true));
+        add(new ExtensionInfo("text/plain", "tf", true));
+        add(new ExtensionInfo("application/json", "libsonnet", true));
+        add(new ExtensionInfo("application/json", "jsonnet", true));
+        add(new ExtensionInfo("application/x-typescript", "tsx", true));
 
     }
 

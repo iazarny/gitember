@@ -1,5 +1,6 @@
 package com.az.gitember.controller.diff;
 
+import com.az.gitember.App;
 import com.az.gitember.control.VirtualizedOverviewScrollPane;
 import com.az.gitember.controller.common.GitemberLineNumberFactory;
 import com.az.gitember.controller.LookAndFeelSet;

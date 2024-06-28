@@ -23,9 +23,9 @@
                     <TableView fx:id="commitsTableView" layoutX="187.0" prefHeight="514.0" prefWidth="820.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <columns>
                             <TableColumn fx:id="laneTableColumn" sortable="false" style="-fx-border-width: 0; -fx-padding: 0 0 0 0;" text="" />
-                            <TableColumn fx:id="authorTableColumn" sortable="false" prefWidth="300" maxWidth="300" text="Author" />
-                            <TableColumn fx:id="dateTableColumn" sortable="false" prefWidth="180" maxWidth="180" text="Date" />
-                            <TableColumn fx:id="shaTableColumn" sortable="false" prefWidth="400" maxWidth="400" text="Sha" />
+                            <TableColumn fx:id="authorTableColumn" sortable="false" prefWidth="120" maxWidth="300" text="Author" />
+                            <TableColumn fx:id="dateTableColumn" sortable="false" prefWidth="80" maxWidth="180" text="Date" />
+                            <TableColumn fx:id="shaTableColumn" sortable="false" prefWidth="120" maxWidth="400" text="Sha" />
                         </columns>
                         <contextMenu>
                             <ContextMenu>

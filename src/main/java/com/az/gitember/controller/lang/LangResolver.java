@@ -43,13 +43,13 @@ public class LangResolver {
         if (is(lcFileExt).oneOf("java", "scala")) {
             this.lexer = new Java9Lexer(charStream );
             this.tokenTypeAdapter = new JavaTokenTypeAdapter(lexer);
-        } else if (is(lcFileExt).oneOf("json")) {
+        } else if (is(lcFileExt).oneOf("json", "json5")) {
             this.lexer = new JSONLexer(charStream );
             this.tokenTypeAdapter = new  JsonTokenTypeAdapter(lexer);
         } else if (is(lcFileExt).oneOf("asm", "masm")) {
             this.lexer = new MASMLexer(charStream );
             this.tokenTypeAdapter = new  AsmTokenTypeAdapter(lexer);
-        } else if (is(lcFileExt).oneOf("bas")) {
+        } else if (is(lcFileExt).oneOf("bas", "vb", "vba", "vbs", "vbscript", "vbe", "wsf", "wsc")) {
             this.lexer = new jvmBasicLexer(charStream );
             this.tokenTypeAdapter = new  BasicTokenTypeAdapter(lexer);
         //} else if ("c".equalsIgnoreCase(fileExtention) || "h".equalsIgnoreCase(fileExtention)) {
@@ -79,7 +79,7 @@ public class LangResolver {
         } else if (is(lcFileExt).oneOf("js")) {
             this.lexer = new JavaScriptLexer(charStream );
             this.tokenTypeAdapter = new JavaScriptTokenTypeAdapter(lexer);
-        } else if (is(lcFileExt).oneOf("ts")) {
+        } else if (is(lcFileExt).oneOf("ts", "tsx")) {
             this.lexer = new TypeScriptLexer(charStream );
             this.tokenTypeAdapter = new TypeScriptTokenTypeAdapter(lexer);
         } else if (is(lcFileExt).oneOf("kt","ktm", "kts")) {

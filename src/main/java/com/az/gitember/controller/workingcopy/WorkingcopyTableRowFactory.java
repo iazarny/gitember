@@ -9,6 +9,10 @@ import com.az.gitember.service.GitemberUtil;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
@@ -28,12 +32,15 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
     private ContextMenu scmItemContextMenu = new ContextMenu();
 
     private Workingcopy workingcopy;
+    private String headSha;
 
 
-    public WorkingcopyTableRowFactory(Workingcopy workingcopy) {
-        //Just  place holder. Menu without any initial elements will not show even if item will nbe added on request menu
+    public WorkingcopyTableRowFactory(Workingcopy workingcopy, String headSha) {
+        //Just  place holder. Menu without any initial elements will not show even if item will
+        // not be added on request menu
         scmItemContextMenu.getItems().add(new MenuItem(""));
         this.workingcopy = workingcopy;
+        this.headSha = headSha;
     }
 
     @Override
@@ -146,23 +153,15 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
         final String itemStatus = item.getAttribute().getStatus();
         scmItemContextMenu.getItems().clear();
 
-
-
+        //stage
         if (is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED)) {
             MenuItem stage = new MenuItem(MI_STAGE_NAME);
             stage.setOnAction(new StageEventHandler(param, item));
             stage.setGraphic(icons.get(MI_STAGE_NAME));
             scmItemContextMenu.getItems().add(stage);
-
         }
 
-        if (is(itemStatus).oneOf(ScmItem.Status.UNTRACKED)) {
-            MenuItem unstage = new MenuItem(MI_DELETE_NAME);
-            unstage.setOnAction(new MassDeleteEventHandler(Collections.singletonList(item)));
-            unstage.setGraphic(icons.get(MI_DELETE_NAME));
-            scmItemContextMenu.getItems().add(unstage);
-        }
-
+        //unstage
         if (is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
             MenuItem unstage = new MenuItem(MI_UNSTAGE_NAME);
             unstage.setOnAction(new StageEventHandler(param, item));
@@ -170,6 +169,26 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
             scmItemContextMenu.getItems().add(unstage);
         }
 
+
+        //diff
+        //if (!is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED, ScmItem.Status.REMOVED)) {
+        if (is(itemStatus).oneOf(ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
+            MenuItem diff = new MenuItem(MI_DIFF_REPO);
+            diff.setOnAction(e -> new DiffWithDiskEventHandler(item).handle(e));
+            diff.setGraphic(icons.get(MI_DIFF_REPO));
+            scmItemContextMenu.getItems().add(diff);
+        }
+
+        //revert
+        if (is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.MISSED)) {
+            MenuItem revert = new MenuItem(MI_REVERT_NAME);
+            revert.setOnAction(new RevertEventHandler(item));
+            revert.setGraphic(icons.get(MI_REVERT_NAME));
+            scmItemContextMenu.getItems().add(revert);
+        }
+
+
+        //resolve conflict
         if (is(itemStatus).oneOf(ScmItem.Status.CONFLICT)) {
             Menu resolve = new Menu("Resolve conflict");
 
@@ -204,8 +223,18 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
             scmItemContextMenu.getItems().add(resolve);
         }
 
-        scmItemContextMenu.getItems().add(new SeparatorMenuItem());
 
+        //history
+        if (is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.MISSED)) {
+            MenuItem history = new MenuItem(MI_HISTORY);
+            history.setOnAction(new ShowHistoryEventHandler(headSha ,item));
+            history.setGraphic(icons.get(MI_HISTORY));
+            scmItemContextMenu.getItems().add(history);
+            scmItemContextMenu.getItems().add(new SeparatorMenuItem());
+        }
+
+
+        //open
         if (!is(itemStatus).oneOf(ScmItem.Status.MISSED, ScmItem.Status.REMOVED)) {
             MenuItem open = new MenuItem(MI_OPEN_NAME);
             open.setOnAction(new OpenFileEventHandler(item, ScmItem.BODY_TYPE.WORK_SPACE));
@@ -213,28 +242,23 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
             scmItemContextMenu.getItems().add(open);
         }
 
-        if (!is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED, ScmItem.Status.REMOVED)) {
-            //MenuItem history = new MenuItem("History");  TODO
-            //scmItemContextMenu.getItems().add(history);
 
-            MenuItem diff = new MenuItem(MI_DIFF_REPO);
-            diff.setOnAction(e -> new DiffWithDiskEventHandler(item).handle(e));
-            diff.setGraphic(icons.get(MI_DIFF_REPO));
-            scmItemContextMenu.getItems().add(diff);
+        //delete
+        if (!is(itemStatus).oneOf(ScmItem.Status.MISSED, ScmItem.Status.REMOVED)) {
+            MenuItem nottracked = new MenuItem(MI_DELETE_NAME);
+            nottracked.setOnAction(new MassDeleteEventHandler(Collections.singletonList(item)));
+            nottracked.setGraphic(icons.get(MI_DELETE_NAME));
+            scmItemContextMenu.getItems().add(nottracked);
         }
 
-        if (is(itemStatus).oneOf(ScmItem.Status.MODIFIED, ScmItem.Status.MISSED)) {
-            MenuItem revert = new MenuItem(MI_REVERT_NAME);
-            revert.setOnAction(new RevertEventHandler(item));
-            revert.setGraphic(icons.get(MI_REVERT_NAME));
-            scmItemContextMenu.getItems().add(revert);
-        }
+
     }
 
 
     static Map<String, StackedFontIcon> icons = new HashMap<>();
     public static String MI_REVERT_NAME = "Revert ...";
     public static String MI_DIFF_REPO = "Diff with repository";
+    public static String MI_HISTORY = "History";
     public static String MI_OPEN_NAME = "Open";
     public static String MI_UNSTAGE_NAME = "Unstage item";
     public static String MI_UNSTAGE_MULTIPLE_NAME = "Unstage items";
@@ -246,9 +270,10 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
         icons.put(MI_OPEN_NAME, GitemberUtil.create(new FontIcon(FontAwesome.FOLDER_OPEN)));
         icons.put(MI_REVERT_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ROTATE_LEFT)));
         icons.put(MI_DIFF_REPO, GitemberUtil.create(new FontIcon(FontAwesome.EXCHANGE)));
-        icons.put(MI_STAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ARROW_CIRCLE_UP)));
-        icons.put(MI_UNSTAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.ARROW_CIRCLE_DOWN)));
-        icons.put(MI_DELETE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.REMOVE)));
+        icons.put(MI_STAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.PLUS)));
+        icons.put(MI_UNSTAGE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.MINUS)));
+        icons.put(MI_DELETE_NAME, GitemberUtil.create(new FontIcon(FontAwesome.TRASH)));
+        icons.put(MI_HISTORY, GitemberUtil.create(new FontIcon(FontAwesome.HISTORY)));
     }
 
 
