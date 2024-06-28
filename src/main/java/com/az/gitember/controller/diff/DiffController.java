@@ -413,7 +413,7 @@ public class DiffController implements Initializable {
 
             Path path = new Path();
             path.getElements().addAll(moveTo, curve0, lineTo0, curve1, lineTo1);
-            path.getStyleClass().add(GitemberUtil.getDiffSyleClass(delta, "diff-path"));
+            path.getStyleClass().add(GitemberUtil.getDiffSyleClass(delta, "diff"));
 
             diffDrawPanel.getChildren().add(path);
         }

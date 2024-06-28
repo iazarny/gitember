@@ -127,7 +127,7 @@ public class TextToSpanContentAdapter {
                     Edit delta = patch.get(i);
                     int origPos = delta.getBeginB();
                     int origLines = delta.getLengthB();
-                    String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff-line");
+                    String styleClass = GitemberUtil.getDiffSyleClass(delta, "diff");
                     if (leftSide) {
                         origPos = delta.getBeginA();
                         origLines = delta.getLengthA();

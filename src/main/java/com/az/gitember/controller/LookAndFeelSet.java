@@ -22,6 +22,7 @@ public class LookAndFeelSet {
     public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #b3b3b3; -fx-font-family: Source Sans Pro;";
 
 
+    //for scroll pane
     public static Color DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
     public static Color DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
     public static Color DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
@@ -32,7 +33,6 @@ public class LookAndFeelSet {
     public static String HISTORY_BOX_TXT_CSS = "";
     public static String RESULT_WARNING = "-fx-text-fill: #1a1919; -fx-background-color: #d7d7ea";
     public static String RESULT_ERROR = "-fx-text-fill: #1a1919; -fx-background-color: #EADFE2";
-    public static String TOOL_BAR_CSS = "-fx-background-radius: 10; -fx-background-color: linear-gradient(to right, skyblue, aquamarine );";
 
     public static double FONT_SIZE = 23.0;
 
@@ -52,7 +52,7 @@ public class LookAndFeelSet {
 
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");
-            DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
+            DIFF_COLOR_REPLACE = Color.valueOf("#118888");
             DIFF_COLOR_TEXT = Color.valueOf("#303030");
             HISTORY_LABEL_BOX_CSS = "-fx-border-insets: 0 5 0 0px; -fx-background-insets: 0 5 0 0px; -fx-padding: 0 4px; -fx-background-color: #404040; -fx-border-color: #a3cfbb; -fx-spacing: 10px;  -fx-border-radius: 4px; -fx-background-radius: 4px";
             HISTORY_LABEL_BOX_TXT_CSS = "-fx-text-fill: #0a3622; -fx-font-size: 16px;";

@@ -43,20 +43,34 @@
      -fx-fill: gray;
 
  }
-
+/*Raw diff*/
 .diff-new {
-    -fx-background-color: #97fa97;
+    -fx-background-color: #d5f8d5;
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #d1e8d1;
+    -fx-fill:  #d5f8d5;
 }
-
 .diff-modified {
-    -fx-background-color: #cdcdcd;
+    -fx-background-color: #d7f8f6;
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #e5e5fa;
+    -fx-fill: #d7f8f6;
 }
-
 .diff-deleted {
-    -fx-background-color: #fa97b3;
+    -fx-background-color: #fad9e2;
+    -fx-stroke-width: 0.5;
+    -fx-stroke: #e5cad1;
+    -fx-fill: #fad9e2;
+}
+.diff-copy {
+    -fx-background-color: #b1f6f2;
+}
+/*Diff compare shadow*/
+.diff-active {
+    -fx-effect: dropshadow(three-pass-box, grey, 10, 0, 0, 10);
 }
 
-.diff-path-new {
+/*.diff-path-new {
     -fx-stroke-width: 0.5;
     -fx-stroke: #d1e8d1;
     -fx-fill:  #a5f1a5;
@@ -71,20 +85,9 @@
     -fx-stroke-width: 0.5;
     -fx-stroke: #e5cad1;
     -fx-fill: #fa97b3;
-}
+}*/
 
-.diff-line-new {
-    -fx-background-color: #a5f1a5;
-}
-.diff-line-modified {
-    -fx-background-color: #cdcdf0;
-}
-.diff-line-deleted {
-    -fx-background-color: #fa97b3;
-}
-.diff-line-copy {
-    -fx-background-color: #97a7fa;
-}
+
 
 
 /*.code-area {

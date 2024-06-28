@@ -3,23 +3,6 @@
     -fx-border-width: 0px;
 
 }
-.diff-row-new {
-    -fx-background-color:  #124e12;
-}
-.diff-row-modified {
-
-}
-.diff-row-deleted {
-    -fx-background-color: #761d1d;
-}
-.diff-row-copy {
-    -fx-background-color: #1d3076;
-}
-
-.diff-active {
-    -fx-effect: dropshadow(three-pass-box, #414040, 10, 0, 0, 10);
-}
-
 
 .root {
     -fx-font-size: 12pt ;

@@ -26,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.apache.commons.io.FilenameUtils;
@@ -36,8 +37,10 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -55,6 +58,7 @@ public class HistoryDetailController implements Initializable {
     public Tab rawDiffTab;
     public Tab mainTab;
     public CodeArea codeArea;
+    public String  content;
     public TextField searchText;
 
     @FXML
@@ -259,9 +263,10 @@ public class HistoryDetailController implements Initializable {
             TextToSpanContentAdapter adapter =
                     new TextToSpanContentAdapter(FilenameUtils.getExtension("rawDiff.txt"), true);
 
-            codeArea.appendText(Context.getGitRepoService().getRawDiff(
-                  Context.scmRevCommitDetails.get().getRevisionFullName(),
-                null));
+            content = Context.getGitRepoService().getRawDiff(
+                    Context.scmRevCommitDetails.get().getRevisionFullName(),
+                    null);
+            codeArea.appendText(content);
 
             codeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
             codeArea
@@ -317,6 +322,29 @@ public class HistoryDetailController implements Initializable {
     }
 
     public void saveFile(ActionEvent actionEvent) {
+
+
+        FileChooser fileChooser = new FileChooser();
+
+        //Set extension filter
+        FileChooser.ExtensionFilter anyFilter = new FileChooser.ExtensionFilter("Any files (*.*)", "*.*");
+        fileChooser.getExtensionFilters().add(anyFilter);
+
+        fileChooser.setTitle("Save file");
+
+        //Show save file dialog
+        File file = fileChooser.showSaveDialog(App.getScene().getWindow());
+
+        if (file != null) {
+
+            try {
+                Files.write(file.toPath(), this.content.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
     }
 
 
