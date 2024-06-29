@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.controller.main.MainController;
 import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,7 +43,6 @@ public class Context {
     public static final BooleanProperty showLfsFiles = new SimpleBooleanProperty(false);
 
     public static final StringProperty selectedTreeName = new SimpleStringProperty();
-    public static final SimpleObjectProperty<LocalDateTime> lastUpdate = new SimpleObjectProperty();
 
 
 
@@ -96,28 +96,27 @@ public class Context {
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new ConcurrentHashMap<>();
 
-    public static AtomicBoolean needReloadWorkingCopy = new AtomicBoolean(true);
-
     private static MainController main;
 
     private static ProjectWatcher projectWatcher;
     private static Thread projectWatcherThread;
 
 
-    private static void initProjectWatcher(String gitFolder) {
-        if (projectWatcherThread != null) {
-            projectWatcher.setStopFlag();
+    private static void initProjectWatcher(String gitFolder) throws Exception {
+        String projFolder = gitFolder
+                .replace("/.git", "")
+                .replace("\\.git", "");
+        if (projectWatcherThread != null) { // TODO move global shutdown
             projectWatcherThread.interrupt();
         }
-        projectWatcher = new ProjectWatcher(gitFolder, (kind, fileName) -> {
-
+        projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
+            Platform.runLater(() ->  Context.updateStatus(null) );
         });
         projectWatcherThread = new Thread(
                 projectWatcher
         );
         projectWatcherThread.setDaemon(true);
         projectWatcherThread.start();
-        needReloadWorkingCopy.set(true);
     }
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
@@ -236,29 +235,9 @@ public class Context {
         plotCommitList.clear();
         statusList.clear();
         statusList.addAll(statuses);
-        lastUpdate.set(LocalDateTime.now());
     }
 
-    /**
-     * Update UI only when the statues are changed
-     * @param progressMonitor
-     */
-    public static synchronized void updateStatusIfNeed(ProgressMonitor progressMonitor) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
-        boolean needupdate;
-        if (statuses.size() == statusList.size()) {
-            statusList.forEach( scmItem -> {
-                statuses.removeIf( newScm -> newScm.equals(scmItem));
-            });
-            needupdate = !statuses.isEmpty();
-        } else {
-            needupdate = true;
-        }
-        if (needupdate) {
-            updateStatus(progressMonitor);
-        }
-        lastUpdate.set(LocalDateTime.now());
-    }
+
 
     public static void updateWorkingBranch() {
         workingBranch.setValue(

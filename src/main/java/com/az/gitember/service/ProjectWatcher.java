@@ -1,61 +1,130 @@
 package com.az.gitember.service;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ProjectWatcher implements Runnable {
-    private final Path path;
+
+    private final Path rootPath;
+    private final Map<WatchKey, Path> watchKeys;
     private final ProjectChangeCallback callback;
-    private volatile boolean stopFlag = false;
+    private final WatchService watchService;
 
-    public ProjectWatcher(Path path, ProjectChangeCallback callback) {
-        this.path = path;
+    public ProjectWatcher(Path rootPath, ProjectChangeCallback callback) throws IOException {
+        this.rootPath = rootPath;
         this.callback = callback;
+        this.watchKeys = new HashMap<>();
+        this.watchService = FileSystems.getDefault().newWatchService();
+        registerAll(rootPath);
     }
 
-    public ProjectWatcher(String path, ProjectChangeCallback callback) {
-        this.path = Paths.get(path);
-        this.callback = callback;
+    public ProjectWatcher(String rootPath, ProjectChangeCallback callback) throws IOException {
+        this(Paths.get(rootPath), callback);
     }
 
-    public void setStopFlag() {
-        this.stopFlag = true;
+    private void registerAll(final Path root) throws IOException {
+        // Register directory and subdirectories
+        Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                String candidate = dir.toString();
+                if (!isCandidateEligibleToRegister(candidate)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                register(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+
+
+    private void register(Path dir) throws IOException {
+        WatchKey key = dir.register(watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_DELETE,
+                StandardWatchEventKinds.ENTRY_MODIFY);
+        watchKeys.put(key, dir);
     }
 
     @Override
     public void run() {
-        try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            // Register the path with the watch service for specified events
-            path.register(watchService,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
-
-            System.out.println("Watch Service registered for directory: " + path.toString());
-
-            // Poll for file system events on the WatchService
-            WatchKey key;
-            while ((key = watchService.take()) != null && !stopFlag) {
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    // Print the kind of event and the affected file
-                    System.out.println("Event kind: " + event.kind() + ". File affected: " + event.context() + ".");
-                    callback.onFileChange(event.kind(), (Path) event.context());
-
+        try {
+            while (true) {
+                WatchKey key = watchService.take();
+                Path dir = watchKeys.get(key);
+                if (dir == null) {
+                    continue;
                 }
-                // Reset the key to receive further watch events
-                key.reset();
+
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    WatchEvent.Kind<?> kind = event.kind();
+                    Path name = (Path) event.context();
+                    Path child = dir.resolve(name);
+
+                    // Invoke the callback
+                    callback.onFileChange(kind, child);
+
+                    // Register new subdirectory if created
+                    if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                        try {
+                            if (Files.isDirectory(child)) {
+                                registerAll(child);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                boolean valid = key.reset();
+                if (!valid) {
+                    watchKeys.remove(key);
+                    if (watchKeys.isEmpty()) {
+                        break;
+                    }
+                }
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            shutDown();
+            Thread.currentThread().interrupt();
         }
+    }
+
+    private void shutDown() {
+        watchKeys.forEach((k,v) -> {
+            k.cancel();
+        });
+        try {
+            watchService.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private boolean isCandidateEligibleToRegister(String candidate) {
+
+        return !(
+                candidate.endsWith(".git")
+                        ||candidate.endsWith("target")
+                        ||candidate.endsWith("build")
+                        ||candidate.endsWith("dist")
+                        ||candidate.endsWith("bin")
+                        ||candidate.endsWith("obj")
+                        ||candidate.endsWith("lib")
+                        ||candidate.endsWith("__pycache__")
+                        ||candidate.endsWith(".stack-work")
+                        ||candidate.endsWith("dist-newstyle")
+                        ||candidate.endsWith("pkg")
+                        ||candidate.endsWith("vendor/bundle")
+                        ||candidate.endsWith("bundle")
+        );
+
     }
 
 

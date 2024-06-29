@@ -92,16 +92,7 @@ public class App extends Application {
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
 
-        stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> ov, Boolean onHidden, Boolean onShown) {
-                if (onShown
-                        && Const.View.WORKING_COPY.equals(Context.mainPaneName.getValueSafe())
-                        && isAllowUpdateByTime()) {
-                    Platform.runLater(() -> Context.updateStatusIfNeed(null));
-                }
-            }
-        });
+
 
         stage.setOnCloseRequest(
                 event -> {
@@ -164,23 +155,8 @@ public class App extends Application {
         return isFocused;
     }
 
-
     public static void main(String[] args) {
-
         launch();
     }
-
-    private boolean isAllowUpdateByTime() {
-        boolean allowUpdateByTime = false;
-        LocalDateTime lastUpdate = Context.lastUpdate.get();
-        if (lastUpdate != null) {
-            Duration duration = Duration.between(lastUpdate, LocalDateTime.now());
-            if (duration.toSeconds() > 60) {
-                allowUpdateByTime = true;
-            }
-        }
-        return allowUpdateByTime;
-    }
-
 
 }
