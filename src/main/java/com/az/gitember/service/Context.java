@@ -112,7 +112,10 @@ public class Context {
         projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
             Platform.runLater(
                     //TODO also need to update workign
-                    () ->  Context.updateStatus(null)
+                    () ->  {
+                        Context.updateStatus(null);
+                        Context.updateWorkingBranch();
+                    }
             );
         });
         projectWatcherThread = new Thread(
