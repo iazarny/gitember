@@ -110,7 +110,10 @@ public class Context {
             projectWatcherThread.interrupt();
         }
         projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
-            Platform.runLater(() ->  Context.updateStatus(null) );
+            Platform.runLater(
+                    //TODO also need to update workign
+                    () ->  Context.updateStatus(null)
+            );
         });
         projectWatcherThread = new Thread(
                 projectWatcher
