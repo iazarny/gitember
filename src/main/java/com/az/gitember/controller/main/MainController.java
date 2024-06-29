@@ -115,13 +115,12 @@ public class MainController implements Initializable {
 
         } else if (Context.isWindows()) {
             mainBorderPane.getChildren().remove(mainMenuBar);
-            menuContainer.getChildren().add(mainMenuBar);
             toolBarContainer.getChildren().remove(winControlBar);
             menuContainer.getChildren().add(winControlBar);
             winControlBar.getStyleClass().clear();
             winControlBar.getStyleClass().addAll(mainMenuBar.getStyleClass());
             winControlBar.setSpacing(1);
-            winControlBar.setStyle("-fx-padding: 10 0 0 20;");
+            winControlBar.setStyle("-fx-background-color:transparent; -fx-padding: 10 0 0 20;");
             winControlBar.getChildren().remove(macMaximizeImgView);
             winControlBar.getChildren().add(macMaximizeImgView);
             winControlBar.getChildren().remove(macCloseImgView);

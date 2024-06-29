@@ -17,12 +17,16 @@
 
         <VBox fx:id="mainPaneTop" styleClass="main-pane-top">
             <children>
-                <HBox fx:id="menuContainer">
+                <HBox fx:id="menuContainer"
+                      styleClass="win-menu-container"
+                >
                     <MenuBar fx:id="mainMenuBar"
                              onMousePressed="#mainBarMousePressed"
                              onMouseDragged="#mainBarMouseDragged"
                              onMouseClicked="#mainBarMouseClicked"
-                             HBox.hgrow="ALWAYS">
+                             HBox.hgrow="ALWAYS"
+                             style="-fx-background-color:transparent"
+                    >
                         <menus>
                             <Menu text="Repo">
                                 <items>

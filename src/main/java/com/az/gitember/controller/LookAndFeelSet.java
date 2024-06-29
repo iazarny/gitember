@@ -37,9 +37,7 @@ public class LookAndFeelSet {
     public static double FONT_SIZE = 23.0;
 
     public static void init(String themeMode) {
-        if (Context.isWindows()) {
-            LookAndFeelSet.FONT_SIZE = 27.0;
-        }
+
         if ("Dark".equalsIgnoreCase(themeMode)) {
             PIECHART_LEGENF_STYLE = "-fx-fill: lightgray";
             BRANCH_NAME_COLOR = Color.LIGHTGRAY;
@@ -61,5 +59,11 @@ public class LookAndFeelSet {
             RESULT_WARNING = "-fx-text-fill: white; -fx-background-color: #070969";
             RESULT_ERROR = "-fx-text-fill: white; -fx-background-color: #690707;";
         }
+
+        if (Context.isWindows()) {
+            LookAndFeelSet.FONT_SIZE = 27.0;
+            DEFAULT_CSS = DEFAULT_CSS.replace("/styles/", "/styles/win/");
+        }
+
     }
 }

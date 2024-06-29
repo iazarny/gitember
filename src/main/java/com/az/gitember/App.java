@@ -72,7 +72,7 @@ public class App extends Application {
 
 
         Rectangle2D rectangle2D = Screen.getPrimary().getVisualBounds();
-        int minus = 0;
+        int minus = 10;
         double width = rectangle2D.getWidth() - minus;
         double height = rectangle2D.getHeight() - minus;
 

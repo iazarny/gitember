@@ -24,6 +24,8 @@ public class IconFactoryImpl implements IconFactory {
 
 
         Canvas cnv = new Canvas(width, height);
+        cnv.getGraphicsContext2D().setImageSmoothing(false);
+
         GraphicsContext gc = cnv.getGraphicsContext2D();
         gc.fillRect(0, 0, cnv.getWidth(), cnv.getHeight());
 
@@ -78,18 +80,21 @@ public class IconFactoryImpl implements IconFactory {
                 double deltay = 2;
 
                 gc.fillRect(0,0, cnv.getWidth(), cnv.getHeight());
+
                 gc.setLineWidth(1);
                 gc.strokeRect(centerx -sizex , centery -sizey + deltay,
                         centerx -2, centery - 1);
                 gc.setLineWidth(2);
                 gc.strokeLine(centerx - sizex + 1, centery - sizey + deltay,
                         centerx + sizex  , centery - sizey + deltay);
+
                 if (isAppMaximised) {
+
                     gc.setLineWidth(1);
-                    gc.strokeLine(centerx - sizex + 2, centery - sizey ,
-                            centerx + sizex + 2 , centery - sizey  );
-                    gc.strokeLine(centerx + sizex +2 , centery - sizey,
-                            centerx + sizex +2 , centery + sizey  );
+                    gc.strokeLine(centerx - sizex + 2, centery - sizey -1,
+                            centerx + sizex + 3 , centery - sizey -1 );
+                    gc.strokeLine(centerx + sizex +3 , centery - sizey,
+                            centerx + sizex +3 , centery + sizey -1  );
 
                 }
 

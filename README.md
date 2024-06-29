@@ -25,6 +25,11 @@ Nothing in particular, but
 
 ## Changes
 
+### 2.5.4
+* Fix multimonitor issues
+* Adjust look and feel
+* Minor refactoring
+
 ### 2.5.3
 * Significant UI / UX changes 
 
