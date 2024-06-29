@@ -12,9 +12,11 @@ import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 
 import java.io.File;
+import java.nio.file.WatchService;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -94,22 +96,37 @@ public class Context {
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new ConcurrentHashMap<>();
 
+    public static AtomicBoolean needReloadWorkingCopy = new AtomicBoolean(true);
 
     private static MainController main;
 
+    private static ProjectWatcher projectWatcher;
+    private static Thread projectWatcherThread;
 
 
+    private static void initProjectWatcher(String gitFolder) {
+        if (projectWatcherThread != null) {
+            projectWatcher.setStopFlag();
+            projectWatcherThread.interrupt();
+        }
+        projectWatcher = new ProjectWatcher(gitFolder, (kind, fileName) -> {
+
+        });
+        projectWatcherThread = new Thread(
+                projectWatcher
+        );
+        projectWatcherThread.setDaemon(true);
+        projectWatcherThread.start();
+        needReloadWorkingCopy.set(true);
+    }
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
-
-        long dt = System.currentTimeMillis();
 
         String gitFolder = remoteRepoParameters.getDestinationFolder();
 
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
             gitFolder += File.separator + Const.GIT_FOLDER;
         }
-
 
         gitRepoService = new GitRepoService(gitFolder);
         scmRevisionInformationCache.clear();
@@ -137,7 +154,6 @@ public class Context {
 
         getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
-        //getMain().projectsCmb.getSelectionModel().select(project);
         branchFilter.addListener(
                 (observable, oldValue, newValue) -> {
                     filterBranches();
@@ -151,6 +167,8 @@ public class Context {
                     s -> gitRepoService.adapt(s, null)
             );
         }).start();
+
+        initProjectWatcher(gitFolder);
 
 
     }

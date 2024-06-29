@@ -49,8 +49,6 @@ public class HistoryDetailController implements Initializable {
 
     private final static Logger log = Logger.getLogger(HistoryDetailController.class.getName());
 
-    @FXML
-    public Menu stashMenu;
     public MenuItem openDiffMenuItem;
     public MenuItem diffWithPrevVersionMenuItem;
     public MenuItem diffWithCurrentVersionMenuItem;
@@ -97,8 +95,6 @@ public class HistoryDetailController implements Initializable {
     private int startIndex = -1;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-
 
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
 
