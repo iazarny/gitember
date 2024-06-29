@@ -72,17 +72,19 @@ public class App extends Application {
 
 
         Rectangle2D rectangle2D = Screen.getPrimary().getVisualBounds();
-        int minus = 20;
+        int minus = 0;
         double width = rectangle2D.getWidth() - minus;
         double height = rectangle2D.getHeight() - minus;
+
 
         App.isFocused = stage.focusedProperty();
         App.stage = stage;
         App.app = this;
 
         scene = new Scene(loadFXML(Const.View.MAIN).getFirst(), width, height);
+
         scene.setFill(Color.TRANSPARENT);
-        stage.setMaximized(true);
+        //stage.setMaximized(true);
         stage.setScene(scene);
         stage.getIcons().add(new Image(this.getClass().getResourceAsStream(Const.ICON)));
         stage.setTitle(Const.APP_NAME);
@@ -91,8 +93,6 @@ public class App extends Application {
 
         LookAndFeelSet.init(Context.settingsProperty.get().getTheme());
         scene.getStylesheets().add(App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
-
-
 
         stage.setOnCloseRequest(
                 event -> {

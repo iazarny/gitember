@@ -111,11 +111,11 @@ public class Context {
         }
         projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
             Platform.runLater(
-                    //TODO also need to update workign
+                    //TODO also need to update branch
                     () ->  {
                         Context.updateStatus(null);
-                        Context.updateWorkingBranch();
-                        Context.getMain().updateButtonUI();
+                        //Context.updateWorkingBranch();
+                        //Context.getMain().updateButtonUI();
                     }
             );
         });
@@ -175,8 +175,6 @@ public class Context {
         }).start();
 
         initProjectWatcher(gitFolder);
-
-
     }
 
     public static void init(String gitFolder) throws Exception {
@@ -187,6 +185,9 @@ public class Context {
 
 
     public static void saveSettings() {
+        if (projectWatcherThread != null) {
+            projectWatcherThread.interrupt();
+        }
         settingService.write(settingsProperty.get());
     }
 
