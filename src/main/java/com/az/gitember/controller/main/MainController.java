@@ -109,6 +109,7 @@ public class MainController implements Initializable {
         Context.setMain(this);
         if (Context.isMac()) {
             mainMenuBar.setUseSystemMenuBar(true);
+            mainMenuBar.setStyle("");
             menuContainer.getChildren().remove(mainMenuBar);
             mainPaneTop.getChildren().add(mainMenuBar);
             mainPaneTop.getChildren().remove(menuContainer);

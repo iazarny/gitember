@@ -43,7 +43,7 @@ public class Workingcopy implements Initializable {
     public Pane spacerPane;
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
-    public CheckBox checkBoxShowLastChanges;
+    //public CheckBox checkBoxShowLastChanges;
     private FilteredList filteredList;
 
     private String headSha = "HEAD";
@@ -80,7 +80,7 @@ public class Workingcopy implements Initializable {
         itemLstChangesDate.setCellValueFactory(
                 c -> new SimpleStringProperty(c.getValue().getChangeDateSafe() ));
 
-        checkBoxShowLastChanges.selectedProperty().addListener((observable, oldValue, newValue) -> {
+        /*checkBoxShowLastChanges.selectedProperty().addListener((observable, oldValue, newValue) -> {
 
             if(newValue) {
                 new StatusUpdateEventHandler(true, workerStateEvent -> {
@@ -95,7 +95,7 @@ public class Workingcopy implements Initializable {
             }
 
 
-        });
+        });*/
 
         checkBoxShowLfs.setVisible(Context.lfsRepo.getValue());
         checkBoxShowLfs.selectedProperty().addListener(
@@ -111,7 +111,7 @@ public class Workingcopy implements Initializable {
 
 
         if (Context.lastChanges.get()) {
-            checkBoxShowLastChanges.setSelected(true);
+           // checkBoxShowLastChanges.setSelected(true);
             itemLstChangesName.setVisible(true);
             itemLstChangesAuthor.setVisible(true);
             itemLstChangesDate.setVisible(true);
@@ -120,7 +120,7 @@ public class Workingcopy implements Initializable {
 
         checkBoxShowLfs.selectedProperty().setValue(Context.showLfsFiles.get());
 
-        Bindings.bindBidirectional(Context.lastChanges, checkBoxShowLastChanges.selectedProperty());
+        //Bindings.bindBidirectional(Context.lastChanges, checkBoxShowLastChanges.selectedProperty());
         Bindings.bindBidirectional(Context.showLfsFiles, checkBoxShowLfs.selectedProperty());
 
         selectTableColumn.setCellValueFactory( c -> new SimpleObjectProperty(c.getValue()));

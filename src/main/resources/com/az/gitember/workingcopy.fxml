@@ -83,7 +83,6 @@
                 </Button>
                 <Pane id="MERGEITEM" fx:id="spacerPane"/>
                 <CheckBox id="MERGEITEM" fx:id="checkBoxShowLfs" text="Show large files" visible="false"/>
-                <CheckBox id="MERGEITEM" fx:id="checkBoxShowLastChanges" text="Last changes" />
 
                 <TextField id="MERGEITEM" fx:id="searchText" promptText="Search" />
 
