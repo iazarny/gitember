@@ -115,6 +115,7 @@ public class Context {
                     () ->  {
                         Context.updateStatus(null);
                         Context.updateWorkingBranch();
+                        Context.getMain().updateButtonUI();
                     }
             );
         });
