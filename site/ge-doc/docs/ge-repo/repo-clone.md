@@ -9,8 +9,11 @@ remote repository. Gitember simplifies this process with an interactive approach
 To clone a repository using Gitember, run clone command via menu Repo -> Clone or tool bar button.
 
 
+| Clone                           |
+|---------------------------------|
+| ![Clone](repo-clone.png) |
 
-![Clone](repo-clone.png)
+
 
 When you run the gitember clone command, 
 Gitember will guide you through the process with the following prompts:

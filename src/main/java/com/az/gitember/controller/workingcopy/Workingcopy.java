@@ -16,8 +16,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.Ref;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;

@@ -135,28 +135,16 @@ public class Context {
         }
 
         gitRepoService = new GitRepoService(gitFolder);
-        scmRevisionInformationCache.clear();
-
-        updateBranches();
-        updateTags();
-        stashProperty.setValue(gitRepoService.getStashList());
         repositoryPathProperty.setValue(gitFolder);
+        scmRevisionInformationCache.clear();
+        stashProperty.setValue(gitRepoService.getStashList());
         lfsRepo.setValue(getGitRepoService().isLfsRepo());
         showLfsFiles.setValue(false);
 
-        updateStatus(null);
-
-
-        Project project = new Project();
-        project.setOpenTime(new Date());
-        project.setProjectHomeFolder(gitFolder);
-        project.setUserName(remoteRepoParameters.getUserName());
-        project.setUserPwd(remoteRepoParameters.getUserPwd());
-        project.setKeyPass(remoteRepoParameters.getKeyPassPhrase());
-
+        updateBranches();
+        updateTags();
         updateWorkingBranch();
-        settingsProperty.get().getProjects().add(project);
-        saveSettings();
+        updateStatus(null);
 
         getMain().repoTreeView.getSelectionModel().select(0);
         getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);

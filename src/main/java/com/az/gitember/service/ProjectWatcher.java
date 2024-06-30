@@ -41,8 +41,6 @@ public class ProjectWatcher implements Runnable {
         });
     }
 
-
-
     private void register(Path dir) throws IOException {
         WatchKey key = dir.register(watchService,
                 StandardWatchEventKinds.ENTRY_CREATE,
@@ -60,6 +58,7 @@ public class ProjectWatcher implements Runnable {
                 if (dir == null) {
                     continue;
                 }
+
 
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();

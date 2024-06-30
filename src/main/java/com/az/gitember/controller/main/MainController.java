@@ -238,6 +238,8 @@ public class MainController implements Initializable {
 
         Context.settingsProperty.addListener(observable -> {
             openRecentMenuItem.getItems().clear();
+            projectsCmb.getItems().clear();
+            projectsCmb.getItems().addAll(Context.settingsProperty.getValue().getProjects());
             Context.settingsProperty.get().getProjects().stream().forEach(
                     o -> {
                         MenuItem mi = new MenuItem(o.getProjectHomeFolder().replace(".git", ""));
@@ -283,7 +285,10 @@ public class MainController implements Initializable {
             public void changed(ObservableValue<? extends Project> observableValue,
                                 Project oldProject, Project newProject) {
                 try {
-                    Context.init(newProject.getProjectHomeFolder());
+                    if (newProject != null) {
+                        Context.init(newProject.getProjectHomeFolder());
+                    }
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
