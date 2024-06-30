@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 public class LookAndFeelSet {
 
 
-    public static int DIALOG_DEFAULT_WIDTH = 800;
+    public static int DIALOG_DEFAULT_WIDTH = 600;
     public static String PIECHART_LEGENF_STYLE = "";
     public static Color BRANCH_NAME_COLOR = Color.color(0.1627451F, 0.1627451F, 0.1627451F); //TODO to css
     public static final Color[] historyPlotCommitRenderedColors = new Color[]{

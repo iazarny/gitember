@@ -27,7 +27,7 @@ public class PullHandler extends AbstractLongTaskEventHandler implements EventHa
     public void handle(ActionEvent event) {
 
         String branchName = scmBranch.getRemoteMergeName();
-        RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject());
+        RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject().get());
         Task<String> longTask = new Task<String>() {
 
             @Override

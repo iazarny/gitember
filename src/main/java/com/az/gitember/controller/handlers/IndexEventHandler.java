@@ -68,7 +68,11 @@ public class IndexEventHandler extends AbstractLongTaskEventHandler implements E
             launchLongTask(
                     longTask,
                     o -> {
-                        Context.getCurrentProject().setIndexed(true);
+                        Context.getCurrentProject().ifPresent(
+                                p -> {
+                                    p.setIndexed(true);
+                                }
+                        );
                         Context.saveSettings();
                         Context.getMain().showResult(
                                 "Indexing", "Was indexed " + docQty + " documents",

@@ -38,7 +38,7 @@ public class CreateTagEventHandler extends AbstractLongTaskEventHandler implemen
                  Context.getGitRepoService().createTag(name);
                  if (Context.getGitRepoService().isRepositoryHasRemoteUrl() && dialogResult.get().getFirst()) {
                      RefSpec refSpec = new RefSpec("refs/tags/" + name + ":refs/tags/" + name);
-                     final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject());
+                     final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject().get());
                      Task<String> longTask = new Task<String>() {
                          @Override
                          protected String call() throws Exception {

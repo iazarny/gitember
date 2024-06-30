@@ -192,7 +192,11 @@ public class MainController implements Initializable {
                     boolean ignoreFileExists = Context.getGitRepoService().isFileExists(Const.GIT_IGNORE_NAME);
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
                     editRawAttrsMenuItem.setVisible(attrFileExists);
-                    dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
+                    Context.getCurrentProject().ifPresent(
+                            p -> {
+                                dropIndexDataMenuItem.setDisable(!p.isIndexed());
+                            }
+                    );
 
 
                 }
@@ -411,7 +415,7 @@ public class MainController implements Initializable {
             if (r == ButtonType.OK) {
                 SearchService service = new SearchService(Context.getProjectFolder());
                 service.dropIndex();
-                Context.getCurrentProject().setIndexed(false);
+                Context.getCurrentProject().get().setIndexed(false);
                 Context.saveSettings();
                 dropIndexDataMenuItem.setDisable(true);
 
@@ -422,7 +426,7 @@ public class MainController implements Initializable {
 
     public void reindexDataHandler(ActionEvent actionEvent) {
         new IndexEventHandler().handle(actionEvent);
-        dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().isIndexed());
+        dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().get().isIndexed());
     }
 
 
@@ -475,7 +479,7 @@ public class MainController implements Initializable {
 
     public void commitEventHandler(ActionEvent actionEvent) {
 
-        final Project proj = Context.getCurrentProject();
+        final Project proj = Context.getCurrentProject().get();
         final Config gitConfig = Context.getGitRepoService().getRepository().getConfig();
         final String cfgCommitName = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_NAME);
         final String cfgCommitEmail = gitConfig.getString(ConfigConstants.CONFIG_USER_SECTION, null, ConfigConstants.CONFIG_KEY_EMAIL);

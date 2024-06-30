@@ -179,13 +179,11 @@ public class Context {
         settingService.write(settingsProperty.get());
     }
 
-    public static Project getCurrentProject() {
+    public static Optional<Project> getCurrentProject() {
         String folder = repositoryPathProperty.getValueSafe();
-        Project rez = settingsProperty.get().getProjects().stream()
+        return settingsProperty.get().getProjects().stream()
                 .filter( p -> p.getProjectHomeFolder().equalsIgnoreCase(folder))
-                .findFirst()
-                .get();
-        return rez;
+                .findFirst();
     }
 
 

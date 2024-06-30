@@ -45,10 +45,13 @@ public class AbstractLongTaskEventHandler {
             );
             ld.showAndWait().ifPresent(
                     newParams -> {
-                        Project proj = Context.getCurrentProject();
-                        proj.setUserName(newParams.getUserName());
-                        proj.setUserPwd(newParams.getUserPwd());
-                        handler.handle(event);
+                        Context.getCurrentProject().ifPresent(
+                                p -> {
+                                    p.setUserName(newParams.getUserName());
+                                    p.setUserPwd(newParams.getUserPwd());
+                                    handler.handle(event);
+                                }
+                        );
                     }
             );
             log.log(Level.WARNING, "Repository " + repoParameters.getUrl()

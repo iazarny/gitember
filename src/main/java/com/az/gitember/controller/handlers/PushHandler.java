@@ -56,7 +56,7 @@ public class PushHandler extends AbstractLongTaskEventHandler implements EventHa
             }
         }
 
-        final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject());
+        final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject().get());
         final RefSpec refSpec = new RefSpec(scmBranch.getFullName() + ":" + scmBranch.getRemoteMergeName());
         final Task<String> longTask = new Task<String>() {
             @Override

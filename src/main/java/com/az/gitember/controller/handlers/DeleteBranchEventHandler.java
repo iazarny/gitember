@@ -52,7 +52,7 @@ public class DeleteBranchEventHandler extends AbstractLongTaskEventHandler imple
                             destPrefix = "";
                         }
                         RefSpec refSpec = new RefSpec().setSource(null).setDestination(destPrefix + branchItem.getShortName());
-                        final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject());
+                        final RemoteRepoParameters repoParameters = new RemoteRepoParameters(Context.getCurrentProject().get());
                         Task<String> longTask = new Task<String>() {
                             @Override
                             protected String call() throws Exception {

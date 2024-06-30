@@ -705,7 +705,7 @@ public class GitRepoService {
                     log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
 
                     getSearchService().dropIndex();
-                    Context.getCurrentProject().setIndexed(false);
+                    Context.getCurrentProject().get().setIndexed(false);
                     Context.saveSettings();
                 }
 

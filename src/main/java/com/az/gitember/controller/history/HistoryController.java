@@ -106,7 +106,7 @@ public class HistoryController implements Initializable {
                         Map<String, Set<String>> searchRez = Context.getGitRepoService().search(
                                 (List<PlotCommit>) Context.plotCommitList,
                                 newValue,
-                                Context.getCurrentProject().isIndexed());
+                                Context.getCurrentProject().get().isIndexed());
 
                         Settings settings =  Context.settingsProperty.getValue();
                         settings.getSearchTerms().remove(oldValue);
