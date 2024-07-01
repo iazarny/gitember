@@ -50,7 +50,12 @@ public class IndexEventHandler extends AbstractLongTaskEventHandler implements E
                     for (ScmRevisionInformation sri : sriList) {
                         sri.getAffectedItems().forEach(
                                 i -> {
-                                    service.submitItemToReindex(new ScmItemDocument(i));
+                                    try {
+                                        service.submitItemToReindex(new ScmItemDocument(i));
+                                    } catch (IllegalStateException e) {
+                                        log.log(Level.WARNING,
+                                                MessageFormat.format("Indexing", e.getMessage()));
+                                    }
                                 }
                         );
                         idx++;

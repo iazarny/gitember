@@ -123,7 +123,7 @@ public class SearchService implements AutoCloseable {
 
     private static String getIndexStorageFolder(String projectFolder) {
         return System.getProperty("java.io.tmpdir") + File.separator
-                + "gitemberidx" + File.separator + CipherService.crypt(projectFolder,"");
+                + "gitemberidx" + File.separator + CipherService.crypt(projectFolder,"a");
     }
 
     @Override

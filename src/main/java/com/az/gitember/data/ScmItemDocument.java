@@ -47,7 +47,7 @@ public class ScmItemDocument  {
 
     private String getContentMedatada(ScmItem item) {
         AutoDetectParser parser = new AutoDetectParser();
-        BodyContentHandler handler = new BodyContentHandler();
+        BodyContentHandler handler = new BodyContentHandler(-1);
         Metadata metadata = new Metadata();
         try (InputStream stream = new ByteArrayInputStream(item.getBody(ScmItem.BODY_TYPE.COMMIT_VERSION))) {
             parser.parse(stream, handler, metadata);
@@ -57,6 +57,8 @@ public class ScmItemDocument  {
                 return handler.toString() + "\n" + metadata.toString();
             }
 
+        } catch (NoSuchMethodError e) {
+            return "";
         } catch (Exception e) {
             return "";
         }

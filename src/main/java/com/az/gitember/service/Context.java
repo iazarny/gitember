@@ -180,9 +180,10 @@ public class Context {
     }
 
     public static Optional<Project> getCurrentProject() {
-        String folder = repositoryPathProperty.getValueSafe();
+        String folder = repositoryPathProperty.getValueSafe()
+                .replace("/.git", "");
         return settingsProperty.get().getProjects().stream()
-                .filter( p -> p.getProjectHomeFolder().equalsIgnoreCase(folder))
+                .filter( p -> p.getProjectHomeFolder().replace("/.git", "").equalsIgnoreCase(folder))
                 .findFirst();
     }
 

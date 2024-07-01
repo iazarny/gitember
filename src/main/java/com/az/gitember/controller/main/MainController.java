@@ -445,7 +445,11 @@ public class MainController implements Initializable {
 
     public void reindexDataHandler(ActionEvent actionEvent) {
         new IndexEventHandler().handle(actionEvent);
-        dropIndexDataMenuItem.setDisable(!Context.getCurrentProject().get().isIndexed());
+        Context.getCurrentProject().ifPresent(
+                p -> {
+                    dropIndexDataMenuItem.setDisable(!p.isIndexed());
+                }
+        );
     }
 
 
