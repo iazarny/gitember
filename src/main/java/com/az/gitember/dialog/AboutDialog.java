@@ -58,7 +58,7 @@ public class AboutDialog extends Dialog {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 10, 10, 20));
+        grid.setPadding(new Insets(20, 10, 10, 0));
 
         Path [] path = createLogoPath();
 
@@ -143,10 +143,10 @@ public class AboutDialog extends Dialog {
 
         path.setStrokeWidth(55);
 
-        path.setStroke(javafx.scene.paint.Color.valueOf("#2020ea"));
+        path.setStroke(javafx.scene.paint.Color.valueOf("#0057B7"));
         Stop[] stops = new Stop[] {
-                new Stop(0d, javafx.scene.paint.Color.valueOf("#FFD700")),
-                new Stop(1d, javafx.scene.paint.Color.valueOf("FFD700"))};
+                new Stop(0d, javafx.scene.paint.Color.valueOf("#FFDD00")),
+                new Stop(1d, javafx.scene.paint.Color.valueOf("#FFDD00"))};
         LinearGradient lg1 = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         path.setFill(lg1);
 
