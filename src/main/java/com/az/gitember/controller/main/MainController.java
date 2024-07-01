@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -329,25 +330,7 @@ public class MainController implements Initializable {
     }
 
 
-    /**
-     * Open repository.
-     *
-     * @param actionEvent event
-     * @throws Exception
-     */
-    public void openHandler(ActionEvent actionEvent) {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File selectedDirectory =
-                directoryChooser.showDialog(App.getStage());
-        if (selectedDirectory != null) {
-            String absPath = selectedDirectory.getAbsolutePath();
-            try {
-                Context.init(absPath);
-            } catch (Exception e) {
-                showResult("Error", "Cannot open repository " + absPath, Alert.AlertType.WARNING);
-            }
-        }
-    }
+
 
     public void fetchHandler(ActionEvent actionEvent) {
         RemoteRepoParameters repoParameters = new RemoteRepoParameters();
@@ -390,6 +373,42 @@ public class MainController implements Initializable {
         handler.handle(null);
     }
 
+
+    /**
+     * Open repository.
+     *
+     * @param actionEvent event
+     * @throws Exception
+     */
+    public void openHandler(ActionEvent actionEvent) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File selectedDirectory =
+                directoryChooser.showDialog(App.getStage());
+        if (selectedDirectory != null) {
+            String absPath = selectedDirectory.getAbsolutePath();
+            try {
+
+                Project project = new Project();
+                project.setOpenTime(new Date());
+                project.setProjectHomeFolder(absPath);
+
+                Context.settingsProperty.get().getProjects().add(project);
+                Context.saveSettings();
+                Context.readSettings();
+
+                Context.settingsProperty.get().getProjects().stream()
+                        .filter(p -> p.getProjectHomeFolder().equalsIgnoreCase(absPath))
+                        .findFirst()
+                        .ifPresent(
+                                p -> Context.getMain().projectsCmb.getSelectionModel().select(p)
+                        );
+
+                Context.init(absPath);
+            } catch (Exception e) {
+                showResult("Error", "Cannot open repository " + absPath, Alert.AlertType.WARNING);
+            }
+        }
+    }
 
     public void cloneHandler(ActionEvent actionEvent) {
         CloneDialog dialog = new CloneDialog(
