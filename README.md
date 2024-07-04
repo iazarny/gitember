@@ -16,7 +16,7 @@ Downloads
 
 ![Gitember](site/assets/img/gallery/gallery-4.png)
 
-## Reasons to create . Just make conflict
+## Reasons to create
 
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
