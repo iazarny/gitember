@@ -1,5 +1,6 @@
 package com.az.gitember.controller.handlers;
 
+import com.az.gitember.App;
 import com.az.gitember.service.Context;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -36,6 +37,7 @@ public class RebaseBranchEventHandler extends StatusUpdateEventHandler implement
         dialog.setTitle("Rebase");
         dialog.setHeaderText("Rebase to " + branchName );
         dialog.setContentText("Choose branch:");
+        dialog.initOwner(App.getScene().getWindow());
         dialog.showAndWait().ifPresent(
                 r -> {
                     try {

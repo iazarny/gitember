@@ -47,6 +47,7 @@ public class ProjectWatcher implements Runnable {
                 StandardWatchEventKinds.ENTRY_DELETE,
                 StandardWatchEventKinds.ENTRY_MODIFY);
         watchKeys.put(key, dir);
+        //System.out.println("Registered " + dir);
     }
 
     @Override
@@ -65,8 +66,7 @@ public class ProjectWatcher implements Runnable {
                     Path name = (Path) event.context();
                     Path child = dir.resolve(name);
 
-                    // Invoke the callback
-                    callback.onFileChange(kind, child);
+
 
                     // Register new subdirectory if created
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
@@ -77,6 +77,13 @@ public class ProjectWatcher implements Runnable {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                    } else {
+                        // Invoke the callback
+                        if (isCandidateEligibleToRegister(child.toString())) {
+                            callback.onFileChange(kind, child);
+                            //System.out.println(child);
+                        }
+
                     }
                 }
 
@@ -110,6 +117,7 @@ public class ProjectWatcher implements Runnable {
 
         return !(
                 candidate.endsWith(".git")
+                        ||candidate.endsWith(".github")
                         ||candidate.endsWith("target")
                         ||candidate.endsWith("build")
                         ||candidate.endsWith("dist")

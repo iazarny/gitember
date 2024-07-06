@@ -1,5 +1,6 @@
 package com.az.gitember.controller.branchdiff;
 
+import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.controller.handlers.DiffEventHandler;
 import com.az.gitember.controller.workingcopy.WorkingcopyTableGraphicsValueFactory;
 import com.az.gitember.data.*;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
 import java.io.IOException;
@@ -84,6 +86,7 @@ public class BranchDiffController implements Initializable {
                     diffTableView.refresh();
                 }
         );
+        diffTableView.getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
 
     }
 
@@ -95,21 +98,17 @@ public class BranchDiffController implements Initializable {
         observableDiffEntry.addAll(diffEntries);
     }
 
-
-
     public void showItemDiffHandler(ActionEvent actionEvent) {
         String fileName = StringUtils.defaultIfBlank(
                 adjustName(diffTableView.getSelectionModel().getSelectedItem().getOldPath()),
                 adjustName(diffTableView.getSelectionModel().getSelectedItem().getNewPath())
         );
         try {
-
             DiffEventHandler diffEventHandler = new DiffEventHandler(
                     new ScmItem(fileName, new ScmItemAttribute()),
-                    getLeftHead().getName(),
-                    getRightHead().getName()
+                    Context.getGitRepoService().getRevCommitBySha(getLeftHead().getName()),
+                    Context.getGitRepoService().getRevCommitBySha(getRightHead().getName())
             );
-
             diffEventHandler.handle(null);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot show  difference for  " + fileName, e);

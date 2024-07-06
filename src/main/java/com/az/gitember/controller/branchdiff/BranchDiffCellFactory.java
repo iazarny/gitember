@@ -31,17 +31,20 @@ public class BranchDiffCellFactory implements Callback<TableColumn<DiffEntry, Di
             }
 
             private String calculateStyle(final DiffEntry diffEntry, final String itemName) {
+                String rez = "";
                 if (diffEntry != null && StringUtils.isNotBlank(itemName)) {
                     if (DiffEntry.ChangeType.ADD == diffEntry.getChangeType()) {
-                        return "diff-row-new";
+                        rez = "diff-new";
                     } else if (DiffEntry.ChangeType.MODIFY == diffEntry.getChangeType()) {
-                        return "diff-row-modified";
+                        rez = "diff-modified";
                     } else if (DiffEntry.ChangeType.DELETE == diffEntry.getChangeType()) {
-                        return "diff-row-deleted";
+                        rez = "diff-deleted";
+                    } else {
+                        rez = "diff-copy";
                     }
-                    return "diff-row-copy";
                 }
-                return "";
+
+                return rez;
             }
 
             private String getItemName(DiffEntry de) {
@@ -57,10 +60,3 @@ public class BranchDiffCellFactory implements Callback<TableColumn<DiffEntry, Di
 
 
 }
-
-
-/*
-
-c ->
-
-*/

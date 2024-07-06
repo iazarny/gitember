@@ -109,7 +109,7 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         return revCommit.getName();
     }
 
-    public void setCommitName(RevCommit revCommit) {
+    public void setRevCommit(RevCommit revCommit) {
         this.revCommit = revCommit;
     }
 

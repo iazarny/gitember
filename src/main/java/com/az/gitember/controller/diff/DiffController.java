@@ -104,14 +104,10 @@ public class DiffController implements Initializable {
 
     public void setOldLabel(String text) {
         oldLabel.setText(text);
-        oldLabel.setEditable(false);
-        oldLabel.getStyleClass().add("copy-label");
     }
 
     public void setNewLabel(String text) {
         newLabel.setText(text);
-        newLabel.setEditable(false);
-        newLabel.getStyleClass().add("copy-label");
     }
 
     private boolean updateAllowed = true;

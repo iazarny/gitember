@@ -22,7 +22,7 @@
    <children>
 
       <ToolBar GridPane.columnIndex="0" style="-fx-background-color: transparent">
-         <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" />
+         <TextField prefWidth="280" fx:id="oldLabel" text="Old Label"  editable="false" styleClass="copy-label"/>
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextOld"  onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>
@@ -50,7 +50,7 @@
       </ToolBar>
 
       <ToolBar GridPane.columnIndex="2" style="-fx-background-color: transparent">
-         <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" />
+         <TextField prefWidth="280" fx:id="newLabel" text="New Label"   editable="false" styleClass="copy-label"/>
          <Pane  HBox.hgrow="ALWAYS" />
          <TextField  fx:id="searchTextNew" onKeyPressed="#repeatSearch"  promptText="Search" />
       </ToolBar>

@@ -8,6 +8,7 @@ import com.az.gitember.data.Const;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -72,6 +73,9 @@ public class DiffWithDiskEventHandler implements EventHandler<Event> {
             final DiffController diffViewer = (DiffController) pair.getSecond();
             diffViewer.setData(oldFile, newFile);
             diffViewer.setOldLabel("Repository version ");
+            if (item.getRevCommit() != null) {
+                diffViewer.setOldLabel(GitemberUtil.formatRev(item.getRevCommit()));
+            }
             diffViewer.setNewLabel("Disk version ");
 
         } catch (Exception e) {

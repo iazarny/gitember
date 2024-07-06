@@ -11,7 +11,6 @@ import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
-import org.eclipse.jgit.diff.RenameDetector;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
@@ -1200,7 +1199,6 @@ public class GitRepoService {
 
     public List<ScmItem> getLfsFiles(String name) throws IOException {
         final List<ScmItem> rez = new ArrayList<>();
-
         final Ref head = repository.exactRef(name);
         final RevWalk walk = new RevWalk(repository);
         final RevCommit commit = walk.parseCommit(head.getObjectId());
@@ -1812,6 +1810,15 @@ public class GitRepoService {
 
     }
 
+    public RevCommit getRevCommitBySha(String sha) {
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            return revWalk.parseCommit(ObjectId.fromString(sha));
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Cannot get rev commit by sha", e);
+        }
+        return null;
+    }
+
     /**
      * Get list of changed files in given revision.
      *
@@ -1834,7 +1841,7 @@ public class GitRepoService {
                     diffs.stream()
                             .map(this::adaptDiffEntry)
                             .collect(Collectors.toCollection(() -> rez));
-                    rez.forEach(scmItem -> scmItem.setCommitName(revCommit));
+                    rez.forEach(scmItem -> scmItem.setRevCommit(revCommit));
 
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "Cannot collect items from rev commit", e);

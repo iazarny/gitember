@@ -4,9 +4,11 @@ import com.az.gitember.data.LangDefinition;
 import com.az.gitember.data.Pair;
 import com.az.gitember.data.Side;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.javafx.StackedFontIcon;
 
@@ -32,7 +34,12 @@ public class GitemberUtil {
     private final static SimpleDateFormat simpleDateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
     private final static SimpleDateFormat shortDateOnlyFormat = new SimpleDateFormat("MMM dd HH:mm");
 
+    public static  String formatRev(RevCommit revCommit) {
+        return revCommit.getName().substring(0, 6)
+                + " " + ObjectUtils.defaultIfNull(revCommit.getAuthorIdent().getName(), "Unknown")
+                + " " + GitemberUtil.formatDate(revCommit.getAuthorIdent().getWhen());
 
+    }
 
     public static String formatDateOnlyShort(Date date) {
         return shortDateOnlyFormat.format(date);

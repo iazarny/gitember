@@ -1,5 +1,7 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.GitemberUtil;
+
 import java.util.Date;
 import java.util.List;
 
@@ -101,11 +103,21 @@ public class ScmRevisionInformation {
     }
 
     public String getNameExt() {
-        final String msg;
         if (this.getStashIndex() >= 0) {
             return  "(" + getStashIndex() +") " + getShortMessage();
         } else {
             return getShortMessage();
         }
+    }
+
+    public String getAuthorExt() {
+        return authorName + " <" + authorEmail + ">";
+    }
+
+    public String getDateFormated() {
+        if (date == null) {
+            return "";
+        }
+        return GitemberUtil.formatDate(date);
     }
 }

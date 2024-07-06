@@ -5,6 +5,7 @@ import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.controller.common.GitemberLineNumberFactory;
 import com.az.gitember.controller.common.TextToSpanContentAdapter;
 import com.az.gitember.controller.editor.EditorController;
+import com.az.gitember.controller.handlers.DiffWithDiskEventHandler;
 import com.az.gitember.controller.handlers.ShowHistoryEventHandler;
 import com.az.gitember.controller.workingcopy.WorkingcopyTableGraphicsValueFactory;
 import com.az.gitember.controller.handlers.DiffEventHandler;
@@ -31,6 +32,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.Caret;
 import org.fxmisc.richtext.CodeArea;
@@ -101,7 +103,7 @@ public class HistoryDetailController implements Initializable {
         msgLbl.setText(scmInfo.getFullMessage().replace("\n", ""));
         authorLbl.setText(scmInfo.getAuthorName());
         emailLbl.setText(scmInfo.getAuthorEmail());
-        dateLbl.setText(GitemberUtil.formatDate(scmInfo.getDate()));
+        dateLbl.setText(scmInfo.getDateFormated());
         refsLbl.setText(
                 scmInfo.getRef().stream().collect(Collectors.joining(", ")));
         parentLbl.setText(
@@ -215,22 +217,23 @@ public class HistoryDetailController implements Initializable {
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
         final String oldRev;
         if (scmInfo.getParents().isEmpty()) {
-
             oldRev = null;
         } else {
             oldRev = scmInfo.getParents().get(0); //TODO is it right parrent ?
         }
-
         final String newRev = scmInfo.getRevisionFullName();
 
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRev, newRev);
+
+        final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(oldRev);
+        final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
+
+        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRevCommit, newRevCommit);
         eventHandler.handle(actionEvent);
 
     }
 
     public void openDiffLastVersion(ActionEvent actionEvent) throws Exception {
-
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
         final String oldRev = scmInfo.getRevisionFullName();
 
@@ -238,14 +241,19 @@ public class HistoryDetailController implements Initializable {
         final String newRev = head.getSha();
 
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRev, newRev);
+
+        final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(oldRev);
+        final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
+
+        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRevCommit, newRevCommit);
         eventHandler.handle(actionEvent);
     }
 
     public void openDiffFileVersion(ActionEvent actionEvent) {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
         if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
-            openDiffPrevVersion(actionEvent);
+            //openDiffPrevVersion(actionEvent);
+            new DiffWithDiskEventHandler(scmItem, scmItem.getCommitName()).handle(actionEvent);
         } else {
             new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
         }
