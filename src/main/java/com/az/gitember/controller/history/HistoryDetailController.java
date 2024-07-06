@@ -152,8 +152,15 @@ public class HistoryDetailController implements Initializable {
 
                         setOnMouseClicked(event -> {
                             if (event.getClickCount() == 2) {
-                                //new DiffWithDiskEventHandler(item).handle(event);
-                                openDiffFileVersion(null);
+                                final ScmItem scmItem =
+                                        (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+                                if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
+                                    openDiffPrevVersion(null);
+                                } else {
+                                    new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(null);
+
+                                }
+
                             }
                         });
 
