@@ -9,13 +9,13 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Gitember doc',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.png',
 
   // Set the production url of your site here
   url: 'http://gitgui.org',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/doc/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -60,8 +60,14 @@ const config = {
   ],
 
   themeConfig:
+
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: 'dark',
+        disableSwitch: false, // Allows users to switch between dark and light modes
+        respectPrefersColorScheme: true, // Optional: This respects the user's OS-level color scheme preferences
+      },
       // Replace with your project's social card
       navbar: {
         items: [
@@ -107,6 +113,8 @@ const config = {
         darkTheme: prismThemes.dracula,
       },
     }),
+
+
 };
 
 export default config;
