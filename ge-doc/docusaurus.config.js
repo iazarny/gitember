@@ -72,16 +72,16 @@ const config = {
       navbar: {
         items: [
           {
+            href: 'http://gitgui.org',
+            label: 'Home',
+          },
+          {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Tutorial',
           },
-          {
-            href: 'http://gitgui.org',
-            label: 'Home',
-            position: 'right',
-          },
+
         ],
       },
       footer: {

@@ -215,13 +215,13 @@ public class AboutDialog extends Dialog {
         dot2.setLayoutY(380);
         applyStyle(dot2);
 
-        Path char4 = getPathChar4();
-        char4.setLayoutX(320);
-        char4.setLayoutY(300);
-        applyStyle(char4);
+        Path char5_4 = getPathChar5();
+        char5_4.setLayoutX(315);
+        char5_4.setLayoutY(300);
+        applyStyle(char5_4);
 
         return new Path [] {
-                path, char2, dot,  char5, dot2, char4,
+                path, char2, dot,  char5, dot2, char5_4,
         };
     }
 
