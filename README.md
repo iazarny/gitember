@@ -16,7 +16,7 @@ Downloads
 
 ![Gitember](site/assets/img/gallery/gallery-4.png)
 
-## Reasons to create
+## Reasons to create 
 
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
@@ -24,6 +24,11 @@ Nothing in particular, but
  * Check http://www.gitgui.org
 
 ## Changes
+
+
+### 2.5.5
+* Initial revision of doc has been added
+* Small bugfixes
 
 ### 2.5.4
 * Fix multimonitor issues
