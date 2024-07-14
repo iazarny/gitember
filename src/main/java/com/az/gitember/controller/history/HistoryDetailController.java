@@ -220,49 +220,64 @@ public class HistoryDetailController implements Initializable {
     }
 
     public void openDiffPrevVersion(ActionEvent actionEvent) {
-
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
-        final String oldRev;
-        if (scmInfo.getParents().isEmpty()) {
-            oldRev = null;
-        } else {
-            oldRev = scmInfo.getParents().get(0); //TODO is it right parrent ?
-        }
         final String newRev = scmInfo.getRevisionFullName();
-
-        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-
-        final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(oldRev);
         final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
-
-        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRevCommit, newRevCommit);
-        eventHandler.handle(actionEvent);
+        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+        final String oldRev;
+        try {
+            final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                    scmItem.getShortName(),
+                    null); //TODO current tree only, not all
+            oldRev = fileRevs.stream()
+                    .filter(scm -> scm.getDate().before(newRevCommit.getAuthorIdent().getWhen()))
+                    .findFirst().map(i -> i.getRevisionFullName()).orElseGet(() -> null);
+            final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(oldRev);
+            final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, fileRevs, oldRevCommit, newRevCommit);
+            eventHandler.handle(actionEvent);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
     public void openDiffLastVersion(ActionEvent actionEvent) throws Exception {
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
         final String oldRev = scmInfo.getRevisionFullName();
-
-        final CommitInfo head = Context.getGitRepoService().getHead();
-        final String newRev = head.getSha();
-
-        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-
         final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(oldRev);
-        final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
-
-        final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, oldRevCommit, newRevCommit);
-        eventHandler.handle(actionEvent);
+        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+        final String newRev;
+        try {
+            final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                    scmItem.getShortName(),
+                    null); //TODO current tree only, not all
+            newRev = fileRevs.stream()
+                    .filter(scm -> scm.getDate().after(oldRevCommit.getAuthorIdent().getWhen()))
+                    .findFirst().map(i -> i.getRevisionFullName()).orElseGet(() -> null);
+            final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
+            final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, fileRevs, oldRevCommit, newRevCommit);
+            eventHandler.handle(actionEvent);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+
+
     public void openDiffFileVersion(ActionEvent actionEvent) {
-        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
-            //openDiffPrevVersion(actionEvent);
-            new DiffWithDiskEventHandler(scmItem, scmItem.getCommitName()).handle(actionEvent);
-        } else {
-            new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+        try {
+            final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+            final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                    scmItem.getShortName(),
+                    null); //TODO current tree only, not all
+            if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
+                new DiffWithDiskEventHandler(scmItem, fileRevs, scmItem.getCommitName()).handle(actionEvent);
+            } else {
+                new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
     }

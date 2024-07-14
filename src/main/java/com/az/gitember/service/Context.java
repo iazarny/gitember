@@ -312,4 +312,8 @@ public class Context {
     public static boolean isMac() {
         return (OS.contains("mac"));
     }
+
+    public static boolean isLinux() {
+        return (OS.contains("linux"));
+    }
 }

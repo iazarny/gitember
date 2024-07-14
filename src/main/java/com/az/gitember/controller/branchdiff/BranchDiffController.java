@@ -104,10 +104,14 @@ public class BranchDiffController implements Initializable {
                 adjustName(diffTableView.getSelectionModel().getSelectedItem().getNewPath())
         );
         try {
+            final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                    fileName,
+                    null); //TODO current tree only, not all
             DiffEventHandler diffEventHandler = new DiffEventHandler(
                     new ScmItem(fileName, new ScmItemAttribute()),
-                    Context.getGitRepoService().getRevCommitBySha(getLeftHead().getName()),
-                    Context.getGitRepoService().getRevCommitBySha(getRightHead().getName())
+                    fileRevs,
+                    Context.getGitRepoService().getRevCommitBySha(fileRevs.get(0).getRevisionFullName()), //todo select last in tree (branch)
+                    Context.getGitRepoService().getRevCommitBySha(fileRevs.get(0).getRevisionFullName())
             );
             diffEventHandler.handle(null);
         } catch (Exception e) {

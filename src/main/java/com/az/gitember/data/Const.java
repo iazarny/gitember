@@ -43,6 +43,6 @@ public interface Const {
 
     String APP_NAME = "Gitember 2.5.5";
 
-    String ICON = "/icon/GE-icon.png";
+    String ICON = "/icon/gitember.png";
 
 }

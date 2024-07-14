@@ -2,6 +2,7 @@ package com.az.gitember.service;
 
 import com.az.gitember.data.LangDefinition;
 import com.az.gitember.data.Pair;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Side;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.ObjectUtils;
@@ -33,6 +34,17 @@ public class GitemberUtil {
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final static SimpleDateFormat simpleDateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
     private final static SimpleDateFormat shortDateOnlyFormat = new SimpleDateFormat("MMM dd HH:mm");
+
+    public static  String formatRev(ScmRevisionInformation revInfo) {
+        if (revInfo == null) {
+            return "";
+        }
+
+        return revInfo.getRevisionFullName().substring(0, 6)
+                + " " + ObjectUtils.defaultIfNull(revInfo.getAuthorName(), "Unknown")
+                + " " + GitemberUtil.formatDate(revInfo.getDate());
+
+    }
 
     public static  String formatRev(RevCommit revCommit) {
         return revCommit.getName().substring(0, 6)

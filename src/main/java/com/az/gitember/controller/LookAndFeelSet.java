@@ -65,5 +65,9 @@ public class LookAndFeelSet {
             DEFAULT_CSS = DEFAULT_CSS.replace("/styles/", "/styles/win/");
         }
 
+        if (Context.isLinux()) {
+            LookAndFeelSet.FONT_SIZE = 21;
+        }
+
     }
 }

@@ -1,21 +1,24 @@
 package com.az.gitember.controller.diff;
 
-import com.az.gitember.App;
 import com.az.gitember.control.VirtualizedOverviewScrollPane;
 import com.az.gitember.controller.common.GitemberLineNumberFactory;
 import com.az.gitember.controller.LookAndFeelSet;
+import com.az.gitember.controller.common.ScmRevisionInformationCellFactory;
+import com.az.gitember.controller.common.ScmRevisionInformationConverter;
 import com.az.gitember.controller.common.TextToSpanContentAdapter;
 import com.az.gitember.controller.handlers.EscEventHandler;
+import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.SquarePos;
+import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -40,16 +43,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DiffController implements Initializable {
 
-    public TextField newLabel;
-    public TextField oldLabel;
     public CodeArea oldCodeArea;
     public CodeArea newCodeArea;
     public Pane diffDrawPanel;
@@ -61,54 +59,78 @@ public class DiffController implements Initializable {
     public ToolBar navBar;
     public Button prevBtn;
     public Button nextBtn;
+    public ComboBox<ScmRevisionInformation> oldRevisionsCmb;
+    public ComboBox<ScmRevisionInformation> newRevisionsCmb;
 
     private String oldText = null;
     private String newText = null;
 
-    private String oldFileName;
-    private String newFileName;
     private EditList diffList = new EditList();
 
     private int oldStartIndex = -1;
     private int newStartIndex = -1;
     private int currentDiff = -1;
 
+    private String oldFileName;
+    private String newFileName;
+
+    private RawText oldRawTxt = null;
+    private RawText newRawTxt = null;
+
     private double fontSize;
 
+    private final ObservableList<ScmRevisionInformation> revisions =
+            FXCollections.observableList(new ArrayList<>());
 
-    public void setData(String oldFileName, String newFileName) throws IOException {
+    private ScmItem scmItem;
 
-        this.oldText = Files.readString(Paths.get(oldFileName));
-        this.newText = Files.readString(Paths.get(newFileName));
+    public void fillComboBoxs(String fileName,List<ScmRevisionInformation> fileRevs, String oldSha, String newSha) throws Exception {
 
-        this.oldFileName = oldFileName;
-        this.newFileName = newFileName;
+        revisions.addAll(fileRevs);
 
-        RawText oldRawTxt = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
-        RawText newRawTxt = new RawText(newText.getBytes(StandardCharsets.UTF_8));
+        oldRevisionsCmb.setItems(revisions);
+        newRevisionsCmb.setItems(revisions);
 
-        DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
-        RawTextComparator comparator = RawTextComparator.WS_IGNORE_ALL;
+        revisions.stream()
+                .filter(i-> i.getRevisionFullName().equals(oldSha))
+                .findFirst()
+                .ifPresent(
+                  scmRevInfo -> {oldRevisionsCmb.getSelectionModel().select(scmRevInfo);}
+        );
 
-        diffList.addAll(diffAlgorithm.diff(comparator, oldRawTxt, newRawTxt));
-
-        setText(oldCodeArea, oldText, oldFileName, true);
-        setText(newCodeArea, newText, newFileName, false);
-
-        oldScrollPane.getVbar().setData(oldText, newText, diffList);
-
-        createPathElements();
-        scrollToFirstDiff();
+        revisions.stream()
+                .filter(i-> i.getRevisionFullName().equals(newSha))
+                .findFirst()
+                .ifPresent(
+                        scmRevInfo -> {newRevisionsCmb.getSelectionModel().select(scmRevInfo);}
+                );
 
     }
 
-    public void setOldLabel(String text) {
-        oldLabel.setText(text);
+
+    public void setData(ScmItem item, List<ScmRevisionInformation> fileRevs, String oldSha, String newSha) throws Exception {
+
+        final String fileName = item.getShortName();
+        scmItem = item;
+        fillComboBoxs(fileName,fileRevs, oldSha, newSha);
+
+        if (newSha == null) {
+            //setNewLabel("Disk version ");
+
+            /*String newFile;
+            try {
+                newFile = Path.of(Context.getProjectFolder(), item.getShortName()).toString();
+                Files.readString(Paths.get(newFile));
+            } catch (Exception e) {
+                newFile = Context.getGitRepoService().creaeEmptyFile(fileName);
+            }*/
+        }
+
+
+
+        //setData(oldFile, newFile);
     }
 
-    public void setNewLabel(String text) {
-        newLabel.setText(text);
-    }
 
     private boolean updateAllowed = true;
     boolean oldScrolled = false;
@@ -118,6 +140,12 @@ public class DiffController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
         fontSize = LookAndFeelSet.FONT_SIZE;
+
+        oldRevisionsCmb.setConverter(new ScmRevisionInformationConverter());
+        oldRevisionsCmb.setCellFactory(new ScmRevisionInformationCellFactory());
+
+        newRevisionsCmb.setConverter(new ScmRevisionInformationConverter());
+        newRevisionsCmb.setCellFactory(new ScmRevisionInformationCellFactory());
 
         oldCodeArea = new CodeArea();
         oldCodeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
@@ -131,11 +159,41 @@ public class DiffController implements Initializable {
         newCodeArea.setMinWidth(Region.USE_PREF_SIZE);
         newCodeArea.setEditable(false);
 
+        initCodePanels();
+
+        mainPanel.addEventHandler(KeyEvent.KEY_PRESSED, new EscEventHandler(mainPanel));
+
+        diffDrawPanel.widthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> {
+                updatePathElements();
+                updateDiffOverview();
+            });
+        });
+
+        searchTextOld.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(searchTextOld, newValue);
+                }
+        );
+        searchTextNew.textProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    searchValue(searchTextNew, newValue);
+                }
+        );
+
+        navBar.toFront();
+    }
+
+
+    private void initCodePanels() {
+
+        if (oldScrollPane != null) {
+            mainPanel.getChildren().remove(oldScrollPane);
+            mainPanel.getChildren().remove(newScrollPane);
+        }
+
         oldScrollPane = new VirtualizedOverviewScrollPane<>(oldCodeArea);
         newScrollPane = new VirtualizedScrollPane<>(newCodeArea);
-
-        mainPanel.add(oldScrollPane, 0, 1);
-        mainPanel.add(newScrollPane, 2, 1);
 
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
         VBox.setVgrow(oldScrollPane, Priority.ALWAYS);
@@ -143,11 +201,12 @@ public class DiffController implements Initializable {
         HBox.setHgrow(oldScrollPane, Priority.ALWAYS);
         HBox.setHgrow(newScrollPane, Priority.ALWAYS);
 
-        oldScrollPane.setPrefHeight(2021);
+        oldScrollPane.setPrefHeight(2024);
 
-		mainPanel.addEventHandler(KeyEvent.KEY_PRESSED, new EscEventHandler(mainPanel));
+        mainPanel.add(oldScrollPane, 0, 1);
+        mainPanel.add(newScrollPane, 2, 1);
+
         mainPanel.layout();
-
 
         try {
             ScrollBar hbar = (ScrollBar) GitemberUtil.getField(oldScrollPane, "hbar");
@@ -158,7 +217,7 @@ public class DiffController implements Initializable {
                         || (MouseEvent.MOUSE_MOVED == event.getEventType())) {
                     updateAllowed = false;
                 } else if (MouseEvent.MOUSE_RELEASED == event.getEventType()
-                    || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
+                        || (MouseEvent.MOUSE_EXITED_TARGET == event.getEventType() && MouseButton.NONE == event.getButton()) ) {
                     updateAllowed = true;
                 }
 
@@ -203,6 +262,11 @@ public class DiffController implements Initializable {
             if (updateAllowed) {
                 newScrolled = true;
                 if (!oldScrolled) {
+
+                    /* TODO
+                    Cannot invoke "java.lang.Double.doubleValue()" because the return value of "org.reactfx.value.Val.getValue()" is null
+	at com.az.gitember.controller.diff.DiffController.lambda$initCodePanels$12(DiffController.java:268)
+                     */
                     Double val = oldScrollPane.snapSizeY(new_val.doubleValue() * oldScrollPane.totalHeightEstimateProperty().getValue() / newScrollPane.totalHeightEstimateProperty().getValue());
                     oldScrollPane.estimatedScrollYProperty().setValue(val);
                 }
@@ -235,28 +299,6 @@ public class DiffController implements Initializable {
                 updateDiffOverview();
             });
         });
-
-        diffDrawPanel.widthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> {
-                updatePathElements();
-                updateDiffOverview();
-            });
-        });
-
-
-
-        searchTextOld.textProperty().addListener(
-                (observable, oldValue, newValue) -> {
-                    searchValue(searchTextOld, newValue);
-                }
-        );
-        searchTextNew.textProperty().addListener(
-                (observable, oldValue, newValue) -> {
-                    searchValue(searchTextNew, newValue);
-                }
-        );
-
-        navBar.toFront();
     }
 
 
@@ -301,7 +343,6 @@ public class DiffController implements Initializable {
     }
 
     private void updatePathElements() {
-
 
         for (int i = 0; i < diffDrawPanel.getChildren().size(); i++) {
             final Path path = (Path) diffDrawPanel.getChildren().get(i);
@@ -398,7 +439,8 @@ public class DiffController implements Initializable {
 
 
     private void createPathElements() {
-
+        
+        diffDrawPanel.getChildren().clear();
         for (Edit delta : this.diffList) {
             SquarePos squarePos = getDiffPos(delta);
             MoveTo moveTo = new MoveTo(squarePos.getX1(), squarePos.getY1());
@@ -433,9 +475,8 @@ public class DiffController implements Initializable {
                          final boolean leftSide,
                          final int activeParagrah) {
 
-        if (StringUtils.isEmpty(codeArea.getText())) {
-            codeArea.appendText(text);
-        }
+        codeArea.clear();
+        codeArea.appendText(text);
 
         TextToSpanContentAdapter adapter = new TextToSpanContentAdapter(
                 FilenameUtils.getExtension(fileName),
@@ -454,8 +495,6 @@ public class DiffController implements Initializable {
 
 
     }
-    TextToSpanContentAdapter leftAdapter;
-    TextToSpanContentAdapter rightAdapter;
 
 
 
@@ -527,4 +566,55 @@ public class DiffController implements Initializable {
         nextBtn.setDisable( ( this.diffList.size() - 1)
                 <= currentDiff );
     }
+
+
+    public void oldRevisionChange(ActionEvent actionEvent) throws IOException {
+        System.out.println(">>>> oldRevisionChange");
+        String filaNameCandidate =  scmItem.getShortName();
+
+        try {
+            if (scmItem.getAttribute().getStatus() != null) {
+                if (scmItem.getAttribute().getStatus().equals(ScmItem.Status.RENAMED)) {
+                    filaNameCandidate = scmItem.getAttribute().getOldName();
+                }
+            }
+            oldFileName = Context.getGitRepoService().saveFile( oldRevisionsCmb.getValue().getRevisionFullName(), filaNameCandidate);
+
+        } catch (Exception e) {
+            oldFileName = Context.getGitRepoService().creaeEmptyFile(scmItem.getShortName());
+        }
+        this.oldText = Files.readString(Paths.get(oldFileName));
+        this.oldRawTxt = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
+        setText(oldCodeArea, oldText, oldFileName, true);
+        updateDiffRepresentation();
+    }
+
+    public void newRevisionChange(ActionEvent actionEvent) throws IOException {
+        System.out.println("newRevisionChange");
+
+        try {
+            newFileName = Context.getGitRepoService().saveFile( newRevisionsCmb.getValue().getRevisionFullName(), scmItem.getShortName());
+        } catch (Exception e) {
+            newFileName = Context.getGitRepoService().creaeEmptyFile(scmItem.getShortName());
+        }
+        this.newText = Files.readString(Paths.get(newFileName));
+        this.newRawTxt = new RawText(newText.getBytes(StandardCharsets.UTF_8));
+        setText(newCodeArea, newText, newFileName, false);
+        updateDiffRepresentation();
+    }
+
+
+
+    public void updateDiffRepresentation() throws IOException {
+        if (oldRawTxt != null && newRawTxt != null) {
+            initCodePanels();
+            DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
+            diffList.addAll(diffAlgorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRawTxt, newRawTxt));
+            oldScrollPane.getVbar().setData(oldText, newText, diffList);
+            createPathElements();
+            scrollToFirstDiff();
+        }
+    }
+
+
 }

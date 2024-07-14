@@ -4,6 +4,7 @@ import com.az.gitember.controller.LookAndFeelSet;
 import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import javafx.scene.control.*;
@@ -68,7 +69,16 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
 
                 	setOnMouseClicked(event -> {
                 		if (event.getClickCount() == 2) {
-                			new DiffWithDiskEventHandler(item).handle(event);
+                            try {
+                                final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                                        item.getShortName(),
+                                        null); //TODO current tree only, not all
+                                new DiffWithDiskEventHandler(item, fileRevs).handle(event);
+
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+
+                            }
                         }
                 	});
 
@@ -174,7 +184,15 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
         //if (!is(itemStatus).oneOf(ScmItem.Status.ADDED, ScmItem.Status.UNTRACKED, ScmItem.Status.MISSED, ScmItem.Status.REMOVED)) {
         if (is(itemStatus).oneOf(ScmItem.Status.CHANGED, ScmItem.Status.RENAMED, ScmItem.Status.REMOVED)) {
             MenuItem diff = new MenuItem(MI_DIFF_REPO);
-            diff.setOnAction(e -> new DiffWithDiskEventHandler(item).handle(e));
+            try {
+                final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                        item.getShortName(),
+                        null); //TODO current tree only, not all
+                diff.setOnAction(e -> new DiffWithDiskEventHandler(item,fileRevs).handle(e));
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             diff.setGraphic(icons.get(MI_DIFF_REPO));
             scmItemContextMenu.getItems().add(diff);
         }

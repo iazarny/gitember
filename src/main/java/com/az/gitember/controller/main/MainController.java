@@ -115,7 +115,7 @@ public class MainController implements Initializable {
             mainPaneTop.getChildren().add(mainMenuBar);
             mainPaneTop.getChildren().remove(menuContainer);
 
-        } else if (Context.isWindows()) {
+        } else if (Context.isWindows() || Context.isLinux()) {
             mainBorderPane.getChildren().remove(mainMenuBar);
             toolBarContainer.getChildren().remove(winControlBar);
             menuContainer.getChildren().add(winControlBar);
@@ -720,7 +720,7 @@ public class MainController implements Initializable {
     }
 
     public void winIconMouseEnter(MouseEvent mouseEvent) {
-        if (Context.isWindows()) {
+        if (Context.isWindows() || Context.isLinux()) {
             if (mouseEvent.getTarget() == macCloseImgView) {
                 macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.HOVER, getTheme(), App.getStage().isMaximized()));
             } else if (mouseEvent.getTarget() == macMinimizeImgView) {

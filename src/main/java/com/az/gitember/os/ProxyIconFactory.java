@@ -17,6 +17,8 @@ public class ProxyIconFactory implements IconFactory {
     public ProxyIconFactory() {
         if(Context.isMac()) {
             delegate = new com.az.gitember.os.mac.IconFactoryImpl();
+        } else if (Context.isLinux()) {
+            delegate = new com.az.gitember.os.lin.IconFactoryImpl();
         } else if (Context.isWindows()) {
             delegate = new com.az.gitember.os.win.IconFactoryImpl();
         }

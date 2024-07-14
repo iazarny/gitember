@@ -120,4 +120,9 @@ public class ScmRevisionInformation {
         }
         return GitemberUtil.formatDate(date);
     }
+
+    @Override
+    public String toString() {
+        return revisionFullName + " " + getDate() + " " + getShortMessage();
+    }
 }
