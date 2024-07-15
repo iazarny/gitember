@@ -247,7 +247,6 @@ public class HistoryDetailController implements Initializable {
                             Context.scmRevCommitDetails.get().getRevisionFullName())
             );
             newRev = fileRevs.stream().distinct().collect(Collectors.toList()).stream()
-                    //.filter(scm -> scm.getDate().after(oldRevCommit.getAuthorIdent().getWhen()))
                     .findFirst().map(i -> i.getRevisionFullName()).orElseGet(() -> null);
             final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
             final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, fileRevs, oldRevCommit, newRevCommit);
@@ -264,7 +263,7 @@ public class HistoryDetailController implements Initializable {
             final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
             final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
                     scmItem.getShortName(),
-                    null); //TODO current tree only, not all
+                    Context.scmRevCommitDetails.get().getRevisionFullName()); //TODO current tree only, not all
             if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
                 new DiffWithDiskEventHandler(scmItem, fileRevs, scmItem.getCommitName()).handle(actionEvent);
             } else {

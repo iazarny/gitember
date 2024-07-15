@@ -1,10 +1,10 @@
 #!/bin/sh
 mkdir app
-mv target/gitember-2.5.5-spring-boot.jar app
+mv target/gitember-2.5.6-spring-boot.jar app
 
 jpackage \
    --input app/  --name Gitember2 --vendor "Igor Azarny" \
-   --main-jar gitember-2.5.5-spring-boot.jar  --app-version 2.5 \
+   --main-jar gitember-2.5.6-spring-boot.jar  --app-version 2.5 \
    --icon src/main/resources/icon/gitember.icns \
    --type "dmg" \
    --mac-sign \
