@@ -5,7 +5,7 @@ import com.az.gitember.service.GitemberUtil;
 import java.util.Date;
 import java.util.List;
 
-public class ScmRevisionInformation {
+public class ScmRevisionInformation implements Comparable {
 
     private String revisionFullName;
     private String authorName;
@@ -121,8 +121,35 @@ public class ScmRevisionInformation {
         return GitemberUtil.formatDate(date);
     }
 
+    public ScmRevisionInformation(String revisionFullName) {
+        this.revisionFullName = revisionFullName;
+        this.date = new Date();
+    }
+
+    public ScmRevisionInformation() {
+    }
+
     @Override
     public String toString() {
         return revisionFullName + " " + getDate() + " " + getShortMessage();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        ScmRevisionInformation other = (ScmRevisionInformation) o;
+        return this.getDate().compareTo(other.getDate());
+    }
+
+    @Override
+    public int hashCode() {
+        return  getRevisionFullName().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        return getRevisionFullName().equals(((ScmRevisionInformation)obj).getRevisionFullName());
     }
 }

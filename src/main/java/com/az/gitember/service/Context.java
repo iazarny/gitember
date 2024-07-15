@@ -113,7 +113,7 @@ public class Context {
             Platform.runLater(
                     //TODO also need to update branch
                     () ->  {
-                        Context.updateStatus(null);
+                        Context.updateStatus(null, true);
                         //Context.updateWorkingBranch();
                         //Context.getMain().updateButtonUI();
                     }
@@ -226,8 +226,14 @@ public class Context {
     }
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor) {
+        updateStatus(progressMonitor, false);
+    }
+
+    public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean wokingCopyOnly) {
         List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
-        plotCommitList.clear();
+        if (!wokingCopyOnly) {
+            plotCommitList.clear();
+        }
         statusList.clear();
         statusList.addAll(statuses);
     }

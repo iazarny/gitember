@@ -79,7 +79,6 @@ public class AboutDialog extends Dialog {
         pathTransition1.setAutoReverse(true);
 
 
-
         grid.add(pane, 0, 0);
         GridPane.setColumnSpan(pane, 2);
 
@@ -211,17 +210,17 @@ public class AboutDialog extends Dialog {
         applyStyle(char5);
 
         Path dot2 = getPathCharDot();
-        dot2.setLayoutX(350);
+        dot2.setLayoutX(345);
         dot2.setLayoutY(380);
         applyStyle(dot2);
 
-        Path char5_4 = getPathChar5();
-        char5_4.setLayoutX(315);
-        char5_4.setLayoutY(300);
-        applyStyle(char5_4);
+        Path char6 = getPathChar6();
+        char6.setLayoutX(310);
+        char6.setLayoutY(300);
+        applyStyle(char6);
 
         return new Path [] {
-                path, char2, dot,  char5, dot2, char5_4,
+                path, char2, dot,  char5, dot2, char6,
         };
     }
 
@@ -255,6 +254,7 @@ public class AboutDialog extends Dialog {
         path.getElements().add(new MoveTo(   0,       0 ));
         path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
         path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
         path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
         path.getElements().add(new LineTo(CHAR_WIDTH , CHAR_HEIGHT ));
         return path;
@@ -288,6 +288,18 @@ public class AboutDialog extends Dialog {
         path.getElements().add(new LineTo(   CHAR_WIDTH,       CHAR_HEIGHT/2 ));
         path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
         path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
+        return path;
+    }
+
+    private Path getPathChar6() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   CHAR_WIDTH,       0 ));
+        path.getElements().add(new LineTo(0  , 0 ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(   CHAR_WIDTH,       CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
         return path;
     }
 

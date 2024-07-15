@@ -941,11 +941,16 @@ public class GitRepoService {
     }
 
 
-    public String creaeEmptyFile(String fileName) throws IOException {
+    public String createEmptyFile(String fileName) {
         final String fileNameExtension = FilenameUtils.getExtension(fileName);
-        final File temp = File.createTempFile(
-                Const.TEMP_FILE_PREFIX,
-                fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+        final File temp;
+        try {
+            temp = File.createTempFile(
+                    Const.TEMP_FILE_PREFIX,
+                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return temp.getAbsolutePath();
     }
 

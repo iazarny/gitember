@@ -73,11 +73,11 @@ public class WorkingcopyTableRowFactory implements Callback<TableView, TableRow>
                                 final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
                                         item.getShortName(),
                                         null); //TODO current tree only, not all
-                                new DiffWithDiskEventHandler(item, fileRevs).handle(event);
-
+                                if (!fileRevs.isEmpty()) {
+                                    new DiffWithDiskEventHandler(item, fileRevs).handle(event);
+                                }
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
-
                             }
                         }
                 	});

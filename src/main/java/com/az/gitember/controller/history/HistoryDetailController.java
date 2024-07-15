@@ -130,24 +130,17 @@ public class HistoryDetailController implements Initializable {
                     String style = "";
                     if (!empty) {
                         String searchTerm = Context.searchValue.getValueSafe().toLowerCase();
-
                         Map<String, Set<String>> searchResult = Context.searchResult.getValue();
-
                         if (searchResult != null && !searchResult.isEmpty()) {
                             Set<String> affectedFiles = searchResult.getOrDefault(
                                     Context.scmRevCommitDetails.getValue().getRevisionFullName(),
                                     Collections.EMPTY_SET
                             );
-
                             boolean found = item.getViewRepresentation().toLowerCase().contains(searchTerm)
                                     || affectedFiles.contains(item.getViewRepresentation());
-
-
                             if (found) {
                                 style = LookAndFeelSet.FOUND_ROW;
-
                             }
-
                         }
 
                         setOnMouseClicked(event -> {
@@ -158,14 +151,9 @@ public class HistoryDetailController implements Initializable {
                                     openDiffPrevVersion(null);
                                 } else {
                                     new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(null);
-
                                 }
-
                             }
                         });
-
-
-
                     }
                     setStyle(style);
 
@@ -228,7 +216,8 @@ public class HistoryDetailController implements Initializable {
         try {
             final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
                     scmItem.getShortName(),
-                    null); //TODO current tree only, not all
+                    Context.scmRevCommitDetails.get().getRevisionFullName()
+            );
             oldRev = fileRevs.stream()
                     .filter(scm -> scm.getDate().before(newRevCommit.getAuthorIdent().getWhen()))
                     .findFirst().map(i -> i.getRevisionFullName()).orElseGet(() -> null);
@@ -250,9 +239,15 @@ public class HistoryDetailController implements Initializable {
         try {
             final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
                     scmItem.getShortName(),
-                    null); //TODO current tree only, not all
-            newRev = fileRevs.stream()
-                    .filter(scm -> scm.getDate().after(oldRevCommit.getAuthorIdent().getWhen()))
+                    null);//
+            //Rev can be located in the three, so need to merge
+            fileRevs.addAll(
+                    Context.getGitRepoService().getFileHistory(
+                            scmItem.getShortName(),
+                            Context.scmRevCommitDetails.get().getRevisionFullName())
+            );
+            newRev = fileRevs.stream().distinct().collect(Collectors.toList()).stream()
+                    //.filter(scm -> scm.getDate().after(oldRevCommit.getAuthorIdent().getWhen()))
                     .findFirst().map(i -> i.getRevisionFullName()).orElseGet(() -> null);
             final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
             final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, fileRevs, oldRevCommit, newRevCommit);

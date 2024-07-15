@@ -51,22 +51,12 @@ public class DiffWithDiskEventHandler implements EventHandler<Event> {
                 sha = revision;
             }
 
-            System.out.println(">>>>> sha " + sha + " for compare with " + item.getShortName());
-
-
-
-
             final Pair<Parent, Object> pair = App.loadFXMLToNewStage(Const.View.FILE_DIFF,
                     "Difference with repository version " + fileName);
             pair.getFirst().getStylesheets().add(this.getClass().getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
 
             final DiffController diffViewer = (DiffController) pair.getSecond();
             diffViewer.setData(item,  fileRevs, sha, null);
-            //diffViewer.setOldLabel("Repository version ");
-            if (item.getRevCommit() != null) {
-                //diffViewer.setOldLabel(GitemberUtil.formatRev(item.getRevCommit()));
-            }
-
 
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot show  difference for  " + item.getShortName(), e);

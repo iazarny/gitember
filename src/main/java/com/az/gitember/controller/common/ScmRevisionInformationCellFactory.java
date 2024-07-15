@@ -14,7 +14,6 @@ public class ScmRevisionInformationCellFactory implements  Callback<ListView<Scm
             protected void updateItem(ScmRevisionInformation item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null) {
-
                     setText(GitemberUtil.formatRev(item));
                 }
             }

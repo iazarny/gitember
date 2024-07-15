@@ -38,6 +38,8 @@ public class GitemberUtil {
     public static  String formatRev(ScmRevisionInformation revInfo) {
         if (revInfo == null) {
             return "";
+        } else if (revInfo.getRevisionFullName().startsWith("Disk")) {
+            return revInfo.getRevisionFullName();
         }
 
         return revInfo.getRevisionFullName().substring(0, 6)

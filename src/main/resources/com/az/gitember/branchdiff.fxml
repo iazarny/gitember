@@ -25,13 +25,13 @@
                 <TableColumn fx:id="rightTableColumn" minWidth="300.0" prefWidth="${diffTableView.width * 0.48}"  />
             </columns>
 
-            <contextMenu>
+            <!--contextMenu>
                 <ContextMenu >
                     <items>
                         <MenuItem fx:id="menuItemShowDiff"  mnemonicParsing="false"   onAction="#showItemDiffHandler" text="Diff"/>
                     </items>
                 </ContextMenu>
-            </contextMenu>
+            </contextMenu-->
 
         </TableView>
     </center>
