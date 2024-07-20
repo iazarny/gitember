@@ -67,6 +67,7 @@ public class LookAndFeelSet {
 
         if (Context.isLinux()) {
             LookAndFeelSet.FONT_SIZE = 21;
+            DEFAULT_CSS = DEFAULT_CSS.replace("/styles/", "/styles/lin/");
         }
 
     }

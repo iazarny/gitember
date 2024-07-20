@@ -1,0 +1,78 @@
+.copy-label, .copy-label:focused {
+    -fx-background-color: transparent ;
+    -fx-background-insets: 0px ;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-padding: 0px;
+    -fx-pref-width: 350px;
+}
+
+.root {
+    -fx-font-size: 12pt ;
+}
+
+.overview-border {
+    -fx-border-color: white;
+}
+
+.noheader .column-header-background {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+.alternate_row_color {
+    -fx-background-color: #dddddd;
+}
+
+.projectlink {
+    -fx-padding: 10 10 10 10;
+}
+
+.win-menu-container {
+   -fx-background-radius: 10;
+   -fx-background-color: linear-gradient(to right, skyblue, #cdded7);
+}
+
+.tool-bar {
+    /*-fx-background-radius: 10;*/
+    /*-fx-background-color: linear-gradient(to right, skyblue, #cdded7);*/
+}
+
+.main-border-pane {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 3;
+    -fx-border-color: transparent;
+}
+
+.main-pane-top {
+    /*-fx-background-color: linear-gradient(to right, skyblue, #cdded7);*/
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+
+.table-view {
+    -fx-background-color: transparent;
+}
+
+.table-view .table-cell{
+    -fx-border-color: transparent;
+    -fx-padding: 2 0 2 10px;
+}
+
+.table-row-cell: odd{
+    -fx-background-color: transparent;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+.table-row-cell: even{
+    -fx-background-color: transparent;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+.table-row-cell:filled:selected {
+    -fx-background-color: #eaeaf0;
+    -fx-text-fill: black;
+}

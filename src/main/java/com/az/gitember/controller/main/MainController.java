@@ -123,6 +123,9 @@ public class MainController implements Initializable {
             winControlBar.getStyleClass().addAll(mainMenuBar.getStyleClass());
             winControlBar.setSpacing(1);
             winControlBar.setStyle("-fx-background-color:transparent; -fx-padding: 10 0 0 20;");
+            if (Context.isLinux()) {
+                winControlBar.setStyle("-fx-background-color:transparent; -fx-padding: 10 10 0 20;");
+            }
             winControlBar.getChildren().remove(macMaximizeImgView);
             winControlBar.getChildren().add(macMaximizeImgView);
             winControlBar.getChildren().remove(macCloseImgView);

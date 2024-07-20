@@ -27,12 +27,12 @@ public class IconFactoryImpl implements IconFactory {
         //gc.fillOval(0, 0, cnv.getWidth(), cnv.getHeight());
 
 
-        Color lineColor = Color.DARKGRAY;
-        Color btnColor = Color.LIGHTGRAY;
+        Color lineColor = Color.GRAY;
+        Color btnColor = Color.WHITE;
 
         if (theme == Theme.DARK) {
             lineColor = Color.GRAY;
-            btnColor = Color.DARKGRAY;
+            btnColor = Color.DARKGRAY.brighter();
         }
 
         double sizex = cnv.getHeight()/4;
