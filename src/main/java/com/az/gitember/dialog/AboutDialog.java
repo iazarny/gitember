@@ -19,6 +19,7 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
+import org.apache.commons.lang3.ArrayUtils;
 
 import static com.az.gitember.data.Const.APP_NAME;
 
@@ -193,7 +194,15 @@ public class AboutDialog extends Dialog {
         path.setLayoutY(-400);
         path.setLayoutX(-400);
 
-//version
+        Path [] vpath = createVersionPath();
+        Path [] rez = new Path [] { path  };
+
+        return ArrayUtils.addAll(rez,vpath);
+    }
+
+    private Path[] createVersionPath() {
+
+
         Path char2 = getPathChar2();
         char2.setLayoutX(250);
         char2.setLayoutY(300);
@@ -214,14 +223,15 @@ public class AboutDialog extends Dialog {
         dot2.setLayoutY(380);
         applyStyle(dot2);
 
-        Path char6 = getPathChar6();
-        char6.setLayoutX(310);
-        char6.setLayoutY(300);
-        applyStyle(char6);
+        Path char7 = getPathChar7();
+        char7.setLayoutX(310);
+        char7.setLayoutY(300);
+        applyStyle(char7);
 
         return new Path [] {
-                path, char2, dot,  char5, dot2, char6,
+                char2, dot,  char5, dot2, char7,
         };
+
     }
 
     private void applyStyle(Path dot) {
@@ -300,6 +310,14 @@ public class AboutDialog extends Dialog {
         path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
         path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
         path.getElements().add(new LineTo(0  , CHAR_HEIGHT/2 ));
+        return path;
+    }
+
+    private Path getPathChar7() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
         return path;
     }
 

@@ -15,45 +15,48 @@ public class WorkingcopyTableStatusCallback implements Callback<TableColumn<ScmI
                 super.updateItem(item, empty);
                 String color = null;
                 if (!empty) {
-                    switch (item.getAttribute().getStatus()) {
-                        case ScmItem.Status.RENAMED:
-                            color = "#10EA10;";
-                            break;
-                        case ScmItem.Status.ADDED:
-                            color = "#10EA10;";
-                            break;
-                        case ScmItem.Status.CHANGED:
-                            color = "#10EA10;";
-                            break;
-                        case ScmItem.Status.MODIFIED:
-                            color = "#EA1010;";
-                            break;
-                        case ScmItem.Status.REMOVED:
-                            color = "#10EA10;";
-                            break;
-                        case ScmItem.Status.MISSED:
-                            color = "#EA1010;";
-                            break;
-                        case ScmItem.Status.CONFLICT:
-                            color = "#D330FF;";
-                            break;
-                        case ScmItem.Status.UNTRACKED_FOLDER:
-                            color = "#808080;";
-                            break;
-                        case ScmItem.Status.UNTRACKED:
-                            color = "#808080;";
-                            break;
-                        default:
-                            color ="";
-                    }
-
+                    color = getColor(item);
                 } else {
                     color = "transparent;";
                 }
-
                 setStyle("-fx-background-color: " + color);
-
             }
         };
+    }
+
+    public String getColor(ScmItem item) {
+        String color;
+        switch (item.getAttribute().getStatus()) {
+            case ScmItem.Status.RENAMED:
+                color = "#10EA10;";
+                break;
+            case ScmItem.Status.ADDED:
+                color = "#10EA10;";
+                break;
+            case ScmItem.Status.CHANGED:
+                color = "#10EA10;";
+                break;
+            case ScmItem.Status.MODIFIED:
+                color = "#EA1010;";
+                break;
+            case ScmItem.Status.REMOVED:
+                color = "#10EA10;";
+                break;
+            case ScmItem.Status.MISSED:
+                color = "#EA1010;";
+                break;
+            case ScmItem.Status.CONFLICT:
+                color = "#D330FF;";
+                break;
+            case ScmItem.Status.UNTRACKED_FOLDER:
+                color = "#808080;";
+                break;
+            case ScmItem.Status.UNTRACKED:
+                color = "#808080;";
+                break;
+            default:
+                color ="";
+        }
+        return color;
     }
 }

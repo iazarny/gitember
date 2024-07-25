@@ -262,60 +262,69 @@
         >
 
 
-            <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true"
-                      style="-fx-padding: 10 20 0 13; -fx-border-color: transparent">
-                <cellFactory>
-                    <MainTreeItemCellFactory/>
-                </cellFactory>
-                <TreeItem value="dummy">
-                    <children>
-                        <TreeItem fx:id="workingCopyTreeItem">
-                            <value>Working copy</value>
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-folder-open-o"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
-                        <TreeItem fx:id="historyTreeItem" value="History">
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-history"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
-                        <TreeItem fx:id="localBranchesTreeItem" value="Local branches">
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-code-fork"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
-                        <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-code-fork"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
-                        <TreeItem fx:id="tagsTreeItem" value="Tags">
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-tags"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
-                        <TreeItem fx:id="stashesTreeItem" value="Stashes">
-                            <graphic>
-                                <StackedFontIcon style="-fx-icon-color: text_color">
-                                    <FontIcon iconLiteral="fa-sticky-note-o"/>
-                                </StackedFontIcon>
-                            </graphic>
-                        </TreeItem>
 
-                    </children>
-                </TreeItem>
-            </TreeView>
+            <VBox>
+                <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true"
+                          style="-fx-padding: 10 20 0 13; -fx-border-color: transparent"
+                           prefHeight="1000000"
+                >
+                    <cellFactory>
+                        <MainTreeItemCellFactory/>
+                    </cellFactory>
+                    <TreeItem value="dummy">
+                        <children>
+                            <TreeItem fx:id="workingCopyTreeItem">
+                                <value>Working copy</value>
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-folder-open-o"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                            <TreeItem fx:id="historyTreeItem" value="History">
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-history"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                            <TreeItem fx:id="localBranchesTreeItem" value="Local branches">
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-code-fork"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                            <TreeItem fx:id="remoteBranchesTreeItem" value="Remote branches">
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-code-fork"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                            <TreeItem fx:id="tagsTreeItem" value="Tags">
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-tags"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                            <TreeItem fx:id="stashesTreeItem" value="Stashes">
+                                <graphic>
+                                    <StackedFontIcon style="-fx-icon-color: text_color">
+                                        <FontIcon iconLiteral="fa-sticky-note-o"/>
+                                    </StackedFontIcon>
+                                </graphic>
+                            </TreeItem>
+                        </children>
+                    </TreeItem>
+                </TreeView>
+                <ScrollPane maxHeight="300" minHeight="80" prefHeight="80" fx:id="infoScrollPane" visible="false">
+                    <content>
+                        <VBox fx:id="infoVBox"/>
+                    </content>
+                </ScrollPane>
+            </VBox>
             <AnchorPane fx:id="hostPanel" BorderPane.alignment="CENTER">
                 <fx:include source="recentprojects.fxml"/>
             </AnchorPane>

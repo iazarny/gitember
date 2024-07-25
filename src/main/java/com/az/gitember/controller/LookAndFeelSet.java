@@ -28,6 +28,7 @@ public class LookAndFeelSet {
     public static Color DIFF_COLOR_REPLACE = Color.valueOf("#6666ff");
     public static Color DIFF_COLOR_TEXT =  Color.valueOf("#e0e0e0");
     public static String HISTORY_LABEL_BOX_CSS = "-fx-border-insets: 0 5 0 0px; -fx-background-insets: 0 5 0 0px; -fx-padding: 0 4px; -fx-background-color: #d1e7dd; -fx-border-color: #a3cfbb; -fx-spacing: 10px; -fx-border-radius: 4px; -fx-background-radius: 4px";
+    public static String INFO_LABEL = "-fx-font-size: 10px; -fx-border-insets: 0 5 0 0px; -fx-background-insets: 0 5 0 0px; -fx-padding: 0 4px; -fx-background-color: #d1e7dd; -fx-border-color: #a3cfbb; -fx-spacing: 10px; -fx-border-radius: 4px; -fx-background-radius: 4px";
     public static String HISTORY_LABEL_BOX_TXT_CSS = "-fx-text-fill: #0a3622; -fx-font-size: 14px;";
     public static String HISTORY_BOX_CSS = "-fx-background-color: transparent";
     public static String HISTORY_BOX_TXT_CSS = "";
@@ -53,6 +54,7 @@ public class LookAndFeelSet {
             DIFF_COLOR_REPLACE = Color.valueOf("#118888");
             DIFF_COLOR_TEXT = Color.valueOf("#303030");
             HISTORY_LABEL_BOX_CSS = "-fx-border-insets: 0 5 0 0px; -fx-background-insets: 0 5 0 0px; -fx-padding: 0 4px; -fx-background-color: #404040; -fx-border-color: #a3cfbb; -fx-spacing: 10px;  -fx-border-radius: 4px; -fx-background-radius: 4px";
+            INFO_LABEL = "-fx-font-size: 10px; -fx-border-insets: 0 5 0 0px; -fx-background-insets: 0 5 0 0px; -fx-padding: 0 4px; -fx-background-color: #404040; -fx-border-color: #a3cfbb; -fx-spacing: 10px;  -fx-border-radius: 4px; -fx-background-radius: 4px";
             HISTORY_LABEL_BOX_TXT_CSS = "-fx-text-fill: #0a3622; -fx-font-size: 16px;";
             HISTORY_BOX_CSS = "-fx-background-color: transparent";
             HISTORY_BOX_TXT_CSS = "-fx-font-size: 14pt";

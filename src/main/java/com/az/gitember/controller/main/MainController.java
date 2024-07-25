@@ -10,6 +10,7 @@ import com.az.gitember.os.ProxyIconFactory;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.SearchService;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -30,10 +31,8 @@ import org.kordamp.ikonli.javafx.StackedFontIcon;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,6 +89,8 @@ public class MainController implements Initializable {
     public HBox menuContainer;
     public VBox mainPaneTop;
     public Button branchBtn;
+    public VBox infoVBox;
+    public ScrollPane infoScrollPane;
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -177,6 +178,16 @@ public class MainController implements Initializable {
                 }
         );
 
+        Context.statusList.addListener(
+                (InvalidationListener) observable -> {
+                    Platform.runLater(
+                            () -> {
+                                fillInfo();
+                            }
+                    );
+                }
+        );
+
         Context.repositoryPathProperty.addListener(
                 (observableValue, oldValue, newValue) ->
                 {
@@ -192,6 +203,7 @@ public class MainController implements Initializable {
                     statReportMenu.setDisable(newValue == null);
                     statReportMenu.setVisible(newValue != null);
                     repoTreeView.setDisable(false);
+                    infoScrollPane.setVisible(true);
                     boolean attrFileExists = Context.getGitRepoService().isFileExists(Const.GIT_ATTR_NAME);
                     boolean ignoreFileExists = Context.getGitRepoService().isFileExists(Const.GIT_IGNORE_NAME);
                     editRawIgnoreMenuItem.setVisible(ignoreFileExists);
@@ -201,8 +213,6 @@ public class MainController implements Initializable {
                                 dropIndexDataMenuItem.setDisable(!p.isIndexed());
                             }
                     );
-
-
                 }
         );
 
@@ -761,6 +771,61 @@ public class MainController implements Initializable {
     }
 
     public void keyPressedHandler(KeyEvent keyEvent) {
-        System.out.println(keyEvent);
+        //System.out.println(keyEvent);
+    }
+
+    public void fillInfo() {
+
+        infoVBox.getChildren().clear();
+        if (Context.workingBranch.getValue() != null) {
+            Label br = new Label(Context.workingBranch.getValue().getNameExt());
+            br.setStyle(LookAndFeelSet.INFO_LABEL);
+            infoVBox.getChildren().add(br);
+        }
+        Map<String, AtomicInteger> statuses = new TreeMap<>();
+        Context.statusList.forEach( scmItem -> {
+            String status = scmItem.getAttribute().getStatus();
+            statuses.computeIfAbsent(status, (k) ->  new AtomicInteger()).incrementAndGet();
+        });
+
+
+        HBox hb = null;
+        int idx = 0 ;
+        for (String st : statuses.keySet()) {
+            if (idx%3 == 0) {
+                hb = new HBox();
+                hb.setStyle("-fx-border-color: transparent; -fx-border-width: 1px;");
+
+                infoVBox.getChildren().add(hb);
+            }
+            AtomicInteger ai = statuses.get(st);
+            if (ai.get() > 0) {
+                Label lb = new Label(String.format("%d %s", ai.get(), st));
+                lb.setStyle(LookAndFeelSet.INFO_LABEL);
+                hb.getChildren().add(lb);
+            }
+            idx++;
+        }
+
+        Context.getCurrentProject().ifPresent(
+                pr -> {
+                    if (pr.isIndexed() || Context.lfsRepo.getValue()) {
+                        HBox idxHBox = new HBox();
+                        idxHBox.setStyle("-fx-border-color: transparent; -fx-border-width: 1px;");
+                        if (pr.isIndexed()) {
+                            Label idxLbl = new Label("Indexed");
+                            idxLbl.setStyle(LookAndFeelSet.INFO_LABEL);
+                            idxHBox.getChildren().add(idxLbl);
+                        }
+                        if (Context.lfsRepo.getValue()) {
+                            Label lfsLbl = new Label("LFS");
+                            lfsLbl.setStyle(LookAndFeelSet.INFO_LABEL);
+                            idxHBox.getChildren().add(lfsLbl);
+                        }
+
+                        infoVBox.getChildren().add(idxHBox);
+                    }
+                }
+        );
     }
 }

@@ -7,21 +7,23 @@ Has been renamed from Gitember. Just another GIT gui client just for fun.
 For Linux, Windows and Mac
 
 Downloads
- * [Windows](http://gitgui.org/Gitember2.5.msi)
- * [Mac M1](http://gitgui.org/Gitember2.5.dmg)
+ * [Windows Intel](http://gitember.org/Gitember2.5.msi)
+ * [Mac M1](http://gitember.org/Gitember2.5.dmg)
+ * [Linux Intel](http://gitember.org/Gitember2.5.deb)
  
 
 ![Mac Version](site/assets/img/gallery/gallery-1.png)
 
-
 ![Gitember](site/assets/img/gallery/gallery-4.png)
+
+![Linux](site/assets/img/gallery/gallery-9.png)
 
 ## Reasons to create 
 
 Nothing in particular, but 
  * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
  * I dont like standard UX of GIT
- * Check http://www.gitgui.org
+ * Check http://www.gitember.org
 
 ## Changes
 

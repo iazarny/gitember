@@ -175,10 +175,13 @@ public class HistoryDetailController implements Initializable {
             final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
             final boolean disableDiff = !ExtensionMap.isTextExtension(scmItem.getShortName());
 
-            openDiffMenuItem.setDisable(disableDiff);
-            diffWithPrevVersionMenuItem.setDisable(disableDiff);;
-            diffWithCurrentVersionMenuItem.setDisable(disableDiff);;
-            diffWithDiskVersionMenuItem.setDisable(disableDiff);;
+
+            boolean added  = ScmItem.Status.ADDED.equals(scmItem.getAttribute().getStatus());
+
+            openDiffMenuItem.setDisable(disableDiff || added);
+            diffWithPrevVersionMenuItem.setDisable(disableDiff || added);
+            diffWithCurrentVersionMenuItem.setDisable(disableDiff);
+            diffWithDiskVersionMenuItem.setDisable(disableDiff);
 
 
         }  );
@@ -209,6 +212,26 @@ public class HistoryDetailController implements Initializable {
 
     public void openDiffPrevVersion(ActionEvent actionEvent) {
         final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
+        final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+        try {
+            final List<ScmRevisionInformation> fileRevs = Context.getGitRepoService().getFileHistory(
+                    scmItem.getShortName(),
+                    Context.scmRevCommitDetails.get().getRevisionFullName()
+            );
+            if (fileRevs.size() >= 2) {
+                final RevCommit oldRevCommit = Context.getGitRepoService().getRevCommitBySha(fileRevs.get(1).getRevisionFullName());
+                final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(fileRevs.get(0).getRevisionFullName());
+
+                final DiffEventHandler eventHandler = new DiffEventHandler(scmItem, fileRevs, oldRevCommit, newRevCommit);
+                eventHandler.handle(actionEvent);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        /*
+        * final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
         final String newRev = scmInfo.getRevisionFullName();
         final RevCommit newRevCommit = Context.getGitRepoService().getRevCommitBySha(newRev);
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
@@ -226,7 +249,7 @@ public class HistoryDetailController implements Initializable {
             eventHandler.handle(actionEvent);
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
+        }*/
 
     }
 

@@ -621,20 +621,20 @@ public class GitRepoService {
      * @return list of revisions where file was changed.
      * @throws Exception
      */
-    public List<ScmRevisionInformation> getFileHistory(final String fileName, final String treeName) throws Exception {
+    public List<ScmRevisionInformation> getFileHistory(final String fileName, final String commitIdToStartFrom) throws Exception {
         final ArrayList<ScmRevisionInformation> rez = new ArrayList<>();
         try (Git git = new Git(repository)) {
             final LogCommand cmd = git.log()
                     .setRevFilter(RevFilter.ALL)
                     .addPath(fileName);
-            if (treeName != null) {
-                cmd.add(repository.resolve(treeName));
+            if (commitIdToStartFrom != null) {
+                cmd.add(repository.resolve(commitIdToStartFrom));
             }
             final Iterable<RevCommit> revCommits = cmd.call();
             for (RevCommit revCommit : revCommits) {
                 final ScmRevisionInformation info = adapt(revCommit, fileName);
                 rez.add(info);
-                if (rez.size() >= 100) {
+                if (rez.size() >= 1024) {
                     break;
                 }
             }
@@ -960,6 +960,18 @@ public class GitRepoService {
     }
 
     boolean isLfsRepo(Repository repo) {
+
+        String gitAttrFile = repo.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER,Const.GIT_ATTR_NAME).replaceAll("/$", "");
+        if (Files.exists(Paths.get(gitAttrFile))) {
+            try {
+                String content = Files.readString(Paths.get(gitAttrFile));
+                if (content.indexOf("lfs") > 0)  {
+                    return true;
+                }
+            } catch (IOException e) {
+                //System.out.println(e);
+            }
+        }
         return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
     }
 
