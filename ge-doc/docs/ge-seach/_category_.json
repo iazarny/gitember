@@ -1,0 +1,8 @@
+{
+  "label": "Search",
+  "position": 60,
+  "link": {
+    "type": "generated-index",
+    "description": "Search with Gitember. Gitember offers two powerful search options to help you find exactly what you need within your project: Regular Search and Extended Search. Each option serves different purposes and can be used depending on your specific needs."
+  }
+}

@@ -213,6 +213,11 @@ public class MainController implements Initializable {
                                 dropIndexDataMenuItem.setDisable(!p.isIndexed());
                             }
                     );
+                    Platform.runLater(
+                            () -> {
+                                fillInfo();
+                            }
+                    );
                 }
         );
 
