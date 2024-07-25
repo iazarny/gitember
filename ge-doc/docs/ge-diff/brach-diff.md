@@ -5,6 +5,7 @@ sidebar_position: 10
 
 # Difference between branches
 
+
 Gitember provides a useful feature to show differences between branches, which helps in understanding the scope of changes and preparing for merges or reviews. 
 This functionality can be accessed easily through the branch context menu.
 

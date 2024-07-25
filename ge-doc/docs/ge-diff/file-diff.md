@@ -5,19 +5,33 @@ sidebar_position: 20
 
 # Difference between files
 
-Gitember provides a useful feature to show differences between branches, which helps in understanding the scope of changes and preparing for merges or reviews. 
-This functionality can be accessed easily through the branch context menu.
+Gitember provides robust functionality to view file differences, allowing you to compare 
+changes in your working copy, between different commits, and more. 
+This can be especially useful for code reviews,  and understanding changes in detail.
 
- 
- * Go to the 'Branch' tab on the main toolbar to see the list of branches in your project.
- * Use branch context menu of source branch
- * Select the target branch to show the differences
+## Viewing Differences in the Working Copy
 
-![Diff](branch-diff.png)
+ * Locate the changed file you want to compare.
+ * Double-click on the changed file to open the diff view.
+ * Gitember will display the differences between the current working copy of the file and the last committed version.
 
-Gitember will open a separate window displaying the differences between the two branches.
-In this window, you will see the changes categorized as added, removed, and changed files.
+## Viewing Differences from a Commit
 
-![Diff](branch-diff-view.png)
+ * Locate the commit you want to compare.
+ * In the commit details view, find the file you want to compare.
+ * Right-click on the file and choose Show Diff from the context menu.
+ * Gitember will display options to compare in context menu
+   * Difference with latest version
+   * Previous version 
+   * With disk version
 
-For changed files use context menu to see file difference
+![Diff](file-diff.png)
+![Diff](file-diff-view.png)
+
+It is also possible to show difference as patch. 
+
+![Diff](file-diff-patch.png)
+
+## Features
+Difference is shown as  side-by-side diffs with highlighted changes - 
+Added, removed, and modified lines are highlighted to show exactly what has changed.

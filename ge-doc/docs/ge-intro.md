@@ -12,7 +12,7 @@ features to streamline your version control workflow.
 
 Before installing Gitember, ensure your system meets the following requirements:
 
- * Operating System: Windows 8 or later, Mac M1 (Silicon)
+ * Operating System: Windows 8+ or later, Mac M1 (Silicon), Linux
  * Memory: 2 GB RAM minimum
  * Disk Space: 500 MB available space
 
@@ -24,6 +24,9 @@ Before installing Gitember, ensure your system meets the following requirements:
  * Mac
     * Download the DMG file from the Gitember website.
     * Open the DMG file and drag Gitember to your Applications folder.
+ * Linux
+    * Download the DEB package file 
+    * Open it with application installer
 
 
 ## Quick start
