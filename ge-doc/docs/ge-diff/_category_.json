@@ -1,0 +1,9 @@
+{
+  "label": "Differences",
+  "position": 70,
+  "link": {
+    "type": "generated-index",
+    "description": "Gitember provides a useful feature to show differences between branches and files, which helps in understanding the scope of changes and preparing for merges or reviews."
+
+  }
+}
