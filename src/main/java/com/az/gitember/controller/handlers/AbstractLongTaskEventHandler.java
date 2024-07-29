@@ -11,6 +11,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.control.Alert;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.errors.TransportException;
 
 import java.util.function.Consumer;
@@ -37,25 +38,30 @@ public class AbstractLongTaskEventHandler {
 
     protected void handleRemoteRepositoryException(final EventHandler handler, final Throwable exception, final RemoteRepoParameters repoParameters, final ActionEvent event) {
         if (exception instanceof TransportException) {
-            TransportException e = (TransportException) exception;
-            LoginDialog ld = new LoginDialog(
-                    "Login",
-                    e.getMessage(),
-                    repoParameters
-            );
-            ld.showAndWait().ifPresent(
-                    newParams -> {
-                        Context.getCurrentProject().ifPresent(
-                                p -> {
-                                    p.setUserName(newParams.getUserName());
-                                    p.setUserPwd(newParams.getUserPwd());
-                                    handler.handle(event);
-                                }
-                        );
-                    }
-            );
-            log.log(Level.WARNING, "Repository " + repoParameters.getUrl()
-                    + " authorization is failed for " + repoParameters.getUserName() + " Will try one more time", exception);
+            Throwable root = ExceptionUtils.getRootCause(exception);
+            TransportException te = (TransportException) exception;
+            if (root instanceof java.nio.channels.UnresolvedAddressException ) {
+                Context.getMain().showResult("Repository", "Connection to " + repoParameters.getUrl() + " failed", Alert.AlertType.ERROR);
+            } else {
+                LoginDialog ld = new LoginDialog(
+                        "Login",
+                        exception.getMessage(),
+                        repoParameters
+                );
+                ld.showAndWait().ifPresent(
+                        newParams -> {
+                            Context.getCurrentProject().ifPresent(
+                                    p -> {
+                                        p.setUserName(newParams.getUserName());
+                                        p.setUserPwd(newParams.getUserPwd());
+                                        handler.handle(event);
+                                    }
+                            );
+                        }
+                );
+                log.log(Level.WARNING, "Repository " + repoParameters.getUrl()
+                        + " authorization is failed for " + repoParameters.getUserName() + " Will try one more time", exception);
+            }
         } else {
             Context.getMain().showResult("Repository", "Failed \n" + exception.getMessage(), Alert.AlertType.ERROR);
             log.log(Level.SEVERE, "Repository " + repoParameters.getUrl()
