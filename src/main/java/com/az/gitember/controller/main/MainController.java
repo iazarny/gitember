@@ -313,6 +313,14 @@ public class MainController implements Initializable {
                     }
 
                 } catch (Exception e) {
+
+                    removeProjectFromList(newProject);
+                    Context.getMain().showResult("Cannot load project ", "Cannot load project "
+                                    + newProject.getProjectHomeFolder()
+                                    + "\n   It will be removed from the list of recent projects",
+                            Alert.AlertType.WARNING);
+                    log.log(Level.WARNING, "Cannot load project " + newProject.getProjectHomeFolder(), e);
+
                     throw new RuntimeException(e);
                 }
             }
@@ -334,6 +342,12 @@ public class MainController implements Initializable {
         });
 
         onFocusSubscribe();
+    }
+
+    private void removeProjectFromList(Project p) {
+        Context.settingsProperty.getValue().getProjects().remove(p);
+        Context.saveSettings();
+        Context.readSettings();
     }
 
 

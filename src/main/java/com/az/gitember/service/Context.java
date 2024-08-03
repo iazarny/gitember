@@ -134,6 +134,10 @@ public class Context {
             gitFolder += File.separator + Const.GIT_FOLDER;
         }
 
+        if (!new File(gitFolder).exists()) {
+            throw new RuntimeException("Git folder "+gitFolder+" not found");
+        }
+
         gitRepoService = new GitRepoService(gitFolder);
         repositoryPathProperty.setValue(gitFolder);
         scmRevisionInformationCache.clear();

@@ -52,11 +52,6 @@ public class RecentProjectsController implements Initializable {
                                         //Context.init(p.getProjectHomeFolder(), getClass().getName());
                                         Context.getMain().projectsCmb.getSelectionModel().select(p);
                                     } catch (Exception e) {
-                                        removeProjectFromList(p);
-                                        Context.getMain().showResult("Cannot load project ", "Cannot load project "
-                                                        + p.getProjectHomeFolder()
-                                                        + "\n   It will be removed from the list of recent projects",
-                                                Alert.AlertType.WARNING);
                                         log.log(Level.WARNING, "Cannot load project " + p.getProjectHomeFolder(), e);
                                     }
                                 }
