@@ -11,7 +11,6 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import org.eclipse.jgit.diff.DiffEntry;
 
-import java.io.IOException;
 import java.util.List;
 
 

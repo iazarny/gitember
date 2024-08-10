@@ -1,8 +1,10 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -1623,6 +1625,8 @@ public class GitRepoService {
                 smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
             }
 
+            ObjectId oldHead = repository.resolve(remoteBranch);
+
             PullCommand pullCommand = git
                     .pull()
                     .setRemoteBranchName(remoteBranch)
@@ -1630,7 +1634,19 @@ public class GitRepoService {
             configureTransportCommand(pullCommand, parameters);
 
             PullResult pullRez = pullCommand.call();
+
+            ObjectId head = repository.resolve(remoteBranch);
+
             if (pullRez.isSuccessful()) {
+                Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
+                        oldHead, head , git, remoteBranch
+                );
+                Optional<String> formatedResult = formatPullResult(
+                        rez
+                );
+                if (formatedResult.isPresent()) {
+                    return formatedResult.get();
+                }
                 return pullRez.getMergeResult().getMergeStatus().toString();
             }
             return pullRez.getMergeResult().toString(); // TODo more info
@@ -1639,6 +1655,94 @@ public class GitRepoService {
                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
                 rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
             }
+        }
+    }
+
+
+
+    private Triple<List<String>,List<String>,List<String>> getPullInfo(
+            ObjectId oldHead,
+            ObjectId newHead,
+            Git git,
+            String remoteBranch) throws IOException {
+
+        RevCommit oldCommit;
+        RevCommit newCommit;
+        ObjectId oldRevTreeId;
+        ObjectId newRevTreeId;
+
+
+        try (RevWalk walk = new RevWalk(repository)) {
+            oldCommit = walk.parseCommit(oldHead);
+            oldRevTreeId = oldCommit.getTree().getId();
+
+            newCommit = walk.parseCommit(newHead);
+            newRevTreeId = newCommit.getTree().getId();
+        }
+
+        List<DiffEntry> diffs;
+        try (ObjectReader reader = git.getRepository().newObjectReader()) {
+
+            CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+            newTreeIter.reset(reader, newRevTreeId);
+
+            CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+            oldTreeIter.reset(reader, oldRevTreeId);
+
+
+            try (DiffFormatter diffFormatter = new DiffFormatter(System.out)) {
+                diffFormatter.setRepository(git.getRepository());
+                diffs = diffFormatter.scan(oldTreeIter, newTreeIter);
+            }
+        }
+
+        List<String> addedFiles = new ArrayList<>();
+        List<String> deletedFiles = new ArrayList<>();
+        List<String> updatedFiles = new ArrayList<>();
+
+        for (DiffEntry diff : diffs) {
+            switch (diff.getChangeType()) {
+                case ADD:
+                    addedFiles.add(diff.getNewPath());
+                    break;
+                case DELETE:
+                    deletedFiles.add(diff.getOldPath());
+                    break;
+                case MODIFY:
+                    updatedFiles.add(diff.getNewPath());
+                    break;
+                case RENAME:
+                    updatedFiles.add(diff.getNewPath());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return Triple.of(addedFiles,deletedFiles,updatedFiles);
+    }
+    private Optional<String> formatPullResult(Triple<List<String>,List<String>,List<String>> diffResult) {
+        if (CollectionUtils.isNotEmpty(diffResult.getLeft())
+                || CollectionUtils.isNotEmpty(diffResult.getMiddle())
+                || CollectionUtils.isNotEmpty(diffResult.getRight())) {
+            StringBuilder sb = new StringBuilder();
+            fillInfo(sb, "Added:", diffResult.getLeft());
+            fillInfo(sb, "Deleted:", diffResult.getMiddle());
+            fillInfo(sb, "Changed:", diffResult.getRight());
+            return Optional.of(sb.toString());
+        }
+        return Optional.empty();
+    }
+
+
+    private void  fillInfo(StringBuilder sb, String sectionName, List<String> content) {
+        if (CollectionUtils.isNotEmpty(content)) {
+            sb.append(sectionName);
+            sb.append("\n");
+            content.stream().forEach( s-> {
+                        sb.append("  " + s + "\n");
+                    }
+            );
         }
     }
 
