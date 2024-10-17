@@ -9,11 +9,13 @@ import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
@@ -235,5 +237,12 @@ public class EditorController implements Initializable {
 
     public void setScmItem(ScmItem scmItem) {
         this.scmItem = scmItem;
+    }
+
+    @FXML
+    public void handleKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ESCAPE) {
+            borderPane.getScene().getWindow().hide();
+        }
     }
 }

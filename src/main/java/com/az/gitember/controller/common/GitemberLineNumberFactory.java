@@ -90,7 +90,7 @@ public class GitemberLineNumberFactory implements IntFunction<Node> {
 
         Label lineNo = new Label();
         if (blame != null) {
-            int width = maxLen * 20;
+            int width = maxLen * 12;
             lineNo.setMaxWidth(width);
             lineNo.setMinWidth(width);
             lineNo.setPrefWidth(width);

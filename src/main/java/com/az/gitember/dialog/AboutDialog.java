@@ -223,7 +223,7 @@ public class AboutDialog extends Dialog {
         dot2.setLayoutY(380);
         applyStyle(dot2);
 
-        Path char7 = getPathChar7();
+        Path char7 = getPathChar8();
         char7.setLayoutX(310);
         char7.setLayoutY(300);
         applyStyle(char7);
@@ -318,6 +318,18 @@ public class AboutDialog extends Dialog {
         path.getElements().add(new MoveTo(   0,       0 ));
         path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
         path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
+        return path;
+    }
+
+    private Path getPathChar8() {
+        Path path = new Path();
+        path.getElements().add(new MoveTo(   0,       0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , 0 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(0  , CHAR_HEIGHT ));
+        path.getElements().add(new LineTo(0  , 0 ));
+        path.getElements().add(new MoveTo(   0,       CHAR_HEIGHT/2 ));
+        path.getElements().add(new LineTo(CHAR_WIDTH  , CHAR_HEIGHT/2 ));
         return path;
     }
 

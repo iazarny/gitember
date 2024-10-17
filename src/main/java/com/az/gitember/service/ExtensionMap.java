@@ -28,6 +28,10 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/html", "html", true));
         add(new ExtensionInfo("text/html", "htm", true));
         add(new ExtensionInfo("text/plain", "txt", true));
+
+        add(new ExtensionInfo("text/plain", "proto", true));
+        add(new ExtensionInfo("text/plain", "avro", true));
+
         add(new ExtensionInfo("text/plain", "hrl", true));
         add(new ExtensionInfo("text/plain", "erl", true));
         add(new ExtensionInfo("text/plain", "ex", true));
