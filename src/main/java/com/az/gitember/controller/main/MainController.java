@@ -743,6 +743,11 @@ public class MainController implements Initializable {
                 macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
                 macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
                 macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
+
+                // Reload file status when application regains focus to detect external changes
+                if (Context.repositoryPathProperty.getValue() != null) {
+                    new StatusUpdateEventHandler(false).handle(null);
+                }
             } else {
                 macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));
                 macMinimizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MINIMIZE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));

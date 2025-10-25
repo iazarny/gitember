@@ -29,7 +29,7 @@
       </ToolBar>
 
       <ToolBar fx:id="navBar"  GridPane.columnIndex="1" style="-fx-background-color: transparent">
-         <!--Button fx:id="prevBtn"  mnemonicParsing="false" onAction="#prevHandler">
+         <Button fx:id="prevBtn"  mnemonicParsing="false" onAction="#prevHandler">
             <graphic>
                <HBox>
                   <StackedFontIcon style="-fx-icon-color: text_color">
@@ -37,9 +37,9 @@
                   </StackedFontIcon>
                </HBox>
             </graphic>
-         </Button-->
+         </Button>
          <Pane  HBox.hgrow="ALWAYS" />
-         <!--Button fx:id="nextBtn"  mnemonicParsing="false" onAction="#nextHandler">
+         <Button fx:id="nextBtn"  mnemonicParsing="false" onAction="#nextHandler">
             <graphic>
                <HBox>
                   <StackedFontIcon style="-fx-icon-color: text_color">
@@ -47,7 +47,7 @@
                   </StackedFontIcon>
                </HBox>
             </graphic>
-         </Button-->
+         </Button>
       </ToolBar>
 
       <ToolBar GridPane.columnIndex="2" style="-fx-background-color: transparent">

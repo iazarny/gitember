@@ -202,6 +202,10 @@ public class DiffOverviewScrollBar extends GridPane {
         leftMaxLine = getMaxLen(leftLines.getFirst());
         rightMaxLine = getMaxLen(rightLines.getFirst());
 
+        // Clear old children before adding new ones to prevent mismatch
+        leftPane.getChildren().clear();
+        rightPane.getChildren().clear();
+
         fillLines(leftPane, leftLines);
         fillLines(rightPane, rightLines);
 
@@ -300,7 +304,11 @@ public class DiffOverviewScrollBar extends GridPane {
     private void layoutLines(Pane pane, Pair<ArrayList<String>, ArrayList<Edit.Type>> lineType, double charWidth) {
         final double strokeSize = getLineThick();
         final double lineWidth = Math.min(0.8 * getLineThick(), 3);
-        for (int i = 0; i < pane.getChildren().size(); i++) {
+
+        // Prevent IndexOutOfBoundsException by using minimum of both sizes
+        final int maxIndex = Math.min(pane.getChildren().size(), lineType.getFirst().size());
+
+        for (int i = 0; i < maxIndex; i++) {
             final String text =   lineType.getFirst().get(i);
             if (StringUtils.isNotBlank(text)) {
 
