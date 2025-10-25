@@ -745,8 +745,9 @@ public class MainController implements Initializable {
                 macMaximizeImgView.setImage(factory.createImage(IconFactory.WinIconType.MAXIMIZE, IconFactory.WinIconMode.NORMAL, getTheme(), App.getStage().isMaximized()));
 
                 // Reload file status when application regains focus to detect external changes
+                // Use workingCopyOnly=true to avoid clearing the commit history
                 if (Context.repositoryPathProperty.getValue() != null) {
-                    new StatusUpdateEventHandler(false).handle(null);
+                    new StatusUpdateEventHandler(false, true).handle(null);
                 }
             } else {
                 macCloseImgView.setImage(factory.createImage(IconFactory.WinIconType.CLOSE, IconFactory.WinIconMode.INACTIVE, getTheme(), App.getStage().isMaximized()));

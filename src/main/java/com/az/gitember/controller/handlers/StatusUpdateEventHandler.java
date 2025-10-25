@@ -17,17 +17,27 @@ import java.util.logging.Logger;
 public class StatusUpdateEventHandler extends AbstractLongTaskEventHandler implements EventHandler<ActionEvent> {
 
     private final boolean showProgressMonitor;
+    private final boolean workingCopyOnly;
     private final Consumer<WorkerStateEvent> onOk;
 
 
     private final static Logger log = Logger.getLogger(StatusUpdateEventHandler.class.getName());
 
     public StatusUpdateEventHandler(boolean showProgressMonitor) {
-        this(showProgressMonitor, workerStateEvent -> {});
+        this(showProgressMonitor, false, workerStateEvent -> {});
+    }
+
+    public StatusUpdateEventHandler(boolean showProgressMonitor, boolean workingCopyOnly) {
+        this(showProgressMonitor, workingCopyOnly, workerStateEvent -> {});
     }
 
     public StatusUpdateEventHandler(boolean showProgressMonitor, final Consumer<WorkerStateEvent> onOk) {
+        this(showProgressMonitor, false, onOk);
+    }
+
+    public StatusUpdateEventHandler(boolean showProgressMonitor, boolean workingCopyOnly, final Consumer<WorkerStateEvent> onOk) {
         this.showProgressMonitor = showProgressMonitor;
+        this.workingCopyOnly = workingCopyOnly;
         this.onOk = onOk;
     }
 
@@ -47,7 +57,7 @@ public class StatusUpdateEventHandler extends AbstractLongTaskEventHandler imple
                     }, DefaultProgressMonitor.Strategy.Step);
                 }
 
-                Context.updateStatus(progressMonitor);
+                Context.updateStatus(progressMonitor, workingCopyOnly);
 
                 return null;
             }

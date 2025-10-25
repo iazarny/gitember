@@ -150,7 +150,12 @@ public class HistoryDetailController implements Initializable {
                                 if (ExtensionMap.isTextExtension(scmItem.getShortName())) {
                                     openDiffPrevVersion(null);
                                 } else {
-                                    new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(null);
+                                    // For deleted files, open from parent commit; otherwise from current commit
+                                    if (ScmItem.Status.REMOVED.equals(scmItem.getAttribute().getStatus())) {
+                                        openDeletedFile(scmItem, null);
+                                    } else {
+                                        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(null);
+                                    }
                                 }
                             }
                         });
@@ -175,13 +180,15 @@ public class HistoryDetailController implements Initializable {
             final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
             final boolean disableDiff = !ExtensionMap.isTextExtension(scmItem.getShortName());
 
+            boolean added = ScmItem.Status.ADDED.equals(scmItem.getAttribute().getStatus());
+            boolean removed = ScmItem.Status.REMOVED.equals(scmItem.getAttribute().getStatus());
 
-            boolean added  = ScmItem.Status.ADDED.equals(scmItem.getAttribute().getStatus());
-
+            // For ADDED files: can't diff with previous version (didn't exist)
+            // For REMOVED files: can diff with previous, but not with current/disk (doesn't exist anymore)
             openDiffMenuItem.setDisable(disableDiff || added);
             diffWithPrevVersionMenuItem.setDisable(disableDiff || added);
-            diffWithCurrentVersionMenuItem.setDisable(disableDiff);
-            diffWithDiskVersionMenuItem.setDisable(disableDiff);
+            diffWithCurrentVersionMenuItem.setDisable(disableDiff || removed);
+            diffWithDiskVersionMenuItem.setDisable(disableDiff || removed);
 
 
         }  );
@@ -196,7 +203,40 @@ public class HistoryDetailController implements Initializable {
 
     public void openItemMenuItemClickHandler(ActionEvent actionEvent) {
         final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
-        new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+
+        // For deleted files, we need to open from the parent commit (last version before deletion)
+        if (ScmItem.Status.REMOVED.equals(scmItem.getAttribute().getStatus())) {
+            openDeletedFile(scmItem, actionEvent);
+        } else {
+            new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+        }
+    }
+
+    /**
+     * Opens a deleted file from the parent commit (the last version before it was deleted)
+     */
+    private void openDeletedFile(ScmItem scmItem, ActionEvent actionEvent) {
+        try {
+            final ScmRevisionInformation scmInfo = Context.scmRevCommitDetails.get();
+
+            // Get the parent commit (the version before deletion)
+            if (!scmInfo.getParents().isEmpty()) {
+                String parentSha = scmInfo.getParents().get(0);
+
+                // Get the RevCommit object for the parent
+                RevCommit parentRevCommit = Context.getGitRepoService().getRevCommitBySha(parentSha);
+
+                // Create a new ScmItem with the parent commit to open the file from before deletion
+                ScmItem itemFromParent = new ScmItem(scmItem.getShortName(), scmItem.getAttribute(), parentRevCommit);
+
+                new OpenFileEventHandler(itemFromParent, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+            } else {
+                // No parent commit available (shouldn't normally happen for deleted files)
+                new OpenFileEventHandler(scmItem, ScmItem.BODY_TYPE.COMMIT_VERSION).handle(actionEvent);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to open deleted file", e);
+        }
     }
 
     public void openRawDiff(ActionEvent actionEvent) {
