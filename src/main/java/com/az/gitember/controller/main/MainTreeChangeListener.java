@@ -50,7 +50,7 @@ public class MainTreeChangeListener implements ChangeListener {
                 file = Const.View.WORKING_COPY;
                 if(Context.statusList.isEmpty()) { //TODO or is changed
                     Platform.runLater(
-                            () -> new StatusUpdateEventHandler(false).handle(null)
+                            () -> new StatusUpdateEventHandler(false, true).handle(null)
                     );
                 }
             } else if (newValue.equals(Const.View.STAT)) {
