@@ -320,21 +320,27 @@ public class GitRepoService {
         final Set<String> rez = new TreeSet<>();
 
         final Ref head = repository.exactRef(name);
-        final RevWalk walk = new RevWalk(repository);
-        final RevCommit commit = walk.parseCommit(head.getObjectId());
-        final RevTree tree = commit.getTree();
-        final TreeWalk treeWalk = new TreeWalk(repository);
+        if (head == null) {
+            throw new IOException("Reference not found: " + name);
+        }
 
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
+        try (RevWalk walk = new RevWalk(repository)) {
+            final RevCommit commit = walk.parseCommit(head.getObjectId());
+            final RevTree tree = commit.getTree();
+            final TreeWalk treeWalk = new TreeWalk(repository);
 
-        while (treeWalk.next()) {
-            if (treeWalk.isSubtree()) {
-                treeWalk.enterSubtree();
-            } else {
-                final String path = treeWalk.getPathString();
-                rez.add(path);
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+
+            while (treeWalk.next()) {
+                if (treeWalk.isSubtree()) {
+                    treeWalk.enterSubtree();
+                } else {
+                    final String path = treeWalk.getPathString();
+                    rez.add(path);
+                }
             }
+            treeWalk.close();
         }
         return rez;
     }
@@ -559,8 +565,9 @@ public class GitRepoService {
 
             List<ScmBranch> rez = branchLst
                     .stream()
-                    .filter(r -> r.getName().startsWith(prefix) || ("HEAD".equals(r.getName()) && Constants.R_HEADS.equals(prefix)))
+                    .filter(r -> r != null && r.getName() != null && (r.getName().startsWith(prefix) || ("HEAD".equals(r.getName()) && Constants.R_HEADS.equals(prefix))))
                     .map(r -> getScmBranch(prefix, branchType, r))
+                    .filter(Objects::nonNull)
                     .map(i -> {
                         i.setHead(i.getFullName().equals(head.getName()));
                         return i;
@@ -582,6 +589,11 @@ public class GitRepoService {
     }
 
     private ScmBranch getScmBranch(String prefix, ScmBranch.BranchType branchType, Ref r) {
+        if (r == null || r.getName() == null) {
+            log.log(Level.WARNING, "Invalid ref provided to getScmBranch");
+            return null;
+        }
+
         int aheadCount = 0;
         int behindCount = 0;
 
@@ -592,14 +604,14 @@ public class GitRepoService {
                 behindCount = trackingStatus.getBehindCount();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.log(Level.WARNING, "Cannot get branch tracking status for " + r.getName(), e);
         }
 
         return new ScmBranch(
                 "HEAD".equals(r.getName()) ? r.getName() : r.getName().substring(prefix.length()),
                 r.getName(),
                 branchType,
-                r.getObjectId().getName(),
+                r.getObjectId() != null ? r.getObjectId().getName() : "",
                 aheadCount,
                 behindCount
         );
@@ -1479,19 +1491,19 @@ public class GitRepoService {
         String smudge = config.getString("filter", "lfs", "smudge");
         String clean = config.getString("filter", "lfs", "clean");
 
-        // config.setString("filter", "lfs", "clean", GitRepoService.CLEAN_NAME);
-        // config.setString("filter", "lfs", "smudge", GitRepoService.SMUDGE_NAME);
-
         config.unset("filter", "lfs", "smudge");
         config.unset("filter", "lfs", "clean");
-
-        //config.setString("filter", "lfs", "smudge", "git-lfs smudge --skip -- %f");
 
         config.save();
         return new Pair<>(smudge, clean);
     }
 
     private void rollbackLfsSupport(StoredConfig config, Pair<String, String> smudgeAndClean) throws Exception {
+        if (smudgeAndClean == null) {
+            log.log(Level.WARNING, "Null smudgeAndClean pair provided to rollbackLfsSupport");
+            return;
+        }
+
         String smudge = smudgeAndClean.getFirst();
         String clean = smudgeAndClean.getSecond();
 
@@ -1899,6 +1911,10 @@ public class GitRepoService {
      * @return instance of {@link ScmRevisionInformation}
      */
     public ScmRevisionInformation adapt(final RevCommit revCommit, final String fileName) {
+        if (revCommit == null) {
+            log.log(Level.WARNING, "Null RevCommit provided to adapt method");
+            return null;
+        }
 
         return Context.scmRevisionInformationCache.computeIfAbsent(revCommit.getId().toString(), s -> {
             final ScmRevisionInformation info = new ScmRevisionInformation();
@@ -1906,19 +1922,22 @@ public class GitRepoService {
             info.setFullMessage(revCommit.getFullMessage());
             info.setRevisionFullName(revCommit.getName());
             info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-            info.setAuthorName(revCommit.getAuthorIdent().getName());
-            info.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
+
+            PersonIdent authorIdent = revCommit.getAuthorIdent();
+            if (authorIdent != null) {
+                info.setAuthorName(authorIdent.getName());
+                info.setAuthorEmail(authorIdent.getEmailAddress());
+            }
+
             info.setParents(
                     Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
             );
             if (revCommit instanceof PlotCommit) {
                 ArrayList<String> refs = new ArrayList<>();
                 for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
-                    if (revCommit != null && ((PlotCommit) revCommit).getRef(i) != null && ((PlotCommit) revCommit).getRef(i).getName() != null) {
-                        refs.add(
-                                ((PlotCommit) revCommit).getRef(i).getName()
-                        );
-
+                    Ref ref = ((PlotCommit) revCommit).getRef(i);
+                    if (ref != null && ref.getName() != null) {
+                        refs.add(ref.getName());
                     }
                 }
                 info.setRef(refs);
@@ -1927,8 +1946,6 @@ public class GitRepoService {
             info.setAffectedItems(getScmItems(revCommit, fileName));
             return info;
         });
-
-
     }
 
     public RevCommit getRevCommitBySha(String sha) {
