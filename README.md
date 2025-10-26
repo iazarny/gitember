@@ -27,6 +27,10 @@ Nothing in particular, but
 
 ## Changes
 
+### 2.5.8
+* Add ability to compare arbitrary files.
+* Small bugfixes
+
 
 ### 2.5.5
 * Initial revision of doc has been added

@@ -18,6 +18,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -29,8 +31,10 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
+import javafx.scene.text.Text;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
+import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
@@ -225,6 +229,17 @@ public class DiffController implements Initializable {
         newCodeArea.setPrefWidth(Region.USE_COMPUTED_SIZE);
         newCodeArea.setMinWidth(Region.USE_PREF_SIZE);
         newCodeArea.setEditable(false);
+
+
+        Text text = new Text("Sample");
+        //text.setFont(newCodeArea.getFont());
+        new Scene(new Group(text)); // forces CSS processing
+        text.applyCss();
+
+        double actualRowHeight = text.getLayoutBounds().getHeight();
+        System.out.println(">>>>>>>>> " + actualRowHeight);
+
+        fontSize = actualRowHeight * 1.395;
 
         initCodePanels();
 
