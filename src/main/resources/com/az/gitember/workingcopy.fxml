@@ -50,13 +50,13 @@
             <MenuBar id="MERGEITEM">
                 <Menu id="MERGEITEM"  text="Working copy">
                     <MenuItem id="MERGEITEM" onAction="#refreshEventHandler" text="Refresh" />
-                    <MenuItem id="MERGEITEM" onAction="#stashEventHandler" text="Stash ..." />
-                    <MenuItem id="MERGEITEM" onAction="#createDiffEventHandler" text="Create diff" />
+                    <MenuItem id="MERGEITEM" fx:id="stashMenuItem" onAction="#stashEventHandler" text="Stash ..." />
+                    <MenuItem id="MERGEITEM" fx:id="createDiffMenuItem" onAction="#createDiffEventHandler" text="Create diff" />
                 </Menu>
             </MenuBar>
             <ToolBar id="MERGEITEM">
                 <Separator id="MERGEITEM"/>
-                <Button id="MERGEITEM" onAction="#stageAllEventHandler">
+                <Button id="MERGEITEM" fx:id="stageAllBtn" onAction="#stageAllEventHandler">
                     <tooltip><Tooltip text="Stage all" /></tooltip>
                     <graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">
@@ -64,7 +64,7 @@
                         </StackedFontIcon>
                     </graphic>
                 </Button>
-                <Button id="MERGEITEM" onAction="#unstageAllEventHandler" >
+                <Button id="MERGEITEM" fx:id="unstageAllBtn" onAction="#unstageAllEventHandler" >
                     <tooltip><Tooltip text="Unstage all" /></tooltip>
                     <graphic>
                         <StackedFontIcon style="-fx-icon-color: text_color">

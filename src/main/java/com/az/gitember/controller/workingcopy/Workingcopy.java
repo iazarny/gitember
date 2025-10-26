@@ -42,6 +42,13 @@ public class Workingcopy implements Initializable {
     public TextField searchText;
     public CheckBox checkBoxShowLfs;
     //public CheckBox checkBoxShowLastChanges;
+
+    // UI elements that need to be disabled when no changes
+    public MenuItem stashMenuItem;
+    public MenuItem createDiffMenuItem;
+    public Button stageAllBtn;
+    public Button unstageAllBtn;
+
     private FilteredList filteredList;
 
     private String headSha = "HEAD";
@@ -169,6 +176,40 @@ public class Workingcopy implements Initializable {
 
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
 
+        // Listen for changes in status list to update button/menu states
+        Context.statusList.addListener((javafx.collections.ListChangeListener<ScmItem>) c -> {
+            updateUIState();
+        });
+
+        // Initial state update
+        updateUIState();
+
+    }
+
+    /**
+     * Update button and menu item states based on whether there are changes in working copy
+     */
+    private void updateUIState() {
+        boolean hasChanges = !Context.statusList.isEmpty();
+
+        // Disable buttons and menu items when there are no changes
+        if (stageAllBtn != null) {
+            stageAllBtn.setDisable(!hasChanges);
+        }
+        if (unstageAllBtn != null) {
+            unstageAllBtn.setDisable(!hasChanges);
+        }
+        if (stashMenuItem != null) {
+            stashMenuItem.setDisable(!hasChanges);
+        }
+        if (createDiffMenuItem != null) {
+            createDiffMenuItem.setDisable(!hasChanges);
+        }
+
+        // Also update the main commit button
+        if (Context.getMain() != null && Context.getMain().commitBtn != null) {
+            Context.getMain().commitBtn.setDisable(!hasChanges);
+        }
     }
 
 
