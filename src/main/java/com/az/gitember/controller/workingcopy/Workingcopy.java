@@ -5,6 +5,7 @@ import com.az.gitember.controller.handlers.*;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.StashDialog;
 import com.az.gitember.service.Context;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -177,8 +178,9 @@ public class Workingcopy implements Initializable {
         HBox.setHgrow(spacerPane, Priority.ALWAYS);
 
         // Listen for changes in status list to update button/menu states
+        // IMPORTANT: Status updates can happen on background threads, so must use Platform.runLater()
         Context.statusList.addListener((javafx.collections.ListChangeListener<ScmItem>) c -> {
-            updateUIState();
+            Platform.runLater(this::updateUIState);
         });
 
         // Initial state update

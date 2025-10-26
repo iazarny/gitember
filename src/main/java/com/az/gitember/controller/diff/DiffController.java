@@ -768,22 +768,21 @@ public class DiffController implements Initializable {
     public void updateDiffRepresentation()  {
 
         if (oldRawTxt != null && newRawTxt != null) {
-            setText(oldCodeArea, oldText, oldFileName, true);
-            setText(newCodeArea, newText, newFileName, false);
-
-            // Clear existing diffs before adding new ones to avoid duplicates
+            // Calculate diffs on current thread (can be background thread)
             diffList.clear();
-
             DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
             diffList.addAll(diffAlgorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRawTxt, newRawTxt));
 
-            if (oldScrollPane != null && oldScrollPane.getVbar() != null) {
-                oldScrollPane.getVbar().setData(oldText, newText, diffList);
-            }
-
-            createPathElements();
-
+            // ALL UI updates must run on JavaFX Application Thread
             Platform.runLater(() -> {
+                setText(oldCodeArea, oldText, oldFileName, true);
+                setText(newCodeArea, newText, newFileName, false);
+
+                if (oldScrollPane != null && oldScrollPane.getVbar() != null) {
+                    oldScrollPane.getVbar().setData(oldText, newText, diffList);
+                }
+
+                createPathElements();
                 scrollToFirstDiff();
                 updateButtonState();
             });

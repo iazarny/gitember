@@ -11,7 +11,9 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -32,11 +34,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 
-//TODO alert in case of close and text changes
 public class EditorController implements Initializable {
     public BorderPane borderPane;
     public CodeArea codeArea;
@@ -165,14 +168,27 @@ public class EditorController implements Initializable {
                         codeArea.setStyleSpans(0, spans);
                     }
 
-                    //re-coloring when editing
+                    // Performance optimization: Debounced re-highlighting when editing
+                    // Instead of re-highlighting on EVERY keystroke (which is very slow for large files),
+                    // we wait 500ms after the user stops typing before re-highlighting
                     codeArea.richChanges()
                             .filter(ch -> !ch.getInserted().equals(ch.getRemoved()))
+                            .successionEnds(Duration.ofMillis(500))  // Wait 500ms after last change
                             .subscribe(change -> {
-                                {
-                                    codeArea.setStyleSpans(0, adapter.computeHighlighting(codeArea.getText())  );
+                                // CRITICAL: Must capture text snapshot on JavaFX thread
+                                // Reading codeArea.getText() on background thread causes IllegalStateException
+                                Platform.runLater(() -> {
+                                    // Capture text on UI thread
+                                    String textToHighlight = codeArea.getText();
+
+                                    // Re-highlight after user stops typing
+                                    StyleSpans<Collection<String>> highlighting = adapter.computeHighlighting(textToHighlight);
+
+                                    if (highlighting != null) {
+                                        codeArea.setStyleSpans(0, highlighting);
+                                    }
                                     saveBtn.setDisable(false);
-                                }
+                                });
                             });
 
                     adapter.getDiffDecoration(codeArea.getText()).entrySet().forEach(p -> {
@@ -242,7 +258,70 @@ public class EditorController implements Initializable {
     @FXML
     public void handleKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.ESCAPE) {
+            closeEditor();
+        }
+    }
+
+    /**
+     * Checks for unsaved changes and prompts user if necessary before closing
+     */
+    private void closeEditor() {
+        if (hasUnsavedChanges()) {
+            Optional<ButtonType> result = showUnsavedChangesDialog();
+
+            if (result.isPresent()) {
+                if (result.get() == ButtonType.YES) {
+                    // Save and close
+                    saveFile(null);
+                    borderPane.getScene().getWindow().hide();
+                } else if (result.get() == ButtonType.NO) {
+                    // Discard changes and close
+                    borderPane.getScene().getWindow().hide();
+                }
+                // If CANCEL, do nothing - keep editor open
+            }
+        } else {
+            // No unsaved changes, close immediately
             borderPane.getScene().getWindow().hide();
         }
+    }
+
+    /**
+     * Check if there are unsaved changes
+     * @return true if there are unsaved changes
+     */
+    private boolean hasUnsavedChanges() {
+        // The save button is disabled when there are no unsaved changes
+        return saveBtn != null && !saveBtn.isDisabled();
+    }
+
+    /**
+     * Show dialog asking user what to do with unsaved changes
+     * @return User's choice: YES (save), NO (discard), CANCEL (don't close)
+     */
+    private Optional<ButtonType> showUnsavedChangesDialog() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Unsaved Changes");
+        alert.setHeaderText("You have unsaved changes");
+        alert.setContentText("Do you want to save your changes before closing?");
+
+        ButtonType buttonTypeSave = new ButtonType("Save");
+        ButtonType buttonTypeDiscard = new ButtonType("Discard");
+        ButtonType buttonTypeCancel = ButtonType.CANCEL;
+
+        alert.getButtonTypes().setAll(buttonTypeSave, buttonTypeDiscard, buttonTypeCancel);
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        // Map custom button types to standard YES/NO/CANCEL
+        if (result.isPresent()) {
+            if (result.get() == buttonTypeSave) {
+                return Optional.of(ButtonType.YES);
+            } else if (result.get() == buttonTypeDiscard) {
+                return Optional.of(ButtonType.NO);
+            }
+        }
+
+        return Optional.of(ButtonType.CANCEL);
     }
 }
