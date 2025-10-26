@@ -178,6 +178,16 @@ public class HistoryDetailController implements Initializable {
         changedFilesListView.setOnContextMenuRequested( e-> {
 
             final ScmItem scmItem = (ScmItem) changedFilesListView.getSelectionModel().getSelectedItem();
+
+            // Disable all menu items if no item is selected
+            if (scmItem == null) {
+                openDiffMenuItem.setDisable(true);
+                diffWithPrevVersionMenuItem.setDisable(true);
+                diffWithCurrentVersionMenuItem.setDisable(true);
+                diffWithDiskVersionMenuItem.setDisable(true);
+                return;
+            }
+
             final boolean disableDiff = !ExtensionMap.isTextExtension(scmItem.getShortName());
 
             boolean added = ScmItem.Status.ADDED.equals(scmItem.getAttribute().getStatus());
@@ -349,6 +359,8 @@ public class HistoryDetailController implements Initializable {
             content = Context.getGitRepoService().getRawDiff(
                     Context.scmRevCommitDetails.get().getRevisionFullName(),
                     null);
+            // Clear existing text before setting new content to avoid accumulation
+            codeArea.clear();
             codeArea.appendText(content);
 
             codeArea.setStyle(LookAndFeelSet.CODE_AREA_CSS);
