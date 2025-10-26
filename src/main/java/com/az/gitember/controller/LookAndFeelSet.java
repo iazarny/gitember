@@ -18,8 +18,8 @@ public class LookAndFeelSet {
     public static String KEYWORDS_CSS = "/styles/keywords.css";
     public static String DEFAULT_CSS = "/styles/styles.css";
     public static String FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #97c9f0";
-    public static String CODE_AREA_CSS = "-fx-font-size: 18; -fx-font-family: Source Sans Pro;";
-    public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #b3b3b3; -fx-font-family: Source Sans Pro;";
+    public static String CODE_AREA_CSS = "-fx-font-size: 18; -fx-font-family: Source Sans Pro; -fx-background-color: white;";
+    public static String CODE_AREA_LINE_NUM_CSS = "-fx-background-color: white; -fx-text-fill: #b3b3b3; -fx-font-family: Source Sans Pro;";
 
 
     //for scroll pane
@@ -47,7 +47,7 @@ public class LookAndFeelSet {
             FOUND_ROW = "-fx-font-weight: bold; -fx-background-color: #004f8b";
 
             CODE_AREA_CSS = "-fx-fill: gray; -fx-background-color: black;  -fx-font-size: 18; -fx-font-family: Source Sans Pro;";
-            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: background_color;  -fx-text-fill: #505050; -fx-font-family: Source Sans Pro;";
+            CODE_AREA_LINE_NUM_CSS = "-fx-background-color: black; -fx-text-fill: #505050; -fx-font-family: Source Sans Pro;";
 
             DIFF_COLOR_DELETE = Color.valueOf("#ff6666");
             DIFF_COLOR_INSERT = Color.valueOf("#66ff66");

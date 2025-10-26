@@ -95,6 +95,9 @@ public class DiffController implements Initializable {
 
     // Track temporary files for cleanup
     private final List<String> tempFilesToCleanup = new ArrayList<>();
+    
+    // Flag to prevent recursive updates during synchronized scrolling
+    private boolean isUpdatingPaths = false;
 
     public void setData(ScmItem item, List<ScmRevisionInformation> fileRevs,
                         String oldSha, String newSha) throws Exception {
@@ -287,7 +290,7 @@ public class DiffController implements Initializable {
         );
 
         oldScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
-            if (updateAllowed) {
+            if (updateAllowed && !this.isUpdatingPaths) {
                 oldScrolled = true;
                 if (!newScrolled) {
                     Double val = oldScrollPane.snapSizeY( new_val.doubleValue()
@@ -296,11 +299,22 @@ public class DiffController implements Initializable {
                         newScrollPane.estimatedScrollYProperty().setValue(val);
                     }
                 }
+                
+                // Only update paths after both scrolls complete
+                if (newScrolled && oldScrolled) {
+                    this.isUpdatingPaths = true;
+                    Platform.runLater(() -> {
+                        updatePathElements();
+                        updateDiffOverview();
+                        newScrolled = oldScrolled = false;
+                        this.isUpdatingPaths = false;
+                    });
+                }
             }
         });
 
         newScrollPane.estimatedScrollYProperty().addListener((ObservableValue<? extends Number> ov,  Number old_val, Number new_val) -> {
-            if (updateAllowed) {
+            if (updateAllowed && !this.isUpdatingPaths) {
                 newScrolled = true;
                 if (!oldScrolled) {
                     Double val = oldScrollPane.snapSizeY(new_val.doubleValue()
@@ -309,26 +323,17 @@ public class DiffController implements Initializable {
                         oldScrollPane.estimatedScrollYProperty().setValue(val);
                     }
                 }
-                updatePathElements();
-            }
-        });
-
-
-        oldScrollPane.estimatedScrollYProperty().addListener(observable -> {
-            if (newScrolled && oldScrolled) {
-                updatePathElements();
-                updateDiffOverview();
-                newScrolled = oldScrolled = false;
-            }
-        });
-
-
-
-        newScrollPane.estimatedScrollYProperty().addListener(observable -> {
-            if (newScrolled && oldScrolled) {
-                updatePathElements();
-                updateDiffOverview();
-                newScrolled = oldScrolled = false;
+                
+                // Only update paths after both scrolls complete
+                if (newScrolled && oldScrolled) {
+                    this.isUpdatingPaths = true;
+                    Platform.runLater(() -> {
+                        updatePathElements();
+                        updateDiffOverview();
+                        newScrolled = oldScrolled = false;
+                        this.isUpdatingPaths = false;
+                    });
+                }
             }
         });
 
