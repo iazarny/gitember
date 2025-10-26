@@ -15,6 +15,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
@@ -632,6 +633,58 @@ public class MainController implements Initializable {
             log.log(Level.WARNING, msg, e);
             showResult(msg, ExceptionUtils.getStackTrace(e), Alert.AlertType.ERROR);
         }
+    }
+
+    public void compareFilesHandler(ActionEvent actionEvent) {
+        FileCompareDialog dialog = new FileCompareDialog(
+                "Compare Files",
+                "Select two files to compare"
+        );
+        dialog.initOwner(App.getStage());
+        dialog.showAndWait().ifPresent(files -> {
+            if (files.size() == 2) {
+                File leftFile = files.get(0);
+                File rightFile = files.get(1);
+                
+                // Validate files exist and are files
+                if (!leftFile.exists() || !leftFile.isFile()) {
+                    showResult("Error", "Left file does not exist or is not a file: " + leftFile.getAbsolutePath(),
+                            Alert.AlertType.ERROR);
+                    return;
+                }
+                
+                if (!rightFile.exists() || !rightFile.isFile()) {
+                    showResult("Error", "Right file does not exist or is not a file: " + rightFile.getAbsolutePath(),
+                            Alert.AlertType.ERROR);
+                    return;
+                }
+                
+                try {
+                    // Load diff viewer in a new stage
+                    Pair<Parent, Object> pair = App.loadFXMLToNewStage(
+                            Const.View.FILE_DIFF,
+                            "Diff: " + leftFile.getName() + " ↔ " + rightFile.getName()
+                    );
+                    
+                    // Apply styles
+                    pair.getFirst().getStylesheets().add(
+                            App.class.getResource(LookAndFeelSet.DEFAULT_CSS).toExternalForm());
+                    pair.getFirst().getStylesheets().add(
+                            App.class.getResource(LookAndFeelSet.KEYWORDS_CSS).toExternalForm());
+                    
+                    // Get the diff controller and load the files
+                    com.az.gitember.controller.diff.DiffController diffController =
+                            (com.az.gitember.controller.diff.DiffController) pair.getSecond();
+                    
+                    // Load the files for comparison
+                    diffController.loadFilesForDiff(leftFile.getAbsolutePath(), rightFile.getAbsolutePath());
+                    
+                } catch (Exception e) {
+                    log.log(Level.SEVERE, "Failed to open diff viewer", e);
+                    showResult("Error", "Failed to open diff viewer: " + e.getMessage(), Alert.AlertType.ERROR);
+                }
+            }
+        });
     }
 
     public void checkForUpdate(ActionEvent actionEvent) {

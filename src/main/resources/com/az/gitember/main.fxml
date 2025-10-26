@@ -81,6 +81,14 @@
                                         <MenuItem text="Branches ..." onAction="#createStatReportBranches"/>
 
                                     </Menu>
+                                    <MenuItem text="Compare Files ..."
+                                              onAction="#compareFilesHandler">
+                                        <graphic>
+                                            <StackedFontIcon style="-fx-icon-color: text_color">
+                                                <FontIcon iconLiteral="fa-files-o"/>
+                                            </StackedFontIcon>
+                                        </graphic>
+                                    </MenuItem>
                                     <MenuItem fx:id="openGitTerminalMenuItem"
                                               onAction="#openGitTerminalActionHandler"
                                               text="Terminal"/>
