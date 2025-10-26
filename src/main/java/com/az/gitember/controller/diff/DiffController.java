@@ -231,7 +231,7 @@ public class DiffController implements Initializable {
                     if (Context.isWindows()) {
                         osAdjustment = fontMetricHeight * 0.5; // Windows typically needs more spacing
                     } else if (Context.isLinux()) {
-                        osAdjustment = fontMetricHeight * 0.01655;
+                        osAdjustment = fontMetricHeight * 0.10493;
                     } else {
                         osAdjustment = fontMetricHeight * 0.01655; // Mac
                     }
