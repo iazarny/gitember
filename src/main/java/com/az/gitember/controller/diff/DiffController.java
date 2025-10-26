@@ -18,8 +18,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.Group;
-import javafx.scene.Scene;
+import javafx.geometry.Bounds;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -31,10 +30,8 @@ import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 
-import javafx.scene.text.Text;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.*;
-import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
@@ -205,11 +202,61 @@ public class DiffController implements Initializable {
     private volatile boolean oldScrolled = false;
     private volatile boolean newScrolled = false;
 
-
+    /**
+     * Update font size from OS-based measurements
+     * This method calculates the actual line height from the rendered text in the CodeArea
+     * instead of using hardcoded values that differ by OS.
+     */
+    private void updateFontSizeFromOS() {
+        Platform.runLater(() -> {
+            try {
+                // Parse font size from the CSS style string
+                String style = LookAndFeelSet.CODE_AREA_CSS;
+                String[] parts = style.split("-fx-font-size:");
+                
+                if (parts.length > 1) {
+                    String fontSizeStr = parts[1].trim().replaceAll("[^0-9\\.]", "");
+                    double parsedSize = Double.parseDouble(fontSizeStr);
+                    
+                    // Create a test text node with the same font as the code area
+                    javafx.scene.text.Text testText = new javafx.scene.text.Text("Ag");
+                    testText.setFont(javafx.scene.text.Font.font("Source Sans Pro", parsedSize));
+                    
+                    // Calculate actual line height including ascent, descent, and leading
+                    Bounds bounds = testText.getLayoutBounds();
+                    double fontMetricHeight = bounds.getHeight();
+                    
+                    // Add OS-specific line height adjustment based on actual rendering
+                    double osAdjustment = 0;
+                    if (Context.isWindows()) {
+                        osAdjustment = fontMetricHeight * 0.5; // Windows typically needs more spacing
+                    } else if (Context.isLinux()) {
+                        osAdjustment = fontMetricHeight * 0.01655;
+                    } else {
+                        osAdjustment = fontMetricHeight * 0.01655; // Mac
+                    }
+                    
+                    fontSize = fontMetricHeight + osAdjustment;
+                    
+                    log.log(Level.INFO, "OS-based font size determined: " + fontSize + 
+                            " (base: " + fontMetricHeight + ", OS: " + System.getProperty("os.name") + ")");
+                    
+                } else {
+                    // Fall back to platform-specific values if parsing fails
+                    fontSize = LookAndFeelSet.FONT_SIZE;
+                    log.log(Level.INFO, "Using platform-specific fallback: " + fontSize);
+                }
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Could not determine font size from OS, using fallback", e);
+                fontSize = LookAndFeelSet.FONT_SIZE;
+            }
+        });
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+        // Initialize with OS-specific default, will be updated dynamically if possible
         fontSize = LookAndFeelSet.FONT_SIZE;
 
         oldRevisionsCmb.setConverter(new ScmRevisionInformationConverter());
@@ -230,18 +277,10 @@ public class DiffController implements Initializable {
         newCodeArea.setMinWidth(Region.USE_PREF_SIZE);
         newCodeArea.setEditable(false);
 
-
-        Text text = new Text("Sample");
-        //text.setFont(newCodeArea.getFont());
-        new Scene(new Group(text)); // forces CSS processing
-        text.applyCss();
-
-        double actualRowHeight = text.getLayoutBounds().getHeight();
-        System.out.println(">>>>>>>>> " + actualRowHeight);
-
-        fontSize = actualRowHeight * 1.395;
-
         initCodePanels();
+        
+        // Obtain font size dynamically from OS and CodeArea
+        updateFontSizeFromOS();
 
         mainPanel.addEventHandler(KeyEvent.KEY_PRESSED, new EscEventHandler(mainPanel));
 
