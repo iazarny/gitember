@@ -91,6 +91,8 @@ public class MainController implements Initializable {
     public Button branchBtn;
     public VBox infoVBox;
     public ScrollPane infoScrollPane;
+    public SplitPane mainSplitPane;
+    public VBox leftPanel;
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -134,6 +136,14 @@ public class MainController implements Initializable {
         }
 
         mainTreeChangeListener = new MainTreeChangeListener();
+
+        // Listen for repository path changes to show/hide left panel
+        Context.repositoryPathProperty.addListener((observable, oldValue, newValue) -> {
+            updateLeftPanelVisibility(newValue != null);
+        });
+
+        // Initialize left panel visibility based on current repository state
+        updateLeftPanelVisibility(Context.repositoryPathProperty.getValue() != null);
 
         Context.workingBranch.addListener(
                 (observableValue, oldValue, newValue) -> {
@@ -797,6 +807,27 @@ public class MainController implements Initializable {
 
     public void keyPressedHandler(KeyEvent keyEvent) {
         //System.out.println(keyEvent);
+    }
+
+    /**
+     * Update left panel visibility based on whether a repository is open
+     * @param repositoryOpen true if a repository is open, false otherwise
+     */
+    private void updateLeftPanelVisibility(boolean repositoryOpen) {
+        if (mainSplitPane == null || leftPanel == null) {
+            return; // Not initialized yet
+        }
+
+        if (repositoryOpen) {
+            // Show left panel
+            if (!mainSplitPane.getItems().contains(leftPanel)) {
+                mainSplitPane.getItems().add(0, leftPanel);
+                mainSplitPane.setDividerPositions(0.16);
+            }
+        } else {
+            // Hide left panel
+            mainSplitPane.getItems().remove(leftPanel);
+        }
     }
 
     public void fillInfo() {

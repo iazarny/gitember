@@ -789,5 +789,39 @@ public class DiffController implements Initializable {
         }
     }
 
+    /**
+     * Load two files for diff comparison (for command-line mode)
+     * @param file1Path Path to first file
+     * @param file2Path Path to second file
+     */
+    public void loadFilesForDiff(String file1Path, String file2Path) {
+        try {
+            this.oldFileName = file1Path;
+            this.newFileName = file2Path;
+
+            this.oldText = Files.readString(Paths.get(file1Path));
+            this.newText = Files.readString(Paths.get(file2Path));
+
+            this.oldRawTxt = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
+            this.newRawTxt = new RawText(newText.getBytes(StandardCharsets.UTF_8));
+
+            // Hide revision combo boxes since we're not working with git history
+            if (oldRevisionsCmb != null) {
+                oldRevisionsCmb.setVisible(false);
+                oldRevisionsCmb.setManaged(false);
+            }
+            if (newRevisionsCmb != null) {
+                newRevisionsCmb.setVisible(false);
+                newRevisionsCmb.setManaged(false);
+            }
+
+            updateDiffRepresentation();
+
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Failed to load files for diff", e);
+            throw new RuntimeException("Failed to load files for diff", e);
+        }
+    }
+
 
 }

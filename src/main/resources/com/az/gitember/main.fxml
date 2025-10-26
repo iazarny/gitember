@@ -257,13 +257,13 @@
     <left>
     </left>
     <center>
-        <SplitPane orientation="HORIZONTAL" dividerPositions="0.16"
+        <SplitPane fx:id="mainSplitPane" orientation="HORIZONTAL" dividerPositions="0.16"
                    style="-fx-padding: 10 20 0 13;"
         >
 
 
 
-            <VBox>
+            <VBox fx:id="leftPanel">
                 <TreeView minWidth="150" prefWidth="300" fx:id="repoTreeView" showRoot="false" disable="true"
                           style="-fx-padding: 10 20 0 13; -fx-border-color: transparent"
                            prefHeight="1000000"
