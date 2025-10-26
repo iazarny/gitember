@@ -2,7 +2,7 @@
 
 rm -rf app
 mkdir app
-cp target/gitember-2.5.7-spring-boot.jar app/gitember.jar
+cp target/gitember-2.5.8-spring-boot.jar app/gitember.jar
 
 # Oracle JDK 21 only 
 # Open JDK 17, 18 jlink failed , but app ot modular. 21 packed ok but launcher has error

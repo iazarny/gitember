@@ -43,6 +43,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -98,6 +102,17 @@ public class DiffController implements Initializable {
     
     // Flag to prevent recursive updates during synchronized scrolling
     private boolean isUpdatingPaths = false;
+    
+    // Topic 2: Debounced diff calculation
+    private ScheduledExecutorService debounceExecutor;
+    private ScheduledFuture<?> debounceTask;
+    private static final long DEBOUNCE_DELAY_MS = 100; // 100ms debounce delay
+    
+    // Topic 3: Syntax highlighting cache
+    private final Map<String, StyleSpans<Collection<String>>> highlightingCache = new HashMap<>();
+    private String lastHighlightedFile = null;
+    private String lastHighlightedContent = null;
+    private static final int MAX_CACHE_SIZE = 10; // Cache up to 10 files
 
     public void setData(ScmItem item, List<ScmRevisionInformation> fileRevs,
                         String oldSha, String newSha) throws Exception {
@@ -159,6 +174,26 @@ public class DiffController implements Initializable {
         }
         if (diffList != null) {
             diffList.clear();
+        }
+        
+        // Topic 3: Clear highlighting cache
+        highlightingCache.clear();
+        lastHighlightedFile = null;
+        lastHighlightedContent = null;
+        
+        // Topic 2: Shutdown debounce executor
+        if (debounceTask != null) {
+            debounceTask.cancel(false);
+            debounceTask = null;
+        }
+        if (debounceExecutor != null) {
+            debounceExecutor.shutdown();
+            try {
+                debounceExecutor.awaitTermination(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                log.log(Level.WARNING, "Interrupted while shutting down debounce executor", e);
+            }
+            debounceExecutor = null;
         }
     }
 
@@ -588,7 +623,28 @@ public class DiffController implements Initializable {
                 FilenameUtils.getExtension(fileName),
                 this.diffList, leftSide, activeParagrah);
 
-        StyleSpans<Collection<String>> spans = adapter.computeHighlighting(codeArea.getText());
+        // Topic 3: Syntax highlighting caching - check cache before computing
+        StyleSpans<Collection<String>> spans;
+        String cacheKey = fileName + ":" + text.hashCode();
+        
+        if (highlightingCache.containsKey(cacheKey) && text.equals(lastHighlightedContent)) {
+            spans = highlightingCache.get(cacheKey);
+            log.log(Level.FINE, "Using cached syntax highlighting for " + fileName);
+        } else {
+            spans = adapter.computeHighlighting(codeArea.getText());
+            if (spans != null) {
+                highlightingCache.put(cacheKey, spans);
+                lastHighlightedFile = fileName;
+                lastHighlightedContent = text;
+                // Keep cache size reasonable - remove oldest entries if needed
+                if (highlightingCache.size() > MAX_CACHE_SIZE) {
+                    String oldestKey = highlightingCache.keySet().iterator().next();
+                    highlightingCache.remove(oldestKey);
+                    log.log(Level.FINE, "Removed oldest cache entry: " + oldestKey);
+                }
+            }
+        }
+        
         if (spans != null) {
             codeArea.setStyleSpans(0, spans);
         }
@@ -771,27 +827,40 @@ public class DiffController implements Initializable {
 
 
     public void updateDiffRepresentation()  {
-
-        if (oldRawTxt != null && newRawTxt != null) {
-            // Calculate diffs on current thread (can be background thread)
-            diffList.clear();
-            DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
-            diffList.addAll(diffAlgorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRawTxt, newRawTxt));
-
-            // ALL UI updates must run on JavaFX Application Thread
-            Platform.runLater(() -> {
-                setText(oldCodeArea, oldText, oldFileName, true);
-                setText(newCodeArea, newText, newFileName, false);
-
-                if (oldScrollPane != null && oldScrollPane.getVbar() != null) {
-                    oldScrollPane.getVbar().setData(oldText, newText, diffList);
-                }
-
-                createPathElements();
-                scrollToFirstDiff();
-                updateButtonState();
-            });
+        // Topic 2: Debounced diff calculation - cancel any pending diff calculation
+        if (debounceTask != null) {
+            debounceTask.cancel(false);
         }
+        
+        if (debounceExecutor == null) {
+            debounceExecutor = Executors.newSingleThreadScheduledExecutor();
+        }
+        
+        // Schedule the diff calculation after debounce delay
+        debounceTask = debounceExecutor.schedule(() -> {
+            if (oldRawTxt != null && newRawTxt != null) {
+                // Calculate diffs on background thread (not UI thread)
+                EditList tempDiffList = new EditList();
+                DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
+                tempDiffList.addAll(diffAlgorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRawTxt, newRawTxt));
+
+                // ALL UI updates must run on JavaFX Application Thread
+                Platform.runLater(() -> {
+                    diffList = tempDiffList;
+                    
+                    setText(oldCodeArea, oldText, oldFileName, true);
+                    setText(newCodeArea, newText, newFileName, false);
+
+                    if (oldScrollPane != null && oldScrollPane.getVbar() != null) {
+                        oldScrollPane.getVbar().setData(oldText, newText, diffList);
+                    }
+
+                    createPathElements();
+                    scrollToFirstDiff();
+                    updateButtonState();
+                });
+            }
+        }, DEBOUNCE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     /**

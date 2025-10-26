@@ -81,9 +81,7 @@ public class FileCompareDialog extends Dialog<List<File>> {
         );
 
         // Drop zone info
-        Label dropZoneInfo = new Label("💡 Tip: You can drag and drop files from your file manager");
-        dropZoneInfo.setStyle("-fx-font-size: 10px; -fx-text-fill: gray;");
-        grid.add(dropZoneInfo, 0, 2, 2, 1);
+
 
         grid.add(swapButton, 1, 2);
 
