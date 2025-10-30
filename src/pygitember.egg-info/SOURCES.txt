@@ -1,0 +1,10 @@
+LICENSE-Apache-2.0.txt
+LICENSE-Gnu-3.0.txt
+README.md
+pyproject.toml
+src/pygitember.egg-info/PKG-INFO
+src/pygitember.egg-info/SOURCES.txt
+src/pygitember.egg-info/dependency_links.txt
+src/pygitember.egg-info/entry_points.txt
+src/pygitember.egg-info/requires.txt
+src/pygitember.egg-info/top_level.txt

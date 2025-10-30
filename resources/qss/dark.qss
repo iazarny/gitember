@@ -1,0 +1,22 @@
+/* Minimal dark theme */
+QWidget {
+  background-color: #1e1f22;
+  color: #e6e6e6;
+  selection-background-color: #2d6cdf;
+}
+
+QMenuBar, QMenu {
+  background-color: #2b2d30;
+}
+
+QMenu::item:selected {
+  background-color: #3a3d41;
+}
+
+QToolTip {
+  color: #e6e6e6;
+  background-color: #2b2d30;
+  border: 1px solid #3a3d41;
+}
+
+

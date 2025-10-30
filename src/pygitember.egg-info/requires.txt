@@ -1,0 +1,9 @@
+PyQt6>=6.6
+pygit2>=1.14
+whoosh>=2.7.4
+filetype>=1.2.0
+Pygments>=2.16
+
+[dev]
+pytest>=7
+ruff>=0.6
