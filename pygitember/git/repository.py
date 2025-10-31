@@ -129,7 +129,7 @@ class GitRepository:
             return ""
         try:
             entry = head[path]
-            return self._read_blob_text(entry.oid)
+            return self._read_blob_text(entry.id)
         except KeyError:
             return ""
 
