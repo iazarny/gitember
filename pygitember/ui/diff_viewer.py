@@ -174,6 +174,11 @@ class MinimapWidget(QWidget):
             self._editor.setTextCursor(cursor)
             self._editor.centerCursor()
 
+    def update_line_map(self, line_map: List[tuple[str, int]]) -> None:
+        """Update the line map and trigger repaint."""
+        self._line_map = line_map
+        self.update()
+
 
 class DiffViewer(QWidget):
     def __init__(self, left_bytes: bytes, right_bytes: bytes, left_label: str, right_label: str) -> None:
@@ -190,7 +195,8 @@ class DiffViewer(QWidget):
         # Text widgets
         self.left_text = LineNumberEditor('left')
         self.right_text = LineNumberEditor('right')
-        self._left_minimap: MinimapWidget | None = None
+        # Create minimap with empty line map initially (will be updated in _render_text_diff)
+        self._left_minimap = MinimapWidget(self.left_text, [])
 
         # Image widgets inside scroll areas
         self.left_img_label = QLabel()
@@ -210,13 +216,15 @@ class DiffViewer(QWidget):
         # Add 5% spacer between left and right (custom painter for Bezier bands)
         self.spacer = DiffSpacer()
         self.spacer.setMinimumWidth(10)
-        # Minimap will be added after opcodes are known in _render_text_diff
+        # Add all widgets: minimap, left panel, spacer, right panel
+        self.split.addWidget(self._left_minimap)
         self.split.addWidget(self.left_text)
         self.split.addWidget(self.spacer)
         self.split.addWidget(self.right_text)
-        self.split.setStretchFactor(0, 1)
-        self.split.setStretchFactor(1, 0)
-        self.split.setStretchFactor(2, 1)
+        self.split.setStretchFactor(0, 0)  # minimap fixed width
+        self.split.setStretchFactor(1, 1)  # left panel
+        self.split.setStretchFactor(2, 0)  # spacer
+        self.split.setStretchFactor(3, 1)  # right panel
 
     def _set_image_mode(self) -> None:
         self.spacer = DiffSpacer()
@@ -260,42 +268,20 @@ class DiffViewer(QWidget):
         if isinstance(self.spacer, DiffSpacer):
             self.spacer.configure(self.left_text, self.right_text, opcodes)
 
-        # Build line maps for minimaps
+        # Build line map for minimap
         left_lines: List[tuple[str, int]] = []
-        right_lines: List[tuple[str, int]] = []
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == "equal":
                 cnt = i2 - i1
                 left_lines.append(("equal", cnt))
-                right_lines.append(("equal", cnt))
             elif tag == "replace":
                 left_lines.append(("modified", i2 - i1))
-                right_lines.append(("modified", j2 - j1))
             elif tag == "delete":
                 left_lines.append(("deleted", i2 - i1))
-            elif tag == "insert":
-                right_lines.append(("inserted", j2 - j1))
+            # insert doesn't affect left file
 
-        # Create minimap after we have line maps (only left side)
-        if self._left_minimap is None:
-            self._left_minimap = MinimapWidget(self.left_text, left_lines)
-            # Reinsert widgets with left minimap
-            widgets = []
-            for i in range(self.split.count()):
-                w = self.split.widget(i)
-                if w is not None:
-                    widgets.append(w)
-                    w.setParent(None)
-            # Insert left minimap first, then existing widgets
-            self.split.addWidget(self._left_minimap)
-            self.split.setStretchFactor(0, 0)  # left minimap fixed width
-            for w in widgets:
-                if w is not None:
-                    self.split.addWidget(w)
-            # Adjust stretch factors: left_minimap(0), left(1), spacer(2), right(3)
-            self.split.setStretchFactor(1, 1)  # left panel
-            self.split.setStretchFactor(2, 0)  # spacer
-            self.split.setStretchFactor(3, 1)  # right panel
+        # Update minimap with line map
+        self._left_minimap.update_line_map(left_lines)
 
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == "equal":
