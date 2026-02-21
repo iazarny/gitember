@@ -121,6 +121,12 @@ public class MainTreePanel extends JPanel {
                 yield null;
             }
             case TAGS -> contextMenuFactory.createTagsCategoryMenu();
+            case STASH -> {
+                if (data.data() instanceof ScmRevisionInformation stash) {
+                    yield contextMenuFactory.createStashContextMenu(stash);
+                }
+                yield null;
+            }
             default -> null;
         };
     }

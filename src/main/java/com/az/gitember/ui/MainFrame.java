@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Settings;
 import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
@@ -44,6 +45,7 @@ public class MainFrame extends JFrame {
     // Working copy
     private WorkingCopyPanel workingCopyPanel;
     private HistoryPanel historyPanel;
+    private CommitDetailPanel stashDetailPanel;
 
     public MainFrame() {
         setTitle("Gitember");
@@ -102,6 +104,7 @@ public class MainFrame extends JFrame {
 
         workingCopyPanel = new WorkingCopyPanel(statusBar);
         historyPanel = new HistoryPanel(statusBar);
+        stashDetailPanel = new CommitDetailPanel();
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
@@ -294,6 +297,13 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
+    private void loadStashDetail(ScmRevisionInformation stash) {
+        // adapt() is called for every stash entry when the stash list is built,
+        // so affected items are already populated at this point.
+        stashDetailPanel.showRevision(stash);
+        statusBar.setStatus("Stash: " + (stash.getShortMessage() != null ? stash.getShortMessage() : ""));
+    }
+
     private void showStashDialog() {
         String message = JOptionPane.showInputDialog(this, "Stash message:", "Stash", JOptionPane.PLAIN_MESSAGE);
         if (message == null) return; // cancelled
@@ -438,6 +448,12 @@ public class MainFrame extends JFrame {
                     if (data.data() instanceof ScmBranch tag) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(tag.getFullName(), false);
+                    }
+                }
+                case STASH -> {
+                    if (data.data() instanceof ScmRevisionInformation stash) {
+                        contentPanel.setContent(stashDetailPanel);
+                        loadStashDetail(stash);
                     }
                 }
                 default -> contentPanel.setContent(null);

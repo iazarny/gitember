@@ -1,18 +1,23 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Creates context menus for branch/tag nodes in the tree,
  * mirroring the original gitember MainTreeContextMenuFactory.
  */
 public class BranchContextMenuFactory {
+
+    private static final Logger log = Logger.getLogger(BranchContextMenuFactory.class.getName());
 
     private final Component parent;
     private final StatusBar statusBar;
@@ -115,6 +120,85 @@ public class BranchContextMenuFactory {
                     statusBar.setStatus("Diff: " + currentBranchFullName + " vs " + br.getFullName() + " (not yet implemented)"));
             diffMenu.add(item);
         }
+    }
+
+    /**
+     * Context menu for an individual stash entry.
+     */
+    public JPopupMenu createStashContextMenu(ScmRevisionInformation stash) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem applyItem = new JMenuItem("Apply Stash");
+        applyItem.addActionListener(e -> doApplyStash(stash));
+        menu.add(applyItem);
+
+        JMenuItem dropItem = new JMenuItem("Drop Stash");
+        dropItem.addActionListener(e -> doDropStash(stash));
+        menu.add(dropItem);
+
+        return menu;
+    }
+
+    private void doApplyStash(ScmRevisionInformation stash) {
+        statusBar.setStatus("Applying stash...");
+        statusBar.showProgress(true);
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Context.getGitRepoService().applyStash(stash.getRevisionFullName());
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    statusBar.setStatus("Stash applied");
+                    Context.updateStatus(null, true);
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Apply stash failed", ex);
+                    statusBar.setStatus("Apply stash failed: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(parent,
+                            "Cannot apply stash:\n" + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    private void doDropStash(ScmRevisionInformation stash) {
+        String label = stash.getShortMessage() != null ? stash.getShortMessage() : "stash@{" + stash.getStashIndex() + "}";
+        int choice = JOptionPane.showConfirmDialog(parent,
+                "Drop stash \"" + label + "\"?\nThis cannot be undone.",
+                "Drop Stash", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (choice != JOptionPane.YES_OPTION) return;
+
+        statusBar.setStatus("Dropping stash...");
+        statusBar.showProgress(true);
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Context.getGitRepoService().deleteStash(stash.getStashIndex());
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    statusBar.setStatus("Stash dropped");
+                    Context.updateStash();
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Drop stash failed", ex);
+                    statusBar.setStatus("Drop stash failed: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(parent,
+                            "Cannot drop stash:\n" + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 
     /**
