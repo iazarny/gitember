@@ -166,6 +166,9 @@ public class MainTreePanel extends JPanel {
         if (branches != null) {
             for (ScmBranch branch : branches) {
                 String name = branch.getShortName() != null ? branch.getShortName() : branch.getFullName();
+                if (branch.getRemoteMergeName() != null) {
+                    name = name + " (" + branch.getRemoteMergeName() + ")";
+                }
                 DefaultMutableTreeNode node = new DefaultMutableTreeNode(
                         new TreeNodeData(name, type, branch));
                 parent.add(node);
