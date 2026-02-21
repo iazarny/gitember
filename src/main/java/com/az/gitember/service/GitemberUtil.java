@@ -10,8 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.kordamp.ikonli.javafx.FontIcon;
-import org.kordamp.ikonli.javafx.StackedFontIcon;
+
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -226,13 +225,6 @@ public class GitemberUtil {
         } else {
             return new Pair<>(edit.getBeginB(), edit.getEndB());
         }
-    }
-
-    public static StackedFontIcon create(final FontIcon fontIcon) {
-        final StackedFontIcon stackedFontIcon = new StackedFontIcon();
-        stackedFontIcon.setStyle("-fx-icon-color: text_color");
-        stackedFontIcon.getChildren().add(fontIcon);
-        return stackedFontIcon;
     }
 
     public static ArrayList<String> getLines(final String content) {

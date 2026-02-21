@@ -24,6 +24,7 @@ public class Settings {
     private TreeSet<Project> projects = new TreeSet<>();
 
     private String theme;
+    private int fontSize = 13;
 
     public TreeSet<Project> getProjects() {
         return projects;
@@ -55,5 +56,13 @@ public class Settings {
 
     public void setTheme(String theme) {
         this.theme = theme;
+    }
+
+    public int getFontSize() {
+        return fontSize;
+    }
+
+    public void setFontSize(int fontSize) {
+        this.fontSize = fontSize;
     }
 }

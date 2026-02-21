@@ -29,6 +29,9 @@ public class Project implements Serializable, Comparable<Project>  {
     @JsonDeserialize(using = MaskStringValueDeSerializer.class)
     @JsonSerialize(using = MaskStringValueSerializer.class)
     private String keyPass;
+    @JsonDeserialize(using = MaskStringValueDeSerializer.class)
+    @JsonSerialize(using = MaskStringValueSerializer.class)
+    private String accessToken;
     private String userCommitName;
     private String userCommitEmail;
     private boolean indexed;
@@ -112,6 +115,14 @@ public class Project implements Serializable, Comparable<Project>  {
 
     public void setKeyPass(String keyPass) {
         this.keyPass = keyPass;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
     @Override

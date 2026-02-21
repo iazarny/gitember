@@ -1,23 +1,17 @@
 package com.az.gitember.service;
 
-import com.az.gitember.controller.main.MainController;
-import com.az.gitember.controller.handlers.StatusUpdateEventHandler;
 import com.az.gitember.data.*;
-import javafx.application.Platform;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 
+import javax.swing.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.nio.file.WatchService;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -28,106 +22,287 @@ public class Context {
 
     private final static String OS = System.getProperty("os.name").toLowerCase();
 
-
     private static GitRepoService gitRepoService = new GitRepoService();
     private final static SettingService settingService = new SettingService();
 
+    private static final PropertyChangeSupport pcs = new PropertyChangeSupport(new Object());
 
-    public static final StringProperty repositoryPathProperty = new SimpleStringProperty();
-    public static ObjectProperty<ScmBranch> workingBranch = new SimpleObjectProperty<ScmBranch>();
-    public static final ObjectProperty<Settings> settingsProperty = new SimpleObjectProperty<Settings>();
-    public static final ObjectProperty<ScmRevisionInformation> scmRevCommitDetails = new SimpleObjectProperty<ScmRevisionInformation>();
+    // Property names
+    public static final String PROP_REPOSITORY_PATH = "repositoryPath";
+    public static final String PROP_WORKING_BRANCH = "workingBranch";
+    public static final String PROP_SETTINGS = "settings";
+    public static final String PROP_SCM_REV_COMMIT_DETAILS = "scmRevCommitDetails";
+    public static final String PROP_LAST_CHANGES = "lastChanges";
+    public static final String PROP_LFS_REPO = "lfsRepo";
+    public static final String PROP_SHOW_LFS_FILES = "showLfsFiles";
+    public static final String PROP_SELECTED_TREE_NAME = "selectedTreeName";
+    public static final String PROP_BRANCH_FILTER = "branchFilter";
+    public static final String PROP_REMOTE_BRANCHES = "remoteBranches";
+    public static final String PROP_LOCAL_BRANCHES = "localBranches";
+    public static final String PROP_TAGS = "tags";
+    public static final String PROP_STASH = "stash";
+    public static final String PROP_STATUS_LIST = "statusList";
+    public static final String PROP_PLOT_COMMIT_LIST = "plotCommitList";
+    public static final String PROP_FILE_HISTORY_TREE = "fileHistoryTree";
+    public static final String PROP_FILE_HISTORY_NAME = "fileHistoryName";
+    public static final String PROP_MAIN_PANE_NAME = "mainPaneName";
+    public static final String PROP_SCM_STAT = "scmStat";
+    public static final String PROP_SCM_STAT_LIST = "scmStatList";
+    public static final String PROP_SCM_STAT_BRANCH_LIVE_TIME = "scmStatBranchLiveTime";
+    public static final String PROP_SCM_STAT_LIST_PARAM = "scmStatListParam";
+    public static final String PROP_SEARCH_VALUE = "searchValue";
+    public static final String PROP_SEARCH_RESULT = "searchResult";
 
-    public static final BooleanProperty lastChanges = new SimpleBooleanProperty();
-    public static final BooleanProperty lfsRepo = new SimpleBooleanProperty(false);
-    public static final BooleanProperty showLfsFiles = new SimpleBooleanProperty(false);
-
-    public static final StringProperty selectedTreeName = new SimpleStringProperty();
-
-
-
-    //-------------------------------------------------------
-
-    public static final StringProperty branchFilter =
-            new SimpleStringProperty();
-
+    // Fields
+    private static String repositoryPath;
+    private static ScmBranch workingBranch;
+    private static Settings settings;
+    private static ScmRevisionInformation scmRevCommitDetails;
+    private static boolean lastChanges;
+    private static boolean lfsRepo;
+    private static boolean showLfsFiles;
+    private static String selectedTreeName;
+    private static String branchFilter = "";
 
     private static final List<ScmBranch> remoteBranchesRaw = new ArrayList<>();
     private static final List<ScmBranch> localBranchesRaw = new ArrayList<>();
     private static final List<ScmBranch> tagsRaw = new ArrayList<>();
 
-    public static final ObjectProperty<List<ScmBranch>> remoteBrancesProperty =
-            new SimpleObjectProperty<List<ScmBranch>>(Collections.emptyList());
+    private static List<ScmBranch> remoteBranches = Collections.emptyList();
+    private static List<ScmBranch> localBranches = Collections.emptyList();
+    private static List<ScmBranch> tags = Collections.emptyList();
+    private static List<ScmRevisionInformation> stash = Collections.emptyList();
 
-    public static final ObjectProperty<List<ScmBranch>> localBrancesProperty =
-            new SimpleObjectProperty<List<ScmBranch>>(Collections.emptyList());
+    private static List<ScmItem> statusList = new ArrayList<>();
+    private static List<PlotCommit> plotCommitList = new ArrayList<>();
 
-    public static final ObjectProperty<List<ScmBranch>> tagsProperty =
-            new SimpleObjectProperty<List<ScmBranch>>(Collections.emptyList());
-    //-------------------------------------------------------
-
-    public static final ObjectProperty<List<ScmRevisionInformation>> stashProperty =
-            new SimpleObjectProperty<List<ScmRevisionInformation>>(Collections.emptyList());
-
-    public static final ObservableList<ScmItem> statusList = FXCollections.observableList(new ArrayList<>());
-    public static final ObservableList<ScmItem> stashItemsList = FXCollections.observableList(new ArrayList<>());
-    public static final ObservableList<PlotCommit> plotCommitList = FXCollections.observableList(new ArrayList<>());
-
-    public static final StringProperty fileHistoryTree = new SimpleStringProperty();
-    public static final StringProperty fileHistoryName = new SimpleStringProperty();
-    public static final StringProperty mainPaneName = new SimpleStringProperty();
-
-    public static final ObjectProperty<ScmStat> scmStatProperty =
-            new SimpleObjectProperty(new ScmStat());
-
-    public static final ObjectProperty<List<ScmStat>> scmStatListProperty =
-            new SimpleObjectProperty(Collections.EMPTY_LIST);
-
-    public static final ObjectProperty<List<AverageLiveTime>> scmStatBranchLiveTimeProperty =
-            new SimpleObjectProperty(Collections.EMPTY_LIST);
-
-    public static final ObjectProperty<StatWPParameters> scmStatListPropertyParam =
-            new SimpleObjectProperty(null);
-
-    public static StringProperty searchValue = new SimpleStringProperty();
-    public static final ObjectProperty<Map<String, Set<String>>> searchResult =
-            new SimpleObjectProperty(Collections.EMPTY_MAP);
+    private static String fileHistoryTree;
+    private static String fileHistoryName;
+    private static String mainPaneName;
+    private static ScmStat scmStat = new ScmStat();
+    private static List<ScmStat> scmStatList = Collections.emptyList();
+    private static List<AverageLiveTime> scmStatBranchLiveTime = Collections.emptyList();
+    private static StatWPParameters scmStatListParam;
+    private static String searchValue;
+    private static Map<String, Set<String>> searchResult = Collections.emptyMap();
 
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new ConcurrentHashMap<>();
 
-    private static MainController main;
-
     private static ProjectWatcher projectWatcher;
     private static Thread projectWatcherThread;
 
+    // Property change listener support
+    public static void addPropertyChangeListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(listener);
+    }
 
+    public static void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public static void removePropertyChangeListener(PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(listener);
+    }
+
+    public static void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(propertyName, listener);
+    }
+
+    // Getters and setters with property change firing
+    public static String getRepositoryPath() {
+        return repositoryPath;
+    }
+
+    public static void setRepositoryPath(String value) {
+        String old = repositoryPath;
+        repositoryPath = value;
+        pcs.firePropertyChange(PROP_REPOSITORY_PATH, old, value);
+    }
+
+    public static ScmBranch getWorkingBranch() {
+        return workingBranch;
+    }
+
+    public static void setWorkingBranch(ScmBranch value) {
+        ScmBranch old = workingBranch;
+        workingBranch = value;
+        pcs.firePropertyChange(PROP_WORKING_BRANCH, old, value);
+    }
+
+    public static Settings getSettings() {
+        return settings;
+    }
+
+    public static void setSettings(Settings value) {
+        Settings old = settings;
+        settings = value;
+        pcs.firePropertyChange(PROP_SETTINGS, old, value);
+    }
+
+    public static ScmRevisionInformation getScmRevCommitDetails() {
+        return scmRevCommitDetails;
+    }
+
+    public static void setScmRevCommitDetails(ScmRevisionInformation value) {
+        ScmRevisionInformation old = scmRevCommitDetails;
+        scmRevCommitDetails = value;
+        pcs.firePropertyChange(PROP_SCM_REV_COMMIT_DETAILS, old, value);
+    }
+
+    public static boolean isLastChanges() {
+        return lastChanges;
+    }
+
+    public static void setLastChanges(boolean value) {
+        boolean old = lastChanges;
+        lastChanges = value;
+        pcs.firePropertyChange(PROP_LAST_CHANGES, old, value);
+    }
+
+    public static boolean isLfsRepo() {
+        return lfsRepo;
+    }
+
+    public static void setLfsRepo(boolean value) {
+        boolean old = lfsRepo;
+        lfsRepo = value;
+        pcs.firePropertyChange(PROP_LFS_REPO, old, value);
+    }
+
+    public static boolean isShowLfsFiles() {
+        return showLfsFiles;
+    }
+
+    public static void setShowLfsFiles(boolean value) {
+        boolean old = showLfsFiles;
+        showLfsFiles = value;
+        pcs.firePropertyChange(PROP_SHOW_LFS_FILES, old, value);
+    }
+
+    public static String getSelectedTreeName() {
+        return selectedTreeName;
+    }
+
+    public static void setSelectedTreeName(String value) {
+        String old = selectedTreeName;
+        selectedTreeName = value;
+        pcs.firePropertyChange(PROP_SELECTED_TREE_NAME, old, value);
+    }
+
+    public static String getBranchFilter() {
+        return branchFilter;
+    }
+
+    public static void setBranchFilter(String value) {
+        String old = branchFilter;
+        branchFilter = value != null ? value : "";
+        pcs.firePropertyChange(PROP_BRANCH_FILTER, old, branchFilter);
+        filterBranches();
+        filterTags();
+    }
+
+    public static List<ScmBranch> getRemoteBranches() {
+        return remoteBranches;
+    }
+
+    public static List<ScmBranch> getLocalBranches() {
+        return localBranches;
+    }
+
+    public static List<ScmBranch> getTags() {
+        return tags;
+    }
+
+    public static List<ScmRevisionInformation> getStash() {
+        return stash;
+    }
+
+    public static List<ScmItem> getStatusList() {
+        return statusList;
+    }
+
+    public static List<PlotCommit> getPlotCommitList() {
+        return plotCommitList;
+    }
+
+    public static String getFileHistoryTree() {
+        return fileHistoryTree;
+    }
+
+    public static void setFileHistoryTree(String value) {
+        String old = fileHistoryTree;
+        fileHistoryTree = value;
+        pcs.firePropertyChange(PROP_FILE_HISTORY_TREE, old, value);
+    }
+
+    public static String getFileHistoryName() {
+        return fileHistoryName;
+    }
+
+    public static void setFileHistoryName(String value) {
+        String old = fileHistoryName;
+        fileHistoryName = value;
+        pcs.firePropertyChange(PROP_FILE_HISTORY_NAME, old, value);
+    }
+
+    public static String getMainPaneName() {
+        return mainPaneName;
+    }
+
+    public static void setMainPaneName(String value) {
+        String old = mainPaneName;
+        mainPaneName = value;
+        pcs.firePropertyChange(PROP_MAIN_PANE_NAME, old, value);
+    }
+
+    public static ScmStat getScmStat() {
+        return scmStat;
+    }
+
+    public static void setScmStat(ScmStat value) {
+        ScmStat old = scmStat;
+        scmStat = value;
+        pcs.firePropertyChange(PROP_SCM_STAT, old, value);
+    }
+
+    public static String getSearchValue() {
+        return searchValue;
+    }
+
+    public static void setSearchValue(String value) {
+        String old = searchValue;
+        searchValue = value;
+        pcs.firePropertyChange(PROP_SEARCH_VALUE, old, value);
+    }
+
+    public static Map<String, Set<String>> getSearchResult() {
+        return searchResult;
+    }
+
+    public static void setSearchResult(Map<String, Set<String>> value) {
+        Map<String, Set<String>> old = searchResult;
+        searchResult = value;
+        pcs.firePropertyChange(PROP_SEARCH_RESULT, old, value);
+    }
+
+    // Init
     private static void initProjectWatcher(String gitFolder) throws Exception {
         String projFolder = gitFolder
                 .replace("/.git", "")
                 .replace("\\.git", "");
-        if (projectWatcherThread != null) { // TODO move global shutdown
+        if (projectWatcherThread != null) {
             projectWatcherThread.interrupt();
         }
         projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
-            Platform.runLater(
-                    //TODO also need to update branch
-                    () ->  {
-                        Context.updateStatus(null, true);
-                        //Context.updateWorkingBranch();
-                        //Context.getMain().updateButtonUI();
-                    }
-            );
+            SwingUtilities.invokeLater(() -> Context.updateStatus(null, true));
         });
-        projectWatcherThread = new Thread(
-                projectWatcher
-        );
+        projectWatcherThread = new Thread(projectWatcher);
         projectWatcherThread.setDaemon(true);
         projectWatcherThread.start();
     }
 
     public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
-
         String gitFolder = remoteRepoParameters.getDestinationFolder();
 
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
@@ -135,31 +310,22 @@ public class Context {
         }
 
         if (!new File(gitFolder).exists()) {
-            throw new RuntimeException("Git folder "+gitFolder+" not found");
+            throw new RuntimeException("Git folder " + gitFolder + " not found");
         }
 
         gitRepoService = new GitRepoService(gitFolder);
-        repositoryPathProperty.setValue(gitFolder);
+        setRepositoryPath(gitFolder);
         scmRevisionInformationCache.clear();
-        stashProperty.setValue(gitRepoService.getStashList());
-        lfsRepo.setValue(getGitRepoService().isLfsRepo());
-        showLfsFiles.setValue(false);
+        setStash(gitRepoService.getStashList());
+        setLfsRepo(getGitRepoService().isLfsRepo());
+        setShowLfsFiles(false);
 
         updateBranches();
         updateTags();
         updateWorkingBranch();
         updateStatus(null);
 
-        getMain().repoTreeView.getSelectionModel().select(0);
-        getMain().mainTreeChangeListener.changed(null, null, Context.getMain().workingCopyTreeItem);
-        branchFilter.addListener(
-                (observable, oldValue, newValue) -> {
-                    filterBranches();
-                    filterTags();
-                }
-        );
-
-        //just fill the cache
+        // Fill cache in background
         new Thread(() -> {
             gitRepoService.getCommitsByTree(null, true, 100, null).stream().forEach(
                     s -> gitRepoService.adapt(s, null)
@@ -175,22 +341,20 @@ public class Context {
         init(params);
     }
 
-
     public static void saveSettings() {
         if (projectWatcherThread != null) {
             projectWatcherThread.interrupt();
         }
-        settingService.write(settingsProperty.get());
+        settingService.write(settings);
     }
 
     public static Optional<Project> getCurrentProject() {
-        String folder = repositoryPathProperty.getValueSafe()
+        String folder = (repositoryPath != null ? repositoryPath : "")
                 .replace("/.git", "");
-        return settingsProperty.get().getProjects().stream()
-                .filter( p -> p.getProjectHomeFolder().replace("/.git", "").equalsIgnoreCase(folder))
+        return settings.getProjects().stream()
+                .filter(p -> p.getProjectHomeFolder().replace("/.git", "").equalsIgnoreCase(folder))
                 .findFirst();
     }
-
 
     private static String lastTreeName;
     private static boolean lastAllHistory;
@@ -202,24 +366,20 @@ public class Context {
     public static void updatePlotCommitList(final String treeName,
                                             final boolean allHistory,
                                             final ProgressMonitor progressMonitor) {
-
         final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
 
-        plotCommitList.clear();
+        List<PlotCommit> old = new ArrayList<>(plotCommitList);
+        plotCommitList = new ArrayList<>(plotCommits);
+        pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, old, plotCommitList);
 
-        plotCommitList.addAll(plotCommits);
-
-        selectedTreeName.set(treeName);
+        setSelectedTreeName(treeName);
 
         lastTreeName = treeName;
-
         lastAllHistory = allHistory;
     }
 
-
     public static void updateAll() {
-        new StatusUpdateEventHandler(true).handle(null);
-
+        updateStatus(null);
         try {
             updateBranches();
         } catch (Exception e) {
@@ -233,57 +393,69 @@ public class Context {
         updateStatus(progressMonitor, false);
     }
 
-    public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean wokingCopyOnly) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges.get());
-        if (!wokingCopyOnly) {
-            plotCommitList.clear();
+    public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
+        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges);
+        List<ScmItem> old = statusList;
+        if (!workingCopyOnly) {
+            List<PlotCommit> oldPlot = plotCommitList;
+            plotCommitList = new ArrayList<>();
+            pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
         }
-        statusList.clear();
-        statusList.addAll(statuses);
+        statusList = new ArrayList<>(statuses);
+        pcs.firePropertyChange(PROP_STATUS_LIST, old, statusList);
     }
 
-
-
     public static void updateWorkingBranch() {
-        workingBranch.setValue(
-                localBrancesProperty.get().stream().filter(ScmBranch::isHead).findFirst().orElse(null)
+        setWorkingBranch(
+                localBranches.stream().filter(ScmBranch::isHead).findFirst().orElse(null)
         );
-        getMain().updateButtonUI();
     }
 
     private static final Object branchLock = new Object();
     private static final Object tagLock = new Object();
 
-    public static void updateBranches()  {
+    public static void updateBranches() {
         synchronized (branchLock) {
             localBranchesRaw.clear();
             remoteBranchesRaw.clear();
             try {
                 localBranchesRaw.addAll(gitRepoService.getBranches());
                 remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
-                localBrancesProperty.setValue(new ArrayList<>(localBranchesRaw));
-                remoteBrancesProperty.setValue(new ArrayList<>(remoteBranchesRaw));
+
+                List<ScmBranch> oldLocal = localBranches;
+                localBranches = new ArrayList<>(localBranchesRaw);
+                pcs.firePropertyChange(PROP_LOCAL_BRANCHES, oldLocal, localBranches);
+
+                List<ScmBranch> oldRemote = remoteBranches;
+                remoteBranches = new ArrayList<>(remoteBranchesRaw);
+                pcs.firePropertyChange(PROP_REMOTE_BRANCHES, oldRemote, remoteBranches);
+
                 filterBranchesInternal();
             } catch (Exception e) {
-                log.log(Level.SEVERE, "Cannot update branch information" );
+                log.log(Level.SEVERE, "Cannot update branch information");
             }
         }
     }
 
-    public static void filterBranches()  {
+    public static void filterBranches() {
         synchronized (branchLock) {
             filterBranchesInternal();
         }
     }
 
-    private static void filterBranchesInternal()  {
-        String filter = branchFilter.getValueSafe().toLowerCase(Locale.ROOT);
-        localBrancesProperty.setValue(localBranchesRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
-                .collect(Collectors.toList()));
-        remoteBrancesProperty.setValue(remoteBranchesRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
-                .collect(Collectors.toList()));
+    private static void filterBranchesInternal() {
+        String filter = (branchFilter != null ? branchFilter : "").toLowerCase(Locale.ROOT);
+        List<ScmBranch> oldLocal = localBranches;
+        localBranches = localBranchesRaw.stream()
+                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
+                .collect(Collectors.toList());
+        pcs.firePropertyChange(PROP_LOCAL_BRANCHES, oldLocal, localBranches);
+
+        List<ScmBranch> oldRemote = remoteBranches;
+        remoteBranches = remoteBranchesRaw.stream()
+                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
+                .collect(Collectors.toList());
+        pcs.firePropertyChange(PROP_REMOTE_BRANCHES, oldRemote, remoteBranches);
     }
 
     public static void updateTags() {
@@ -301,19 +473,27 @@ public class Context {
     }
 
     private static void filterTagsInternal() {
-        String filter = branchFilter.getValueSafe().toLowerCase();
-        tagsProperty.setValue(tagsRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
-                .collect(Collectors.toList()));
+        String filter = (branchFilter != null ? branchFilter : "").toLowerCase();
+        List<ScmBranch> old = tags;
+        tags = tagsRaw.stream()
+                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
+                .collect(Collectors.toList());
+        pcs.firePropertyChange(PROP_TAGS, old, tags);
     }
 
     public static void readSettings() {
-        Settings settings = settingService.read();
-        settingsProperty.setValue(settings);
+        Settings s = settingService.read();
+        setSettings(s);
     }
 
     public static void updateStash() {
-        stashProperty.setValue(gitRepoService.getStashList());
+        setStash(gitRepoService.getStashList());
+    }
+
+    private static void setStash(List<ScmRevisionInformation> value) {
+        List<ScmRevisionInformation> old = stash;
+        stash = value;
+        pcs.firePropertyChange(PROP_STASH, old, value);
     }
 
     public static GitRepoService getGitRepoService() {
@@ -324,16 +504,8 @@ public class Context {
         return settingService;
     }
 
-    public static MainController getMain() {
-        return main;
-    }
-
-    public static void setMain(MainController main) {
-        Context.main = main;
-    }
-
     public static String getProjectFolder() {
-        return repositoryPathProperty.getValueSafe().replace(Const.GIT_FOLDER, "");
+        return (repositoryPath != null ? repositoryPath : "").replace(Const.GIT_FOLDER, "");
     }
 
     public static boolean isWindows() {

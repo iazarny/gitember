@@ -1547,8 +1547,10 @@ public class GitRepoService {
         try (Git git = new Git(repository)) {
 
             final PushCommand pushCommand = git.push()
-                    .setRefSpecs(refSpec)
                     .setProgressMonitor(progressMonitor);
+            if (refSpec != null) {
+                pushCommand.setRefSpecs(refSpec);
+            }
 
             configureTransportCommand(pushCommand, parameters);
 
@@ -1637,7 +1639,7 @@ public class GitRepoService {
                 smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
             }
 
-            ObjectId oldHead = repository.resolve(remoteBranch);
+            ObjectId oldHead = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
             PullCommand pullCommand = git
                     .pull()
@@ -1647,7 +1649,7 @@ public class GitRepoService {
 
             PullResult pullRez = pullCommand.call();
 
-            ObjectId head = repository.resolve(remoteBranch);
+            ObjectId head = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
             if (pullRez.isSuccessful()) {
                 Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
@@ -1845,7 +1847,14 @@ public class GitRepoService {
     private void configureTransportCommand(
             final TransportCommand cmd, RemoteRepoParameters params) throws ConfigInvalidException, IOException {
 
-        if (params.getUserName() != null) {
+        if (StringUtils.isNotBlank(params.getAccessToken())) {
+            // GitHub / GitLab / Bitbucket: personal access token used as Bearer credential.
+            // "oauth2" is accepted as a dummy username by all three hosts when the
+            // real secret is carried in the password field.
+            cmd.setCredentialsProvider(
+                    new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken())
+            );
+        } else if (StringUtils.isNotBlank(params.getUserName())) {
             cmd.setCredentialsProvider(
                     new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd())
             );

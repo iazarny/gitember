@@ -1,39 +1,32 @@
 package com.az.gitember.data;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class LfsData {
 
-    private BooleanProperty lfsSupport = new SimpleBooleanProperty(false);
-    private ObservableList<String> extentions = FXCollections.observableArrayList();
+    private boolean lfsSupport = false;
+    private List<String> extentions = new ArrayList<>();
 
     public boolean isLfsSupport() {
-        return lfsSupport.get();
-    }
-
-    public BooleanProperty lfsSupportProperty() {
         return lfsSupport;
     }
 
     public void setLfsSupport(boolean lfsSupport) {
-        this.lfsSupport.set(lfsSupport);
+        this.lfsSupport = lfsSupport;
     }
 
-    public ObservableList<String> getExtentions() {
+    public List<String> getExtentions() {
         return extentions;
     }
 
-    public void setExtentions(ObservableList<String> extentions) {
+    public void setExtentions(List<String> extentions) {
         this.extentions = extentions;
     }
 
     @Override
     public String toString() {
-        return "LfsData " + lfsSupport.get() + " " + extentions.stream().collect(Collectors.joining(","));
+        return "LfsData " + lfsSupport + " " + extentions.stream().collect(Collectors.joining(","));
     }
 }

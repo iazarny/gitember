@@ -1,99 +1,79 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.Context;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 
-import java.io.File;
-
 public class RemoteRepoParameters {
 
-    private StringProperty userName = new SimpleStringProperty("");
-    private StringProperty userPwd = new SimpleStringProperty("");
-    private StringProperty url = new SimpleStringProperty("");
-    private StringProperty destinationFolder = new SimpleStringProperty("");
-
-    private StringProperty keyPassPhrase = new SimpleStringProperty("");
+    private String userName = "";
+    private String userPwd = "";
+    private String accessToken = "";
+    private String url = "";
+    private String destinationFolder = "";
+    private String keyPassPhrase = "";
 
     public String getUrl() {
-        return url.get();
-    }
-
-    public StringProperty urlProperty() {
         return url;
     }
 
     public void setUrl(String url) {
-        this.url.set(url);
+        this.url = url;
     }
 
     public String getDestinationFolder() {
-        return destinationFolder.get();
-    }
-
-    public StringProperty destinationFolderProperty() {
         return destinationFolder;
     }
 
     public void setDestinationFolder(String destinationFolder) {
-        this.destinationFolder.set(destinationFolder);
+        this.destinationFolder = destinationFolder;
     }
 
     public String getKeyPassPhrase() {
-        return keyPassPhrase.get();
-    }
-
-    public StringProperty keyPassPhraseProperty() {
         return keyPassPhrase;
     }
 
     public void setKeyPassPhrase(String keyPassPhrase) {
-        this.keyPassPhrase.set(keyPassPhrase);
+        this.keyPassPhrase = keyPassPhrase;
     }
 
     public String getUserName() {
-        return userName.get();
-    }
-
-    public StringProperty userNameProperty() {
         return userName;
     }
 
     public void setUserName(String userName) {
-        this.userName.set(userName);
+        this.userName = userName;
     }
 
     public String getUserPwd() {
-        return userPwd.get();
-    }
-
-    public StringProperty userPwdProperty() {
         return userPwd;
     }
 
     public void setUserPwd(String userPwd) {
-        this.userPwd.set(userPwd);
+        this.userPwd = userPwd;
     }
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 
     public RemoteRepoParameters(Project project) {
-
         final Config gitConfig = Context.getGitRepoService().getRepository().getConfig();
         final String url = gitConfig.getString(ConfigConstants.CONFIG_REMOTE_SECTION,
                 "origin",
                 ConfigConstants.CONFIG_KEY_URL);
 
-        this.userName.setValue(project.getUserName());
-        this.userPwd.setValue(project.getUserPwd());
-        this.keyPassPhrase.setValue(project.getKeyPass());
-        this.url.setValue(url);
-
+        this.userName = project.getUserName();
+        this.userPwd = project.getUserPwd();
+        this.accessToken = project.getAccessToken();
+        this.keyPassPhrase = project.getKeyPass();
+        this.url = url;
     }
-
-
 
     public RemoteRepoParameters() {
     }
@@ -102,7 +82,8 @@ public class RemoteRepoParameters {
     public String toString() {
         return "CloneParameters{" +
                 "userName=" + userName +
-                ", userPwd=" + (StringUtils.isBlank(userPwd.getValue()) ? "none" : "set") +
+                ", userPwd=" + (StringUtils.isBlank(userPwd) ? "none" : "set") +
+                ", accessToken=" + (StringUtils.isBlank(accessToken) ? "none" : "set") +
                 ", url=" + url +
                 ", destinationFolder=" + destinationFolder +
                 ", keyPassPhrase=" + keyPassPhrase +
