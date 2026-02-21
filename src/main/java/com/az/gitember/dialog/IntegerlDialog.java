@@ -11,7 +11,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.control.*;
 
+import java.util.regex.Pattern;
+
 public class IntegerlDialog extends Dialog<Integer> {
+
+    private static final Pattern DIGITS_ONLY = Pattern.compile("\\d*");
+    private static final Pattern NON_DIGITS = Pattern.compile("[^\\d]");
 
     private TextField integerField;
 
@@ -33,8 +38,8 @@ public class IntegerlDialog extends Dialog<Integer> {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue,
                                 String newValue) {
-                if (!newValue.matches("\\d*")) {
-                    integerField.setText(newValue.replaceAll("[^\\d]", ""));
+                if (!DIGITS_ONLY.matcher(newValue).matches()) {
+                    integerField.setText(NON_DIGITS.matcher(newValue).replaceAll(""));
                 }
             }
         });

@@ -251,38 +251,59 @@ public class Context {
         getMain().updateButtonUI();
     }
 
+    private static final Object branchLock = new Object();
+    private static final Object tagLock = new Object();
+
     public static void updateBranches()  {
-        localBranchesRaw.clear();
-        remoteBranchesRaw.clear();
-        try {
-            localBranchesRaw.addAll(gitRepoService.getBranches());
-            remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
-            localBrancesProperty.setValue(localBranchesRaw);
-            remoteBrancesProperty.setValue(remoteBranchesRaw);
-            filterBranches();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot updatre branch information" );
+        synchronized (branchLock) {
+            localBranchesRaw.clear();
+            remoteBranchesRaw.clear();
+            try {
+                localBranchesRaw.addAll(gitRepoService.getBranches());
+                remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
+                localBrancesProperty.setValue(new ArrayList<>(localBranchesRaw));
+                remoteBrancesProperty.setValue(new ArrayList<>(remoteBranchesRaw));
+                filterBranchesInternal();
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Cannot update branch information" );
+            }
         }
     }
 
     public static void filterBranches()  {
+        synchronized (branchLock) {
+            filterBranchesInternal();
+        }
+    }
+
+    private static void filterBranchesInternal()  {
+        String filter = branchFilter.getValueSafe().toLowerCase(Locale.ROOT);
         localBrancesProperty.setValue(localBranchesRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(branchFilter.getValueSafe().toLowerCase(Locale.ROOT)) )
+                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
                 .collect(Collectors.toList()));
         remoteBrancesProperty.setValue(remoteBranchesRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(branchFilter.getValueSafe().toLowerCase(Locale.ROOT)) )
+                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
                 .collect(Collectors.toList()));
     }
 
     public static void updateTags() {
-        tagsRaw.clear();
-        tagsRaw.addAll(gitRepoService.getTags());
-        filterTags();
+        synchronized (tagLock) {
+            tagsRaw.clear();
+            tagsRaw.addAll(gitRepoService.getTags());
+            filterTagsInternal();
+        }
     }
 
     public static void filterTags() {
+        synchronized (tagLock) {
+            filterTagsInternal();
+        }
+    }
+
+    private static void filterTagsInternal() {
+        String filter = branchFilter.getValueSafe().toLowerCase();
         tagsProperty.setValue(tagsRaw.stream()
-                .filter( b -> b.getNameExt().toLowerCase().contains(branchFilter.getValueSafe().toLowerCase()) )
+                .filter( b -> b.getNameExt().toLowerCase().contains(filter) )
                 .collect(Collectors.toList()));
     }
 

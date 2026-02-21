@@ -100,8 +100,9 @@ public class GitemberUtil {
     }
 
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     public static LangDefinition[] getKeywordsDefinition(String json) {
-        ObjectMapper objectMapper = new ObjectMapper();
         LangDefinition[] rez ;
         try {
             rez = objectMapper.readValue(json, LangDefinition[].class);
@@ -197,22 +198,26 @@ public class GitemberUtil {
     }
 
     private static Edit getDiffAtLine(final EditList diffList, final Side side, final int lineIdx) {
-
-        Edit editRez = null;
-
         for (int i = 0; i < diffList.size(); i++) {
-
             Edit edit = diffList.get(i);
 
-            if (side == Side.A && lineIdx >= edit.getBeginA() && lineIdx < edit.getEndA()) {
-                editRez = edit;
-            } else if (side == Side.B && lineIdx >= edit.getBeginB() && lineIdx < edit.getEndB()) {
-                editRez = edit;
+            if (side == Side.A) {
+                if (lineIdx >= edit.getBeginA() && lineIdx < edit.getEndA()) {
+                    return edit;
+                }
+                if (lineIdx < edit.getBeginA()) {
+                    return null;
+                }
+            } else if (side == Side.B) {
+                if (lineIdx >= edit.getBeginB() && lineIdx < edit.getEndB()) {
+                    return edit;
+                }
+                if (lineIdx < edit.getBeginB()) {
+                    return null;
+                }
             }
-
         }
-        return editRez;
-
+        return null;
     }
 
     private static Pair<Integer, Integer> getPosition(Side side, Edit edit) {

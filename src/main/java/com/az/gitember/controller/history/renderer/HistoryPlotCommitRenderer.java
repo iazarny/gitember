@@ -117,11 +117,10 @@ public class HistoryPlotCommitRenderer extends AbstractPlotRenderer<PlotLane, Co
 
     @Override
     protected Color laneColor(PlotLane myLane) {
-        plotLaneColorHashMap.computeIfAbsent(
+        return plotLaneColorHashMap.computeIfAbsent(
                 myLane,
                 k -> LookAndFeelSet.historyPlotCommitRenderedColors[(1 + plotLaneColorHashMap.size()) % LookAndFeelSet.historyPlotCommitRenderedColors.length]
         );
-        return plotLaneColorHashMap.get(myLane);
     }
 
 

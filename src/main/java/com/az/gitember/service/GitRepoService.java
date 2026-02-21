@@ -1048,12 +1048,12 @@ public class GitRepoService {
 
         String str;
 
-        try (Git git = new Git(repository)) {
+        try (Git git = new Git(repository);
+             PlotWalk plotWalk = new PlotWalk(repository)) {
 
             final ObjectId objId = repository.resolve(revisionName);
-            final RevCommit root = new PlotWalk(repository).parseCommit(objId);
+            final RevCommit root = plotWalk.parseCommit(objId);
             final RevCommit parent = root.getParent(0); //TODO is this correct parent ?
-
 
             OutputStream out = new ByteArrayOutputStream();
             DiffCommand diff = git.diff()
@@ -1079,8 +1079,9 @@ public class GitRepoService {
             throw new IllegalArgumentException(name);
         }
 
-        try (ObjectReader or = repo.newObjectReader()) {
-            p.reset(or, new RevWalk(repo).parseTree(id));
+        try (ObjectReader or = repo.newObjectReader();
+             RevWalk revWalk = new RevWalk(repo)) {
+            p.reset(or, revWalk.parseTree(id));
             return p;
         }
     }
@@ -1146,12 +1147,10 @@ public class GitRepoService {
             Status status = git.status().setProgressMonitor(progressMonitor).call();
 
             Ref refHead = repository.exactRef(Constants.HEAD);
-            RevWalk revWalk = new RevWalk(repository);
-            RevCommit revCommitHead = revWalk.parseCommit(refHead.getObjectId());
-            TreeWalk tw = new TreeWalk(repository);
-            tw.setRecursive(false);
-            tw.addTree(revCommitHead.getTree());
-            tw.addTree(new FileTreeIterator(repository));
+            try (RevWalk revWalk = new RevWalk(repository)) {
+                RevCommit revCommitHead = revWalk.parseCommit(refHead.getObjectId());
+                // TreeWalk is not used after initialization, removing unused code
+            }
 
             status.getRemoved().forEach(item -> {
                         if (!filter.contains(item)) {
@@ -1231,29 +1230,30 @@ public class GitRepoService {
     public List<ScmItem> getLfsFiles(String name) throws IOException {
         final List<ScmItem> rez = new ArrayList<>();
         final Ref head = repository.exactRef(name);
-        final RevWalk walk = new RevWalk(repository);
-        final RevCommit commit = walk.parseCommit(head.getObjectId());
-        final RevTree tree = commit.getTree();
-        final TreeWalk treeWalk = new TreeWalk(repository);
-        final LfsPointerFilter filter = new LfsPointerFilter();
+        try (RevWalk walk = new RevWalk(repository)) {
+            final RevCommit commit = walk.parseCommit(head.getObjectId());
+            final RevTree tree = commit.getTree();
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                final LfsPointerFilter filter = new LfsPointerFilter();
 
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        treeWalk.setFilter(filter);
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(filter);
 
-        while (treeWalk.next()) {
-            if (treeWalk.isSubtree()) {
-                treeWalk.enterSubtree();
-            } else {
-                final String path = treeWalk.getPathString();
-                final Path filePath = Paths.get(Context.getProjectFolder(), path);
-                final long sizeOnDisk = Files.size(filePath);
-                //final LfsPointer pointer = filter.getPointer(); //TODO deleted file
-                final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
-                final ScmItem scmItem = new ScmItem(
-                        path, new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
-                );
-                rez.add(scmItem);
+                while (treeWalk.next()) {
+                    if (treeWalk.isSubtree()) {
+                        treeWalk.enterSubtree();
+                    } else {
+                        final String path = treeWalk.getPathString();
+                        final Path filePath = Paths.get(Context.getProjectFolder(), path);
+                        final long sizeOnDisk = Files.size(filePath);
+                        final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
+                        final ScmItem scmItem = new ScmItem(
+                                path, new ScmItemAttribute().withStatus(ScmItem.Status.LFS).withSubStatus(subStatus)
+                        );
+                        rez.add(scmItem);
+                    }
+                }
             }
         }
         return rez;
@@ -1751,10 +1751,7 @@ public class GitRepoService {
         if (CollectionUtils.isNotEmpty(content)) {
             sb.append(sectionName);
             sb.append("\n");
-            content.stream().forEach( s-> {
-                        sb.append("  " + s + "\n");
-                    }
-            );
+            content.forEach(s -> sb.append("  ").append(s).append("\n"));
         }
     }
 
@@ -1970,9 +1967,8 @@ public class GitRepoService {
         try (RevWalk rw = new RevWalk(repository)) {
             ArrayList<ScmItem> rez = new ArrayList<>();
             if (revCommit != null) {
-                final DiffFormatter df = getDiffFormatter(filePath);
-                final List<DiffEntry> diffs;
-                try {
+                try (DiffFormatter df = getDiffFormatter(filePath)) {
+                    final List<DiffEntry> diffs;
                     diffs = df.scan(
                             revCommit.getParentCount() > 0 ? rw.parseCommit(revCommit.getParent(0).getId()).getTree() : null,
                             revCommit.getTree());
@@ -1980,12 +1976,10 @@ public class GitRepoService {
                             .map(this::adaptDiffEntry)
                             .collect(Collectors.toCollection(() -> rez));
                     rez.forEach(scmItem -> scmItem.setRevCommit(revCommit));
-
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "Cannot collect items from rev commit", e);
                 }
             }
-            rw.dispose();
             return rez;
         }
     }
@@ -2020,28 +2014,30 @@ public class GitRepoService {
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
         final Ref head = repository.exactRef(Constants.HEAD);
-        final RevWalk walk = new RevWalk(repository);
-        final RevCommit commit = walk.parseCommit(head.getObjectId());
         final Map<String, Map> rez = new TreeMap<>();
         final Map<String, Integer> totalLines = new TreeMap<>();
         final Map<String, Integer> commitsMap = new HashMap<>();
-        final Iterator<String> pathIter = files.iterator();
 
-        progressMonitor.beginTask(taskName, files.size());
+        try (RevWalk walk = new RevWalk(repository)) {
+            final RevCommit commit = walk.parseCommit(head.getObjectId());
+            final Iterator<String> pathIter = files.iterator();
 
-        int cnt = 0;
+            progressMonitor.beginTask(taskName, files.size());
 
-        while (pathIter.hasNext()) {
-            final String path = pathIter.next();
-            final BlameCommand blamer = new BlameCommand(repository);
-            blamer.setStartCommit(commit);
-            blamer.setFilePath(path);
-            final BlameResult blame = blamer.call();
-            rez.put(path, countLines(blame));
-            progressMonitor.update(cnt++);
+            int cnt = 0;
+
+            while (pathIter.hasNext()) {
+                final String path = pathIter.next();
+                final BlameCommand blamer = new BlameCommand(repository);
+                blamer.setStartCommit(commit);
+                blamer.setFilePath(path);
+                final BlameResult blame = blamer.call();
+                rez.put(path, countLines(blame));
+                progressMonitor.update(cnt++);
+            }
         }
 
-        rez.values().stream().forEach(
+        rez.values().forEach(
                 m -> m.forEach(
                         (author, c) -> {
                             totalLines.computeIfPresent(

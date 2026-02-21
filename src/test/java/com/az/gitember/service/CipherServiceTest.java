@@ -24,9 +24,14 @@ class CipherServiceTest {
     void crypt() throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 
         assertEquals("//AES//bla-bla" , CipherService.crypt("//AES//bla-bla"));
-        assertTrue(CipherService.crypt("Hal9000").startsWith("//AES//"));
-        assertEquals(CipherService.crypt("Hal9000"), CipherService.crypt("Hal9000"));
-        assertNotEquals(CipherService.crypt("Hal9000"), CipherService.crypt("Bender"));
+        assertEquals("//AES2//bla-bla" , CipherService.crypt("//AES2//bla-bla"));
+        assertTrue(CipherService.crypt("Hal9000").startsWith("//AES2//"));
+        // Due to random IV, encrypting same value twice produces different ciphertext
+        String encrypted1 = CipherService.crypt("Hal9000");
+        String encrypted2 = CipherService.crypt("Hal9001");
+        // Both should decrypt to original values
+        assertEquals("Hal9000", CipherService.decrypt(encrypted1));
+        assertEquals("Hal9001", CipherService.decrypt(encrypted2));
         assertEquals(null , CipherService.crypt(null));
         assertEquals("" , CipherService.crypt(""));
 

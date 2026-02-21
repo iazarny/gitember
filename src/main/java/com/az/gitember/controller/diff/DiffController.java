@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -99,18 +100,18 @@ public class DiffController implements Initializable {
     private String oldSha;
 
     // Track temporary files for cleanup
-    private final List<String> tempFilesToCleanup = new ArrayList<>();
-    
+    private final List<String> tempFilesToCleanup = Collections.synchronizedList(new ArrayList<>());
+
     // Flag to prevent recursive updates during synchronized scrolling
-    private boolean isUpdatingPaths = false;
-    
+    private volatile boolean isUpdatingPaths = false;
+
     // Topic 2: Debounced diff calculation
     private ScheduledExecutorService debounceExecutor;
     private ScheduledFuture<?> debounceTask;
     private static final long DEBOUNCE_DELAY_MS = 100; // 100ms debounce delay
-    
+
     // Topic 3: Syntax highlighting cache
-    private final Map<String, StyleSpans<Collection<String>>> highlightingCache = new HashMap<>();
+    private final Map<String, StyleSpans<Collection<String>>> highlightingCache = new ConcurrentHashMap<>();
     private String lastHighlightedFile = null;
     private String lastHighlightedContent = null;
     private static final int MAX_CACHE_SIZE = 10; // Cache up to 10 files
