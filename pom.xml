@@ -17,7 +17,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <jgit.version>6.8.0.202311291450-r</jgit.version>
-        <flatlaf.version>3.4</flatlaf.version>
+        <flatlaf.version>3.7</flatlaf.version>
         <ikonli.version>12.3.1</ikonli.version>
         <jackson.version>2.16.1</jackson.version>
         <slf4j.version>2.0.11</slf4j.version>
@@ -47,6 +47,8 @@
             <version>3.6.1</version>
             <scope>compile</scope>
         </dependency>
+
+
 
         <!-- JGit -->
         <dependency>

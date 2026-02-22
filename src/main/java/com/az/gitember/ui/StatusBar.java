@@ -14,7 +14,7 @@ public class StatusBar extends JPanel {
 
         statusLabel = new JLabel("Ready");
         progressBar = new JProgressBar();
-        progressBar.setPreferredSize(new Dimension(150, 16));
+        progressBar.setPreferredSize(new Dimension(300, 16));
         progressBar.setVisible(false);
 
         add(statusLabel, BorderLayout.CENTER);

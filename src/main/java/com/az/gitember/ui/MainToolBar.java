@@ -6,6 +6,9 @@ import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Set;
@@ -64,8 +67,8 @@ public class MainToolBar extends JToolBar {
         add(openBtn);
         add(cloneBtn);
         addSeparator();
-        add(projectCombo);
-        addSeparator();
+        //add(projectCombo);
+        //addSeparator();
 
         add(pullBtn);
         add(pushBtn);
@@ -76,13 +79,21 @@ public class MainToolBar extends JToolBar {
         addSeparator();
         branchLabel = new JLabel("");
         branchLabel.setFont(branchLabel.getFont().deriveFont(Font.BOLD));
-        add(branchLabel);
+        //add(branchLabel);
 
         setRepoActionsEnabled(false);
     }
 
     private JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon) {
         JButton btn = new JButton();
+        //btn.setBorder(new EmptyBorder(10, 20, 10, 20));
+        //btn.setMargin(new Insets(10, 20, 10, 20));
+
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(true);
+        btn.setMargin(new Insets(10, 20, 10, 20));
+
         btn.setIcon(FontIcon.of(ikon, 16));
         btn.setText(text);
         btn.setToolTipText(tooltip);
