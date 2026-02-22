@@ -1598,6 +1598,59 @@ public class GitRepoService {
 
 
     /**
+     * Returns all files that differ between two branch (or ref) tips.
+     *
+     * @param branchARef full ref name of the "old" branch (e.g. "refs/heads/main")
+     * @param branchBRef full ref name of the "new" branch (e.g. "refs/heads/feature")
+     * @return list of DiffEntry objects describing each changed file
+     */
+    public List<DiffEntry> getBranchDiff(String branchARef, String branchBRef) throws Exception {
+        ObjectId aId = repository.resolve(branchARef);
+        ObjectId bId = repository.resolve(branchBRef);
+        if (aId == null) throw new IllegalArgumentException("Cannot resolve ref: " + branchARef);
+        if (bId == null) throw new IllegalArgumentException("Cannot resolve ref: " + branchBRef);
+
+        try (RevWalk walk = new RevWalk(repository);
+             ObjectReader reader = repository.newObjectReader()) {
+
+            RevCommit aCommit = walk.parseCommit(aId);
+            RevCommit bCommit = walk.parseCommit(bId);
+
+            CanonicalTreeParser oldTree = new CanonicalTreeParser();
+            oldTree.reset(reader, aCommit.getTree());
+
+            CanonicalTreeParser newTree = new CanonicalTreeParser();
+            newTree.reset(reader, bCommit.getTree());
+
+            try (Git git = new Git(repository)) {
+                return git.diff()
+                        .setOldTree(oldTree)
+                        .setNewTree(newTree)
+                        .call();
+            }
+        }
+    }
+
+    /**
+     * Returns the raw text content of a file at a given ref (branch / commit SHA).
+     * Returns an empty string if the file does not exist in that ref.
+     *
+     * @param ref      branch full name or commit SHA
+     * @param filePath path within the repository (e.g. "src/Main.java")
+     */
+    public String getFileContentAtRef(String ref, String filePath) throws Exception {
+        ObjectId id = repository.resolve(ref);
+        if (id == null) return "";
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(id);
+            try (TreeWalk tw = TreeWalk.forPath(repository, filePath, commit.getTree())) {
+                if (tw == null) return ""; // file absent in this ref
+                return new String(repository.open(tw.getObjectId(0)).getBytes(), "UTF-8");
+            }
+        }
+    }
+
+    /**
      * Set track remote branch
      *
      * @param localBranch  local branch name

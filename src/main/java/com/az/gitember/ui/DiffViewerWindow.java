@@ -127,6 +127,74 @@ public class DiffViewerWindow extends JFrame {
     }
 
     /**
+     * Constructor for branch-to-branch file diff.
+     * Both content strings are provided directly — no revision combos shown.
+     *
+     * @param fileName     used for syntax highlighting and window title
+     * @param leftLabel    label shown above the left pane  (e.g. "Branch: main")
+     * @param leftContent  file text in the left branch
+     * @param rightLabel   label shown above the right pane (e.g. "Branch: feature")
+     * @param rightContent file text in the right branch
+     */
+    public DiffViewerWindow(String fileName,
+                            String leftLabel,  String leftContent,
+                            String rightLabel, String rightContent) {
+        this.fileName = fileName;
+        setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
+        setSize(1200, 700);
+        setLocationRelativeTo(null);
+
+        String syntaxStyle = SyntaxStyleUtil.getSyntaxStyle(fileName);
+
+        oldPane = createEditor(syntaxStyle);
+        newPane = createEditor(syntaxStyle);
+
+        leftScroll  = new RTextScrollPane(oldPane);
+        leftScroll.setFoldIndicatorEnabled(false);
+        rightScroll = new RTextScrollPane(newPane);
+        rightScroll.setFoldIndicatorEnabled(false);
+        centerPanel = new DiffConnectorPanel();
+        syncScroll(leftScroll, rightScroll);
+
+        oldCombo = null;
+        newCombo = null;
+
+        prevBtn = new JButton("<< Prev");
+        prevBtn.setEnabled(false);
+        prevBtn.addActionListener(e -> navigateDiff(-1));
+
+        nextBtn = new JButton("Next >>");
+        nextBtn.setEnabled(false);
+        nextBtn.addActionListener(e -> navigateDiff(1));
+
+        diffInfoLabel = new JLabel("");
+
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        toolbar.add(prevBtn);
+        toolbar.add(nextBtn);
+        toolbar.add(Box.createHorizontalStrut(10));
+        toolbar.add(diffInfoLabel);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.add(new JLabel(" " + leftLabel), BorderLayout.NORTH);
+        leftPanel.add(leftScroll, BorderLayout.CENTER);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(new JLabel(" " + rightLabel), BorderLayout.NORTH);
+        rightPanel.add(rightScroll, BorderLayout.CENTER);
+
+        JPanel diffPanel = buildDiffPanel(leftPanel, rightPanel);
+
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(toolbar, BorderLayout.NORTH);
+        getContentPane().add(diffPanel, BorderLayout.CENTER);
+
+        this.oldText = leftContent;
+        this.newText = rightContent;
+        computeAndDisplayDiff();
+    }
+
+    /**
      * Constructor for diff with disk (no revision combos).
      */
     public DiffViewerWindow(String fileName, String commitSha,
