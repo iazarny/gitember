@@ -1,15 +1,17 @@
 package com.az.gitember.handler;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.dialog.PullResultDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 
 import java.awt.*;
 import java.util.Optional;
 
-public class BranchPullHandler extends AbstractAsyncHandler<String> {
+public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult> {
 
     private final ScmBranch branch;
 
@@ -24,7 +26,7 @@ public class BranchPullHandler extends AbstractAsyncHandler<String> {
     }
 
     @Override
-    protected String doInBackground() throws Exception {
+    protected PullOperationResult doInBackground() throws Exception {
         Optional<Project> project = Context.getCurrentProject();
         RemoteRepoParameters params = new RemoteRepoParameters();
         project.ifPresent(p -> {
@@ -34,14 +36,15 @@ public class BranchPullHandler extends AbstractAsyncHandler<String> {
             params.setKeyPassPhrase(p.getKeyPass());
         });
 
-        String result = Context.getGitRepoService().remoteRepositoryPull(
+        PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(
                 params, branch.getRemoteMergeName(), null);
         Context.updateAll();
         return result;
     }
 
     @Override
-    protected void onSuccess(String result) {
-        statusBar.setStatus("Pull completed: " + result);
+    protected void onSuccess(PullOperationResult result) {
+        statusBar.setStatus("Pull completed: " + result.toStatusString());
+        new PullResultDialog(parent, result).setVisible(true);
     }
 }

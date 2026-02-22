@@ -3,17 +3,18 @@ package com.az.gitember.handler;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.dialog.PushResultDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.transport.RefSpec;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.Optional;
 
 public class BranchPushHandler extends AbstractAsyncHandler<String> {
 
     private final ScmBranch branch;
+    private String remoteUrl;
 
     public BranchPushHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
         super(parent, statusBar);
@@ -41,6 +42,10 @@ public class BranchPushHandler extends AbstractAsyncHandler<String> {
             params.setKeyPassPhrase(p.getKeyPass());
         });
 
+        remoteUrl = Context.getGitRepoService().getRepository()
+                .getConfig().getString("remote", "origin", "url");
+        params.setUrl(remoteUrl != null ? remoteUrl : "");
+
         RefSpec refSpec = new RefSpec(branch.getFullName() + ":" + branch.getFullName());
         String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
         Context.updateAll();
@@ -49,6 +54,7 @@ public class BranchPushHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Push completed: " + result);
+        statusBar.setStatus("Push completed");
+        new PushResultDialog(parent, remoteUrl, result).setVisible(true);
     }
 }

@@ -7,6 +7,7 @@ import com.az.gitember.ui.WorkingCopyPanel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Set;
@@ -142,6 +143,9 @@ public class MainToolBar extends JToolBar {
         add(sep3);
 
         JLabel filterLabel = new JLabel("Filter:");
+        //filterLabel.setMargin(new Insets(10, 20, 10, 20));
+        filterLabel.setBorder(new EmptyBorder(10, 20, 10, 5));
+// top, left, bottom, right
         mergedComponents.add(filterLabel);
         add(filterLabel);
 

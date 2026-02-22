@@ -1571,14 +1571,21 @@ public class GitRepoService {
             fetchCommand.call();
 
             StringBuilder stringBuilder = new StringBuilder();
-            pushResults.forEach(
-                    pushResult -> {
-                        stringBuilder.append(pushResult.getMessages());
-                        log.log(Level.INFO,
-                                "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
-                                        + " updates: " + pushResult.getRemoteUpdates());
-                    }
-            );
+            pushResults.forEach(pushResult -> {
+                pushResult.getRemoteUpdates().forEach(update -> {
+                    stringBuilder.append(update.getRemoteName())
+                            .append(": ")
+                            .append(update.getStatus())
+                            .append("\n");
+                });
+                String msgs = pushResult.getMessages();
+                if (msgs != null && !msgs.isBlank()) {
+                    stringBuilder.append(msgs);
+                }
+                log.log(Level.INFO,
+                        "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
+                                + " updates: " + pushResult.getRemoteUpdates());
+            });
             return stringBuilder.toString();
         } catch (Exception e) {
             //} catch (CheckoutConflictException conflictException) {
@@ -1624,9 +1631,9 @@ public class GitRepoService {
      * @return result of opertion
      * @throws Exception
      */
-    public String remoteRepositoryPull(final RemoteRepoParameters parameters,
-                                       final String remoteBranch,
-                                       final ProgressMonitor progressMonitor) throws Exception {
+    public PullOperationResult remoteRepositoryPull(final RemoteRepoParameters parameters,
+                                                    final String remoteBranch,
+                                                    final ProgressMonitor progressMonitor) throws Exception {
 
         boolean lfsrepo = isLfsRepo();
         Pair<String, String> smudgeAndCleanRepo = null;
@@ -1653,17 +1660,13 @@ public class GitRepoService {
 
             if (pullRez.isSuccessful()) {
                 Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
-                        oldHead, head , git, remoteBranch
+                        oldHead, head, git, remoteBranch
                 );
-                Optional<String> formatedResult = formatPullResult(
-                        rez
-                );
-                if (formatedResult.isPresent()) {
-                    return formatedResult.get();
-                }
-                return pullRez.getMergeResult().getMergeStatus().toString();
+                String status = pullRez.getMergeResult().getMergeStatus().toString();
+                return new PullOperationResult(status, rez.getLeft(), rez.getMiddle(), rez.getRight());
             }
-            return pullRez.getMergeResult().toString(); // TODo more info
+            String status = pullRez.getMergeResult().getMergeStatus().toString();
+            return new PullOperationResult(status, null, null, null);
         } finally {
             if (smudgeAndCleanRepo != null) {
                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);
