@@ -65,8 +65,8 @@ public class CommitGraphRenderer extends AbstractPlotRenderer<PlotLane, Color> {
         } else {
             g2.setColor(color);
         }
-        g2.fill(new Ellipse2D.Double(x, y, w + 1, h + 1));
-        g2.setColor(color.darker());
+        g2.fill(new Ellipse2D.Double(x, y, w + 1.8, h + 1.8));
+        g2.setColor(color);
         g2.draw(new Ellipse2D.Double(x, y, w + 2, h + 2));
     }
 
@@ -96,7 +96,7 @@ public class CommitGraphRenderer extends AbstractPlotRenderer<PlotLane, Color> {
         else if (name.startsWith("refs/tags/")) name = name.substring(10);
 
         Font origFont = g2.getFont();
-        Font labelFont = origFont.deriveFont(Font.BOLD, 10f);
+        Font labelFont = origFont.deriveFont(Font.BOLD, origFont.getSize() - 1);
         g2.setFont(labelFont);
         FontMetrics fm = g2.getFontMetrics();
 
