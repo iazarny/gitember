@@ -1,14 +1,12 @@
-package com.az.gitember.ui;
+package com.az.gitember.ui.misc;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.Util;
+import com.az.gitember.ui.WorkingCopyPanel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
-import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Set;
@@ -33,9 +31,9 @@ public class MainToolBar extends JToolBar {
 
         openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
-        pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.ARROW_DOWN);
-        pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.ARROW_UP);
-        fetchBtn = Util.createButton("Fetch", "Fetch changes from remore repository");
+        pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.REPLY, -45);
+        pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.REPLY, 135);
+        fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository");
         commitBtn = Util.createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
 
         projectCombo = new JComboBox<>();

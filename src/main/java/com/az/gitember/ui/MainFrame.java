@@ -12,6 +12,7 @@ import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
+import com.az.gitember.ui.misc.MainToolBar;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;

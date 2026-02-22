@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.ui.misc.RotatedIcon;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
@@ -17,6 +18,10 @@ public class Util {
     }
 
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon) {
+        return createButton(text, tooltip, ikon, 0);
+    }
+
+    public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         JButton btn = new JButton();
 
         btn.setFocusPainted(false);
@@ -25,7 +30,12 @@ public class Util {
         btn.setMargin(new Insets(10, 20, 10, 20));
 
         if (ikon != null) {
-            btn.setIcon(FontIcon.of(ikon, 16));
+            if (rotation == 0) {
+                btn.setIcon(FontIcon.of(ikon, 16));
+            } else  {
+                btn.setIcon(new RotatedIcon(  FontIcon.of(ikon, 16), rotation));
+            }
+
         }
 
         btn.setText(text);
