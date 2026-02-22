@@ -4,6 +4,7 @@ import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmItemAttribute;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -109,13 +110,13 @@ public class WorkingCopyPanel extends JPanel {
         });
 
         // Toolbar
-        stageAllBtn = new JButton("Stage All");
+        stageAllBtn = Util.createButton("Stage All", null, FontAwesomeSolid.PLUS);
         stageAllBtn.addActionListener(e -> stageAll());
 
-        unstageAllBtn = new JButton("Unstage All");
+        unstageAllBtn = Util.createButton("Unstage All", null, FontAwesomeSolid.MINUS);
         unstageAllBtn.addActionListener(e -> unstageAll());
 
-        refreshBtn = new JButton("Refresh");
+        refreshBtn = Util.createButton("Refresh", null, FontAwesomeSolid.SYNC);
         refreshBtn.addActionListener(e -> refresh());
 
         searchField = new JTextField(15);

@@ -31,12 +31,12 @@ public class MainToolBar extends JToolBar {
     public MainToolBar() {
         setFloatable(false);
 
-        openBtn = createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
-        cloneBtn = createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
-        pullBtn = createButton("Pull", "Pull",  FontAwesomeSolid.ARROW_DOWN);
-        pushBtn = createButton("Push", "Push", FontAwesomeSolid.ARROW_UP);
-        fetchBtn = createButton("Fetch", "Fetch", FontAwesomeSolid.SYNC_ALT);
-        commitBtn = createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
+        openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
+        cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
+        pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.ARROW_DOWN);
+        pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.ARROW_UP);
+        fetchBtn = Util.createButton("Fetch", "Fetch changes from remore repository");
+        commitBtn = Util.createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
 
         projectCombo = new JComboBox<>();
         projectCombo.setVisible(false);
@@ -76,7 +76,7 @@ public class MainToolBar extends JToolBar {
         addSeparator();
         add(commitBtn);
 
-        addSeparator();
+        //addSeparator();
         branchLabel = new JLabel("");
         branchLabel.setFont(branchLabel.getFont().deriveFont(Font.BOLD));
         //add(branchLabel);
@@ -84,22 +84,7 @@ public class MainToolBar extends JToolBar {
         setRepoActionsEnabled(false);
     }
 
-    private JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon) {
-        JButton btn = new JButton();
-        //btn.setBorder(new EmptyBorder(10, 20, 10, 20));
-        //btn.setMargin(new Insets(10, 20, 10, 20));
 
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(true);
-        btn.setMargin(new Insets(10, 20, 10, 20));
-
-        btn.setIcon(FontIcon.of(ikon, 16));
-        btn.setText(text);
-        btn.setToolTipText(tooltip);
-        btn.setFocusable(false);
-        return btn;
-    }
 
     public void refreshProjects(Set<Project> projects, Project selected) {
         suppressComboEvents = true;
