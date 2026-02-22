@@ -1658,15 +1658,19 @@ public class GitRepoService {
 
             ObjectId head = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
+            String serverMessages = pullRez.getFetchResult() != null
+                    ? pullRez.getFetchResult().getMessages() : "";
+
             if (pullRez.isSuccessful()) {
                 Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
                         oldHead, head, git, remoteBranch
                 );
                 String status = pullRez.getMergeResult().getMergeStatus().toString();
-                return new PullOperationResult(status, rez.getLeft(), rez.getMiddle(), rez.getRight());
+                return new PullOperationResult(status, serverMessages,
+                        rez.getLeft(), rez.getMiddle(), rez.getRight());
             }
             String status = pullRez.getMergeResult().getMergeStatus().toString();
-            return new PullOperationResult(status, null, null, null);
+            return new PullOperationResult(status, serverMessages, null, null, null);
         } finally {
             if (smudgeAndCleanRepo != null) {
                 rollbackLfsSupport(repository.getConfig(), smudgeAndCleanRepo);

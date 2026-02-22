@@ -6,24 +6,28 @@ import java.util.List;
 public class PullOperationResult {
 
     private final String status;
+    private final String serverMessages;
     private final List<String> addedFiles;
     private final List<String> deletedFiles;
     private final List<String> changedFiles;
 
     public PullOperationResult(String status,
+                               String serverMessages,
                                List<String> addedFiles,
                                List<String> deletedFiles,
                                List<String> changedFiles) {
-        this.status       = status;
-        this.addedFiles   = addedFiles   != null ? addedFiles   : Collections.emptyList();
-        this.deletedFiles = deletedFiles != null ? deletedFiles : Collections.emptyList();
-        this.changedFiles = changedFiles != null ? changedFiles : Collections.emptyList();
+        this.status         = status;
+        this.serverMessages = serverMessages != null ? serverMessages.trim() : "";
+        this.addedFiles     = addedFiles   != null ? addedFiles   : Collections.emptyList();
+        this.deletedFiles   = deletedFiles != null ? deletedFiles : Collections.emptyList();
+        this.changedFiles   = changedFiles != null ? changedFiles : Collections.emptyList();
     }
 
-    public String getStatus()           { return status; }
-    public List<String> getAddedFiles() { return addedFiles; }
-    public List<String> getDeletedFiles(){ return deletedFiles; }
-    public List<String> getChangedFiles(){ return changedFiles; }
+    public String getStatus()             { return status; }
+    public String getServerMessages()     { return serverMessages; }
+    public List<String> getAddedFiles()   { return addedFiles; }
+    public List<String> getDeletedFiles() { return deletedFiles; }
+    public List<String> getChangedFiles() { return changedFiles; }
 
     public boolean hasChanges() {
         return !addedFiles.isEmpty() || !deletedFiles.isEmpty() || !changedFiles.isEmpty();
