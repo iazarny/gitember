@@ -86,9 +86,9 @@ public class HistoryPanel extends JPanel {
                     commits.add((PlotCommit<PlotLane>) pc);
                 }
                 // Pre-adapt to cache ScmRevisionInformation
-                for (var pc : commits) {
+                /*for (var pc : commits) {
                     Context.getGitRepoService().adapt(pc, null);
-                }
+                }*/
                 return commits;
             }
 
