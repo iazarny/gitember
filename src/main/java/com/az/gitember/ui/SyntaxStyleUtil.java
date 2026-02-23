@@ -1,7 +1,12 @@
 package com.az.gitember.ui;
 
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.Theme;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -62,7 +67,30 @@ public final class SyntaxStyleUtil {
             Map.entry("makefile", SyntaxConstants.SYNTAX_STYLE_MAKEFILE)
     );
 
+    private static final String THEME_LIGHT = "/org/fife/ui/rsyntaxtextarea/themes/default.xml";
+    private static final String THEME_DARK  = "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml";
+
     private SyntaxStyleUtil() {}
+
+    /** Returns true when the active FlatLaf theme is dark. */
+    public static boolean isDarkTheme() {
+        Color bg = UIManager.getColor("Panel.background");
+        return bg != null && bg.getRed() < 128;
+    }
+
+    /**
+     * Applies the appropriate RSyntaxTextArea colour theme (light / dark)
+     * based on the current Swing look-and-feel.
+     */
+    public static void applyTheme(RSyntaxTextArea area) {
+        String path = isDarkTheme() ? THEME_DARK : THEME_LIGHT;
+        try {
+            Theme theme = Theme.load(SyntaxStyleUtil.class.getResourceAsStream(path));
+            theme.apply(area);
+        } catch (IOException | NullPointerException ignored) {
+            // theme file missing — fall back to RSyntaxTextArea defaults
+        }
+    }
 
     public static String getSyntaxStyle(String fileName) {
         if (fileName == null) return SyntaxConstants.SYNTAX_STYLE_NONE;

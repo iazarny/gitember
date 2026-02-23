@@ -41,12 +41,16 @@ public class DiffViewerWindow extends JFrame {
     private String oldText;
     private String newText;
 
-    // Highlight colors
-    private static final Color ADDED_BG = new Color(200, 255, 200);
-    private static final Color DELETED_BG = new Color(255, 200, 200);
-    private static final Color CHANGED_OLD_BG = new Color(200, 230, 255);
-    //private static final Color CHANGED_OLD_BG = new Color(255, 230, 200);
-    private static final Color CHANGED_NEW_BG = new Color(200, 230, 255);
+    // Highlight colors — two palettes selected at paint time based on active theme
+    private static Color addedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 70, 0) : new Color(200, 255, 200);
+    }
+    private static Color deletedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(90, 20, 20) : new Color(255, 200, 200);
+    }
+    private static Color changedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
+    }
 
     public DiffViewerWindow(String fileName, List<ScmRevisionInformation> fileRevisions,
                             String oldSha, String newSha) {
@@ -305,6 +309,7 @@ public class DiffViewerWindow extends JFrame {
         area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         area.setLineWrap(false);
         area.setHighlightCurrentLine(false);
+        SyntaxStyleUtil.applyTheme(area);
         return area;
     }
 
@@ -428,16 +433,16 @@ public class DiffViewerWindow extends JFrame {
                 beginLine = edit.getBeginA();
                 endLine = edit.getEndA();
                 color = switch (edit.getType()) {
-                    case DELETE -> DELETED_BG;
-                    case REPLACE -> CHANGED_OLD_BG;
+                    case DELETE -> deletedBg();
+                    case REPLACE -> changedBg();
                     default -> null;
                 };
             } else {
                 beginLine = edit.getBeginB();
                 endLine = edit.getEndB();
                 color = switch (edit.getType()) {
-                    case INSERT -> ADDED_BG;
-                    case REPLACE -> CHANGED_NEW_BG;
+                    case INSERT -> addedBg();
+                    case REPLACE -> changedBg();
                     default -> null;
                 };
             }
@@ -579,9 +584,9 @@ public class DiffViewerWindow extends JFrame {
 
         private Color getConnectorColor(Edit edit) {
             return switch (edit.getType()) {
-                case DELETE -> DELETED_BG;
-                case INSERT -> ADDED_BG;
-                case REPLACE -> CHANGED_NEW_BG;
+                case DELETE -> deletedBg();
+                case INSERT -> addedBg();
+                case REPLACE -> changedBg();
                 default -> null;
             };
         }

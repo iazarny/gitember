@@ -38,6 +38,7 @@ public class FileViewerWindow extends JFrame {
         textArea.setAntiAliasingEnabled(true);
         textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         textArea.setCaretPosition(0);
+        SyntaxStyleUtil.applyTheme(textArea);
 
         RTextScrollPane sp = new RTextScrollPane(textArea);
         sp.setFoldIndicatorEnabled(true);
