@@ -3,7 +3,6 @@ package com.az.gitember.ui;
 import com.az.gitember.data.Project;
 import com.az.gitember.service.GitemberUtil;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
-import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -131,7 +130,7 @@ public class WelcomePanel extends JPanel {
     private JButton createWellcomeButton(String text, FontAwesomeSolid icon) {
         JButton btn = new JButton();
 
-        btn.setIcon(FontIcon.of(icon, 64));
+        btn.setIcon(Util.themeAwareIcon(icon, 64));
         btn.setText(text);
 
         btn.setHorizontalTextPosition(SwingConstants.CENTER);

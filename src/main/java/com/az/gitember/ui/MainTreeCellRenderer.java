@@ -2,7 +2,6 @@ package com.az.gitember.ui;
 
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeRegular;
-import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -44,16 +43,16 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
 
     private Icon getIconForType(NodeType type) {
         return switch (type) {
-            case WORKING_COPY -> FontIcon.of(FontAwesomeSolid.EDIT, 14);
-            case HISTORY -> FontIcon.of(FontAwesomeSolid.HISTORY, 14);
-            case LOCAL_BRANCHES -> FontIcon.of(FontAwesomeSolid.CODE_BRANCH, 14);
-            case REMOTE_BRANCHES -> FontIcon.of(FontAwesomeSolid.CLOUD, 14);
-            case TAGS -> FontIcon.of(FontAwesomeSolid.TAGS, 14);
-            case STASHES -> FontIcon.of(FontAwesomeSolid.ARCHIVE, 14);
-            case BRANCH -> FontIcon.of(FontAwesomeSolid.CODE_BRANCH, 14);
-            case TAG -> FontIcon.of(FontAwesomeSolid.TAG, 14);
-            case STASH -> FontIcon.of(FontAwesomeRegular.FILE, 14);
-            case ROOT -> FontIcon.of(FontAwesomeSolid.DATABASE, 14);
+            case WORKING_COPY   -> Util.themeAwareIcon(FontAwesomeSolid.EDIT,        14);
+            case HISTORY        -> Util.themeAwareIcon(FontAwesomeSolid.HISTORY,     14);
+            case LOCAL_BRANCHES -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
+            case REMOTE_BRANCHES-> Util.themeAwareIcon(FontAwesomeSolid.CLOUD,       14);
+            case TAGS           -> Util.themeAwareIcon(FontAwesomeSolid.TAGS,        14);
+            case STASHES        -> Util.themeAwareIcon(FontAwesomeSolid.ARCHIVE,     14);
+            case BRANCH         -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
+            case TAG            -> Util.themeAwareIcon(FontAwesomeSolid.TAG,         14);
+            case STASH          -> Util.themeAwareIcon(FontAwesomeRegular.FILE,      14);
+            case ROOT           -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);
         };
     }
 
