@@ -6,6 +6,7 @@ import org.eclipse.jgit.diff.DiffEntry;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.UIManager;
 import java.awt.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -19,10 +20,28 @@ public class BranchDiffWindow extends JFrame {
 
     private static final Logger log = Logger.getLogger(BranchDiffWindow.class.getName());
 
-    private static final Color COLOR_ADDED    = new Color(210, 245, 210);
-    private static final Color COLOR_DELETED  = new Color(250, 210, 210);
-    private static final Color COLOR_MODIFIED = new Color(210, 225, 250);
-    private static final Color COLOR_RENAMED  = new Color(255, 245, 200);
+    // Colors are computed at call time so they adapt to the active theme
+    private static Color statusBg(String label) {
+        boolean dark = SyntaxStyleUtil.isDarkTheme();
+        return switch (label) {
+            case "Added"   -> dark ? new Color( 20,  80,  20) : new Color(210, 245, 210);
+            case "Deleted" -> dark ? new Color( 90,  20,  20) : new Color(250, 210, 210);
+            case "Renamed" -> dark ? new Color( 80,  65,  10) : new Color(255, 245, 200);
+            default        -> dark ? new Color( 20,  45,  90) : new Color(210, 225, 250);
+        };
+    }
+
+    private static Color statusFg(String label) {
+        if (!SyntaxStyleUtil.isDarkTheme()) {
+            return UIManager.getColor("Table.foreground");
+        }
+        return switch (label) {
+            case "Added"   -> new Color(120, 220, 120);
+            case "Deleted" -> new Color(220, 120, 120);
+            case "Renamed" -> new Color(220, 200,  90);
+            default        -> new Color(120, 170, 255);
+        };
+    }
 
     private final String branchARef;   // "old" / left branch
     private final String branchBRef;   // "new" / right branch
@@ -56,7 +75,8 @@ public class BranchDiffWindow extends JFrame {
                 Component c = super.prepareRenderer(r, row, col);
                 if (!isRowSelected(row)) {
                     String st = (String) getValueAt(row, 1);
-                    c.setBackground(statusColor(st));
+                    c.setBackground(statusBg(st));
+                    c.setForeground(statusFg(st));
                 }
                 return c;
             }
@@ -92,10 +112,10 @@ public class BranchDiffWindow extends JFrame {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         JPanel legendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
-        legendPanel.add(makeBadge("Added",    COLOR_ADDED));
-        legendPanel.add(makeBadge("Deleted",  COLOR_DELETED));
-        legendPanel.add(makeBadge("Modified", COLOR_MODIFIED));
-        legendPanel.add(makeBadge("Renamed",  COLOR_RENAMED));
+        legendPanel.add(makeBadge("Added"));
+        legendPanel.add(makeBadge("Deleted"));
+        legendPanel.add(makeBadge("Modified"));
+        legendPanel.add(makeBadge("Renamed"));
 
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.add(legendPanel,  BorderLayout.WEST);
@@ -226,19 +246,13 @@ public class BranchDiffWindow extends JFrame {
         };
     }
 
-    private static Color statusColor(String label) {
-        return switch (label) {
-            case "Added"   -> COLOR_ADDED;
-            case "Deleted" -> COLOR_DELETED;
-            case "Renamed" -> COLOR_RENAMED;
-            default        -> COLOR_MODIFIED;
-        };
-    }
-
-    private static JLabel makeBadge(String text, Color bg) {
-        JLabel lbl = new JLabel(text);
+    private static JLabel makeBadge(String label) {
+        Color bg = statusBg(label);
+        Color fg = statusFg(label);
+        JLabel lbl = new JLabel(label);
         lbl.setOpaque(true);
         lbl.setBackground(bg);
+        lbl.setForeground(fg);
         lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN, 11f));
         lbl.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(bg.darker(), 1),
