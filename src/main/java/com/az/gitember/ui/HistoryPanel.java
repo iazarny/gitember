@@ -142,65 +142,79 @@ public class HistoryPanel extends JPanel {
         worker.execute();
     }
 
-    // Custom cell renderer that draws the commit graph + message
+    // Custom cell renderer: graph canvas on the left, commit message label on the right
     private class GraphCellRenderer extends JPanel implements TableCellRenderer {
 
-        private PlotCommit<PlotLane> commit;
-        private boolean selected;
-        private boolean hasFocus;
+        private final GraphCanvas graphCanvas = new GraphCanvas();
+        private final JLabel messageLabel = new JLabel();
 
         GraphCellRenderer() {
+            setLayout(new BorderLayout(4, 0));
+            messageLabel.setVerticalAlignment(SwingConstants.CENTER);
+            add(graphCanvas, BorderLayout.WEST);
+            add(messageLabel, BorderLayout.CENTER);
             setOpaque(true);
+            graphCanvas.setOpaque(true);
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus,
                                                        int row, int column) {
-            this.commit = tableModel.getCommitAt(row);
-            this.selected = isSelected;
-            this.hasFocus = hasFocus;
-            if (isSelected) {
-                setBackground(table.getSelectionBackground());
-                setForeground(table.getSelectionForeground());
+            Color bg = isSelected ? table.getSelectionBackground() : table.getBackground();
+            Color fg = isSelected ? table.getSelectionForeground() : table.getForeground();
+            setBackground(bg);
+            messageLabel.setFont(table.getFont());
+            messageLabel.setForeground(fg);
+
+            PlotCommit<PlotLane> commit = tableModel.getCommitAt(row);
+            graphCanvas.setCommit(commit, bg);
+
+            if (commit != null) {
+                messageLabel.setText(commit.getShortMessage() != null ? commit.getShortMessage() : "");
             } else {
-                setBackground(table.getBackground());
-                setForeground(table.getForeground());
+                // file-history mode: value is already the short-message string
+                messageLabel.setText(value != null ? value.toString() : "");
             }
+
+            doLayout();
             return this;
+        }
+    }
+
+    // Paints only the graph portion (lines, dots, ref labels) for a single commit row
+    private class GraphCanvas extends JComponent {
+
+        private PlotCommit<PlotLane> commit;
+
+        GraphCanvas() {
+            setOpaque(true);
+        }
+
+        void setCommit(PlotCommit<PlotLane> commit, Color bg) {
+            this.commit = commit;
+            setBackground(bg);
+            if (commit != null) {
+                // Quick off-screen pass to measure how wide the graph portion is.
+                // The image is 1 px wide so no real pixels are written; only the
+                // graphWidth side-effect from drawText() is captured.
+                BufferedImage probe = new BufferedImage(1, ROW_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D mg = probe.createGraphics();
+                mg.setFont(commitTable.getFont());
+                int w = graphRenderer.render(mg, commit, ROW_HEIGHT);
+                mg.dispose();
+                setPreferredSize(new Dimension(Math.max(w + 4, 20), ROW_HEIGHT));
+            } else {
+                setPreferredSize(new Dimension(0, ROW_HEIGHT));
+            }
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (commit == null) return;
-
             Graphics2D g2 = (Graphics2D) g.create();
-            int h = getHeight();
-            int w = getWidth();
-
-            // Draw graph into offscreen image (renderer may draw outside our bounds upward/downward)
-            BufferedImage graphImage = new BufferedImage(
-                    Math.max(w, 800), h, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D gImg = graphImage.createGraphics();
-            gImg.setFont(g2.getFont());
-            int graphWidth = graphRenderer.render(gImg, commit, h);
-            gImg.dispose();
-
-            // Paint the graph image
-            g2.drawImage(graphImage, 0, 0, null);
-
-            // Draw the commit message after the graph
-            int textX = Math.max(graphWidth + 4, 10);
-            g2.setColor(getForeground());
-            g2.setFont(getFont());
-            FontMetrics fm = g2.getFontMetrics();
-            String msg = commit.getShortMessage();
-            if (msg != null) {
-                int textY = (h + fm.getAscent() - fm.getDescent()) / 2;
-                g2.drawString(msg, textX, textY);
-            }
-
+            graphRenderer.render(g2, commit, getHeight());
             g2.dispose();
         }
     }
