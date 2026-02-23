@@ -109,6 +109,7 @@ public class CommitGraphRenderer extends AbstractPlotRenderer<PlotLane, Color> {
         Color tableBg = UIManager.getColor("Table.background");
         boolean isDark = tableBg != null && tableBg.getRed() < 128;
         if (isDark) {
+
             g2.setColor(new Color(50, 60, 80));
             g2.fillRoundRect(x, y - boxHeight / 2, boxWidth, boxHeight, 6, 6);
             g2.setColor(new Color(100, 130, 180));

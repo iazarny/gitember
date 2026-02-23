@@ -213,6 +213,22 @@ public class GitRepoService {
         return createDiff(null, null);
     }
 
+    /**
+     * Apply a patch file to the working copy.
+     *
+     * @param patchStream input stream of the unified diff / patch file
+     * @return list of paths that were patched
+     * @throws Exception if the patch cannot be applied
+     */
+    public java.util.List<String> applyDiff(java.io.InputStream patchStream) throws Exception {
+        try (Git git = new Git(repository)) {
+            ApplyResult result = git.apply().setPatch(patchStream).call();
+            return result.getUpdatedFiles().stream()
+                    .map(f -> f.getPath())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+    }
+
     public String  createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
         try (Git git = new Git(repository)) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(4098);

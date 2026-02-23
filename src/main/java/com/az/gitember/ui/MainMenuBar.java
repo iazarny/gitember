@@ -28,6 +28,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem refreshItem;
     private final JMenuItem stashItem;
     private final JMenuItem createDiffItem;
+    private final JMenuItem applyDiffItem;
 
     // Repository credentials
     private final JMenuItem credentialsItem;
@@ -96,10 +97,13 @@ public class MainMenuBar extends JMenuBar {
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
         stashItem = new JMenuItem("Stash...", KeyEvent.VK_S);
         createDiffItem = new JMenuItem("Create diff", KeyEvent.VK_D);
+        applyDiffItem = new JMenuItem("Apply diff...", KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
         workingCopyMenu.add(stashItem);
+        workingCopyMenu.addSeparator();
         workingCopyMenu.add(createDiffItem);
+        workingCopyMenu.add(applyDiffItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");
@@ -156,6 +160,7 @@ public class MainMenuBar extends JMenuBar {
         refreshItem.setEnabled(enabled);
         stashItem.setEnabled(enabled);
         createDiffItem.setEnabled(enabled);
+        applyDiffItem.setEnabled(enabled);
     }
 
     public void addOpenListener(ActionListener l) { openItem.addActionListener(l); }
@@ -168,6 +173,7 @@ public class MainMenuBar extends JMenuBar {
     public void addRefreshListener(ActionListener l) { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l) { stashItem.addActionListener(l); }
     public void addCreateDiffListener(ActionListener l) { createDiffItem.addActionListener(l); }
+    public void addApplyDiffListener(ActionListener l)  { applyDiffItem.addActionListener(l); }
     public void addCredentialsListener(ActionListener l) { credentialsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l) { settingsItem.addActionListener(l); }
 }

@@ -20,7 +20,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -154,6 +156,7 @@ public class MainFrame extends JFrame {
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());
         menuBar.addCreateDiffListener(e -> createDiff());
+        menuBar.addApplyDiffListener(e -> applyDiff());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
@@ -360,6 +363,61 @@ public class MainFrame extends JFrame {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Create diff failed", ex);
                     statusBar.setStatus("Create diff failed");
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void applyDiff() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select patch file to apply");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Patch / Diff files (*.patch, *.diff)", "patch", "diff"));
+        chooser.setAcceptAllFileFilterUsed(true);
+
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        File patchFile = chooser.getSelectedFile();
+        statusBar.setStatus("Applying patch: " + patchFile.getName() + "...");
+        statusBar.showProgress(true);
+
+        SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                try (FileInputStream fis = new FileInputStream(patchFile)) {
+                    return Context.getGitRepoService().applyDiff(fis);
+                }
+            }
+
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    List<String> applied = get();
+                    Context.updateStatus(null, true);
+                    statusBar.setStatus("Patch applied: " + applied.size() + " file(s) modified");
+
+                    // Build result message
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Patch applied successfully.\n\n");
+                    if (applied.isEmpty()) {
+                        sb.append("No files were modified.");
+                    } else {
+                        sb.append("Modified files (").append(applied.size()).append("):\n");
+                        for (String path : applied) {
+                            sb.append("  ").append(path).append("\n");
+                        }
+                    }
+                    JOptionPane.showMessageDialog(MainFrame.this,
+                            sb.toString(), "Apply Patch", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    log.log(Level.WARNING, "Apply diff failed", cause);
+                    statusBar.setStatus("Apply diff failed: " + cause.getMessage());
+                    JOptionPane.showMessageDialog(MainFrame.this,
+                            "Cannot apply patch:\n" + cause.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
