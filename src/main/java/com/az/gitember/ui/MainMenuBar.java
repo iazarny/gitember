@@ -112,7 +112,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem = new JMenuItem("About", KeyEvent.VK_A);
         aboutItem.addActionListener(e -> JOptionPane.showMessageDialog(
                 SwingUtilities.getWindowAncestor(this),
-                "Gitember - Git GUI Client\nSwing Edition",
+                "Gitember 3 - Git GUI Client",
                 "About Gitember",
                 JOptionPane.INFORMATION_MESSAGE));
 
