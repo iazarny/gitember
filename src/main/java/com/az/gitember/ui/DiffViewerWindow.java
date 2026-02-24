@@ -24,17 +24,17 @@ public class DiffViewerWindow extends JFrame {
 
     private static final Logger log = Logger.getLogger(DiffViewerWindow.class.getName());
 
-    private final RSyntaxTextArea oldPane;
-    private final RSyntaxTextArea newPane;
-    private final RTextScrollPane leftScroll;
-    private final RTextScrollPane rightScroll;
+    private RSyntaxTextArea oldPane;
+    private RSyntaxTextArea newPane;
+    private RTextScrollPane leftScroll;
+    private RTextScrollPane rightScroll;
     private final JComboBox<RevisionItem> oldCombo;
     private final JComboBox<RevisionItem> newCombo;
-    private final JLabel diffInfoLabel;
-    private final JButton prevBtn;
-    private final JButton nextBtn;
+    private JLabel diffInfoLabel;
+    private JButton prevBtn;
+    private JButton nextBtn;
     private final String fileName;
-    private final DiffConnectorPanel centerPanel;
+    private DiffConnectorPanel centerPanel;
 
     private EditList editList;
     private int currentDiff = -1;
@@ -52,26 +52,13 @@ public class DiffViewerWindow extends JFrame {
         return SyntaxStyleUtil.isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
     }
 
+    // ---- Constructors ----
+
     public DiffViewerWindow(String fileName, List<ScmRevisionInformation> fileRevisions,
                             String oldSha, String newSha) {
         this.fileName = fileName;
         setTitle("Diff: " + fileName);
-        setSize(1200, 700);
-        setLocationRelativeTo(null);
-
-        String syntaxStyle = SyntaxStyleUtil.getSyntaxStyle(fileName);
-
-        oldPane = createEditor(syntaxStyle);
-        newPane = createEditor(syntaxStyle);
-
-        leftScroll = new RTextScrollPane(oldPane);
-        leftScroll.setFoldIndicatorEnabled(false);
-        //leftScroll.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        //oldPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-        rightScroll = new RTextScrollPane(newPane);
-        rightScroll.setFoldIndicatorEnabled(false);
-        centerPanel = new DiffConnectorPanel();
-        syncScroll(leftScroll, rightScroll);
+        initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
 
         // Revision combo boxes
         oldCombo = new JComboBox<>();
@@ -85,62 +72,35 @@ public class DiffViewerWindow extends JFrame {
         }
         selectRevision(oldCombo, oldSha);
         selectRevision(newCombo, newSha);
-
         oldCombo.addActionListener(e -> loadAndDiff());
         newCombo.addActionListener(e -> loadAndDiff());
 
-        // Navigation
-        prevBtn = new JButton("<< Prev");
-        prevBtn.setEnabled(false);
-        prevBtn.addActionListener(e -> navigateDiff(-1));
-
-        nextBtn = new JButton("Next >>");
-        nextBtn.setEnabled(false);
-        nextBtn.addActionListener(e -> navigateDiff(1));
-
-        diffInfoLabel = new JLabel("");
-
-        // Toolbar — combos stretch to fill the width of their respective editor panes,
-        // mirroring the 45% / 10% / 45% split used in the diff panel below.
-        JPanel toolbar = new JPanel(new GridBagLayout());
-        toolbar.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        // Row 1: combo boxes stretch to fill their respective editor panes (45%/10%/45%)
+        JPanel combosRow = new JPanel(new GridBagLayout());
+        combosRow.setBorder(BorderFactory.createEmptyBorder(4, 4, 2, 4));
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0;
         g.insets = new Insets(0, 3, 0, 3);
 
-        g.gridx = 0; g.weightx = 0;   g.fill = GridBagConstraints.NONE;
-        toolbar.add(new JLabel("Old:"), g);
-
+        g.gridx = 0; g.weightx = 0;    g.fill = GridBagConstraints.NONE;
+        combosRow.add(new JLabel("Old:"), g);
         g.gridx = 1; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
-        toolbar.add(oldCombo, g);
-
+        combosRow.add(oldCombo, g);
         // spacer that matches the connector-panel column
         g.gridx = 2; g.weightx = 0.10; g.fill = GridBagConstraints.HORIZONTAL;
-        toolbar.add(new JLabel("New:"), g);
-
+        combosRow.add(new JLabel("New:"), g);
         g.gridx = 3; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
-        toolbar.add(newCombo, g);
+        combosRow.add(newCombo, g);
 
-        g.gridx = 4; g.weightx = 0; g.fill = GridBagConstraints.NONE;
-        toolbar.add(prevBtn, g);
-        g.gridx = 5;
-        toolbar.add(nextBtn, g);
-        g.gridx = 6; g.insets = new Insets(0, 8, 0, 3);
-        toolbar.add(diffInfoLabel, g);
+        // Row 2: navigation centered
+        JPanel toolbar = new JPanel();
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.Y_AXIS));
+        toolbar.add(combosRow);
+        toolbar.add(buildNavPanel());
 
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JLabel(" Old revision"), BorderLayout.NORTH);
-        leftPanel.add(leftScroll, BorderLayout.CENTER);
-
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(new JLabel(" New revision"), BorderLayout.NORTH);
-        rightPanel.add(rightScroll, BorderLayout.CENTER);
-
-        JPanel diffPanel = buildDiffPanel(leftPanel, rightPanel);
-
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(toolbar, BorderLayout.NORTH);
-        getContentPane().add(diffPanel, BorderLayout.CENTER);
+        setupContentPane(toolbar,
+                headerPanel(" Old revision", leftScroll),
+                headerPanel(" New revision", rightScroll));
 
         loadAndDiff();
     }
@@ -148,65 +108,19 @@ public class DiffViewerWindow extends JFrame {
     /**
      * Constructor for branch-to-branch file diff.
      * Both content strings are provided directly — no revision combos shown.
-     *
-     * @param fileName     used for syntax highlighting and window title
-     * @param leftLabel    label shown above the left pane  (e.g. "Branch: main")
-     * @param leftContent  file text in the left branch
-     * @param rightLabel   label shown above the right pane (e.g. "Branch: feature")
-     * @param rightContent file text in the right branch
      */
     public DiffViewerWindow(String fileName,
                             String leftLabel,  String leftContent,
                             String rightLabel, String rightContent) {
         this.fileName = fileName;
         setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
-        setSize(1200, 700);
-        setLocationRelativeTo(null);
-
-        String syntaxStyle = SyntaxStyleUtil.getSyntaxStyle(fileName);
-
-        oldPane = createEditor(syntaxStyle);
-        newPane = createEditor(syntaxStyle);
-
-        leftScroll  = new RTextScrollPane(oldPane);
-        leftScroll.setFoldIndicatorEnabled(false);
-        rightScroll = new RTextScrollPane(newPane);
-        rightScroll.setFoldIndicatorEnabled(false);
-        centerPanel = new DiffConnectorPanel();
-        syncScroll(leftScroll, rightScroll);
-
+        initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
         oldCombo = null;
         newCombo = null;
 
-        prevBtn = new JButton("<< Prev");
-        prevBtn.setEnabled(false);
-        prevBtn.addActionListener(e -> navigateDiff(-1));
-
-        nextBtn = new JButton("Next >>");
-        nextBtn.setEnabled(false);
-        nextBtn.addActionListener(e -> navigateDiff(1));
-
-        diffInfoLabel = new JLabel("");
-
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        toolbar.add(prevBtn);
-        toolbar.add(nextBtn);
-        toolbar.add(Box.createHorizontalStrut(10));
-        toolbar.add(diffInfoLabel);
-
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JLabel(" " + leftLabel), BorderLayout.NORTH);
-        leftPanel.add(leftScroll, BorderLayout.CENTER);
-
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(new JLabel(" " + rightLabel), BorderLayout.NORTH);
-        rightPanel.add(rightScroll, BorderLayout.CENTER);
-
-        JPanel diffPanel = buildDiffPanel(leftPanel, rightPanel);
-
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(toolbar, BorderLayout.NORTH);
-        getContentPane().add(diffPanel, BorderLayout.CENTER);
+        setupContentPane(buildNavPanel(),
+                headerPanel(" " + leftLabel, leftScroll),
+                headerPanel(" " + rightLabel, rightScroll));
 
         this.oldText = leftContent;
         this.newText = rightContent;
@@ -220,27 +134,37 @@ public class DiffViewerWindow extends JFrame {
                             String commitContent, String diskContent) {
         this.fileName = fileName;
         setTitle("Diff with disk: " + fileName);
+        initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
+        oldCombo = null;
+        newCombo = null;
+
+        String shortSha = commitSha.length() > 8 ? commitSha.substring(0, 8) : commitSha;
+        setupContentPane(buildNavPanel(),
+                headerPanel(" Commit: " + shortSha, leftScroll),
+                headerPanel(" Working directory", rightScroll));
+
+        this.oldText = commitContent;
+        this.newText = diskContent;
+        computeAndDisplayDiff();
+    }
+
+    // ---- Private init helpers ----
+
+    /** Initializes all shared components. Must be called first in every constructor. */
+    private void initCommon(String syntaxStyle) {
         setSize(1200, 700);
         setLocationRelativeTo(null);
-
-        String syntaxStyle = SyntaxStyleUtil.getSyntaxStyle(fileName);
 
         oldPane = createEditor(syntaxStyle);
         newPane = createEditor(syntaxStyle);
 
         leftScroll = new RTextScrollPane(oldPane);
         leftScroll.setFoldIndicatorEnabled(false);
-        //leftScroll.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        //oldPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         rightScroll = new RTextScrollPane(newPane);
         rightScroll.setFoldIndicatorEnabled(false);
         centerPanel = new DiffConnectorPanel();
         syncScroll(leftScroll, rightScroll);
 
-        oldCombo = null;
-        newCombo = null;
-
-        // Navigation
         prevBtn = new JButton("<< Prev");
         prevBtn.setEnabled(false);
         prevBtn.addActionListener(e -> navigateDiff(-1));
@@ -250,35 +174,34 @@ public class DiffViewerWindow extends JFrame {
         nextBtn.addActionListener(e -> navigateDiff(1));
 
         diffInfoLabel = new JLabel("");
+    }
 
-        String shortSha = commitSha.length() > 8 ? commitSha.substring(0, 8) : commitSha;
+    /** Centered navigation row: Prev / Next / diff-info label. */
+    private JPanel buildNavPanel() {
+        JPanel nav = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
+        nav.add(prevBtn);
+        nav.add(nextBtn);
+        nav.add(Box.createHorizontalStrut(10));
+        nav.add(diffInfoLabel);
+        return nav;
+    }
 
-        // Toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        toolbar.add(prevBtn);
-        toolbar.add(nextBtn);
-        toolbar.add(Box.createHorizontalStrut(10));
-        toolbar.add(diffInfoLabel);
+    /** Wraps a scroll pane in a titled panel. */
+    private static JPanel headerPanel(String title, JComponent content) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JLabel(title), BorderLayout.NORTH);
+        panel.add(content, BorderLayout.CENTER);
+        return panel;
+    }
 
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JLabel(" Commit: " + shortSha), BorderLayout.NORTH);
-        leftPanel.add(leftScroll, BorderLayout.CENTER);
-
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(new JLabel(" Working directory"), BorderLayout.NORTH);
-        rightPanel.add(rightScroll, BorderLayout.CENTER);
-
-        JPanel diffPanel = buildDiffPanel(leftPanel, rightPanel);
-
+    /** Assembles toolbar + diff panel into the content pane. */
+    private void setupContentPane(JPanel toolbar, JPanel leftPanel, JPanel rightPanel) {
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(toolbar, BorderLayout.NORTH);
-        getContentPane().add(diffPanel, BorderLayout.CENTER);
-
-        // Run diff directly
-        this.oldText = commitContent;
-        this.newText = diskContent;
-        computeAndDisplayDiff();
+        getContentPane().add(buildDiffPanel(leftPanel, rightPanel), BorderLayout.CENTER);
     }
+
+    // ---- Layout ----
 
     private JPanel buildDiffPanel(JPanel leftPanel, JPanel rightPanel) {
         centerPanel.setPreferredSize(new Dimension(40, 0));
@@ -294,22 +217,11 @@ public class DiffViewerWindow extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy = 0;
 
-        // Left - 45%
-        gbc.gridx = 0;
-        gbc.weightx = 0.45;
-        gbc.weighty = 1.0;
+        gbc.gridx = 0; gbc.weightx = 0.45; gbc.weighty = 1.0;
         panel.add(leftPanel, gbc);
-
-        // Center
-        gbc.gridx = 1;
-        gbc.weightx = 0.10;
-        gbc.weighty = 1.0;
+        gbc.gridx = 1; gbc.weightx = 0.10;
         panel.add(centerPanel, gbc);
-
-        // Right - 45%
-        gbc.gridx = 2;
-        gbc.weightx = 0.45;
-        gbc.weighty = 1.0;
+        gbc.gridx = 2; gbc.weightx = 0.45;
         panel.add(rightPanel, gbc);
 
         return panel;
@@ -437,7 +349,6 @@ public class DiffViewerWindow extends JFrame {
     }
 
     private void applyLineHighlights(RSyntaxTextArea pane, EditList edits, boolean isOld) {
-        // Remove previous highlights
         pane.removeAllLineHighlights();
 
         for (Edit edit : edits) {
@@ -486,7 +397,6 @@ public class DiffViewerWindow extends JFrame {
         if (editList == null || currentDiff < 0 || currentDiff >= editList.size()) return;
 
         Edit edit = editList.get(currentDiff);
-
         scrollToLine(oldPane, edit.getBeginA());
         scrollToLine(newPane, edit.getBeginB());
     }
@@ -546,50 +456,40 @@ public class DiffViewerWindow extends JFrame {
             int leftScrollPos = leftScroll.getViewport().getViewPosition().y;
             int rightScrollPos = rightScroll.getViewport().getViewPosition().y;
 
-            // Visible bounds for clipping
             int panelHeight = getHeight();
 
             for (Edit edit : editList) {
                 Color color = getConnectorColor(edit);
                 if (color == null) continue;
 
-                // Get pixel Y in editor coordinates, then adjust for scroll + panel offset
-                int leftTop = getLineYInEditor(oldPane, edit.getBeginA()) - leftScrollPos + leftOffsetY;
-                int leftBottom = getLineYInEditor(oldPane, edit.getEndA()) - leftScrollPos + leftOffsetY;
-                int rightTop = getLineYInEditor(newPane, edit.getBeginB()) - rightScrollPos + rightOffsetY;
-                int rightBottom = getLineYInEditor(newPane, edit.getEndB()) - rightScrollPos + rightOffsetY;
+                int leftTop    = getLineYInEditor(oldPane, edit.getBeginA()) - leftScrollPos  + leftOffsetY;
+                int leftBottom = getLineYInEditor(oldPane, edit.getEndA())   - leftScrollPos  + leftOffsetY;
+                int rightTop   = getLineYInEditor(newPane, edit.getBeginB()) - rightScrollPos + rightOffsetY;
+                int rightBottom= getLineYInEditor(newPane, edit.getEndB())   - rightScrollPos + rightOffsetY;
 
-                // Skip if entirely out of visible area
                 if (leftBottom < 0 && rightBottom < 0) continue;
                 if (leftTop > panelHeight && rightTop > panelHeight) continue;
 
-                // For empty ranges (pure insert/delete), draw thin connector
-                if (leftTop == leftBottom) leftBottom = leftTop + 2;
+                if (leftTop  == leftBottom)  leftBottom  = leftTop  + 2;
                 if (rightTop == rightBottom) rightBottom = rightTop + 2;
 
-                // Draw filled shape using Bézier curves
                 float cx1 = w * 0.4f;
                 float cx2 = w * 0.6f;
 
                 java.awt.geom.GeneralPath path = new java.awt.geom.GeneralPath();
-                // Top curve: left top -> right top
                 path.moveTo(0, leftTop);
-                path.curveTo(cx1, leftTop, cx2, rightTop, w, rightTop);
-                // Right edge down
+                path.curveTo(cx1, leftTop,    cx2, rightTop,    w, rightTop);
                 path.lineTo(w, rightBottom);
-                // Bottom curve: right bottom -> left bottom
                 path.curveTo(cx2, rightBottom, cx1, leftBottom, 0, leftBottom);
-                // Left edge up (close)
                 path.closePath();
 
                 g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 80));
                 g2.fill(path);
 
-                // Draw top and bottom Bézier border curves
                 g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 180));
                 g2.setStroke(new BasicStroke(1f));
                 g2.draw(new java.awt.geom.CubicCurve2D.Float(
-                        0, leftTop, cx1, leftTop, cx2, rightTop, w, rightTop));
+                        0, leftTop,    cx1, leftTop,    cx2, rightTop,    w, rightTop));
                 g2.draw(new java.awt.geom.CubicCurve2D.Float(
                         0, leftBottom, cx1, leftBottom, cx2, rightBottom, w, rightBottom));
             }
@@ -599,17 +499,13 @@ public class DiffViewerWindow extends JFrame {
 
         private Color getConnectorColor(Edit edit) {
             return switch (edit.getType()) {
-                case DELETE -> deletedBg();
-                case INSERT -> addedBg();
+                case DELETE  -> deletedBg();
+                case INSERT  -> addedBg();
                 case REPLACE -> changedBg();
-                default -> null;
+                default      -> null;
             };
         }
 
-        /**
-         * Get the Y pixel position of a line in the editor's own coordinate space
-         * (not adjusted for scroll).
-         */
         private int getLineYInEditor(RSyntaxTextArea pane, int lineNumber) {
             try {
                 int lineCount = pane.getLineCount();
@@ -617,21 +513,15 @@ public class DiffViewerWindow extends JFrame {
                 if (lineNumber < 0) lineNumber = 0;
                 int offset = pane.getLineStartOffset(lineNumber);
                 Rectangle rect = pane.modelToView(offset);
-                if (rect != null) {
-                    return rect.y;
-                }
+                if (rect != null) return rect.y;
             } catch (Exception ignored) {
             }
             return 0;
         }
 
-        /**
-         * Get the Y offset of a scroll pane's viewport origin relative to this center panel.
-         */
         private int getViewportOffsetY(RTextScrollPane scrollPane) {
             try {
-                Point p = SwingUtilities.convertPoint(
-                        scrollPane.getViewport(), 0, 0, this);
+                Point p = SwingUtilities.convertPoint(scrollPane.getViewport(), 0, 0, this);
                 return p.y;
             } catch (Exception e) {
                 return 0;
