@@ -490,7 +490,13 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKING_COPY -> {
                     contentPanel.setContent(workingCopyPanel);
-                    workingCopyPanel.setItems(Context.getStatusList());
+                    workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateStatus(null, true);
+                            return null;
+                        }
+                    }.execute();
                 }
                 case HISTORY -> {
                     contentPanel.setContent(historyPanel);

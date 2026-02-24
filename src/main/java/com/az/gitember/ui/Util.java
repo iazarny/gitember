@@ -22,10 +22,6 @@ public class Util {
         return createButton(text, tooltip, ikon, 0);
     }
 
-    /*for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
-
-            btn.setMargin(new Insets(4, 12, 4, 12));
-        }*/
 
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         JButton btn = new JButton();
