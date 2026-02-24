@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
@@ -32,6 +33,7 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode remoteBranchesNode;
     private DefaultMutableTreeNode tagsNode;
     private DefaultMutableTreeNode stashesNode;
+    private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
 
     private BranchContextMenuFactory contextMenuFactory;
 
@@ -81,6 +83,7 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_TAGS, this::onTagsChanged);
         Context.addPropertyChangeListener(Context.PROP_STASH, this::onStashChanged);
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoChanged);
+        Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, this::onPullRequestsChanged);
     }
 
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
@@ -133,6 +136,7 @@ public class MainTreePanel extends JPanel {
 
     private void buildInitialTree() {
         rootNode.removeAllChildren();
+        pullRequestsNode = null;
 
         workingCopyNode = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
         historyNode = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY));
@@ -229,5 +233,34 @@ public class MainTreePanel extends JPanel {
             refreshTree();
             tree.setSelectionPath(new TreePath(new Object[]{rootNode, workingCopyNode}));
         });
+    }
+
+    private void onPullRequestsChanged(PropertyChangeEvent evt) {
+        SwingUtilities.invokeLater(() -> updatePullRequestsNode(Context.getPullRequests()));
+    }
+
+    private void updatePullRequestsNode(List<PullRequest> prs) {
+        if (prs == null || prs.isEmpty()) {
+            if (pullRequestsNode != null) {
+                rootNode.remove(pullRequestsNode);
+                treeModel.reload(rootNode);
+                pullRequestsNode = null;
+            }
+            return;
+        }
+
+        if (pullRequestsNode == null) {
+            pullRequestsNode = new DefaultMutableTreeNode(
+                    new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS));
+            rootNode.add(pullRequestsNode);
+        }
+
+        pullRequestsNode.removeAllChildren();
+        for (PullRequest pr : prs) {
+            pullRequestsNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(pr.toString(), NodeType.PULL_REQUEST, pr)));
+        }
+        treeModel.reload(rootNode);
+        tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
     }
 }

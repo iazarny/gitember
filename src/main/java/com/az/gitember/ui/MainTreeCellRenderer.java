@@ -20,7 +20,9 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         BRANCH,
         TAG,
         STASH,
-        ROOT
+        ROOT,
+        PULL_REQUESTS,
+        PULL_REQUEST
     }
 
     @Override
@@ -51,8 +53,10 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case STASHES        -> Util.themeAwareIcon(FontAwesomeSolid.ARCHIVE,     14);
             case BRANCH         -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
             case TAG            -> Util.themeAwareIcon(FontAwesomeSolid.TAG,         14);
-            case STASH          -> Util.themeAwareIcon(FontAwesomeRegular.FILE,      14);
+            case STASH          -> Util.themeAwareIcon(FontAwesomeRegular.FILE,        14);
             case ROOT           -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);
+            case PULL_REQUESTS  -> Util.themeAwareIcon(FontAwesomeSolid.TASKS,       14);
+            case PULL_REQUEST   -> Util.themeAwareIcon(FontAwesomeSolid.EXCHANGE_ALT,14);
         };
     }
 

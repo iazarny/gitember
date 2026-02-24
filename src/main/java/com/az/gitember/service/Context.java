@@ -52,6 +52,7 @@ public class Context {
     public static final String PROP_SCM_STAT_LIST_PARAM = "scmStatListParam";
     public static final String PROP_SEARCH_VALUE = "searchValue";
     public static final String PROP_SEARCH_RESULT = "searchResult";
+    public static final String PROP_PULL_REQUESTS = "pullRequests";
 
     // Fields
     private static String repositoryPath;
@@ -85,6 +86,7 @@ public class Context {
     private static StatWPParameters scmStatListParam;
     private static String searchValue;
     private static Map<String, Set<String>> searchResult = Collections.emptyMap();
+    private static List<PullRequest> pullRequests = Collections.emptyList();
 
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new ConcurrentHashMap<>();
@@ -333,6 +335,7 @@ public class Context {
         }).start();
 
         initProjectWatcher(gitFolder);
+        updatePullRequests();
     }
 
     public static void init(String gitFolder) throws Exception {
@@ -488,6 +491,32 @@ public class Context {
 
     public static void updateStash() {
         setStash(gitRepoService.getStashList());
+    }
+
+    public static List<PullRequest> getPullRequests() {
+        return pullRequests;
+    }
+
+    private static void setPullRequests(List<PullRequest> value) {
+        List<PullRequest> old = pullRequests;
+        pullRequests = value;
+        pcs.firePropertyChange(PROP_PULL_REQUESTS, old, value);
+    }
+
+    /** Fetches open PRs in a daemon thread; fires PROP_PULL_REQUESTS on the EDT when done. */
+    public static void updatePullRequests() {
+        Thread t = new Thread(() -> {
+            try {
+                String remoteUrl = gitRepoService.getRepositoryRemoteUrl();
+                String token = getCurrentProject().map(Project::getAccessToken).orElse(null);
+                List<PullRequest> prs = PullRequestService.fetch(remoteUrl, token);
+                SwingUtilities.invokeLater(() -> setPullRequests(prs));
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Failed to update pull requests", e);
+            }
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     private static void setStash(List<ScmRevisionInformation> value) {
