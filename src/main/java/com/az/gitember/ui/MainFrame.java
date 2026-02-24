@@ -53,11 +53,24 @@ public class MainFrame extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
 
-        // Set icon
-        try {
-            ImageIcon icon = new ImageIcon(getClass().getResource("/icon/gitember.png"));
-            setIconImage(icon.getImage());
-        } catch (Exception ignored) {
+        // Set window icons — provide multiple sizes so each OS picks the best fit.
+        // Windows uses 16/32/48/256; Linux uses 16/32/48/128; macOS uses the largest.
+        setIconImages(loadIcons("/icon/gitember-16.png", "/icon/gitember-32.png",
+                "/icon/gitember-48.png", "/icon/gitember-64.png",
+                "/icon/gitember-256.png", "/icon/gitember-512.png"));
+
+        // macOS Dock icon: use the largest available image (Java 9+ Taskbar API)
+        if (java.awt.Taskbar.isTaskbarSupported()) {
+            try {
+                java.awt.Taskbar taskbar = java.awt.Taskbar.getTaskbar();
+                if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
+                    java.net.URL dockIconUrl = getClass().getResource("/icon/gitember-512.png");
+                    if (dockIconUrl != null) {
+                        taskbar.setIconImage(new ImageIcon(dockIconUrl).getImage());
+                    }
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         // Create components
@@ -517,6 +530,27 @@ public class MainFrame extends JFrame {
                 default -> contentPanel.setContent(null);
             }
         }
+    }
+
+    /** Loads icon images from classpath resources, silently skipping any that are missing. */
+    private java.util.List<Image> loadIcons(String... paths) {
+        java.util.List<Image> icons = new java.util.ArrayList<>();
+        for (String path : paths) {
+            try {
+                java.net.URL url = getClass().getResource(path);
+                if (url != null) icons.add(new ImageIcon(url).getImage());
+            } catch (Exception ignored) {
+            }
+        }
+        // Fallback to the original single icon if none were found
+        if (icons.isEmpty()) {
+            try {
+                java.net.URL url = getClass().getResource("/icon/gitember.png");
+                if (url != null) icons.add(new ImageIcon(url).getImage());
+            } catch (Exception ignored) {
+            }
+        }
+        return icons;
     }
 
     public StatusBar getStatusBar() {
