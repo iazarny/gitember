@@ -100,18 +100,33 @@ public class DiffViewerWindow extends JFrame {
 
         diffInfoLabel = new JLabel("");
 
-        // Toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        toolbar.add(new JLabel("Old:"));
-        toolbar.add(oldCombo);
-        toolbar.add(Box.createHorizontalStrut(12));
-        toolbar.add(new JLabel("New:"));
-        toolbar.add(newCombo);
-        toolbar.add(Box.createHorizontalStrut(20));
-        toolbar.add(prevBtn);
-        toolbar.add(nextBtn);
-        toolbar.add(Box.createHorizontalStrut(10));
-        toolbar.add(diffInfoLabel);
+        // Toolbar — combos stretch to fill the width of their respective editor panes,
+        // mirroring the 45% / 10% / 45% split used in the diff panel below.
+        JPanel toolbar = new JPanel(new GridBagLayout());
+        toolbar.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridy = 0;
+        g.insets = new Insets(0, 3, 0, 3);
+
+        g.gridx = 0; g.weightx = 0;   g.fill = GridBagConstraints.NONE;
+        toolbar.add(new JLabel("Old:"), g);
+
+        g.gridx = 1; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
+        toolbar.add(oldCombo, g);
+
+        // spacer that matches the connector-panel column
+        g.gridx = 2; g.weightx = 0.10; g.fill = GridBagConstraints.HORIZONTAL;
+        toolbar.add(new JLabel("New:"), g);
+
+        g.gridx = 3; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
+        toolbar.add(newCombo, g);
+
+        g.gridx = 4; g.weightx = 0; g.fill = GridBagConstraints.NONE;
+        toolbar.add(prevBtn, g);
+        g.gridx = 5;
+        toolbar.add(nextBtn, g);
+        g.gridx = 6; g.insets = new Insets(0, 8, 0, 3);
+        toolbar.add(diffInfoLabel, g);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(new JLabel(" Old revision"), BorderLayout.NORTH);
