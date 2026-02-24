@@ -22,20 +22,33 @@ public class Util {
         return createButton(text, tooltip, ikon, 0);
     }
 
+    /*for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
+
+            btn.setMargin(new Insets(4, 12, 4, 12));
+        }*/
+
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         JButton btn = new JButton();
+
+        //btn.setVerticalTextPosition(SwingConstants.BOTTOM);
+        //btn.setHorizontalTextPosition(SwingConstants.CENTER);
+
+        Dimension size = new Dimension(110, 40);
+        btn.setPreferredSize(size);
+        btn.setMinimumSize(size);
+        btn.setMaximumSize(size);
 
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(true);
-        btn.setMargin(new Insets(10, 20, 10, 20));
+        //btn.setMargin(new Insets(5, 5, 5, 5));
 
         if (ikon != null) {
             Icon icon = themeAwareIcon(ikon, 16);
             btn.setIcon(rotation == 0 ? icon : new RotatedIcon(icon, rotation));
         }
 
-        btn.setText(text);
+        btn.setText("<html>" + text + "</html>");
         if (tooltip != null) {
             btn.setToolTipText(tooltip);
         }

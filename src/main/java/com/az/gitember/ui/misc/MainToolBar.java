@@ -190,7 +190,7 @@ public class MainToolBar extends JToolBar {
 
         // Pull button: shows "behind" count — N commits exist on remote that we don't have
         if (behind > 0) {
-            pullBtn.setText("<html>Pull (" + behind + ")</html>");
+            pullBtn.setText("<html>Pull <small>(" + behind + ")</small></html>");
             pullBtn.setToolTipText(branch.getScmBranchPullTooltip().orElse("Pull"));
         } else {
             pullBtn.setText("Pull");
@@ -199,7 +199,7 @@ public class MainToolBar extends JToolBar {
 
         // Push button: shows "ahead" count — N local commits not yet on remote
         if (ahead > 0) {
-            pushBtn.setText("<html>Push (" + ahead + ")</html>");
+            pushBtn.setText("<html>Push <small>(" + ahead + ")</small></html>");
             pushBtn.setToolTipText(branch.getScmBranchPushTooltip().orElse("Push"));
         } else {
             pushBtn.setText("Push");

@@ -1,9 +1,6 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.data.Project;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmRevisionInformation;
-import com.az.gitember.data.Settings;
+import com.az.gitember.data.*;
 import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
 import com.az.gitember.dialog.CredentialsDialog;
@@ -147,6 +144,7 @@ public class MainFrame extends JFrame {
 
         // Fetch
         menuBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
+        toolBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
 
         // Commit
         menuBar.addCommitListener(e -> showCommitDialog());
