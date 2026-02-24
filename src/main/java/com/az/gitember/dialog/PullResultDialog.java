@@ -15,9 +15,22 @@ import java.util.List;
  */
 public class PullResultDialog extends JDialog {
 
-    private static final Color COLOR_ADDED   = new Color(210, 245, 210);
-    private static final Color COLOR_DELETED = new Color(250, 210, 210);
-    private static final Color COLOR_CHANGED = new Color(210, 225, 250);
+    // Light-theme pastels
+    private static final Color COLOR_ADDED_LIGHT   = new Color(210, 245, 210);
+    private static final Color COLOR_DELETED_LIGHT = new Color(250, 210, 210);
+    private static final Color COLOR_CHANGED_LIGHT = new Color(210, 225, 250);
+
+    // Dark-theme muted variants
+    private static final Color COLOR_ADDED_DARK   = new Color(30, 80, 30);
+    private static final Color COLOR_DELETED_DARK = new Color(100, 30, 30);
+    private static final Color COLOR_CHANGED_DARK = new Color(25, 50, 100);
+
+    private static boolean isDarkTheme() {
+        Color bg = UIManager.getColor("Panel.background");
+        if (bg == null) return false;
+        int lum = (bg.getRed() * 299 + bg.getGreen() * 587 + bg.getBlue() * 114) / 1000;
+        return lum < 128;
+    }
 
     public PullResultDialog(Component parent, PullOperationResult result) {
         super(SwingUtilities.getWindowAncestor(parent), "Pull Result",
@@ -25,6 +38,14 @@ public class PullResultDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(580, 500);
         setLocationRelativeTo(parent);
+
+        boolean dark = isDarkTheme();
+        Color colorAdded   = dark ? COLOR_ADDED_DARK   : COLOR_ADDED_LIGHT;
+        Color colorDeleted = dark ? COLOR_DELETED_DARK : COLOR_DELETED_LIGHT;
+        Color colorChanged = dark ? COLOR_CHANGED_DARK : COLOR_CHANGED_LIGHT;
+        Color fgAdded   = dark ? new Color(180, 240, 180) : Color.BLACK;
+        Color fgDeleted = dark ? new Color(240, 160, 160) : Color.BLACK;
+        Color fgChanged = dark ? new Color(160, 195, 255) : Color.BLACK;
 
         // ---- header ----
         JPanel headerPanel = new JPanel(new BorderLayout(6, 4));
@@ -36,9 +57,9 @@ public class PullResultDialog extends JDialog {
 
         if (result.hasChanges()) {
             JPanel badges = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-            badges.add(makeBadge("+" + result.getAddedFiles().size()    + "  added",   COLOR_ADDED));
-            badges.add(makeBadge("-" + result.getDeletedFiles().size()  + "  deleted", COLOR_DELETED));
-            badges.add(makeBadge("~" + result.getChangedFiles().size()  + "  changed", COLOR_CHANGED));
+            badges.add(makeBadge("+" + result.getAddedFiles().size()    + "  added",   colorAdded,   fgAdded));
+            badges.add(makeBadge("-" + result.getDeletedFiles().size()  + "  deleted", colorDeleted, fgDeleted));
+            badges.add(makeBadge("~" + result.getChangedFiles().size()  + "  changed", colorChanged, fgChanged));
             headerPanel.add(badges, BorderLayout.CENTER);
         } else {
             JLabel noChanges = new JLabel("No file changes.");
@@ -59,11 +80,14 @@ public class PullResultDialog extends JDialog {
             public Component prepareRenderer(javax.swing.table.TableCellRenderer r, int row, int col) {
                 Component c = super.prepareRenderer(r, row, col);
                 if (!isRowSelected(row)) {
-                    c.setBackground(switch ((String) getValueAt(row, 1)) {
-                        case "Added"   -> COLOR_ADDED;
-                        case "Deleted" -> COLOR_DELETED;
-                        default        -> COLOR_CHANGED;
-                    });
+                    Color bg, fg;
+                    switch ((String) getValueAt(row, 1)) {
+                        case "Added"   -> { bg = colorAdded;   fg = fgAdded; }
+                        case "Deleted" -> { bg = colorDeleted; fg = fgDeleted; }
+                        default        -> { bg = colorChanged; fg = fgChanged; }
+                    }
+                    c.setBackground(bg);
+                    c.setForeground(fg);
                 }
                 return c;
             }
@@ -120,10 +144,11 @@ public class PullResultDialog extends JDialog {
         for (String f : files) model.addRow(new Object[]{f, status});
     }
 
-    private static JLabel makeBadge(String text, Color bg) {
+    private static JLabel makeBadge(String text, Color bg, Color fg) {
         JLabel lbl = new JLabel(text);
         lbl.setOpaque(true);
         lbl.setBackground(bg);
+        lbl.setForeground(fg);
         lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
         lbl.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(bg.darker(), 1),
