@@ -37,11 +37,11 @@ public class MainToolBar extends JToolBar {
         pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.REPLY, 135);
 
         // Icon on top, text / count badge below
-        for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
+        /*for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
             btn.setVerticalTextPosition(SwingConstants.BOTTOM);
             btn.setHorizontalTextPosition(SwingConstants.CENTER);
             btn.setMargin(new Insets(4, 12, 4, 12));
-        }
+        }*/
         fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository");
         commitBtn = Util.createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
 
@@ -190,7 +190,7 @@ public class MainToolBar extends JToolBar {
 
         // Pull button: shows "behind" count — N commits exist on remote that we don't have
         if (behind > 0) {
-            pullBtn.setText("<html><center>Pull<br><small>\u2193" + behind + "</small></center></html>");
+            pullBtn.setText("<html>Pull (" + behind + ")</html>");
             pullBtn.setToolTipText(branch.getScmBranchPullTooltip().orElse("Pull"));
         } else {
             pullBtn.setText("Pull");
@@ -199,7 +199,7 @@ public class MainToolBar extends JToolBar {
 
         // Push button: shows "ahead" count — N local commits not yet on remote
         if (ahead > 0) {
-            pushBtn.setText("<html><center>Push<br><small>\u2191" + ahead + "</small></center></html>");
+            pushBtn.setText("<html>Push (" + ahead + ")</html>");
             pushBtn.setToolTipText(branch.getScmBranchPushTooltip().orElse("Push"));
         } else {
             pushBtn.setText("Push");
