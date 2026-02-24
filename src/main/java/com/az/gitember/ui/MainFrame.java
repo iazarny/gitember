@@ -435,6 +435,7 @@ public class MainFrame extends JFrame {
             ScmBranch branch = (ScmBranch) evt.getNewValue();
             String name = branch != null ? branch.getShortName() : "";
             toolBar.setBranchName(name);
+            toolBar.updateSyncCounts(branch);
             updateTitle();
         });
     }

@@ -1,6 +1,7 @@
 package com.az.gitember.ui.misc;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.Util;
 import com.az.gitember.ui.WorkingCopyPanel;
@@ -34,6 +35,13 @@ public class MainToolBar extends JToolBar {
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
         pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.REPLY, -45);
         pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.REPLY, 135);
+
+        // Icon on top, text / count badge below
+        for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
+            btn.setVerticalTextPosition(SwingConstants.BOTTOM);
+            btn.setHorizontalTextPosition(SwingConstants.CENTER);
+            btn.setMargin(new Insets(4, 12, 4, 12));
+        }
         fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository");
         commitBtn = Util.createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
 
@@ -164,6 +172,46 @@ public class MainToolBar extends JToolBar {
         mergedComponents.clear();
         revalidate();
         repaint();
+    }
+
+    /**
+     * Updates Pull/Push button text and tooltips to reflect how many commits
+     * the current branch is behind / ahead of its remote tracking branch.
+     * Call this whenever the working branch changes.
+     */
+    public void updateSyncCounts(ScmBranch branch) {
+        if (branch == null) {
+            resetSyncButtons();
+            return;
+        }
+
+        int behind = branch.getBehindCount();
+        int ahead  = branch.getAheadCount();
+
+        // Pull button: shows "behind" count — N commits exist on remote that we don't have
+        if (behind > 0) {
+            pullBtn.setText("<html><center>Pull<br><small>\u2193" + behind + "</small></center></html>");
+            pullBtn.setToolTipText(branch.getScmBranchPullTooltip().orElse("Pull"));
+        } else {
+            pullBtn.setText("Pull");
+            pullBtn.setToolTipText("Pull");
+        }
+
+        // Push button: shows "ahead" count — N local commits not yet on remote
+        if (ahead > 0) {
+            pushBtn.setText("<html><center>Push<br><small>\u2191" + ahead + "</small></center></html>");
+            pushBtn.setToolTipText(branch.getScmBranchPushTooltip().orElse("Push"));
+        } else {
+            pushBtn.setText("Push");
+            pushBtn.setToolTipText("Push");
+        }
+    }
+
+    private void resetSyncButtons() {
+        pullBtn.setText("Pull");
+        pullBtn.setToolTipText("Pull");
+        pushBtn.setText("Push");
+        pushBtn.setToolTipText("Push");
     }
 
     public void addOpenListener(ActionListener l) { openBtn.addActionListener(l); }
