@@ -36,6 +36,7 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
         Context.getGitRepoService().remoteRepositoryFetch(params, null, null);
         Context.updateBranches();
         Context.updateTags();
+        Context.updateWorkingBranch();
         return null;
     }
 

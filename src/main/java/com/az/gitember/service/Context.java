@@ -352,10 +352,9 @@ public class Context {
     }
 
     public static Optional<Project> getCurrentProject() {
-        String folder = (repositoryPath != null ? repositoryPath : "")
-                .replace("/.git", "");
+        String folder = getProjectFolder().replaceAll("[/\\\\]+$", "");
         return settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().replace("/.git", "").equalsIgnoreCase(folder))
+                .filter(p -> p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "").equalsIgnoreCase(folder))
                 .findFirst();
     }
 

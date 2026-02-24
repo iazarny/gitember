@@ -93,6 +93,7 @@ public class CommitDialog extends JDialog {
         try {
             Context.getGitRepoService().commit(message, null, null);
             Context.updateStatus(null);
+            Context.updateBranches();
             Context.updateWorkingBranch();
             dispose();
         } catch (Exception e) {
