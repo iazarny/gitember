@@ -187,6 +187,12 @@ public class MainFrame extends JFrame {
         menuBar.addCreateDiffListener(e -> createDiff());
         menuBar.addApplyDiffListener(e -> applyDiff());
 
+        // Tools
+        menuBar.addCompareFilesListener(e ->
+                new DiffViewerWindow().setVisible(true));
+        menuBar.addCompareFoldersListener(e ->
+                new FolderCompareWindow().setVisible(true));
+
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
 

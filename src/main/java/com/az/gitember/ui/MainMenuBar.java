@@ -36,6 +36,10 @@ public class MainMenuBar extends JMenuBar {
     // Settings
     private final JMenuItem settingsItem;
 
+    // Tools menu items
+    private final JMenuItem compareFilesItem;
+    private final JMenuItem compareFoldersItem;
+
     // Help menu items
     private final JMenuItem aboutItem;
 
@@ -105,6 +109,22 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
 
+        // Tools menu  (always enabled – no repo required)
+        JMenu toolsMenu = new JMenu("Tools");
+        toolsMenu.setMnemonic(KeyEvent.VK_T);
+
+        compareFilesItem   = new JMenuItem("Compare Files…",   KeyEvent.VK_F);
+        compareFoldersItem = new JMenuItem("Compare Folders…", KeyEvent.VK_D);
+
+        compareFilesItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
+        compareFoldersItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_F7,
+                        java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
+        toolsMenu.add(compareFilesItem);
+        toolsMenu.add(compareFoldersItem);
+
         // Help menu
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
@@ -121,6 +141,7 @@ public class MainMenuBar extends JMenuBar {
         add(fileMenu);
         add(branchMenu);
         add(workingCopyMenu);
+        add(toolsMenu);
         add(helpMenu);
 
         setRepoActionsEnabled(false);
@@ -175,5 +196,8 @@ public class MainMenuBar extends JMenuBar {
     public void addCreateDiffListener(ActionListener l) { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)  { applyDiffItem.addActionListener(l); }
     public void addCredentialsListener(ActionListener l) { credentialsItem.addActionListener(l); }
-    public void addSettingsListener(ActionListener l) { settingsItem.addActionListener(l); }
+    public void addSettingsListener(ActionListener l)    { settingsItem.addActionListener(l); }
+
+    public void addCompareFilesListener(ActionListener l)   { compareFilesItem.addActionListener(l); }
+    public void addCompareFoldersListener(ActionListener l) { compareFoldersItem.addActionListener(l); }
 }

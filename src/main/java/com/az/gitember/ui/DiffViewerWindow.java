@@ -8,7 +8,11 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.dnd.*;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,6 +44,11 @@ public class DiffViewerWindow extends JFrame {
     private int currentDiff = -1;
     private String oldText;
     private String newText;
+
+    // Editable / arbitrary-compare mode
+    private boolean editableMode = false;
+    private boolean loadingFile  = false;
+    private Timer   debounce;
 
     // Highlight colors — two palettes selected at paint time based on active theme
     private static Color addedBg() {
@@ -148,7 +157,69 @@ public class DiffViewerWindow extends JFrame {
         computeAndDisplayDiff();
     }
 
+    /**
+     * Opens an empty, fully editable compare window (F7 / Compare Files).
+     * <ul>
+     *   <li>Both panes are editable – type or paste any text.</li>
+     *   <li>Drop a file onto a pane or its path field to load it.</li>
+     *   <li>Click Browse to pick a file from disk.</li>
+     *   <li>Diff is recomputed automatically (400 ms debounce).</li>
+     * </ul>
+     */
+    public DiffViewerWindow() {
+        this.fileName = "";
+        setTitle("Compare");
+        initCommon(RSyntaxTextArea.SYNTAX_STYLE_NONE);
+        oldCombo = null;
+        newCombo = null;
+        editableMode = true;
+
+        oldPane.setEditable(true);
+        newPane.setEditable(true);
+        oldPane.setHighlightCurrentLine(true);
+        newPane.setHighlightCurrentLine(true);
+
+        debounce = new Timer(400, e -> computeAndDisplayDiff());
+        debounce.setRepeats(false);
+
+        javax.swing.event.DocumentListener autoRecompute = new javax.swing.event.DocumentListener() {
+            private void trigger() { if (!loadingFile) debounce.restart(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e)  { trigger(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e)  { trigger(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { trigger(); }
+        };
+        oldPane.getDocument().addDocumentListener(autoRecompute);
+        newPane.getDocument().addDocumentListener(autoRecompute);
+
+        JTextField leftPathField  = pathField();
+        JTextField rightPathField = pathField();
+
+        setupDropOnField(leftPathField,  oldPane);
+        setupDropOnField(rightPathField, newPane);
+        setupDropOnEditor(oldPane, leftPathField);
+        setupDropOnEditor(newPane, rightPathField);
+
+        JButton browseLeft  = new JButton("Browse…");
+        JButton browseRight = new JButton("Browse…");
+        browseLeft .addActionListener(e -> browseAndLoad(leftPathField,  oldPane));
+        browseRight.addActionListener(e -> browseAndLoad(rightPathField, newPane));
+
+        setupContentPane(
+                buildNavPanel(),
+                buildEditableHeader(leftPathField,  browseLeft,  leftScroll),
+                buildEditableHeader(rightPathField, browseRight, rightScroll));
+    }
+
     // ---- Private init helpers ----
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            toFront();
+            requestFocus();
+        }
+    }
 
     /** Initializes all shared components. Must be called first in every constructor. */
     private void initCommon(String syntaxStyle) {
@@ -240,6 +311,124 @@ public class DiffViewerWindow extends JFrame {
         return area;
     }
 
+    // ---- Editable-mode helpers -----------------------------------------------
+
+    private static JTextField pathField() {
+        JTextField f = new JTextField();
+        f.putClientProperty("JTextField.placeholderText", "Drop a file here, or click Browse…");
+        f.setEditable(false);   // path is set programmatically / via DnD / browse
+        return f;
+    }
+
+    private static JPanel buildEditableHeader(JTextField pathField, JButton browseBtn,
+                                              JComponent scroll) {
+        JPanel row = new JPanel(new BorderLayout(4, 0));
+        row.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        row.add(browseBtn,  BorderLayout.WEST);
+        row.add(pathField,  BorderLayout.CENTER);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(row,   BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    /** File-drop on a path field: sets field text and loads file into the paired editor. */
+    private void setupDropOnField(JTextField field, RSyntaxTextArea targetEditor) {
+        Border orig = field.getBorder();
+        new DropTarget(field, DnDConstants.ACTION_COPY, new DropTargetAdapter() {
+            @Override public void dragEnter(DropTargetDragEvent d) {
+                if (d.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    d.acceptDrag(DnDConstants.ACTION_COPY);
+                    field.setBorder(BorderFactory.createLineBorder(new Color(0x4488FF), 2));
+                } else { d.rejectDrag(); }
+            }
+            @Override public void dragExit(DropTargetEvent d) { field.setBorder(orig); }
+            @Override @SuppressWarnings("unchecked")
+            public void drop(DropTargetDropEvent d) {
+                field.setBorder(orig);
+                d.acceptDrop(DnDConstants.ACTION_COPY);
+                try {
+                    List<File> files = (List<File>)
+                            d.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    if (!files.isEmpty() && files.get(0).isFile()) {
+                        loadFileIntoEditor(files.get(0), field, targetEditor);
+                        d.dropComplete(true); return;
+                    }
+                } catch (Exception ignored) {}
+                d.dropComplete(false);
+            }
+        }, true);
+    }
+
+    /** File-drop directly on an editor pane (updates the paired path field too). */
+    private void setupDropOnEditor(RSyntaxTextArea editor, JTextField pathField) {
+        new DropTarget(editor, DnDConstants.ACTION_COPY, new DropTargetAdapter() {
+            @Override public void dragEnter(DropTargetDragEvent d) {
+                if (d.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+                    d.acceptDrag(DnDConstants.ACTION_COPY);
+                else d.rejectDrag();
+            }
+            @Override @SuppressWarnings("unchecked")
+            public void drop(DropTargetDropEvent d) {
+                d.acceptDrop(DnDConstants.ACTION_COPY);
+                try {
+                    List<File> files = (List<File>)
+                            d.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    if (!files.isEmpty() && files.get(0).isFile()) {
+                        loadFileIntoEditor(files.get(0), pathField, editor);
+                        d.dropComplete(true); return;
+                    }
+                } catch (Exception ignored) {}
+                d.dropComplete(false);
+            }
+        }, true);
+    }
+
+    private void browseAndLoad(JTextField pathField, RSyntaxTextArea editor) {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Select file to compare");
+        if (!pathField.getText().isBlank()) {
+            File cur = new File(pathField.getText().trim());
+            fc.setCurrentDirectory(cur.isDirectory() ? cur : cur.getParentFile());
+        }
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+            loadFileIntoEditor(fc.getSelectedFile(), pathField, editor);
+    }
+
+    private void loadFileIntoEditor(File f, JTextField pathField, RSyntaxTextArea editor) {
+        if (CompareFilesDialog.looksLikeBinary(f)) {
+            JOptionPane.showMessageDialog(this, f.getName() + " appears to be binary.",
+                    "Binary file", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override protected String doInBackground() throws Exception {
+                return Files.readString(f.toPath());
+            }
+            @Override protected void done() {
+                try {
+                    String content = get();
+                    pathField.setText(f.getAbsolutePath());
+                    loadingFile = true;
+                    editor.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(f.getName()));
+                    editor.setText(content);
+                    editor.setCaretPosition(0);
+                    loadingFile = false;
+                    if (debounce != null) debounce.stop();
+                    computeAndDisplayDiff();
+                } catch (Exception ex) {
+                    loadingFile = false;
+                    log.log(Level.WARNING, "Failed to load file for comparison", ex);
+                    JOptionPane.showMessageDialog(DiffViewerWindow.this,
+                            "Cannot read file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    // ---- End editable-mode helpers -------------------------------------------
+
     private void syncScroll(JScrollPane left, JScrollPane right) {
         left.getVerticalScrollBar().addAdjustmentListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -314,6 +503,11 @@ public class DiffViewerWindow extends JFrame {
     }
 
     private void computeAndDisplayDiff() {
+        if (editableMode) {
+            // In editable mode the panes ARE the source of truth
+            oldText = oldPane.getText();
+            newText = newPane.getText();
+        }
         if (oldText == null || newText == null) return;
 
         // Compute diff using JGit HISTOGRAM algorithm
@@ -322,11 +516,13 @@ public class DiffViewerWindow extends JFrame {
         DiffAlgorithm algorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         editList = algorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRaw, newRaw);
 
-        // Set text content (RSyntaxTextArea handles syntax highlighting)
-        oldPane.setText(oldText);
-        oldPane.setCaretPosition(0);
-        newPane.setText(newText);
-        newPane.setCaretPosition(0);
+        if (!editableMode) {
+            // Non-editable: push the loaded text into the panes
+            oldPane.setText(oldText);
+            oldPane.setCaretPosition(0);
+            newPane.setText(newText);
+            newPane.setCaretPosition(0);
+        }
 
         // Apply diff line highlights
         applyLineHighlights(oldPane, editList, true);
