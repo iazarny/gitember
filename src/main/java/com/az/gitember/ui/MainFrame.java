@@ -115,6 +115,22 @@ public class MainFrame extends JFrame {
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
 
+        // Reload working copy when the window regains focus (like an IDE)
+        addWindowFocusListener(new java.awt.event.WindowFocusListener() {
+            @Override
+            public void windowGainedFocus(java.awt.event.WindowEvent e) {
+                if (Context.getRepositoryPath() != null) {
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateStatus(null, true);
+                            return null;
+                        }
+                    }.execute();
+                }
+            }
+            @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
+        });
+
         workingCopyPanel = new WorkingCopyPanel(statusBar);
         historyPanel = new HistoryPanel(statusBar);
         stashDetailPanel = new CommitDetailPanel();
@@ -503,7 +519,13 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKING_COPY -> {
                     contentPanel.setContent(workingCopyPanel);
-                    workingCopyPanel.setItems(Context.getStatusList());
+                    workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateStatus(null, true);
+                            return null;
+                        }
+                    }.execute();
                 }
                 case HISTORY -> {
                     contentPanel.setContent(historyPanel);
