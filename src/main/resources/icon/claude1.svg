@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+    <defs>
+        <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#dedede"/>
+            <stop offset="100%" stop-color="#9e9e9e"/>
+        </radialGradient>
+        <clipPath id="clip">
+            <rect width="500" height="500" rx="100" ry="100"/>
+        </clipPath>
+    </defs>
+
+    <rect width="500" height="500" rx="100" ry="100" fill="url(#bg)"/>
+
+    <g clip-path="url(#clip)" fill="none" stroke-linecap="round">
+
+        <!-- RING 1 -->
+        <path d="M 419.5,357.0 A 190,190 0 1,1 288.0,74.9" stroke="#2200ee" stroke-width="18"/>
+        <path d="M 404.8,348.5 A 173,173 0 1,1 285.0,91.6" stroke="#ffcc00" stroke-width="14"/>
+
+        <!-- RING 2 -->
+        <path d="M 387.5,338.5 A 153,153 0 1,1 281.6,111.3" stroke="#2200ee" stroke-width="18"/>
+        <path d="M 372.8,330.0 A 136,136 0 1,1 278.6,128.1" stroke="#ffcc00" stroke-width="14"/>
+
+        <!-- RING 3 -->
+        <path d="M 355.5,320.0 A 116,116 0 1,1 275.1,147.8" stroke="#2200ee" stroke-width="18"/>
+        <path d="M 340.7,311.5 A 99,99 0 1,1 272.2,164.5" stroke="#ffcc00" stroke-width="14"/>
+
+        <!-- INNER C -->
+        <path d="M 323.4,301.5 A 79,79 0 1,1 333.7,255.1" stroke="#2200ee" stroke-width="18"/>
+        <path d="M 308.7,293.0 A 62,62 0 1,1 316.8,256.6" stroke="#ffcc00" stroke-width="14"/>
+
+    </g>
+
+    <!-- TEARDROP PIN: circle + triangle overlay -->
+    <g clip-path="url(#clip)">
+        <!-- Blue outer: circle + triangle -->
+        <circle cx="287.6" cy="76.9" r="32" fill="#2200ee"/>
+        <polygon points="256.1,71.3 319.2,82.4 297.0,23.7" fill="#2200ee"/>
+        <!-- Yellow inner: circle + triangle -->
+        <circle cx="287.6" cy="76.9" r="19" fill="#ffcc00"/>
+        <polygon points="268.9,73.6 306.4,80.2 294.6,37.5" fill="#ffcc00"/>
+    </g>
+</svg>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="500" height="500" viewBox="0 0 500 500">
+
+    <!--
+      Clean parametric rebuild with stacked strokes:
+      - Blue underlay (thicker) to create the outline
+      - Yellow overlay (36px) for the inner band
+      Tuned to visually match the uploaded 500×500 logo.
+    -->
+
+    <defs>
+        <!--
+          The geometry is defined once (centerline),
+          then stroked twice: blue (under), yellow (over).
+          All segments use round caps/joins.
+        -->
+        <g id="logo-centerline" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Outer arc (like a big 'C') -->
+            <path id="outer-arc"
+                  d="
+              M 390 135
+              A 200 200 0 0 1 110 365
+            " />
+            <!-- Middle arc -->
+            <path id="middle-arc"
+                  d="
+              M 360 165
+              A 170 170 0 0 1 140 335
+            " />
+            <!-- Inner arc -->
+            <path id="inner-arc"
+                  d="
+              M 315 205
+              A 125 125 0 0 1 185 295
+            " />
+            <!-- 'G' tip: short diagonal + return arc entrance -->
+            <path id="g-tip"
+                  d="
+              M 360 165
+              L 405 210
+            " />
+        </g>
+    </defs>
+
+    <!-- Blue outline (underlay) -->
+    <use href="#logo-centerline" stroke="#1B07EF" stroke-width="56"/>
+    <!-- Yellow core (overlay) -->
+    <use href="#logo-centerline" stroke="#FCCE05" stroke-width="36"/>
+
+</svg>

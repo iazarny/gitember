@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 512 512"
+     xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Outer ring -->
+    <path d="M256 40
+           A216 216 0 1 1 90 422"
+          fill="none"
+          stroke="#1E1AE8"
+          stroke-width="50"
+          stroke-linecap="round"/>
+
+    <path d="M256 40
+           A216 216 0 1 1 90 422"
+          fill="none"
+          stroke="#FFC700"
+          stroke-width="30"
+          stroke-linecap="round"/>
+
+    <!-- Middle ring -->
+    <path d="M256 150
+           A110 110 0 1 1 165 350"
+          fill="none"
+          stroke="#1E1AE8"
+          stroke-width="50"
+          stroke-linecap="round"/>
+
+    <path d="M256 150
+           A110 110 0 1 1 165 350"
+          fill="none"
+          stroke="#FFC700"
+          stroke-width="30"
+          stroke-linecap="round"/>
+
+    <!-- Arrow -->
+    <path d="M260 260
+           L390 130"
+          stroke="#1E1AE8"
+          stroke-width="50"
+          stroke-linecap="round"
+          fill="none"/>
+
+    <path d="M260 260
+           L390 130"
+          stroke="#FFC700"
+          stroke-width="30"
+          stroke-linecap="round"
+          fill="none"/>
+
+</svg>
