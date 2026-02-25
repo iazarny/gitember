@@ -46,6 +46,7 @@ public class MainFrame extends JFrame {
     private WorkingCopyPanel workingCopyPanel;
     private HistoryPanel historyPanel;
     private CommitDetailPanel stashDetailPanel;
+    private PullRequestPanel pullRequestPanel;
 
     public MainFrame() {
         setTitle("Gitember");
@@ -134,6 +135,7 @@ public class MainFrame extends JFrame {
         workingCopyPanel = new WorkingCopyPanel(statusBar);
         historyPanel = new HistoryPanel(statusBar);
         stashDetailPanel = new CommitDetailPanel();
+        pullRequestPanel = new PullRequestPanel();
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
@@ -551,6 +553,12 @@ public class MainFrame extends JFrame {
                     if (data.data() instanceof ScmRevisionInformation stash) {
                         contentPanel.setContent(stashDetailPanel);
                         loadStashDetail(stash);
+                    }
+                }
+                case PULL_REQUEST -> {
+                    if (data.data() instanceof PullRequest pr) {
+                        contentPanel.setContent(pullRequestPanel);
+                        pullRequestPanel.showPullRequest(pr);
                     }
                 }
                 default -> contentPanel.setContent(null);

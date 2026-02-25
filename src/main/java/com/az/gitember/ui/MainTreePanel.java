@@ -261,6 +261,6 @@ public class MainTreePanel extends JPanel {
                     new TreeNodeData(pr.toString(), NodeType.PULL_REQUEST, pr)));
         }
         treeModel.reload(rootNode);
-        tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
+        //tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
     }
 }

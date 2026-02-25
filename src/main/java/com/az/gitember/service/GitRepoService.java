@@ -1648,6 +1648,34 @@ public class GitRepoService {
     }
 
     /**
+     * Returns files changed in a pull/merge request: diff between targetBranch (base) and
+     * sourceBranch (head). Tries remote-tracking refs before local refs.
+     *
+     * @param sourceBranch PR head branch (e.g. "feature/my-feature")
+     * @param targetBranch PR base branch (e.g. "main")
+     * @return list of ScmItems describing each changed file
+     */
+    public List<ScmItem> getPrChangedFiles(String sourceBranch, String targetBranch) throws Exception {
+        String sourceRef = resolveAnyRef(sourceBranch);
+        String targetRef = resolveAnyRef(targetBranch);
+        return getBranchDiff(targetRef, sourceRef).stream()
+                .map(this::adaptDiffEntry)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private String resolveAnyRef(String branchName) throws Exception {
+        String[] candidates = {
+            "refs/remotes/origin/" + branchName,
+            "refs/heads/" + branchName,
+            branchName
+        };
+        for (String ref : candidates) {
+            if (repository.resolve(ref) != null) return ref;
+        }
+        throw new IllegalArgumentException("Cannot resolve branch: " + branchName);
+    }
+
+    /**
      * Returns the raw text content of a file at a given ref (branch / commit SHA).
      * Returns an empty string if the file does not exist in that ref.
      *
