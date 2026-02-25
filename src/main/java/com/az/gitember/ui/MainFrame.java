@@ -46,6 +46,7 @@ public class MainFrame extends JFrame {
     private WorkingCopyPanel workingCopyPanel;
     private HistoryPanel historyPanel;
     private CommitDetailPanel stashDetailPanel;
+    private boolean workingCopyActive = false;
 
     public MainFrame() {
         setTitle("Gitember");
@@ -101,6 +102,21 @@ public class MainFrame extends JFrame {
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
+
+        // Refresh working copy when the app regains focus (user returns from editor, terminal, etc.)
+        addWindowFocusListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowGainedFocus(java.awt.event.WindowEvent e) {
+                if (workingCopyActive && Context.getRepositoryPath() != null) {
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateStatus(null, true);
+                            return null;
+                        }
+                    }.execute();
+                }
+            }
+        });
 
         workingCopyPanel = new WorkingCopyPanel(statusBar);
         historyPanel = new HistoryPanel(statusBar);
@@ -486,6 +502,8 @@ public class MainFrame extends JFrame {
             } else {
                 toolBar.unmergeWorkingCopyToolbar();
             }
+
+            workingCopyActive = (data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY);
 
             switch (data.type()) {
                 case WORKING_COPY -> {

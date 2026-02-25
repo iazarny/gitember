@@ -6,6 +6,7 @@ import java.nio.file.WatchEvent;
 
 @FunctionalInterface
 public interface ProjectChangeCallback {
+    
     void onFileChange(WatchEvent.Kind<?> kind, Path fileName);
 
 }
