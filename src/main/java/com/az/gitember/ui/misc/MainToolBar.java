@@ -116,6 +116,12 @@ public class MainToolBar extends JToolBar {
         pullBtn.setEnabled(enabled);
         pushBtn.setEnabled(enabled);
         fetchBtn.setEnabled(enabled);
+        if (!enabled) {
+            commitBtn.setEnabled(false);
+        }
+    }
+
+    public void setCommitEnabled(boolean enabled) {
         commitBtn.setEnabled(enabled);
     }
 

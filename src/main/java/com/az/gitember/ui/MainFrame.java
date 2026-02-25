@@ -486,7 +486,10 @@ public class MainFrame extends JFrame {
     }
 
     private void onStatusListChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> workingCopyPanel.setItems(Context.getStatusList()));
+        SwingUtilities.invokeLater(() -> {
+            workingCopyPanel.setItems(Context.getStatusList());
+            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
+        });
     }
 
     private void updateTitle() {
@@ -520,6 +523,7 @@ public class MainFrame extends JFrame {
                 case WORKING_COPY -> {
                     contentPanel.setContent(workingCopyPanel);
                     workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
+                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);

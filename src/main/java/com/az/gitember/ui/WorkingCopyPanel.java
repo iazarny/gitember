@@ -111,9 +111,11 @@ public class WorkingCopyPanel extends JPanel {
 
         // Toolbar
         stageAllBtn = Util.createButton("Stage All", null, FontAwesomeSolid.PLUS);
+        stageAllBtn.setEnabled(false);
         stageAllBtn.addActionListener(e -> stageAll());
 
         unstageAllBtn = Util.createButton("Unstage All", null, FontAwesomeSolid.MINUS);
+        unstageAllBtn.setEnabled(false);
         unstageAllBtn.addActionListener(e -> unstageAll());
 
         refreshBtn = Util.createButton("Refresh", null, FontAwesomeSolid.SYNC);
@@ -156,6 +158,20 @@ public class WorkingCopyPanel extends JPanel {
     public void setItems(List<ScmItem> items) {
         tableModel.setItems(items);
         applyFilter();
+        updateButtonStates();
+    }
+
+    public boolean hasStagedItems() {
+        return tableModel.getAllItems().stream()
+                .anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+    }
+
+    private void updateButtonStates() {
+        List<ScmItem> items = tableModel.getAllItems();
+        boolean hasUnstaged = items.stream().anyMatch(i -> !isStaged(i.getAttribute().getStatus()));
+        boolean hasStaged = items.stream().anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+        stageAllBtn.setEnabled(hasUnstaged);
+        unstageAllBtn.setEnabled(hasStaged);
     }
 
     private void applyFilter() {
