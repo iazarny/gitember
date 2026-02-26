@@ -153,12 +153,12 @@ public class MainToolBar extends JToolBar {
         mergedComponents.add(wcp.getRefreshBtn());
         add(wcp.getRefreshBtn());
 
-        JSeparator sep3 = new JToolBar.Separator();
-        mergedComponents.add(sep3);
-        add(sep3);
+        Component glue = Box.createHorizontalGlue();
+        mergedComponents.add(glue);
+        add(glue);
 
         JLabel filterLabel = new JLabel("Search:");
-        filterLabel.setBorder(new EmptyBorder(10, 20, 10, 5));
+        filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
         mergedComponents.add(filterLabel);
         add(filterLabel);
 
@@ -185,12 +185,12 @@ public class MainToolBar extends JToolBar {
     public void mergeHistoryToolbar(HistoryPanel hp) {
         if (!mergedHistoryComponents.isEmpty()) return; // already merged
 
-        JSeparator sep = new JToolBar.Separator();
-        mergedHistoryComponents.add(sep);
-        add(sep);
+        Component glue = Box.createHorizontalGlue();
+        mergedHistoryComponents.add(glue);
+        add(glue);
 
         JLabel searchLabel = new JLabel("Search:");
-        searchLabel.setBorder(new EmptyBorder(0, 8, 0, 4));
+        searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
         mergedHistoryComponents.add(searchLabel);
         add(searchLabel);
 
