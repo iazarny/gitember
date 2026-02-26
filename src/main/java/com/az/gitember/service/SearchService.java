@@ -114,9 +114,31 @@ public class SearchService implements AutoCloseable {
 
     public synchronized IndexWriter getWritter() throws IOException {
         if (this.writter == null) {
-            this.writter = new IndexWriter(index, indexWriterConfig);
+            this.writter = new IndexWriter(index, new IndexWriterConfig(analyzer));
         }
         return this.writter;
+    }
+
+    /** Flushes and closes the writer, resets reader/searcher so searches see new data. */
+    public synchronized void commitIndex() throws IOException {
+        if (writter != null) {
+            writter.commit();
+            writter.close();
+            writter = null;
+        }
+        if (reader != null) {
+            reader.close();
+            reader = null;
+        }
+        searcher = null;
+    }
+
+    public boolean hasIndex() {
+        try {
+            return DirectoryReader.indexExists(index);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 

@@ -39,6 +39,7 @@ public class MainMenuBar extends JMenuBar {
     // Tools menu items
     private final JMenuItem compareFilesItem;
     private final JMenuItem compareFoldersItem;
+    private final JMenuItem indexHistoryItem;
 
     // Help menu items
     private final JMenuItem aboutItem;
@@ -115,6 +116,9 @@ public class MainMenuBar extends JMenuBar {
 
         compareFilesItem   = new JMenuItem("Compare Files…",   KeyEvent.VK_F);
         compareFoldersItem = new JMenuItem("Compare Folders…", KeyEvent.VK_D);
+        indexHistoryItem   = new JMenuItem("Index History…",   KeyEvent.VK_I);
+        indexHistoryItem.setToolTipText(
+                "Build a Lucene index of commit file content for full-text search");
 
         compareFilesItem.setAccelerator(
                 KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
@@ -124,6 +128,8 @@ public class MainMenuBar extends JMenuBar {
 
         toolsMenu.add(compareFilesItem);
         toolsMenu.add(compareFoldersItem);
+        toolsMenu.addSeparator();
+        toolsMenu.add(indexHistoryItem);
 
         // Help menu
         JMenu helpMenu = new JMenu("Help");
@@ -200,4 +206,5 @@ public class MainMenuBar extends JMenuBar {
 
     public void addCompareFilesListener(ActionListener l)   { compareFilesItem.addActionListener(l); }
     public void addCompareFoldersListener(ActionListener l) { compareFoldersItem.addActionListener(l); }
+    public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
 }

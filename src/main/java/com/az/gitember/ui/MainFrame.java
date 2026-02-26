@@ -205,6 +205,8 @@ public class MainFrame extends JFrame {
                 new DiffViewerWindow().setVisible(true));
         menuBar.addCompareFoldersListener(e ->
                 new FolderCompareWindow().setVisible(true));
+        menuBar.addIndexHistoryListener(e ->
+                new com.az.gitember.dialog.IndexHistoryDialog(this).setVisible(true));
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());

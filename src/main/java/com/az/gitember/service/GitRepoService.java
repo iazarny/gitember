@@ -756,14 +756,62 @@ public class GitRepoService {
 
     SearchService service = null;
 
-    private synchronized SearchService getSearchService() {
+    public synchronized SearchService getSearchService() {
         if (service == null) {
             service = new SearchService(Context.getProjectFolder());
         }
-
         return service;
     }
 
+    /**
+     * Builds a Lucene index over the most recent {@code maxCommits} commits
+     * (pass {@code 0} or negative to index all commits).
+     *
+     * @param commits          full PlotCommit list (already loaded in Context)
+     * @param maxCommits       upper bound; ≤0 means "all"
+     * @param progressCallback receives (processedCount, totalCount) on the calling thread
+     */
+    @SuppressWarnings("unchecked")
+    public void indexHistory(java.util.List<org.eclipse.jgit.revplot.PlotCommit> commits,
+                             int maxCommits,
+                             java.util.function.BiConsumer<Integer, Integer> progressCallback)
+            throws Exception {
+        SearchService svc = getSearchService();
+        svc.dropIndex();       // wipe any previous index
+        // Re-create after drop
+        service = new SearchService(Context.getProjectFolder());
+        svc = service;
+
+        int total = (maxCommits > 0) ? Math.min(maxCommits, commits.size()) : commits.size();
+        int filesIndexed = 0;
+
+        for (int i = 0; i < total; i++) {
+            org.eclipse.jgit.revplot.PlotCommit pc = commits.get(i);
+            try {
+                com.az.gitember.data.ScmRevisionInformation rev = adapt(pc, null);
+                for (com.az.gitember.data.ScmItem item : rev.getAffectedItems()) {
+                    try {
+                        com.az.gitember.data.ScmItemDocument doc =
+                                new com.az.gitember.data.ScmItemDocument(item);
+                        svc.submitItemToReindex(doc);
+                        filesIndexed++;
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Skip indexing item: " + item.getShortName(), ex);
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Skip indexing commit: " + pc.getName(), ex);
+            }
+            if (progressCallback != null) progressCallback.accept(i + 1, total);
+        }
+
+        svc.commitIndex();
+
+        // Persist the indexed flag
+        Context.getCurrentProject().ifPresent(p -> p.setIndexed(true));
+        Context.saveSettings();
+        log.info("Lucene indexing complete: " + total + " commits, " + filesIndexed + " file versions");
+    }
 
     private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
         return prersonIndent != null

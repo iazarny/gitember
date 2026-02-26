@@ -11,7 +11,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +28,17 @@ public class HistoryPanel extends JPanel {
     private final StatusBar statusBar;
     private final CommitGraphRenderer graphRenderer = new CommitGraphRenderer();
 
+    // Search toolbar
+    private final JTextField searchField  = new JTextField(25);
+    private final JButton    searchBtn    = new JButton("Search");
+    private final JButton    clearBtn     = new JButton("Clear");
+    private final JCheckBox  luceneCheck  = new JCheckBox("Content (Lucene)");
+    private final JLabel     resultLabel  = new JLabel(" ");
+
+    /** Full unfiltered commit list kept for repeated searches. */
+    @SuppressWarnings("rawtypes")
+    private List<PlotCommit<PlotLane>> allCommits = new ArrayList<>();
+
     public HistoryPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
@@ -41,16 +52,14 @@ public class HistoryPanel extends JPanel {
         commitTable.setIntercellSpacing(new Dimension(0, 0));
 
         // Column widths: Graph+Message | Date | Author
-        commitTable.getColumnModel().getColumn(0).setPreferredWidth(600);  // Graph + message
+        commitTable.getColumnModel().getColumn(0).setPreferredWidth(600);
         commitTable.getColumnModel().getColumn(0).setCellRenderer(new GraphCellRenderer());
-        commitTable.getColumnModel().getColumn(1).setPreferredWidth(140);  // Date
+        commitTable.getColumnModel().getColumn(1).setPreferredWidth(140);
         commitTable.getColumnModel().getColumn(1).setMaxWidth(160);
-        commitTable.getColumnModel().getColumn(2).setPreferredWidth(150);  // Author
+        commitTable.getColumnModel().getColumn(2).setPreferredWidth(150);
         commitTable.getColumnModel().getColumn(2).setMaxWidth(200);
 
-        // Detail panel for selected commit (tabbed: Main + Diff)
         detailPanel = new CommitDetailPanel();
-
         commitTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = commitTable.getSelectedRow();
@@ -60,35 +69,126 @@ public class HistoryPanel extends JPanel {
             }
         });
 
+        // ── Search toolbar ────────────────────────────────────────────────
+        searchField.putClientProperty("JTextField.placeholderText",
+                "Search commits (message, author, SHA, file name…)");
+
+        luceneCheck.setToolTipText(
+                "<html>Search file <b>content</b> using the Lucene index.<br>" +
+                "Index must be built first via Tools › Index History…<br>" +
+                "Supports Lucene query syntax: AND, OR, NOT, wildcards * ?</html>");
+        luceneCheck.setEnabled(false);   // enabled after indexing check
+
+        searchBtn.addActionListener(e -> performSearch());
+        clearBtn .addActionListener(e -> clearSearch());
+        searchField.addActionListener(e -> performSearch());   // Enter key
+
+        resultLabel.setFont(resultLabel.getFont().deriveFont(Font.PLAIN, 11f));
+
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
+        searchBar.add(new JLabel("Search:"));
+        searchBar.add(searchField);
+        searchBar.add(searchBtn);
+        searchBar.add(clearBtn);
+        searchBar.add(new JSeparator(SwingConstants.VERTICAL));
+        searchBar.add(luceneCheck);
+        searchBar.add(Box.createHorizontalStrut(8));
+        searchBar.add(resultLabel);
+        searchBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
+                UIManager.getColor("Separator.foreground")));
+
+        // ── Layout ────────────────────────────────────────────────────────
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(commitTable),
-                detailPanel);
+                new JScrollPane(commitTable), detailPanel);
         splitPane.setDividerLocation(400);
         splitPane.setResizeWeight(0.65);
 
+        add(searchBar, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
+    }
+
+    // ── Search logic ──────────────────────────────────────────────────────────
+
+    private void refreshLuceneCheckState() {
+        boolean indexed = Context.getCurrentProject()
+                .map(p -> p.isIndexed())
+                .orElse(false);
+        // Also verify the index actually exists on disk
+        if (indexed) {
+            try {
+                indexed = Context.getGitRepoService().getSearchService().hasIndex();
+            } catch (Exception ignored) {
+                indexed = false;
+            }
+        }
+        luceneCheck.setEnabled(indexed);
+        if (!indexed) luceneCheck.setSelected(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void performSearch() {
+        String term = searchField.getText().trim();
+        if (term.isEmpty()) { clearSearch(); return; }
+
+        boolean useLucene = luceneCheck.isSelected() && luceneCheck.isEnabled();
+        List<PlotCommit<PlotLane>> base = new ArrayList<>(allCommits);
+
+        if (base.isEmpty()) {
+            resultLabel.setText("No commits loaded.");
+            return;
+        }
+
+        searchBtn.setEnabled(false);
+        resultLabel.setText("Searching…");
+
+        new SwingWorker<Map<String, Set<String>>, Void>() {
+            @Override
+            protected Map<String, Set<String>> doInBackground() {
+                return Context.getGitRepoService().search((List) base, term, useLucene);
+            }
+
+            @Override
+            protected void done() {
+                searchBtn.setEnabled(true);
+                try {
+                    Map<String, Set<String>> results = get();
+                    List<PlotCommit<PlotLane>> filtered = base.stream()
+                            .filter(pc -> results.containsKey(pc.getName()))
+                            .toList();
+                    tableModel.setData(filtered);
+                    resultLabel.setText(filtered.size() + " commit" +
+                            (filtered.size() != 1 ? "s" : "") + " found");
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Search failed", ex);
+                    resultLabel.setText("Search error: " + ex.getMessage());
+                }
+            }
+        }.execute();
+    }
+
+    private void clearSearch() {
+        searchField.setText("");
+        resultLabel.setText(" ");
+        tableModel.setData(allCommits);
     }
 
     @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
         tableModel.clear();
+        allCommits = new ArrayList<>();
         detailPanel.showRevision(null);
         statusBar.setStatus("Loading history...");
         statusBar.showProgress(true);
+        refreshLuceneCheckState();
 
         SwingWorker<List<PlotCommit<PlotLane>>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<PlotCommit<PlotLane>> doInBackground() {
                 Context.updatePlotCommitList(treeName, allHistory, null);
-                // Copy the list - PlotCommit objects hold lane/passing lane info needed for graph
                 List<PlotCommit<PlotLane>> commits = new ArrayList<>();
                 for (var pc : Context.getPlotCommitList()) {
                     commits.add((PlotCommit<PlotLane>) pc);
                 }
-                // Pre-adapt to cache ScmRevisionInformation
-                /*for (var pc : commits) {
-                    Context.getGitRepoService().adapt(pc, null);
-                }*/
                 return commits;
             }
 
@@ -96,9 +196,11 @@ public class HistoryPanel extends JPanel {
             protected void done() {
                 try {
                     List<PlotCommit<PlotLane>> commits = get();
+                    allCommits = commits;
                     tableModel.setData(commits);
                     statusBar.clearProgress();
                     statusBar.setStatus(commits.size() + " commits loaded");
+                    refreshLuceneCheckState();
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load history", e);
                     statusBar.clearProgress();
