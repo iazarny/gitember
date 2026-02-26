@@ -26,6 +26,10 @@ public class Util {
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         JButton btn = new JButton();
 
+        //btn.setBackground(Color.CYAN);
+        //btn.setOpaque(true);
+        //btn.setForeground(Color.MAGENTA);
+
         //btn.setVerticalTextPosition(SwingConstants.BOTTOM);
         //btn.setHorizontalTextPosition(SwingConstants.CENTER);
 

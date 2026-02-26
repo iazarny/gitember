@@ -40,6 +40,8 @@ public class DiffViewerWindow extends JFrame {
     private final String fileName;
     private DiffConnectorPanel centerPanel;
 
+    private DiffOverviewPanel overviewPanel;
+
     private EditList editList;
     private int currentDiff = -1;
     private String oldText;
@@ -233,7 +235,20 @@ public class DiffViewerWindow extends JFrame {
         leftScroll.setFoldIndicatorEnabled(false);
         rightScroll = new RTextScrollPane(newPane);
         rightScroll.setFoldIndicatorEnabled(false);
-        centerPanel = new DiffConnectorPanel();
+        centerPanel  = new DiffConnectorPanel();
+        overviewPanel = new DiffOverviewPanel();
+        overviewPanel.setOnJump(offset -> {
+            JScrollBar bar = leftScroll.getVerticalScrollBar();
+            int range = bar.getMaximum() - bar.getModel().getExtent();
+            bar.setValue((int) (offset * range));
+            // rightScroll syncs automatically via syncScroll()
+        });
+        leftScroll.getVerticalScrollBar().addAdjustmentListener(e -> updateOverviewViewport());
+        leftScroll.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override public void componentResized(java.awt.event.ComponentEvent e) {
+                updateOverviewViewport();
+            }
+        });
         syncScroll(leftScroll, rightScroll);
 
         prevBtn = new JButton("<< Prev");
@@ -279,23 +294,37 @@ public class DiffViewerWindow extends JFrame {
         centerPanel.setMinimumSize(new Dimension(40, 0));
 
         // Repaint center panel on scroll so connectors track line positions
-        leftScroll.getVerticalScrollBar().addAdjustmentListener(e -> centerPanel.repaint());
+        leftScroll.getVerticalScrollBar() .addAdjustmentListener(e -> centerPanel.repaint());
         rightScroll.getVerticalScrollBar().addAdjustmentListener(e -> centerPanel.repaint());
 
-        // Use GridBagLayout for 45% / center / 45% distribution
+        // Layout: left(43%) | connectors(9%) | right(43%) | overview(fixed 80px)
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill  = GridBagConstraints.BOTH;
         gbc.gridy = 0;
+        gbc.weighty = 1.0;
 
-        gbc.gridx = 0; gbc.weightx = 0.45; gbc.weighty = 1.0;
+        gbc.gridx = 0; gbc.weightx = 0.43;
         panel.add(leftPanel, gbc);
-        gbc.gridx = 1; gbc.weightx = 0.10;
+        gbc.gridx = 1; gbc.weightx = 0.09;
         panel.add(centerPanel, gbc);
-        gbc.gridx = 2; gbc.weightx = 0.45;
+        gbc.gridx = 2; gbc.weightx = 0.43;
         panel.add(rightPanel, gbc);
+        gbc.gridx = 3; gbc.weightx = 0.0;   // fixed preferred width
+        panel.add(overviewPanel, gbc);
 
         return panel;
+    }
+
+    private void updateOverviewViewport() {
+        JScrollBar bar = leftScroll.getVerticalScrollBar();
+        int value  = bar.getValue();
+        int extent = bar.getModel().getExtent();
+        int max    = bar.getMaximum();
+        int range  = max - extent;
+        double offset = range > 0 ? (double) value / range : 0.0;
+        double size   = max   > 0 ? (double) extent / max  : 1.0;
+        overviewPanel.setViewport(offset, size);
     }
 
     private RSyntaxTextArea createEditor(String syntaxStyle) {
@@ -515,6 +544,10 @@ public class DiffViewerWindow extends JFrame {
         RawText newRaw = new RawText(newText.getBytes(StandardCharsets.UTF_8));
         DiffAlgorithm algorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         editList = algorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRaw, newRaw);
+
+        // Feed the overview minimap
+        overviewPanel.setData(editList, oldRaw.size(), newRaw.size());
+        SwingUtilities.invokeLater(this::updateOverviewViewport);
 
         if (!editableMode) {
             // Non-editable: push the loaded text into the panes
