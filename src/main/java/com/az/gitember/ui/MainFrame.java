@@ -56,9 +56,22 @@ public class MainFrame extends JFrame {
 
         // Set window icons — provide multiple sizes so each OS picks the best fit.
         // Windows uses 16/32/48/256; Linux uses 16/32/48/128; macOS uses the largest.
-        setIconImages(loadIcons("/icon/gitember-16.png", "/icon/gitember-32.png",
-                "/icon/gitember-48.png", "/icon/gitember-64.png",
-                "/icon/gitember-256.png", "/icon/gitember-512.png"));
+        setIconImages(loadIcons(
+                "/icon/gitember-16.png",
+                "/icon/gitember-20.png",
+                "/icon/gitember-24.png",
+                "/icon/gitember-32.png",
+                "/icon/gitember-34.png",
+                "/icon/gitember-36.png",
+                "/icon/gitember-40.png",
+                "/icon/gitember-48.png",
+                "/icon/gitember-60.png",
+                "/icon/gitember-64.png",
+                "/icon/gitember-72.png",
+                "/icon/gitember-80.png",
+                "/icon/gitember-96.png",
+                "/icon/gitember-256.png",
+                "/icon/gitember-512.png"));
 
         // macOS Dock icon: use the largest available image (Java 9+ Taskbar API)
         if (java.awt.Taskbar.isTaskbarSupported()) {
