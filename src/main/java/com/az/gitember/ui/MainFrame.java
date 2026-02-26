@@ -538,12 +538,20 @@ public class MainFrame extends JFrame {
         Object userObject = node.getUserObject();
         if (userObject instanceof TreeNodeData data) {
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
+            boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
 
             // Merge/unmerge working copy toolbar
             if (isWorkingCopy) {
                 toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
             } else {
                 toolBar.unmergeWorkingCopyToolbar();
+            }
+
+            // Merge/unmerge history search toolbar
+            if (isAllHistory) {
+                toolBar.mergeHistoryToolbar(historyPanel);
+            } else {
+                toolBar.unmergeHistoryToolbar();
             }
 
             switch (data.type()) {

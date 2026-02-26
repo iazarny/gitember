@@ -32,12 +32,11 @@ public class HistoryPanel extends JPanel {
     private final StatusBar statusBar;
     private final CommitGraphRenderer graphRenderer = new CommitGraphRenderer();
 
-    // Search toolbar (only shown for entire/all-branch history)
-    private final JTextField searchField = new JTextField(25);
+    // Search components (merged into main toolbar when entire history is shown)
+    private final JTextField searchField = new JTextField(20);
     private final JLabel     resultLabel = new JLabel(" ");
     private boolean          useLucene   = false;
     private Timer            searchDebounce;
-    private JPanel           searchBar;
 
     /** Full unfiltered commit list kept for repeated searches. */
     @SuppressWarnings("rawtypes")
@@ -46,6 +45,10 @@ public class HistoryPanel extends JPanel {
     public HistoryPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
+
+        searchField.setPreferredSize(new Dimension(150, 25));
+        searchField.setMinimumSize(new Dimension(100, 25));
+        searchField.setMaximumSize(new Dimension(150, 25));
 
         tableModel = new CommitTableModel();
         commitTable = new JTable(tableModel);
@@ -89,22 +92,12 @@ public class HistoryPanel extends JPanel {
             @Override public void changedUpdate(DocumentEvent e) { onSearchTextChanged(); }
         });
 
-        searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
-        searchBar.add(new JLabel("Search:"));
-        searchBar.add(searchField);
-        searchBar.add(new JSeparator(SwingConstants.VERTICAL));
-        searchBar.add(Box.createHorizontalStrut(8));
-        searchBar.add(resultLabel);
-        searchBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
-                UIManager.getColor("Separator.foreground")));
-
         // ── Layout ────────────────────────────────────────────────────────
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
                 new JScrollPane(commitTable), detailPanel);
         splitPane.setDividerLocation(400);
         splitPane.setResizeWeight(0.65);
 
-        add(searchBar, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
     }
 
@@ -178,10 +171,11 @@ public class HistoryPanel extends JPanel {
         }.execute();
     }
 
+    public JTextField getSearchField()  { return searchField; }
+    public JLabel     getResultLabel()  { return resultLabel; }
+
     @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
-        // Search is only meaningful over the entire multi-branch history
-        searchBar.setVisible(allHistory);
         if (!allHistory) {
             searchField.setText("");
             resultLabel.setText(" ");

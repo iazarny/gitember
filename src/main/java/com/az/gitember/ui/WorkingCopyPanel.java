@@ -47,6 +47,8 @@ public class WorkingCopyPanel extends JPanel {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
 
+
+
         tableModel = new WorkingCopyTableModel();
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -122,6 +124,10 @@ public class WorkingCopyPanel extends JPanel {
         refreshBtn.addActionListener(e -> refresh());
 
         searchField = new JTextField(15);
+        searchField.setPreferredSize(new Dimension(150, 25));
+        searchField.setMinimumSize(new Dimension(100, 25));
+        searchField.setMaximumSize(new Dimension(150, 25));
+
         searchField.putClientProperty("JTextField.placeholderText", "Filter files...");
         searchField.addActionListener(e -> applyFilter());
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

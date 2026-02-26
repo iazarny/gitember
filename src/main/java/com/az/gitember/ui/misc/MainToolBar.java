@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.Util;
+import com.az.gitember.ui.HistoryPanel;
 import com.az.gitember.ui.WorkingCopyPanel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -176,6 +177,41 @@ public class MainToolBar extends JToolBar {
             remove(c);
         }
         mergedComponents.clear();
+        revalidate();
+        repaint();
+    }
+
+    // History search components merged into main toolbar
+    private final java.util.List<Component> mergedHistoryComponents = new java.util.ArrayList<>();
+
+    public void mergeHistoryToolbar(HistoryPanel hp) {
+        if (!mergedHistoryComponents.isEmpty()) return; // already merged
+
+        JSeparator sep = new JToolBar.Separator();
+        mergedHistoryComponents.add(sep);
+        add(sep);
+
+        JLabel searchLabel = new JLabel("Search:");
+        searchLabel.setBorder(new EmptyBorder(0, 8, 0, 4));
+        mergedHistoryComponents.add(searchLabel);
+        add(searchLabel);
+
+        mergedHistoryComponents.add(hp.getSearchField());
+        add(hp.getSearchField());
+
+        mergedHistoryComponents.add(hp.getResultLabel());
+        add(hp.getResultLabel());
+
+        revalidate();
+        repaint();
+    }
+
+    public void unmergeHistoryToolbar() {
+        if (mergedHistoryComponents.isEmpty()) return;
+        for (Component c : mergedHistoryComponents) {
+            remove(c);
+        }
+        mergedHistoryComponents.clear();
         revalidate();
         repaint();
     }
