@@ -30,6 +30,11 @@ public class IndexHistoryDialog extends JDialog {
     private final JButton closeBtn;
 
     private SwingWorker<Void, String> worker;
+    private Runnable onComplete;
+
+    public void setOnComplete(Runnable onComplete) {
+        this.onComplete = onComplete;
+    }
 
     @SuppressWarnings("unchecked")
     public IndexHistoryDialog(Frame owner) {
@@ -151,6 +156,7 @@ public class IndexHistoryDialog extends JDialog {
                     get();
                     statusLabel.setText("Indexing complete. You can now search file content.");
                     progressBar.setString("Done");
+                    if (onComplete != null) onComplete.run();
                 } catch (java.util.concurrent.CancellationException ex) {
                     statusLabel.setText("Indexing cancelled.");
                     progressBar.setString("Cancelled");

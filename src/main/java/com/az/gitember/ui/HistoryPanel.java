@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -7,6 +8,9 @@ import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 
 import javax.swing.*;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
@@ -28,12 +32,13 @@ public class HistoryPanel extends JPanel {
     private final StatusBar statusBar;
     private final CommitGraphRenderer graphRenderer = new CommitGraphRenderer();
 
-    // Search toolbar
-    private final JTextField searchField  = new JTextField(25);
-    private final JButton    searchBtn    = new JButton("Search");
-    private final JButton    clearBtn     = new JButton("Clear");
-    private final JCheckBox  luceneCheck  = new JCheckBox("Content (Lucene)");
-    private final JLabel     resultLabel  = new JLabel(" ");
+    // Search toolbar (only shown for entire/all-branch history)
+    private final JTextField searchField = new JTextField(25);
+    private final JLabel     luceneLabel = new JLabel();   // shows index status
+    private final JLabel     resultLabel = new JLabel(" ");
+    private boolean          useLucene   = false;
+    private Timer            searchDebounce;
+    private JPanel           searchBar;
 
     /** Full unfiltered commit list kept for repeated searches. */
     @SuppressWarnings("rawtypes")
@@ -73,25 +78,24 @@ public class HistoryPanel extends JPanel {
         searchField.putClientProperty("JTextField.placeholderText",
                 "Search commits (message, author, SHA, file name…)");
 
-        luceneCheck.setToolTipText(
-                "<html>Search file <b>content</b> using the Lucene index.<br>" +
-                "Index must be built first via Tools › Index History…<br>" +
-                "Supports Lucene query syntax: AND, OR, NOT, wildcards * ?</html>");
-        luceneCheck.setEnabled(false);   // enabled after indexing check
-
-        searchBtn.addActionListener(e -> performSearch());
-        clearBtn .addActionListener(e -> clearSearch());
-        searchField.addActionListener(e -> performSearch());   // Enter key
-
+        luceneLabel.setFont(luceneLabel.getFont().deriveFont(Font.PLAIN, 11f));
         resultLabel.setFont(resultLabel.getFont().deriveFont(Font.PLAIN, 11f));
 
-        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
+        // Auto-search: trigger 400 ms after the user stops typing (min 3 chars)
+        searchDebounce = new Timer(400, e -> performSearch());
+        searchDebounce.setRepeats(false);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e)  { onSearchTextChanged(); }
+            @Override public void removeUpdate(DocumentEvent e)  { onSearchTextChanged(); }
+            @Override public void changedUpdate(DocumentEvent e) { onSearchTextChanged(); }
+        });
+
+        searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
         searchBar.add(new JLabel("Search:"));
         searchBar.add(searchField);
-        searchBar.add(searchBtn);
-        searchBar.add(clearBtn);
         searchBar.add(new JSeparator(SwingConstants.VERTICAL));
-        searchBar.add(luceneCheck);
+        searchBar.add(luceneLabel);
         searchBar.add(Box.createHorizontalStrut(8));
         searchBar.add(resultLabel);
         searchBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
@@ -109,11 +113,10 @@ public class HistoryPanel extends JPanel {
 
     // ── Search logic ──────────────────────────────────────────────────────────
 
-    private void refreshLuceneCheckState() {
+    public void refreshLuceneState() {
         boolean indexed = Context.getCurrentProject()
-                .map(p -> p.isIndexed())
+                .map(Project::isIndexed)
                 .orElse(false);
-        // Also verify the index actually exists on disk
         if (indexed) {
             try {
                 indexed = Context.getGitRepoService().getSearchService().hasIndex();
@@ -121,16 +124,30 @@ public class HistoryPanel extends JPanel {
                 indexed = false;
             }
         }
-        luceneCheck.setEnabled(indexed);
-        if (!indexed) luceneCheck.setSelected(false);
+        useLucene = indexed;
+        if (indexed) {
+            luceneLabel.setText("Lucene index active");
+            luceneLabel.setForeground(new Color(0, 130, 0));
+        } else {
+            luceneLabel.setText("No Lucene index");
+            luceneLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        }
+    }
+
+    private void onSearchTextChanged() {
+        searchDebounce.restart();
     }
 
     @SuppressWarnings("unchecked")
     private void performSearch() {
         String term = searchField.getText().trim();
-        if (term.isEmpty()) { clearSearch(); return; }
+        if (term.length() < 3) {
+            resultLabel.setText(" ");
+            tableModel.setData(allCommits);
+            return;
+        }
 
-        boolean useLucene = luceneCheck.isSelected() && luceneCheck.isEnabled();
+        boolean useLucene = this.useLucene;
         List<PlotCommit<PlotLane>> base = new ArrayList<>(allCommits);
 
         if (base.isEmpty()) {
@@ -138,7 +155,6 @@ public class HistoryPanel extends JPanel {
             return;
         }
 
-        searchBtn.setEnabled(false);
         resultLabel.setText("Searching…");
 
         new SwingWorker<Map<String, Set<String>>, Void>() {
@@ -149,7 +165,6 @@ public class HistoryPanel extends JPanel {
 
             @Override
             protected void done() {
-                searchBtn.setEnabled(true);
                 try {
                     Map<String, Set<String>> results = get();
                     List<PlotCommit<PlotLane>> filtered = base.stream()
@@ -166,20 +181,21 @@ public class HistoryPanel extends JPanel {
         }.execute();
     }
 
-    private void clearSearch() {
-        searchField.setText("");
-        resultLabel.setText(" ");
-        tableModel.setData(allCommits);
-    }
-
     @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
+        // Search is only meaningful over the entire multi-branch history
+        searchBar.setVisible(allHistory);
+        if (!allHistory) {
+            searchField.setText("");
+            resultLabel.setText(" ");
+        }
+
         tableModel.clear();
         allCommits = new ArrayList<>();
         detailPanel.showRevision(null);
         statusBar.setStatus("Loading history...");
         statusBar.showProgress(true);
-        refreshLuceneCheckState();
+        if (allHistory) refreshLuceneState();
 
         SwingWorker<List<PlotCommit<PlotLane>>, Void> worker = new SwingWorker<>() {
             @Override
@@ -200,7 +216,7 @@ public class HistoryPanel extends JPanel {
                     tableModel.setData(commits);
                     statusBar.clearProgress();
                     statusBar.setStatus(commits.size() + " commits loaded");
-                    refreshLuceneCheckState();
+                    refreshLuceneState();
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load history", e);
                     statusBar.clearProgress();

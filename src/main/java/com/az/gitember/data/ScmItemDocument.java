@@ -77,4 +77,11 @@ public class ScmItemDocument  {
         return body;
     }
 
+    @Override
+    public String toString() {
+        return "ScmItemDocument{" +
+                "revision='" + revision + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
