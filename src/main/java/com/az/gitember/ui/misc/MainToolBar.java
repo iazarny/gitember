@@ -157,10 +157,8 @@ public class MainToolBar extends JToolBar {
         mergedComponents.add(sep3);
         add(sep3);
 
-        JLabel filterLabel = new JLabel("Filter:");
-        //filterLabel.setMargin(new Insets(10, 20, 10, 20));
+        JLabel filterLabel = new JLabel("Search:");
         filterLabel.setBorder(new EmptyBorder(10, 20, 10, 5));
-// top, left, bottom, right
         mergedComponents.add(filterLabel);
         add(filterLabel);
 
@@ -198,9 +196,6 @@ public class MainToolBar extends JToolBar {
 
         mergedHistoryComponents.add(hp.getSearchField());
         add(hp.getSearchField());
-
-        mergedHistoryComponents.add(hp.getResultLabel());
-        add(hp.getResultLabel());
 
         revalidate();
         repaint();

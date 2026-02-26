@@ -34,7 +34,6 @@ public class HistoryPanel extends JPanel {
 
     // Search components (merged into main toolbar when entire history is shown)
     private final JTextField searchField = new JTextField(20);
-    private final JLabel     resultLabel = new JLabel(" ");
     private boolean          useLucene   = false;
     private Timer            searchDebounce;
 
@@ -79,8 +78,6 @@ public class HistoryPanel extends JPanel {
         // ── Search toolbar ────────────────────────────────────────────────
         searchField.putClientProperty("JTextField.placeholderText",
                 "Search commits (message, author, SHA, file name…)");
-
-        resultLabel.setFont(resultLabel.getFont().deriveFont(Font.PLAIN, 11f));
 
         // Auto-search: trigger 400 ms after the user stops typing (min 3 chars)
         searchDebounce = new Timer(400, e -> performSearch());
@@ -132,8 +129,8 @@ public class HistoryPanel extends JPanel {
     private void performSearch() {
         String term = searchField.getText().trim();
         if (term.length() < 3) {
-            resultLabel.setText(" ");
             tableModel.setData(allCommits);
+            statusBar.setStatus(allCommits.size() + " commits loaded");
             return;
         }
 
@@ -141,11 +138,11 @@ public class HistoryPanel extends JPanel {
         List<PlotCommit<PlotLane>> base = new ArrayList<>(allCommits);
 
         if (base.isEmpty()) {
-            resultLabel.setText("No commits loaded.");
+            statusBar.setStatus("No commits loaded.");
             return;
         }
 
-        resultLabel.setText("Searching…");
+        statusBar.setStatus("Searching…");
 
         new SwingWorker<Map<String, Set<String>>, Void>() {
             @Override
@@ -161,24 +158,22 @@ public class HistoryPanel extends JPanel {
                             .filter(pc -> results.containsKey(pc.getName()))
                             .toList();
                     tableModel.setData(filtered);
-                    resultLabel.setText(filtered.size() + " commit" +
+                    statusBar.setStatus(filtered.size() + " commit" +
                             (filtered.size() != 1 ? "s" : "") + " found");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Search failed", ex);
-                    resultLabel.setText("Search error: " + ex.getMessage());
+                    statusBar.setStatus("Search error: " + ex.getMessage());
                 }
             }
         }.execute();
     }
 
-    public JTextField getSearchField()  { return searchField; }
-    public JLabel     getResultLabel()  { return resultLabel; }
+    public JTextField getSearchField() { return searchField; }
 
     @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
         if (!allHistory) {
             searchField.setText("");
-            resultLabel.setText(" ");
         }
 
         tableModel.clear();
