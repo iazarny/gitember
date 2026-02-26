@@ -796,7 +796,6 @@ public class GitRepoService {
                         svc.submitItemToReindex(doc);
                         filesIndexed++;
                     } catch (Exception ex) {
-                        System.out.println(">>>>>> " + item);
                         log.log(Level.FINE, "Skip indexing item: " + item.getShortName(), ex);
                     }
                 }

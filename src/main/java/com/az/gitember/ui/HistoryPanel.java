@@ -34,7 +34,6 @@ public class HistoryPanel extends JPanel {
 
     // Search toolbar (only shown for entire/all-branch history)
     private final JTextField searchField = new JTextField(25);
-    private final JLabel     luceneLabel = new JLabel();   // shows index status
     private final JLabel     resultLabel = new JLabel(" ");
     private boolean          useLucene   = false;
     private Timer            searchDebounce;
@@ -78,7 +77,6 @@ public class HistoryPanel extends JPanel {
         searchField.putClientProperty("JTextField.placeholderText",
                 "Search commits (message, author, SHA, file name…)");
 
-        luceneLabel.setFont(luceneLabel.getFont().deriveFont(Font.PLAIN, 11f));
         resultLabel.setFont(resultLabel.getFont().deriveFont(Font.PLAIN, 11f));
 
         // Auto-search: trigger 400 ms after the user stops typing (min 3 chars)
@@ -95,7 +93,6 @@ public class HistoryPanel extends JPanel {
         searchBar.add(new JLabel("Search:"));
         searchBar.add(searchField);
         searchBar.add(new JSeparator(SwingConstants.VERTICAL));
-        searchBar.add(luceneLabel);
         searchBar.add(Box.createHorizontalStrut(8));
         searchBar.add(resultLabel);
         searchBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
@@ -126,11 +123,11 @@ public class HistoryPanel extends JPanel {
         }
         useLucene = indexed;
         if (indexed) {
-            luceneLabel.setText("Lucene index active");
-            luceneLabel.setForeground(new Color(0, 130, 0));
+            searchField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(0, 150, 0), 2),
+                    BorderFactory.createEmptyBorder(2, 4, 2, 4)));
         } else {
-            luceneLabel.setText("No Lucene index");
-            luceneLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+            searchField.setBorder(UIManager.getBorder("TextField.border"));
         }
     }
 
