@@ -311,9 +311,15 @@ public class DiffViewerWindow extends JFrame {
         gbc.gridx = 2; gbc.weightx = 0.43;
         panel.add(rightPanel, gbc);
         gbc.gridx = 3; gbc.weightx = 0.0;   // fixed preferred width
-        panel.add(overviewPanel, gbc);
-
+        panel.add(overviewWithHeader(overviewPanel), gbc);
         return panel;
+    }
+
+    private JPanel overviewWithHeader(DiffOverviewPanel overviewPanel) {
+        JPanel row = new JPanel(new BorderLayout(4, 0));
+        row.add(new JLabel("    "),  BorderLayout.NORTH);
+        row.add(overviewPanel,  BorderLayout.CENTER);
+        return row;
     }
 
     private void updateOverviewViewport() {
