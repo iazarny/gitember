@@ -200,9 +200,13 @@ public class MainMenuBar extends JMenuBar {
 
     public void setRepoActionsEnabled(boolean enabled) {
         // Entire menus go grey when no repo is open
-        repoMenu.setEnabled(enabled);
+        /*repoMenu.setEnabled(enabled);
         branchMenu.setEnabled(enabled);
-        workingCopyMenu.setEnabled(enabled);
+        workingCopyMenu.setEnabled(enabled);*/
+
+        repoMenu.setVisible(enabled);
+        branchMenu.setVisible(enabled);
+        workingCopyMenu.setVisible(enabled);
     }
 
     // ── Listener registration ─────────────────────────────────────────────────
