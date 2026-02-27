@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  *   <li>SOUTH  – monthly stacked-bar chart (fixed ~200 px height)</li>
  * </ul>
  */
-public class StatDialog extends JDialog {
+public class StatDialog extends JFrame {
 
     private static final Logger log = Logger.getLogger(StatDialog.class.getName());
 
@@ -46,7 +46,7 @@ public class StatDialog extends JDialog {
     private SwingWorker<List<ScmStat>, String> worker;
 
     public StatDialog(Frame owner) {
-        super(owner, "Statistics", true);
+        super("Statistics");
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
