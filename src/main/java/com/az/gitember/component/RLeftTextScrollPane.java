@@ -1,7 +1,6 @@
 package com.az.gitember.component;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
@@ -15,20 +14,35 @@ public class RLeftTextScrollPane extends RTextScrollPane {
     }
 
     private void configure() {
-
         setLineNumbersEnabled(true);
 
-        Gutter gutter = getGutter();
-        JScrollBar verticalBar = getVerticalScrollBar();
+        // JScrollPane.setLayout() requires a ScrollPaneLayout subclass.
+        // Override layoutContainer to reposition components after the normal
+        // pass so the order becomes:  [VScrollbar | Gutter | Text viewport]
+        setLayout(new ScrollPaneLayout() {
+            @Override
+            public void layoutContainer(Container parent) {
+                super.layoutContainer(parent);          // standard placement
+                if (vsb == null || !vsb.isVisible()) return;
 
-        // Remove default layout components
-        setRowHeaderView(null);
+                Rectangle vsbR = vsb.getBounds();
+                int vsbW = vsbR.width;
 
-        setLayout(new BorderLayout());
+                // Shift the row header (gutter) right to make room for the scrollbar
+                if (rowHead != null) {
+                    Rectangle rh = rowHead.getBounds();
+                    rowHead.setBounds(vsbW, rh.y, rh.width, rh.height);
+                }
 
-        // Order: Scrollbar | LineNumbers | Text
-        add(verticalBar, BorderLayout.WEST);
-        add(gutter, BorderLayout.CENTER);
-        add(getViewport(), BorderLayout.EAST);
+                // Shift the viewport right by the same amount
+                if (viewport != null) {
+                    Rectangle vp = viewport.getBounds();
+                    viewport.setBounds(vp.x + vsbW, vp.y, vp.width, vp.height);
+                }
+
+                // Move the scrollbar to the far left
+                vsb.setBounds(0, vsbR.y, vsbW, vsbR.height);
+            }
+        });
     }
 }

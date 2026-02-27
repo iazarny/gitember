@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.component.RLeftTextScrollPane;
+import com.az.gitember.component.RRightTextScrollPane;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -30,8 +32,8 @@ public class DiffViewerWindow extends JFrame {
 
     private RSyntaxTextArea oldPane;
     private RSyntaxTextArea newPane;
-    private RTextScrollPane leftScroll;
-    private RTextScrollPane rightScroll;
+    private RLeftTextScrollPane leftScroll;
+    private RRightTextScrollPane rightScroll;
     private final JComboBox<RevisionItem> oldCombo;
     private final JComboBox<RevisionItem> newCombo;
     private JLabel diffInfoLabel;
@@ -231,9 +233,9 @@ public class DiffViewerWindow extends JFrame {
         oldPane = createEditor(syntaxStyle);
         newPane = createEditor(syntaxStyle);
 
-        leftScroll = new RTextScrollPane(oldPane);
+        leftScroll = new RLeftTextScrollPane(oldPane);
         leftScroll.setFoldIndicatorEnabled(false);
-        rightScroll = new RTextScrollPane(newPane);
+        rightScroll = new RRightTextScrollPane(newPane);
         rightScroll.setFoldIndicatorEnabled(false);
         centerPanel  = new DiffConnectorPanel();
         overviewPanel = new DiffOverviewPanel();

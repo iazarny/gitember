@@ -15,21 +15,34 @@ public class RRightTextScrollPane extends RTextScrollPane {
     }
 
     private void configure() {
-
         setLineNumbersEnabled(true);
 
-        Gutter gutter = getGutter();
-        JScrollBar verticalBar = getVerticalScrollBar();
+        // JScrollPane.setLayout() requires a ScrollPaneLayout subclass.
+        // Override layoutContainer to reposition components after the normal
+        // pass so the order becomes:  [Text viewport | Gutter | VScrollbar]
+        setLayout(new ScrollPaneLayout() {
+            @Override
+            public void layoutContainer(Container parent) {
+                super.layoutContainer(parent);          // standard placement
+                if (vsb == null || !vsb.isVisible()) return;
 
-        setRowHeaderView(null);
+                // After super: rowHead(gutter) is at x=0, viewport starts after it,
+                // vsb is on the right. We want: viewport | gutter | vsb.
+                if (rowHead != null) {
+                    Rectangle rh  = rowHead.getBounds();
+                    int rhW = rh.width;
 
-        setLayout(new BorderLayout());
+                    // Shift viewport left to fill the space the gutter vacated
+                    if (viewport != null) {
+                        Rectangle vp = viewport.getBounds();
+                        viewport.setBounds(0, vp.y, vp.width, vp.height);
+                    }
 
-        JPanel eastPanel = new JPanel(new BorderLayout());
-        eastPanel.add(gutter, BorderLayout.CENTER);
-        eastPanel.add(verticalBar, BorderLayout.EAST);
-
-        add(getViewport(), BorderLayout.CENTER);
-        add(eastPanel, BorderLayout.EAST);
+                    // Move gutter to sit just left of the scrollbar
+                    Rectangle vsbR = vsb.getBounds();
+                    rowHead.setBounds(vsbR.x - rhW, rh.y, rhW, rh.height);
+                }
+            }
+        });
     }
 }
