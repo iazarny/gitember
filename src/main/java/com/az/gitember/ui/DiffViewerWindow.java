@@ -546,7 +546,7 @@ public class DiffViewerWindow extends JFrame {
         editList = algorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRaw, newRaw);
 
         // Feed the overview minimap
-        overviewPanel.setData(editList, oldRaw.size(), newRaw.size());
+        overviewPanel.setData(editList, oldText.split("\n", -1), newText.split("\n", -1));
         SwingUtilities.invokeLater(this::updateOverviewViewport);
 
         if (!editableMode) {

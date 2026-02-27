@@ -25,8 +25,8 @@ class DiffOverviewPanel extends JPanel {
     private static final int PREF_WIDTH = 80;
 
     private EditList editList;
-    private int leftLineCount  = 1;
-    private int rightLineCount = 1;
+    private String[] leftLines  = null;
+    private String[] rightLines = null;
 
     private double viewportOffset = 0.0;   // 0.0–1.0
     private double viewportSize   = 1.0;   // 0.0–1.0
@@ -64,10 +64,10 @@ class DiffOverviewPanel extends JPanel {
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    void setData(EditList editList, int leftLineCount, int rightLineCount) {
-        this.editList       = editList;
-        this.leftLineCount  = Math.max(leftLineCount,  1);
-        this.rightLineCount = Math.max(rightLineCount, 1);
+    void setData(EditList editList, String[] leftLines, String[] rightLines) {
+        this.editList   = editList;
+        this.leftLines  = leftLines;
+        this.rightLines = rightLines;
         cachedImage = null;   // force cache rebuild
         repaint();
     }
@@ -119,22 +119,9 @@ class DiffOverviewPanel extends JPanel {
 
         int half = w / 2;
 
-        // Diff blocks
-        if (editList != null) {
-            for (Edit edit : editList) {
-                switch (edit.getType()) {
-                    case DELETE -> paintBlock(g2, 0, half, h,
-                            edit.getBeginA(), edit.getEndA(), leftLineCount,  deletedColor());
-                    case INSERT -> paintBlock(g2, half, w, h,
-                            edit.getBeginB(), edit.getEndB(), rightLineCount, addedColor());
-                    case REPLACE -> {
-                        paintBlock(g2, 0,    half, h, edit.getBeginA(), edit.getEndA(), leftLineCount,  changedColor());
-                        paintBlock(g2, half, w,    h, edit.getBeginB(), edit.getEndB(), rightLineCount, changedColor());
-                    }
-                    default -> { /* EMPTY — skip */ }
-                }
-            }
-        }
+        // Single pass per column: each line is drawn with its correct colour
+        paintTextLines(g2, 0,    half, h, leftLines,  true);
+        paintTextLines(g2, half, w,    h, rightLines, false);
 
         // Column divider and outer border (on top of blocks)
         Color sepColor = UIManager.getColor("Separator.foreground");
@@ -148,16 +135,76 @@ class DiffOverviewPanel extends JPanel {
         return img;
     }
 
-    /** Paints a filled rectangle for a range of lines in one column. */
-    private void paintBlock(Graphics2D g2, int x1, int x2, int panelH,
-                             int beginLine, int endLine, int totalLines, Color color) {
-        if (endLine <= beginLine) endLine = beginLine + 1;
-        int y1 = lineToY(beginLine, totalLines, panelH);
-        int y2 = lineToY(endLine,   totalLines, panelH);
-        if (y2 <= y1) y2 = y1 + 2;
-        g2.setColor(color);
-        g2.fillRect(x1 + 1, y1, x2 - x1 - 1, y2 - y1);
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+    /**
+     * Single-pass minimap renderer for one column.
+     * <p>
+     * Builds a per-line colour array from the {@code editList} first, then
+     * iterates every source line once: blank lines are skipped, changed lines
+     * are drawn with their highlight colour, unchanged lines with a dim grey.
+     * Each line is rendered as a short horizontal segment whose x-start reflects
+     * the leading indent and whose x-end reflects the trimmed text width.
+     *
+     * @param isLeft {@code true} for the left (old) column, {@code false} for right (new)
+     */
+    private void paintTextLines(Graphics2D g2, int x1, int x2, int panelH,
+                                 String[] lines, boolean isLeft) {
+        if (lines == null || lines.length == 0) return;
+        int colW = x2 - x1 - 2;
+        if (colW <= 0) return;
+
+        int n = lines.length;
+
+        // ── Build per-line colour lookup ──────────────────────────────────────
+        Color dimColor = SyntaxStyleUtil.isDarkTheme()
+                ? new Color(200, 200, 200, 70)
+                : new Color(50,  50,  50,  70);
+        Color[] lineColor = new Color[n];
+        java.util.Arrays.fill(lineColor, dimColor);
+
+        if (editList != null) {
+            for (Edit edit : editList) {
+                Color c = switch (edit.getType()) {
+                    case DELETE  -> isLeft  ? deletedColor() : null;
+                    case INSERT  -> !isLeft ? addedColor()   : null;
+                    case REPLACE -> changedColor();
+                    default      -> null;
+                };
+                if (c == null) continue;
+                int begin = isLeft ? edit.getBeginA() : edit.getBeginB();
+                int end   = isLeft ? edit.getEndA()   : edit.getEndB();
+                for (int i = begin; i < end && i < n; i++) lineColor[i] = c;
+            }
+        }
+
+        // ── Scale reference: max line length capped at 120 chars ──────────────
+        int maxLen = 1;
+        for (String line : lines) maxLen = Math.max(maxLen, line.length());
+        maxLen = Math.min(maxLen, 120);
+
+        // ── Draw one line per source line ─────────────────────────────────────
+        for (int i = 0; i < n; i++) {
+            String line = lines[i];
+            if (line.isBlank()) continue;
+
+            int indent = 0;
+            for (int c = 0; c < line.length(); c++) {
+                char ch = line.charAt(c);
+                if      (ch == ' ')  indent++;
+                else if (ch == '\t') indent += 4;
+                else break;
+            }
+
+            int textEnd = line.stripTrailing().length();
+            if (textEnd <= indent) continue;
+
+            int xStart = x1 + 1 + indent                      * colW / maxLen;
+            int xEnd   = x1 + 1 + Math.min(textEnd, maxLen)   * colW / maxLen;
+            if (xEnd <= xStart) xEnd = xStart + 1;
+            xEnd = Math.min(xEnd, x2 - 1);
+
+            g2.setColor(lineColor[i]);
+            g2.drawLine(xStart, lineToY(i, n, panelH), xEnd, lineToY(i, n, panelH));
+        }
     }
 
     /** Paints the semi-transparent viewport indicator. */
