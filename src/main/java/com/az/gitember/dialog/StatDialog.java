@@ -71,14 +71,12 @@ public class StatDialog extends JFrame {
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
         progressBar.setString("");
-        progressBar.setPreferredSize(new Dimension(180, progressBar.getPreferredSize().height));
 
         JPanel controlBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         controlBar.add(new JLabel("Depth:"));
         controlBar.add(depthSpinner);
         controlBar.add(new JLabel("months"));
         controlBar.add(computeBtn);
-        controlBar.add(progressBar);
 
         // ── Pie chart ────────────────────────────────────────────────────────
         pieChart = new PieChartPanel();
@@ -103,12 +101,17 @@ public class StatDialog extends JFrame {
         barChart.setBorder(BorderFactory.createTitledBorder("Monthly Contributions"));
         barChart.setPreferredSize(new Dimension(800, 220));
 
+        // ── South: bar chart above full-width progress bar ────────────────────
+        JPanel southPanel = new JPanel(new BorderLayout(0, 2));
+        southPanel.add(barChart,    BorderLayout.CENTER);
+        southPanel.add(progressBar, BorderLayout.SOUTH);
+
         // ── Layout ────────────────────────────────────────────────────────────
         JPanel content = new JPanel(new BorderLayout(0, 4));
         content.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         content.add(controlBar, BorderLayout.NORTH);
         content.add(splitPane,  BorderLayout.CENTER);
-        content.add(barChart,   BorderLayout.SOUTH);
+        content.add(southPanel, BorderLayout.SOUTH);
         getContentPane().add(content);
 
         if (Context.getPlotCommitList() == null || Context.getPlotCommitList().isEmpty()) {

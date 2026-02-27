@@ -15,32 +15,33 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem openItem;
     private final JMenuItem cloneItem;
     private final JMenuItem initItem;
-    private final JMenu openRecentMenu;
+    private final JMenu     openRecentMenu;
+    private final JMenuItem settingsItem;
     private final JMenuItem exitItem;
 
-    // Branch menu items
+    // Repository menu (enabled only when a repo is open)
+    private final JMenu     repoMenu;
+    private final JMenuItem indexHistoryItem;
+    private final JMenuItem statisticsItem;
+    private final JMenuItem credentialsItem;
+
+    // Branch menu (enabled only when a repo is open)
+    private final JMenu     branchMenu;
     private final JMenuItem pullItem;
     private final JMenuItem pushItem;
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
 
-    // Working copy menu items
+    // Working copy menu (enabled only when a repo is open)
+    private final JMenu     workingCopyMenu;
     private final JMenuItem refreshItem;
     private final JMenuItem stashItem;
     private final JMenuItem createDiffItem;
     private final JMenuItem applyDiffItem;
 
-    // Repository credentials
-    private final JMenuItem credentialsItem;
-
-    // Settings
-    private final JMenuItem settingsItem;
-
-    // Tools menu items
+    // Tools menu items (always available – no repo required)
     private final JMenuItem compareFilesItem;
     private final JMenuItem compareFoldersItem;
-    private final JMenuItem indexHistoryItem;
-    private final JMenuItem statisticsItem;
 
     // Help menu items
     private final JMenuItem aboutItem;
@@ -48,15 +49,16 @@ public class MainMenuBar extends JMenuBar {
     private Consumer<Project> recentProjectHandler;
 
     public MainMenuBar() {
-        // File menu
+
+        // ── File ─────────────────────────────────────────────────────────────
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
 
         openItem = new JMenuItem("Open Repository...", KeyEvent.VK_O);
-        openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-
+        openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
-        initItem = new JMenuItem("Init Repository...", KeyEvent.VK_I);
+        initItem  = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
@@ -77,33 +79,49 @@ public class MainMenuBar extends JMenuBar {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
-        // Branch menu
-        JMenu branchMenu = new JMenu("Branch");
+        // ── Repository (repo-only) ────────────────────────────────────────────
+        repoMenu = new JMenu("Repository");
+        repoMenu.setMnemonic(KeyEvent.VK_R);
+
+        indexHistoryItem = new JMenuItem("Index History…", KeyEvent.VK_I);
+        indexHistoryItem.setToolTipText(
+                "Build a Lucene index of commit file content for full-text search");
+
+        statisticsItem = new JMenuItem("Statistics…", KeyEvent.VK_S);
+        statisticsItem.setToolTipText(
+                "Show per-developer commit / line statistics and monthly charts");
+
+        credentialsItem = new JMenuItem("Credentials…", KeyEvent.VK_E);
+
+        repoMenu.add(indexHistoryItem);
+        repoMenu.add(statisticsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(credentialsItem);
+
+        // ── Branch (repo-only) ────────────────────────────────────────────────
+        branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem = new JMenuItem("Pull", KeyEvent.VK_L);
-        pushItem = new JMenuItem("Push", KeyEvent.VK_P);
-        fetchItem = new JMenuItem("Fetch", KeyEvent.VK_F);
-        commitItem = new JMenuItem("Commit...", KeyEvent.VK_M);
-        credentialsItem = new JMenuItem("Credentials...", KeyEvent.VK_E);
+        pullItem   = new JMenuItem("Pull",       KeyEvent.VK_L);
+        pushItem   = new JMenuItem("Push",       KeyEvent.VK_P);
+        fetchItem  = new JMenuItem("Fetch",      KeyEvent.VK_F);
+        commitItem = new JMenuItem("Commit...",  KeyEvent.VK_M);
 
         branchMenu.add(pullItem);
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
         branchMenu.addSeparator();
         branchMenu.add(commitItem);
-        branchMenu.addSeparator();
-        branchMenu.add(credentialsItem);
 
-        // Working copy menu
-        JMenu workingCopyMenu = new JMenu("Working copy");
+        // ── Working copy (repo-only) ──────────────────────────────────────────
+        workingCopyMenu = new JMenu("Working copy");
         workingCopyMenu.setMnemonic(KeyEvent.VK_W);
 
-        refreshItem = new JMenuItem("Refresh", KeyEvent.VK_R);
+        refreshItem    = new JMenuItem("Refresh",        KeyEvent.VK_R);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
-        stashItem = new JMenuItem("Stash...", KeyEvent.VK_S);
-        createDiffItem = new JMenuItem("Create diff", KeyEvent.VK_D);
-        applyDiffItem = new JMenuItem("Apply diff...", KeyEvent.VK_A);
+        stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
+        createDiffItem = new JMenuItem("Create diff",    KeyEvent.VK_D);
+        applyDiffItem  = new JMenuItem("Apply diff...",  KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
         workingCopyMenu.add(stashItem);
@@ -111,33 +129,21 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
 
-        // Tools menu  (always enabled – no repo required)
+        // ── Tools (always available) ──────────────────────────────────────────
         JMenu toolsMenu = new JMenu("Tools");
         toolsMenu.setMnemonic(KeyEvent.VK_T);
 
         compareFilesItem   = new JMenuItem("Compare Files…",   KeyEvent.VK_F);
         compareFoldersItem = new JMenuItem("Compare Folders…", KeyEvent.VK_D);
-        indexHistoryItem   = new JMenuItem("Index History…",   KeyEvent.VK_I);
-        indexHistoryItem.setToolTipText(
-                "Build a Lucene index of commit file content for full-text search");
-        statisticsItem     = new JMenuItem("Statistics…",      KeyEvent.VK_S);
-        statisticsItem.setToolTipText(
-                "Show per-developer commit / line statistics and monthly charts");
 
-        compareFilesItem.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
-        compareFoldersItem.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_F7,
-                        java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        compareFilesItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
+        compareFoldersItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
         toolsMenu.add(compareFilesItem);
         toolsMenu.add(compareFoldersItem);
-        toolsMenu.addSeparator();
-        toolsMenu.add(indexHistoryItem);
-        toolsMenu.addSeparator();
-        toolsMenu.add(statisticsItem);
 
-        // Help menu
+        // ── Help ─────────────────────────────────────────────────────────────
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
@@ -147,10 +153,11 @@ public class MainMenuBar extends JMenuBar {
                 "Gitember 3 - Git GUI Client",
                 "About Gitember",
                 JOptionPane.INFORMATION_MESSAGE));
-
         helpMenu.add(aboutItem);
 
+        // ── Menu bar order ────────────────────────────────────────────────────
         add(fileMenu);
+        add(repoMenu);
         add(branchMenu);
         add(workingCopyMenu);
         add(toolsMenu);
@@ -159,21 +166,20 @@ public class MainMenuBar extends JMenuBar {
         setRepoActionsEnabled(false);
     }
 
+    // ── Recent projects ───────────────────────────────────────────────────────
+
     public void refreshRecentProjects(Set<Project> projects) {
         openRecentMenu.removeAll();
         if (projects == null || projects.isEmpty()) {
             openRecentMenu.setEnabled(false);
             return;
         }
-
         for (Project project : projects) {
             String label = GitemberUtil.getFolderName(project.getProjectHomeFolder());
             JMenuItem item = new JMenuItem(label);
             item.setToolTipText(project.getProjectHomeFolder());
             item.addActionListener(e -> {
-                if (recentProjectHandler != null) {
-                    recentProjectHandler.accept(project);
-                }
+                if (recentProjectHandler != null) recentProjectHandler.accept(project);
             });
             openRecentMenu.add(item);
         }
@@ -184,34 +190,32 @@ public class MainMenuBar extends JMenuBar {
         this.recentProjectHandler = handler;
     }
 
+    // ── Enable / disable all repo-dependent menus at once ─────────────────────
+
     public void setRepoActionsEnabled(boolean enabled) {
-        pullItem.setEnabled(enabled);
-        pushItem.setEnabled(enabled);
-        fetchItem.setEnabled(enabled);
-        commitItem.setEnabled(enabled);
-        credentialsItem.setEnabled(enabled);
-        refreshItem.setEnabled(enabled);
-        stashItem.setEnabled(enabled);
-        createDiffItem.setEnabled(enabled);
-        applyDiffItem.setEnabled(enabled);
+        // Entire menus go grey when no repo is open
+        repoMenu.setEnabled(enabled);
+        branchMenu.setEnabled(enabled);
+        workingCopyMenu.setEnabled(enabled);
     }
 
-    public void addOpenListener(ActionListener l) { openItem.addActionListener(l); }
-    public void addCloneListener(ActionListener l) { cloneItem.addActionListener(l); }
-    public void addInitListener(ActionListener l) { initItem.addActionListener(l); }
-    public void addPullListener(ActionListener l) { pullItem.addActionListener(l); }
-    public void addPushListener(ActionListener l) { pushItem.addActionListener(l); }
-    public void addFetchListener(ActionListener l) { fetchItem.addActionListener(l); }
-    public void addCommitListener(ActionListener l) { commitItem.addActionListener(l); }
-    public void addRefreshListener(ActionListener l) { refreshItem.addActionListener(l); }
-    public void addStashListener(ActionListener l) { stashItem.addActionListener(l); }
-    public void addCreateDiffListener(ActionListener l) { createDiffItem.addActionListener(l); }
-    public void addApplyDiffListener(ActionListener l)  { applyDiffItem.addActionListener(l); }
-    public void addCredentialsListener(ActionListener l) { credentialsItem.addActionListener(l); }
-    public void addSettingsListener(ActionListener l)    { settingsItem.addActionListener(l); }
+    // ── Listener registration ─────────────────────────────────────────────────
 
-    public void addCompareFilesListener(ActionListener l)   { compareFilesItem.addActionListener(l); }
-    public void addCompareFoldersListener(ActionListener l) { compareFoldersItem.addActionListener(l); }
-    public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
-    public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
+    public void addOpenListener(ActionListener l)          { openItem.addActionListener(l); }
+    public void addCloneListener(ActionListener l)         { cloneItem.addActionListener(l); }
+    public void addInitListener(ActionListener l)          { initItem.addActionListener(l); }
+    public void addPullListener(ActionListener l)          { pullItem.addActionListener(l); }
+    public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
+    public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }
+    public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
+    public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
+    public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
+    public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
+    public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
+    public void addCredentialsListener(ActionListener l)   { credentialsItem.addActionListener(l); }
+    public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }
+    public void addCompareFilesListener(ActionListener l)  { compareFilesItem.addActionListener(l); }
+    public void addCompareFoldersListener(ActionListener l){ compareFoldersItem.addActionListener(l); }
+    public void addIndexHistoryListener(ActionListener l)  { indexHistoryItem.addActionListener(l); }
+    public void addStatisticsListener(ActionListener l)    { statisticsItem.addActionListener(l); }
 }
