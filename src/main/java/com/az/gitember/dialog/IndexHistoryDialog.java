@@ -40,6 +40,12 @@ public class IndexHistoryDialog extends JDialog {
     public IndexHistoryDialog(Frame owner) {
         super(owner, "Index History", true);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override public void windowClosing(java.awt.event.WindowEvent e) {
+                if (worker != null && !worker.isDone()) worker.cancel(true);
+                dispose();
+            }
+        });
         setResizable(false);
 
         // ── Input row ────────────────────────────────────────────────────────
