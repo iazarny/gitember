@@ -103,4 +103,16 @@ public class CredentialsDialog extends JDialog {
     public String getPassword() {
         return new String(pwdField.getPassword());
     }
+
+    public void setAccessToken(String accessToken) {
+        tokenField.setText(accessToken);
+    }
+
+    public void setUserName(String userName) {
+        userField.setText(userName);
+    }
+
+    public void setPassword(String password) {
+        pwdField.setText(password);
+    }
 }

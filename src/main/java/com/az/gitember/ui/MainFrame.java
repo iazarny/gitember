@@ -317,6 +317,9 @@ public class MainFrame extends JFrame {
         Context.getCurrentProject().ifPresentOrElse(project -> {
             CredentialsDialog dialog = new CredentialsDialog(this, project);
             dialog.setVisible(true);
+            dialog.setAccessToken(project.getAccessToken());
+            dialog.setUserName(project.getUserName());
+            dialog.setPassword(project.getUserPwd());
             if (dialog.isConfirmed()) {
                 project.setAccessToken(dialog.getAccessToken());
                 project.setUserName(dialog.getUserName());
