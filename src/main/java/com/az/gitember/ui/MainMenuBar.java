@@ -23,6 +23,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenu     repoMenu;
     private final JMenuItem indexHistoryItem;
     private final JMenuItem statisticsItem;
+    private final JMenuItem openTerminalItem;
     private final JMenuItem credentialsItem;
 
     // Branch menu (enabled only when a repo is open)
@@ -93,8 +94,13 @@ public class MainMenuBar extends JMenuBar {
 
         credentialsItem = new JMenuItem("Credentials…", KeyEvent.VK_E);
 
+        openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
+        openTerminalItem.setToolTipText("Open a terminal in the repository folder");
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(openTerminalItem);
         repoMenu.addSeparator();
         repoMenu.add(credentialsItem);
 
@@ -216,6 +222,7 @@ public class MainMenuBar extends JMenuBar {
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }
     public void addCompareFilesListener(ActionListener l)  { compareFilesItem.addActionListener(l); }
     public void addCompareFoldersListener(ActionListener l){ compareFoldersItem.addActionListener(l); }
-    public void addIndexHistoryListener(ActionListener l)  { indexHistoryItem.addActionListener(l); }
-    public void addStatisticsListener(ActionListener l)    { statisticsItem.addActionListener(l); }
+    public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
+    public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
+    public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
 }

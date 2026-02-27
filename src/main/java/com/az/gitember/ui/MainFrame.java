@@ -213,6 +213,7 @@ public class MainFrame extends JFrame {
             dlg.setVisible(true);
         });
         menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
+        menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
@@ -628,5 +629,63 @@ public class MainFrame extends JFrame {
 
     public MainTreePanel getTreePanel() {
         return treePanel;
+    }
+
+    // ── Terminal launcher ─────────────────────────────────────────────────────
+
+    private void openTerminalInRepo() {
+        String path = Context.getProjectFolder();
+        if (path == null || path.isEmpty()) {
+            statusBar.setStatus("No repository open.");
+            return;
+        }
+        File dir = new File(path);
+        try {
+            if (Context.isWindows()) {
+                openTerminalWindows(dir);
+            } else if (Context.isMac()) {
+                // open -a Terminal <path>  works for Terminal.app
+                new ProcessBuilder("open", "-a", "Terminal", dir.getAbsolutePath()).start();
+            } else {
+                openTerminalLinux(dir);
+            }
+            statusBar.setStatus("Terminal opened in " + path);
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Cannot open terminal", ex);
+            statusBar.setStatus("Cannot open terminal: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Could not open a terminal:\n" + ex.getMessage(),
+                    "Open Terminal", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void openTerminalWindows(File dir) throws java.io.IOException {
+        // Try Windows Terminal (wt.exe) first, fall back to cmd.exe
+        try {
+            new ProcessBuilder("wt", "-d", dir.getAbsolutePath()).start();
+        } catch (java.io.IOException ignored) {
+            new ProcessBuilder("cmd", "/c", "start", "cmd.exe")
+                    .directory(dir).start();
+        }
+    }
+
+    private void openTerminalLinux(File dir) throws java.io.IOException {
+        // Try common terminal emulators in preference order
+        String[][] candidates = {
+            { "x-terminal-emulator" },
+            { "gnome-terminal", "--working-directory=" + dir.getAbsolutePath() },
+            { "xfce4-terminal", "--working-directory=" + dir.getAbsolutePath() },
+            { "konsole", "--workdir", dir.getAbsolutePath() },
+            { "xterm" }
+        };
+        for (String[] cmd : candidates) {
+            try {
+                new ProcessBuilder(cmd).directory(dir).start();
+                return;
+            } catch (java.io.IOException ignored) {
+            }
+        }
+        throw new java.io.IOException(
+                "No terminal emulator found. Install x-terminal-emulator, gnome-terminal, konsole, or xterm.");
     }
 }
