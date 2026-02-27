@@ -43,8 +43,8 @@ public class MainToolBar extends JToolBar {
             btn.setHorizontalTextPosition(SwingConstants.CENTER);
             btn.setMargin(new Insets(4, 12, 4, 12));
         }*/
-        fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository");
-        commitBtn = Util.createButton("Commit", "Fetch", FontAwesomeSolid.CHECK);
+        fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
+        commitBtn = Util.createButton("Commit", "Commit", FontAwesomeSolid.CHECK);
 
         projectCombo = new JComboBox<>();
         projectCombo.setVisible(false);
