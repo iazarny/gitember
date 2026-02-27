@@ -6,6 +6,7 @@ import com.az.gitember.dialog.CommitDialog;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.dialog.InitDialog;
 import com.az.gitember.dialog.SettingsDialog;
+import com.az.gitember.dialog.StatDialog;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
@@ -211,6 +212,7 @@ public class MainFrame extends JFrame {
             dlg.setOnComplete(historyPanel::refreshLuceneState);
             dlg.setVisible(true);
         });
+        menuBar.addStatisticsListener(e -> new StatDialog(this).setVisible(true));
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());

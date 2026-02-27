@@ -2159,6 +2159,46 @@ public class GitRepoService {
         return scmStats;
     }
 
+    /**
+     * Returns one representative PlotCommit per calendar month, in chronological order.
+     * Commits arrive newest-first from the plot list; putIfAbsent keeps the latest per month.
+     *
+     * @param maxMonths   maximum number of months to return (most recent N)
+     * @param allCommits  full commit list from Context.getPlotCommitList()
+     */
+    @SuppressWarnings("unchecked")
+    public List<PlotCommit<PlotLane>> getLastCommitPerMonth(int maxMonths, List<PlotCommit> allCommits) {
+        if (allCommits == null || allCommits.isEmpty()) return Collections.emptyList();
+        Map<String, PlotCommit<PlotLane>> map = new LinkedHashMap<>();
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM");
+        for (PlotCommit pc : allCommits) {
+            map.putIfAbsent(fmt.format(GitemberUtil.intToDate(pc.getCommitTime())), (PlotCommit<PlotLane>) pc);
+        }
+        List<PlotCommit<PlotLane>> list = new ArrayList<>(map.values());
+        Collections.reverse(list); // oldest → newest
+        if (list.size() > maxMonths) list = list.subList(list.size() - maxMonths, list.size());
+        return list;
+    }
+
+    /**
+     * Same as {@link #blame(PlotCommitList, ProgressMonitor)} but accepts a plain {@link List}.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ScmStat> blameList(final List<PlotCommit<PlotLane>> commits,
+                                   final ProgressMonitor progressMonitor) throws Exception {
+        final List<ScmStat> scmStats = new ArrayList<>(commits.size());
+        for (PlotCommit<PlotLane> pc : commits) {
+            checkoutRevCommit(pc, progressMonitor);
+            final Set<String> files = getAllFiles();
+            final Date date = GitemberUtil.intToDate(pc.getCommitTime());
+            final String taskName = new SimpleDateFormat("yyyy MMM  ").format(date);
+            final ScmStat stat = blame(files, taskName, progressMonitor);
+            stat.setDate(date);
+            scmStats.add(stat);
+        }
+        return scmStats;
+    }
+
     public ScmStat blame(final Set<String> files, final ProgressMonitor progressMonitor) throws Exception {
         return blame(files, "Blame", progressMonitor);
     }
