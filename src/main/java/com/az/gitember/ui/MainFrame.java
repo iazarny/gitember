@@ -212,7 +212,7 @@ public class MainFrame extends JFrame {
             dlg.setOnComplete(historyPanel::refreshLuceneState);
             dlg.setVisible(true);
         });
-        menuBar.addStatisticsListener(e -> new StatDialog(this).setVisible(true));
+        menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
