@@ -5,11 +5,15 @@ import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.nio.file.Files;
@@ -42,12 +46,11 @@ public class CommitDetailPanel extends JPanel {
     private final JTable filesTable;
 
     // Diff tab
-    private final JTextArea diffArea;
-    private final JTextField searchField;
+    private final RSyntaxTextArea diffArea;
+    private final SearchBar searchBar;
     private final JTabbedPane tabbedPane;
 
     private ScmRevisionInformation currentRevision;
-    private int searchIndex = -1;
 
     public CommitDetailPanel() {
         setLayout(new BorderLayout());
@@ -94,33 +97,34 @@ public class CommitDetailPanel extends JPanel {
 
         // === Diff tab ===
         JPanel diffPanel = new JPanel(new BorderLayout());
-        diffArea = new JTextArea();
-        diffArea.setEditable(false);
-        diffArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
-        // Diff toolbar with search
-        JPanel diffToolbar = new JPanel(new BorderLayout());
-        diffToolbar.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        diffArea = new RSyntaxTextArea();
+        diffArea.setEditable(false);
+        diffArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+        diffArea.setCodeFoldingEnabled(false);
+        diffArea.setAntiAliasingEnabled(true);
+        diffArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        SyntaxStyleUtil.applyTheme(diffArea);
+
+        searchBar = new SearchBar(diffArea);
 
         JButton saveBtn = new JButton("Save as...");
         saveBtn.addActionListener(e -> saveDiff());
+        JPanel diffToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        diffToolbar.add(saveBtn);
 
-        searchField = new JTextField(20);
-        searchField.putClientProperty("JTextField.placeholderText", "Search");
-        searchField.addActionListener(e -> searchNext());
+        JPanel northDiff = new JPanel(new BorderLayout());
+        northDiff.add(diffToolbar, BorderLayout.NORTH);
+        northDiff.add(searchBar,   BorderLayout.SOUTH);
 
-        JPanel leftToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        leftToolbar.add(saveBtn);
+        // Ctrl/Cmd+F activates search bar when focus is anywhere in the diff panel
+        KeyStroke ctrlF = KeyStroke.getKeyStroke(KeyEvent.VK_F,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        diffPanel.registerKeyboardAction(
+                e -> searchBar.activate(), ctrlF, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        rightToolbar.add(new JLabel("Search:"));
-        rightToolbar.add(searchField);
-
-        diffToolbar.add(leftToolbar, BorderLayout.WEST);
-        diffToolbar.add(rightToolbar, BorderLayout.EAST);
-
-        diffPanel.add(diffToolbar, BorderLayout.NORTH);
-        diffPanel.add(new JScrollPane(diffArea), BorderLayout.CENTER);
+        diffPanel.add(northDiff, BorderLayout.NORTH);
+        diffPanel.add(new RTextScrollPane(diffArea), BorderLayout.CENTER);
         tabbedPane.addTab("Diff", diffPanel);
 
         // Lazy load diff when tab selected
@@ -487,7 +491,8 @@ public class CommitDetailPanel extends JPanel {
     public void showRevision(ScmRevisionInformation rev) {
         this.currentRevision = rev;
         diffArea.setText("");
-        searchIndex = -1;
+        diffArea.removeAllLineHighlights();
+        searchBar.close();
 
         if (rev == null) {
             clearFields();
@@ -544,6 +549,7 @@ public class CommitDetailPanel extends JPanel {
                 try {
                     diffArea.setText(get());
                     diffArea.setCaretPosition(0);
+                    applyDiffHighlights();
                 } catch (Exception e) {
                     diffArea.setText("Error loading diff");
                 }
@@ -552,26 +558,30 @@ public class CommitDetailPanel extends JPanel {
         worker.execute();
     }
 
-    private void searchNext() {
-        String text = searchField.getText();
-        if (text == null || text.isEmpty()) return;
-
-        String content = diffArea.getText();
-        searchIndex++;
-        int idx = content.indexOf(text, searchIndex);
-        if (idx == -1) {
-            idx = content.indexOf(text);
-        }
-        if (idx >= 0) {
-            searchIndex = idx;
-            diffArea.setCaretPosition(idx);
-            diffArea.select(idx, idx + text.length());
-            diffArea.requestFocusInWindow();
+    private void applyDiffHighlights() {
+        diffArea.removeAllLineHighlights();
+        Color addedColor   = SyntaxStyleUtil.addedBg();
+        Color deletedColor = SyntaxStyleUtil.deletedBg();
+        Color hunkColor    = SyntaxStyleUtil.changedBg();
+        String[] lines = diffArea.getText().split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            try {
+                if (line.startsWith("+++") || line.startsWith("---")) {
+                    diffArea.addLineHighlight(i, hunkColor);
+                } else if (line.startsWith("+")) {
+                    diffArea.addLineHighlight(i, addedColor);
+                } else if (line.startsWith("-")) {
+                    diffArea.addLineHighlight(i, deletedColor);
+                } else if (line.startsWith("@@")) {
+                    diffArea.addLineHighlight(i, hunkColor);
+                }
+            } catch (Exception ignored) {}
         }
     }
 
     private void saveDiff() {
-        if (diffArea.getText().isEmpty()) return;
+        if (diffArea.getText().isBlank()) return;
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save diff");
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
