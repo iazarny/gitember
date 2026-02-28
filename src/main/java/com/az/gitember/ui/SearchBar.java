@@ -4,6 +4,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 import org.fife.ui.rtextarea.SearchResult;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -26,7 +27,6 @@ import java.awt.event.KeyEvent;
 class SearchBar extends JPanel {
 
     private final JTextField searchField;
-    private final JToggleButton caseBtn;
     private final JLabel statusLabel;
 
     private final RSyntaxTextArea[] textAreas;
@@ -43,42 +43,30 @@ class SearchBar extends JPanel {
             });
         }
 
-        setLayout(new FlowLayout(FlowLayout.LEFT, 4, 2));
-        setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0,
+        setLayout(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+        setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
                 UIManager.getColor("Separator.foreground")));
 
-        JButton closeBtn = new JButton("✕");
-        closeBtn.setMargin(new Insets(1, 5, 1, 5));
-        closeBtn.setFocusable(false);
-        closeBtn.setToolTipText("Close search (Escape)");
-        closeBtn.addActionListener(e -> close());
-        add(closeBtn);
+
+
 
         add(new JLabel("Find:"));
 
         searchField = new JTextField(22);
         add(searchField);
 
-        JButton prevBtn = new JButton("▲");
-        JButton nextBtn = new JButton("▼");
-        prevBtn.setMargin(new Insets(1, 7, 1, 7));
-        nextBtn.setMargin(new Insets(1, 7, 1, 7));
-        prevBtn.setFocusable(false);
-        nextBtn.setFocusable(false);
-        prevBtn.setToolTipText("Previous match");
-        nextBtn.setToolTipText("Next match");
+        JButton prevBtn = Util.createButton("", "Previous match", FontAwesomeSolid.ANGLE_UP, 0, new Dimension(32, 32));
+        prevBtn.addActionListener(e -> findNext(false));
+        JButton nextBtn = Util.createButton("", "Next match", FontAwesomeSolid.ANGLE_DOWN, 0, new Dimension(32, 32));
+        nextBtn.addActionListener(e -> findNext(true));
+        JButton closeBtn = Util.createButton("", "Close search [Esc]", FontAwesomeSolid.WINDOW_CLOSE, 0, new Dimension(32, 32));
+        closeBtn.addActionListener(e -> close());
+
         add(prevBtn);
         add(nextBtn);
-
-        caseBtn = new JToggleButton("Aa");
-        caseBtn.setMargin(new Insets(1, 5, 1, 5));
-        caseBtn.setFocusable(false);
-        caseBtn.setToolTipText("Match case");
-        add(caseBtn);
+        add(closeBtn);
 
         statusLabel = new JLabel("");
-        statusLabel.setFont(statusLabel.getFont().deriveFont(Font.ITALIC));
-        add(statusLabel);
 
         setVisible(false);
 
@@ -88,9 +76,8 @@ class SearchBar extends JPanel {
             public void removeUpdate(DocumentEvent e) { markAll(); }
             public void changedUpdate(DocumentEvent e) { markAll(); }
         });
-        nextBtn.addActionListener(e -> findNext(true));
-        prevBtn.addActionListener(e -> findNext(false));
-        caseBtn.addActionListener(e -> markAll());
+
+
         searchField.addActionListener(e -> findNext(true));
 
         // Escape closes the bar
@@ -119,7 +106,6 @@ class SearchBar extends JPanel {
 
     private SearchContext buildContext(boolean forward) {
         SearchContext ctx = new SearchContext(searchField.getText());
-        ctx.setMatchCase(caseBtn.isSelected());
         ctx.setSearchForward(forward);
         ctx.setWholeWord(false);
         return ctx;
@@ -154,7 +140,7 @@ class SearchBar extends JPanel {
 
         SearchContext ctx = buildContext(forward);
         SearchResult result = SearchEngine.find(target, ctx);
-        if (!result.wasFound()) {
+        if (result.wasFound()) {
             // Wrap around
             target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
             SearchEngine.find(target, ctx);

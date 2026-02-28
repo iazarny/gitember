@@ -57,13 +57,10 @@ public class FileViewerWindow extends JFrame {
         btnPanel.add(saveBtn);
         btnPanel.add(closeBtn);
 
-        JPanel southPanel = new JPanel(new BorderLayout());
-        southPanel.add(searchBar, BorderLayout.NORTH);
-        southPanel.add(btnPanel,  BorderLayout.SOUTH);
-
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(sp,         BorderLayout.CENTER);
-        getContentPane().add(southPanel, BorderLayout.SOUTH);
+        getContentPane().add(searchBar, BorderLayout.NORTH);
+        getContentPane().add(sp,        BorderLayout.CENTER);
+        getContentPane().add(btnPanel,  BorderLayout.SOUTH);
 
         getRootPane().setDefaultButton(closeBtn);
 

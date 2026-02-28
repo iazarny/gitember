@@ -22,8 +22,12 @@ public class Util {
         return createButton(text, tooltip, ikon, 0);
     }
 
-
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
+        Dimension size = new Dimension(110, 40);
+        return createButton(text, tooltip, ikon, rotation, size);
+    }
+
+    public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation, Dimension size) {
         JButton btn = new JButton();
 
         //btn.setBackground(Color.CYAN);
@@ -33,10 +37,12 @@ public class Util {
         //btn.setVerticalTextPosition(SwingConstants.BOTTOM);
         //btn.setHorizontalTextPosition(SwingConstants.CENTER);
 
-        Dimension size = new Dimension(110, 40);
-        btn.setPreferredSize(size);
-        btn.setMinimumSize(size);
-        btn.setMaximumSize(size);
+        if (size != null) {
+            btn.setPreferredSize(size);
+            btn.setMinimumSize(size);
+            btn.setMaximumSize(size);
+        }
+
 
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);

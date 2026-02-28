@@ -278,10 +278,13 @@ public class DiffViewerWindow extends JFrame {
 
     /** Assembles toolbar + diff panel into the content pane. */
     private void setupContentPane(JPanel toolbar, JPanel leftPanel, JPanel rightPanel) {
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(toolbar,    BorderLayout.NORTH);
+        northPanel.add(searchBar,  BorderLayout.SOUTH);
+
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(toolbar,                             BorderLayout.NORTH);
+        getContentPane().add(northPanel,                            BorderLayout.NORTH);
         getContentPane().add(buildDiffPanel(leftPanel, rightPanel), BorderLayout.CENTER);
-        getContentPane().add(searchBar,                           BorderLayout.SOUTH);
 
         // Ctrl/Cmd+F → open search bar
         KeyStroke ctrlF = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F,
