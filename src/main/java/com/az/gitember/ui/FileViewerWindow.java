@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.awt.event.KeyEvent;
 
 /**
  * Simple window to display text file content from a git commit.
@@ -18,6 +19,7 @@ public class FileViewerWindow extends JFrame {
 
     private final RSyntaxTextArea textArea;
     private final String suggestedFileName;
+    private final SearchBar searchBar;
 
     public FileViewerWindow(String title, String content) {
         this(title, content, title);
@@ -43,6 +45,8 @@ public class FileViewerWindow extends JFrame {
         RTextScrollPane sp = new RTextScrollPane(textArea);
         sp.setFoldIndicatorEnabled(true);
 
+        searchBar = new SearchBar(textArea);
+
         JButton saveBtn = new JButton("Save...");
         saveBtn.addActionListener(e -> saveContent());
 
@@ -53,11 +57,21 @@ public class FileViewerWindow extends JFrame {
         btnPanel.add(saveBtn);
         btnPanel.add(closeBtn);
 
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(searchBar, BorderLayout.NORTH);
+        southPanel.add(btnPanel,  BorderLayout.SOUTH);
+
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(sp, BorderLayout.CENTER);
-        getContentPane().add(btnPanel, BorderLayout.SOUTH);
+        getContentPane().add(sp,         BorderLayout.CENTER);
+        getContentPane().add(southPanel, BorderLayout.SOUTH);
 
         getRootPane().setDefaultButton(closeBtn);
+
+        // Ctrl/Cmd+F → open search bar
+        KeyStroke ctrlF = KeyStroke.getKeyStroke(KeyEvent.VK_F,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        getRootPane().registerKeyboardAction(
+                e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     private void saveContent() {

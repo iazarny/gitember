@@ -111,4 +111,16 @@ public final class SyntaxStyleUtil {
 
         return SyntaxConstants.SYNTAX_STYLE_NONE;
     }
+
+    // Highlight colors — two palettes selected at paint time based on active theme
+    public static Color addedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 70, 0) : new Color(200, 255, 200);
+    }
+    public static Color deletedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(90, 20, 20) : new Color(255, 200, 200);
+    }
+    public static Color changedBg() {
+        return SyntaxStyleUtil.isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
+    }
+
 }

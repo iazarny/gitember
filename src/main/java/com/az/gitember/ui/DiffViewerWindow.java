@@ -43,6 +43,7 @@ public class DiffViewerWindow extends JFrame {
     private DiffConnectorPanel centerPanel;
 
     private DiffOverviewPanel overviewPanel;
+    private SearchBar searchBar;
 
     private EditList editList;
     private int currentDiff = -1;
@@ -54,16 +55,7 @@ public class DiffViewerWindow extends JFrame {
     private boolean loadingFile  = false;
     private Timer   debounce;
 
-    // Highlight colors — two palettes selected at paint time based on active theme
-    private static Color addedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 70, 0) : new Color(200, 255, 200);
-    }
-    private static Color deletedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(90, 20, 20) : new Color(255, 200, 200);
-    }
-    private static Color changedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
-    }
+
 
     // ---- Constructors ----
 
@@ -262,6 +254,8 @@ public class DiffViewerWindow extends JFrame {
         nextBtn.addActionListener(e -> navigateDiff(1));
 
         diffInfoLabel = new JLabel("");
+
+        searchBar = new SearchBar(oldPane, newPane);
     }
 
     /** Centered navigation row: Prev / Next / diff-info label. */
@@ -285,8 +279,15 @@ public class DiffViewerWindow extends JFrame {
     /** Assembles toolbar + diff panel into the content pane. */
     private void setupContentPane(JPanel toolbar, JPanel leftPanel, JPanel rightPanel) {
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(toolbar, BorderLayout.NORTH);
+        getContentPane().add(toolbar,                             BorderLayout.NORTH);
         getContentPane().add(buildDiffPanel(leftPanel, rightPanel), BorderLayout.CENTER);
+        getContentPane().add(searchBar,                           BorderLayout.SOUTH);
+
+        // Ctrl/Cmd+F → open search bar
+        KeyStroke ctrlF = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        getRootPane().registerKeyboardAction(
+                e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     // ---- Layout ----
@@ -596,16 +597,16 @@ public class DiffViewerWindow extends JFrame {
                 beginLine = edit.getBeginA();
                 endLine = edit.getEndA();
                 color = switch (edit.getType()) {
-                    case DELETE -> deletedBg();
-                    case REPLACE -> changedBg();
+                    case DELETE -> SyntaxStyleUtil.deletedBg();
+                    case REPLACE -> SyntaxStyleUtil.changedBg();
                     default -> null;
                 };
             } else {
                 beginLine = edit.getBeginB();
                 endLine = edit.getEndB();
                 color = switch (edit.getType()) {
-                    case INSERT -> addedBg();
-                    case REPLACE -> changedBg();
+                    case INSERT -> SyntaxStyleUtil.addedBg();
+                    case REPLACE -> SyntaxStyleUtil.changedBg();
                     default -> null;
                 };
             }
@@ -736,9 +737,9 @@ public class DiffViewerWindow extends JFrame {
 
         private Color getConnectorColor(Edit edit) {
             return switch (edit.getType()) {
-                case DELETE  -> deletedBg();
-                case INSERT  -> addedBg();
-                case REPLACE -> changedBg();
+                case DELETE  -> SyntaxStyleUtil.deletedBg();
+                case INSERT  -> SyntaxStyleUtil.addedBg();
+                case REPLACE -> SyntaxStyleUtil.changedBg();
                 default      -> null;
             };
         }
