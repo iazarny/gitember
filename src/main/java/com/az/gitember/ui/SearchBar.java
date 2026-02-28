@@ -140,7 +140,7 @@ class SearchBar extends JPanel {
 
         SearchContext ctx = buildContext(forward);
         SearchResult result = SearchEngine.find(target, ctx);
-        if (result.wasFound()) {
+        if (!result.wasFound()) {
             // Wrap around
             target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
             SearchEngine.find(target, ctx);
