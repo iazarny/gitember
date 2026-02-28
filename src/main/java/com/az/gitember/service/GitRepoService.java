@@ -16,7 +16,9 @@ import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
+import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
+import org.eclipse.jgit.lfs.LfsPrePushHook;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
@@ -1324,6 +1326,93 @@ public class GitRepoService {
     }
 
 
+    /**
+     * Enables LFS on an existing repository by writing filter entries to .git/config
+     * and creating the .git/lfs/tmp directory. Does not modify .gitattributes.
+     */
+    public void enableLfsOnExistingRepo() throws IOException {
+        StoredConfig config = repository.getConfig();
+        config.setString("filter", "lfs", "clean", CLEAN_NAME);
+        config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
+        config.save();
+        new File(repository.getDirectory().getAbsolutePath()
+                + File.separator + Const.GIT_LFS_FOLDER
+                + File.separator + "tmp").mkdirs();
+    }
+
+    /**
+     * Returns the list of LFS-tracked patterns from .gitattributes.
+     */
+    public List<String> getLfsTrackedPatterns() throws IOException {
+        Path attrPath = getGitAttrPath();
+        if (!Files.exists(attrPath)) return Collections.emptyList();
+        return GitAttributesUtil.getLsfPatters(Files.readString(attrPath));
+    }
+
+    /**
+     * Adds an LFS tracking pattern to .gitattributes and stages the file.
+     */
+    public void lfsTrack(String pattern) throws IOException, GitAPIException {
+        Path attrPath = getGitAttrPath();
+        String existing = Files.exists(attrPath) ? Files.readString(attrPath) : "";
+        String updated = GitAttributesUtil.addLfsPattern(existing, pattern);
+        Files.writeString(attrPath, updated);
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+        }
+    }
+
+    /**
+     * Removes an LFS tracking pattern from .gitattributes and stages the file.
+     */
+    public void lfsUntrack(String pattern) throws IOException, GitAPIException {
+        Path attrPath = getGitAttrPath();
+        if (!Files.exists(attrPath)) return;
+        String existing = Files.readString(attrPath);
+        String updated = GitAttributesUtil.removeLfsPattern(existing, pattern);
+        Files.writeString(attrPath, updated);
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+        }
+    }
+
+    /**
+     * Downloads all LFS objects referenced by HEAD that are missing from
+     * the local LFS object store.
+     */
+    public void fetchLfsObjects() throws IOException {
+        Ref head = repository.exactRef(Constants.HEAD);
+        if (head == null || head.getObjectId() == null) return;
+        Lfs lfs = new Lfs(repository);
+        List<LfsPointer> pointers = new ArrayList<>();
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(head.getObjectId());
+            RevTree tree = commit.getTree();
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                LfsPointerFilter filter = new LfsPointerFilter();
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(filter);
+                while (treeWalk.next()) {
+                    LfsPointer pointer = filter.getPointer();
+                    if (pointer != null) pointers.add(pointer);
+                }
+            }
+        }
+        if (!pointers.isEmpty()) {
+            SmudgeFilter.downloadLfsResource(lfs, repository,
+                    pointers.toArray(new LfsPointer[0]));
+        }
+    }
+
+    private Path getGitAttrPath() {
+        String attrFile = repository.getDirectory().getAbsolutePath()
+                .replace(Const.GIT_FOLDER, Const.GIT_ATTR_NAME)
+                .replaceAll("/$", "");
+        return Paths.get(attrFile);
+    }
+
+
     public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty, final ProgressMonitor progressMonitor) {
         PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty, progressMonitor);
         List<ScmRevisionInformation> rez = commit.stream().map(this::adapt).collect(Collectors.toList());
@@ -1622,6 +1711,17 @@ public class GitRepoService {
                     .getConfig()
                     .getString("remote", "origin", "url");
             log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
+
+            // Upload LFS objects to the LFS server before pushing git objects
+            if (isLfsRepo()) {
+                try {
+                    LfsPrePushHook lfsHook = new LfsPrePushHook(repository, null);
+                    lfsHook.setRefs(Collections.emptyList());
+                    lfsHook.call();
+                } catch (Exception lfsEx) {
+                    log.log(Level.WARNING, "LFS pre-push upload failed: " + lfsEx.getMessage(), lfsEx);
+                }
+            }
 
             Iterable<PushResult> pushResults = pushCommand.call();
 

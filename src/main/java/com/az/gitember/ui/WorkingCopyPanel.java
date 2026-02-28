@@ -42,6 +42,7 @@ public class WorkingCopyPanel extends JPanel {
     private static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
     private static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
     private static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
+    private static final Color LFS_COLOR = new Color(0, 153, 204);        // blue - LFS files
 
     public WorkingCopyPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
@@ -822,7 +823,13 @@ public class WorkingCopyPanel extends JPanel {
             return switch (columnIndex) {
                 case 0 -> status; // color indicator
                 case 1 -> isStaged(status); // checkbox
-                case 2 -> status;
+                case 2 -> {
+                    // For LFS items show the sub-status (lfs_file / lfs_pointer)
+                    if (ScmItem.Status.LFS.equals(status) && item.getAttribute().getSubstatus() != null) {
+                        yield "LFS:" + item.getAttribute().getSubstatus();
+                    }
+                    yield status;
+                }
                 case 3 -> item.getShortName();
                 default -> "";
             };
@@ -846,6 +853,8 @@ public class WorkingCopyPanel extends JPanel {
                 color = CONFLICT_COLOR;
             } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
                 color = UNTRACKED_COLOR;
+            } else if (ScmItem.Status.LFS.equals(status)) {
+                color = LFS_COLOR;
             } else {
                 color = UNSTAGED_COLOR;
             }
@@ -871,6 +880,8 @@ public class WorkingCopyPanel extends JPanel {
                     label.setForeground(CONFLICT_COLOR);
                 } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
                     label.setForeground(UNTRACKED_COLOR);
+                } else if (ScmItem.Status.LFS.equals(status)) {
+                    label.setForeground(LFS_COLOR);
                 } else {
                     label.setForeground(UNSTAGED_COLOR);
                 }

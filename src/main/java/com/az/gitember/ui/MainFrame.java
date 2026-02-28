@@ -5,9 +5,11 @@ import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.dialog.InitDialog;
+import com.az.gitember.dialog.LfsManageDialog;
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.dialog.StatDialog;
 import com.az.gitember.handler.*;
+import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
 import com.az.gitember.ui.misc.MainToolBar;
@@ -214,6 +216,8 @@ public class MainFrame extends JFrame {
         });
         menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
+        menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
+        menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());

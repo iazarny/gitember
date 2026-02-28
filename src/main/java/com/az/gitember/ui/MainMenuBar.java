@@ -26,6 +26,11 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem openTerminalItem;
     private final JMenuItem credentialsItem;
 
+    // LFS submenu (inside Repository menu)
+    private final JMenu     lfsMenu;
+    private final JMenuItem manageLfsItem;
+    private final JMenuItem fetchLfsItem;
+
     // Branch menu (enabled only when a repo is open)
     private final JMenu     branchMenu;
     private final JMenuItem pullItem;
@@ -97,8 +102,24 @@ public class MainMenuBar extends JMenuBar {
         openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
         openTerminalItem.setToolTipText("Open a terminal in the repository folder");
 
+        // LFS submenu
+        lfsMenu = new JMenu("Git LFS");
+        lfsMenu.setMnemonic(KeyEvent.VK_L);
+
+        manageLfsItem = new JMenuItem("Manage LFS…", KeyEvent.VK_M);
+        manageLfsItem.setToolTipText("Enable LFS, track patterns, view LFS files, fetch objects");
+
+        fetchLfsItem = new JMenuItem("Fetch LFS Objects", KeyEvent.VK_F);
+        fetchLfsItem.setToolTipText("Download LFS file content from the remote LFS server");
+
+        lfsMenu.add(manageLfsItem);
+        lfsMenu.addSeparator();
+        lfsMenu.add(fetchLfsItem);
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(lfsMenu);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
         repoMenu.addSeparator();
@@ -229,4 +250,6 @@ public class MainMenuBar extends JMenuBar {
     public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
     public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
+    public void addManageLfsListener(ActionListener l)      { manageLfsItem.addActionListener(l); }
+    public void addFetchLfsListener(ActionListener l)       { fetchLfsItem.addActionListener(l); }
 }
