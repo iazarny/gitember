@@ -1,10 +1,11 @@
-# Geetember 2.5
+# Geetember 3
 ---
 Has been renamed from Gitember. Just another GIT gui client just for fun. 
 
 ## Multiplatform GUI for GIT
 
 For Linux, Windows and Mac
+
 
 Downloads
  * [Windows Intel](http://gitember.org/Gitember2.5.msi)
