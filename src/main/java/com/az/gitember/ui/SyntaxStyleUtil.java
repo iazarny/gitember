@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.Context;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
@@ -110,6 +111,16 @@ public final class SyntaxStyleUtil {
         }
 
         return SyntaxConstants.SYNTAX_STYLE_NONE;
+    }
+
+    /**
+     * Returns a monospaced font at the size configured in Settings (falls back to 13).
+     * Use this wherever an RSyntaxTextArea font is set so the user's preference is honoured.
+     */
+    public static Font monoFont() {
+        var settings = Context.getSettings();
+        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize() : 13;
+        return new Font(Font.MONOSPACED, Font.PLAIN, size);
     }
 
     // Highlight colors — two palettes selected at paint time based on active theme

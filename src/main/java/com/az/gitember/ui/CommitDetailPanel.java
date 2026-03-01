@@ -103,7 +103,7 @@ public class CommitDetailPanel extends JPanel {
         diffArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
         diffArea.setCodeFoldingEnabled(false);
         diffArea.setAntiAliasingEnabled(true);
-        diffArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        diffArea.setFont(SyntaxStyleUtil.monoFont());
         SyntaxStyleUtil.applyTheme(diffArea);
 
         searchBar = new SearchBar(diffArea);

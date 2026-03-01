@@ -38,7 +38,7 @@ public class FileViewerWindow extends JFrame {
         textArea.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(fileName));
         textArea.setCodeFoldingEnabled(true);
         textArea.setAntiAliasingEnabled(true);
-        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        textArea.setFont(SyntaxStyleUtil.monoFont());
         textArea.setCaretPosition(0);
         SyntaxStyleUtil.applyTheme(textArea);
 
