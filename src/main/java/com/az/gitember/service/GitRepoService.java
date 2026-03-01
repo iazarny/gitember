@@ -1379,10 +1379,24 @@ public class GitRepoService {
     /**
      * Downloads all LFS objects referenced by HEAD that are missing from
      * the local LFS object store.
+     *
+     * <p>JGit's {@link SmudgeFilter#downloadLfsResource} needs to know the LFS
+     * server URL and valid credentials.  When the remote is SSH-based
+     * ({@code git@github.com:…}) JGit tries to run {@code git-lfs-authenticate}
+     * over SSH, which typically fails in an embedded context.  We therefore:
+     * <ol>
+     *   <li>Derive the HTTPS LFS endpoint from the remote URL if {@code lfs.url}
+     *       is not already set in the repository config.</li>
+     *   <li>Register credentials via {@link CredentialsProvider#setDefault} so
+     *       the LFS HTTP connection can authenticate.</li>
+     *   <li>Restore the previous state in a {@code finally} block.</li>
+     * </ol>
      */
     public void fetchLfsObjects() throws IOException {
         Ref head = repository.exactRef(Constants.HEAD);
         if (head == null || head.getObjectId() == null) return;
+
+        // Collect all LFS pointers from HEAD tree
         Lfs lfs = new Lfs(repository);
         List<LfsPointer> pointers = new ArrayList<>();
         try (RevWalk walk = new RevWalk(repository)) {
@@ -1399,10 +1413,93 @@ public class GitRepoService {
                 }
             }
         }
-        if (!pointers.isEmpty()) {
-            SmudgeFilter.downloadLfsResource(lfs, repository,
+        if (pointers.isEmpty()) return;
+
+        // Configure transport for the LFS download
+        RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
+        StoredConfig repoCfg = repository.getConfig();
+        String prevLfsUrl = repoCfg.getString("lfs", null, "url");
+        CredentialsProvider prevCp = CredentialsProvider.getDefault();
+
+        try {
+            // If lfs.url is not set, derive it from the remote URL.
+            // SSH remotes (git@host:path) need to be converted to HTTPS form
+            // because the LFS protocol always uses HTTPS, not SSH.
+            if (StringUtils.isBlank(prevLfsUrl)) {
+                String lfsUrl = deriveLfsUrl(params.getUrl());
+                if (StringUtils.isNotBlank(lfsUrl)) {
+                    repoCfg.setString("lfs", null, "url", lfsUrl);
+                    repoCfg.save();
+                    log.log(Level.INFO, "Derived LFS URL: " + lfsUrl);
+                }
+            }
+
+            // Register credentials so LfsConnectionFactory can authenticate
+            if (StringUtils.isNotBlank(params.getAccessToken())) {
+                CredentialsProvider.setDefault(
+                        new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
+            } else if (StringUtils.isNotBlank(params.getUserName())) {
+                CredentialsProvider.setDefault(
+                        new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
+            }
+
+            Collection<Path> downloaded = SmudgeFilter.downloadLfsResource(lfs, repository,
                     pointers.toArray(new LfsPointer[0]));
+
+        } finally {
+            // Always restore the previous state
+            CredentialsProvider.setDefault(prevCp);
+            if (StringUtils.isBlank(prevLfsUrl)) {
+                repoCfg.unset("lfs", null, "url");
+            } else {
+                repoCfg.setString("lfs", null, "url", prevLfsUrl);
+            }
+            repoCfg.save();
         }
+    }
+
+    /**
+     * Converts any supported remote URL form to the HTTPS LFS endpoint URL.
+     *
+     * <ul>
+     *   <li>{@code git@github.com:user/repo.git} →
+     *       {@code https://github.com/user/repo.git/info/lfs}</li>
+     *   <li>{@code ssh://git@github.com/user/repo.git} →
+     *       {@code https://github.com/user/repo.git/info/lfs}</li>
+     *   <li>{@code https://github.com/user/repo.git} →
+     *       {@code https://github.com/user/repo.git/info/lfs}</li>
+     * </ul>
+     *
+     * Returns {@code null} if the URL cannot be converted.
+     */
+    static String deriveLfsUrl(String remoteUrl) {
+        if (StringUtils.isBlank(remoteUrl)) return null;
+        String base = null;
+        if (remoteUrl.startsWith("git@")) {
+            // git@host:path/repo.git
+            int atEnd = remoteUrl.indexOf('@');
+            int colon = remoteUrl.indexOf(':', atEnd);
+            if (colon > 0) {
+                String host = remoteUrl.substring(atEnd + 1, colon);
+                String path = remoteUrl.substring(colon + 1);
+                base = "https://" + host + "/" + path;
+            }
+        } else if (remoteUrl.startsWith("ssh://")) {
+            // ssh://git@host/path/repo.git
+            String withoutScheme = remoteUrl.substring("ssh://".length());
+            int slash = withoutScheme.indexOf('/');
+            if (slash > 0) {
+                String hostPart = withoutScheme.substring(0, slash);
+                String path = withoutScheme.substring(slash);
+                // strip optional "git@" user prefix from host
+                if (hostPart.contains("@")) hostPart = hostPart.substring(hostPart.indexOf('@') + 1);
+                base = "https://" + hostPart + path;
+            }
+        } else if (remoteUrl.startsWith("https://") || remoteUrl.startsWith("http://")) {
+            base = remoteUrl;
+        }
+        if (base == null) return null;
+        return base.endsWith("/info/lfs") ? base : base + "/info/lfs";
     }
 
     private Path getGitAttrPath() {

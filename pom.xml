@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <jgit.version>6.8.0.202311291450-r</jgit.version>
+        <jgit.version>7.5.0.202512021534-r</jgit.version>
         <flatlaf.version>3.7</flatlaf.version>
         <ikonli.version>12.3.1</ikonli.version>
         <jackson.version>2.16.1</jackson.version>
