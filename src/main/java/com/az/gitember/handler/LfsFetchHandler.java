@@ -1,6 +1,7 @@
 package com.az.gitember.handler;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
@@ -31,7 +32,8 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        Context.getGitRepoService().fetchLfsObjects();
+        RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
+        Context.getGitRepoService().fetchLfsObjects(params);
         return null;
     }
 
@@ -59,7 +61,8 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
         if (t == null) return false;
         if (t instanceof org.eclipse.jgit.lfs.errors.LfsUnauthorized) return true;
         String msg = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
-        if (msg.contains("401") || msg.contains("unauthorized")
+        if (msg.contains("401") || msg.contains("403")
+                || msg.contains("unauthorized") || msg.contains("forbidden")
                 || msg.contains("auth fail") || msg.contains("authentication")) {
             return true;
         }

@@ -222,7 +222,8 @@ public class LfsManageDialog extends JDialog {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                Context.getGitRepoService().fetchLfsObjects();
+                Context.getGitRepoService().fetchLfsObjects(
+                        com.az.gitember.data.RemoteRepoParameters.forCurrentRepo());
                 return null;
             }
             @Override

@@ -1378,13 +1378,17 @@ public class GitRepoService {
 
     /**
      * Downloads all LFS objects referenced by HEAD that are missing from
-     * the local LFS object store.
+     * the local LFS object store, then re-checks out each LFS path so the
+     * smudge filter replaces pointer files with real content in the working tree.
+     *
+     * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
      */
-    public void fetchLfsObjects() throws IOException {
+    public void fetchLfsObjects(RemoteRepoParameters params) throws IOException {
         Ref head = repository.exactRef(Constants.HEAD);
         if (head == null || head.getObjectId() == null) return;
         Lfs lfs = new Lfs(repository);
         List<LfsPointer> pointers = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
         try (RevWalk walk = new RevWalk(repository)) {
             RevCommit commit = walk.parseCommit(head.getObjectId());
             RevTree tree = commit.getTree();
@@ -1395,14 +1399,92 @@ public class GitRepoService {
                 treeWalk.setFilter(filter);
                 while (treeWalk.next()) {
                     LfsPointer pointer = filter.getPointer();
-                    if (pointer != null) pointers.add(pointer);
+                    if (pointer != null) {
+                        pointers.add(pointer);
+                        paths.add(treeWalk.getPathString());
+                    }
                 }
             }
         }
-        if (!pointers.isEmpty()) {
+        if (pointers.isEmpty()) return;
+
+        // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
+        // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
+        // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
+        StoredConfig repoCfg = repository.getConfig();
+        boolean tempLfsUrl = false;
+        if (repoCfg.getString("lfs", null, "url") == null) {
+            String httpsUrl = sshRemoteToHttps(params.getUrl());
+            if (httpsUrl != null) {
+                // LfsConnectionFactory appends /objects/batch to lfs.url, so the
+                // base URL must end with /info/lfs (GitHub LFS endpoint convention).
+                String lfsUrl = httpsUrl.endsWith("/info/lfs")
+                        ? httpsUrl : httpsUrl + "/info/lfs";
+                repoCfg.setString("lfs", null, "url", lfsUrl);
+                tempLfsUrl = true;
+            }
+        }
+
+        // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
+        CredentialsProvider prevCp = CredentialsProvider.getDefault();
+        try {
+            if (StringUtils.isNotBlank(params.getAccessToken())) {
+                CredentialsProvider.setDefault(
+                        new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
+            } else if (StringUtils.isNotBlank(params.getUserName())) {
+                CredentialsProvider.setDefault(
+                        new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
+            }
             SmudgeFilter.downloadLfsResource(lfs, repository,
                     pointers.toArray(new LfsPointer[0]));
+        } finally {
+            CredentialsProvider.setDefault(prevCp);
+            if (tempLfsUrl) {
+                repoCfg.unset("lfs", null, "url");
+            }
         }
+
+        // Re-checkout each LFS path so the smudge filter replaces the pointer
+        // content with the real file in the working tree.
+        try (Git git = new Git(repository)) {
+            CheckoutCommand co = git.checkout();
+            paths.forEach(co::addPath);
+            co.call();
+        } catch (GitAPIException e) {
+            throw new IOException("LFS objects downloaded but working-copy update failed", e);
+        }
+    }
+
+    /**
+     * Converts an SSH remote URL to its HTTPS equivalent, or returns the URL
+     * unchanged if it is already HTTPS.  Returns {@code null} for unrecognised formats.
+     *
+     * <ul>
+     *   <li>{@code git@github.com:user/repo.git} → {@code https://github.com/user/repo.git}</li>
+     *   <li>{@code ssh://git@github.com/user/repo.git} → {@code https://github.com/user/repo.git}</li>
+     * </ul>
+     */
+    private static String sshRemoteToHttps(String remoteUrl) {
+        if (remoteUrl == null) return null;
+        if (remoteUrl.startsWith("https://")) return remoteUrl;
+        // SCP-style: git@host:path/repo.git
+        if (remoteUrl.startsWith("git@")) {
+            String rest = remoteUrl.substring(4);      // host:path/repo.git
+            int colon = rest.indexOf(':');
+            if (colon > 0) {
+                return "https://" + rest.substring(0, colon) + "/" + rest.substring(colon + 1);
+            }
+        }
+        // ssh://[user@]host/path/repo.git
+        if (remoteUrl.startsWith("ssh://")) {
+            try {
+                java.net.URI uri = java.net.URI.create(remoteUrl);
+                return "https://" + uri.getHost() + uri.getPath();
+            } catch (IllegalArgumentException ignored) {
+                // fall through
+            }
+        }
+        return null;
     }
 
     private Path getGitAttrPath() {
