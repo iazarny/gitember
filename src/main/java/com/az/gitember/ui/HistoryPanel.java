@@ -4,8 +4,10 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -14,6 +16,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
@@ -72,6 +76,107 @@ public class HistoryPanel extends JPanel {
                 if (row >= 0 && row < tableModel.getRowCount()) {
                     detailPanel.showRevision(tableModel.getRevisionAt(row));
                 }
+            }
+        });
+
+        // ── Commit context menu ───────────────────────────────────────────
+        JPopupMenu commitMenu = new JPopupMenu();
+        JMenuItem checkoutItem      = new JMenuItem("Checkout");
+        JMenuItem checkoutAsItem    = new JMenuItem("Checkout as…");
+        JMenuItem cherryPickItem    = new JMenuItem("Cherry-pick…");
+        JMenuItem revertItem        = new JMenuItem("Revert commit");
+        JMenuItem resetItem         = new JMenuItem("Reset to commit…");
+
+        checkoutItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            runCommitAction("Checkout", () -> {
+                Context.getGitRepoService().checkoutRevCommit(commit, null);
+                return "Checked out " + commit.name().substring(0, 7);
+            });
+        });
+
+        checkoutAsItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            String branchName = JOptionPane.showInputDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "New branch name:", "Checkout as Branch",
+                    JOptionPane.PLAIN_MESSAGE);
+            if (branchName == null || branchName.isBlank()) return;
+            runCommitAction("Checkout as branch", () -> {
+                Context.getGitRepoService().checkoutRevCommit(commit, branchName.trim(), null);
+                return "Created and checked out branch '" + branchName.trim() + "'";
+            });
+        });
+
+        cherryPickItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            int ok = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "Cherry-pick commit " + commit.name().substring(0, 7) + "?",
+                    "Cherry-pick", JOptionPane.OK_CANCEL_OPTION);
+            if (ok != JOptionPane.OK_OPTION) return;
+            runCommitAction("Cherry-pick", () -> {
+                Context.getGitRepoService().cherryPick((RevCommit) commit);
+                return "Cherry-picked " + commit.name().substring(0, 7);
+            });
+        });
+
+        revertItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            int ok = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "Revert commit " + commit.name().substring(0, 7) + "?",
+                    "Revert commit", JOptionPane.OK_CANCEL_OPTION);
+            if (ok != JOptionPane.OK_OPTION) return;
+            runCommitAction("Revert", () -> {
+                Context.getGitRepoService().revertCommit((RevCommit) commit, null);
+                return "Reverted " + commit.name().substring(0, 7);
+            });
+        });
+
+        resetItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            String[] modes = {"Soft", "Mixed", "Hard"};
+            String choice = (String) JOptionPane.showInputDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "Reset mode:", "Reset to Commit",
+                    JOptionPane.PLAIN_MESSAGE, null, modes, "Mixed");
+            if (choice == null) return;
+            ResetCommand.ResetType mode = switch (choice) {
+                case "Soft"  -> ResetCommand.ResetType.SOFT;
+                case "Hard"  -> ResetCommand.ResetType.HARD;
+                default      -> ResetCommand.ResetType.MIXED;
+            };
+            runCommitAction("Reset", () -> {
+                Context.getGitRepoService().resetBranch((RevCommit) commit, mode, null);
+                return "Reset (" + choice + ") to " + commit.name().substring(0, 7);
+            });
+        });
+
+        commitMenu.add(checkoutItem);
+        commitMenu.add(checkoutAsItem);
+        commitMenu.addSeparator();
+        commitMenu.add(cherryPickItem);
+        commitMenu.addSeparator();
+        commitMenu.add(revertItem);
+        commitMenu.add(resetItem);
+
+        commitTable.addMouseListener(new MouseAdapter() {
+            @Override public void mousePressed(MouseEvent ev)  { maybeShowMenu(ev); }
+            @Override public void mouseReleased(MouseEvent ev) { maybeShowMenu(ev); }
+
+            private void maybeShowMenu(MouseEvent ev) {
+                if (!ev.isPopupTrigger()) return;
+                int row = commitTable.rowAtPoint(ev.getPoint());
+                if (row < 0) return;
+                if (tableModel.getCommitAt(row) == null) return; // file-history mode
+                commitTable.setRowSelectionInterval(row, row);
+                commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
         });
 
@@ -245,6 +350,42 @@ public class HistoryPanel extends JPanel {
         };
         worker.execute();
     }
+
+    // ── Context-menu helpers ──────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private PlotCommit<PlotLane> selectedCommit() {
+        int row = commitTable.getSelectedRow();
+        return row >= 0 ? tableModel.getCommitAt(row) : null;
+    }
+
+    /** Runs a git action on a background thread, showing status bar progress. */
+    private void runCommitAction(String label, CommitAction action) {
+        statusBar.setStatus(label + "…");
+        statusBar.showProgress(true);
+        new SwingWorker<String, Void>() {
+            @Override protected String doInBackground() throws Exception { return action.run(); }
+            @Override protected void done() {
+                statusBar.clearProgress();
+                try {
+                    statusBar.setStatus(get());
+                } catch (java.util.concurrent.CancellationException ex) {
+                    statusBar.setStatus(label + " cancelled.");
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, label + " failed", ex);
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    JOptionPane.showMessageDialog(
+                            SwingUtilities.getWindowAncestor(HistoryPanel.this),
+                            cause.getMessage(), label + " Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    @FunctionalInterface
+    private interface CommitAction { String run() throws Exception; }
 
     // Custom cell renderer: graph canvas on the left, commit message label on the right
     private class GraphCellRenderer extends JPanel implements TableCellRenderer {
