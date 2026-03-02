@@ -739,13 +739,8 @@ public class CommitDetailPanel extends JPanel {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             setHorizontalAlignment(CENTER);
             if (!isSelected && value instanceof String status) {
-                switch (status) {
-                    case "ADDED", "ADD" -> setForeground(new Color(0, 150, 0));
-                    case "MODIFIED", "MODIFY" -> setForeground(new Color(0, 100, 200));
-                    case "REMOVED", "DELETE" -> setForeground(new Color(200, 0, 0));
-                    case "RENAMED", "RENAME", "COPY" -> setForeground(new Color(150, 100, 0));
-                    default -> setForeground(table.getForeground());
-                }
+                Color c = SyntaxStyleUtil.statusColor(status);
+                setForeground(c != null ? c : table.getForeground());
             }
             return this;
         }
