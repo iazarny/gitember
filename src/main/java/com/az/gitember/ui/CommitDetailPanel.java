@@ -1,10 +1,12 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.service.avatar.AvatarService;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -16,10 +18,14 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +38,10 @@ public class CommitDetailPanel extends JPanel {
 
     private static final Logger log = Logger.getLogger(CommitDetailPanel.class.getName());
 
+    private static final Map<String, ImageIcon> placeHolderIconCache = new HashMap<>();
+
+    private static final int AVATAR_SIZE = 64;
+
     // Header fields
     private final JTextField msgField = createReadOnlyField();
     private final JTextField authorField = createReadOnlyField();
@@ -40,6 +50,9 @@ public class CommitDetailPanel extends JPanel {
     private final JTextField shaField = createReadOnlyField();
     private final JTextField parentField = createReadOnlyField();
     private final JTextField refsField = createReadOnlyField();
+
+    // Avatar
+    private final JLabel avatarLabel = new JLabel();
 
     // Changed files table
     private final ChangedFilesTableModel filesTableModel = new ChangedFilesTableModel();
@@ -115,7 +128,7 @@ public class CommitDetailPanel extends JPanel {
 
         JPanel northDiff = new JPanel(new BorderLayout());
         northDiff.add(diffToolbar, BorderLayout.NORTH);
-        northDiff.add(searchBar,   BorderLayout.SOUTH);
+        northDiff.add(searchBar, BorderLayout.SOUTH);
 
         // Ctrl/Cmd+F activates search bar when focus is anywhere in the diff panel
         KeyStroke ctrlF = KeyStroke.getKeyStroke(KeyEvent.VK_F,
@@ -191,9 +204,12 @@ public class CommitDetailPanel extends JPanel {
             }
 
             @Override
-            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {}
+            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
+            }
+
             @Override
-            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {}
+            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
+            }
         });
 
         filesTable.setComponentPopupMenu(popup);
@@ -435,8 +451,18 @@ public class CommitDetailPanel extends JPanel {
 
     // --- Header panel ---
     private JPanel buildHeaderPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        // ── Avatar label (left side) ──────────────────────────────────────
+        avatarLabel.setPreferredSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setMinimumSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setMaximumSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        avatarLabel.setVerticalAlignment(SwingConstants.CENTER);
+        avatarLabel.setBorder(BorderFactory.createLineBorder(
+                UIManager.getColor("Separator.foreground"), 1));
+        avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
+
+        // ── Form fields (centre) ──────────────────────────────────────────
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
         GridBagConstraints lbl = new GridBagConstraints();
         lbl.anchor = GridBagConstraints.WEST;
         lbl.insets = new Insets(1, 2, 1, 4);
@@ -447,44 +473,64 @@ public class CommitDetailPanel extends JPanel {
         fld.insets = new Insets(1, 0, 1, 8);
 
         // Row 0: Message (spans full width)
-        lbl.gridx = 0; lbl.gridy = 0;
-        panel.add(new JLabel("Message:"), lbl);
-        fld.gridx = 1; fld.gridy = 0; fld.gridwidth = 5;
-        panel.add(msgField, fld);
+        lbl.gridx = 0;
+        lbl.gridy = 0;
+        fieldsPanel.add(new JLabel("Message:"), lbl);
+        fld.gridx = 1;
+        fld.gridy = 0;
+        fld.gridwidth = 5;
+        fieldsPanel.add(msgField, fld);
         fld.gridwidth = 1;
 
         // Row 1: Author | Email | Date
-        lbl.gridx = 0; lbl.gridy = 1;
-        panel.add(new JLabel("Author:"), lbl);
-        fld.gridx = 1; fld.gridy = 1;
-        panel.add(authorField, fld);
+        lbl.gridx = 0;
+        lbl.gridy = 1;
+        fieldsPanel.add(new JLabel("Author:"), lbl);
+        fld.gridx = 1;
+        fld.gridy = 1;
+        fieldsPanel.add(authorField, fld);
 
-        lbl.gridx = 2; lbl.gridy = 1;
-        panel.add(new JLabel("Email:"), lbl);
-        fld.gridx = 3; fld.gridy = 1;
-        panel.add(emailField, fld);
+        lbl.gridx = 2;
+        lbl.gridy = 1;
+        fieldsPanel.add(new JLabel("Email:"), lbl);
+        fld.gridx = 3;
+        fld.gridy = 1;
+        fieldsPanel.add(emailField, fld);
 
-        lbl.gridx = 4; lbl.gridy = 1;
-        panel.add(new JLabel("Date:"), lbl);
-        fld.gridx = 5; fld.gridy = 1;
-        panel.add(dateField, fld);
+        lbl.gridx = 4;
+        lbl.gridy = 1;
+        fieldsPanel.add(new JLabel("Date:"), lbl);
+        fld.gridx = 5;
+        fld.gridy = 1;
+        fieldsPanel.add(dateField, fld);
 
         // Row 2: SHA | Parent | Refs
-        lbl.gridx = 0; lbl.gridy = 2;
-        panel.add(new JLabel("SHA:"), lbl);
-        fld.gridx = 1; fld.gridy = 2;
-        panel.add(shaField, fld);
+        lbl.gridx = 0;
+        lbl.gridy = 2;
+        fieldsPanel.add(new JLabel("SHA:"), lbl);
+        fld.gridx = 1;
+        fld.gridy = 2;
+        fieldsPanel.add(shaField, fld);
 
-        lbl.gridx = 2; lbl.gridy = 2;
-        panel.add(new JLabel("Parent:"), lbl);
-        fld.gridx = 3; fld.gridy = 2;
-        panel.add(parentField, fld);
+        lbl.gridx = 2;
+        lbl.gridy = 2;
+        fieldsPanel.add(new JLabel("Parent:"), lbl);
+        fld.gridx = 3;
+        fld.gridy = 2;
+        fieldsPanel.add(parentField, fld);
 
-        lbl.gridx = 4; lbl.gridy = 2;
-        panel.add(new JLabel("Refs:"), lbl);
-        fld.gridx = 5; fld.gridy = 2;
-        panel.add(refsField, fld);
+        lbl.gridx = 4;
+        lbl.gridy = 2;
+        fieldsPanel.add(new JLabel("Refs:"), lbl);
+        fld.gridx = 5;
+        fld.gridy = 2;
+        fieldsPanel.add(refsField, fld);
 
+        // ── Wrapper: avatar west, fields centre ───────────────────────────
+        JPanel panel = new JPanel(new BorderLayout(8, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        panel.add(avatarLabel, BorderLayout.WEST);
+        panel.add(fieldsPanel, BorderLayout.CENTER);
         return panel;
     }
 
@@ -497,6 +543,7 @@ public class CommitDetailPanel extends JPanel {
         if (rev == null) {
             clearFields();
             filesTableModel.clear();
+            avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
             return;
         }
 
@@ -515,8 +562,45 @@ public class CommitDetailPanel extends JPanel {
         // Populate changed files table
         filesTableModel.setData(rev.getAffectedItems());
 
+        // Show initials placeholder immediately, then fetch real avatar in background
+
+        fetchAvatarAsync(rev.getAuthorEmail(), rev.getAuthorName());
+
         // Switch to Main tab
         tabbedPane.setSelectedIndex(0);
+    }
+
+    private void fetchAvatarAsync(String email, String authorName) {
+        new SwingWorker<BufferedImage, Void>() {
+            @Override
+            protected BufferedImage doInBackground() {
+                try {
+                    String remoteUrl = Context.getGitRepoService() != null
+                            ? Context.getGitRepoService().getRepositoryRemoteUrl() : null;
+                    String token = Context.getCurrentProject()
+                            .map(Project::getAccessToken).orElse(null);
+                    return AvatarService.getAvatar(email, authorName, remoteUrl, token);
+                } catch (Exception e) {
+                    avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
+                    return null;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    BufferedImage img = get();
+                    if (img != null) {
+                        Image scaled = img.getScaledInstance(AVATAR_SIZE, AVATAR_SIZE,
+                                Image.SCALE_SMOOTH);
+                        avatarLabel.setIcon(new ImageIcon(scaled));
+                    }
+                    // If null, keep the initials placeholder
+                } catch (Exception ignored) {
+                    avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
+                }
+            }
+        }.execute();
     }
 
     private void clearFields() {
@@ -560,9 +644,9 @@ public class CommitDetailPanel extends JPanel {
 
     private void applyDiffHighlights() {
         diffArea.removeAllLineHighlights();
-        Color addedColor   = SyntaxStyleUtil.addedBg();
+        Color addedColor = SyntaxStyleUtil.addedBg();
         Color deletedColor = SyntaxStyleUtil.deletedBg();
-        Color hunkColor    = SyntaxStyleUtil.changedBg();
+        Color hunkColor = SyntaxStyleUtil.changedBg();
         String[] lines = diffArea.getText().split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
@@ -576,7 +660,8 @@ public class CommitDetailPanel extends JPanel {
                 } else if (line.startsWith("@@")) {
                     diffArea.addLineHighlight(i, hunkColor);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -595,6 +680,48 @@ public class CommitDetailPanel extends JPanel {
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+
+    /**
+     * Creates a colored circle icon with 1-2 initials drawn in white.
+     */
+    private static ImageIcon placeholderIcon(String name, int size) {
+        return placeHolderIconCache.computeIfAbsent(name, new Function<String, ImageIcon>() {
+                    @Override
+                    public ImageIcon apply(String name) {
+                        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+                        Graphics2D g2 = img.createGraphics();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        // Color derived from author name hash — stable across calls for same name
+                        float hue = name != null && !name.isBlank()
+                                ? (Math.abs(name.hashCode()) % 360) / 360.0f : 0.55f;
+                        g2.setColor(Color.getHSBColor(hue, 0.45f, 0.65f));
+                        g2.fillOval(0, 0, size - 1, size - 1);
+                        // Initials
+                        String initials = initials(name);
+                        g2.setColor(Color.WHITE);
+                        g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, size / 3));
+                        FontMetrics fm = g2.getFontMetrics();
+                        int tx = (size - fm.stringWidth(initials)) / 2;
+                        int ty = (size - fm.getHeight()) / 2 + fm.getAscent();
+                        g2.drawString(initials, tx, ty);
+                        g2.dispose();
+                        return new ImageIcon(img);
+                    }
+                }
+        );
+
+    }
+
+
+
+    private static String initials(String name) {
+        if (name == null || name.isBlank()) return "?";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length >= 2)
+            return ("" + parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        return ("" + name.charAt(0)).toUpperCase();
     }
 
     private static JTextField createReadOnlyField() {

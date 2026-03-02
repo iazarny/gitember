@@ -318,6 +318,7 @@ public class Context {
         gitRepoService = new GitRepoService(gitFolder);
         setRepositoryPath(gitFolder);
         scmRevisionInformationCache.clear();
+        com.az.gitember.service.avatar.AvatarService.clearCache();
         setStash(gitRepoService.getStashList());
         setLfsRepo(getGitRepoService().isLfsRepo());
         setShowLfsFiles(false);
