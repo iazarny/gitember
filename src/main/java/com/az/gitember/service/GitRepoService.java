@@ -14,6 +14,8 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheEditor;
+import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
@@ -1278,18 +1280,29 @@ public class GitRepoService {
 
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
+        List<ScmItem> toRemove = new ArrayList<>();
         for (ScmItem scmItem : status) {
             for (ScmItem scmItemLfs : lfs) {
                 if (scmItem.getShortName().equals(scmItemLfs.getShortName())) {
-                    scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
-                    lfs.remove(scmItemLfs);
+                    if (ScmItem.Status.MODIFIED.equalsIgnoreCase(scmItem.getAttribute().getStatus())
+                            && ScmItem.Status.LFS_FILE.equalsIgnoreCase(scmItemLfs.getAttribute().getSubstatus())) {
+                        // The working tree has real LFS content but JGit marks the file as
+                        // "modified" because it doesn't apply the clean filter when comparing
+                        // working-tree bytes against the pointer hash in the index.
+                        // Suppress the false-positive: remove from the modified list and let
+                        // the entry reappear below via addAll(lfs) with only the LFS status.
+                        toRemove.add(scmItem);
+                        // Leave scmItemLfs in the lfs list so it is re-added by addAll below.
+                    } else {
+                        scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
+                        lfs.remove(scmItemLfs);
+                    }
                     break;
                 }
             }
         }
-
+        status.removeAll(toRemove);
         status.addAll(lfs);
-
         return status;
     }
 
@@ -1444,14 +1457,45 @@ public class GitRepoService {
             }
         }
 
-        // Re-checkout each LFS path so the smudge filter replaces the pointer
-        // content with the real file in the working tree.
-        try (Git git = new Git(repository)) {
-            CheckoutCommand co = git.checkout();
-            paths.forEach(co::addPath);
-            co.call();
-        } catch (GitAPIException e) {
-            throw new IOException("LFS objects downloaded but working-copy update failed", e);
+        // Write the real content from the LFS store directly into the working tree,
+        // then refresh the index stat entries so that git status quick-check (mtime/size
+        // comparison) treats these files as clean — matching what "git lfs checkout" does.
+        List<String> updated = new ArrayList<>();
+        for (int i = 0; i < paths.size(); i++) {
+            Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
+            if (Files.exists(lfsObjPath)) {
+                Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
+                Files.createDirectories(workingPath.getParent());
+                Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                updated.add(paths.get(i));
+            }
+        }
+
+        if (!updated.isEmpty()) {
+            DirCache dc = repository.lockDirCache();
+            try {
+                DirCacheEditor editor = dc.editor();
+                for (String p : updated) {
+                    editor.add(new DirCacheEditor.PathEdit(p) {
+                        @Override
+                        public void apply(DirCacheEntry ent) {
+                            File f = new File(repository.getWorkTree(), p);
+                            if (f.exists()) {
+                                ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
+                                ent.setLength((int) f.length());
+                                // ObjectId (pointer hash) is intentionally left unchanged.
+                            }
+                        }
+                    });
+                }
+                editor.commit();
+                dc.write();
+                dc.commit();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
+            } finally {
+                dc.unlock();
+            }
         }
     }
 
