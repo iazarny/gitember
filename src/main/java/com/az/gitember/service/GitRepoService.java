@@ -1280,28 +1280,15 @@ public class GitRepoService {
 
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
-        List<ScmItem> toRemove = new ArrayList<>();
         for (ScmItem scmItem : status) {
             for (ScmItem scmItemLfs : lfs) {
                 if (scmItem.getShortName().equals(scmItemLfs.getShortName())) {
-                    if (ScmItem.Status.MODIFIED.equalsIgnoreCase(scmItem.getAttribute().getStatus())
-                            && ScmItem.Status.LFS_FILE.equalsIgnoreCase(scmItemLfs.getAttribute().getSubstatus())) {
-                        // The working tree has real LFS content but JGit marks the file as
-                        // "modified" because it doesn't apply the clean filter when comparing
-                        // working-tree bytes against the pointer hash in the index.
-                        // Suppress the false-positive: remove from the modified list and let
-                        // the entry reappear below via addAll(lfs) with only the LFS status.
-                        toRemove.add(scmItem);
-                        // Leave scmItemLfs in the lfs list so it is re-added by addAll below.
-                    } else {
-                        scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
-                        lfs.remove(scmItemLfs);
-                    }
+                    scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
+                    lfs.remove(scmItemLfs);
                     break;
                 }
             }
         }
-        status.removeAll(toRemove);
         status.addAll(lfs);
         return status;
     }
