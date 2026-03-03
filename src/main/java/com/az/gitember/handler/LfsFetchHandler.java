@@ -34,6 +34,8 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     protected Void doInBackground() throws Exception {
         RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
         Context.getGitRepoService().fetchLfsObjects(params);
+        Context.updateAll();
+        Context.updateWorkingBranch();
         return null;
     }
 

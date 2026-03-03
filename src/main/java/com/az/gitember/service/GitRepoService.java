@@ -1450,6 +1450,9 @@ public class GitRepoService {
             }
             SmudgeFilter.downloadLfsResource(lfs, repository,
                     pointers.toArray(new LfsPointer[0]));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
         } finally {
             CredentialsProvider.setDefault(prevCp);
             if (tempLfsUrl) {
@@ -1489,11 +1492,8 @@ public class GitRepoService {
                     });
                 }
                 editor.commit();
-                dc.write();
-                dc.commit();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
-            } finally {
                 dc.unlock();
             }
         }
