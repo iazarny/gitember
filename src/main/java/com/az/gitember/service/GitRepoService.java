@@ -1723,12 +1723,22 @@ public class GitRepoService {
                 .setDirectory(new File(params.getDestinationFolder()))
                 .setCloneAllBranches(true)
                 .setCloneSubmodules(true)
+                //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
         configureTransportCommand(cmd, params);
 
         Git result = null;
 
-        Pair<String, String> smudgeAndClean = configureLfsSupport(SystemReader.getInstance().getUserConfig());
+        // Suppress the external git-lfs smudge/clean commands in the user config
+        // for the duration of the clone checkout so JGit does not invoke the
+        // external git-lfs binary during the initial checkout pass.
+        // After clone the repo config is written with gitember's built-in filter
+        // commands so subsequent checkouts use JGit's SmudgeFilter.
+        // Note: we do NOT touch the system config — it may be read-only
+        // (e.g. C:\Program Files\Git\etc\gitconfig on Windows requires admin).
+        // If a system-wide git-lfs is active, clone will download actual LFS
+        // content during checkout; that is acceptable (same as native git clone).
+        Pair<String, String> smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
 
         try {
             result = cmd.call();
@@ -1745,7 +1755,7 @@ public class GitRepoService {
                 repoCfg.save();
                 log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
             }
-            rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndClean);
+            rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
         }
     }
 
