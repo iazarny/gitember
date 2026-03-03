@@ -100,6 +100,14 @@ public class MainFrame extends JFrame {
         // Welcome panel
         welcomePanel = new WelcomePanel();
         welcomePanel.setOnProjectSelected(this::openProject);
+        welcomePanel.setOnProjectRemoved(project -> {
+            Settings settings = Context.getSettings();
+            if (settings != null) {
+                settings.getProjects().remove(project);
+                Context.saveSettings();
+                refreshProjectLists();
+            }
+        });
 
         // Layout
         setJMenuBar(menuBar);
