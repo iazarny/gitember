@@ -25,7 +25,7 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        Context.getGitRepoService().checkoutBranch(branch.getFullName(), null);
+        Context.getGitRepoService().checkoutBranch(branch.getFullName(), progressMonitor);
         Context.updateBranches();
         Context.updateWorkingBranch();
         Context.updateStatus(null);

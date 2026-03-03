@@ -35,7 +35,7 @@ public class BranchPushHandler extends AbstractAsyncHandler<String> {
         remoteUrl = params.getUrl();
 
         RefSpec refSpec = new RefSpec(branch.getFullName() + ":" + branch.getFullName());
-        String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
+        String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, progressMonitor);
         Context.updateAll();
         return result;
     }

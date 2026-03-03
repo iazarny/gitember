@@ -26,7 +26,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
         RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
         remoteUrl = params.getUrl();
 
-        String result = Context.getGitRepoService().remoteRepositoryPush(params, null, null);
+        String result = Context.getGitRepoService().remoteRepositoryPush(params, null, progressMonitor);
         Context.updateBranches();
         Context.updateWorkingBranch();
         return result;

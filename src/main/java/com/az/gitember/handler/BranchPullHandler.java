@@ -37,7 +37,7 @@ public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult>
         });
 
         PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(
-                params, branch.getRemoteMergeName(), null);
+                params, branch.getRemoteMergeName(), progressMonitor);
         Context.updateAll();
         return result;
     }
