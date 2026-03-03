@@ -242,17 +242,16 @@ public class MainTreePanel extends JPanel {
     private void updatePullRequestsNode(List<PullRequest> prs) {
         if (prs == null || prs.isEmpty()) {
             if (pullRequestsNode != null) {
-                rootNode.remove(pullRequestsNode);
-                treeModel.reload(rootNode);
+                treeModel.removeNodeFromParent(pullRequestsNode);
                 pullRequestsNode = null;
             }
             return;
         }
 
-        if (pullRequestsNode == null) {
+        boolean isNew = pullRequestsNode == null;
+        if (isNew) {
             pullRequestsNode = new DefaultMutableTreeNode(
                     new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS));
-            rootNode.add(pullRequestsNode);
         }
 
         pullRequestsNode.removeAllChildren();
@@ -260,7 +259,12 @@ public class MainTreePanel extends JPanel {
             pullRequestsNode.add(new DefaultMutableTreeNode(
                     new TreeNodeData(pr.toString(), NodeType.PULL_REQUEST, pr)));
         }
-        treeModel.reload(rootNode);
-        //tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
+
+        if (isNew) {
+            treeModel.insertNodeInto(pullRequestsNode, rootNode, rootNode.getChildCount());
+        } else {
+            treeModel.reload(pullRequestsNode);
+        }
+        tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
     }
 }
