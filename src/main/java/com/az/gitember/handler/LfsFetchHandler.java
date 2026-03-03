@@ -56,27 +56,9 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
         super.onError(e);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Returns true if {@code t} or any cause in the chain looks like an auth failure. */
-    private static boolean isAuthError(Throwable t) {
-        if (t == null) return false;
-        if (t instanceof org.eclipse.jgit.lfs.errors.LfsUnauthorized) return true;
-        String msg = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
-        if (msg.contains("401") || msg.contains("403")
-                || msg.contains("unauthorized") || msg.contains("forbidden")
-                || msg.contains("auth fail") || msg.contains("authentication")) {
-            return true;
-        }
-        return isAuthError(t.getCause());
-    }
-
-    /**
-     * Shows a confirmation prompt explaining why HTTPS credentials are needed,
-     * then opens {@link CredentialsDialog}.  Saves accepted credentials to the
-     * current project and returns {@code true} so the caller can retry.
-     */
-    private boolean promptAndSaveCredentials() {
+    /** LFS-specific credential prompt explaining why HTTPS credentials are needed. */
+    @Override
+    protected boolean promptAndSaveCredentials() {
         Project project = Context.getCurrentProject().orElse(null);
         if (project == null) {
             JOptionPane.showMessageDialog(parent,

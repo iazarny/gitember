@@ -20,7 +20,6 @@ import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
-import org.eclipse.jgit.lfs.LfsPrePushHook;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
@@ -49,6 +48,9 @@ import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,6 +59,8 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1825,15 +1829,11 @@ public class GitRepoService {
                     .getString("remote", "origin", "url");
             log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
 
-            // Upload LFS objects to the LFS server before pushing git objects
+            // Upload LFS objects via the batch API before the git push.
+            // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
+            // for its internal HTTP requests, so we implement the batch protocol directly.
             if (isLfsRepo()) {
-                try {
-                    LfsPrePushHook lfsHook = new LfsPrePushHook(repository, null);
-                    lfsHook.setRefs(Collections.emptyList());
-                    lfsHook.call();
-                } catch (Exception lfsEx) {
-                    log.log(Level.WARNING, "LFS pre-push upload failed: " + lfsEx.getMessage(), lfsEx);
-                }
+                uploadLfsObjectsDirect(parameters, refSpec);
             }
 
             Iterable<PushResult> pushResults = pushCommand.call();
@@ -2208,6 +2208,208 @@ public class GitRepoService {
         return stringBuilder.toString();
     }
 
+
+    /**
+     * Uploads all LFS objects referenced by the current HEAD directly via the
+     * Git LFS Batch API, using explicit {@code Authorization} headers.
+     * This bypasses {@link LfsPrePushHook} which does not forward credentials
+     * in JGit 6.x.
+     */
+    private void uploadLfsObjectsDirect(RemoteRepoParameters params,
+                                        RefSpec refSpec) throws IOException {
+        // Collect LFS pointers present in the commit being pushed
+        Lfs lfs = new Lfs(repository);
+        List<LfsPointer> toUpload = new ArrayList<>();
+
+        Collection<RemoteRefUpdate> refs = buildPushRefs(refSpec);
+        try (RevWalk walk = new RevWalk(repository)) {
+            for (RemoteRefUpdate rru : refs) {
+                ObjectId newId = repository.resolve(rru.getSrcRef());
+                if (newId == null) continue;
+                RevCommit commit = walk.parseCommit(newId);
+                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                    LfsPointerFilter filter = new LfsPointerFilter();
+                    treeWalk.addTree(commit.getTree());
+                    treeWalk.setRecursive(true);
+                    treeWalk.setFilter(filter);
+                    while (treeWalk.next()) {
+                        LfsPointer ptr = filter.getPointer();
+                        if (ptr != null && Files.exists(lfs.getMediaFile(ptr.getOid()))) {
+                            toUpload.add(ptr);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to collect LFS objects for upload", e);
+        }
+
+        if (toUpload.isEmpty()) return;
+
+        // LFS batch endpoint
+        String httpsUrl = sshRemoteToHttps(params.getUrl());
+        if (httpsUrl == null) httpsUrl = params.getUrl();
+        String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
+        String batchUrl = lfsBase + "/objects/batch";
+
+        // Build Basic auth header directly — the only reliable mechanism for
+        // plain HttpURLConnection without JGit's credential-provider plumbing.
+        String authHeader = buildLfsAuthHeader(params);
+
+        // ── 1. POST batch-upload request ──────────────────────────────────────
+        StringBuilder sb = new StringBuilder(
+                "{\"operation\":\"upload\",\"transfers\":[\"basic\"],\"objects\":[");
+        for (int i = 0; i < toUpload.size(); i++) {
+            LfsPointer p = toUpload.get(i);
+            if (i > 0) sb.append(',');
+            sb.append("{\"oid\":\"").append(p.getOid().getName())
+              .append("\",\"size\":").append(p.getSize()).append('}');
+        }
+        sb.append("]}");
+        byte[] batchBody = sb.toString().getBytes(StandardCharsets.UTF_8);
+
+        HttpURLConnection batchConn = openLfsHttp(batchUrl, "POST", authHeader);
+        batchConn.setRequestProperty("Content-Type",  "application/vnd.git-lfs+json");
+        batchConn.setRequestProperty("Accept",        "application/vnd.git-lfs+json");
+        batchConn.setFixedLengthStreamingMode(batchBody.length);
+        batchConn.setDoOutput(true);
+        try (OutputStream out = batchConn.getOutputStream()) { out.write(batchBody); }
+
+        int batchStatus = batchConn.getResponseCode();
+        if (batchStatus != 200) {
+            String err = readHttpError(batchConn);
+            throw new IOException("LFS batch-upload request failed (" + batchStatus + "): " + err);
+        }
+
+        // ── 2. Upload each object that the server doesn't have yet ─────────────
+        Map<String, LfsPointer> byOid = new HashMap<>();
+        for (LfsPointer p : toUpload) byOid.put(p.getOid().getName(), p);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode response = mapper.readTree(batchConn.getInputStream());
+
+        for (JsonNode obj : response.path("objects")) {
+            String oid = obj.path("oid").asText();
+            JsonNode actions = obj.path("actions");
+            if (actions.isMissingNode()) continue;  // already on server
+
+            LfsPointer pointer = byOid.get(oid);
+            if (pointer == null) continue;
+            Path objPath = lfs.getMediaFile(pointer.getOid());
+
+            JsonNode uploadAction = actions.path("upload");
+            if (!uploadAction.isMissingNode()) {
+                String uploadHref = uploadAction.path("href").asText();
+                HttpURLConnection uploadConn = openLfsHttp(uploadHref, "PUT", null);
+                uploadConn.setFixedLengthStreamingMode(pointer.getSize());
+                uploadConn.setRequestProperty("Content-Type", "application/octet-stream");
+                applyActionHeaders(uploadConn, uploadAction.path("header"));
+                uploadConn.setDoOutput(true);
+                try (InputStream in  = Files.newInputStream(objPath);
+                     OutputStream out = uploadConn.getOutputStream()) {
+                    byte[] buf = new byte[65536];
+                    int n;
+                    while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                }
+                int uploadStatus = uploadConn.getResponseCode();
+                if (uploadStatus >= 400) {
+                    throw new IOException("LFS upload failed for " + oid + ": " + uploadStatus);
+                }
+                log.log(Level.INFO, "Uploaded LFS object " + oid
+                        + " (" + pointer.getSize() + " bytes)");
+            }
+
+            // Optional verify step (GitHub LFS requires it for some objects)
+            JsonNode verifyAction = actions.path("verify");
+            if (!verifyAction.isMissingNode()) {
+                String verifyHref   = verifyAction.path("href").asText();
+                byte[] verifyBody   = ("{\"oid\":\"" + oid + "\",\"size\":"
+                        + pointer.getSize() + "}").getBytes(StandardCharsets.UTF_8);
+                HttpURLConnection verifyConn = openLfsHttp(verifyHref, "POST", authHeader);
+                verifyConn.setRequestProperty("Content-Type", "application/vnd.git-lfs+json");
+                applyActionHeaders(verifyConn, verifyAction.path("header"));
+                verifyConn.setFixedLengthStreamingMode(verifyBody.length);
+                verifyConn.setDoOutput(true);
+                try (OutputStream out = verifyConn.getOutputStream()) { out.write(verifyBody); }
+                int verifyStatus = verifyConn.getResponseCode();
+                if (verifyStatus >= 400) {
+                    log.log(Level.WARNING, "LFS verify failed for " + oid + ": " + verifyStatus);
+                }
+            }
+        }
+    }
+
+    private String buildLfsAuthHeader(RemoteRepoParameters params) {
+        String creds = null;
+        if (StringUtils.isNotBlank(params.getAccessToken())) {
+            creds = "oauth2:" + params.getAccessToken();
+        } else if (StringUtils.isNotBlank(params.getUserName())) {
+            creds = params.getUserName() + ":" + params.getUserPwd();
+        }
+        if (creds == null) return null;
+        return "Basic " + Base64.getEncoder()
+                .encodeToString(creds.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static HttpURLConnection openLfsHttp(String url, String method,
+                                                  String authHeader) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        conn.setRequestMethod(method);
+        conn.setConnectTimeout(30_000);
+        conn.setReadTimeout(300_000);
+        if (authHeader != null) conn.setRequestProperty("Authorization", authHeader);
+        return conn;
+    }
+
+    private static void applyActionHeaders(HttpURLConnection conn, JsonNode headerNode) {
+        if (headerNode == null || headerNode.isMissingNode()) return;
+        Iterator<Map.Entry<String, JsonNode>> it = headerNode.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> h = it.next();
+            conn.setRequestProperty(h.getKey(), h.getValue().asText());
+        }
+    }
+
+    private static String readHttpError(HttpURLConnection conn) {
+        try (InputStream err = conn.getErrorStream()) {
+            if (err == null) return "";
+            return new String(err.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    /**
+     * Builds the list of {@link RemoteRefUpdate} entries that describe what is
+     * about to be pushed.  This is used to tell {@link LfsPrePushHook} which
+     * commits to scan for LFS objects so it can upload them before the git push.
+     */
+    private Collection<RemoteRefUpdate> buildPushRefs(RefSpec refSpec) {
+        try {
+            String branch = repository.getBranch();
+            String localRef = (refSpec != null && refSpec.getSource() != null)
+                    ? refSpec.getSource()
+                    : Constants.R_HEADS + branch;
+            String remoteName = (refSpec != null && refSpec.getDestination() != null)
+                    ? refSpec.getDestination()
+                    : Constants.R_HEADS + branch;
+
+            ObjectId newId = repository.resolve(localRef);
+            if (newId == null) return Collections.emptyList();
+
+            // Remote tracking ref holds the last-known remote commit — used as the
+            // "old" boundary so the hook only scans commits not yet on the server.
+            String trackingRef = Constants.R_REMOTES + "origin/" + branch;
+            ObjectId oldId = repository.resolve(trackingRef); // null for brand-new branch
+
+            return Collections.singletonList(
+                    new RemoteRefUpdate(repository, localRef, remoteName, false, trackingRef, oldId)
+            );
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Could not build push refs for LFS pre-push hook", e);
+            return Collections.emptyList();
+        }
+    }
 
     private void configureTransportCommand(
             final TransportCommand cmd, RemoteRepoParameters params) throws ConfigInvalidException, IOException {

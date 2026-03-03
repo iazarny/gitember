@@ -10,6 +10,7 @@ import java.awt.*;
 public class PushHandler extends AbstractAsyncHandler<String> {
 
     private String remoteUrl;
+    private boolean credentialsPrompted = false;
 
     public PushHandler(Component parent, StatusBar statusBar) {
         super(parent, statusBar);
@@ -35,5 +36,17 @@ public class PushHandler extends AbstractAsyncHandler<String> {
     protected void onSuccess(String result) {
         statusBar.setStatus("Push completed");
         new PushResultDialog(parent, remoteUrl, result).setVisible(true);
+    }
+
+    @Override
+    protected void onError(Exception e) {
+        if (!credentialsPrompted && isAuthError(e)) {
+            credentialsPrompted = true;
+            if (promptAndSaveCredentials()) {
+                execute();
+                return;
+            }
+        }
+        super.onError(e);
     }
 }
