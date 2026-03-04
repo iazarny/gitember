@@ -38,7 +38,6 @@ public class PullRequestService {
         if (host == Host.UNKNOWN) return Collections.emptyList();
 
         String token = resolveToken(accessToken, host);
-        if (token == null || token.isBlank()) return Collections.emptyList();
 
         try {
             return switch (host) {
@@ -73,27 +72,41 @@ public class PullRequestService {
     // ---- URL parsing ----
 
     /**
-     * Extracts the path segments after the host domain from an HTTPS or SSH remote URL.
+     * Extracts the path segments after the host domain from any supported remote URL.
      * Returns null if parsing fails.
      *
      * Examples:
-     *   https://github.com/owner/repo.git  → ["owner","repo"]
-     *   git@github.com:owner/repo.git      → ["owner","repo"]
-     *   https://gitlab.com/g/sub/repo.git  → ["g","sub","repo"]
+     *   https://github.com/owner/repo.git        → ["owner","repo"]
+     *   https://user@github.com/owner/repo.git   → ["owner","repo"]
+     *   git@github.com:owner/repo.git            → ["owner","repo"]
+     *   ssh://git@github.com/owner/repo.git      → ["owner","repo"]
+     *   ssh://git@github.com:22/owner/repo.git   → ["owner","repo"]
+     *   git://github.com/owner/repo.git          → ["owner","repo"]
+     *   https://gitlab.com/g/sub/repo.git        → ["g","sub","repo"]
      */
     private static String[] parsePathSegments(String url, String hostDomain) {
-        String u = url.replaceAll("\\.git$", "");
-        String path = null;
+        String u = url.trim().replaceAll("\\.git$", "");
 
-        // HTTPS / HTTPS with credentials
-        if (u.contains(hostDomain + "/")) {
-            int idx = u.indexOf(hostDomain + "/");
-            path = u.substring(idx + hostDomain.length() + 1);
-        }
-        // SSH  git@host:path  or  ssh://git@host/path
-        else if (u.contains(":")) {
-            path = u.substring(u.lastIndexOf(':') + 1);
-            if (path.startsWith("/")) path = path.substring(1);
+        int domainIdx = u.indexOf(hostDomain);
+        if (domainIdx < 0) return null;
+
+        String afterDomain = u.substring(domainIdx + hostDomain.length());
+        String path;
+
+        if (afterDomain.startsWith("/")) {
+            // https://host/path  or  ssh://user@host/path  or  git://host/path
+            path = afterDomain.substring(1);
+        } else if (afterDomain.startsWith(":")) {
+            String rest = afterDomain.substring(1);
+            // SSH with explicit port: :22/owner/repo → strip port number
+            if (rest.matches("\\d+/.*")) {
+                path = rest.substring(rest.indexOf('/') + 1);
+            } else {
+                // SCP style: git@host:owner/repo
+                path = rest;
+            }
+        } else {
+            return null;
         }
 
         if (path == null || path.isBlank()) return null;
@@ -110,10 +123,11 @@ public class PullRequestService {
         String apiUrl = "https://api.github.com/repos/" + parts[0] + "/" + parts[1]
                 + "/pulls?state=open&per_page=100";
 
-        String body = get(apiUrl,
-                "Authorization",       "Bearer " + token,
-                "Accept",              "application/vnd.github+json",
-                "X-GitHub-Api-Version","2022-11-28");
+        HttpRequest.Builder req = HttpRequest.newBuilder()
+                .header("Accept", "application/vnd.github+json")
+                .header("X-GitHub-Api-Version", "2022-11-28");
+        if (token != null && !token.isBlank()) req.header("Authorization", "Bearer " + token);
+        String body = get(apiUrl, req);
         if (body == null) return Collections.emptyList();
 
         List<PullRequest> result = new ArrayList<>();
@@ -141,7 +155,9 @@ public class PullRequestService {
         String apiUrl = "https://gitlab.com/api/v4/projects/" + encodedPath
                 + "/merge_requests?state=opened&per_page=100";
 
-        String body = get(apiUrl, "PRIVATE-TOKEN", token);
+        HttpRequest.Builder req = HttpRequest.newBuilder();
+        if (token != null && !token.isBlank()) req.header("PRIVATE-TOKEN", token);
+        String body = get(apiUrl, req);
         if (body == null) return Collections.emptyList();
 
         List<PullRequest> result = new ArrayList<>();
@@ -160,18 +176,14 @@ public class PullRequestService {
 
     // ---- HTTP helper ----
 
-    /** Performs a GET request with the supplied header key-value pairs. Returns null on non-200. */
-    private static String get(String url, String... headers) throws Exception {
+    /** Performs a GET request using the supplied pre-configured builder. Returns null on non-200. */
+    private static String get(String url, HttpRequest.Builder builder) throws Exception {
         HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url)).GET();
-        for (int i = 0; i + 1 < headers.length; i += 2) {
-            builder.header(headers[i], headers[i + 1]);
-        }
-
-        HttpResponse<String> response = client.send(builder.build(),
+        HttpResponse<String> response = client.send(
+                builder.uri(URI.create(url)).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
