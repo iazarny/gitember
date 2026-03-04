@@ -1,8 +1,9 @@
 package com.az.gitember.ui;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -15,22 +16,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Araxis-Merge style folder comparison window.
+ * Folder comparison window with two side-by-side synchronised trees.
  *
  * <ul>
- *   <li>Recursively compares two directory trees.</li>
- *   <li>Table shows: Left path | Status | Right path.</li>
- *   <li>Colour-coded rows: blue = different, red/pink = left-only, green = right-only.</li>
- *   <li>Double-click on DIFFERENT opens {@link DiffViewerWindow}.</li>
- *   <li>"Differences only" filter toggle and Prev/Next navigation.</li>
- *   <li>Both path fields accept drag-and-drop of a folder.</li>
+ *   <li>Left tree shows the left folder; right tree shows the right folder.</li>
+ *   <li>Both trees share the same {@link DefaultTreeModel} and stay in sync
+ *       (scroll + expand/collapse).</li>
+ *   <li>Folder nodes show open/closed folder icons; file nodes show leaf icons.</li>
+ *   <li>Left tree greys out RIGHT_ONLY files; right tree greys out LEFT_ONLY files.</li>
+ *   <li>Double-click a file node to open {@link DiffViewerWindow}.</li>
+ *   <li>"Differences only" filter and Prev/Next diff navigation.</li>
  * </ul>
  */
 public class FolderCompareWindow extends JFrame {
 
     private static final Logger log = Logger.getLogger(FolderCompareWindow.class.getName());
 
-    // ── Data ─────────────────────────────────────────────────────────────────
+    // ── Data ──────────────────────────────────────────────────────────────────
 
     enum EntryStatus { IDENTICAL, DIFFERENT, LEFT_ONLY, RIGHT_ONLY }
 
@@ -39,24 +41,31 @@ public class FolderCompareWindow extends JFrame {
                        String rightAbsPath,
                        EntryStatus status) {}
 
-    // ── UI components ─────────────────────────────────────────────────────────
+    // ── UI ────────────────────────────────────────────────────────────────────
 
     private final JTextField leftPathField  = new JTextField();
     private final JTextField rightPathField = new JTextField();
     private final JButton    compareBtn     = new JButton("Compare");
+
+    private final JLabel leftHeader  = new JLabel(" ");
+    private final JLabel rightHeader = new JLabel(" ");
 
     private final JToggleButton diffsOnlyBtn = new JToggleButton("Differences only");
     private final JButton prevBtn  = new JButton("◄ Prev");
     private final JButton nextBtn  = new JButton("Next ►");
     private final JLabel  statsLbl = new JLabel(" ");
 
-    private final FolderTableModel tableModel = new FolderTableModel();
-    private final JTable table;
+    private final JTree          leftTree;
+    private final JTree          rightTree;
+    private       DefaultTreeModel treeModel;
 
-    // ── State ────────────────────────────────────────────────────────────────
+    // ── State ─────────────────────────────────────────────────────────────────
 
-    private List<FolderEntry> allEntries  = Collections.emptyList();
-    private int currentDiffIdx = -1;
+    private List<FolderEntry>              allEntries     = Collections.emptyList();
+    private List<DefaultMutableTreeNode>   diffNodes      = Collections.emptyList();
+    private int                            currentDiffIdx = -1;
+    private boolean                        syncingExpansion = false;
+    private boolean                        syncingScroll    = false;
 
     // ── Construction ──────────────────────────────────────────────────────────
 
@@ -66,39 +75,72 @@ public class FolderCompareWindow extends JFrame {
         setSize(1100, 700);
         setLocationRelativeTo(null);
 
-        // ---- Path selector bar ----
-        JPanel pathBar = new JPanel(new GridBagLayout());
-        pathBar.setBorder(BorderFactory.createEmptyBorder(6, 8, 4, 8));
+        treeModel = new DefaultTreeModel(new DefaultMutableTreeNode("root"));
+        leftTree  = makeTree(new LeftRenderer());
+        rightTree = makeTree(new RightRenderer());
 
-        JButton browseLeft  = new JButton("Browse…");
-        JButton browseRight = new JButton("Browse…");
-        browseLeft .addActionListener(e -> browse(leftPathField));
-        browseRight.addActionListener(e -> browse(rightPathField));
+        wireExpansionSync(leftTree,  rightTree);
+        wireExpansionSync(rightTree, leftTree);
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(2, 3, 2, 3);
-        c.gridy = 0; c.fill = GridBagConstraints.HORIZONTAL;
+        setupContextMenu(leftTree);
+        setupContextMenu(rightTree);
 
-        c.gridx = 0; c.weightx = 0; c.fill = GridBagConstraints.NONE;
-        pathBar.add(browseLeft, c);
-        c.gridx = 1; c.weightx = 0.45; c.fill = GridBagConstraints.HORIZONTAL;
-        pathBar.add(leftPathField, c);
-
-        c.gridx = 2; c.weightx = 0; c.fill = GridBagConstraints.NONE;
-        pathBar.add(compareBtn, c);
-
-        c.gridx = 3; c.weightx = 0.45; c.fill = GridBagConstraints.HORIZONTAL;
-        pathBar.add(rightPathField, c);
-        c.gridx = 4; c.weightx = 0; c.fill = GridBagConstraints.NONE;
-        pathBar.add(browseRight, c);
-
-        // ---- Filter / navigation toolbar ----
         prevBtn.setEnabled(false);
         nextBtn.setEnabled(false);
         diffsOnlyBtn.addActionListener(e -> applyFilter());
         prevBtn.addActionListener(e -> navigateDiff(-1));
         nextBtn.addActionListener(e -> navigateDiff(+1));
 
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(buildTopBar(),   BorderLayout.NORTH);
+        getContentPane().add(buildSplit(),    BorderLayout.CENTER);
+        getContentPane().add(buildLegend(),  BorderLayout.SOUTH);
+
+        CompareFilesDialog.attachFileDrop(leftPathField,  true);
+        CompareFilesDialog.attachFileDrop(rightPathField, true);
+        compareBtn.addActionListener(e -> startScan());
+    }
+
+    // ── Widget factories ──────────────────────────────────────────────────────
+
+    private JTree makeTree(TreeCellRenderer renderer) {
+        JTree t = new JTree(treeModel);
+        t.setRootVisible(false);
+        t.setShowsRootHandles(true);
+        t.setRowHeight(22);
+        t.setCellRenderer(renderer);
+        t.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        t.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() != 2) return;
+                TreePath path = t.getPathForLocation(e.getX(), e.getY());
+                if (path == null) return;
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                if (node.isLeaf() && node.getUserObject() instanceof NodeData data && data.isFile())
+                    openEntry(data.entry);
+            }
+        });
+        return t;
+    }
+
+    private JPanel buildTopBar() {
+        // path selector
+        JPanel pathBar = new JPanel(new GridBagLayout());
+        pathBar.setBorder(BorderFactory.createEmptyBorder(6, 8, 4, 8));
+        JButton browseLeft  = new JButton("Browse…");
+        JButton browseRight = new JButton("Browse…");
+        browseLeft .addActionListener(e -> browse(leftPathField));
+        browseRight.addActionListener(e -> browse(rightPathField));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(2, 3, 2, 3); c.gridy = 0;
+        c.gridx = 0; c.weightx = 0;    c.fill = GridBagConstraints.NONE;       pathBar.add(browseLeft, c);
+        c.gridx = 1; c.weightx = 0.45; c.fill = GridBagConstraints.HORIZONTAL; pathBar.add(leftPathField, c);
+        c.gridx = 2; c.weightx = 0;    c.fill = GridBagConstraints.NONE;       pathBar.add(compareBtn, c);
+        c.gridx = 3; c.weightx = 0.45; c.fill = GridBagConstraints.HORIZONTAL; pathBar.add(rightPathField, c);
+        c.gridx = 4; c.weightx = 0;    c.fill = GridBagConstraints.NONE;       pathBar.add(browseRight, c);
+
+        // filter / navigation
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
         filterBar.add(diffsOnlyBtn);
         filterBar.add(new JSeparator(SwingConstants.VERTICAL));
@@ -107,95 +149,100 @@ public class FolderCompareWindow extends JFrame {
         filterBar.add(Box.createHorizontalStrut(12));
         filterBar.add(statsLbl);
 
-        // ---- Top area ----
         JPanel top = new JPanel(new BorderLayout());
         top.add(pathBar,   BorderLayout.NORTH);
         top.add(filterBar, BorderLayout.SOUTH);
-
-        // ---- Table ----
-        table = new JTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setRowHeight(22);
-        table.setShowVerticalLines(true);
-        table.setIntercellSpacing(new Dimension(4, 0));
-        table.getTableHeader().setReorderingAllowed(false);
-
-        // Column widths: left path stretches, status is narrow, right path stretches
-        table.getColumnModel().getColumn(0).setPreferredWidth(440);
-        table.getColumnModel().getColumn(1).setPreferredWidth(60);
-        table.getColumnModel().getColumn(1).setMaxWidth(80);
-        table.getColumnModel().getColumn(2).setPreferredWidth(440);
-
-        table.getColumnModel().getColumn(0).setCellRenderer(new PathRenderer(true));
-        table.getColumnModel().getColumn(1).setCellRenderer(new StatusRenderer());
-        table.getColumnModel().getColumn(2).setCellRenderer(new PathRenderer(false));
-
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = table.rowAtPoint(e.getPoint());
-                    if (row >= 0) openEntry(tableModel.getEntryAt(row));
-                }
-            }
-        });
-
-        setupContextMenu();
-
-        // ---- Legend bar ----
-        JPanel legendBar = buildLegend();
-
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(top,                        BorderLayout.NORTH);
-        getContentPane().add(new JScrollPane(table),     BorderLayout.CENTER);
-        getContentPane().add(legendBar,                  BorderLayout.SOUTH);
-
-        // ---- DnD ----
-        CompareFilesDialog.attachFileDrop(leftPathField,  true);
-        CompareFilesDialog.attachFileDrop(rightPathField, true);
-
-        compareBtn.addActionListener(e -> startScan());
+        return top;
     }
 
-    // ── Scanning ─────────────────────────────────────────────────────────────
+    private JSplitPane buildSplit() {
+        styleHeader(leftHeader);
+        styleHeader(rightHeader);
+
+        JScrollPane leftScroll  = new JScrollPane(leftTree);
+        JScrollPane rightScroll = new JScrollPane(rightTree);
+
+        // Sync vertical scrolling
+        leftScroll.getVerticalScrollBar().addAdjustmentListener(e -> {
+            if (!syncingScroll) { syncingScroll = true;
+                rightScroll.getVerticalScrollBar().setValue(e.getValue()); syncingScroll = false; }
+        });
+        rightScroll.getVerticalScrollBar().addAdjustmentListener(e -> {
+            if (!syncingScroll) { syncingScroll = true;
+                leftScroll.getVerticalScrollBar().setValue(e.getValue()); syncingScroll = false; }
+        });
+
+        JPanel leftPanel  = new JPanel(new BorderLayout());
+        leftPanel.add(leftHeader,  BorderLayout.NORTH);
+        leftPanel.add(leftScroll,  BorderLayout.CENTER);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(rightHeader, BorderLayout.NORTH);
+        rightPanel.add(rightScroll, BorderLayout.CENTER);
+
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+        split.setResizeWeight(0.5);
+        split.setDividerSize(5);
+        return split;
+    }
+
+    private static void styleHeader(JLabel lbl) {
+        lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0,
+                        UIManager.getColor("Separator.foreground")),
+                BorderFactory.createEmptyBorder(3, 6, 3, 6)));
+        lbl.setOpaque(true);
+    }
+
+    private void wireExpansionSync(JTree source, JTree target) {
+        source.addTreeExpansionListener(new TreeExpansionListener() {
+            @Override public void treeExpanded(TreeExpansionEvent e) {
+                if (!syncingExpansion) { syncingExpansion = true;
+                    target.expandPath(e.getPath()); syncingExpansion = false; }
+            }
+            @Override public void treeCollapsed(TreeExpansionEvent e) {
+                if (!syncingExpansion) { syncingExpansion = true;
+                    target.collapsePath(e.getPath()); syncingExpansion = false; }
+            }
+        });
+    }
+
+    // ── Scanning ──────────────────────────────────────────────────────────────
 
     private void startScan() {
         String leftStr  = leftPathField.getText().trim();
         String rightStr = rightPathField.getText().trim();
-
         if (leftStr.isEmpty() || rightStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select both folders.", "Compare Folders",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select both folders.",
+                    "Compare Folders", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         Path leftRoot  = Path.of(leftStr);
         Path rightRoot = Path.of(rightStr);
-
         if (!Files.isDirectory(leftRoot) || !Files.isDirectory(rightRoot)) {
-            JOptionPane.showMessageDialog(this, "Both paths must be directories.", "Compare Folders",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Both paths must be directories.",
+                    "Compare Folders", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         compareBtn.setEnabled(false);
         statsLbl.setText("Scanning…");
-        tableModel.setEntries(Collections.emptyList());
+        treeModel.setRoot(new DefaultMutableTreeNode("root"));
         prevBtn.setEnabled(false);
         nextBtn.setEnabled(false);
 
-        SwingWorker<List<FolderEntry>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<FolderEntry> doInBackground() throws Exception {
+        new SwingWorker<List<FolderEntry>, Void>() {
+            @Override protected List<FolderEntry> doInBackground() throws Exception {
                 return scan(leftRoot, rightRoot);
             }
-
-            @Override
-            protected void done() {
+            @Override protected void done() {
                 compareBtn.setEnabled(true);
                 try {
                     allEntries = get();
                     currentDiffIdx = -1;
+                    leftHeader.setText(leftStr);
+                    rightHeader.setText(rightStr);
                     applyFilter();
                     updateStats();
                 } catch (Exception ex) {
@@ -203,16 +250,13 @@ public class FolderCompareWindow extends JFrame {
                     statsLbl.setText("Error: " + ex.getMessage());
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
 
     private List<FolderEntry> scan(Path leftRoot, Path rightRoot) throws Exception {
         Set<String> leftRel  = collectRelativePaths(leftRoot);
         Set<String> rightRel = collectRelativePaths(rightRoot);
-
-        Set<String> all = new TreeSet<>();
-        all.addAll(leftRel);
+        Set<String> all = new TreeSet<>(leftRel);
         all.addAll(rightRel);
 
         List<FolderEntry> entries = new ArrayList<>(all.size());
@@ -221,15 +265,12 @@ public class FolderCompareWindow extends JFrame {
             boolean inRight = rightRel.contains(rel);
             String  leftAbs  = inLeft  ? leftRoot.resolve(rel).toString()  : null;
             String  rightAbs = inRight ? rightRoot.resolve(rel).toString() : null;
-
             EntryStatus status;
             if (inLeft && inRight) {
-                long mismatch = Files.mismatch(Path.of(leftAbs), Path.of(rightAbs));
-                status = (mismatch == -1L) ? EntryStatus.IDENTICAL : EntryStatus.DIFFERENT;
-            } else if (inLeft) {
-                status = EntryStatus.LEFT_ONLY;
+                status = Files.mismatch(Path.of(leftAbs), Path.of(rightAbs)) == -1L
+                        ? EntryStatus.IDENTICAL : EntryStatus.DIFFERENT;
             } else {
-                status = EntryStatus.RIGHT_ONLY;
+                status = inLeft ? EntryStatus.LEFT_ONLY : EntryStatus.RIGHT_ONLY;
             }
             entries.add(new FolderEntry(rel, leftAbs, rightAbs, status));
         }
@@ -240,119 +281,163 @@ public class FolderCompareWindow extends JFrame {
         if (!Files.exists(root)) return Collections.emptySet();
         Set<String> paths = new TreeSet<>();
         Files.walkFileTree(root, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                String rel = root.relativize(file).toString().replace('\\', '/');
-                paths.add(rel);
+            @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                paths.add(root.relativize(file).toString().replace('\\', '/'));
                 return FileVisitResult.CONTINUE;
             }
         });
         return paths;
     }
 
-    // ── Filtering & navigation ────────────────────────────────────────────────
+    // ── Tree model building ───────────────────────────────────────────────────
+
+    private DefaultMutableTreeNode buildTreeModel(List<FolderEntry> entries) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
+        Map<String, DefaultMutableTreeNode> dirNodes = new LinkedHashMap<>();
+
+        for (FolderEntry entry : entries) {
+            String[] segments = entry.relativePath().split("/");
+            DefaultMutableTreeNode parent = root;
+            StringBuilder soFar = new StringBuilder();
+
+            for (int i = 0; i < segments.length - 1; i++) {
+                if (soFar.length() > 0) soFar.append('/');
+                soFar.append(segments[i]);
+                String key = soFar.toString();
+                DefaultMutableTreeNode dir = dirNodes.get(key);
+                if (dir == null) {
+                    dir = new DefaultMutableTreeNode(new NodeData(segments[i], null));
+                    dirNodes.put(key, dir);
+                    parent.add(dir);
+                }
+                parent = dir;
+            }
+            parent.add(new DefaultMutableTreeNode(
+                    new NodeData(segments[segments.length - 1], entry)));
+        }
+
+        propagateStatus(root);
+        return root;
+    }
+
+    private EntryStatus propagateStatus(DefaultMutableTreeNode node) {
+        NodeData data = (node.getUserObject() instanceof NodeData nd) ? nd : null;
+        if (data != null && data.isFile()) return data.entry.status();
+
+        EntryStatus worst = EntryStatus.IDENTICAL;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            EntryStatus cs = propagateStatus((DefaultMutableTreeNode) node.getChildAt(i));
+            if (statusPriority(cs) > statusPriority(worst)) worst = cs;
+        }
+        if (data != null) data.propagatedStatus = worst;
+        return worst;
+    }
+
+    private static int statusPriority(EntryStatus s) {
+        return switch (s) {
+            case IDENTICAL  -> 0;
+            case RIGHT_ONLY -> 1;
+            case LEFT_ONLY  -> 2;
+            case DIFFERENT  -> 3;
+        };
+    }
+
+    // ── Filter & navigation ───────────────────────────────────────────────────
 
     private void applyFilter() {
-        boolean diffsOnly = diffsOnlyBtn.isSelected();
-        List<FolderEntry> visible = diffsOnly
-                ? allEntries.stream()
-                    .filter(e -> e.status() != EntryStatus.IDENTICAL)
-                    .toList()
+        List<FolderEntry> visible = diffsOnlyBtn.isSelected()
+                ? allEntries.stream().filter(e -> e.status() != EntryStatus.IDENTICAL).toList()
                 : allEntries;
-        tableModel.setEntries(visible);
+
+        DefaultMutableTreeNode newRoot = buildTreeModel(visible);
+        treeModel.setRoot(newRoot);
+
+        // Expand all in both trees
+        for (int i = 0; i < leftTree.getRowCount();  i++) leftTree.expandRow(i);
+        for (int i = 0; i < rightTree.getRowCount(); i++) rightTree.expandRow(i);
+
+        // Collect diff leaf nodes for prev/next navigation
+        diffNodes = new ArrayList<>();
+        Enumeration<?> en = newRoot.preorderEnumeration();
+        while (en.hasMoreElements()) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) en.nextElement();
+            if (node.isLeaf() && node.getUserObject() instanceof NodeData data
+                    && data.isFile() && data.entry.status() != EntryStatus.IDENTICAL)
+                diffNodes.add(node);
+        }
         currentDiffIdx = -1;
-        updateNavButtons();
+        prevBtn.setEnabled(!diffNodes.isEmpty());
+        nextBtn.setEnabled(!diffNodes.isEmpty());
     }
 
     private void navigateDiff(int direction) {
-        List<FolderEntry> entries = tableModel.getEntries();
-        List<Integer> diffRows = new ArrayList<>();
-        for (int i = 0; i < entries.size(); i++) {
-            if (entries.get(i).status() != EntryStatus.IDENTICAL) diffRows.add(i);
-        }
-        if (diffRows.isEmpty()) return;
+        if (diffNodes.isEmpty()) return;
+        currentDiffIdx = direction > 0
+                ? (currentDiffIdx < diffNodes.size() - 1 ? currentDiffIdx + 1 : 0)
+                : (currentDiffIdx > 0 ? currentDiffIdx - 1 : diffNodes.size() - 1);
 
-        if (direction > 0) {
-            currentDiffIdx = (currentDiffIdx < diffRows.size() - 1) ? currentDiffIdx + 1 : 0;
-        } else {
-            currentDiffIdx = (currentDiffIdx > 0) ? currentDiffIdx - 1 : diffRows.size() - 1;
-        }
-
-        int row = diffRows.get(currentDiffIdx);
-        table.setRowSelectionInterval(row, row);
-        table.scrollRectToVisible(table.getCellRect(row, 0, true));
-        updateNavButtons();
-    }
-
-    private void updateNavButtons() {
-        long diffs = tableModel.getEntries().stream()
-                .filter(e -> e.status() != EntryStatus.IDENTICAL).count();
-        prevBtn.setEnabled(diffs > 0);
-        nextBtn.setEnabled(diffs > 0);
+        DefaultMutableTreeNode node = diffNodes.get(currentDiffIdx);
+        TreePath path = new TreePath(node.getPath());
+        leftTree.setSelectionPath(path);
+        leftTree.scrollPathToVisible(path);
+        rightTree.setSelectionPath(path);
+        rightTree.scrollPathToVisible(path);
     }
 
     private void updateStats() {
         long total     = allEntries.size();
+        long identical = allEntries.stream().filter(e -> e.status() == EntryStatus.IDENTICAL).count();
         long different = allEntries.stream().filter(e -> e.status() == EntryStatus.DIFFERENT).count();
         long leftOnly  = allEntries.stream().filter(e -> e.status() == EntryStatus.LEFT_ONLY).count();
         long rightOnly = allEntries.stream().filter(e -> e.status() == EntryStatus.RIGHT_ONLY).count();
-        long identical = allEntries.stream().filter(e -> e.status() == EntryStatus.IDENTICAL).count();
         statsLbl.setText(total + " files  |  " + identical + " identical  |  "
                 + different + " different  |  " + leftOnly + " left only  |  " + rightOnly + " right only");
     }
 
-    // ── Opening entries ───────────────────────────────────────────────────────
+    // ── Open entries ──────────────────────────────────────────────────────────
+
+    private FolderEntry entryFromTree(JTree tree) {
+        TreePath p = tree.getSelectionPath();
+        if (p == null) return null;
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) p.getLastPathComponent();
+        return node.getUserObject() instanceof NodeData d && d.isFile() ? d.entry : null;
+    }
 
     private void openEntry(FolderEntry entry) {
         if (entry == null) return;
         switch (entry.status()) {
-            case DIFFERENT  -> openDiff(entry);
+            case DIFFERENT, IDENTICAL -> openDiff(entry);
             case LEFT_ONLY  -> openSingle(entry.leftAbsPath(),  entry.relativePath());
             case RIGHT_ONLY -> openSingle(entry.rightAbsPath(), entry.relativePath());
-            case IDENTICAL  -> openDiff(entry);   // open to confirm they're equal
         }
     }
 
     private void openDiff(FolderEntry entry) {
-        if (entry.leftAbsPath() == null || entry.rightAbsPath() == null) return;
-
+        if (entry == null || entry.leftAbsPath() == null || entry.rightAbsPath() == null) return;
         File lf = new File(entry.leftAbsPath());
         File rf = new File(entry.rightAbsPath());
-
         if (CompareFilesDialog.looksLikeBinary(lf) || CompareFilesDialog.looksLikeBinary(rf)) {
-            JOptionPane.showMessageDialog(this,
-                    entry.relativePath() + " appears to be binary.",
+            JOptionPane.showMessageDialog(this, entry.relativePath() + " appears to be binary.",
                     "Binary file", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
-            @Override
-            protected String[] doInBackground() throws Exception {
-                return new String[]{
-                    Files.readString(lf.toPath()),
-                    Files.readString(rf.toPath())
-                };
+        new SwingWorker<String[], Void>() {
+            @Override protected String[] doInBackground() throws Exception {
+                return new String[]{ Files.readString(lf.toPath()), Files.readString(rf.toPath()) };
             }
-
-            @Override
-            protected void done() {
+            @Override protected void done() {
                 try {
-                    String[] texts = get();
-                    DiffViewerWindow w = new DiffViewerWindow(
-                            entry.relativePath(),
-                            leftPathField.getText().trim(),  texts[0],
-                            rightPathField.getText().trim(), texts[1]);
-                    w.setVisible(true);
+                    String[] t = get();
+                    new DiffViewerWindow(entry.relativePath(),
+                            leftPathField.getText().trim(),  t[0],
+                            rightPathField.getText().trim(), t[1]).setVisible(true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to open diff", ex);
                     JOptionPane.showMessageDialog(FolderCompareWindow.this,
-                            "Cannot open diff: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            "Cannot open diff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
 
     private void openSingle(String absPath, String relPath) {
@@ -363,20 +448,13 @@ public class FolderCompareWindow extends JFrame {
                     "Binary file", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
-            @Override protected String doInBackground() throws Exception {
-                return Files.readString(f.toPath());
-            }
+        new SwingWorker<String, Void>() {
+            @Override protected String  doInBackground() throws Exception { return Files.readString(f.toPath()); }
             @Override protected void done() {
-                try {
-                    FileViewerWindow w = new FileViewerWindow(relPath, get(), relPath);
-                    w.setVisible(true);
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to open file", ex);
-                }
+                try { new FileViewerWindow(relPath, get(), relPath).setVisible(true); }
+                catch (Exception ex) { log.log(Level.WARNING, "Failed to open file", ex); }
             }
-        };
-        worker.execute();
+        }.execute();
     }
 
     // ── Browse ────────────────────────────────────────────────────────────────
@@ -389,59 +467,45 @@ public class FolderCompareWindow extends JFrame {
             File cur = new File(target.getText().trim());
             if (cur.isDirectory()) fc.setCurrentDirectory(cur);
         }
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
             target.setText(fc.getSelectedFile().getAbsolutePath());
-        }
     }
 
     // ── Context menu ──────────────────────────────────────────────────────────
 
-    private void setupContextMenu() {
-        JPopupMenu menu = new JPopupMenu();
+    private void setupContextMenu(JTree tree) {
+        JPopupMenu menu      = new JPopupMenu();
+        JMenuItem diffItem   = new JMenuItem("Open diff");
+        JMenuItem leftItem   = new JMenuItem("Open left file");
+        JMenuItem rightItem  = new JMenuItem("Open right file");
 
-        JMenuItem openDiffItem  = new JMenuItem("Open diff");
-        JMenuItem openLeftItem  = new JMenuItem("Open left file");
-        JMenuItem openRightItem = new JMenuItem("Open right file");
+        diffItem .addActionListener(e -> openDiff(entryFromTree(tree)));
+        leftItem .addActionListener(e -> { FolderEntry en = entryFromTree(tree); if (en != null) openSingle(en.leftAbsPath(),  en.relativePath()); });
+        rightItem.addActionListener(e -> { FolderEntry en = entryFromTree(tree); if (en != null) openSingle(en.rightAbsPath(), en.relativePath()); });
 
-        openDiffItem.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) openDiff(tableModel.getEntryAt(row));
-        });
-        openLeftItem.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                FolderEntry entry = tableModel.getEntryAt(row);
-                openSingle(entry.leftAbsPath(), entry.relativePath());
-            }
-        });
-        openRightItem.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                FolderEntry entry = tableModel.getEntryAt(row);
-                openSingle(entry.rightAbsPath(), entry.relativePath());
-            }
-        });
-
-        menu.add(openDiffItem);
-        menu.addSeparator();
-        menu.add(openLeftItem);
-        menu.add(openRightItem);
+        menu.add(diffItem); menu.addSeparator(); menu.add(leftItem); menu.add(rightItem);
 
         menu.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
-            @Override
-            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
-                int row = table.getSelectedRow();
-                FolderEntry entry = (row >= 0) ? tableModel.getEntryAt(row) : null;
-                openDiffItem.setEnabled(entry != null
-                        && entry.leftAbsPath() != null && entry.rightAbsPath() != null);
-                openLeftItem.setEnabled(entry != null && entry.leftAbsPath() != null);
-                openRightItem.setEnabled(entry != null && entry.rightAbsPath() != null);
+            @Override public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
+                FolderEntry en = entryFromTree(tree);
+                diffItem .setEnabled(en != null && en.leftAbsPath()  != null && en.rightAbsPath() != null);
+                leftItem .setEnabled(en != null && en.leftAbsPath()  != null);
+                rightItem.setEnabled(en != null && en.rightAbsPath() != null);
             }
             @Override public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {}
             @Override public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {}
         });
 
-        table.setComponentPopupMenu(menu);
+        tree.addMouseListener(new MouseAdapter() {
+            private void show(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                TreePath p = tree.getPathForLocation(e.getX(), e.getY());
+                if (p != null) tree.setSelectionPath(p);
+                menu.show(tree, e.getX(), e.getY());
+            }
+            @Override public void mousePressed(MouseEvent e)  { show(e); }
+            @Override public void mouseReleased(MouseEvent e) { show(e); }
+        });
     }
 
     // ── Legend ────────────────────────────────────────────────────────────────
@@ -449,14 +513,14 @@ public class FolderCompareWindow extends JFrame {
     private static JPanel buildLegend() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
         p.setBorder(BorderFactory.createEmptyBorder(2, 6, 4, 6));
-        p.add(legendChip(diffColor(), "Different"));
-        p.add(legendChip(leftOnlyColor(), "Left only"));
-        p.add(legendChip(rightOnlyColor(), "Right only"));
-        p.add(legendChip(null, "Identical (default)"));
+        p.add(chip(SyntaxStyleUtil.rowBgChanged(), "Different  ≠"));
+        p.add(chip(SyntaxStyleUtil.rowBgDeleted(), "Left only  ◄"));
+        p.add(chip(SyntaxStyleUtil.rowBgAdded(),   "Right only  ►"));
+        p.add(chip(null,                           "Identical"));
         return p;
     }
 
-    private static JLabel legendChip(Color bg, String text) {
+    private static JLabel chip(Color bg, String text) {
         JLabel l = new JLabel(" " + text + " ");
         l.setOpaque(bg != null);
         if (bg != null) l.setBackground(bg);
@@ -465,106 +529,112 @@ public class FolderCompareWindow extends JFrame {
         return l;
     }
 
-    // ── Colours ───────────────────────────────────────────────────────────────
+    // ── NodeData ──────────────────────────────────────────────────────────────
 
-    private static Color diffColor()      { return new Color(0xD6E4FF); }   // blue tint
-    private static Color leftOnlyColor()  { return new Color(0xFFD6D6); }   // red tint
-    private static Color rightOnlyColor() { return new Color(0xD6FFD6); }   // green tint
+    static class NodeData {
+        final String      name;
+        final FolderEntry entry;            // null → directory
+        EntryStatus       propagatedStatus; // computed by propagateStatus()
 
-    // ── Table model ───────────────────────────────────────────────────────────
-
-    private static class FolderTableModel extends AbstractTableModel {
-
-        private static final String[] COLS = {"Left", "Status", "Right"};
-        private List<FolderEntry> entries = new ArrayList<>();
-
-        void setEntries(List<FolderEntry> data) {
-            this.entries = new ArrayList<>(data);
-            fireTableDataChanged();
+        NodeData(String name, FolderEntry entry) {
+            this.name = name;
+            this.entry = entry;
+            this.propagatedStatus = entry != null ? entry.status() : EntryStatus.IDENTICAL;
         }
 
-        List<FolderEntry> getEntries() { return entries; }
-
-        FolderEntry getEntryAt(int row) {
-            return (row >= 0 && row < entries.size()) ? entries.get(row) : null;
-        }
-
-        @Override public int getRowCount()    { return entries.size(); }
-        @Override public int getColumnCount() { return COLS.length; }
-        @Override public String getColumnName(int col) { return COLS[col]; }
-
-        @Override
-        public Object getValueAt(int row, int col) {
-            FolderEntry e = entries.get(row);
-            return switch (col) {
-                case 0 -> e.leftAbsPath()  != null ? e.relativePath() : "";
-                case 1 -> statusSymbol(e.status());
-                case 2 -> e.rightAbsPath() != null ? e.relativePath() : "";
-                default -> "";
-            };
-        }
-
-        private static String statusSymbol(EntryStatus s) {
-            return switch (s) {
-                case IDENTICAL  -> "=";
-                case DIFFERENT  -> "≠";
-                case LEFT_ONLY  -> "◄";
-                case RIGHT_ONLY -> "►";
-            };
-        }
+        boolean isFile() { return entry != null; }
+        EntryStatus effectiveStatus() { return isFile() ? entry.status() : propagatedStatus; }
     }
 
     // ── Cell renderers ────────────────────────────────────────────────────────
 
-    /** Colours left/right path cells based on the row's entry status. */
-    private class PathRenderer extends DefaultTableCellRenderer {
-        private final boolean isLeft;
-        PathRenderer(boolean isLeft) { this.isLeft = isLeft; }
+    /**
+     * Base renderer. Inherits folder-open / folder-closed / leaf icons from
+     * {@link DefaultTreeCellRenderer} automatically via the {@code expanded} and
+     * {@code leaf} parameters — no explicit icon override needed.
+     */
+    private static abstract class BaseRenderer extends DefaultTreeCellRenderer {
 
         @Override
-        public Component getTableCellRendererComponent(JTable t, Object value, boolean sel,
-                                                       boolean focus, int row, int col) {
-            super.getTableCellRendererComponent(t, value, sel, focus, row, col);
-            FolderEntry entry = tableModel.getEntryAt(row);
-            if (!sel && entry != null) {
-                Color bg = switch (entry.status()) {
-                    case DIFFERENT  -> diffColor();
-                    case LEFT_ONLY  -> isLeft ? leftOnlyColor()  : new Color(0xF0F0F0);
-                    case RIGHT_ONLY -> isLeft ? new Color(0xF0F0F0) : rightOnlyColor();
-                    case IDENTICAL  -> t.getBackground();
-                };
-                setBackground(bg);
-                Color fg = entry.status() == EntryStatus.IDENTICAL
-                        ? t.getForeground().darker()
-                        : t.getForeground();
-                setForeground(fg);
+        public Component getTreeCellRendererComponent(JTree tree, Object value,
+                boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            // super sets open/closed folder icon (non-leaf) or leaf icon based on expanded/leaf
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+            if (!(value instanceof DefaultMutableTreeNode node)) return this;
+            if (!(node.getUserObject() instanceof NodeData data)) return this;
+
+            EntryStatus status = data.effectiveStatus();
+            setText(label(data, status));
+
+            if (!sel) {
+                Color bg = bg(status);
+                setBackground(bg != null ? bg : tree.getBackground());
+                setForeground(fg(status));
+                setOpaque(true);
             }
             return this;
+        }
+
+        /** Text to display for this node. */
+        protected abstract String label(NodeData data, EntryStatus status);
+        /** Row background colour, or {@code null} for default. */
+        protected abstract Color  bg(EntryStatus status);
+        /** Row foreground colour. */
+        protected abstract Color  fg(EntryStatus status);
+    }
+
+    /** Left-side tree: highlights LEFT_ONLY (red), greys out RIGHT_ONLY. */
+    private static class LeftRenderer extends BaseRenderer {
+        @Override protected String label(NodeData data, EntryStatus status) {
+            String n = data.isFile() ? data.name : data.name + "/";
+            return switch (status) {
+                case DIFFERENT  -> n + "  ≠";
+                case LEFT_ONLY  -> n + "  ◄";
+                default         -> n;
+            };
+        }
+        @Override protected Color bg(EntryStatus status) {
+            return switch (status) {
+                case DIFFERENT  -> SyntaxStyleUtil.rowBgChanged();
+                case LEFT_ONLY  -> SyntaxStyleUtil.rowBgDeleted();
+                default         -> null;
+            };
+        }
+        @Override protected Color fg(EntryStatus status) {
+            return switch (status) {
+                case DIFFERENT  -> SyntaxStyleUtil.rowFgChanged();
+                case LEFT_ONLY  -> SyntaxStyleUtil.rowFgDeleted();
+                case RIGHT_ONLY -> UIManager.getColor("Label.disabledForeground");
+                default         -> UIManager.getColor("Tree.foreground");
+            };
         }
     }
 
-    /** Status column renderer — bold, centered. */
-    private class StatusRenderer extends DefaultTableCellRenderer {
-        StatusRenderer() {
-            setHorizontalAlignment(CENTER);
-            setFont(getFont().deriveFont(Font.BOLD));
+    /** Right-side tree: highlights RIGHT_ONLY (green), greys out LEFT_ONLY. */
+    private static class RightRenderer extends BaseRenderer {
+        @Override protected String label(NodeData data, EntryStatus status) {
+            String n = data.isFile() ? data.name : data.name + "/";
+            return switch (status) {
+                case DIFFERENT  -> n + "  ≠";
+                case RIGHT_ONLY -> n + "  ►";
+                default         -> n;
+            };
         }
-
-        @Override
-        public Component getTableCellRendererComponent(JTable t, Object value, boolean sel,
-                                                       boolean focus, int row, int col) {
-            super.getTableCellRendererComponent(t, value, sel, focus, row, col);
-            FolderEntry entry = tableModel.getEntryAt(row);
-            if (!sel && entry != null) {
-                Color bg = switch (entry.status()) {
-                    case DIFFERENT  -> diffColor();
-                    case LEFT_ONLY  -> leftOnlyColor();
-                    case RIGHT_ONLY -> rightOnlyColor();
-                    case IDENTICAL  -> t.getBackground();
-                };
-                setBackground(bg);
-            }
-            return this;
+        @Override protected Color bg(EntryStatus status) {
+            return switch (status) {
+                case DIFFERENT  -> SyntaxStyleUtil.rowBgChanged();
+                case RIGHT_ONLY -> SyntaxStyleUtil.rowBgAdded();
+                default         -> null;
+            };
+        }
+        @Override protected Color fg(EntryStatus status) {
+            return switch (status) {
+                case DIFFERENT  -> SyntaxStyleUtil.rowFgChanged();
+                case RIGHT_ONLY -> SyntaxStyleUtil.rowFgAdded();
+                case LEFT_ONLY  -> UIManager.getColor("Label.disabledForeground");
+                default         -> UIManager.getColor("Tree.foreground");
+            };
         }
     }
 }
