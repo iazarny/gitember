@@ -134,6 +134,16 @@ public final class SyntaxStyleUtil {
         return isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
     }
 
+    // ---- Table-row colours for added / deleted / changed file rows ----
+    // Shared by PullRequestPanel, PullResultDialog, and similar views.
+
+    public static Color rowBgAdded()   { return isDarkTheme() ? new Color( 30,  80,  30) : new Color(210, 245, 210); }
+    public static Color rowBgDeleted() { return isDarkTheme() ? new Color(100,  30,  30) : new Color(250, 210, 210); }
+    public static Color rowBgChanged() { return isDarkTheme() ? new Color( 25,  50, 100) : new Color(210, 225, 250); }
+    public static Color rowFgAdded()   { return isDarkTheme() ? new Color(180, 240, 180) : Color.BLACK; }
+    public static Color rowFgDeleted() { return isDarkTheme() ? new Color(240, 160, 160) : Color.BLACK; }
+    public static Color rowFgChanged() { return isDarkTheme() ? new Color(160, 195, 255) : Color.BLACK; }
+
     /**
      * Returns a theme-aware foreground colour for a SCM file-status label
      * (as used in the changed-files table of the commit detail panel).
