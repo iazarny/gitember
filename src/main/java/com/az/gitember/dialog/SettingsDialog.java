@@ -7,15 +7,17 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.TreeSet;
 
 public class SettingsDialog extends JDialog {
 
     private final JComboBox<String> themeCombo;
-    private final JSpinner fontSizeSpinner;
+    private final JSpinner          fontSizeSpinner;
+    private final JTextArea         ignoreExtArea;
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(350, 180);
+        setSize(460, 310);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -23,6 +25,15 @@ public class SettingsDialog extends JDialog {
         String currentTheme = settings != null && "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light";
         int currentFontSize = settings != null ? settings.getFontSize() : 13;
         if (currentFontSize <= 0) currentFontSize = 13;
+
+        // current ignore list — show effective (default if empty)
+        String currentIgnore = settings != null
+                ? String.join(", ", settings.getEffectiveIgnoreCompareFiles())
+                : String.join(", ", Settings.DEFAULT_IGNORE_COMPARE_FILES);
+        ignoreExtArea = new JTextArea(currentIgnore, 3, 30);
+        ignoreExtArea.setLineWrap(true);
+        ignoreExtArea.setWrapStyleWord(true);
+        ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, 11f));
 
         // Form panel
         JPanel form = new JPanel(new GridBagLayout());
@@ -47,6 +58,26 @@ public class SettingsDialog extends JDialog {
         fontSizeSpinner = new JSpinner(new SpinnerNumberModel(currentFontSize, 8, 36, 1));
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(fontSizeSpinner, gbc);
+
+        // Ignore extensions (folder compare)
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        form.add(new JLabel("Ignore extensions\n(folder compare):"), gbc);
+
+        JScrollPane ignoreScroll = new JScrollPane(ignoreExtArea);
+        ignoreScroll.setPreferredSize(new Dimension(0, 64));
+        gbc.gridx = 1; gbc.gridy = 2; gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0; gbc.weighty = 1.0;
+        form.add(ignoreScroll, gbc);
+        gbc.weighty = 0;
+
+        JButton resetBtn = new JButton("Reset to defaults");
+        resetBtn.setFont(resetBtn.getFont().deriveFont(Font.PLAIN, 11f));
+        resetBtn.addActionListener(e -> ignoreExtArea.setText(
+                String.join(", ", Settings.DEFAULT_IGNORE_COMPARE_FILES)));
+        gbc.gridx = 1; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.EAST;
+        form.add(resetBtn, gbc);
+        gbc.anchor = GridBagConstraints.WEST;
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -80,6 +111,18 @@ public class SettingsDialog extends JDialog {
 
         settings.setTheme("Dark".equals(selectedTheme) ? "dark" : "light");
         settings.setFontSize(selectedFontSize);
+
+        // Parse ignore-extensions textarea (comma-separated, strip dots and whitespace)
+        TreeSet<String> ignore = new TreeSet<>();
+        for (String tok : ignoreExtArea.getText().split("[,\\s]+")) {
+            String ext = tok.trim().toLowerCase().replaceAll("^\\.", "");
+            if (!ext.isEmpty()) ignore.add(ext);
+        }
+        // Store empty set when user entered exactly the defaults → fallback to default at runtime
+        settings.setIgnoreCompareFiles(
+                ignore.equals(new TreeSet<>(Settings.DEFAULT_IGNORE_COMPARE_FILES))
+                        ? new TreeSet<>() : ignore);
+
         Context.saveSettings();
 
         if (themeChanged) {

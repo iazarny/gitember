@@ -1,5 +1,8 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Settings;
+import com.az.gitember.service.Context;
+
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
@@ -12,6 +15,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -279,14 +283,26 @@ public class FolderCompareWindow extends JFrame {
 
     private Set<String> collectRelativePaths(Path root) throws Exception {
         if (!Files.exists(root)) return Collections.emptySet();
-        Set<String> paths = new TreeSet<>();
+        Set<String> ignore = effectiveIgnoreExtensions();
+        Set<String> paths  = new TreeSet<>();
         Files.walkFileTree(root, new SimpleFileVisitor<>() {
             @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                paths.add(root.relativize(file).toString().replace('\\', '/'));
+                if (!ignore.contains(extensionOf(file.getFileName().toString())))
+                    paths.add(root.relativize(file).toString().replace('\\', '/'));
                 return FileVisitResult.CONTINUE;
             }
         });
         return paths;
+    }
+
+    private static Set<String> effectiveIgnoreExtensions() {
+        Settings s = Context.getSettings();
+        return s != null ? s.getEffectiveIgnoreCompareFiles() : Settings.DEFAULT_IGNORE_COMPARE_FILES;
+    }
+
+    private static String extensionOf(String filename) {
+        int dot = filename.lastIndexOf('.');
+        return dot >= 0 ? filename.substring(dot + 1).toLowerCase() : "";
     }
 
     // ── Tree model building ───────────────────────────────────────────────────
