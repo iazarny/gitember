@@ -68,8 +68,9 @@ public class FolderCompareWindow extends JFrame {
     private List<FolderEntry>              allEntries     = Collections.emptyList();
     private List<DefaultMutableTreeNode>   diffNodes      = Collections.emptyList();
     private int                            currentDiffIdx = -1;
-    private boolean                        syncingExpansion = false;
-    private boolean                        syncingScroll    = false;
+    private boolean                        syncingExpansion  = false;
+    private boolean                        syncingScroll     = false;
+    private boolean                        syncingSelection  = false;
 
     // ── Construction ──────────────────────────────────────────────────────────
 
@@ -85,6 +86,8 @@ public class FolderCompareWindow extends JFrame {
 
         wireExpansionSync(leftTree,  rightTree);
         wireExpansionSync(rightTree, leftTree);
+        wireSelectionSync(leftTree,  rightTree);
+        wireSelectionSync(rightTree, leftTree);
 
         setupContextMenu(leftTree);
         setupContextMenu(rightTree);
@@ -208,6 +211,17 @@ public class FolderCompareWindow extends JFrame {
             @Override public void treeCollapsed(TreeExpansionEvent e) {
                 if (!syncingExpansion) { syncingExpansion = true;
                     target.collapsePath(e.getPath()); syncingExpansion = false; }
+            }
+        });
+    }
+
+    private void wireSelectionSync(JTree source, JTree target) {
+        source.addTreeSelectionListener(e -> {
+            if (!syncingSelection) {
+                syncingSelection = true;
+                target.setSelectionPath(e.getPath());
+                if (e.getPath() != null) target.scrollPathToVisible(e.getPath());
+                syncingSelection = false;
             }
         });
     }
@@ -571,11 +585,19 @@ public class FolderCompareWindow extends JFrame {
      */
     private static abstract class BaseRenderer extends DefaultTreeCellRenderer {
 
+        private transient JTree  currentTree;
+        private           boolean currentSel;
+
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
                 boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             // super sets open/closed folder icon (non-leaf) or leaf icon based on expanded/leaf
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            currentTree = tree;
+            currentSel  = sel;
+            // Keep opaque=false so JLabel never fills just the label bounds with background;
+            // full-row background is painted manually in paint() below.
+            setOpaque(false);
 
             if (!(value instanceof DefaultMutableTreeNode node)) return this;
             if (!(node.getUserObject() instanceof NodeData data)) return this;
@@ -587,9 +609,19 @@ public class FolderCompareWindow extends JFrame {
                 Color bg = bg(status);
                 setBackground(bg != null ? bg : tree.getBackground());
                 setForeground(fg(status));
-                setOpaque(true);
             }
             return this;
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            // Paint background spanning the full tree row width (not just label bounds).
+            // Skip for selected rows — the L&F (FlatLaf) already paints a full-width highlight.
+            if (!currentSel && currentTree != null) {
+                g.setColor(getBackground());
+                g.fillRect(0, 0, currentTree.getWidth(), getHeight());
+            }
+            super.paint(g);
         }
 
         /** Text to display for this node. */
