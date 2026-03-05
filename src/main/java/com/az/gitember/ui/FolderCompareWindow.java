@@ -6,6 +6,7 @@ import com.az.gitember.service.Context;
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.plaf.basic.BasicTreeUI;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -110,8 +111,44 @@ public class FolderCompareWindow extends JFrame {
 
     // ── Widget factories ──────────────────────────────────────────────────────
 
-    private JTree makeTree(TreeCellRenderer renderer) {
+    /**
+     * TreeUI that paints full-row backgrounds from the left edge (x=0) before each row,
+     * so selection and status highlights span the entire row and are not overwritten.
+     */
+    private static final class FullRowTreeUI extends BasicTreeUI {
+        private final BaseRenderer rowRenderer;
+
+        FullRowTreeUI(BaseRenderer renderer) {
+            this.rowRenderer = renderer;
+        }
+
+        @Override
+        protected void paintRow(Graphics g, Rectangle clipBounds, Insets insets,
+                Rectangle bounds, TreePath path, int row, boolean isExpanded,
+                boolean hasBeenExpanded, boolean isLeaf) {
+            // Paint full row background from left edge before painting row content.
+            Color c = tree.isRowSelected(row)
+                    ? UIManager.getColor("Tree.selectionBackground")
+                    : rowBackgroundForPath(path);
+            if (c != null) {
+                g.setColor(c);
+                g.fillRect(0, bounds.y, tree.getWidth(), bounds.height);
+            }
+            super.paintRow(g, clipBounds, insets, bounds, path, row, isExpanded, hasBeenExpanded, isLeaf);
+        }
+
+        private Color rowBackgroundForPath(TreePath path) {
+            Object last = path.getLastPathComponent();
+            if (!(last instanceof DefaultMutableTreeNode node)) return null;
+            if (!(node.getUserObject() instanceof NodeData data)) return null;
+            Color c = rowRenderer.bg(data.effectiveStatus());
+            return c != null ? c : tree.getBackground();
+        }
+    }
+
+    private JTree makeTree(BaseRenderer renderer) {
         JTree t = new JTree(treeModel);
+        t.setUI(new FullRowTreeUI(renderer));
         t.setRootVisible(false);
         t.setShowsRootHandles(true);
         t.setRowHeight(22);
@@ -585,18 +622,12 @@ public class FolderCompareWindow extends JFrame {
      */
     private static abstract class BaseRenderer extends DefaultTreeCellRenderer {
 
-        private transient JTree  currentTree;
-        private           boolean currentSel;
-
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
                 boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             // super sets open/closed folder icon (non-leaf) or leaf icon based on expanded/leaf
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
-            currentTree = tree;
-            currentSel  = sel;
-            // Keep opaque=false so JLabel never fills just the label bounds with background;
-            // full-row background is painted manually in paint() below.
+            // Non-opaque so full-row background painted by FullRowTree shows through.
             setOpaque(false);
 
             if (!(value instanceof DefaultMutableTreeNode node)) return this;
@@ -611,17 +642,6 @@ public class FolderCompareWindow extends JFrame {
                 setForeground(fg(status));
             }
             return this;
-        }
-
-        @Override
-        public void paint(Graphics g) {
-            // Paint background spanning the full tree row width (not just label bounds).
-            // Skip for selected rows — the L&F (FlatLaf) already paints a full-width highlight.
-            if (!currentSel && currentTree != null) {
-                g.setColor(getBackground());
-                g.fillRect(0, 0, currentTree.getWidth(), getHeight());
-            }
-            super.paint(g);
         }
 
         /** Text to display for this node. */
