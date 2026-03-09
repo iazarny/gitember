@@ -557,6 +557,7 @@ public class MainFrame extends JFrame {
         if (userObject instanceof TreeNodeData data) {
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
+            boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;
 
             // Merge/unmerge working copy toolbar
             if (isWorkingCopy) {
@@ -570,6 +571,13 @@ public class MainFrame extends JFrame {
                 toolBar.mergeHistoryToolbar(historyPanel);
             } else {
                 toolBar.unmergeHistoryToolbar();
+            }
+
+            // Merge/unmerge pull-request file filter
+            if (isPullRequest) {
+                toolBar.mergePullRequestToolbar(pullRequestPanel);
+            } else {
+                toolBar.unmergePullRequestToolbar();
             }
 
             switch (data.type()) {

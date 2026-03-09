@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.Util;
 import com.az.gitember.ui.HistoryPanel;
+import com.az.gitember.ui.PullRequestPanel;
 import com.az.gitember.ui.WorkingCopyPanel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -207,6 +208,38 @@ public class MainToolBar extends JToolBar {
             remove(c);
         }
         mergedHistoryComponents.clear();
+        revalidate();
+        repaint();
+    }
+
+    // Pull-request file filter component merged into main toolbar
+    private final java.util.List<Component> mergedPrComponents = new java.util.ArrayList<>();
+
+    public void mergePullRequestToolbar(PullRequestPanel prp) {
+        if (!mergedPrComponents.isEmpty()) return;
+
+        Component glue = Box.createHorizontalGlue();
+        mergedPrComponents.add(glue);
+        add(glue);
+
+        JLabel filterLabel = new JLabel("Filter:");
+        filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+        mergedPrComponents.add(filterLabel);
+        add(filterLabel);
+
+        mergedPrComponents.add(prp.getSearchField());
+        add(prp.getSearchField());
+
+        revalidate();
+        repaint();
+    }
+
+    public void unmergePullRequestToolbar() {
+        if (mergedPrComponents.isEmpty()) return;
+        for (Component c : mergedPrComponents) {
+            remove(c);
+        }
+        mergedPrComponents.clear();
         revalidate();
         repaint();
     }
