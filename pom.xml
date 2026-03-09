@@ -16,6 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <spring.boot.version>3.3.5</spring.boot.version>
         <jgit.version>6.10.1.202505221210-r</jgit.version>
         <flatlaf.version>3.7</flatlaf.version>
         <ikonli.version>12.3.1</ikonli.version>
@@ -195,6 +196,24 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.az.gitember.App</mainClass>
+                            <layout>JAR</layout>
+                            <classifier>boot</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
