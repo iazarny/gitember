@@ -303,7 +303,14 @@ public class DiffViewerWindow extends JFrame {
         leftScroll.getVerticalScrollBar() .addAdjustmentListener(e -> centerPanel.repaint());
         rightScroll.getVerticalScrollBar().addAdjustmentListener(e -> centerPanel.repaint());
 
-        // Layout: left(43%) | connectors(9%) | right(43%) | overview(fixed 80px)
+        // Neutralise preferred sizes so GridBagLayout distributes space by weight only.
+        // Without this, panels whose header labels have different text lengths end up
+        // with different preferred widths, causing unequal pane sizes even with equal weights.
+        Dimension zero = new Dimension(0, 0);
+        leftPanel.setPreferredSize(zero);
+        rightPanel.setPreferredSize(zero);
+
+        // Layout: left(43%) | connectors(9%) | right(43%) | overview(fixed preferred width)
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill  = GridBagConstraints.BOTH;

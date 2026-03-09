@@ -1965,6 +1965,28 @@ public class GitRepoService {
         }
     }
 
+    /**
+     * Returns the SHA of the merge base (common ancestor) of two branches,
+     * or null if the branches are not available locally.
+     */
+    public String getMergeBaseSha(String sourceBranch, String targetBranch) {
+        try {
+            ObjectId sourceId = repository.resolve(resolveAnyRef(sourceBranch));
+            ObjectId targetId = repository.resolve(resolveAnyRef(targetBranch));
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit sourceCommit = walk.parseCommit(sourceId);
+                RevCommit targetCommit = walk.parseCommit(targetId);
+                walk.setRevFilter(RevFilter.MERGE_BASE);
+                walk.markStart(sourceCommit);
+                walk.markStart(targetCommit);
+                RevCommit mergeBase = walk.next();
+                return mergeBase != null ? mergeBase.getName() : null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private String resolveAnyRef(String branchName) throws Exception {
         String[] candidates = {
             "refs/remotes/origin/" + branchName,
@@ -1986,6 +2008,14 @@ public class GitRepoService {
      */
     public String getFileContentAtRef(String ref, String filePath) throws Exception {
         ObjectId id = repository.resolve(ref);
+        if (id == null) {
+            // Plain branch name may not resolve — try remote-tracking and local ref variants
+            try {
+                id = repository.resolve(resolveAnyRef(ref));
+            } catch (Exception ignored) {
+                return ""; // branch genuinely not available locally
+            }
+        }
         if (id == null) return "";
         try (RevWalk walk = new RevWalk(repository)) {
             RevCommit commit = walk.parseCommit(id);

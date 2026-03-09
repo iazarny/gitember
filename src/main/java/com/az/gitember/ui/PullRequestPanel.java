@@ -372,21 +372,57 @@ public class PullRequestPanel extends JPanel {
         new SwingWorker<String[], Void>() {
             @Override
             protected String[] doInBackground() throws Exception {
-                String targetContent = Context.getGitRepoService()
-                        .getFileContentAtRef(currentPr.targetBranch(), item.getShortName());
-                String sourceContent = Context.getGitRepoService()
-                        .getFileContentAtRef(currentPr.sourceBranch(), item.getShortName());
-                return new String[]{targetContent, sourceContent};
+                String status  = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                String newPath = item.getShortName();
+                // For renames the old path (in base) differs from the new path (in source)
+                String oldPath = (item.getAttribute() != null
+                        && item.getAttribute().getOldName() != null
+                        && !item.getAttribute().getOldName().isBlank())
+                        ? item.getAttribute().getOldName() : newPath;
+
+                // GitHub diffs merge-base → source-head (three-dot diff).
+                // Using the target branch tip would include unrelated commits merged
+                // into target after the PR branch was created.
+                String mergeBaseSha = Context.getGitRepoService()
+                        .getMergeBaseSha(currentPr.sourceBranch(), currentPr.targetBranch());
+                // Fall back to target tip when branches are not available locally
+                // (fork PRs) — content will still be fetched via getFileContentAtRef's
+                // resolveAnyRef fallback; if that also fails the pane shows empty.
+                String baseRef = mergeBaseSha != null ? mergeBaseSha : currentPr.targetBranch();
+
+                String baseContent;
+                String sourceContent;
+
+                if (ScmItem.Status.ADDED.equals(status)) {
+                    baseContent   = "";
+                    sourceContent = Context.getGitRepoService()
+                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                } else if (ScmItem.Status.REMOVED.equals(status)) {
+                    baseContent   = Context.getGitRepoService()
+                            .getFileContentAtRef(baseRef, oldPath);
+                    sourceContent = "";
+                } else {
+                    // Modified or renamed
+                    baseContent   = Context.getGitRepoService()
+                            .getFileContentAtRef(baseRef, oldPath);
+                    sourceContent = Context.getGitRepoService()
+                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                }
+
+                return new String[]{baseContent, sourceContent};
             }
 
             @Override
             protected void done() {
                 try {
                     String[] texts = get();
+                    // Left = base (merge base), Right = source (PR head) — same as GitHub
+                    String baseLabel   = currentPr.targetBranch() + " (base)";
+                    String sourceLabel = currentPr.sourceBranch();
                     DiffViewerWindow w = new DiffViewerWindow(
                             item.getShortName(),
-                            currentPr.targetBranch() + " → " + currentPr.sourceBranch(),
-                            texts[0], texts[1]);
+                            baseLabel,   texts[0],
+                            sourceLabel, texts[1]);
                     w.setVisible(true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show PR file diff", ex);
