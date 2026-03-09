@@ -209,8 +209,10 @@ class DiffOverviewPanel extends JPanel {
 
     /** Paints the semi-transparent viewport indicator. */
     private void paintViewportRect(Graphics2D g2, int w, int h) {
-        int y  = (int) (viewportOffset * h);
         int rh = Math.max(4, (int) (viewportSize * h));
+        int y  = Math.min((int) (viewportOffset * h), h - rh);   // top cannot push rect below panel
+        y      = Math.max(0, y);                                   // top cannot be above panel
+        rh     = Math.min(rh, h - y);                             // bottom cannot exceed panel
         g2.setColor(new Color(128, 128, 128, 55));
         g2.fillRect(0, y, w, rh);
         g2.setColor(new Color(100, 100, 100, 170));
