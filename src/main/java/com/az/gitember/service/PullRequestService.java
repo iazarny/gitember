@@ -1,6 +1,8 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.PullRequest;
+import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmItemAttribute;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -271,6 +273,111 @@ public class PullRequestService {
                     pr.path("base").path("label").asText(""),
                     pr.path("html_url").asText(""),
                     pr.path("state").asText("open")));
+        }
+        return result;
+    }
+
+    // ---- PR file list via API (fallback when branches are not available locally) ----
+
+    /**
+     * Fetches the list of files changed in a PR/MR directly from the hosting API.
+     * Use this when the branch is not available in the local clone (e.g. fork PRs).
+     *
+     * @param remoteUrl   git remote URL
+     * @param accessToken project-level token (may be null)
+     * @param prNumber    PR / MR number
+     * @return list of ScmItems, or empty list if the host is unsupported / request fails
+     */
+    public static List<ScmItem> fetchPrFiles(String remoteUrl, String accessToken, int prNumber) {
+        if (remoteUrl == null || remoteUrl.isBlank()) return Collections.emptyList();
+
+        Host host = detectHost(remoteUrl);
+        String token = resolveToken(accessToken, host);
+
+        try {
+            return switch (host) {
+                case GITHUB -> fetchGitHubPrFiles(remoteUrl, token, prNumber);
+                case GITLAB -> fetchGitLabMrFiles(remoteUrl, token, prNumber);
+                default     -> Collections.emptyList();
+            };
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Failed to fetch PR files from API for PR #" + prNumber, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private static List<ScmItem> fetchGitHubPrFiles(String remoteUrl, String token, int prNumber)
+            throws Exception {
+        String[] parts = parsePathSegments(remoteUrl, "github.com");
+        if (parts == null) return Collections.emptyList();
+
+        // GitHub paginates at 30 by default; fetch up to 100 pages of 100
+        List<ScmItem> result = new ArrayList<>();
+        int page = 1;
+        while (true) {
+            String apiUrl = "https://api.github.com/repos/" + parts[0] + "/" + parts[1]
+                    + "/pulls/" + prNumber + "/files?per_page=100&page=" + page;
+
+            HttpRequest.Builder req = HttpRequest.newBuilder()
+                    .header("Accept", "application/vnd.github+json")
+                    .header("X-GitHub-Api-Version", "2022-11-28");
+            if (token != null && !token.isBlank()) req.header("Authorization", "Bearer " + token);
+
+            String body = get(apiUrl, req);
+            if (body == null) break;
+
+            JsonNode arr = MAPPER.readTree(body);
+            if (!arr.isArray() || arr.size() == 0) break;
+
+            for (JsonNode f : arr) {
+                String filename = f.path("filename").asText("");
+                String prev     = f.path("previous_filename").asText(null);
+                String status   = f.path("status").asText("modified");
+                String scmStatus = switch (status) {
+                    case "added"   -> ScmItem.Status.ADDED;
+                    case "removed" -> ScmItem.Status.REMOVED;
+                    case "renamed" -> ScmItem.Status.RENAMED;
+                    default        -> ScmItem.Status.MODIFIED;
+                };
+                ScmItemAttribute attr = new ScmItemAttribute().withStatus(scmStatus);
+                if (prev != null && !prev.isBlank()) attr.withOldName(prev);
+                result.add(new ScmItem(filename, attr));
+            }
+            if (arr.size() < 100) break;
+            page++;
+        }
+        return result;
+    }
+
+    private static List<ScmItem> fetchGitLabMrFiles(String remoteUrl, String token, int prNumber)
+            throws Exception {
+        String[] parts = parsePathSegments(remoteUrl, "gitlab.com");
+        if (parts == null) return Collections.emptyList();
+
+        String encodedPath = String.join("%2F", parts);
+        String apiUrl = "https://gitlab.com/api/v4/projects/" + encodedPath
+                + "/merge_requests/" + prNumber + "/changes";
+
+        HttpRequest.Builder req = HttpRequest.newBuilder();
+        if (token != null && !token.isBlank()) req.header("PRIVATE-TOKEN", token);
+
+        String body = get(apiUrl, req);
+        if (body == null) return Collections.emptyList();
+
+        List<ScmItem> result = new ArrayList<>();
+        for (JsonNode f : MAPPER.readTree(body).path("changes")) {
+            String newPath  = f.path("new_path").asText("");
+            String oldPath  = f.path("old_path").asText("");
+            boolean isNew      = f.path("new_file").asBoolean(false);
+            boolean isDeleted  = f.path("deleted_file").asBoolean(false);
+            boolean isRenamed  = f.path("renamed_file").asBoolean(false);
+            String scmStatus = isNew ? ScmItem.Status.ADDED
+                    : isDeleted  ? ScmItem.Status.REMOVED
+                    : isRenamed  ? ScmItem.Status.RENAMED
+                    : ScmItem.Status.MODIFIED;
+            ScmItemAttribute attr = new ScmItemAttribute().withStatus(scmStatus);
+            if (isRenamed) attr.withOldName(oldPath);
+            result.add(new ScmItem(newPath, attr));
         }
         return result;
     }

@@ -1929,9 +1929,40 @@ public class GitRepoService {
     public List<ScmItem> getPrChangedFiles(String sourceBranch, String targetBranch) throws Exception {
         String sourceRef = resolveAnyRef(sourceBranch);
         String targetRef = resolveAnyRef(targetBranch);
-        return getBranchDiff(targetRef, sourceRef).stream()
-                .map(this::adaptDiffEntry)
-                .collect(java.util.stream.Collectors.toList());
+
+        ObjectId sourceId = repository.resolve(sourceRef);
+        ObjectId targetId = repository.resolve(targetRef);
+
+        try (RevWalk walk = new RevWalk(repository);
+             ObjectReader reader = repository.newObjectReader()) {
+
+            RevCommit sourceCommit = walk.parseCommit(sourceId);
+            RevCommit targetCommit = walk.parseCommit(targetId);
+
+            // Find the merge base (common ancestor) — what GitHub/GitLab use for PR diffs
+            walk.setRevFilter(RevFilter.MERGE_BASE);
+            walk.markStart(sourceCommit);
+            walk.markStart(targetCommit);
+            RevCommit mergeBase = walk.next();
+
+            RevCommit baseCommit = mergeBase != null ? mergeBase : targetCommit;
+
+            CanonicalTreeParser baseTree = new CanonicalTreeParser();
+            baseTree.reset(reader, walk.parseCommit(baseCommit.getId()).getTree());
+
+            CanonicalTreeParser sourceTree = new CanonicalTreeParser();
+            sourceTree.reset(reader, sourceCommit.getTree());
+
+            try (Git git = new Git(repository)) {
+                return git.diff()
+                        .setOldTree(baseTree)
+                        .setNewTree(sourceTree)
+                        .call()
+                        .stream()
+                        .map(this::adaptDiffEntry)
+                        .collect(java.util.stream.Collectors.toList());
+            }
+        }
     }
 
     private String resolveAnyRef(String branchName) throws Exception {

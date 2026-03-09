@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.PullRequestService;
 import com.az.gitember.service.avatar.AvatarService;
 
 import javax.swing.*;
@@ -310,6 +311,17 @@ public class PullRequestPanel extends JPanel {
         new SwingWorker<List<ScmItem>, Void>() {
             @Override
             protected List<ScmItem> doInBackground() throws Exception {
+                String remoteUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
+                String token = Context.getCurrentProject()
+                        .map(Project::getAccessToken).orElse(null);
+
+                // Try hosting API first — it is always authoritative (handles forks,
+                // deleted branches, merged PRs, stale local refs, etc.)
+                List<ScmItem> apiResult = PullRequestService.fetchPrFiles(remoteUrl, token, pr.number());
+                if (!apiResult.isEmpty()) return apiResult;
+
+                // API unavailable (no network, unsupported host, rate-limited without token)
+                // — fall back to local git merge-base diff.
                 return Context.getGitRepoService()
                         .getPrChangedFiles(pr.sourceBranch(), pr.targetBranch());
             }
