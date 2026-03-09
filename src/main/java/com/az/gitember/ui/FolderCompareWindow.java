@@ -117,6 +117,13 @@ public class FolderCompareWindow extends JFrame {
         compareBtn.addActionListener(e -> startScan());
     }
 
+    /** Pre-fill both paths and start the scan immediately (used by CLI invocation). */
+    public void compare(String leftPath, String rightPath) {
+        leftPathField.setText(leftPath);
+        rightPathField.setText(rightPath);
+        startScan();
+    }
+
     // ── Widget factories ──────────────────────────────────────────────────────
 
     /**
