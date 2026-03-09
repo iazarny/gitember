@@ -39,7 +39,15 @@ public class FolderCompareWindow extends JFrame {
 
     // ── Data ──────────────────────────────────────────────────────────────────
 
-    enum EntryStatus { IDENTICAL, DIFFERENT, LEFT_ONLY, RIGHT_ONLY }
+    enum EntryStatus {
+        IDENTICAL  ("="),
+        DIFFERENT  ("≠"),
+        LEFT_ONLY  ("<<"),
+        RIGHT_ONLY (">>");
+
+        public final String label;
+        EntryStatus(String label) { this.label = label; }
+    }
 
     record FolderEntry(String relativePath,
                        String leftAbsPath,
@@ -56,8 +64,8 @@ public class FolderCompareWindow extends JFrame {
     private final JLabel rightHeader = new JLabel(" ");
 
     private final JToggleButton diffsOnlyBtn = new JToggleButton("Differences only");
-    private final JButton prevBtn  = new JButton("◄ Prev");
-    private final JButton nextBtn  = new JButton("Next ►");
+    private final JButton prevBtn  = new JButton("<< Prev");
+    private final JButton nextBtn  = new JButton("Next >>");
     private final JLabel  statsLbl = new JLabel(" ");
 
     private final JTree          leftTree;
@@ -580,9 +588,9 @@ public class FolderCompareWindow extends JFrame {
     private static JPanel buildLegend() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
         p.setBorder(BorderFactory.createEmptyBorder(2, 6, 4, 6));
-        p.add(chip(SyntaxStyleUtil.rowBgChanged(), "Different  ≠"));
-        p.add(chip(SyntaxStyleUtil.rowBgDeleted(), "Left only  ◄"));
-        p.add(chip(SyntaxStyleUtil.rowBgAdded(),   "Right only  ►"));
+        p.add(chip(SyntaxStyleUtil.rowBgChanged(), "Different  " + EntryStatus.DIFFERENT.label));
+        p.add(chip(SyntaxStyleUtil.rowBgDeleted(), "Left only  " + EntryStatus.LEFT_ONLY.label));
+        p.add(chip(SyntaxStyleUtil.rowBgAdded(),   "Right only  " + EntryStatus.RIGHT_ONLY.label));
         p.add(chip(null,                           "Identical"));
         return p;
     }
@@ -657,8 +665,8 @@ public class FolderCompareWindow extends JFrame {
         @Override protected String label(NodeData data, EntryStatus status) {
             String n = data.isFile() ? data.name : data.name + "/";
             return switch (status) {
-                case DIFFERENT  -> n + "  ≠";
-                case LEFT_ONLY  -> n + "  ◄";
+                case DIFFERENT  -> n + "  " + EntryStatus.DIFFERENT.label;
+                case LEFT_ONLY  -> n + "  " + EntryStatus.LEFT_ONLY.label;
                 default         -> n;
             };
         }
@@ -684,8 +692,8 @@ public class FolderCompareWindow extends JFrame {
         @Override protected String label(NodeData data, EntryStatus status) {
             String n = data.isFile() ? data.name : data.name + "/";
             return switch (status) {
-                case DIFFERENT  -> n + "  ≠";
-                case RIGHT_ONLY -> n + "  ►";
+                case DIFFERENT  -> n + "  " + EntryStatus.DIFFERENT.label;
+                case RIGHT_ONLY -> n + "  " + EntryStatus.RIGHT_ONLY.label;
                 default         -> n;
             };
         }
