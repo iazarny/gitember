@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.sshd.common.digest.BuiltinDigests.md5;
+
 public class SearchService implements AutoCloseable {
 
     private final String indexStorageFolder;
@@ -145,7 +147,7 @@ public class SearchService implements AutoCloseable {
 
     private static String getIndexStorageFolder(String projectFolder) {
         return System.getProperty("java.io.tmpdir") + File.separator
-                + "gitemberidx" + File.separator + CipherService.crypt(projectFolder,"a");
+                + "gitemberidx" + File.separator + "luceneidx-"  + GitemberUtil.getMd5Hash(projectFolder);
     }
 
     @Override
