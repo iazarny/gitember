@@ -459,7 +459,7 @@ public class DiffViewerWindow extends JFrame {
             }
             @Override protected void done() {
                 try {
-                    String content = get();
+                    String content = normalizeLF(get());
                     pathField.setText(f.getAbsolutePath());
                     loadingFile = true;
                     editor.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(f.getName()));
@@ -554,6 +554,12 @@ public class DiffViewerWindow extends JFrame {
         }
     }
 
+    /** Normalise Windows (CRLF) and legacy Mac (CR) line endings to LF. */
+    private static String normalizeLF(String text) {
+        if (text == null) return null;
+        return text.replace("\r\n", "\n").replace("\r", "\n");
+    }
+
     private void computeAndDisplayDiff() {
         if (editableMode) {
             // In editable mode the panes ARE the source of truth
@@ -561,6 +567,10 @@ public class DiffViewerWindow extends JFrame {
             newText = newPane.getText();
         }
         if (oldText == null || newText == null) return;
+
+        // Normalise line endings so CRLF files diff and display correctly
+        oldText = normalizeLF(oldText);
+        newText = normalizeLF(newText);
 
         // Compute diff using JGit HISTOGRAM algorithm
         RawText oldRaw = new RawText(oldText.getBytes(StandardCharsets.UTF_8));

@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.az</groupId>
-    <artifactId>gitember-swing</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>gitember</artifactId>
+    <version>3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Gitember Swing</name>

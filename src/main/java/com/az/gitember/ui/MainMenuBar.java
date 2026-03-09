@@ -4,8 +4,11 @@ import com.az.gitember.data.Project;
 import com.az.gitember.service.GitemberUtil;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.net.URI;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -175,11 +178,26 @@ public class MainMenuBar extends JMenuBar {
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
         aboutItem = new JMenuItem("About", KeyEvent.VK_A);
-        aboutItem.addActionListener(e -> JOptionPane.showMessageDialog(
-                SwingUtilities.getWindowAncestor(this),
-                "Gitember 3 - Git GUI Client",
-                "About Gitember",
-                JOptionPane.INFORMATION_MESSAGE));
+        aboutItem.addActionListener(e -> {
+            JEditorPane ep = new JEditorPane("text/html",
+                    "<html><body style='font-family:sans-serif;font-size:12px'>" +
+                    "<b>Gitember 3</b> — Git GUI Client<br><br>" +
+                    "<a href='https://gitember.org/'>https://gitember.org/</a>" +
+                    "</body></html>");
+            ep.setEditable(false);
+            ep.setOpaque(false);
+            ep.addHyperlinkListener(ev -> {
+                if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    try { Desktop.getDesktop().browse(new URI("https://gitember.org/")); }
+                    catch (Exception ex) { /* ignore */ }
+                }
+            });
+            JOptionPane.showMessageDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    ep,
+                    "About Gitember",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
         helpMenu.add(aboutItem);
 
         // ── Menu bar order ────────────────────────────────────────────────────
