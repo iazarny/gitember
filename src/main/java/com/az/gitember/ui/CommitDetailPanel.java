@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +66,9 @@ public class CommitDetailPanel extends JPanel {
 
     private ScmRevisionInformation currentRevision;
 
+    /** File names (short paths) that matched the last Lucene search for the current commit. */
+    private Set<String> matchedFiles = Set.of();
+
     public CommitDetailPanel() {
         setLayout(new BorderLayout());
 
@@ -88,6 +92,8 @@ public class CommitDetailPanel extends JPanel {
 
         // Status column renderer with color coding
         filesTable.getColumnModel().getColumn(0).setCellRenderer(new StatusCellRenderer());
+        // File-name column renderer: highlights files matched by Lucene search
+        filesTable.getColumnModel().getColumn(1).setCellRenderer(new MatchedFileCellRenderer());
 
         // Context menu for changed files
         setupFilesContextMenu();
@@ -570,6 +576,15 @@ public class CommitDetailPanel extends JPanel {
         tabbedPane.setSelectedIndex(0);
     }
 
+    /**
+     * Marks which files in the changed-files table matched the current Lucene search.
+     * Pass an empty set (or null) to clear all highlights.
+     */
+    public void setMatchedFiles(Set<String> files) {
+        this.matchedFiles = (files != null) ? files : Set.of();
+        filesTable.repaint();
+    }
+
     private void fetchAvatarAsync(String email, String authorName) {
         new SwingWorker<BufferedImage, Void>() {
             @Override
@@ -728,6 +743,29 @@ public class CommitDetailPanel extends JPanel {
         JTextField field = new JTextField();
         field.setEditable(false);
         return field;
+    }
+
+    // --- File-name cell renderer: highlights rows whose file matched the Lucene search ---
+    private class MatchedFileCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (!isSelected) {
+                ScmItem item = filesTableModel.getItemAt(row);
+                if (item != null && !matchedFiles.isEmpty()
+                        && matchedFiles.contains(item.getShortName())) {
+                    boolean dark = SyntaxStyleUtil.isDarkTheme();
+                    setBackground(dark ? new Color(100, 80, 0) : new Color(255, 250, 160));
+                    setForeground(dark ? new Color(255, 240, 120) : Color.BLACK);
+                } else {
+                    setBackground(table.getBackground());
+                    setForeground(table.getForeground());
+                }
+            }
+            return this;
+        }
     }
 
     // --- Status cell renderer with color-coded status ---

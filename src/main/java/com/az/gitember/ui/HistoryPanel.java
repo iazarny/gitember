@@ -45,6 +45,9 @@ public class HistoryPanel extends JPanel {
     @SuppressWarnings("rawtypes")
     private List<PlotCommit<PlotLane>> allCommits = new ArrayList<>();
 
+    /** Last Lucene search results: revision SHA → set of matched file names. */
+    private Map<String, Set<String>> lastSearchResults = new java.util.HashMap<>();
+
     public HistoryPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
@@ -74,7 +77,12 @@ public class HistoryPanel extends JPanel {
             if (!e.getValueIsAdjusting()) {
                 int row = commitTable.getSelectedRow();
                 if (row >= 0 && row < tableModel.getRowCount()) {
-                    detailPanel.showRevision(tableModel.getRevisionAt(row));
+                    ScmRevisionInformation rev = tableModel.getRevisionAt(row);
+                    detailPanel.showRevision(rev);
+                    if (rev != null && !lastSearchResults.isEmpty()) {
+                        detailPanel.setMatchedFiles(
+                                lastSearchResults.get(rev.getRevisionFullName()));
+                    }
                 }
             }
         });
@@ -234,6 +242,8 @@ public class HistoryPanel extends JPanel {
     private void performSearch() {
         String term = searchField.getText().trim();
         if (term.length() < 3) {
+            lastSearchResults = new java.util.HashMap<>();
+            detailPanel.setMatchedFiles(null);
             tableModel.setData(allCommits);
             statusBar.setStatus(allCommits.size() + " commits loaded");
             return;
@@ -259,12 +269,21 @@ public class HistoryPanel extends JPanel {
             protected void done() {
                 try {
                     Map<String, Set<String>> results = get();
+                    lastSearchResults = results;
                     List<PlotCommit<PlotLane>> filtered = base.stream()
                             .filter(pc -> results.containsKey(pc.getName()))
                             .toList();
                     tableModel.setData(filtered);
                     statusBar.setStatus(filtered.size() + " commit" +
                             (filtered.size() != 1 ? "s" : "") + " found");
+                    // Update highlight for currently selected commit
+                    int row = commitTable.getSelectedRow();
+                    if (row >= 0 && row < tableModel.getRowCount()) {
+                        ScmRevisionInformation rev = tableModel.getRevisionAt(row);
+                        if (rev != null) {
+                            detailPanel.setMatchedFiles(results.get(rev.getRevisionFullName()));
+                        }
+                    }
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Search failed", ex);
                     statusBar.setStatus("Search error: " + ex.getMessage());
