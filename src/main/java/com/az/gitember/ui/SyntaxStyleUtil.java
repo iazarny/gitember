@@ -125,21 +125,24 @@ public final class SyntaxStyleUtil {
 
     // Highlight colors — two palettes selected at paint time based on active theme
     public static Color addedBg() {
-        return isDarkTheme() ? new Color(0, 70, 0) : new Color(200, 255, 200);
+        return isDarkTheme() ?
+                new Color(33, 168, 33) :
+                new Color(144, 221, 144);
     }
     public static Color deletedBg() {
-        return isDarkTheme() ? new Color(90, 20, 20) : new Color(255, 200, 200);
+        return isDarkTheme() ?
+                new Color(202, 64, 64) :
+                new Color(205, 152, 152);
     }
     public static Color changedBg() {
-        return isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
+        return isDarkTheme() ?
+                new Color(41, 127, 213) :
+                new Color(165, 192, 220);
     }
 
-    // ---- Table-row colours for added / deleted / changed file rows ----
-    // Shared by PullRequestPanel, PullResultDialog, and similar views.
 
-    public static Color rowBgAdded()   { return isDarkTheme() ? new Color( 30,  80,  30) : new Color(210, 245, 210); }
-    public static Color rowBgDeleted() { return isDarkTheme() ? new Color(100,  30,  30) : new Color(250, 210, 210); }
-    public static Color rowBgChanged() { return isDarkTheme() ? new Color( 25,  50, 100) : new Color(210, 225, 250); }
+
+
     public static Color rowFgAdded()   { return isDarkTheme() ? new Color(180, 240, 180) : Color.BLACK; }
     public static Color rowFgDeleted() { return isDarkTheme() ? new Color(240, 160, 160) : Color.BLACK; }
     public static Color rowFgChanged() { return isDarkTheme() ? new Color(160, 195, 255) : Color.BLACK; }

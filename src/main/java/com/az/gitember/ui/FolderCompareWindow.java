@@ -595,9 +595,9 @@ public class FolderCompareWindow extends JFrame {
     private static JPanel buildLegend() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
         p.setBorder(BorderFactory.createEmptyBorder(2, 6, 4, 6));
-        p.add(chip(SyntaxStyleUtil.rowBgChanged(), "Different  " + EntryStatus.DIFFERENT.label));
-        p.add(chip(SyntaxStyleUtil.rowBgDeleted(), "Left only  " + EntryStatus.LEFT_ONLY.label));
-        p.add(chip(SyntaxStyleUtil.rowBgAdded(),   "Right only  " + EntryStatus.RIGHT_ONLY.label));
+        p.add(chip(SyntaxStyleUtil.changedBg(), "Different  " + EntryStatus.DIFFERENT.label));
+        p.add(chip(SyntaxStyleUtil.deletedBg(), "Left only  " + EntryStatus.LEFT_ONLY.label));
+        p.add(chip(SyntaxStyleUtil.addedBg(),   "Right only  " + EntryStatus.RIGHT_ONLY.label));
         p.add(chip(null,                           "Identical"));
         return p;
     }
@@ -679,8 +679,8 @@ public class FolderCompareWindow extends JFrame {
         }
         @Override protected Color bg(EntryStatus status) {
             return switch (status) {
-                case DIFFERENT  -> SyntaxStyleUtil.rowBgChanged();
-                case LEFT_ONLY  -> SyntaxStyleUtil.rowBgDeleted();
+                case DIFFERENT  -> SyntaxStyleUtil.changedBg();
+                case LEFT_ONLY  -> SyntaxStyleUtil.deletedBg();
                 default         -> null;
             };
         }
@@ -706,8 +706,8 @@ public class FolderCompareWindow extends JFrame {
         }
         @Override protected Color bg(EntryStatus status) {
             return switch (status) {
-                case DIFFERENT  -> SyntaxStyleUtil.rowBgChanged();
-                case RIGHT_ONLY -> SyntaxStyleUtil.rowBgAdded();
+                case DIFFERENT  -> SyntaxStyleUtil.changedBg();
+                case RIGHT_ONLY -> SyntaxStyleUtil.addedBg();
                 default         -> null;
             };
         }

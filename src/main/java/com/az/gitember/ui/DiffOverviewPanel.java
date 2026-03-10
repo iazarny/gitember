@@ -164,9 +164,9 @@ class DiffOverviewPanel extends JPanel {
         if (editList != null) {
             for (Edit edit : editList) {
                 Color c = switch (edit.getType()) {
-                    case DELETE  -> isLeft  ? deletedColor() : null;
-                    case INSERT  -> !isLeft ? addedColor()   : null;
-                    case REPLACE -> changedColor();
+                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBg() : null;
+                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBg( )  : null;
+                    case REPLACE -> SyntaxStyleUtil.changedBg();
                     default      -> null;
                 };
                 if (c == null) continue;
@@ -248,15 +248,7 @@ class DiffOverviewPanel extends JPanel {
 
     // ── Colours ───────────────────────────────────────────────────────────────
 
-    private static Color addedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 110, 0)   : new Color(100, 200, 100);
-    }
-    private static Color deletedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(130, 30, 30) : new Color(200, 100, 100);
-    }
-    private static Color changedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(30, 60, 130) : new Color(100, 140, 210);
-    }
+
 
     private static double clamp(double v) { return Math.max(0.0, Math.min(1.0, v)); }
 }

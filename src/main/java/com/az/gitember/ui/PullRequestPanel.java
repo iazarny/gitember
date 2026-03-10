@@ -353,9 +353,9 @@ public class PullRequestPanel extends JPanel {
         }
 
         badgesPanel.removeAll();
-        if (added   > 0) badgesPanel.add(makeBadge("+" + added   + "  added",   SyntaxStyleUtil.rowBgAdded(),   SyntaxStyleUtil.rowFgAdded()));
-        if (deleted > 0) badgesPanel.add(makeBadge("-" + deleted  + "  deleted", SyntaxStyleUtil.rowBgDeleted(), SyntaxStyleUtil.rowFgDeleted()));
-        if (changed > 0) badgesPanel.add(makeBadge("~" + changed  + "  changed", SyntaxStyleUtil.rowBgChanged(), SyntaxStyleUtil.rowFgChanged()));
+        if (added   > 0) badgesPanel.add(makeBadge("+" + added   + "  added",   SyntaxStyleUtil.addedBg(),   SyntaxStyleUtil.rowFgAdded()));
+        if (deleted > 0) badgesPanel.add(makeBadge("-" + deleted  + "  deleted", SyntaxStyleUtil.deletedBg(), SyntaxStyleUtil.rowFgDeleted()));
+        if (changed > 0) badgesPanel.add(makeBadge("~" + changed  + "  changed", SyntaxStyleUtil.changedBg(), SyntaxStyleUtil.rowFgChanged()));
         if (added == 0 && deleted == 0 && changed == 0) {
             JLabel none = new JLabel("  No file changes.");
             none.setForeground(UIManager.getColor("Label.disabledForeground"));
@@ -452,9 +452,9 @@ public class PullRequestPanel extends JPanel {
 
     private static Color colorFor(String category) {
         return switch (category) {
-            case "Added"   -> SyntaxStyleUtil.rowBgAdded();
-            case "Deleted" -> SyntaxStyleUtil.rowBgDeleted();
-            default        -> SyntaxStyleUtil.rowBgChanged();
+            case "Added"   -> SyntaxStyleUtil.addedBg();
+            case "Deleted" -> SyntaxStyleUtil.deletedBg();
+            default        -> SyntaxStyleUtil.changedBg();
         };
     }
 

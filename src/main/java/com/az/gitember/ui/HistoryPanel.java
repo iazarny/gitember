@@ -48,6 +48,10 @@ public class HistoryPanel extends JPanel {
     /** Last Lucene search results: revision SHA → set of matched file names. */
     private Map<String, Set<String>> lastSearchResults = new java.util.HashMap<>();
 
+    /** Parameters of the most recent loadHistory call, used to refresh after mutating actions. */
+    private String  lastTreeName   = null;
+    private boolean lastAllHistory = true;
+
     public HistoryPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
@@ -143,7 +147,7 @@ public class HistoryPanel extends JPanel {
             runCommitAction("Revert", () -> {
                 Context.getGitRepoService().revertCommit((RevCommit) commit, null);
                 return "Reverted " + commit.name().substring(0, 7);
-            });
+            }, true);
         });
 
         resetItem.addActionListener(e -> {
@@ -163,7 +167,7 @@ public class HistoryPanel extends JPanel {
             runCommitAction("Reset", () -> {
                 Context.getGitRepoService().resetBranch((RevCommit) commit, mode, null);
                 return "Reset (" + choice + ") to " + commit.name().substring(0, 7);
-            });
+            }, true);
         });
 
         commitMenu.add(checkoutItem);
@@ -296,6 +300,8 @@ public class HistoryPanel extends JPanel {
 
     @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
+        lastTreeName   = treeName;
+        lastAllHistory = allHistory;
         if (!allHistory) {
             searchField.setText("");
         }
@@ -380,6 +386,10 @@ public class HistoryPanel extends JPanel {
 
     /** Runs a git action on a background thread, showing status bar progress. */
     private void runCommitAction(String label, CommitAction action) {
+        runCommitAction(label, action, false);
+    }
+
+    private void runCommitAction(String label, CommitAction action, boolean refreshAfter) {
         statusBar.setStatus(label + "…");
         statusBar.showProgress(true);
         new SwingWorker<String, Void>() {
@@ -388,6 +398,9 @@ public class HistoryPanel extends JPanel {
                 statusBar.clearProgress();
                 try {
                     statusBar.setStatus(get());
+                    if (refreshAfter) {
+                        loadHistory(lastTreeName, lastAllHistory);
+                    }
                 } catch (java.util.concurrent.CancellationException ex) {
                     statusBar.setStatus(label + " cancelled.");
                 } catch (Exception ex) {
