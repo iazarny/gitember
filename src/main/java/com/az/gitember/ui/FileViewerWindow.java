@@ -85,9 +85,14 @@ public class FileViewerWindow extends JFrame {
                 dark ? new Color(70, 70, 80) : new Color(200, 200, 210)));
         blameScrollPane.setVisible(false);
 
-        // Share vertical scroll model so both panes scroll together
-        blameScrollPane.getVerticalScrollBar().setModel(
-                scrollPane.getVerticalScrollBar().getModel());
+        // Sync blame viewport to follow the main viewport (one-way, no model conflicts)
+        scrollPane.getViewport().addChangeListener(e -> {
+            int y = scrollPane.getViewport().getViewPosition().y;
+            Point cur = blameScrollPane.getViewport().getViewPosition();
+            if (cur.y != y) {
+                blameScrollPane.getViewport().setViewPosition(new Point(0, y));
+            }
+        });
 
         // ── Search bar ────────────────────────────────────────────────────
         searchBar = new SearchBar(textArea);
