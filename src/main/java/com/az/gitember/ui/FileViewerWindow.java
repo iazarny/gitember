@@ -134,6 +134,16 @@ public class FileViewerWindow extends JFrame {
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
         getRootPane().registerKeyboardAction(
                 e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        this.addPropertyChangeListener("graphicsConfiguration", evt -> {
+            SwingUtilities.invokeLater(() -> {
+                textArea.revalidate();
+                if (textArea.getParserCount() > 0) {
+                    textArea.forceReparsing(0);
+                }
+                textArea.repaint();
+            });
+        });
     }
 
     /**
