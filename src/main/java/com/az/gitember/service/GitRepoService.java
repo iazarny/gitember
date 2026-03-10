@@ -2698,6 +2698,40 @@ public class GitRepoService {
         return blamer.call();
     }
 
+    /**
+     * Returns blame annotations — one formatted string per file line.
+     * Format: {@code "sha7    author-name       yyyy-MM-dd"}.
+     * Returns an empty list on error.
+     */
+    public List<String> getBlameAnnotations(String commitSha, String filePath) {
+        try {
+            BlameCommand blamer = new BlameCommand(repository);
+            if (commitSha != null && !commitSha.isBlank()) {
+                ObjectId id = repository.resolve(commitSha);
+                if (id != null) blamer.setStartCommit(id);
+            }
+            blamer.setFilePath(filePath);
+            BlameResult result = blamer.call();
+            if (result == null || result.getResultContents() == null) return List.of();
+            int count = result.getResultContents().size();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            List<String> lines = new ArrayList<>(count);
+            for (int i = 0; i < count; i++) {
+                RevCommit c      = result.getSourceCommit(i);
+                PersonIdent auth = result.getSourceAuthor(i);
+                String sha  = c    != null ? c.getName().substring(0, 7) : "       ";
+                String name = auth != null ? auth.getName() : "";
+                if (name.length() > 16) name = name.substring(0, 16);
+                String date = auth != null ? sdf.format(auth.getWhen()) : "          ";
+                lines.add(String.format("%-7s %-16s %s", sha, name, date));
+            }
+            return lines;
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Blame failed for " + filePath, e);
+            return List.of();
+        }
+    }
+
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
         final Ref head = repository.exactRef(Constants.HEAD);

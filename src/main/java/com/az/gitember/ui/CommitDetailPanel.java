@@ -270,7 +270,8 @@ public class CommitDetailPanel extends JPanel {
                     String content = get();
                     FileViewerWindow viewer = new FileViewerWindow(
                             item.getShortName() + " @ " + commitSha.substring(0, Math.min(8, commitSha.length())),
-                            content);
+                            content, item.getShortName());
+                    viewer.enableBlame(commitSha, item.getShortName());
                     viewer.setVisible(true);
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to open file", e);

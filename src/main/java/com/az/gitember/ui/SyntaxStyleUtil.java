@@ -127,7 +127,7 @@ public final class SyntaxStyleUtil {
     public static Color addedBg() {
         return isDarkTheme() ?
                 new Color(33, 168, 33) :
-                new Color(144, 221, 144);
+                new Color(187, 236, 187);
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
@@ -137,7 +137,7 @@ public final class SyntaxStyleUtil {
     public static Color changedBg() {
         return isDarkTheme() ?
                 new Color(41, 127, 213) :
-                new Color(165, 192, 220);
+                new Color(130, 221, 236);
     }
 
 
