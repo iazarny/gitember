@@ -221,6 +221,7 @@ public class DiffViewerWindow extends JFrame {
     private void initCommon(String syntaxStyle) {
         setSize(1200, 700);
         setLocationRelativeTo(null);
+        setIconImages(Util.appIcons());
 
         oldPane = createEditor(syntaxStyle);
         newPane = createEditor(syntaxStyle);
