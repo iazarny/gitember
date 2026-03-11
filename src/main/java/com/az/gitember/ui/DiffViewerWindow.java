@@ -357,10 +357,10 @@ public class DiffViewerWindow extends JFrame {
         area.setEditable(false);
         area.setCodeFoldingEnabled(false);
         area.setAntiAliasingEnabled(true);
-        area.setFont(SyntaxStyleUtil.monoFont());
         area.setLineWrap(false);
         area.setHighlightCurrentLine(false);
         SyntaxStyleUtil.applyTheme(area);
+        area.setFont(SyntaxStyleUtil.monoFont());  // after theme so settings font size is applied
         return area;
     }
 

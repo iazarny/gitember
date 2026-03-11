@@ -58,11 +58,11 @@ public class FileViewerWindow extends JFrame {
         textArea.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(fileName));
         textArea.setCodeFoldingEnabled(false);
         textArea.setAntiAliasingEnabled(true);
-        textArea.setFont(SyntaxStyleUtil.monoFont());
         textArea.setCaretPosition(0);
         textArea.setBracketMatchingEnabled(false);
         textArea.setAnimateBracketMatching(false);
         SyntaxStyleUtil.applyTheme(textArea);
+        textArea.setFont(SyntaxStyleUtil.monoFont());  // after theme so settings font size is applied
 
         scrollPane = new RTextScrollPane(textArea);
         scrollPane.setFoldIndicatorEnabled(false);
