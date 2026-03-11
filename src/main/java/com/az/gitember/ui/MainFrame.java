@@ -50,6 +50,7 @@ public class MainFrame extends JFrame {
     private HistoryPanel historyPanel;
     private CommitDetailPanel stashDetailPanel;
     private PullRequestPanel pullRequestPanel;
+    private SubmodulePanel submodulePanel;
 
     public MainFrame() {
         Context.setMainFrame(this);
@@ -161,6 +162,10 @@ public class MainFrame extends JFrame {
         historyPanel = new HistoryPanel(statusBar);
         stashDetailPanel = new CommitDetailPanel();
         pullRequestPanel = new PullRequestPanel();
+        submodulePanel = new SubmodulePanel(statusBar);
+
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,
+                e -> submodulePanel.setSubmodules(Context.getSubmodules()));
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
@@ -227,6 +232,8 @@ public class MainFrame extends JFrame {
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
         menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
+        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
+        menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
@@ -620,6 +627,10 @@ public class MainFrame extends JFrame {
                         contentPanel.setContent(pullRequestPanel);
                         pullRequestPanel.showPullRequest(pr);
                     }
+                }
+                case SUBMODULES, SUBMODULE -> {
+                    contentPanel.setContent(submodulePanel);
+                    submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 default -> contentPanel.setContent(null);
             }

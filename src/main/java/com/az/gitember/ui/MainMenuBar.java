@@ -34,6 +34,11 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem manageLfsItem;
     private final JMenuItem fetchLfsItem;
 
+    // Submodules submenu (inside Repository menu)
+    private final JMenu     submodulesMenu;
+    private final JMenuItem updateSubmodulesItem;
+    private final JMenuItem syncSubmodulesItem;
+
     // Branch menu (enabled only when a repo is open)
     private final JMenu     branchMenu;
     private final JMenuItem pullItem;
@@ -119,10 +124,24 @@ public class MainMenuBar extends JMenuBar {
         lfsMenu.addSeparator();
         lfsMenu.add(fetchLfsItem);
 
+        // Submodules submenu
+        submodulesMenu = new JMenu("Submodules");
+        submodulesMenu.setMnemonic(KeyEvent.VK_U);
+
+        updateSubmodulesItem = new JMenuItem("Update Submodules", KeyEvent.VK_U);
+        updateSubmodulesItem.setToolTipText("Run git submodule init + update for all submodules");
+
+        syncSubmodulesItem = new JMenuItem("Sync Submodule URLs", KeyEvent.VK_Y);
+        syncSubmodulesItem.setToolTipText("Update recorded remote URLs from .gitmodules");
+
+        submodulesMenu.add(updateSubmodulesItem);
+        submodulesMenu.add(syncSubmodulesItem);
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
         repoMenu.addSeparator();
         repoMenu.add(lfsMenu);
+        repoMenu.add(submodulesMenu);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
         repoMenu.addSeparator();
@@ -268,6 +287,8 @@ public class MainMenuBar extends JMenuBar {
     public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
     public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
-    public void addManageLfsListener(ActionListener l)      { manageLfsItem.addActionListener(l); }
-    public void addFetchLfsListener(ActionListener l)       { fetchLfsItem.addActionListener(l); }
+    public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
+    public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
+    public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
+    public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
 }

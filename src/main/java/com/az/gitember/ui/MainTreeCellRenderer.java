@@ -22,7 +22,9 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         STASH,
         ROOT,
         PULL_REQUESTS,
-        PULL_REQUEST
+        PULL_REQUEST,
+        SUBMODULES,
+        SUBMODULE
     }
 
     @Override
@@ -57,6 +59,8 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case ROOT           -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);
             case PULL_REQUESTS  -> Util.themeAwareIcon(FontAwesomeSolid.TASKS,       14);
             case PULL_REQUEST   -> Util.themeAwareIcon(FontAwesomeSolid.EXCHANGE_ALT,14);
+            case SUBMODULES     -> Util.themeAwareIcon(FontAwesomeSolid.CUBES,       14);
+            case SUBMODULE      -> Util.themeAwareIcon(FontAwesomeSolid.CUBE,        14);
         };
     }
 

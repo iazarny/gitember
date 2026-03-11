@@ -37,6 +37,7 @@ import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -2902,5 +2903,74 @@ public class GitRepoService {
     private static String gitAttributesContent = "*.psd filter=lfs diff=lfs merge=lfs -text\n" +
             "*.bmp filter=lfs diff=lfs merge=lfs -text\n";
 
+    // ── Submodule support ──────────────────────────────────────────────────────
+
+    /**
+     * Lists all submodules declared in .gitmodules, together with their current status.
+     */
+    public List<Submodule> getSubmodules() throws Exception {
+        List<Submodule> result = new ArrayList<>();
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                String name     = walk.getModuleName();
+                String path     = walk.getPath();
+                String url      = walk.getRemoteUrl();
+                String indexSha = walk.getObjectId() != null
+                        ? walk.getObjectId().abbreviate(8).name() : "";
+
+                Submodule.Status status;
+                String headSha = "";
+
+                Repository subRepo = walk.getRepository();
+                if (subRepo == null) {
+                    status = Submodule.Status.UNINITIALIZED;
+                } else {
+                    try {
+                        ObjectId head = subRepo.resolve(Constants.HEAD);
+                        if (head == null) {
+                            status = Submodule.Status.MISSING;
+                        } else {
+                            headSha = head.abbreviate(8).name();
+                            status = head.equals(walk.getObjectId())
+                                    ? Submodule.Status.UP_TO_DATE
+                                    : Submodule.Status.MODIFIED;
+                        }
+                    } finally {
+                        subRepo.close();
+                    }
+                }
+
+                result.add(new Submodule(
+                        name != null ? name : path,
+                        path,
+                        url != null ? url : "",
+                        status, headSha, indexSha));
+            }
+        }
+        result.sort(Comparator.comparing(Submodule::getPath));
+        return result;
+    }
+
+    /**
+     * Runs {@code git submodule init} followed by {@code git submodule update} for all submodules.
+     */
+    public void updateSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.submoduleInit().call();
+            git.submoduleUpdate()
+                    .setProgressMonitor(progressMonitor)
+                    .call();
+        }
+    }
+
+    /**
+     * Runs {@code git submodule sync} — updates recorded remote URLs from .gitmodules.
+     */
+    public void syncSubmodules() throws Exception {
+        try (Git git = new Git(repository)) {
+            git.submoduleSync().call();
+        }
+    }
 
 }
+
