@@ -24,7 +24,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Gitember — Free Git GUI Client &amp; File Diff Tool">
   <meta property="og:description" content="Free open-source Git GUI with powerful file and folder comparison tools. Works on Windows, Mac &amp; Linux.">
-  <meta property="og:image" content="assets/img/product-screen-1.png">
+  <meta property="og:image" content="assets/img/3/mac7.png">
 
   <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
@@ -60,8 +60,8 @@
       "@type": "Person",
       "name": "Igor Azarny"
     },
-    "softwareVersion": "3.0.1",
-    "url": "https://gitember.app"
+    "softwareVersion": "3.0",
+    "url": "https://gitember.org"
   }
   </script>
 
@@ -73,177 +73,6 @@
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
 
-  <style>
-    /* ── Screenshot placeholder ── */
-    .screenshot-placeholder {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      border: 2px dashed rgba(255,255,255,0.2);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255,255,255,0.55);
-      font-family: 'Open Sans', sans-serif;
-      font-size: 0.85rem;
-      padding: 24px 16px;
-      text-align: center;
-      min-height: 220px;
-    }
-    .screenshot-placeholder i {
-      font-size: 2.6rem;
-      margin-bottom: 10px;
-      color: rgba(255,255,255,0.3);
-    }
-    .screenshot-placeholder .ph-label {
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      opacity: 0.5;
-      margin-top: 6px;
-    }
-
-    /* ── Feature detail rows ── */
-    .feature-detail {
-      padding: 60px 0;
-    }
-    .feature-detail + .feature-detail {
-      border-top: 1px solid rgba(0,0,0,0.07);
-    }
-    .feature-detail .feature-icon-lg {
-      font-size: 3rem;
-      color: #4154f1;
-      margin-bottom: 16px;
-    }
-    .feature-detail h2 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
-    .feature-detail p {
-      color: #555;
-      line-height: 1.8;
-    }
-    .feature-detail ul {
-      color: #555;
-      line-height: 2;
-      padding-left: 1.2rem;
-    }
-    .feature-detail ul li::marker {
-      color: #4154f1;
-    }
-
-    /* ── Platform badges ── */
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 6px;
-      padding: 10px 20px;
-      color: #fff;
-      font-size: 1rem;
-      margin: 6px;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .platform-badge:hover {
-      background: rgba(255,255,255,0.18);
-      color: #fff;
-    }
-    .platform-badge i { font-size: 1.4rem; }
-
-    /* ── Stat strip ── */
-    .stat-strip {
-      background: rgba(65, 241, 209, 0.43);
-      color: #0a4c4c;
-      padding: 40px 0;
-    }
-    .stat-strip .stat-number {
-      font-size: 2.4rem;
-      font-weight: 700;
-    }
-    .stat-strip .stat-label {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    /* ── CTA banner ── */
-    .cta-banner {
-
-        background: rgba(65, 241, 209, 0.43);
-        color: #0a4c4c;
-      padding: 70px 0;
-      text-align: center;
-    }
-    .cta-banner h2 { font-size: 2rem; font-weight: 700; margin-bottom: 12px; }
-    .cta-banner p  { font-size: 1.1rem; opacity: 0.88; margin-bottom: 30px; }
-    .btn-cta-white {
-      background: #fff;
-      color: #4154f1;
-      font-weight: 600;
-      padding: 14px 36px;
-      border-radius: 4px;
-      text-decoration: none;
-      transition: opacity 0.2s;
-      display: inline-block;
-    }
-    .btn-cta-white:hover { opacity: 0.9; color: #4154f1; }
-
-    /* ── v3 news banner ── */
-    .v3-banner {
-      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #1a1a2e 100%);
-      color: #fff;
-      padding: 60px 0 50px;
-    }
-    .v3-banner .v3-badge {
-      display: inline-block;
-      background: #4154f1;
-      color: #fff;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      border-radius: 4px;
-      padding: 4px 12px;
-      margin-bottom: 16px;
-    }
-    .v3-banner h2 { font-size: 2rem; font-weight: 700; margin-bottom: 14px; }
-    .v3-banner p  { opacity: 0.85; line-height: 1.8; font-size: 1rem; }
-    .v3-card {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 28px 24px;
-      height: 100%;
-      transition: background 0.2s;
-    }
-    .v3-card:hover { background: rgba(255,255,255,0.12); }
-    .v3-card .v3-icon { font-size: 2rem; color: #41f1d1; margin-bottom: 12px; }
-    .v3-card h5 { font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: #fff; }
-    .v3-card p  { font-size: 0.9rem; opacity: 0.8; margin: 0; }
-
-    /* ── Audience cards ── */
-    .audience-card {
-      border: 1px solid #e5e5e5;
-      border-radius: 10px;
-      padding: 32px 28px;
-      height: 100%;
-      transition: box-shadow 0.2s;
-    }
-    .audience-card:hover { box-shadow: 0 8px 28px rgba(65,84,241,0.12); }
-    .audience-card .ac-icon {
-      font-size: 2.4rem;
-      color: #4154f1;
-
-      margin-bottom: 14px;
-    }
-    .audience-card h4 { font-weight: 700; margin-bottom: 10px; }
-    .audience-card p  { color: #666; line-height: 1.75; font-size: 0.95rem; }
-  </style>
 </head>
 
 <body>
@@ -260,9 +89,6 @@
         <ul>
           <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
           <li><a class="nav-link scrollto" href="#features">Features</a></li>
-          <li><a class="nav-link scrollto" href="#diff-tool">Diff Tool</a></li>
-          <li><a class="nav-link scrollto" href="#folder-compare">Folder Compare</a></li>
-          <li><a class="nav-link scrollto" href="#gallery">Gallery</a></li>
           <li><a class="nav-link scrollto" href="#download">Download</a></li>
           <li><a class="nav-link scrollto" href="doc/docs/ge-intro">Docs</a></li>
         </ul>
@@ -277,7 +103,7 @@
       <div class="hero-text" data-aos="zoom-out">
           <h2>The Git GUI Client that works <em>your</em> way</h2>
           <p>Gitember brings the full power of Git to a clean, intuitive interface </p>
-          <a href="#download" class="btn-get-started scrollto">Download Free V 3.0.1 Mar 2026</a>
+          <a href="#download" class="btn-get-started scrollto">Download Free V 3.0 Mar 2026</a>
           <p style="opacity:0.7; font-size:0.9rem;">Free &amp; Open Source &nbsp;·&nbsp; Windows · MacOS · Linux &nbsp;&nbsp;</p>
           <p style="opacity:0.7; font-size:0.9rem;">No account or registration required</p>
       </div>
@@ -285,13 +111,13 @@
 
     <div class="product-screens">
       <div class="product-screen-1" data-aos="fade-up" data-aos-delay="400">
-        <img src="assets/img/product-screen-1.png" alt="Gitember Git GUI client main window screenshot">
+        <img src="assets/img/3/win1.png" width="800" alt="Gitember Git GUI client main window screenshot">
       </div>
       <div class="product-screen-2" data-aos="fade-up" data-aos-delay="200">
-        <img src="assets/img/product-screen-2.png" alt="Gitember file diff viewer screenshot" style="transform: translateX(-150px);">
+        <img src="assets/img/3/mac7.png" width="800" alt="Gitember file diff viewer screenshot" style="transform: translateX(-150px);">
       </div>
       <div class="product-screen-3" data-aos="fade-up">
-        <img src="assets/img/product-screen-3.png" alt="Gitember folder comparison tool screenshot" style="transform: translateX(-300px);">
+        <img src="assets/img/3/win2.png" width="800" alt="Gitember folder comparison tool screenshot" style="transform: translateX(-300px);">
       </div>
     </div>
   </section>
@@ -311,7 +137,7 @@
             <div class="v3-card">
               <div class="v3-icon"><i class="bi bi-lightning-charge-fill"></i></div>
               <h5>Blazing Fast Startup</h5>
-              <p>Swing-based UI boots in a fraction of the time. No JavaFX runtime bundled — smaller download, less RAM, instant launch.</p>
+              <p>Swing-based UI boots in a fraction of the time. Smaller download, less RAM, instant launch.</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="80">
@@ -476,10 +302,9 @@
             </div>
             <div class="col-lg-6">
               <!-- SCREENSHOT PLACEHOLDER: Side-by-side file diff viewer -->
-              <div class="screenshot-placeholder">
-                <i class="bi bi-layout-split"></i>
-                <div><strong>Screenshot placeholder</strong><br>Side-by-side file diff viewer<br>showing syntax-highlighted changes</div>
-                <div class="ph-label">Replace with: assets/img/screenshots/diff-side-by-side.png</div>
+                <img src="assets/img/3/file-compare.png" width="600" alt="Gitember folder comparison tool screenshot" >
+
+
               </div>
             </div>
           </div>
@@ -499,12 +324,8 @@
               </ul>
             </div>
             <div class="col-lg-6 order-lg-1">
-              <!-- SCREENSHOT PLACEHOLDER: Commit history / log view -->
-              <div class="screenshot-placeholder">
-                <i class="bi bi-diagram-3"></i>
-                <div><strong>Screenshot placeholder</strong><br>Commit history log with visual branch graph<br>and commit detail panel</div>
-                <div class="ph-label">Replace with: assets/img/screenshots/commit-history.png</div>
-              </div>
+                <img src="assets/img/3/repo-view.png" width="600" alt="Gitember folder comparison tool screenshot" style="transform:  translateX(120px);">
+
             </div>
           </div>
         </div>
@@ -516,14 +337,7 @@
     <section id="folder-compare" class="features-row section-bg" data-aos="fade-up">
       <div class="container">
         <div class="row align-items-center g-5" style="padding: 60px 0;">
-          <div class="col-lg-6">
-            <!-- SCREENSHOT PLACEHOLDER: Folder comparison tree view -->
-            <div class="screenshot-placeholder">
-              <i class="bi bi-folder2-open"></i>
-              <div><strong>Screenshot placeholder</strong><br>Dual-pane folder comparison tree<br>with colour-coded added / removed / changed files</div>
-              <div class="ph-label">Replace with: assets/img/screenshots/folder-compare.png</div>
-            </div>
-          </div>
+
           <div class="col-lg-6">
             <div class="feature-icon-lg"><i class="bi bi-intersect"></i></div>
             <h2>Folder Comparison Tool — See the Whole Picture</h2>
@@ -537,6 +351,9 @@
               <li>Navigate between differences with Next / Previous buttons</li>
             </ul>
           </div>
+            <div class="col-lg-6">
+                <img src="assets/img/3/folder-compare.png" width="600" alt="Gitember folder comparison tool screenshot" >
+            </div>
         </div>
       </div>
     </section>
@@ -545,6 +362,11 @@
     <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
       <div class="container">
         <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <img src="assets/img/3/pull-request.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+
+            </div>
+
           <div class="col-lg-6">
             <div class="feature-icon-lg"><i class="bi bi-git"></i></div>
             <h2>Pull Request Review — No Browser Required</h2>
@@ -557,14 +379,7 @@
               <li>One-click "Open in Browser" to jump to the PR page</li>
             </ul>
           </div>
-          <div class="col-lg-6">
-            <!-- SCREENSHOT PLACEHOLDER: Pull Request panel -->
-            <div class="screenshot-placeholder">
-              <i class="bi bi-arrow-left-right"></i>
-              <div><strong>Screenshot placeholder</strong><br>Pull Request panel showing changed files<br>colour-coded by status (added / changed / deleted)</div>
-              <div class="ph-label">Replace with: assets/img/screenshots/pull-request-panel.png</div>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
@@ -573,111 +388,60 @@
     <section style="padding: 60px 0; background:#fafafa;" data-aos="fade-up">
       <div class="container">
         <div class="row align-items-center g-5">
-          <div class="col-lg-6 order-lg-2">
+
+          <div class="col-lg-6 order-lg-1">
             <div class="feature-icon-lg"><i class="bi bi-search"></i></div>
             <h2>Search Everything, Find Anything</h2>
             <p>Gitember's indexing engine goes far beyond grepping text files. It extracts and indexes content from a wide variety of file formats, so you can search across your entire repository history with a single query.</p>
             <ul>
-              <li>Search commit messages, tags, branch names, and file paths</li>
+              <li>Search commit messages, tags, branch names, and file paths.</li>
               <li>Full-text search inside source code, Markdown, and config files</li>
               <li>Indexed content from graphics (PNG, JPEG, SVG), PDFs, Office documents (Word, Excel, PowerPoint), OpenDocument files, and CAD formats (DXF, STL)</li>
               <li>Filter results by branch, author, or date range</li>
             </ul>
           </div>
-          <div class="col-lg-6 order-lg-1">
-            <!-- SCREENSHOT PLACEHOLDER: Advanced search panel -->
-            <div class="screenshot-placeholder">
-              <i class="bi bi-search-heart"></i>
-              <div><strong>Screenshot placeholder</strong><br>Advanced search panel with results<br>spanning text, office documents, and images</div>
-              <div class="ph-label">Replace with: assets/img/screenshots/advanced-search.png</div>
+
+            <div class="col-lg-6 order-lg-2">
+                <img src="assets/img/3/search.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+
             </div>
-          </div>
         </div>
       </div>
     </section>
 
-    <!-- ======= Gallery Section ======= -->
-    <section id="gallery">
-      <div class="container-fluid" data-aos="fade-up">
-        <div class="section-header">
-          <h2 class="section-title">Screenshots</h2>
-          <span class="section-divider"></span>
-        </div>
 
-        <div class="row g-0">
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-1.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-1.png" alt="Gitember main window — commit history view">
-              </a>
-            </div>
+      <!-- ======= Statistics ======= -->
+      <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+          <div class="container">
+              <div class="row align-items-center g-5">
+                  <div class="col-lg-6">
+                      <img src="assets/img/3/pull-request.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+                  </div>
+
+                  <div class="col-lg-6">
+                      <div class="feature-icon-lg"><i class="bi bi-git"></i></div>
+                      <h2>Pull Request Review — No Browser Required</h2>
+                      <p>Connect Gitember to your GitHub, GitLab, Bitbucket, or self-hosted Gitea instance and review open Pull Requests without leaving the app. See the PR title, author, state, and the full list of changed files — colour-coded and ready to diff.</p>
+                      <ul>
+                          <li>Supports GitHub, GitLab, Bitbucket Cloud, and Gitea</li>
+                          <li>Works with both HTTPS and SSH remote URLs</li>
+                          <li>Changed files listed as Added / Modified / Deleted with colour coding</li>
+                          <li>Double-click any file for a full side-by-side diff between base and head branches</li>
+                          <li>One-click "Open in Browser" to jump to the PR page</li>
+                      </ul>
+                  </div>
+
+              </div>
           </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-2.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-2.png" alt="Gitember side-by-side file diff viewer">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-3.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-3.png" alt="Gitember folder comparison tool">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-4.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-4.png" alt="Gitember working copy and staging area">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-5.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-5.png" alt="Gitember advanced search results">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-6.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-6.png" alt="Gitember repository statistics dashboard">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-7.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-7.png" alt="Gitember Git LFS management panel">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-8.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-8.png" alt="Gitember pull request panel with changed files">
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="gallery-item">
-              <a href="assets/img/gallery/gallery-9.png" data-gall="portfolioGallery" class="gallery-lightbox">
-                <img src="assets/img/gallery/gallery-9.png" alt="Gitember branch management and merge view">
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+
+
 
     <!-- ======= CTA Banner ======= -->
     <div class="cta-banner" data-aos="fade-up">
       <div class="container">
         <h2>Stop Struggling with the Command Line</h2>
         <p>Download Gitember 3 for free — a complete Git client with GitHub, GitLab, Bitbucket &amp; Gitea integrations,<br>powerful diff tools, and a lightweight Swing UI that just works.</p>
-        <a href="#download" class="btn-cta-white scrollto">Get Gitember 3 Free</a>
       </div>
     </div>
 
@@ -701,7 +465,7 @@
             <div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 20px; margin-top: 10px;">
               <p style="color:#aaa; font-size:0.85rem; margin:0;">
                 <i class="bi bi-info-circle"></i>&nbsp;
-                Version 3.0.1 · March 2026<br>
+                Version 3.0 · March 2026<br>
                 Questions? Mail <a href="mailto:iazarny@yahoo.com" style="color:#aaa;">Igor Azarny</a>
               </p>
             </div>
@@ -730,10 +494,6 @@
             <a href="#hero" class="scrollto">Home</a>
             &nbsp;·&nbsp;
             <a href="#features" class="scrollto">Features</a>
-            &nbsp;·&nbsp;
-            <a href="#diff-tool" class="scrollto">Diff Tool</a>
-            &nbsp;·&nbsp;
-            <a href="#folder-compare" class="scrollto">Folder Compare</a>
             &nbsp;·&nbsp;
             <a href="#download" class="scrollto">Download</a>
           </nav>

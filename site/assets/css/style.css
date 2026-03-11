@@ -1378,3 +1378,174 @@ section {
 #footer .footer-links a:hover {
   color: #1dc8cd;
 }
+
+/*******************************/
+/* ── Screenshot placeholder ── */
+.screenshot-placeholder {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.55);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 24px 16px;
+    text-align: center;
+    min-height: 220px;
+}
+.screenshot-placeholder i {
+    font-size: 2.6rem;
+    margin-bottom: 10px;
+    color: rgba(255,255,255,0.3);
+}
+.screenshot-placeholder .ph-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-top: 6px;
+}
+
+/* ── Feature detail rows ── */
+.feature-detail {
+    padding: 60px 0;
+}
+.feature-detail + .feature-detail {
+    border-top: 1px solid rgba(0,0,0,0.07);
+}
+.feature-detail .feature-icon-lg {
+    font-size: 3rem;
+    color: #4154f1;
+    margin-bottom: 16px;
+}
+.feature-detail h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+.feature-detail p {
+    color: #555;
+    line-height: 1.8;
+}
+.feature-detail ul {
+    color: #555;
+    line-height: 2;
+    padding-left: 1.2rem;
+}
+.feature-detail ul li::marker {
+    color: #4154f1;
+}
+
+/* ── Platform badges ── */
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    padding: 10px 20px;
+    color: #fff;
+    font-size: 1rem;
+    margin: 6px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.platform-badge:hover {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+}
+.platform-badge i { font-size: 1.4rem; }
+
+/* ── Stat strip ── */
+.stat-strip {
+    background: rgba(65, 241, 209, 0.43);
+    color: #0a4c4c;
+    padding: 40px 0;
+}
+.stat-strip .stat-number {
+    font-size: 2.4rem;
+    font-weight: 700;
+}
+.stat-strip .stat-label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ── CTA banner ── */
+.cta-banner {
+
+    background: rgba(65, 241, 209, 0.43);
+    color: #0a4c4c;
+    padding: 70px 0;
+    text-align: center;
+}
+.cta-banner h2 { font-size: 2rem; font-weight: 700; margin-bottom: 12px; }
+.cta-banner p  { font-size: 1.1rem; opacity: 0.88; margin-bottom: 30px; }
+.btn-cta-white {
+    background: #fff;
+    color: #4154f1;
+    font-weight: 600;
+    padding: 14px 36px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    display: inline-block;
+}
+.btn-cta-white:hover { opacity: 0.9; color: #4154f1; }
+
+/* ── v3 news banner ── */
+.v3-banner {
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #1a1a2e 100%);
+    color: #fff;
+    padding: 60px 0 50px;
+}
+.v3-banner .v3-badge {
+    display: inline-block;
+    background: #4154f1;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: 4px 12px;
+    margin-bottom: 16px;
+}
+.v3-banner h2 { font-size: 2rem; font-weight: 700; margin-bottom: 14px; }
+.v3-banner p  { opacity: 0.85; line-height: 1.8; font-size: 1rem; }
+.v3-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 28px 24px;
+    height: 100%;
+    transition: background 0.2s;
+}
+.v3-card:hover { background: rgba(255,255,255,0.12); }
+.v3-card .v3-icon { font-size: 2rem; color: #41f1d1; margin-bottom: 12px; }
+.v3-card h5 { font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: #fff; }
+.v3-card p  { font-size: 0.9rem; opacity: 0.8; margin: 0; }
+
+/* ── Audience cards ── */
+.audience-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 32px 28px;
+    height: 100%;
+    transition: box-shadow 0.2s;
+}
+.audience-card:hover { box-shadow: 0 8px 28px rgba(65,84,241,0.12); }
+.audience-card .ac-icon {
+    font-size: 2.4rem;
+    color: #4154f1;
+
+    margin-bottom: 14px;
+}
+.audience-card h4 { font-weight: 700; margin-bottom: 10px; }
+.audience-card p  { color: #666; line-height: 1.75; font-size: 0.95rem; }
