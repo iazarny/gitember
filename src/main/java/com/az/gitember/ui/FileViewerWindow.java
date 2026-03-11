@@ -46,7 +46,7 @@ public class FileViewerWindow extends JFrame {
     public FileViewerWindow(String title, String content, String fileName) {
         setTitle(title);
         setSize(900, 600);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(Context.getMainFrame());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setIconImages(Util.appIcons());
 

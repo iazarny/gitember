@@ -220,7 +220,7 @@ public class DiffViewerWindow extends JFrame {
     /** Initializes all shared components. Must be called first in every constructor. */
     private void initCommon(String syntaxStyle) {
         setSize(1200, 700);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(Context.getMainFrame());
         setIconImages(Util.appIcons());
 
         oldPane = createEditor(syntaxStyle);

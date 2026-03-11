@@ -1,78 +1,83 @@
-# Geetember 2.5
+# Gitember v 3
 ---
-Has been renamed from Gitember. Just another GIT gui client just for fun. 
+A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightweight, and packed with features that make everyday Git work a pleasure.
 
-## Multiplatform GUI for GIT
+> **What's new in v3:** The GUI has been completely rewritten using lightweight Java **Swing**, replacing the heavy JavaFX runtime. The result is a significantly smaller download, faster startup, and lower memory usage — while adding first-class integrations with **GitHub, GitLab, Bitbucket, and Gitea**.
+> JavaFX version still available in the branc or by tag
 
-For Linux, Windows and Mac
+## Why Gitember?
 
-Downloads
- * [Windows Intel](http://gitember.org/Gitember2.5.msi)
- * [Mac M1](http://gitember.org/Gitember2.5.dmg)
- * [Linux Intel](http://gitember.org/Gitember2.5.deb)
- 
+* **No command-line memorisation** — commit, branch, merge, stash, rebase through a clean visual interface
+* **Powerful diff viewer** — unified, context, and side-by-side modes with syntax highlighting for 40+ languages
+* **Folder comparison tool** — compare entire directory trees and spot added / removed / changed files at a glance
+* **Arbitrary file comparison tool** 
+* **Pull Request review** — browse and review PRs from GitHub, GitLab, Bitbucket, and self-hosted Gitea without leaving the app
+* **Advanced full-text search** — search commits, file contents, Office documents, PDFs, images, and CAD files across the entire history
+* **Repository statistics** — commit frequency, lines changed per author, branch activity
+* **Git LFS support** — manage large binary assets with built-in LFS tooling
+* **Truly free** — open source, no account required, works offline
 
-![Mac Version](site/assets/img/gallery/gallery-1.png)
+## Downloads — Version 3.0.1 · March 2026
 
-![Gitember](site/assets/img/gallery/gallery-4.png)
+| Platform     | Link | Screenshot                                         |
+|--------------|------|----------------------------------------------------|
+| Windows (x64) | [Gitember3.0.msi](http://gitember.org/Gitember3.0.msi) | ![Gitember](site/assets/img/gallery/gallery-4.png) |
+| macOS (M1)   | [Gitember3.0.dmg](http://gitember.org/Gitember3.0.dmg) | ![Mac Version](site/assets/img/gallery/gallery-1.png)  | 
+| Linux  (x64) | [Gitember3.0.deb](http://gitember.org/Gitember3.0.deb) | ![Linux](site/assets/img/gallery/gallery-9.png) |
 
-![Linux](site/assets/img/gallery/gallery-9.png)
 
-## Reasons to create 
 
-Nothing in particular, but 
- * I had some free time in december 2016 and wanted to check is JavaFx suitable for GUI programming
- * I dont like standard UX of GIT
- * Check http://www.gitember.org
+More info and documentation: https://gitember.app
 
 ## Changes
 
+### 3.0 · March 2026
+* **GUI migrated from JavaFX to Swing** — dramatically faster startup, smaller install, lower memory footprint
+* **GitHub, GitLab, Bitbucket, Gitea integration** — browse and review Pull Requests directly inside Gitember, avatars, token support
+* Improved rendering performance across all platforms
+* Reduced installer size
+
 ### 2.5.8
-* Add ability to compare arbitrary files.
+* Add ability to compare arbitrary files
 * Small bugfixes
 
-
 ### 2.5.5
-* Initial revision of doc has been added
+* Initial revision of docs added
 * Small bugfixes
 
 ### 2.5.4
-* Fix multimonitor issues
+* Fix multi-monitor issues
 * Adjust look and feel
 * Minor refactoring
 
 ### 2.5.3
-* Significant UI / UX changes 
+* Significant UI / UX changes
 
-### 2.5 
- * Diff viewer has been updated
- * UI changes
- * Added support for Ed25519
- * Mac M1 silicon support
+### 2.5
+* Diff viewer updated
+* UI changes
+* Added support for Ed25519
+* Mac M1 Silicon support
 
 ### 2.35
- * Minor changes , related to search 
- * Open files from stash 
- * Add chery pick 
- * Rename to geetember 
+* Minor changes related to search
+* Open files from stash
+* Add cherry-pick
+* Renamed to Geetember
 
 ### 2.3
- * Full text search across history, including binary files
- * Search in open files
- * Add change annotation
- * Branch differences with item details
- * Add overview for difference component 
+* Full-text search across history, including binary files
+* Search in open files
+* Add change annotation
+* Branch differences with item details
+* Add overview for difference component
 
 ### 2.2
- * Added LFS support. With SSH only. Http is coming soon see  https://www.eclipse.org/lists/jgit-dev/msg03804.html for details
- * Fast file compare. The text flow changed to rich text fx .
- * Mass operations - delete, stage, unstage, revert
- * Branch difference
+* Added LFS support (SSH only)
+* Fast file compare using RichTextFX
+* Mass operations — delete, stage, unstage, revert
+* Branch difference view
 
- 
+## Background
 
-## Plans 
-
- * Integration with git providers, at least with github
- * Tabs support
-
+Started in December 2016 as a weekend experiment to see if JavaFX was suitable for desktop GUI programming. It turned into a full-featured Git client. Version 3 marks the move to Swing for a lighter, faster experience.

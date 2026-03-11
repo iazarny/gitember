@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.Context;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -13,7 +15,7 @@ public class FileViewerWindowOld extends JFrame {
     public FileViewerWindowOld(String title, String content) {
         setTitle(title);
         setSize(900, 600);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(Context.getMainFrame());
 
         textArea = new JTextArea(content);
         textArea.setEditable(false);

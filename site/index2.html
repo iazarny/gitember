@@ -14,9 +14,9 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Gitember — Free Git GUI Client &amp; File Diff Tool for Windows, Mac &amp; Linux</title>
-  <meta name="description" content="Gitember is a free, open-source Git GUI client for Windows, Mac and Linux. Features side-by-side file diff viewer, folder comparison tool, Pull Request panel, advanced search, statistics, and Git LFS support. Perfect for beginners and professionals.">
-  <meta name="keywords" content="git gui client, git gui, file diff tool, folder comparison tool, git client windows, git client mac, git client linux, side by side diff, git lfs, pull request viewer, free git gui, open source git client, gitember, file comparison software, folder diff tool">
+  <title>Gitember 3 — Lightweight Git GUI Client for Windows, Mac &amp; Linux | GitHub GitLab Bitbucket Gitea</title>
+  <meta name="description" content="Gitember 3 is a free, open-source Git GUI client rebuilt with lightweight Swing UI. Faster startup, lower memory, GitHub, GitLab, Bitbucket and Gitea integrations, side-by-side diff, folder comparison, Pull Request panel, advanced search, and Git LFS support.">
+  <meta name="keywords" content="git gui client, git gui, file diff tool, folder comparison tool, git client windows, git client mac, git client linux, side by side diff, git lfs, pull request viewer, free git gui, open source git client, gitember, github integration, gitlab integration, bitbucket integration, gitea integration, swing git client, lightweight git gui">
   <meta name="author" content="Igor Azarny">
   <meta name="robots" content="index, follow">
 
@@ -60,7 +60,7 @@
       "@type": "Person",
       "name": "Igor Azarny"
     },
-    "softwareVersion": "2.5.8",
+    "softwareVersion": "3.0.1",
     "url": "https://gitember.app"
   }
   </script>
@@ -193,6 +193,39 @@
     }
     .btn-cta-white:hover { opacity: 0.9; color: #4154f1; }
 
+    /* ── v3 news banner ── */
+    .v3-banner {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #1a1a2e 100%);
+      color: #fff;
+      padding: 60px 0 50px;
+    }
+    .v3-banner .v3-badge {
+      display: inline-block;
+      background: #4154f1;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: 4px 12px;
+      margin-bottom: 16px;
+    }
+    .v3-banner h2 { font-size: 2rem; font-weight: 700; margin-bottom: 14px; }
+    .v3-banner p  { opacity: 0.85; line-height: 1.8; font-size: 1rem; }
+    .v3-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 28px 24px;
+      height: 100%;
+      transition: background 0.2s;
+    }
+    .v3-card:hover { background: rgba(255,255,255,0.12); }
+    .v3-card .v3-icon { font-size: 2rem; color: #41f1d1; margin-bottom: 12px; }
+    .v3-card h5 { font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: #fff; }
+    .v3-card p  { font-size: 0.9rem; opacity: 0.8; margin: 0; }
+
     /* ── Audience cards ── */
     .audience-card {
       border: 1px solid #e5e5e5;
@@ -246,6 +279,7 @@
           <p>Gitember brings the full power of Git to a clean, intuitive interface </p>
           <a href="#download" class="btn-get-started scrollto">Download Free V 3.0.1 Mar 2026</a>
           <p style="opacity:0.7; font-size:0.9rem;">Free &amp; Open Source &nbsp;·&nbsp; Windows · MacOS · Linux &nbsp;&nbsp;</p>
+          <p style="opacity:0.7; font-size:0.9rem;">No account or registration required</p>
       </div>
 
 
@@ -263,6 +297,50 @@
   </section>
 
   <main id="main">
+
+    <!-- ======= What's New in v3 ======= -->
+    <section class="v3-banner" data-aos="fade-up">
+      <div class="container">
+        <div class="text-center mb-5">
+          <span class="v3-badge">New — Version 3</span>
+          <h2>Gitember 3: Lighter, Faster, More Connected</h2>
+          <p style="max-width:680px; margin:0 auto;">Version 3 is a complete rewrite of the UI layer. We dropped the heavy JavaFX runtime and rebuilt the GUI with lightweight Java Swing — resulting in dramatically faster startup, a smaller install footprint, and a snappier experience on every platform.</p>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+            <div class="v3-card">
+              <div class="v3-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+              <h5>Blazing Fast Startup</h5>
+              <p>Swing-based UI boots in a fraction of the time. No JavaFX runtime bundled — smaller download, less RAM, instant launch.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="80">
+            <div class="v3-card">
+              <div class="v3-icon"><i class="bi bi-github"></i></div>
+              <h5>GitHub Integration</h5>
+              <p>Browse and review GitHub Pull Requests, view open/closed PRs, and diff changed files — all without leaving Gitember.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="160">
+            <div class="v3-card">
+              <div class="v3-icon"><i class="bi bi-git"></i></div>
+              <h5>GitLab &amp; Bitbucket</h5>
+              <p>Native Merge Request and Pull Request support for GitLab and Bitbucket Cloud. Connect once, review everywhere.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="240">
+            <div class="v3-card">
+              <div class="v3-icon"><i class="bi bi-server"></i></div>
+              <h5>Self-hosted Gitea</h5>
+              <p>Works with your self-hosted Gitea instance over HTTPS. Perfect for teams running private infrastructure.</p>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-5">
+          <a href="#download" class="btn-cta-white scrollto" style="background:#41f1d1; color:#0a4c4c;">Download v3 — It's Free</a>
+        </div>
+      </div>
+    </section>
 
     <!-- ======= Audience Section ======= -->
     <section style="padding: 70px 0; background:#fafafa;">
@@ -598,7 +676,8 @@
     <div class="cta-banner" data-aos="fade-up">
       <div class="container">
         <h2>Stop Struggling with the Command Line</h2>
-        <p>Download Gitember for free and get a complete Git client, file diff tool,<br>and folder comparison utility — all in one lightweight app.</p>
+        <p>Download Gitember 3 for free — a complete Git client with GitHub, GitLab, Bitbucket &amp; Gitea integrations,<br>powerful diff tools, and a lightweight Swing UI that just works.</p>
+        <a href="#download" class="btn-cta-white scrollto">Get Gitember 3 Free</a>
       </div>
     </div>
 
@@ -610,32 +689,19 @@
             <div class="section-header">
               <h2 class="section-title">Download Gitember</h2>
               <span class="section-divider"></span>
-              <p class="mt-3" style="color:#aaa; text-align:center;">Free and open source. No account required. Works offline.</p>
+              <p class="mt-3" style="color:#aaa; text-align:center;">Free and open source. No account or registration required. Works offline.</p>
             </div>
           </div>
         </div>
 
         <div class="row justify-content-center" style="margin-bottom: 60px;">
           <div class="col-lg-6 col-md-8 text-center">
-            <div style="margin-bottom: 30px;">
-              <a href="/Gitember2.5.msi" class="platform-badge">
-                <i class="bi bi-windows"></i> Windows &nbsp;<small style="opacity:0.7;">MSI installer</small>
-              </a>
-              <a href="/Gitember2.5.dmg" class="platform-badge">
-                <i class="bi bi-apple"></i> macOS &nbsp;<small style="opacity:0.7;">Apple Silicon DMG</small>
-              </a>
-              <a href="/Gitember2.5.deb" class="platform-badge">
-                <i class="bi bi-ubuntu"></i> Linux &nbsp;<small style="opacity:0.7;">DEB package</small>
-              </a>
-              <a href="https://github.com/iazarny/gitember" class="platform-badge" target="_blank" rel="noopener">
-                <i class="bi bi-github"></i> Source code &nbsp;<small style="opacity:0.7;">GitHub</small>
-              </a>
-            </div>
+
 
             <div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 20px; margin-top: 10px;">
               <p style="color:#aaa; font-size:0.85rem; margin:0;">
                 <i class="bi bi-info-circle"></i>&nbsp;
-                Requires Java 17 or later. Version 2.5.8 · October 2024<br>
+                Version 3.0.1 · March 2026<br>
                 Questions? Mail <a href="mailto:iazarny@yahoo.com" style="color:#aaa;">Igor Azarny</a>
               </p>
             </div>

@@ -52,6 +52,7 @@ public class MainFrame extends JFrame {
     private PullRequestPanel pullRequestPanel;
 
     public MainFrame() {
+        Context.setMainFrame(this);
         setTitle("Gitember");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);

@@ -94,6 +94,11 @@ public class Context {
     private static ProjectWatcher projectWatcher;
     private static Thread projectWatcherThread;
 
+    private static JFrame mainFrame;
+
+    public static JFrame getMainFrame() { return mainFrame; }
+    public static void setMainFrame(JFrame frame) { mainFrame = frame; }
+
     // Property change listener support
     public static void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
