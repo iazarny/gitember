@@ -54,8 +54,8 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
 
-        Frame frame = (Frame) SwingUtilities.getWindowAncestor(parent);
-        MergeDialog dialog = new MergeDialog(frame, branchShortName, workingBranchName);
+        Window window = SwingUtilities.getWindowAncestor(parent);
+        MergeDialog dialog = new MergeDialog(window, branchShortName, workingBranchName);
         dialog.setVisible(true);
 
         MergeDialogResult result = dialog.getResult();

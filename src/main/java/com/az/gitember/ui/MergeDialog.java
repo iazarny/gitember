@@ -18,8 +18,8 @@ public class MergeDialog extends JDialog {
 
     private MergeDialogResult result;
 
-    public MergeDialog(Frame owner, String branchShortName, String workingBranchName) {
-        super(owner, "Merge Branch", true);
+    public MergeDialog(Window owner, String branchShortName, String workingBranchName) {
+        super(owner, "Merge Branch", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
