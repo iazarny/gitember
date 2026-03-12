@@ -58,6 +58,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem compareFoldersItem;
 
     // Help menu items
+    private final JMenuItem helpContentsItem;
     private final JMenuItem aboutItem;
 
     private Consumer<Project> recentProjectHandler;
@@ -196,6 +197,15 @@ public class MainMenuBar extends JMenuBar {
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
+        helpContentsItem = new JMenuItem("Help Contents", KeyEvent.VK_H);
+        helpContentsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+        helpContentsItem.addActionListener(e -> {
+            try { Desktop.getDesktop().browse(new URI("http://www.gitember.org/doc/docs/ge-intro/index.html")); }
+            catch (Exception ex) { /* ignore */ }
+        });
+        helpMenu.add(helpContentsItem);
+        helpMenu.addSeparator();
+
         aboutItem = new JMenuItem("About", KeyEvent.VK_A);
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
@@ -292,4 +302,5 @@ public class MainMenuBar extends JMenuBar {
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
     public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
+    public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
 }
