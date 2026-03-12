@@ -125,13 +125,47 @@ public final class SyntaxStyleUtil {
 
     // Highlight colors — two palettes selected at paint time based on active theme
     public static Color addedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 70, 0) : new Color(200, 255, 200);
+        return isDarkTheme() ?
+                new Color(121, 197, 121) :
+                new Color(187, 236, 187);
     }
     public static Color deletedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(90, 20, 20) : new Color(255, 200, 200);
+        return isDarkTheme() ?
+                new Color(202, 64, 64) :
+                new Color(205, 152, 152);
     }
     public static Color changedBg() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(20, 50, 100) : new Color(200, 230, 255);
+        return isDarkTheme() ?
+                new Color(41, 127, 213) :
+                new Color(130, 221, 236);
+    }
+
+
+
+
+    public static Color rowFgAdded()   { return isDarkTheme() ? new Color(180, 240, 180) : Color.BLACK; }
+    public static Color rowFgDeleted() { return isDarkTheme() ? new Color(240, 160, 160) : Color.BLACK; }
+    public static Color rowFgChanged() { return isDarkTheme() ? new Color(160, 195, 255) : Color.BLACK; }
+
+    /**
+     * Returns a theme-aware foreground colour for a SCM file-status label
+     * (as used in the changed-files table of the commit detail panel).
+     *
+     * <p>Returns {@code null} for unknown statuses so callers can fall back to
+     * the default table foreground.</p>
+     *
+     * @param status upper-case status string, e.g. {@code "ADDED"}, {@code "MODIFIED"} …
+     */
+    public static Color statusColor(String status) {
+        if (status == null) return null;
+        boolean dark = isDarkTheme();
+        return switch (status) {
+            case "ADDED",    "ADD"             -> dark ? new Color( 80, 220,  80) : new Color(  0, 140,  0);
+            case "MODIFIED", "MODIFY"          -> dark ? new Color( 80, 160, 255) : new Color(  0,  90, 200);
+            case "REMOVED",  "DELETE"          -> dark ? new Color(255,  90,  90) : new Color(190,  0,   0);
+            case "RENAMED",  "RENAME", "COPY"  -> dark ? new Color(220, 170,  60) : new Color(140,  80,  0);
+            default                            -> null;
+        };
     }
 
 }

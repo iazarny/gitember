@@ -27,7 +27,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
         if (Context.getWorkingBranch() != null) {
             remoteBranch = Context.getWorkingBranch().getRemoteMergeName();
         }
-        PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(params, remoteBranch, null);
+        PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(params, remoteBranch, progressMonitor);
         Context.updateAll();
         Context.updateWorkingBranch();
         return result;

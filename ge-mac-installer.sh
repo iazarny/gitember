@@ -1,17 +1,17 @@
 #!/bin/sh
-mkdir app
-mv target/gitember-2.5.8-spring-boot.jar app
+#mkdir app
+#mv target/gitember-2.5.8-spring-boot.jar app
 
 jpackage \
-   --input app/  --name Gitember2 --vendor "Igor Azarny" \
-   --main-jar gitember-2.5.8-spring-boot.jar  --app-version 2.5 \
+   --input app/  --name Gitember --vendor "Igor Azarny" \
+   --main-jar gitember-3.0-SNAPSHOT-boot.jar  --app-version 3.0 \
    --icon src/main/resources/icon/gitember.icns \
-   --type "dmg" \
-   --mac-sign \
-   --mac-package-signing-prefix "com.az.gitember" \
-   --mac-signing-key-user-name "Igor Azarny (3H6449CVS8)"
+   --type "dmg"
+#   --mac-sign \
+#   --mac-package-signing-prefix "com.az.gitember" \
+#   --mac-signing-key-user-name "Igor Azarny (3H6449CVS8)"
 
-mv Gitember2-2.5.dmg Gitember2.5.dmg
+#mv Gitember2-2.5.dmg Gitember2.5.dmg
 
 # .dmg signing is required for notarization.
 #codesign --timestamp -s "Igor Azarny (3H6449CVS8)" "Gitember2.5.dmg"

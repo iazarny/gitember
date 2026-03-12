@@ -14,11 +14,12 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheEditor;
+import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
-import org.eclipse.jgit.lfs.LfsPrePushHook;
 import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -47,6 +49,9 @@ import org.eclipse.jgit.util.SystemReader;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,6 +60,8 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1287,9 +1294,7 @@ public class GitRepoService {
                 }
             }
         }
-
         status.addAll(lfs);
-
         return status;
     }
 
@@ -1378,27 +1383,17 @@ public class GitRepoService {
 
     /**
      * Downloads all LFS objects referenced by HEAD that are missing from
-     * the local LFS object store.
+     * the local LFS object store, then re-checks out each LFS path so the
+     * smudge filter replaces pointer files with real content in the working tree.
      *
-     * <p>JGit's {@link SmudgeFilter#downloadLfsResource} needs to know the LFS
-     * server URL and valid credentials.  When the remote is SSH-based
-     * ({@code git@github.com:…}) JGit tries to run {@code git-lfs-authenticate}
-     * over SSH, which typically fails in an embedded context.  We therefore:
-     * <ol>
-     *   <li>Derive the HTTPS LFS endpoint from the remote URL if {@code lfs.url}
-     *       is not already set in the repository config.</li>
-     *   <li>Register credentials via {@link CredentialsProvider#setDefault} so
-     *       the LFS HTTP connection can authenticate.</li>
-     *   <li>Restore the previous state in a {@code finally} block.</li>
-     * </ol>
+     * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
      */
-    public void fetchLfsObjects() throws IOException {
+    public void fetchLfsObjects(RemoteRepoParameters params) throws IOException {
         Ref head = repository.exactRef(Constants.HEAD);
         if (head == null || head.getObjectId() == null) return;
-
-        // Collect all LFS pointers from HEAD tree
         Lfs lfs = new Lfs(repository);
         List<LfsPointer> pointers = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
         try (RevWalk walk = new RevWalk(repository)) {
             RevCommit commit = walk.parseCommit(head.getObjectId());
             RevTree tree = commit.getTree();
@@ -1409,32 +1404,35 @@ public class GitRepoService {
                 treeWalk.setFilter(filter);
                 while (treeWalk.next()) {
                     LfsPointer pointer = filter.getPointer();
-                    if (pointer != null) pointers.add(pointer);
+                    if (pointer != null) {
+                        pointers.add(pointer);
+                        paths.add(treeWalk.getPathString());
+                    }
                 }
             }
         }
         if (pointers.isEmpty()) return;
 
-        // Configure transport for the LFS download
-        RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
+        // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
+        // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
+        // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
         StoredConfig repoCfg = repository.getConfig();
-        String prevLfsUrl = repoCfg.getString("lfs", null, "url");
-        CredentialsProvider prevCp = CredentialsProvider.getDefault();
-
-        try {
-            // If lfs.url is not set, derive it from the remote URL.
-            // SSH remotes (git@host:path) need to be converted to HTTPS form
-            // because the LFS protocol always uses HTTPS, not SSH.
-            if (StringUtils.isBlank(prevLfsUrl)) {
-                String lfsUrl = deriveLfsUrl(params.getUrl());
-                if (StringUtils.isNotBlank(lfsUrl)) {
-                    repoCfg.setString("lfs", null, "url", lfsUrl);
-                    repoCfg.save();
-                    log.log(Level.INFO, "Derived LFS URL: " + lfsUrl);
-                }
+        boolean tempLfsUrl = false;
+        if (repoCfg.getString("lfs", null, "url") == null) {
+            String httpsUrl = sshRemoteToHttps(params.getUrl());
+            if (httpsUrl != null) {
+                // LfsConnectionFactory appends /objects/batch to lfs.url, so the
+                // base URL must end with /info/lfs (GitHub LFS endpoint convention).
+                String lfsUrl = httpsUrl.endsWith("/info/lfs")
+                        ? httpsUrl : httpsUrl + "/info/lfs";
+                repoCfg.setString("lfs", null, "url", lfsUrl);
+                tempLfsUrl = true;
             }
+        }
 
-            // Register credentials so LfsConnectionFactory can authenticate
+        // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
+        CredentialsProvider prevCp = CredentialsProvider.getDefault();
+        try {
             if (StringUtils.isNotBlank(params.getAccessToken())) {
                 CredentialsProvider.setDefault(
                         new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
@@ -1442,64 +1440,87 @@ public class GitRepoService {
                 CredentialsProvider.setDefault(
                         new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
             }
-
-            Collection<Path> downloaded = SmudgeFilter.downloadLfsResource(lfs, repository,
+            SmudgeFilter.downloadLfsResource(lfs, repository,
                     pointers.toArray(new LfsPointer[0]));
-
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
         } finally {
-            // Always restore the previous state
             CredentialsProvider.setDefault(prevCp);
-            if (StringUtils.isBlank(prevLfsUrl)) {
+            if (tempLfsUrl) {
                 repoCfg.unset("lfs", null, "url");
-            } else {
-                repoCfg.setString("lfs", null, "url", prevLfsUrl);
             }
-            repoCfg.save();
+        }
+
+        // Write the real content from the LFS store directly into the working tree,
+        // then refresh the index stat entries so that git status quick-check (mtime/size
+        // comparison) treats these files as clean — matching what "git lfs checkout" does.
+        List<String> updated = new ArrayList<>();
+        for (int i = 0; i < paths.size(); i++) {
+            Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
+            if (Files.exists(lfsObjPath)) {
+                Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
+                Files.createDirectories(workingPath.getParent());
+                Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                updated.add(paths.get(i));
+            }
+        }
+
+        if (!updated.isEmpty()) {
+            DirCache dc = repository.lockDirCache();
+            try {
+                DirCacheEditor editor = dc.editor();
+                for (String p : updated) {
+                    editor.add(new DirCacheEditor.PathEdit(p) {
+                        @Override
+                        public void apply(DirCacheEntry ent) {
+                            File f = new File(repository.getWorkTree(), p);
+                            if (f.exists()) {
+                                ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
+                                ent.setLength((int) f.length());
+                                // ObjectId (pointer hash) is intentionally left unchanged.
+                            }
+                        }
+                    });
+                }
+                editor.commit();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
+                dc.unlock();
+            }
         }
     }
 
     /**
-     * Converts any supported remote URL form to the HTTPS LFS endpoint URL.
+     * Converts an SSH remote URL to its HTTPS equivalent, or returns the URL
+     * unchanged if it is already HTTPS.  Returns {@code null} for unrecognised formats.
      *
      * <ul>
-     *   <li>{@code git@github.com:user/repo.git} →
-     *       {@code https://github.com/user/repo.git/info/lfs}</li>
-     *   <li>{@code ssh://git@github.com/user/repo.git} →
-     *       {@code https://github.com/user/repo.git/info/lfs}</li>
-     *   <li>{@code https://github.com/user/repo.git} →
-     *       {@code https://github.com/user/repo.git/info/lfs}</li>
+     *   <li>{@code git@github.com:user/repo.git} → {@code https://github.com/user/repo.git}</li>
+     *   <li>{@code ssh://git@github.com/user/repo.git} → {@code https://github.com/user/repo.git}</li>
      * </ul>
-     *
-     * Returns {@code null} if the URL cannot be converted.
      */
-    static String deriveLfsUrl(String remoteUrl) {
-        if (StringUtils.isBlank(remoteUrl)) return null;
-        String base = null;
+    private static String sshRemoteToHttps(String remoteUrl) {
+        if (remoteUrl == null) return null;
+        if (remoteUrl.startsWith("https://")) return remoteUrl;
+        // SCP-style: git@host:path/repo.git
         if (remoteUrl.startsWith("git@")) {
-            // git@host:path/repo.git
-            int atEnd = remoteUrl.indexOf('@');
-            int colon = remoteUrl.indexOf(':', atEnd);
+            String rest = remoteUrl.substring(4);      // host:path/repo.git
+            int colon = rest.indexOf(':');
             if (colon > 0) {
-                String host = remoteUrl.substring(atEnd + 1, colon);
-                String path = remoteUrl.substring(colon + 1);
-                base = "https://" + host + "/" + path;
+                return "https://" + rest.substring(0, colon) + "/" + rest.substring(colon + 1);
             }
-        } else if (remoteUrl.startsWith("ssh://")) {
-            // ssh://git@host/path/repo.git
-            String withoutScheme = remoteUrl.substring("ssh://".length());
-            int slash = withoutScheme.indexOf('/');
-            if (slash > 0) {
-                String hostPart = withoutScheme.substring(0, slash);
-                String path = withoutScheme.substring(slash);
-                // strip optional "git@" user prefix from host
-                if (hostPart.contains("@")) hostPart = hostPart.substring(hostPart.indexOf('@') + 1);
-                base = "https://" + hostPart + path;
-            }
-        } else if (remoteUrl.startsWith("https://") || remoteUrl.startsWith("http://")) {
-            base = remoteUrl;
         }
-        if (base == null) return null;
-        return base.endsWith("/info/lfs") ? base : base + "/info/lfs";
+        // ssh://[user@]host/path/repo.git
+        if (remoteUrl.startsWith("ssh://")) {
+            try {
+                java.net.URI uri = java.net.URI.create(remoteUrl);
+                return "https://" + uri.getHost() + uri.getPath();
+            } catch (IllegalArgumentException ignored) {
+                // fall through
+            }
+        }
+        return null;
     }
 
     private Path getGitAttrPath() {
@@ -1703,12 +1724,22 @@ public class GitRepoService {
                 .setDirectory(new File(params.getDestinationFolder()))
                 .setCloneAllBranches(true)
                 .setCloneSubmodules(true)
+                //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
         configureTransportCommand(cmd, params);
 
         Git result = null;
 
-        Pair<String, String> smudgeAndClean = configureLfsSupport(SystemReader.getInstance().getUserConfig());
+        // Suppress the external git-lfs smudge/clean commands in the user config
+        // for the duration of the clone checkout so JGit does not invoke the
+        // external git-lfs binary during the initial checkout pass.
+        // After clone the repo config is written with gitember's built-in filter
+        // commands so subsequent checkouts use JGit's SmudgeFilter.
+        // Note: we do NOT touch the system config — it may be read-only
+        // (e.g. C:\Program Files\Git\etc\gitconfig on Windows requires admin).
+        // If a system-wide git-lfs is active, clone will download actual LFS
+        // content during checkout; that is acceptable (same as native git clone).
+        Pair<String, String> smudgeAndCleanUser = configureLfsSupport(SystemReader.getInstance().getUserConfig());
 
         try {
             result = cmd.call();
@@ -1725,7 +1756,7 @@ public class GitRepoService {
                 repoCfg.save();
                 log.log(Level.INFO, MessageFormat.format("Repo {0} configured  with LFS support by gitember", reporitoryUrl));
             }
-            rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndClean);
+            rollbackLfsSupport(SystemReader.getInstance().getUserConfig(), smudgeAndCleanUser);
         }
     }
 
@@ -1809,15 +1840,11 @@ public class GitRepoService {
                     .getString("remote", "origin", "url");
             log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
 
-            // Upload LFS objects to the LFS server before pushing git objects
+            // Upload LFS objects via the batch API before the git push.
+            // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
+            // for its internal HTTP requests, so we implement the batch protocol directly.
             if (isLfsRepo()) {
-                try {
-                    LfsPrePushHook lfsHook = new LfsPrePushHook(repository, null);
-                    lfsHook.setRefs(Collections.emptyList());
-                    lfsHook.call();
-                } catch (Exception lfsEx) {
-                    log.log(Level.WARNING, "LFS pre-push upload failed: " + lfsEx.getMessage(), lfsEx);
-                }
+                uploadLfsObjectsDirect(parameters, refSpec);
             }
 
             Iterable<PushResult> pushResults = pushCommand.call();
@@ -1903,9 +1930,62 @@ public class GitRepoService {
     public List<ScmItem> getPrChangedFiles(String sourceBranch, String targetBranch) throws Exception {
         String sourceRef = resolveAnyRef(sourceBranch);
         String targetRef = resolveAnyRef(targetBranch);
-        return getBranchDiff(targetRef, sourceRef).stream()
-                .map(this::adaptDiffEntry)
-                .collect(java.util.stream.Collectors.toList());
+
+        ObjectId sourceId = repository.resolve(sourceRef);
+        ObjectId targetId = repository.resolve(targetRef);
+
+        try (RevWalk walk = new RevWalk(repository);
+             ObjectReader reader = repository.newObjectReader()) {
+
+            RevCommit sourceCommit = walk.parseCommit(sourceId);
+            RevCommit targetCommit = walk.parseCommit(targetId);
+
+            // Find the merge base (common ancestor) — what GitHub/GitLab use for PR diffs
+            walk.setRevFilter(RevFilter.MERGE_BASE);
+            walk.markStart(sourceCommit);
+            walk.markStart(targetCommit);
+            RevCommit mergeBase = walk.next();
+
+            RevCommit baseCommit = mergeBase != null ? mergeBase : targetCommit;
+
+            CanonicalTreeParser baseTree = new CanonicalTreeParser();
+            baseTree.reset(reader, walk.parseCommit(baseCommit.getId()).getTree());
+
+            CanonicalTreeParser sourceTree = new CanonicalTreeParser();
+            sourceTree.reset(reader, sourceCommit.getTree());
+
+            try (Git git = new Git(repository)) {
+                return git.diff()
+                        .setOldTree(baseTree)
+                        .setNewTree(sourceTree)
+                        .call()
+                        .stream()
+                        .map(this::adaptDiffEntry)
+                        .collect(java.util.stream.Collectors.toList());
+            }
+        }
+    }
+
+    /**
+     * Returns the SHA of the merge base (common ancestor) of two branches,
+     * or null if the branches are not available locally.
+     */
+    public String getMergeBaseSha(String sourceBranch, String targetBranch) {
+        try {
+            ObjectId sourceId = repository.resolve(resolveAnyRef(sourceBranch));
+            ObjectId targetId = repository.resolve(resolveAnyRef(targetBranch));
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit sourceCommit = walk.parseCommit(sourceId);
+                RevCommit targetCommit = walk.parseCommit(targetId);
+                walk.setRevFilter(RevFilter.MERGE_BASE);
+                walk.markStart(sourceCommit);
+                walk.markStart(targetCommit);
+                RevCommit mergeBase = walk.next();
+                return mergeBase != null ? mergeBase.getName() : null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String resolveAnyRef(String branchName) throws Exception {
@@ -1929,6 +2009,14 @@ public class GitRepoService {
      */
     public String getFileContentAtRef(String ref, String filePath) throws Exception {
         ObjectId id = repository.resolve(ref);
+        if (id == null) {
+            // Plain branch name may not resolve — try remote-tracking and local ref variants
+            try {
+                id = repository.resolve(resolveAnyRef(ref));
+            } catch (Exception ignored) {
+                return ""; // branch genuinely not available locally
+            }
+        }
         if (id == null) return "";
         try (RevWalk walk = new RevWalk(repository)) {
             RevCommit commit = walk.parseCommit(id);
@@ -2193,6 +2281,208 @@ public class GitRepoService {
     }
 
 
+    /**
+     * Uploads all LFS objects referenced by the current HEAD directly via the
+     * Git LFS Batch API, using explicit {@code Authorization} headers.
+     * This bypasses {@link LfsPrePushHook} which does not forward credentials
+     * in JGit 6.x.
+     */
+    private void uploadLfsObjectsDirect(RemoteRepoParameters params,
+                                        RefSpec refSpec) throws IOException {
+        // Collect LFS pointers present in the commit being pushed
+        Lfs lfs = new Lfs(repository);
+        List<LfsPointer> toUpload = new ArrayList<>();
+
+        Collection<RemoteRefUpdate> refs = buildPushRefs(refSpec);
+        try (RevWalk walk = new RevWalk(repository)) {
+            for (RemoteRefUpdate rru : refs) {
+                ObjectId newId = repository.resolve(rru.getSrcRef());
+                if (newId == null) continue;
+                RevCommit commit = walk.parseCommit(newId);
+                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                    LfsPointerFilter filter = new LfsPointerFilter();
+                    treeWalk.addTree(commit.getTree());
+                    treeWalk.setRecursive(true);
+                    treeWalk.setFilter(filter);
+                    while (treeWalk.next()) {
+                        LfsPointer ptr = filter.getPointer();
+                        if (ptr != null && Files.exists(lfs.getMediaFile(ptr.getOid()))) {
+                            toUpload.add(ptr);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to collect LFS objects for upload", e);
+        }
+
+        if (toUpload.isEmpty()) return;
+
+        // LFS batch endpoint
+        String httpsUrl = sshRemoteToHttps(params.getUrl());
+        if (httpsUrl == null) httpsUrl = params.getUrl();
+        String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
+        String batchUrl = lfsBase + "/objects/batch";
+
+        // Build Basic auth header directly — the only reliable mechanism for
+        // plain HttpURLConnection without JGit's credential-provider plumbing.
+        String authHeader = buildLfsAuthHeader(params);
+
+        // ── 1. POST batch-upload request ──────────────────────────────────────
+        StringBuilder sb = new StringBuilder(
+                "{\"operation\":\"upload\",\"transfers\":[\"basic\"],\"objects\":[");
+        for (int i = 0; i < toUpload.size(); i++) {
+            LfsPointer p = toUpload.get(i);
+            if (i > 0) sb.append(',');
+            sb.append("{\"oid\":\"").append(p.getOid().getName())
+              .append("\",\"size\":").append(p.getSize()).append('}');
+        }
+        sb.append("]}");
+        byte[] batchBody = sb.toString().getBytes(StandardCharsets.UTF_8);
+
+        HttpURLConnection batchConn = openLfsHttp(batchUrl, "POST", authHeader);
+        batchConn.setRequestProperty("Content-Type",  "application/vnd.git-lfs+json");
+        batchConn.setRequestProperty("Accept",        "application/vnd.git-lfs+json");
+        batchConn.setFixedLengthStreamingMode(batchBody.length);
+        batchConn.setDoOutput(true);
+        try (OutputStream out = batchConn.getOutputStream()) { out.write(batchBody); }
+
+        int batchStatus = batchConn.getResponseCode();
+        if (batchStatus != 200) {
+            String err = readHttpError(batchConn);
+            throw new IOException("LFS batch-upload request failed (" + batchStatus + "): " + err);
+        }
+
+        // ── 2. Upload each object that the server doesn't have yet ─────────────
+        Map<String, LfsPointer> byOid = new HashMap<>();
+        for (LfsPointer p : toUpload) byOid.put(p.getOid().getName(), p);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode response = mapper.readTree(batchConn.getInputStream());
+
+        for (JsonNode obj : response.path("objects")) {
+            String oid = obj.path("oid").asText();
+            JsonNode actions = obj.path("actions");
+            if (actions.isMissingNode()) continue;  // already on server
+
+            LfsPointer pointer = byOid.get(oid);
+            if (pointer == null) continue;
+            Path objPath = lfs.getMediaFile(pointer.getOid());
+
+            JsonNode uploadAction = actions.path("upload");
+            if (!uploadAction.isMissingNode()) {
+                String uploadHref = uploadAction.path("href").asText();
+                HttpURLConnection uploadConn = openLfsHttp(uploadHref, "PUT", null);
+                uploadConn.setFixedLengthStreamingMode(pointer.getSize());
+                uploadConn.setRequestProperty("Content-Type", "application/octet-stream");
+                applyActionHeaders(uploadConn, uploadAction.path("header"));
+                uploadConn.setDoOutput(true);
+                try (InputStream in  = Files.newInputStream(objPath);
+                     OutputStream out = uploadConn.getOutputStream()) {
+                    byte[] buf = new byte[65536];
+                    int n;
+                    while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                }
+                int uploadStatus = uploadConn.getResponseCode();
+                if (uploadStatus >= 400) {
+                    throw new IOException("LFS upload failed for " + oid + ": " + uploadStatus);
+                }
+                log.log(Level.INFO, "Uploaded LFS object " + oid
+                        + " (" + pointer.getSize() + " bytes)");
+            }
+
+            // Optional verify step (GitHub LFS requires it for some objects)
+            JsonNode verifyAction = actions.path("verify");
+            if (!verifyAction.isMissingNode()) {
+                String verifyHref   = verifyAction.path("href").asText();
+                byte[] verifyBody   = ("{\"oid\":\"" + oid + "\",\"size\":"
+                        + pointer.getSize() + "}").getBytes(StandardCharsets.UTF_8);
+                HttpURLConnection verifyConn = openLfsHttp(verifyHref, "POST", authHeader);
+                verifyConn.setRequestProperty("Content-Type", "application/vnd.git-lfs+json");
+                applyActionHeaders(verifyConn, verifyAction.path("header"));
+                verifyConn.setFixedLengthStreamingMode(verifyBody.length);
+                verifyConn.setDoOutput(true);
+                try (OutputStream out = verifyConn.getOutputStream()) { out.write(verifyBody); }
+                int verifyStatus = verifyConn.getResponseCode();
+                if (verifyStatus >= 400) {
+                    log.log(Level.WARNING, "LFS verify failed for " + oid + ": " + verifyStatus);
+                }
+            }
+        }
+    }
+
+    private String buildLfsAuthHeader(RemoteRepoParameters params) {
+        String creds = null;
+        if (StringUtils.isNotBlank(params.getAccessToken())) {
+            creds = "oauth2:" + params.getAccessToken();
+        } else if (StringUtils.isNotBlank(params.getUserName())) {
+            creds = params.getUserName() + ":" + params.getUserPwd();
+        }
+        if (creds == null) return null;
+        return "Basic " + Base64.getEncoder()
+                .encodeToString(creds.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static HttpURLConnection openLfsHttp(String url, String method,
+                                                  String authHeader) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        conn.setRequestMethod(method);
+        conn.setConnectTimeout(30_000);
+        conn.setReadTimeout(300_000);
+        if (authHeader != null) conn.setRequestProperty("Authorization", authHeader);
+        return conn;
+    }
+
+    private static void applyActionHeaders(HttpURLConnection conn, JsonNode headerNode) {
+        if (headerNode == null || headerNode.isMissingNode()) return;
+        Iterator<Map.Entry<String, JsonNode>> it = headerNode.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> h = it.next();
+            conn.setRequestProperty(h.getKey(), h.getValue().asText());
+        }
+    }
+
+    private static String readHttpError(HttpURLConnection conn) {
+        try (InputStream err = conn.getErrorStream()) {
+            if (err == null) return "";
+            return new String(err.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    /**
+     * Builds the list of {@link RemoteRefUpdate} entries that describe what is
+     * about to be pushed.  This is used to tell {@link LfsPrePushHook} which
+     * commits to scan for LFS objects so it can upload them before the git push.
+     */
+    private Collection<RemoteRefUpdate> buildPushRefs(RefSpec refSpec) {
+        try {
+            String branch = repository.getBranch();
+            String localRef = (refSpec != null && refSpec.getSource() != null)
+                    ? refSpec.getSource()
+                    : Constants.R_HEADS + branch;
+            String remoteName = (refSpec != null && refSpec.getDestination() != null)
+                    ? refSpec.getDestination()
+                    : Constants.R_HEADS + branch;
+
+            ObjectId newId = repository.resolve(localRef);
+            if (newId == null) return Collections.emptyList();
+
+            // Remote tracking ref holds the last-known remote commit — used as the
+            // "old" boundary so the hook only scans commits not yet on the server.
+            String trackingRef = Constants.R_REMOTES + "origin/" + branch;
+            ObjectId oldId = repository.resolve(trackingRef); // null for brand-new branch
+
+            return Collections.singletonList(
+                    new RemoteRefUpdate(repository, localRef, remoteName, false, trackingRef, oldId)
+            );
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Could not build push refs for LFS pre-push hook", e);
+            return Collections.emptyList();
+        }
+    }
+
     private void configureTransportCommand(
             final TransportCommand cmd, RemoteRepoParameters params) throws ConfigInvalidException, IOException {
 
@@ -2409,6 +2699,40 @@ public class GitRepoService {
         return blamer.call();
     }
 
+    /**
+     * Returns blame annotations — one formatted string per file line.
+     * Format: {@code "sha7    author-name       yyyy-MM-dd"}.
+     * Returns an empty list on error.
+     */
+    public List<String> getBlameAnnotations(String commitSha, String filePath) {
+        try {
+            BlameCommand blamer = new BlameCommand(repository);
+            if (commitSha != null && !commitSha.isBlank()) {
+                ObjectId id = repository.resolve(commitSha);
+                if (id != null) blamer.setStartCommit(id);
+            }
+            blamer.setFilePath(filePath);
+            BlameResult result = blamer.call();
+            if (result == null || result.getResultContents() == null) return List.of();
+            int count = result.getResultContents().size();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            List<String> lines = new ArrayList<>(count);
+            for (int i = 0; i < count; i++) {
+                RevCommit c      = result.getSourceCommit(i);
+                PersonIdent auth = result.getSourceAuthor(i);
+                String sha  = c    != null ? c.getName().substring(0, 7) : "       ";
+                String name = auth != null ? auth.getName() : "";
+                if (name.length() > 16) name = name.substring(0, 16);
+                String date = auth != null ? sdf.format(auth.getWhen()) : "          ";
+                lines.add(String.format("%-7s %-16s %s", sha, name, date));
+            }
+            return lines;
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Blame failed for " + filePath, e);
+            return List.of();
+        }
+    }
+
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
         final Ref head = repository.exactRef(Constants.HEAD);
@@ -2579,5 +2903,74 @@ public class GitRepoService {
     private static String gitAttributesContent = "*.psd filter=lfs diff=lfs merge=lfs -text\n" +
             "*.bmp filter=lfs diff=lfs merge=lfs -text\n";
 
+    // ── Submodule support ──────────────────────────────────────────────────────
+
+    /**
+     * Lists all submodules declared in .gitmodules, together with their current status.
+     */
+    public List<Submodule> getSubmodules() throws Exception {
+        List<Submodule> result = new ArrayList<>();
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                String name     = walk.getModuleName();
+                String path     = walk.getPath();
+                String url      = walk.getRemoteUrl();
+                String indexSha = walk.getObjectId() != null
+                        ? walk.getObjectId().abbreviate(8).name() : "";
+
+                Submodule.Status status;
+                String headSha = "";
+
+                Repository subRepo = walk.getRepository();
+                if (subRepo == null) {
+                    status = Submodule.Status.UNINITIALIZED;
+                } else {
+                    try {
+                        ObjectId head = subRepo.resolve(Constants.HEAD);
+                        if (head == null) {
+                            status = Submodule.Status.MISSING;
+                        } else {
+                            headSha = head.abbreviate(8).name();
+                            status = head.equals(walk.getObjectId())
+                                    ? Submodule.Status.UP_TO_DATE
+                                    : Submodule.Status.MODIFIED;
+                        }
+                    } finally {
+                        subRepo.close();
+                    }
+                }
+
+                result.add(new Submodule(
+                        name != null ? name : path,
+                        path,
+                        url != null ? url : "",
+                        status, headSha, indexSha));
+            }
+        }
+        result.sort(Comparator.comparing(Submodule::getPath));
+        return result;
+    }
+
+    /**
+     * Runs {@code git submodule init} followed by {@code git submodule update} for all submodules.
+     */
+    public void updateSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.submoduleInit().call();
+            git.submoduleUpdate()
+                    .setProgressMonitor(progressMonitor)
+                    .call();
+        }
+    }
+
+    /**
+     * Runs {@code git submodule sync} — updates recorded remote URLs from .gitmodules.
+     */
+    public void syncSubmodules() throws Exception {
+        try (Git git = new Git(repository)) {
+            git.submoduleSync().call();
+        }
+    }
 
 }
+

@@ -164,9 +164,9 @@ class DiffOverviewPanel extends JPanel {
         if (editList != null) {
             for (Edit edit : editList) {
                 Color c = switch (edit.getType()) {
-                    case DELETE  -> isLeft  ? deletedColor() : null;
-                    case INSERT  -> !isLeft ? addedColor()   : null;
-                    case REPLACE -> changedColor();
+                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBg() : null;
+                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBg( )  : null;
+                    case REPLACE -> SyntaxStyleUtil.changedBg();
                     default      -> null;
                 };
                 if (c == null) continue;
@@ -209,8 +209,10 @@ class DiffOverviewPanel extends JPanel {
 
     /** Paints the semi-transparent viewport indicator. */
     private void paintViewportRect(Graphics2D g2, int w, int h) {
-        int y  = (int) (viewportOffset * h);
         int rh = Math.max(4, (int) (viewportSize * h));
+        int y  = Math.min((int) (viewportOffset * h), h - rh);   // top cannot push rect below panel
+        y      = Math.max(0, y);                                   // top cannot be above panel
+        rh     = Math.min(rh, h - y);                             // bottom cannot exceed panel
         g2.setColor(new Color(128, 128, 128, 55));
         g2.fillRect(0, y, w, rh);
         g2.setColor(new Color(100, 100, 100, 170));
@@ -246,15 +248,7 @@ class DiffOverviewPanel extends JPanel {
 
     // ── Colours ───────────────────────────────────────────────────────────────
 
-    private static Color addedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(0, 110, 0)   : new Color(100, 200, 100);
-    }
-    private static Color deletedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(130, 30, 30) : new Color(200, 100, 100);
-    }
-    private static Color changedColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? new Color(30, 60, 130) : new Color(100, 140, 210);
-    }
+
 
     private static double clamp(double v) { return Math.max(0.0, Math.min(1.0, v)); }
 }

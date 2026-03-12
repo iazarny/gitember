@@ -21,7 +21,7 @@ public class CloneHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        Context.getGitRepoService().cloneRepository(params, null);
+        Context.getGitRepoService().cloneRepository(params, progressMonitor);
         Context.init(params.getDestinationFolder());
         return null;
     }

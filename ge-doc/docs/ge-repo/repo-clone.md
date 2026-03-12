@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Cloning a repository means creating a local copy of a project that exists in a
 remote repository. Gitember simplifies this process with an interactive approach.
-To clone a repository using Gitember, run clone command via menu Repo -> Clone or tool bar button.
+To clone a repository using Gitember, run clone command via menu File -> Clone or Clone the project from start screen.
 
 ![Clone](repo-clone.png)
 

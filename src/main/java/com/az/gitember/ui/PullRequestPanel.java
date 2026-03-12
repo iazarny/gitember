@@ -1,113 +1,183 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.CommitDetailPanel.ChangedFilesTableModel;
+import com.az.gitember.service.PullRequestService;
+import com.az.gitember.service.avatar.AvatarService;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Panel shown when a Pull Request node is selected in the tree.
- * Displays PR metadata and the list of files changed in the PR.
+ * Displays PR metadata (with author avatar) and the list of files changed
+ * in the PR, colour-coded by status (added / deleted / changed),
+ * with a live file-name filter.
  */
 public class PullRequestPanel extends JPanel {
 
     private static final Logger log = Logger.getLogger(PullRequestPanel.class.getName());
+    private static final int AVATAR_SIZE = 48;
+    private static final Map<String, ImageIcon> avatarIconCache = new HashMap<>();
 
     // Header fields
-    private final JTextField titleField   = readOnlyField();
-    private final JTextField authorField  = readOnlyField();
-    private final JTextField stateField   = readOnlyField();
-    private final JTextField branchField  = readOnlyField();
-    private final JButton    openUrlBtn   = new JButton("Open in Browser");
+    private final JTextField titleField  = readOnlyField();
+    private final JTextField authorField = readOnlyField();
+    private final JTextField stateField  = readOnlyField();
+    private final JTextField branchField = readOnlyField();
+    private final JButton    openUrlBtn  = new JButton("Open in Browser");
+    private final JLabel     avatarLabel = new JLabel();
 
-    // Files table
-    private final ChangedFilesTableModel filesModel = new ChangedFilesTableModel();
-    private final JTable filesTable;
+    // Files area
+    private final FilesTableModel filesModel  = new FilesTableModel();
+    private final JTable          filesTable;
+    private final JPanel          badgesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+    private final JLabel          statusLabel = new JLabel();
+    private final JTextField      searchField = new JTextField(15);
 
     private PullRequest currentPr;
 
     public PullRequestPanel() {
+        filesTable = buildFilesTable();
+
+        searchField.setPreferredSize(new Dimension(180, 25));
+        searchField.setMinimumSize(new Dimension(100, 25));
+        searchField.setMaximumSize(new Dimension(220, 25));
+        searchField.putClientProperty("JTextField.placeholderText", "Filter files…");
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e)  { applyFilter(); }
+            @Override public void removeUpdate(DocumentEvent e)  { applyFilter(); }
+            @Override public void changedUpdate(DocumentEvent e) { applyFilter(); }
+        });
+
         setLayout(new BorderLayout());
+        add(buildHeader(),     BorderLayout.NORTH);
+        add(buildFilesPanel(), BorderLayout.CENTER);
+    }
 
-        // --- Header ---
-        JPanel header = buildHeader();
-        add(header, BorderLayout.NORTH);
+    public JTextField getSearchField() { return searchField; }
 
-        // --- Files table ---
-        filesTable = new JTable(filesModel);
-        filesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        filesTable.setShowVerticalLines(false);
-        filesTable.setIntercellSpacing(new Dimension(0, 0));
-        filesTable.setRowHeight(22);
-        filesTable.getColumnModel().getColumn(0).setPreferredWidth(70);
-        filesTable.getColumnModel().getColumn(0).setMaxWidth(90);
-        filesTable.getColumnModel().getColumn(1).setPreferredWidth(700);
-        filesTable.getColumnModel().getColumn(0).setCellRenderer(new StatusCellRenderer());
+    // ---- table construction ----
 
-        filesTable.addMouseListener(new MouseAdapter() {
+    private JTable buildFilesTable() {
+        JTable table = new JTable(filesModel) {
+            @Override
+            public Component prepareRenderer(TableCellRenderer r, int row, int col) {
+                Component c = super.prepareRenderer(r, row, col);
+                if (!isRowSelected(row)) {
+                    String cat = filesModel.categoryAt(row);
+                    c.setBackground(colorFor(cat));
+                    c.setForeground(fgFor(cat));
+                }
+                return c;
+            }
+        };
+
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setRowHeight(22);
+        table.setFillsViewportHeight(true);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Status column: narrow + centred
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(1).setCellRenderer(center);
+        table.getColumnModel().getColumn(1).setPreferredWidth(72);
+        table.getColumnModel().getColumn(1).setMaxWidth(90);
+
+        table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    int row = filesTable.rowAtPoint(e.getPoint());
+                    int row = table.rowAtPoint(e.getPoint());
                     if (row >= 0) openFileDiff(filesModel.getItemAt(row));
                 }
             }
         });
 
-        JPanel filesPanel = new JPanel(new BorderLayout());
-        JLabel filesLabel = new JLabel("  Changed files");
-        filesLabel.setFont(filesLabel.getFont().deriveFont(Font.BOLD));
-        filesLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        filesPanel.add(filesLabel, BorderLayout.NORTH);
-        filesPanel.add(new JScrollPane(filesTable), BorderLayout.CENTER);
-        add(filesPanel, BorderLayout.CENTER);
+        return table;
+    }
+
+    // ---- panel layout ----
+
+    private JPanel buildFilesPanel() {
+        JLabel heading = new JLabel("  Changed files");
+        heading.setFont(heading.getFont().deriveFont(Font.BOLD));
+        heading.setBorder(BorderFactory.createEmptyBorder(4, 4, 2, 4));
+
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+        statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+
+        JPanel headRow = new JPanel(new BorderLayout(4, 0));
+        headRow.add(heading,     BorderLayout.WEST);
+        headRow.add(statusLabel, BorderLayout.CENTER);
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.add(headRow,     BorderLayout.NORTH);
+        top.add(badgesPanel, BorderLayout.CENTER);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(top,                        BorderLayout.NORTH);
+        panel.add(new JScrollPane(filesTable), BorderLayout.CENTER);
+        return panel;
     }
 
     private JPanel buildHeader() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        // ── Avatar (left) ─────────────────────────────────────────────────
+        avatarLabel.setPreferredSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setMinimumSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setMaximumSize(new Dimension(AVATAR_SIZE, AVATAR_SIZE));
+        avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        avatarLabel.setVerticalAlignment(SwingConstants.CENTER);
+        avatarLabel.setBorder(BorderFactory.createLineBorder(
+                UIManager.getColor("Separator.foreground"), 1));
+        avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
+
+        // ── Form fields ───────────────────────────────────────────────────
+        JPanel fields = new JPanel(new GridBagLayout());
 
         GridBagConstraints lc = new GridBagConstraints();
         lc.anchor = GridBagConstraints.WEST;
         lc.insets = new Insets(2, 2, 2, 6);
 
         GridBagConstraints fc = new GridBagConstraints();
-        fc.fill = GridBagConstraints.HORIZONTAL;
+        fc.fill    = GridBagConstraints.HORIZONTAL;
         fc.weightx = 1.0;
-        fc.insets = new Insets(2, 0, 2, 10);
+        fc.insets  = new Insets(2, 0, 2, 10);
 
         // Row 0: Title (spans all columns)
         lc.gridx = 0; lc.gridy = 0;
-        panel.add(new JLabel("Title:"), lc);
+        fields.add(new JLabel("Title:"), lc);
         fc.gridx = 1; fc.gridy = 0; fc.gridwidth = 5;
-        panel.add(titleField, fc);
+        fields.add(titleField, fc);
         fc.gridwidth = 1;
 
         // Row 1: Author | State | Branches
-        lc.gridx = 0; lc.gridy = 1;
-        panel.add(new JLabel("Author:"), lc);
-        fc.gridx = 1; fc.gridy = 1;
-        panel.add(authorField, fc);
-
-        lc.gridx = 2; lc.gridy = 1;
-        panel.add(new JLabel("State:"), lc);
-        fc.gridx = 3; fc.gridy = 1;
-        panel.add(stateField, fc);
-
-        lc.gridx = 4; lc.gridy = 1;
-        panel.add(new JLabel("Branches:"), lc);
-        fc.gridx = 5; fc.gridy = 1;
-        panel.add(branchField, fc);
+        lc.gridx = 0; lc.gridy = 1; fields.add(new JLabel("Author:"),   lc);
+        fc.gridx = 1; fc.gridy = 1; fields.add(authorField, fc);
+        lc.gridx = 2; lc.gridy = 1; fields.add(new JLabel("State:"),    lc);
+        fc.gridx = 3; fc.gridy = 1; fields.add(stateField,  fc);
+        lc.gridx = 4; lc.gridy = 1; fields.add(new JLabel("Branches:"), lc);
+        fc.gridx = 5; fc.gridy = 1; fields.add(branchField, fc);
 
         // Row 2: Open button
         GridBagConstraints bc = new GridBagConstraints();
@@ -116,40 +186,142 @@ public class PullRequestPanel extends JPanel {
         bc.insets = new Insets(4, 0, 2, 0);
         openUrlBtn.setEnabled(false);
         openUrlBtn.addActionListener(e -> openInBrowser());
-        panel.add(openUrlBtn, bc);
+        fields.add(openUrlBtn, bc);
 
+        // ── Wrapper: avatar west, fields centre ───────────────────────────
+        JPanel panel = new JPanel(new BorderLayout(8, 0));
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, panel.getBackground().darker()),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, getBackground().darker()),
                 BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        panel.add(avatarLabel, BorderLayout.WEST);
+        panel.add(fields,      BorderLayout.CENTER);
         return panel;
     }
+
+    // ---- public API ----
 
     public void showPullRequest(PullRequest pr) {
         this.currentPr = pr;
         filesModel.clear();
+        badgesPanel.removeAll();
+        badgesPanel.revalidate();
+        badgesPanel.repaint();
+        searchField.setText("");
 
         if (pr == null) {
             titleField.setText("");
             authorField.setText("");
             stateField.setText("");
             branchField.setText("");
+            statusLabel.setText("");
             openUrlBtn.setEnabled(false);
+            avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
             return;
         }
 
         titleField.setText("#" + pr.number() + "  " + pr.title());
-        authorField.setText(pr.author() != null ? pr.author() : "");
-        stateField.setText(pr.state() != null ? pr.state() : "");
+        authorField.setText(pr.author()      != null ? pr.author()      : "");
+        stateField.setText(pr.state()        != null ? pr.state()       : "");
         branchField.setText(pr.sourceBranch() + "  →  " + pr.targetBranch());
         openUrlBtn.setEnabled(pr.webUrl() != null && !pr.webUrl().isBlank());
+        statusLabel.setText("Loading…");
+
+        // Show initials placeholder, then fetch real avatar
+        avatarLabel.setIcon(placeholderIcon(pr.author() != null ? pr.author() : "", AVATAR_SIZE));
+        fetchAvatarAsync(null, pr.author());
 
         loadChangedFiles(pr);
     }
 
+    // ---- avatar ----
+
+    private void fetchAvatarAsync(String email, String authorName) {
+        new SwingWorker<BufferedImage, Void>() {
+            @Override
+            protected BufferedImage doInBackground() {
+                try {
+                    String remoteUrl = Context.getGitRepoService() != null
+                            ? Context.getGitRepoService().getRepositoryRemoteUrl() : null;
+                    String token = Context.getCurrentProject()
+                            .map(Project::getAccessToken).orElse(null);
+                    return AvatarService.getAvatar(email, authorName, remoteUrl, token);
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    BufferedImage img = get();
+                    if (img != null) {
+                        Image scaled = img.getScaledInstance(AVATAR_SIZE, AVATAR_SIZE,
+                                Image.SCALE_SMOOTH);
+                        avatarLabel.setIcon(new ImageIcon(scaled));
+                    }
+                } catch (Exception ignored) {
+                    avatarLabel.setIcon(placeholderIcon("", AVATAR_SIZE));
+                }
+            }
+        }.execute();
+    }
+
+    private static ImageIcon placeholderIcon(String name, int size) {
+        return avatarIconCache.computeIfAbsent(name, new Function<String, ImageIcon>() {
+            @Override
+            public ImageIcon apply(String n) {
+                BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2 = img.createGraphics();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                float hue = n != null && !n.isBlank()
+                        ? (Math.abs(n.hashCode()) % 360) / 360.0f : 0.55f;
+                g2.setColor(Color.getHSBColor(hue, 0.45f, 0.65f));
+                g2.fillOval(0, 0, size - 1, size - 1);
+                String initials = initials(n);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, size / 3));
+                FontMetrics fm = g2.getFontMetrics();
+                int tx = (size - fm.stringWidth(initials)) / 2;
+                int ty = (size - fm.getHeight()) / 2 + fm.getAscent();
+                g2.drawString(initials, tx, ty);
+                g2.dispose();
+                return new ImageIcon(img);
+            }
+        });
+    }
+
+    private static String initials(String name) {
+        if (name == null || name.isBlank()) return "?";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length >= 2)
+            return ("" + parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        return ("" + name.charAt(0)).toUpperCase();
+    }
+
+    // ---- file filter ----
+
+    private void applyFilter() {
+        String term = searchField.getText().trim().toLowerCase();
+        filesModel.applyFilter(term);
+    }
+
+    // ---- background loading ----
+
     private void loadChangedFiles(PullRequest pr) {
-        SwingWorker<List<ScmItem>, Void> worker = new SwingWorker<>() {
+        new SwingWorker<List<ScmItem>, Void>() {
             @Override
             protected List<ScmItem> doInBackground() throws Exception {
+                String remoteUrl = Context.getGitRepoService().getRepositoryRemoteUrl();
+                String token = Context.getCurrentProject()
+                        .map(Project::getAccessToken).orElse(null);
+
+                // Try hosting API first — it is always authoritative (handles forks,
+                // deleted branches, merged PRs, stale local refs, etc.)
+                List<ScmItem> apiResult = PullRequestService.fetchPrFiles(remoteUrl, token, pr.number());
+                if (!apiResult.isEmpty()) return apiResult;
+
+                // API unavailable (no network, unsupported host, rate-limited without token)
+                // — fall back to local git merge-base diff.
                 return Context.getGitRepoService()
                         .getPrChangedFiles(pr.sourceBranch(), pr.targetBranch());
             }
@@ -157,39 +329,100 @@ public class PullRequestPanel extends JPanel {
             @Override
             protected void done() {
                 try {
-                    filesModel.setData(get());
+                    List<ScmItem> items = get();
+                    filesModel.setData(items);
+                    applyFilter();
+                    updateBadges(items);
+                    statusLabel.setText("");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to load PR files", ex);
-                    JOptionPane.showMessageDialog(PullRequestPanel.this,
-                            "Could not load changed files:\n" + ex.getMessage()
-                            + "\n\nNote: branches must be available locally or as remote-tracking refs.",
-                            "PR files", JOptionPane.WARNING_MESSAGE);
+                    statusLabel.setText("Could not load files: " + ex.getMessage());
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
+
+    private void updateBadges(List<ScmItem> items) {
+        int added = 0, deleted = 0, changed = 0;
+        for (ScmItem item : items) {
+            switch (filesModel.categoryOf(item)) {
+                case "Added"   -> added++;
+                case "Deleted" -> deleted++;
+                default        -> changed++;
+            }
+        }
+
+        badgesPanel.removeAll();
+        if (added   > 0) badgesPanel.add(makeBadge("+" + added   + "  added",   SyntaxStyleUtil.addedBg(),   SyntaxStyleUtil.rowFgAdded()));
+        if (deleted > 0) badgesPanel.add(makeBadge("-" + deleted  + "  deleted", SyntaxStyleUtil.deletedBg(), SyntaxStyleUtil.rowFgDeleted()));
+        if (changed > 0) badgesPanel.add(makeBadge("~" + changed  + "  changed", SyntaxStyleUtil.changedBg(), SyntaxStyleUtil.rowFgChanged()));
+        if (added == 0 && deleted == 0 && changed == 0) {
+            JLabel none = new JLabel("  No file changes.");
+            none.setForeground(UIManager.getColor("Label.disabledForeground"));
+            badgesPanel.add(none);
+        }
+        badgesPanel.revalidate();
+        badgesPanel.repaint();
+    }
+
+    // ---- diff viewer ----
 
     private void openFileDiff(ScmItem item) {
         if (item == null || currentPr == null) return;
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
+        new SwingWorker<String[], Void>() {
             @Override
             protected String[] doInBackground() throws Exception {
-                String targetContent = Context.getGitRepoService()
-                        .getFileContentAtRef(currentPr.targetBranch(), item.getShortName());
-                String sourceContent = Context.getGitRepoService()
-                        .getFileContentAtRef(currentPr.sourceBranch(), item.getShortName());
-                return new String[]{targetContent, sourceContent};
+                String status  = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                String newPath = item.getShortName();
+                // For renames the old path (in base) differs from the new path (in source)
+                String oldPath = (item.getAttribute() != null
+                        && item.getAttribute().getOldName() != null
+                        && !item.getAttribute().getOldName().isBlank())
+                        ? item.getAttribute().getOldName() : newPath;
+
+                // GitHub diffs merge-base → source-head (three-dot diff).
+                // Using the target branch tip would include unrelated commits merged
+                // into target after the PR branch was created.
+                String mergeBaseSha = Context.getGitRepoService()
+                        .getMergeBaseSha(currentPr.sourceBranch(), currentPr.targetBranch());
+                // Fall back to target tip when branches are not available locally
+                // (fork PRs) — content will still be fetched via getFileContentAtRef's
+                // resolveAnyRef fallback; if that also fails the pane shows empty.
+                String baseRef = mergeBaseSha != null ? mergeBaseSha : currentPr.targetBranch();
+
+                String baseContent;
+                String sourceContent;
+
+                if (ScmItem.Status.ADDED.equals(status)) {
+                    baseContent   = "";
+                    sourceContent = Context.getGitRepoService()
+                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                } else if (ScmItem.Status.REMOVED.equals(status)) {
+                    baseContent   = Context.getGitRepoService()
+                            .getFileContentAtRef(baseRef, oldPath);
+                    sourceContent = "";
+                } else {
+                    // Modified or renamed
+                    baseContent   = Context.getGitRepoService()
+                            .getFileContentAtRef(baseRef, oldPath);
+                    sourceContent = Context.getGitRepoService()
+                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                }
+
+                return new String[]{baseContent, sourceContent};
             }
 
             @Override
             protected void done() {
                 try {
                     String[] texts = get();
+                    // Left = base (merge base), Right = source (PR head) — same as GitHub
+                    String baseLabel   = currentPr.targetBranch() + " (base)";
+                    String sourceLabel = currentPr.sourceBranch();
                     DiffViewerWindow w = new DiffViewerWindow(
                             item.getShortName(),
-                            currentPr.targetBranch() + " → " + currentPr.sourceBranch(),
-                            texts[0], texts[1]);
+                            baseLabel,   texts[0],
+                            sourceLabel, texts[1]);
                     w.setVisible(true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show PR file diff", ex);
@@ -198,9 +431,10 @@ public class PullRequestPanel extends JPanel {
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
+
+    // ---- browser ----
 
     private void openInBrowser() {
         if (currentPr == null || currentPr.webUrl() == null) return;
@@ -214,31 +448,103 @@ public class PullRequestPanel extends JPanel {
         }
     }
 
+    // ---- helpers ----
+
+    private static Color colorFor(String category) {
+        return switch (category) {
+            case "Added"   -> SyntaxStyleUtil.addedBg();
+            case "Deleted" -> SyntaxStyleUtil.deletedBg();
+            default        -> SyntaxStyleUtil.changedBg();
+        };
+    }
+
+    private static Color fgFor(String category) {
+        return switch (category) {
+            case "Added"   -> SyntaxStyleUtil.rowFgAdded();
+            case "Deleted" -> SyntaxStyleUtil.rowFgDeleted();
+            default        -> SyntaxStyleUtil.rowFgChanged();
+        };
+    }
+
+    private static JLabel makeBadge(String text, Color bg, Color fg) {
+        JLabel lbl = new JLabel(text);
+        lbl.setOpaque(true);
+        lbl.setBackground(bg);
+        lbl.setForeground(fg);
+        lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(bg.darker(), 1),
+                BorderFactory.createEmptyBorder(2, 7, 2, 7)));
+        return lbl;
+    }
+
     private static JTextField readOnlyField() {
         JTextField f = new JTextField();
         f.setEditable(false);
         return f;
     }
 
-    // --- Renderers ---
-    private static class StatusCellRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            setHorizontalAlignment(CENTER);
-            if (!isSelected && value instanceof String status) {
-                switch (status) {
-                    case "ADDED",    "ADD"    -> setForeground(new Color(0, 150, 0));
-                    case "MODIFIED", "MODIFY" -> setForeground(new Color(0, 100, 200));
-                    case "REMOVED",  "DELETE" -> setForeground(new Color(200, 0, 0));
-                    case "RENAMED",  "RENAME",
-                         "COPY"              -> setForeground(new Color(150, 100, 0));
-                    default                   -> setForeground(table.getForeground());
+    // ---- table model ----
+
+    private static class FilesTableModel extends AbstractTableModel {
+        private static final String[] COLS = {"File", "Status"};
+        private List<ScmItem> allItems = new ArrayList<>();
+        private List<ScmItem> items    = new ArrayList<>();  // filtered view
+
+        void setData(List<ScmItem> data) {
+            allItems = data != null ? new ArrayList<>(data) : new ArrayList<>();
+            items    = new ArrayList<>(allItems);
+            fireTableDataChanged();
+        }
+
+        void clear() {
+            allItems = new ArrayList<>();
+            items    = new ArrayList<>();
+            fireTableDataChanged();
+        }
+
+        void applyFilter(String term) {
+            if (term == null || term.isBlank()) {
+                items = new ArrayList<>(allItems);
+            } else {
+                items = new ArrayList<>();
+                for (ScmItem item : allItems) {
+                    String name = item.getViewRepresentation();
+                    if (name != null && name.toLowerCase().contains(term)) {
+                        items.add(item);
+                    }
                 }
             }
-            return this;
+            fireTableDataChanged();
+        }
+
+        ScmItem getItemAt(int row) {
+            return row >= 0 && row < items.size() ? items.get(row) : null;
+        }
+
+        String categoryAt(int row) {
+            return row >= 0 && row < items.size() ? categoryOf(items.get(row)) : "Changed";
+        }
+
+        String categoryOf(ScmItem item) {
+            String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+            if (ScmItem.Status.ADDED.equals(status))   return "Added";
+            if (ScmItem.Status.REMOVED.equals(status)) return "Deleted";
+            return "Changed";
+        }
+
+        @Override public int    getRowCount()              { return items.size(); }
+        @Override public int    getColumnCount()           { return COLS.length; }
+        @Override public String getColumnName(int col)     { return COLS[col]; }
+
+        @Override
+        public Object getValueAt(int row, int col) {
+            ScmItem item = items.get(row);
+            return switch (col) {
+                case 0 -> item.getViewRepresentation();
+                case 1 -> categoryOf(item);
+                default -> "";
+            };
         }
     }
 }

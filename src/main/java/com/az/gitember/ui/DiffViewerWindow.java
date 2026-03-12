@@ -220,7 +220,8 @@ public class DiffViewerWindow extends JFrame {
     /** Initializes all shared components. Must be called first in every constructor. */
     private void initCommon(String syntaxStyle) {
         setSize(1200, 700);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(Context.getMainFrame());
+        setIconImages(Util.appIcons());
 
         oldPane = createEditor(syntaxStyle);
         newPane = createEditor(syntaxStyle);
@@ -233,8 +234,11 @@ public class DiffViewerWindow extends JFrame {
         overviewPanel = new DiffOverviewPanel();
         overviewPanel.setOnJump(offset -> {
             JScrollBar bar = leftScroll.getVerticalScrollBar();
-            int range = bar.getMaximum() - bar.getModel().getExtent();
-            bar.setValue((int) (offset * range));
+            // offset is in [0,1] relative to total content (max), not scrollable range
+            int max    = bar.getMaximum();
+            int extent = bar.getModel().getExtent();
+            int value  = (int) Math.round(offset * max);
+            bar.setValue(Math.max(0, Math.min(value, max - extent)));
             // rightScroll syncs automatically via syncScroll()
         });
         leftScroll.getVerticalScrollBar().addAdjustmentListener(e -> updateOverviewViewport());
@@ -303,7 +307,14 @@ public class DiffViewerWindow extends JFrame {
         leftScroll.getVerticalScrollBar() .addAdjustmentListener(e -> centerPanel.repaint());
         rightScroll.getVerticalScrollBar().addAdjustmentListener(e -> centerPanel.repaint());
 
-        // Layout: left(43%) | connectors(9%) | right(43%) | overview(fixed 80px)
+        // Neutralise preferred sizes so GridBagLayout distributes space by weight only.
+        // Without this, panels whose header labels have different text lengths end up
+        // with different preferred widths, causing unequal pane sizes even with equal weights.
+        Dimension zero = new Dimension(0, 0);
+        leftPanel.setPreferredSize(zero);
+        rightPanel.setPreferredSize(zero);
+
+        // Layout: left(43%) | connectors(9%) | right(43%) | overview(fixed preferred width)
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill  = GridBagConstraints.BOTH;
@@ -333,9 +344,10 @@ public class DiffViewerWindow extends JFrame {
         int value  = bar.getValue();
         int extent = bar.getModel().getExtent();
         int max    = bar.getMaximum();
-        int range  = max - extent;
-        double offset = range > 0 ? (double) value / range : 0.0;
-        double size   = max   > 0 ? (double) extent / max  : 1.0;
+        // Both offset and size must use the same denominator (max = total content height)
+        // so that offset + size == 1.0 exactly when scrolled to the very bottom.
+        double offset = max > 0 ? (double) value  / max : 0.0;
+        double size   = max > 0 ? (double) extent / max : 1.0;
         overviewPanel.setViewport(offset, size);
     }
 
@@ -345,10 +357,10 @@ public class DiffViewerWindow extends JFrame {
         area.setEditable(false);
         area.setCodeFoldingEnabled(false);
         area.setAntiAliasingEnabled(true);
-        area.setFont(SyntaxStyleUtil.monoFont());
         area.setLineWrap(false);
         area.setHighlightCurrentLine(false);
         SyntaxStyleUtil.applyTheme(area);
+        area.setFont(SyntaxStyleUtil.monoFont());  // after theme so settings font size is applied
         return area;
     }
 
@@ -448,7 +460,7 @@ public class DiffViewerWindow extends JFrame {
             }
             @Override protected void done() {
                 try {
-                    String content = get();
+                    String content = normalizeLF(get());
                     pathField.setText(f.getAbsolutePath());
                     loadingFile = true;
                     editor.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(f.getName()));
@@ -543,6 +555,12 @@ public class DiffViewerWindow extends JFrame {
         }
     }
 
+    /** Normalise Windows (CRLF) and legacy Mac (CR) line endings to LF. */
+    private static String normalizeLF(String text) {
+        if (text == null) return null;
+        return text.replace("\r\n", "\n").replace("\r", "\n");
+    }
+
     private void computeAndDisplayDiff() {
         if (editableMode) {
             // In editable mode the panes ARE the source of truth
@@ -550,6 +568,10 @@ public class DiffViewerWindow extends JFrame {
             newText = newPane.getText();
         }
         if (oldText == null || newText == null) return;
+
+        // Normalise line endings so CRLF files diff and display correctly
+        oldText = normalizeLF(oldText);
+        newText = normalizeLF(newText);
 
         // Compute diff using JGit HISTOGRAM algorithm
         RawText oldRaw = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
@@ -645,15 +667,23 @@ public class DiffViewerWindow extends JFrame {
     private void scrollToLine(RSyntaxTextArea pane, int lineNumber) {
         try {
             if (lineNumber >= pane.getLineCount()) return;
-            int offset = pane.getLineStartOffset(lineNumber);
-            pane.setCaretPosition(offset);
+            int charOffset = pane.getLineStartOffset(lineNumber);
+            pane.setCaretPosition(charOffset);
 
-            Rectangle rect = pane.modelToView(offset);
-            if (rect != null) {
-                rect.y = Math.max(0, rect.y - 60);
-                rect.height = pane.getVisibleRect().height;
-                pane.scrollRectToVisible(rect);
-            }
+            Rectangle lineRect = pane.modelToView(charOffset);
+            if (lineRect == null) return;
+
+            // Directly position the scroll bar so the target line sits 1/4 of the
+            // viewport height from the top.  scrollRectToVisible() is unreliable here
+            // because Swing only scrolls the *minimum* amount — a line that is already
+            // partially visible (at the bottom of the viewport) will not be moved to
+            // the top, causing the "line shown at bottom" symptom.
+            RTextScrollPane scroll = (pane == oldPane) ? leftScroll : rightScroll;
+            JScrollBar bar = scroll.getVerticalScrollBar();
+            int margin = Math.max(40, scroll.getViewport().getHeight() / 4);
+            int target = Math.max(0, lineRect.y - margin);
+            target = Math.min(target, bar.getMaximum() - bar.getModel().getExtent());
+            bar.setValue(target);
         } catch (Exception e) {
             log.log(Level.FINE, "Failed to scroll to line", e);
         }

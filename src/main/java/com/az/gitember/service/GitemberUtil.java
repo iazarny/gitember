@@ -17,9 +17,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -263,6 +267,37 @@ public class GitemberUtil {
             return tmpPath.getNameCount() > 0 ? tmpPath.getName(tmpPath.getNameCount() - 1).toString() : "";
         }
         return "";
+    }
+
+    /**
+     * Generates a hexadecimal encoded MD5 hash for the input String.
+     * @param input The string to hash.
+     * @return The 32-character hexadecimal MD5 hash.
+     */
+    public static String getMd5Hash(String input) {
+        try {
+            // Get the MD5 MessageDigest instance
+            MessageDigest md = MessageDigest.getInstance("MD5");
+
+            // Digest the input bytes
+            byte[] messageDigest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+
+            // Convert the byte array into a signum representation (BigInteger)
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert the BigInteger into a hexadecimal string
+            String hashtext = no.toString(16);
+
+            // Pad the hash with leading zeros if needed to ensure 32 characters
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+
+            return hashtext;
+        } catch (NoSuchAlgorithmException e) {
+            // MD5 is guaranteed to be in the standard Java library, so this should not happen
+            throw new RuntimeException(e);
+        }
     }
 
 }

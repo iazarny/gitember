@@ -712,6 +712,10 @@ public class WorkingCopyPanel extends JPanel {
             try {
                 String content = Files.readString(Paths.get(filePath));
                 FileViewerWindow viewer = new FileViewerWindow(item.getShortName(), content, item.getShortName());
+                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                if (ScmItem.Status.MODIFIED.equals(status) || ScmItem.Status.CHANGED.equals(status)) {
+                    viewer.enableBlame(null, item.getShortName());
+                }
                 viewer.setVisible(true);
             } catch (Exception ex) {
                 log.log(Level.WARNING, "Cannot open file", ex);

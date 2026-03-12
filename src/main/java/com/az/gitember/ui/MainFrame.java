@@ -50,8 +50,10 @@ public class MainFrame extends JFrame {
     private HistoryPanel historyPanel;
     private CommitDetailPanel stashDetailPanel;
     private PullRequestPanel pullRequestPanel;
+    private SubmodulePanel submodulePanel;
 
     public MainFrame() {
+        Context.setMainFrame(this);
         setTitle("Gitember");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
@@ -100,6 +102,14 @@ public class MainFrame extends JFrame {
         // Welcome panel
         welcomePanel = new WelcomePanel();
         welcomePanel.setOnProjectSelected(this::openProject);
+        welcomePanel.setOnProjectRemoved(project -> {
+            Settings settings = Context.getSettings();
+            if (settings != null) {
+                settings.getProjects().remove(project);
+                Context.saveSettings();
+                refreshProjectLists();
+            }
+        });
 
         // Layout
         setJMenuBar(menuBar);
@@ -152,6 +162,10 @@ public class MainFrame extends JFrame {
         historyPanel = new HistoryPanel(statusBar);
         stashDetailPanel = new CommitDetailPanel();
         pullRequestPanel = new PullRequestPanel();
+        submodulePanel = new SubmodulePanel(statusBar);
+
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,
+                e -> submodulePanel.setSubmodules(Context.getSubmodules()));
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
@@ -218,6 +232,8 @@ public class MainFrame extends JFrame {
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
         menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
+        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
+        menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
@@ -549,6 +565,7 @@ public class MainFrame extends JFrame {
         if (userObject instanceof TreeNodeData data) {
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
+            boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;
 
             // Merge/unmerge working copy toolbar
             if (isWorkingCopy) {
@@ -562,6 +579,13 @@ public class MainFrame extends JFrame {
                 toolBar.mergeHistoryToolbar(historyPanel);
             } else {
                 toolBar.unmergeHistoryToolbar();
+            }
+
+            // Merge/unmerge pull-request file filter
+            if (isPullRequest) {
+                toolBar.mergePullRequestToolbar(pullRequestPanel);
+            } else {
+                toolBar.unmergePullRequestToolbar();
             }
 
             switch (data.type()) {
@@ -603,6 +627,10 @@ public class MainFrame extends JFrame {
                         contentPanel.setContent(pullRequestPanel);
                         pullRequestPanel.showPullRequest(pr);
                     }
+                }
+                case SUBMODULES, SUBMODULE -> {
+                    contentPanel.setContent(submodulePanel);
+                    submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 default -> contentPanel.setContent(null);
             }

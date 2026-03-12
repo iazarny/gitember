@@ -53,6 +53,7 @@ public class Context {
     public static final String PROP_SEARCH_VALUE = "searchValue";
     public static final String PROP_SEARCH_RESULT = "searchResult";
     public static final String PROP_PULL_REQUESTS = "pullRequests";
+    public static final String PROP_SUBMODULES    = "submodules";
 
     // Fields
     private static String repositoryPath;
@@ -87,12 +88,18 @@ public class Context {
     private static String searchValue;
     private static Map<String, Set<String>> searchResult = Collections.emptyMap();
     private static List<PullRequest> pullRequests = Collections.emptyList();
+    private static List<Submodule>   submodules   = Collections.emptyList();
 
     public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
             new ConcurrentHashMap<>();
 
     private static ProjectWatcher projectWatcher;
     private static Thread projectWatcherThread;
+
+    private static JFrame mainFrame;
+
+    public static JFrame getMainFrame() { return mainFrame; }
+    public static void setMainFrame(JFrame frame) { mainFrame = frame; }
 
     // Property change listener support
     public static void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -318,6 +325,7 @@ public class Context {
         gitRepoService = new GitRepoService(gitFolder);
         setRepositoryPath(gitFolder);
         scmRevisionInformationCache.clear();
+        com.az.gitember.service.avatar.AvatarService.clearCache();
         setStash(gitRepoService.getStashList());
         setLfsRepo(getGitRepoService().isLfsRepo());
         setShowLfsFiles(false);
@@ -336,6 +344,7 @@ public class Context {
 
         initProjectWatcher(gitFolder);
         updatePullRequests();
+        updateSubmodules();
     }
 
     public static void init(String gitFolder) throws Exception {
@@ -500,6 +509,31 @@ public class Context {
         List<PullRequest> old = pullRequests;
         pullRequests = value;
         pcs.firePropertyChange(PROP_PULL_REQUESTS, old, value);
+    }
+
+    public static List<Submodule> getSubmodules() {
+        return submodules;
+    }
+
+    private static void setSubmodules(List<Submodule> value) {
+        List<Submodule> old = submodules;
+        submodules = value;
+        pcs.firePropertyChange(PROP_SUBMODULES, old, value);
+    }
+
+    /** Refreshes the submodule list in a daemon thread; fires PROP_SUBMODULES on the EDT when done. */
+    public static void updateSubmodules() {
+        Thread t = new Thread(() -> {
+            try {
+                List<Submodule> list = gitRepoService.getSubmodules();
+                SwingUtilities.invokeLater(() -> setSubmodules(list));
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Failed to load submodules", e);
+                SwingUtilities.invokeLater(() -> setSubmodules(Collections.emptyList()));
+            }
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     /** Fetches open PRs in a daemon thread; fires PROP_PULL_REQUESTS on the EDT when done. */

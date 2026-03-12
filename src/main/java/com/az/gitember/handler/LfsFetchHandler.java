@@ -1,6 +1,7 @@
 package com.az.gitember.handler;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
@@ -31,7 +32,10 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        Context.getGitRepoService().fetchLfsObjects();
+        RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
+        Context.getGitRepoService().fetchLfsObjects(params);
+        Context.updateAll();
+        Context.updateWorkingBranch();
         return null;
     }
 
@@ -52,41 +56,24 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
         super.onError(e);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Returns true if {@code t} or any cause in the chain looks like an auth failure. */
-    private static boolean isAuthError(Throwable t) {
-        if (t == null) return false;
-        if (t instanceof org.eclipse.jgit.lfs.errors.LfsUnauthorized) return true;
-        String msg = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
-        if (msg.contains("401") || msg.contains("unauthorized")
-                || msg.contains("auth fail") || msg.contains("authentication")) {
-            return true;
-        }
-        return isAuthError(t.getCause());
-    }
-
-    /**
-     * Shows a confirmation prompt explaining why HTTPS credentials are needed,
-     * then opens {@link CredentialsDialog}.  Saves accepted credentials to the
-     * current project and returns {@code true} so the caller can retry.
-     */
-    private boolean promptAndSaveCredentials() {
+    /** LFS-specific credential prompt explaining why HTTPS credentials are needed. */
+    @Override
+    protected boolean promptAndSaveCredentials() {
         Project project = Context.getCurrentProject().orElse(null);
         if (project == null) {
             JOptionPane.showMessageDialog(parent,
                     "LFS authentication failed and no project is open.\n"
-                    + "Please configure credentials via Repository → Credentials…",
+                            + "Please configure credentials via Repository → Credentials…",
                     "LFS Authentication", JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
         int choice = JOptionPane.showConfirmDialog(parent,
                 "<html><b>LFS authentication required</b><br><br>"
-                + "Git LFS always transfers files over <b>HTTPS</b>, even when git itself<br>"
-                + "uses SSH. An access token (or username + password) is therefore<br>"
-                + "needed to download LFS objects.<br><br>"
-                + "Would you like to enter credentials now?</html>",
+                        + "Git LFS always transfers files over <b>HTTPS</b>, even when git itself<br>"
+                        + "uses SSH. An access token (or username + password) is therefore<br>"
+                        + "needed to download LFS objects.<br><br>"
+                        + "Would you like to enter credentials now?</html>",
                 "LFS Authentication Required",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);

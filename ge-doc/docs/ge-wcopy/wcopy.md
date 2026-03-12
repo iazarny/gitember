@@ -5,8 +5,8 @@ sidebar_position: 1
 # Working copy
 
 The Git Working Copy page in Gitember is the main interface where you can 
-observe and manage the latest changes in your working copy. T
-his page provides a visual representation of the current state of your project’s files, 
+observe and manage the latest changes in your working copy. 
+This page provides a visual representation of the current state of your project’s files, 
 similar to what you would see when using the git status command in the terminal.
 
 ![Working copy](w-copy.png)
@@ -49,7 +49,7 @@ Also posible, that file may be presented in the list two times:
  * marked as changed
 It is possible that some file can be marked twice: as staged and as changed.
 
-![Working copy](w-copy-item-mark.png)
+
 
 
 

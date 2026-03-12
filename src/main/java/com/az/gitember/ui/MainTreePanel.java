@@ -3,6 +3,7 @@ package com.az.gitember.ui;
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.Submodule;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
@@ -34,6 +35,7 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode tagsNode;
     private DefaultMutableTreeNode stashesNode;
     private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
+    private DefaultMutableTreeNode submodulesNode;    // null when no submodules
 
     private BranchContextMenuFactory contextMenuFactory;
 
@@ -84,6 +86,7 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_STASH, this::onStashChanged);
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoChanged);
         Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, this::onPullRequestsChanged);
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
     }
 
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
@@ -137,6 +140,7 @@ public class MainTreePanel extends JPanel {
     private void buildInitialTree() {
         rootNode.removeAllChildren();
         pullRequestsNode = null;
+        submodulesNode   = null;
 
         workingCopyNode = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
         historyNode = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY));
@@ -239,20 +243,23 @@ public class MainTreePanel extends JPanel {
         SwingUtilities.invokeLater(() -> updatePullRequestsNode(Context.getPullRequests()));
     }
 
+    private void onSubmodulesChanged(PropertyChangeEvent evt) {
+        SwingUtilities.invokeLater(() -> updateSubmodulesNode(Context.getSubmodules()));
+    }
+
     private void updatePullRequestsNode(List<PullRequest> prs) {
         if (prs == null || prs.isEmpty()) {
             if (pullRequestsNode != null) {
-                rootNode.remove(pullRequestsNode);
-                treeModel.reload(rootNode);
+                treeModel.removeNodeFromParent(pullRequestsNode);
                 pullRequestsNode = null;
             }
             return;
         }
 
-        if (pullRequestsNode == null) {
+        boolean isNew = pullRequestsNode == null;
+        if (isNew) {
             pullRequestsNode = new DefaultMutableTreeNode(
                     new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS));
-            rootNode.add(pullRequestsNode);
         }
 
         pullRequestsNode.removeAllChildren();
@@ -260,7 +267,48 @@ public class MainTreePanel extends JPanel {
             pullRequestsNode.add(new DefaultMutableTreeNode(
                     new TreeNodeData(pr.toString(), NodeType.PULL_REQUEST, pr)));
         }
-        treeModel.reload(rootNode);
+
+        if (isNew) {
+            treeModel.insertNodeInto(pullRequestsNode, rootNode, rootNode.getChildCount());
+        } else {
+            treeModel.reload(pullRequestsNode);
+        }
         //tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
+    }
+
+    private void updateSubmodulesNode(List<Submodule> subs) {
+        if (subs == null || subs.isEmpty()) {
+            if (submodulesNode != null) {
+                treeModel.removeNodeFromParent(submodulesNode);
+                submodulesNode = null;
+            }
+            return;
+        }
+
+        boolean isNew = submodulesNode == null;
+        if (isNew) {
+            submodulesNode = new DefaultMutableTreeNode(
+                    new TreeNodeData("Submodules", NodeType.SUBMODULES));
+        }
+
+        submodulesNode.removeAllChildren();
+        for (Submodule sub : subs) {
+            String label = sub.getPath();
+            if (sub.getStatus() == Submodule.Status.UNINITIALIZED) {
+                label += " [uninit]";
+            } else if (sub.getStatus() == Submodule.Status.MODIFIED) {
+                label += " [modified]";
+            } else if (sub.getStatus() == Submodule.Status.MISSING) {
+                label += " [missing]";
+            }
+            submodulesNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(label, NodeType.SUBMODULE, sub)));
+        }
+
+        if (isNew) {
+            treeModel.insertNodeInto(submodulesNode, rootNode, rootNode.getChildCount());
+        } else {
+            treeModel.reload(submodulesNode);
+        }
     }
 }

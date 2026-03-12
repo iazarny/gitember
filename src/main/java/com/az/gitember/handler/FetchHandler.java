@@ -21,7 +21,7 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
     protected Void doInBackground() throws Exception {
         RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
 
-        Context.getGitRepoService().remoteRepositoryFetch(params, null, null);
+        Context.getGitRepoService().remoteRepositoryFetch(params, null, progressMonitor);
         Context.updateBranches();
         Context.updateTags();
         Context.updateWorkingBranch();

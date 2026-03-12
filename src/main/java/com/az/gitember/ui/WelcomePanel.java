@@ -20,12 +20,23 @@ public class WelcomePanel extends JPanel {
     private final DefaultListModel<Project> listModel;
     private final JList<Project> projectList;
     private Consumer<Project> onProjectSelected;
+    private Consumer<Project> onProjectRemoved;
     private Runnable onOpenRepo;
     private Runnable onCloneRepo;
     private Runnable onInitRepo;
+    private final JPopupMenu contextMenu;
+    private final JMenuItem openMenuItem;
+    private final JMenuItem removeMenuItem;
 
     public WelcomePanel() {
         setLayout(new BorderLayout());
+
+        contextMenu = new JPopupMenu();
+        openMenuItem = new JMenuItem("Open");
+        removeMenuItem = new JMenuItem("Remove from list");
+        contextMenu.add(openMenuItem);
+        contextMenu.addSeparator();
+        contextMenu.add(removeMenuItem);
 
         // Header
         JLabel header = new JLabel("Gitember", SwingConstants.CENTER);
@@ -75,7 +86,7 @@ public class WelcomePanel extends JPanel {
         projectList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
+                if (e.getClickCount() == 1 && !SwingUtilities.isRightMouseButton(e)) {
                     int index = projectList.locationToIndex(e.getPoint());
                     if (index >= 0 && projectList.getCellBounds(index, index).contains(e.getPoint())) {
                         Project project = listModel.getElementAt(index);
@@ -84,6 +95,36 @@ public class WelcomePanel extends JPanel {
                         }
                     }
                 }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeShowContextMenu(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowContextMenu(e);
+            }
+
+            private void maybeShowContextMenu(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                int index = projectList.locationToIndex(e.getPoint());
+                if (index < 0 || !projectList.getCellBounds(index, index).contains(e.getPoint())) return;
+                projectList.setSelectedIndex(index);
+                Project project = listModel.getElementAt(index);
+                // Replace listeners each time to avoid accumulation
+                for (java.awt.event.ActionListener al : openMenuItem.getActionListeners())
+                    openMenuItem.removeActionListener(al);
+                for (java.awt.event.ActionListener al : removeMenuItem.getActionListeners())
+                    removeMenuItem.removeActionListener(al);
+                openMenuItem.addActionListener(ev -> {
+                    if (onProjectSelected != null) onProjectSelected.accept(project);
+                });
+                removeMenuItem.addActionListener(ev -> {
+                    if (onProjectRemoved != null) onProjectRemoved.accept(project);
+                });
+                contextMenu.show(projectList, e.getX(), e.getY());
             }
         });
 
@@ -151,6 +192,10 @@ public class WelcomePanel extends JPanel {
 
     public void setOnProjectSelected(Consumer<Project> handler) {
         this.onProjectSelected = handler;
+    }
+
+    public void setOnProjectRemoved(Consumer<Project> handler) {
+        this.onProjectRemoved = handler;
     }
 
     public void setOnOpenRepo(Runnable handler) {

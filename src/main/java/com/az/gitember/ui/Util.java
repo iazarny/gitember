@@ -5,8 +5,12 @@ import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Util {
 
@@ -61,6 +65,29 @@ public class Util {
 
         btn.setFocusable(false);
         return btn;
+    }
+
+    private static List<Image> cachedAppIcons;
+
+    /**
+     * Returns the gitember icon set (multiple resolutions) for use with
+     * {@link java.awt.Window#setIconImages(List)}.
+     */
+    public static List<Image> appIcons() {
+        if (cachedAppIcons != null) return cachedAppIcons;
+        int[] sizes = {16, 32, 48, 64, 128, 256};
+        List<Image> icons = new ArrayList<>(sizes.length);
+        for (int s : sizes) {
+            String path = "/icon/gitember-" + s + ".png";
+            try (var is = Util.class.getResourceAsStream(path)) {
+                if (is != null) {
+                    BufferedImage img = ImageIO.read(is);
+                    if (img != null) icons.add(img);
+                }
+            } catch (Exception ignored) {}
+        }
+        cachedAppIcons = icons;
+        return icons;
     }
 
     /**

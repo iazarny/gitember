@@ -4,8 +4,11 @@ import com.az.gitember.data.Project;
 import com.az.gitember.service.GitemberUtil;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.net.URI;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -31,6 +34,11 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem manageLfsItem;
     private final JMenuItem fetchLfsItem;
 
+    // Submodules submenu (inside Repository menu)
+    private final JMenu     submodulesMenu;
+    private final JMenuItem updateSubmodulesItem;
+    private final JMenuItem syncSubmodulesItem;
+
     // Branch menu (enabled only when a repo is open)
     private final JMenu     branchMenu;
     private final JMenuItem pullItem;
@@ -50,6 +58,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem compareFoldersItem;
 
     // Help menu items
+    private final JMenuItem helpContentsItem;
     private final JMenuItem aboutItem;
 
     private Consumer<Project> recentProjectHandler;
@@ -116,10 +125,24 @@ public class MainMenuBar extends JMenuBar {
         lfsMenu.addSeparator();
         lfsMenu.add(fetchLfsItem);
 
+        // Submodules submenu
+        submodulesMenu = new JMenu("Submodules");
+        submodulesMenu.setMnemonic(KeyEvent.VK_U);
+
+        updateSubmodulesItem = new JMenuItem("Update Submodules", KeyEvent.VK_U);
+        updateSubmodulesItem.setToolTipText("Run git submodule init + update for all submodules");
+
+        syncSubmodulesItem = new JMenuItem("Sync Submodule URLs", KeyEvent.VK_Y);
+        syncSubmodulesItem.setToolTipText("Update recorded remote URLs from .gitmodules");
+
+        submodulesMenu.add(updateSubmodulesItem);
+        submodulesMenu.add(syncSubmodulesItem);
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
         repoMenu.addSeparator();
         repoMenu.add(lfsMenu);
+        repoMenu.add(submodulesMenu);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
         repoMenu.addSeparator();
@@ -174,12 +197,37 @@ public class MainMenuBar extends JMenuBar {
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
+        helpContentsItem = new JMenuItem("Help Contents", KeyEvent.VK_H);
+        helpContentsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+        helpContentsItem.addActionListener(e -> {
+            try { Desktop.getDesktop().browse(new URI("http://www.gitember.org/doc/docs/ge-intro/index.html")); }
+            catch (Exception ex) { /* ignore */ }
+        });
+        helpMenu.add(helpContentsItem);
+        helpMenu.addSeparator();
+
         aboutItem = new JMenuItem("About", KeyEvent.VK_A);
-        aboutItem.addActionListener(e -> JOptionPane.showMessageDialog(
-                SwingUtilities.getWindowAncestor(this),
-                "Gitember 3 - Git GUI Client",
-                "About Gitember",
-                JOptionPane.INFORMATION_MESSAGE));
+        aboutItem.addActionListener(e -> {
+            JEditorPane ep = new JEditorPane("text/html",
+                    "<html><body style='font-family:sans-serif;font-size:12px'>" +
+                    "<b>Gitember 3</b> — Git GUI Client<br><br>" +
+                    "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
+                    "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
+                    "</body></html>");
+            ep.setEditable(false);
+            ep.setOpaque(false);
+            ep.addHyperlinkListener(ev -> {
+                if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    try { Desktop.getDesktop().browse(new URI("https://gitember.org/")); }
+                    catch (Exception ex) { /* ignore */ }
+                }
+            });
+            JOptionPane.showMessageDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    ep,
+                    "About Gitember",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
         helpMenu.add(aboutItem);
 
         // ── Menu bar order ────────────────────────────────────────────────────
@@ -250,6 +298,9 @@ public class MainMenuBar extends JMenuBar {
     public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
     public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
-    public void addManageLfsListener(ActionListener l)      { manageLfsItem.addActionListener(l); }
-    public void addFetchLfsListener(ActionListener l)       { fetchLfsItem.addActionListener(l); }
+    public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
+    public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
+    public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
+    public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
+    public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
 }

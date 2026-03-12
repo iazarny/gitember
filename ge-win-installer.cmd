@@ -1,7 +1,7 @@
-mkdir app
+rem mkdir app
 
-move target\gitember-2.5.8-spring-boot.jar app
+rem move target\gitember-3.0-SNAPSHOT-boot.jar app
 
-jpackage --input app/  --name Gitember2 --vendor "Igor Azarny"  --main-jar gitember-2.5.8-spring-boot.jar  --win-menu --win-shortcut --type "msi"  --icon src\main\resources\icon\gitember.ico
+jpackage --input app/  --name Gitember --win-menu-group Gitember --install-dir gitember --app-version 3.0  --vendor "Igor Azarny"  --main-jar gitember-3.0-SNAPSHOT-boot.jar  --win-menu --win-shortcut --type "msi"  --icon src\main\resources\icon\gitember.ico
 
-move Gitember2-1.0.msi Gitember2.5.msi
+rem move Gitember2-1.0.msi Gitember2.5.msi

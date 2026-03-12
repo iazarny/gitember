@@ -19,10 +19,10 @@ public class BranchContextMenuFactory {
 
     private static final Logger log = Logger.getLogger(BranchContextMenuFactory.class.getName());
 
-    private final Component parent;
+    private final Frame parent;
     private final StatusBar statusBar;
 
-    public BranchContextMenuFactory(Component parent, StatusBar statusBar) {
+    public BranchContextMenuFactory(Frame parent, StatusBar statusBar) {
         this.parent = parent;
         this.statusBar = statusBar;
     }
