@@ -1,8 +1,9 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MergeDialog;
 import com.az.gitember.ui.StatusBar;
-import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
 
 import javax.swing.*;
@@ -11,13 +12,13 @@ import java.awt.*;
 public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
     private final String branchFullName;
-    private final String commitMessage;
+    private final MergeDialogResult dialogResult;
 
     public MergeBranchHandler(Component parent, StatusBar statusBar,
-                              String branchFullName, String commitMessage) {
+                              String branchFullName, MergeDialogResult dialogResult) {
         super(parent, statusBar);
         this.branchFullName = branchFullName;
-        this.commitMessage = commitMessage;
+        this.dialogResult   = dialogResult;
     }
 
     @Override
@@ -28,7 +29,10 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     @Override
     protected MergeResult doInBackground() throws Exception {
         MergeResult result = Context.getGitRepoService().mergeBranch(
-                branchFullName, commitMessage, false, MergeCommand.FastForwardMode.FF);
+                branchFullName,
+                dialogResult.getCommitMessage(),
+                dialogResult.isSquash(),
+                dialogResult.getFastForwardMode());
         Context.updateAll();
         return result;
     }
@@ -43,21 +47,20 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     }
 
     /**
-     * Shows merge dialog and executes if confirmed.
+     * Shows the merge options dialog and executes if confirmed.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar,
                                       String branchFullName, String branchShortName) {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
 
-        String message = JOptionPane.showInputDialog(parent,
-                "Merge " + branchShortName + " into " + workingBranchName + "\nCommit message:",
-                "Merge Branch", JOptionPane.PLAIN_MESSAGE);
-        if (message != null) {
-            if (message.isBlank()) {
-                message = "Merge " + branchShortName + " into " + workingBranchName;
-            }
-            new MergeBranchHandler(parent, statusBar, branchFullName, message).execute();
+        Frame frame = (Frame) SwingUtilities.getWindowAncestor(parent);
+        MergeDialog dialog = new MergeDialog(frame, branchShortName, workingBranchName);
+        dialog.setVisible(true);
+
+        MergeDialogResult result = dialog.getResult();
+        if (result != null) {
+            new MergeBranchHandler(parent, statusBar, branchFullName, result).execute();
         }
     }
 }
