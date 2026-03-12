@@ -49,13 +49,12 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     /**
      * Shows the merge options dialog and executes if confirmed.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar,
+    public static void showAndExecute(Frame parent, StatusBar statusBar,
                                       String branchFullName, String branchShortName) {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
 
-        Window window = SwingUtilities.getWindowAncestor(parent);
-        MergeDialog dialog = new MergeDialog(window, branchShortName, workingBranchName);
+        MergeDialog dialog = new MergeDialog(parent, branchShortName, workingBranchName);
         dialog.setVisible(true);
 
         MergeDialogResult result = dialog.getResult();
