@@ -18,7 +18,8 @@ public class CommitDialog extends JDialog {
     private final DefaultTableModel tableModel;
 
     public CommitDialog(Frame parent) {
-        super(parent, "Commit", true);
+        super(parent, "Commit" + (Context.getWorkingBranch() != null
+                ? " [" + Context.getWorkingBranch().getShortName() + "]" : ""), true);
         setSize(600, 500);
         setLocationRelativeTo(parent);
 
