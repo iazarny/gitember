@@ -19,10 +19,7 @@ public class BranchContextMenuFactory {
 
     private static final Logger log = Logger.getLogger(BranchContextMenuFactory.class.getName());
 
-<<<<<<< HEAD
-=======
     
->>>>>>> refs/heads/301
     private final Frame parent;
     private final StatusBar statusBar;
 
