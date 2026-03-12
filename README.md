@@ -2,8 +2,12 @@
 ---
 A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightweight, and packed with features that make everyday Git work a pleasure.
 
-> **What's new in v3:** The GUI has been completely rewritten using lightweight Java **Swing**, replacing the heavy JavaFX runtime. The result is a significantly smaller download, faster startup, and lower memory usage — while adding first-class integrations with **GitHub, GitLab, Bitbucket, and Gitea**.
-> JavaFX version still available in the branc or by tag
+> **What's new in v3:** The GUI has been completely rewritten, replacing the heavy JavaFX runtime. 
+> The result is a significantly smaller download, faster startup, and lower memory 
+> usage — while adding first-class integrations with **GitHub, GitLab, Bitbucket, and Gitea**.
+> JavaFX version still available in the branch or by tag
+
+![Gitember](site/assets/img/3/repo-view.png)
 
 ## Why Gitember?
 
@@ -17,17 +21,17 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.0.1 · March 2026
+## Downloads — Version 3.0 · March 2026
 
-| Platform     | Link | Screenshot                                         |
-|--------------|------|----------------------------------------------------|
-| Windows (x64) | [Gitember3.0.msi](http://gitember.org/Gitember3.0.msi) | ![Gitember](site/assets/img/gallery/gallery-4.png) |
-| macOS (M1)   | [Gitember3.0.dmg](http://gitember.org/Gitember3.0.dmg) | ![Mac Version](site/assets/img/gallery/gallery-1.png)  | 
-| Linux  (x64) | [Gitember3.0.deb](http://gitember.org/Gitember3.0.deb) | ![Linux](site/assets/img/gallery/gallery-9.png) |
+| Platform         | Link                                                      |
+|------------------|-----------------------------------------------------------|
+| Windows (x64)    | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.msi) |
+| macOS (M1)       | Comming soon                                              | 
+| Linux  (x64)     | [Gitember-3.0.deb](https://gitember.org/Gitember-3.0.deb) | 
+| Fat jar. java 21 | [Gitember-3.0.jar](https://gitember.org/Gitember-3.0.jar) | 
 
 
-
-More info and documentation: https://gitember.app
+More info and documentation: https://gitember.org
 
 ## Changes
 
