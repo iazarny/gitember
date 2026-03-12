@@ -71,13 +71,22 @@ public class CommitDialog extends JDialog {
         getRootPane().setDefaultButton(commitBtn);
     }
 
+    private static final java.util.Set<String> STAGED_STATUSES = java.util.Set.of(
+            ScmItem.Status.ADDED,
+            ScmItem.Status.CHANGED,
+            ScmItem.Status.REMOVED,
+            ScmItem.Status.RENAMED
+    );
+
     private void populateFiles() {
         tableModel.setRowCount(0);
         List<ScmItem> items = Context.getStatusList();
         if (items != null) {
             for (ScmItem item : items) {
-                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "?";
-                tableModel.addRow(new Object[]{item.getShortName(), status});
+                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                if (STAGED_STATUSES.contains(status)) {
+                    tableModel.addRow(new Object[]{item.getShortName(), status});
+                }
             }
         }
     }
