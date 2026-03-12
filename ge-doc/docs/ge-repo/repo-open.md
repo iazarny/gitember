@@ -18,10 +18,8 @@ reopen projects that you have worked on before. Whether you cloned a repository 
 a project previously, you can swiftly access your projects through various convenient methods.
 
 * Via the Menu
-* Via the Project Selector on the Toolbar
 * Via the List of Recent Projects
 
-![Reopen](repo-reopen.png)
 
 Gitember provides an easy way to manage your list of recent projects. If you have projects that you no longer need quick 
 access to, you can easily remove them from the recent projects list.
@@ -31,6 +29,6 @@ access to, you can easily remove them from the recent projects list.
 
 A context menu will appear. Click on the option labeled Remove from Recent Projects.
 
-![Clean](list-clean.png)
+
 
 

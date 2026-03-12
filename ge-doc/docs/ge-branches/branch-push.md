@@ -15,7 +15,7 @@ push and select pusk from context menu. The same you can do from tool bar or fro
 
 In case if branch was not tracked in remote repo you will be prompted for remote branch name, otherwise branch will be simple pushed to remote repo.
 
-![Branch](branch-push-remote.png)
+
 
 ## Error handling
 
@@ -27,7 +27,7 @@ During push operation some errors may occur:
 In case with authorization you will be prompted to input login and password. This operation need to do once.
 Login and password will be remembered
 
-![Branch](branch-push-error.png)
+
 
 ## Push result 
 
