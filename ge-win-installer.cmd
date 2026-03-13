@@ -1,9 +1,7 @@
-rem mkdir app
 
-rem move target\gitember-3.0-SNAPSHOT-boot.jar app
+rmdir /s /q Gitember
 
-rem jpackage --input app/  --name Gitember --win-menu-group Gitember --install-dir gitember --app-version 3.0  --vendor "Igor Azarny"  --main-jar gitember-3.0-SNAPSHOT-boot.jar  --win-menu --win-shortcut --type "msi"  --icon src\main\resources\icon\gitember.ico
-
+del Gitember-3.0.msix
 
 jpackage ^
  --type app-image ^
@@ -14,7 +12,13 @@ jpackage ^
  --vendor "Igor Azarny" ^
  --icon src\main\resources\icon\gitember.ico 
 
+copy inst\AppxManifest.xml Gitember
 
+mkdir Gitember\inst
 
+copy inst\*.png Gitember\inst
+
+makeappx pack ^
+  /d Gitember ^
+  /p Gitember-3.0.msix
  
-rem move Gitember2-1.0.msi Gitember2.5.msi

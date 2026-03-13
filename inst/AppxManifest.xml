@@ -1,0 +1,46 @@
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+
+  <Identity
+    Name="Gitember"
+    Publisher="CN=Igor Azarny"
+    Version="3.0.0.0" 
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Gitember</DisplayName>
+    <PublisherDisplayName>Igor Azarny</PublisherDisplayName>
+    <Logo>inst/logo50x50.png</Logo>
+    <Description>Gitember is a powerful Git gui tool.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.10240.0" MaxVersionTested="10.0.26200.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us"/>
+  </Resources>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust"/>
+  </Capabilities>
+
+  <Applications>
+    <Application Id="Gitember"
+      Executable="Gitember.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Gitember"
+        Description="Git gui tool"
+        Square150x150Logo="inst/logo150x150.png"
+        Square44x44Logo="inst/logo44x44.png"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="inst/logo150x150.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+ </Package>
