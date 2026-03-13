@@ -12,9 +12,9 @@ jpackage ^
  --main-jar gitember-3.0-SNAPSHOT-boot.jar ^
  --app-version 3.0 ^
  --vendor "Igor Azarny" ^
- --runtime-image runtime ^
- --icon src\main\resources\icon\gitember.ico ^
- --win-menu ^
- --win-shortcut
+ --icon src\main\resources\icon\gitember.ico 
+
+
+
  
 rem move Gitember2-1.0.msi Gitember2.5.msi
