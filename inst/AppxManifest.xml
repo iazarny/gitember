@@ -5,19 +5,19 @@
 
   <Identity
     Name="Gitember"
-    Publisher="CN=Igor Azarny"
+    Publisher="CN=Ihor Azarnyi"
     Version="3.0.0.0" 
     ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>Gitember</DisplayName>
-    <PublisherDisplayName>Igor Azarny</PublisherDisplayName>
+    <PublisherDisplayName>Ihor Azarnyi</PublisherDisplayName>
     <Logo>inst/logo50x50.png</Logo>
     <Description>Gitember is a powerful Git gui tool.</Description>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.10240.0" MaxVersionTested="10.0.26200.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26200.0" />
   </Dependencies>
 
   <Resources>
