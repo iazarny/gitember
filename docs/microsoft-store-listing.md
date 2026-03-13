@@ -151,7 +151,8 @@ Gitember is completely free and open source. No subscription, no account, no ads
 ```
 Version 3.0 — March 2026
 
-• New lightweight Swing UI — faster startup, lower memory, smaller install (no JavaFX runtime required)
+• New lightweight UI. Improved performance. GitHub, GitLab, Bitbucket, Gitea integration. 
+ — faster startup, lower memory, smaller install (no JavaFX runtime required)
 • GitHub integration — browse and review Pull Requests directly inside Gitember
 • GitLab integration — Merge Request listing and diff review
 • Bitbucket Cloud integration — Pull Request panel support
