@@ -106,27 +106,16 @@ run codesign \
 "$dylib"
 done
 
-cp com/formdev/flatlaf/natives/libflatlaf-macos-arm64.dylib ..
-cp com/formdev/flatlaf/natives/libflatlaf-macos-x86_64.dylib ..
-
-rm -rf com/formdev/flatlaf/natives/
-
 run jar cf ../flatlaf-signed.jar .
 
 cd ..
 
 rm "$FLATLAF_JAR"
-
 mv flatlaf-signed.jar "$FLATLAF_JAR"
-mv *.dylib BOOT-INF/lib
 
-
+rm -rf flatlaf_tmp
 
 ok "FlatLaf dylibs signed"
-
-
-
-
 
 # ─────────────────────────────────────────────
 # Step 4 — Rebuild Spring Boot jar
@@ -137,7 +126,7 @@ step "Rebuilding Spring Boot jar"
 rm ${BOOT_JAR}
 
 #run jar cfm ${BOOT_JAR} META-INF/MANIFEST.MF .
-jar -cf0m ${BOOT_JAR} META-INF/MANIFEST.MF .
+run jar -cf0m ${BOOT_JAR} META-INF/MANIFEST.MF .
 
 cd ..
 
@@ -145,7 +134,6 @@ run cp app2/${BOOT_JAR} app3/
 
 ok "Boot jar rebuilt with preserved manifest"
 
-exit
 
 # ─────────────────────────────────────────────
 # Step 5 — Build DMG
