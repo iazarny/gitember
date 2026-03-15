@@ -95,12 +95,11 @@ public class Settings {
     }
 
     /**
-     * Returns the configured ignore-extensions set, or the built-in default when the
-     * stored set is absent or empty.
+     * Returns the configured ignore-extensions set.
+     * Defaults are seeded into this set at startup (see {@code Context.readSettings()}),
+     * so what is stored here is exactly what gets used — no hidden fallback.
      */
     public Set<String> getEffectiveIgnoreCompareFiles() {
-        return (ignoreCompareFiles == null || ignoreCompareFiles.isEmpty())
-                ? DEFAULT_IGNORE_COMPARE_FILES
-                : ignoreCompareFiles;
+        return ignoreCompareFiles != null ? ignoreCompareFiles : DEFAULT_IGNORE_COMPARE_FILES;
     }
 }

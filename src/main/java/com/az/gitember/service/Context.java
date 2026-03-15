@@ -494,6 +494,12 @@ public class Context {
 
     public static void readSettings() {
         Settings s = settingService.read();
+        // Seed the ignore list with built-in defaults on first run (or after migration
+        // from a version that stored an empty set as the "use defaults" sentinel).
+        if (s.getIgnoreCompareFiles() == null || s.getIgnoreCompareFiles().isEmpty()) {
+            s.setIgnoreCompareFiles(new java.util.TreeSet<>(com.az.gitember.data.Settings.DEFAULT_IGNORE_COMPARE_FILES));
+            settingService.write(s);
+        }
         setSettings(s);
     }
 

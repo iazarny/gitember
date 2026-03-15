@@ -26,9 +26,9 @@ public class SettingsDialog extends JDialog {
         int currentFontSize = settings != null ? settings.getFontSize() : 13;
         if (currentFontSize <= 0) currentFontSize = 13;
 
-        // current ignore list — show effective (default if empty)
+        // Show the stored ignore list (defaults are seeded at startup, so this is always populated)
         String currentIgnore = settings != null
-                ? String.join(", ", settings.getEffectiveIgnoreCompareFiles())
+                ? String.join(", ", settings.getIgnoreCompareFiles())
                 : String.join(", ", Settings.DEFAULT_IGNORE_COMPARE_FILES);
         ignoreExtArea = new JTextArea(currentIgnore, 3, 30);
         ignoreExtArea.setLineWrap(true);
@@ -118,10 +118,8 @@ public class SettingsDialog extends JDialog {
             String ext = tok.trim().toLowerCase().replaceAll("^\\.", "");
             if (!ext.isEmpty()) ignore.add(ext);
         }
-        // Store empty set when user entered exactly the defaults → fallback to default at runtime
-        settings.setIgnoreCompareFiles(
-                ignore.equals(new TreeSet<>(Settings.DEFAULT_IGNORE_COMPARE_FILES))
-                        ? new TreeSet<>() : ignore);
+        // Store exactly what the user typed — no magic substitution
+        settings.setIgnoreCompareFiles(ignore);
 
         Context.saveSettings();
 
