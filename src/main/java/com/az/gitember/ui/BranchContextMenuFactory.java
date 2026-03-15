@@ -88,12 +88,29 @@ public class BranchContextMenuFactory {
             menu.add(pushItem);
         }
 
+        // Push / Delete - tag-specific actions
+        if (isTag) {
+            menu.addSeparator();
+
+            JMenuItem pushTagItem = new JMenuItem("Push tag to remote...");
+            pushTagItem.addActionListener(e ->
+                    new PushTagHandler(parent, statusBar, branch).execute());
+            menu.add(pushTagItem);
+        }
+
         // Delete
         menu.addSeparator();
-        JMenuItem deleteItem = new JMenuItem("Delete " + name + "...");
-        deleteItem.addActionListener(e ->
-                DeleteBranchHandler.showAndExecute(parent, statusBar, branch));
-        menu.add(deleteItem);
+        if (isTag) {
+            JMenuItem deleteTagItem = new JMenuItem("Delete tag \"" + name + "\"...");
+            deleteTagItem.addActionListener(e ->
+                    DeleteTagHandler.showAndExecute(parent, statusBar, branch));
+            menu.add(deleteTagItem);
+        } else {
+            JMenuItem deleteItem = new JMenuItem("Delete " + name + "...");
+            deleteItem.addActionListener(e ->
+                    DeleteBranchHandler.showAndExecute(parent, statusBar, branch));
+            menu.add(deleteItem);
+        }
 
         // Diff with submenu
         List<ScmBranch> localBranches = Context.getLocalBranches();
@@ -212,13 +229,8 @@ public class BranchContextMenuFactory {
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem createTagItem = new JMenuItem("Create tag ...");
-        createTagItem.addActionListener(e -> {
-            String tagName = JOptionPane.showInputDialog(parent,
-                    "Tag name:", "Create Tag", JOptionPane.PLAIN_MESSAGE);
-            if (tagName != null && !tagName.isBlank()) {
-                statusBar.setStatus("Create tag: not yet implemented");
-            }
-        });
+        createTagItem.addActionListener(e ->
+                CreateTagHandler.showAndExecute(parent, statusBar));
         menu.add(createTagItem);
 
         return menu;

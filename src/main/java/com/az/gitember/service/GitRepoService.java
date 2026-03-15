@@ -867,6 +867,52 @@ public class GitRepoService {
         }
     }
 
+    /**
+     * Delete a local tag.
+     *
+     * @param fullTagRef full ref name ({@code refs/tags/v1.0}) or short name ({@code v1.0})
+     * @throws IOException on error
+     */
+    public void deleteLocalTag(String fullTagRef) throws IOException {
+        String shortName = fullTagRef.startsWith("refs/tags/")
+                ? fullTagRef.substring("refs/tags/".length()) : fullTagRef;
+        try (Git git = new Git(repository)) {
+            git.tagDelete().setTags(shortName).call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot delete local tag " + shortName, e);
+            throw new IOException("Cannot delete tag " + shortName, e);
+        }
+    }
+
+    /**
+     * Push a local tag to the remote ({@code origin}).
+     *
+     * @param fullTagRef      full ref name ({@code refs/tags/v1.0})
+     * @param progressMonitor progress monitor, may be {@code null}
+     * @return push result summary
+     * @throws Exception on error
+     */
+    public String pushTag(String fullTagRef, ProgressMonitor progressMonitor) throws Exception {
+        com.az.gitember.data.RemoteRepoParameters params =
+                com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
+        RefSpec refSpec = new RefSpec(fullTagRef + ":" + fullTagRef);
+        return remoteRepositoryPush(params, refSpec, progressMonitor);
+    }
+
+    /**
+     * Delete a tag from the remote (the local tag is kept intact).
+     *
+     * @param fullTagRef full ref name ({@code refs/tags/v1.0})
+     * @return push result summary
+     * @throws Exception on error
+     */
+    public String deleteRemoteTag(String fullTagRef) throws Exception {
+        com.az.gitember.data.RemoteRepoParameters params =
+                com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
+        RefSpec refSpec = new RefSpec().setSource(null).setDestination(fullTagRef);
+        return remoteRepositoryPush(params, refSpec, null);
+    }
+
     public CommitInfo getHead() throws Exception {
         final Ref head = repository.exactRef(Constants.HEAD);
         return new CommitInfo(
