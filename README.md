@@ -23,12 +23,12 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 ## Downloads — Version 3.0 · March 2026
 
-| Platform         | Link                                                      |
-|------------------|-----------------------------------------------------------|
-| Windows (x64)    | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.msi) |
-| macOS (M1)       | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.dmg) | 
-| Linux  (x64)     | [Gitember-3.0.deb](https://gitember.org/Gitember-3.0.deb) | 
-| Fat jar. java 21 | [Gitember-3.0.jar](https://gitember.org/Gitember-3.0.jar) | 
+| Platform         | Link                                                                               |
+|------------------|------------------------------------------------------------------------------------|
+| Windows (x64)    | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
+| macOS (M1)       | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.dmg)                          | 
+| Linux  (x64)     | [Gitember-3.0.deb](https://gitember.org/Gitember-3.0.deb)                          | 
+| Fat jar. java 21 | [Gitember-3.0.jar](https://gitember.org/Gitember-3.0.jar)                          | 
 
 
 More info and documentation: https://gitember.org
