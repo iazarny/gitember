@@ -97,6 +97,16 @@ public class MainTreePanel extends JPanel {
         if (contextMenuFactory == null) return;
 
         int row = tree.getRowForLocation(e.getX(), e.getY());
+        if (row < 0) {
+            // Click was in the row's empty space — find row by Y coordinate only
+            TreePath closestPath = tree.getClosestPathForLocation(e.getX(), e.getY());
+            if (closestPath != null) {
+                Rectangle rowBounds = tree.getPathBounds(closestPath);
+                if (rowBounds != null && e.getY() >= rowBounds.y && e.getY() < rowBounds.y + rowBounds.height) {
+                    row = tree.getRowForPath(closestPath);
+                }
+            }
+        }
         if (row < 0) return;
 
         TreePath path = tree.getPathForRow(row);
