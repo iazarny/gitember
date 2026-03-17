@@ -1416,7 +1416,7 @@ section {
 .feature-detail + .feature-detail {
     border-top: 1px solid rgba(0,0,0,0.07);
 }
-.feature-detail .feature-icon-lg {
+.feature-icon-lg {
     font-size: 3rem;
     color: #4154f1;
     margin-bottom: 16px;
