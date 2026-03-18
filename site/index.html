@@ -258,29 +258,93 @@
       </div>
     </section>
 
-    <!-- ======= Stat Strip ======= -->
-    <div class="stat-strip" data-aos="fade-up">
+      <!-- ======= Stat Strip ======= -->
+      <div class="stat-strip" data-aos="fade-up">
+          <div class="container">
+              <div class="row text-center g-4">
+                  <div class="col-6 col-md-3">
+                      <div class="stat-number">40+</div>
+                      <div class="stat-label">Languages with syntax highlight</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                      <div class="stat-number">3</div>
+                      <div class="stat-label">Diff view modes</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                      <div class="stat-number">4</div>
+                      <div class="stat-label">Hosting platforms (GitHub, GitLab, Bitbucket, Gitea)</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                      <div class="stat-number">Free</div>
+                      <div class="stat-label">Open-source, always</div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+    <!-- ======= Roadmap Section ======= -->
+    <section id="roadmap" style="padding: 70px 0; background:#fafafa;" data-aos="fade-up">
       <div class="container">
-        <div class="row text-center g-4">
-          <div class="col-6 col-md-3">
-            <div class="stat-number">40+</div>
-            <div class="stat-label">Languages with syntax highlight</div>
+        <div class="section-header text-center mb-5">
+          <h2 class="section-title">What's Coming Next</h2>
+          <span class="section-divider"></span>
+          <p class="mt-3" style="color:#666; max-width:600px; margin:0 auto;">Here's what we're working on for future releases of Gitember.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="0">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-subtract"></i></div>
+              <h4>Branch Diff View</h4>
+              <p>Side-by-side comparison of two branches — see all commits and file changes that differ between them at a glance.</p>
+            </div>
           </div>
-          <div class="col-6 col-md-3">
-            <div class="stat-number">3</div>
-            <div class="stat-label">Diff view modes</div>
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="80">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-layout-split"></i></div>
+              <h4>Improved File Diff Overview</h4>
+              <p>Redesigned diff overview panel with a cleaner layout, better navigation controls, and adjustable split ratios.</p>
+            </div>
           </div>
-          <div class="col-6 col-md-3">
-            <div class="stat-number">4</div>
-            <div class="stat-label">Hosting platforms (GitHub, GitLab, Bitbucket, Gitea)</div>
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="160">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-arrow-repeat"></i></div>
+              <h4>Interactive Rebase</h4>
+              <p>Reorder, squash, edit, and drop commits visually — no more editing rebase todo files in a text editor.</p>
+            </div>
           </div>
-          <div class="col-6 col-md-3">
-            <div class="stat-number">Free</div>
-            <div class="stat-label">Open-source, always</div>
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="240">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-terminal"></i></div>
+              <h4>CLI Alternatives</h4>
+              <p>One-click copy of the equivalent Git command for every operation — learn Git faster or integrate actions into your scripts.</p>
+            </div>
           </div>
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="320">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-cup-hot"></i></div>
+              <h4>Java 26 Migration</h4>
+              <p>Upgrade the runtime to Java 26, adopting modern language features, improved GC, and Virtual Threads for snappier background operations.</p>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="audience-card">
+              <div class="ac-icon"><i class="bi bi-shield-exclamation"></i></div>
+              <h4>Secret &amp; Dirty-Word Detector</h4>
+              <p>Pre-commit scanning that flags accidental secrets (API keys, tokens, passwords) and configurable word lists before they ever reach the remote.</p>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </section>
+
+
 
     <!-- ======= File Diff Deep-dive ======= -->
     <section id="diff-tool" style="background:#fff;">
@@ -300,7 +364,7 @@
               </ul>
             </div>
             <div class="col-lg-6">
-                <img src="assets/img/3/file-compare.png" width="600" alt="Gitember folder comparison tool screenshot" >
+                <img src="assets/img/3/file-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
               </div>
             </div>
           </div>
@@ -313,7 +377,7 @@
       <div class="container">
         <div class="row align-items-center g-5">
           <div class="col-lg-6">
-            <img src="assets/img/3/repo-view.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+            <img src="assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
           </div>
           <div class="col-lg-6 order-lg-2">
             <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
@@ -349,7 +413,7 @@
             </ul>
           </div>
             <div class="col-lg-6">
-                <img src="assets/img/3/folder-compare.png" width="600" alt="Gitember folder comparison tool screenshot" >
+                <img src="assets/img/3/folder-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
             </div>
         </div>
       </div>
@@ -360,7 +424,7 @@
       <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <img src="assets/img/3/pull-request.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+                <img src="assets/img/3/pull-request.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
 
             </div>
 
@@ -399,7 +463,7 @@
           </div>
 
             <div class="col-lg-6 order-lg-2">
-                <img src="assets/img/3/search.png" width="600" alt="Pull request view" style="transform:  translateX(20px);">
+                <img src="assets/img/3/search.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
 
             </div>
         </div>
@@ -412,7 +476,7 @@
           <div class="container">
               <div class="row align-items-center g-5">
                   <div class="col-lg-6">
-                      <img src="assets/img/3/mac10.png" width="600" alt="Commit history and statistics" style="transform: translateX(20px);">
+                      <img src="assets/img/3/mac10.png" style="width:100%; max-width:600px; height:auto;" alt="Commit history and statistics">
                   </div>
 
                   <div class="col-lg-6">
@@ -462,10 +526,13 @@
                         <div class="col-lg-6 col-md-6">
                             <ul style="list-style-type: none;">
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.0.msi"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows MSI </span></a> <br> or <a href="https://apps.microsoft.com/detail/9NXNMLLGBGD4">Microsoft store</a>
+                                    <a href="https://gitember.org/Gitember-3.0.msi"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows MSI </span></a>
                                 </li>
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.0.dmg"><span style="font-size: 36px;"><i class="bi bi-apple"></i> Apple silicon DMG </span></a>
+                                    <a href="https://apps.microsoft.com/detail/9NXNMLLGBGD4"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows store </span></a> <span style="display:inline-block; background:#28a745; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">better</span>
+                                </li>
+                                <li>
+                                    <a href="https://gitember.org/Gitember-3.0.dmg"><span style="font-size: 36px;"><i class="bi bi-apple"></i> Apple silicon DMG </span></a> <span style="display:inline-block; background:#6c757d; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">signed</span> <span style="display:inline-block; background:#0d6efd; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:2px;">notarized</span>
                                 </li>
                                 <li>
                                     <a href="https://gitember.org/Gitember-3.0.deb"><span style="font-size: 36px;"><i class="bi bi-postcard-fill"></i> Linux DEB</span></a>
