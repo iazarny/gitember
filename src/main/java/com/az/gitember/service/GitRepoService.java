@@ -1772,6 +1772,9 @@ public class GitRepoService {
                 .setCloneSubmodules(true)
                 //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
+        if (params.getDepth() > 0) {
+            cmd.setDepth(params.getDepth());
+        }
         configureTransportCommand(cmd, params);
 
         Git result = null;
