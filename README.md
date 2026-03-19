@@ -35,6 +35,8 @@ More info and documentation: https://gitember.org
 
 ## Changes
 
+### 3.1 · April 2026
+
 ### 3.0 · March 2026
 * **GUI migrated from JavaFX to Swing** — dramatically faster startup, smaller install, lower memory footprint
 * **GitHub, GitLab, Bitbucket, Gitea integration** — browse and review Pull Requests directly inside Gitember, avatars, token support

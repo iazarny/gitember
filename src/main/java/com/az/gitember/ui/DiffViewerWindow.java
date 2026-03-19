@@ -754,15 +754,19 @@ public class DiffViewerWindow extends JFrame {
                 path.curveTo(cx2, rightBottom, cx1, leftBottom, 0, leftBottom);
                 path.closePath();
 
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 80));
+                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 240));
                 g2.fill(path);
 
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 180));
+                /*
+                //The frame
+                                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 180));
                 g2.setStroke(new BasicStroke(1f));
                 g2.draw(new java.awt.geom.CubicCurve2D.Float(
-                        0, leftTop,    cx1, leftTop,    cx2, rightTop,    w, rightTop));
+                       0, leftTop,    cx1, leftTop,    cx2, rightTop,    w, rightTop));
                 g2.draw(new java.awt.geom.CubicCurve2D.Float(
                         0, leftBottom, cx1, leftBottom, cx2, rightBottom, w, rightBottom));
+                */
+
             }
 
             g2.dispose();
