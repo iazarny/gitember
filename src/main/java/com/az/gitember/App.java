@@ -20,6 +20,9 @@ public class App {
     private static final Logger log = Logger.getLogger(App.class.getName());
 
     public static void main(String[] args) {
+        // GPU acceleration — must be set before Java2D initialises (before invokeLater)
+        setupAcceleration();
+
         // Use native macOS screen menu bar
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("apple.awt.application.name", "Gitember");
@@ -63,6 +66,38 @@ public class App {
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+
+    /**
+     * Enables Java2D GPU acceleration before the Java2D/AWT subsystem starts.
+     * These properties have no effect if set after invokeLater fires.
+     *
+     * Windows: Direct3D pipeline (sun.java2d.d3d) — faster than the default GDI
+     *          pipeline; VRAM caching for images (ddforcevram).
+     * Linux:   OpenGL pipeline.
+     * macOS:   OpenGL is deprecated; the JVM picks Metal automatically on recent JDKs.
+     *
+     * A property already set on the command line (-Dsun.java2d.d3d=false) takes
+     * precedence — setProperty is a no-op when the value is already present.
+     */
+    private static void setupAcceleration() {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("win")) {
+            setIfAbsent("sun.java2d.d3d",         "true");   // Direct3D pipeline
+            setIfAbsent("sun.java2d.ddforcevram", "true");   // keep images in VRAM
+            setIfAbsent("sun.java2d.translaccel", "true");   // hw-accelerate translucency
+            setIfAbsent("sun.java2d.noddraw",     "false");  // keep DirectDraw active
+        } else if (os.contains("linux") || os.contains("nix") || os.contains("nux")) {
+            setIfAbsent("sun.java2d.opengl", "true");
+        }
+        // macOS: no property needed — the JDK uses the Metal pipeline automatically
+    }
+
+    /** Sets a system property only when it has not already been provided (e.g. via -D). */
+    private static void setIfAbsent(String key, String value) {
+        if (System.getProperty(key) == null) {
+            System.setProperty(key, value);
+        }
     }
 
     private static void setupLookAndFeel() {
