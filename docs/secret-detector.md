@@ -341,7 +341,7 @@ public class SecretScanner {
 
     public List<Finding> scanFile(Path path) throws IOException {
         List<String> lines = Files.readAllLines(path);
-        List<Finding> findings = new ArrayList<>();
+        List<Finding> finding = new ArrayList<>();
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
@@ -350,11 +350,11 @@ public class SecretScanner {
             while (matcher.find()) {
                 String potentialSecret = matcher.group(2);
                 if (calculateEntropy(potentialSecret) > 3.5) { // Threshold for randomness
-                    findings.add(new Finding(path, i + 1, "High entropy secret detected"));
+                    finding.add(new Finding(path, i + 1, "High entropy secret detected"));
                 }
             }
         }
-        return findings;
+        return finding;
     }
 
     private double calculateEntropy(String s) {
