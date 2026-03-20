@@ -1,10 +1,9 @@
-package com.az.gitember.service.detector.imp;
+package com.az.gitember.service.detector.impl;
 
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.FileType;
 import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
-import com.az.gitember.service.detector.impl.KeyBasedDetector;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+/**
+ * Created by Igor Azarny iazarny@yahoo.com on March 21  2026.
+ */
 public class KeyBasedDetector implements Detector {
 
     private static final Pattern KEY_PATTERN =
