@@ -6,17 +6,24 @@ import com.az.gitember.service.detector.DetectorService;
 import com.az.gitember.service.detector.FileType;
 import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
+import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EventObject;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -36,21 +43,24 @@ public class CommitDialog extends JDialog {
     private final DefaultTableModel tableModel;
     private final DefaultTableModel findingsModel;
     private final JPanel findingsPanel;
+    private final List<Finding> findings = new ArrayList<>();
 
     public CommitDialog(Frame parent) {
         super(parent, "Commit" + (Context.getWorkingBranch() != null
-                ? " [" + Context.getWorkingBranch().getShortName() + "]" : ""), true);
-        setSize(640, 580);
+                ? " [" + Context.getWorkingBranch().getShortName() + "]" : ""),
+                java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
+        setMinimumSize(new Dimension(800, 400));
+        setSize(800, 580);
         setLocationRelativeTo(parent);
 
         // Files table
-        tableModel = new DefaultTableModel(new String[]{"File", "Status"}, 0) {
+        tableModel = new DefaultTableModel(new String[]{"Status", "File"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
         filesTable = new JTable(tableModel);
-        filesTable.getColumnModel().getColumn(1).setPreferredWidth(100);
-        filesTable.getColumnModel().getColumn(1).setMaxWidth(150);
+        filesTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+        filesTable.getColumnModel().getColumn(0).setMaxWidth(150);
 
         populateFiles();
 
@@ -65,25 +75,42 @@ public class CommitDialog extends JDialog {
         JScrollPane msgScroll = new JScrollPane(messageArea);
 
         // Findings table (hidden until there are results)
-        findingsModel = new DefaultTableModel(new String[]{"File", "Line", "Type", "Confidence", "Details"}, 0) {
+        findingsModel = new DefaultTableModel(new String[]{"File", "Line", "Type", "Confidence", "Details", ""}, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) { return column == 5; }
+            @Override
+            public Class<?> getColumnClass(int col) { return col == 5 ? JButton.class : Object.class; }
         };
         JTable findingsTable = new JTable(findingsModel);
-        findingsTable.getColumnModel().getColumn(0).setPreferredWidth(140);
+        findingsTable.setRowHeight(findingsTable.getRowHeight() + 4);
+        findingsTable.getColumnModel().getColumn(0).setPreferredWidth(130);
         findingsTable.getColumnModel().getColumn(1).setPreferredWidth(45);
         findingsTable.getColumnModel().getColumn(1).setMaxWidth(60);
         findingsTable.getColumnModel().getColumn(2).setPreferredWidth(110);
         findingsTable.getColumnModel().getColumn(2).setMaxWidth(140);
         findingsTable.getColumnModel().getColumn(3).setPreferredWidth(80);
         findingsTable.getColumnModel().getColumn(3).setMaxWidth(90);
+        findingsTable.getColumnModel().getColumn(5).setPreferredWidth(60);
+        findingsTable.getColumnModel().getColumn(5).setMaxWidth(70);
         findingsTable.setDefaultRenderer(Object.class, new FindingsCellRenderer());
+        findingsTable.getColumnModel().getColumn(5).setCellRenderer(new OpenButtonRenderer());
+        findingsTable.getColumnModel().getColumn(5).setCellEditor(new OpenButtonEditor(findingsTable));
+        findingsTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = findingsTable.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        openFinding(row);
+                    }
+                }
+            }
+        });
 
         JScrollPane findingsScroll = new JScrollPane(findingsTable);
         findingsScroll.setPreferredSize(new Dimension(0, 120));
 
         JLabel findingsLabel = new JLabel("⚠ Potential secrets / sensitive data detected:");
-        //findingsLabel.setForeground(new Color(0xB00020));
         findingsLabel.setForeground(SyntaxStyleUtil.statusColor("DELETE"));
         findingsLabel.setFont(findingsLabel.getFont().deriveFont(Font.BOLD));
 
@@ -130,7 +157,7 @@ public class CommitDialog extends JDialog {
             for (ScmItem item : items) {
                 String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
                 if (STAGED_STATUSES.contains(status)) {
-                    tableModel.addRow(new Object[]{item.getShortName(), status});
+                    tableModel.addRow(new Object[]{ status,item.getShortName()});
                 }
             }
         }
@@ -164,6 +191,8 @@ public class CommitDialog extends JDialog {
         }
 
         if (!allFindings.isEmpty()) {
+            findings.clear();
+            findings.addAll(allFindings);
             findingsModel.setRowCount(0);
             for (Finding f : allFindings) {
                 String fileName = f.getFile() != null ? f.getFile().getFileName().toString() : "";
@@ -172,7 +201,8 @@ public class CommitDialog extends JDialog {
                         f.getLineNo(),
                         f.getType(),
                         f.getConfidence() != null ? f.getConfidence().name() : "",
-                        f.getMessage()
+                        f.getMessage(),
+                        "Open"
                 });
             }
             findingsPanel.setVisible(true);
@@ -208,6 +238,64 @@ public class CommitDialog extends JDialog {
         }
     }
 
+    private void openFinding(int row) {
+        if (row < 0 || row >= findings.size()) return;
+        Finding f = findings.get(row);
+        if (f.getFile() == null) return;
+        try {
+            String content = Files.readString(f.getFile(), StandardCharsets.UTF_8);
+            FileViewerWindow viewer = new FileViewerWindow(
+                    f.getFile().getFileName().toString(), content,
+                    f.getFile().getFileName().toString());
+            viewer.setVisible(true);
+            viewer.toFront();
+            viewer.requestFocus();
+            SwingUtilities.invokeLater(() -> viewer.scrollToAndHighlight(f.getLineNo()));
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot open file:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Renders the "Open" button cell. */
+    private static class OpenButtonRenderer implements TableCellRenderer {
+        private final JButton btn = new JButton("Open");
+        { btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 11f)); }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            return btn;
+        }
+    }
+
+    /** Handles clicks on the "Open" button cell. */
+    private class OpenButtonEditor extends AbstractCellEditor implements TableCellEditor {
+        private final JButton btn = new JButton("Open");
+        private int clickedRow = -1;
+
+        OpenButtonEditor(JTable table) {
+            btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 11f));
+            btn.addActionListener(e -> {
+                fireEditingStopped();
+                openFinding(clickedRow);
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            clickedRow = row;
+            return btn;
+        }
+
+        @Override
+        public Object getCellEditorValue() { return "Open"; }
+
+        @Override
+        public boolean isCellEditable(EventObject e) { return true; }
+    }
+
     /** Colours findings rows by confidence level. */
     private static class FindingsCellRenderer extends DefaultTableCellRenderer {
 
@@ -215,16 +303,7 @@ public class CommitDialog extends JDialog {
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            /*if (!isSelected) {
-                String confidence = String.valueOf(table.getValueAt(row, 3));
-                c.setBackground(switch (confidence) {
-                    case "CRITICAL" -> CRITICAL_BG;
-                    case "HIGH"     -> HIGH_BG;
-                    case "MEDIUM"   -> MEDIUM_BG;
-                    default         -> table.getBackground();
-                });
-                c.setBackground(table.getBackground());
-            }*/
+           // c.setBackground(table.getBackground()); // TODO confidence
             return c;
         }
     }

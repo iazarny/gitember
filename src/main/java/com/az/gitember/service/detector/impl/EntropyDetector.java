@@ -46,9 +46,7 @@ public class EntropyDetector implements Detector {
                 }
             }
 
-
         }*/
-
         return findings;
     }
 

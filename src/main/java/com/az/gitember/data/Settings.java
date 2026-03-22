@@ -42,7 +42,7 @@ public class Settings {
 
     private String theme;
     private int fontSize = 13;
-    private Boolean enableLeakDetector = true;
+    private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
 
     public Boolean getEnableLeakDetector() {
         return enableLeakDetector;

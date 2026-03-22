@@ -159,6 +159,23 @@ public class FileViewerWindow extends JFrame {
         annotateBtn.setVisible(true);
     }
 
+    /**
+     * Scrolls to {@code lineNo} (1-based) and highlights that line in amber.
+     * Call after {@code setVisible(true)} or from {@code SwingUtilities.invokeLater}.
+     */
+    public void scrollToAndHighlight(int lineNo) {
+        if (lineNo <= 0) return;
+        try {
+            int zeroLine = lineNo - 1;
+            textArea.addLineHighlight(zeroLine, new Color(0xFF, 0xD0, 0x00, 120));
+            int offset = textArea.getLineStartOffset(zeroLine);
+            textArea.setCaretPosition(offset);
+            textArea.scrollRectToVisible(textArea.modelToView2D(offset).getBounds());
+        } catch (Exception ex) {
+            log.fine("scrollToAndHighlight failed at line " + lineNo + ": " + ex.getMessage());
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private void toggleAnnotation() {

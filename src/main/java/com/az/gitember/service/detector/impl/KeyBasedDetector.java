@@ -53,9 +53,7 @@ public class KeyBasedDetector implements Detector {
 
             String value = extractValue(rawValue);
 
-            if (value == null) continue;
-
-            if (!isHardcoded(value)) continue;
+            if (value == null || !isHardcoded(value)) continue;
 
             findings.add(new Finding(
                     context.getSha(),

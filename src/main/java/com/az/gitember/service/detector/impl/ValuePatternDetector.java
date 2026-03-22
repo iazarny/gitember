@@ -104,8 +104,6 @@ public class ValuePatternDetector implements Detector {
             )
     );
 
-
-
     @Override
     public List<Finding> detect(ScanContext context) {
         List<Finding> findings = new ArrayList<>();
