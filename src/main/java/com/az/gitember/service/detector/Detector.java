@@ -12,9 +12,4 @@ public interface Detector {
 
     String name();
 
-    /**
-     * Set sthis parameter to have more paranoid check
-     * @param multilingual
-     */
-     void setMultilingual(boolean multilingual);
 }

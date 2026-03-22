@@ -36,7 +36,7 @@ public class ValuePatternDetector implements Detector {
             ),
 
             new PatternRule(
-                    Pattern.compile("[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+"),
+                    Pattern.compile("[A-Za-z0-9-_]{36,}\\.[A-Za-z0-9-_]{60,}\\.[A-Za-z0-9-_]{36,}"),
                     "JWT Token",
                     Confidence.MEDIUM
             ),
@@ -135,9 +135,5 @@ public class ValuePatternDetector implements Detector {
         return "ValuePatternDetector";
     }
 
-    @Override
-    public void setMultilingual(boolean multilingual) {
-
-    }
 
 }

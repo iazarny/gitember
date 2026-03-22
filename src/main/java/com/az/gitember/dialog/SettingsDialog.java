@@ -14,10 +14,11 @@ public class SettingsDialog extends JDialog {
     private final JComboBox<String> themeCombo;
     private final JSpinner          fontSizeSpinner;
     private final JTextArea         ignoreExtArea;
+    private final JCheckBox         leakDetectorCheck;
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(460, 310);
+        setSize(460, 360);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -25,6 +26,7 @@ public class SettingsDialog extends JDialog {
         String currentTheme = settings != null && "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light";
         int currentFontSize = settings != null ? settings.getFontSize() : 13;
         if (currentFontSize <= 0) currentFontSize = 13;
+        boolean currentLeakDetector = settings == null || !Boolean.FALSE.equals(settings.getEnableLeakDetector());
 
         // Show the stored ignore list (defaults are seeded at startup, so this is always populated)
         String currentIgnore = settings != null
@@ -79,6 +81,15 @@ public class SettingsDialog extends JDialog {
         form.add(resetBtn, gbc);
         gbc.anchor = GridBagConstraints.WEST;
 
+        // Leak detector
+        gbc.gridx = 0; gbc.gridy = 4; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        form.add(new JLabel("Enable secret detector:"), gbc);
+
+        leakDetectorCheck = new JCheckBox("", currentLeakDetector);
+        leakDetectorCheck.setToolTipText("Scan staged files for secrets words before each commit");
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        form.add(leakDetectorCheck, gbc);
+
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton okBtn = new JButton("OK");
@@ -120,6 +131,8 @@ public class SettingsDialog extends JDialog {
         }
         // Store exactly what the user typed — no magic substitution
         settings.setIgnoreCompareFiles(ignore);
+
+        settings.setEnableLeakDetector(leakDetectorCheck.isSelected());
 
         Context.saveSettings();
 

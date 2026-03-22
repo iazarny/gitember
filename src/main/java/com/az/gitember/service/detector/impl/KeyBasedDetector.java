@@ -17,79 +17,105 @@ import java.util.regex.Pattern;
  */
 public class KeyBasedDetector implements Detector {
 
-    private static final Pattern KEY_PATTERN =
-            Pattern.compile("(?i)(cipher|pwd|pass|passwd|password|passcode|passphrase|secret|token|api[_-]?key|client[_-]?secret|auth[_-]?code|credential|access[_-]?key|watchword)");
+    private static final Pattern KEY_PATTERN = Pattern.compile(
+            "(?iu)(cipher|pwd|pass|passwd|password|passcode|passphrase|secret|token|api[_-]?key|client[_-]?secret|auth[_-]?code|credential|access[_-]?key|watchword|" +
+                    "passwort|kennwort|geheimnis|schluessel|zugangscode|berechtigungsnachweis|" +
+                    "contrasena|clave|secreto|ficha|codigo[_-]?acceso|credencial|" +
+                    "mot[_-]?de[_-]?passe|jeton|code[_-]?authentification|identifiant|" +
+                    "parola[_-]?chiave|segreto|gettone|codice[_-]?accesso|credenziali|" +
+                    "haslo|s[ei]kret|klucz|kod[_-]?dostepu|uwierzytelnienie|poswiadczenie|" +
+                    "пароль|код[_-]?доступа|ключ|секрет|токен|посвідчення|облікові[_-]?дані|шифр|гасло|" +
+                    "parol|kod[_-]?dostupu|kliuch|klyuch|posvidchennia|oblikovi[_-]?dani|shyfr)"
+    );
 
-    private static final Pattern KEY_PATTERN_DE =
-            Pattern.compile("(?i)(passwort|kennwort|geheimnis|schluessel|token|zugangscode|berechtigungsnachweis)");
-
-    private static final Pattern KEY_PATTERN_ES =
-            Pattern.compile("(?i)(contrasena|clave|secreto|ficha|token|codigo[_-]?acceso|credencial)");
-
-    private static final Pattern KEY_PATTERN_FR =
-            Pattern.compile("(?i)(mot[_-]?de[_-]?passe|secret|jeton|token|code[_-]?authentification|identifiant)");
-
-    private static final Pattern KEY_PATTERN_IT =
-            Pattern.compile("(?i)(password|parola[_-]?chiave|segreto|gettone|token|codice[_-]?accesso|credenziali)");
-
-    private static final Pattern KEY_PATTERN_PL =
-            Pattern.compile("(?i)(haslo|s[e|i]kret|token|klucz|kod[_-]?dostepu|uwierzytelnienie|poswiadczenie)");
-
-    private static final Pattern KEY_PATTERN_UA =
-            Pattern.compile("(?i)(пароль|код[_-]?доступа|ключ|секрет|токен|посвідчення|облікові[_-]?дані|шифр|гасло)",
-                    Pattern.UNICODE_CASE);
-
-    private static final Pattern KEY_PATTERN_UA_TR =
-            Pattern.compile("(?i)(parol|kod[_-]?dostupu|kliuch|klyuch|sekret|token|posvidchennia|oblikovi[_-]?dani|shyfr|haslo)");
-
-    private boolean multilingual = false;
+    // key = value OR key: value
+    private static final Pattern ASSIGNMENT_PATTERN = Pattern.compile(
+            "(?i)([a-zA-Z0-9._-]+)\\s*[:=]\\s*(.+)"
+    );
 
     @Override
     public List<Finding> detect(ScanContext context) {
-        List<Finding> findings = Collections.synchronizedList(new ArrayList<>());
-        for (int i = 0; i < context.getLines().size(); i++) {
-            String line = context.getLines().get(i);
-            for(Pattern pattern : getPatterns()) { //TODO several threads , per cpu
-                Matcher matrcher = pattern.matcher(line);
-                if (matrcher.find()) {
-                    findings.add(new Finding(
-                            context.getSha(),
-                            context.getFile(),
-                            i + 1,
-                            "KEY_MATCH",
-                            "Suspicious key detected",
-                            Confidence.MEDIUM,
-                            line,
-                            matrcher.group(0)
-                    ));
-                }
-            }
+        List<Finding> findings = new ArrayList<>();
+
+        List<String> lines = context.getLines();
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+
+            Matcher keyMatcher = KEY_PATTERN.matcher(line);
+            if (!keyMatcher.find()) continue;
+
+            Matcher assignMatcher = ASSIGNMENT_PATTERN.matcher(line);
+            if (!assignMatcher.find()) continue;
+
+            String key = assignMatcher.group(1);
+            String rawValue = assignMatcher.group(2).trim();
+
+            String value = extractValue(rawValue);
+
+            if (value == null) continue;
+
+            if (!isHardcoded(value)) continue;
+
+            findings.add(new Finding(
+                    context.getSha(),
+                    context.getFile(),
+                    i + 1,
+                    "HARDCODED_SECRET",
+                    "Hardcoded secret assigned",
+                    Confidence.HIGH,
+                    line,
+                    value
+            ));
         }
+
         return findings;
     }
 
-    private List<Pattern> getPatterns() {
-        List<Pattern> rez = new ArrayList<>();
-        rez.add(KEY_PATTERN);
-        if (multilingual) {
-            rez.add(KEY_PATTERN_DE);
-            rez.add(KEY_PATTERN_ES);
-            rez.add(KEY_PATTERN_IT);
-            rez.add(KEY_PATTERN_FR);
-            rez.add(KEY_PATTERN_PL);
-            rez.add(KEY_PATTERN_UA);
-            rez.add(KEY_PATTERN_UA_TR);
+    /**
+     * Extract clean value from quotes or raw
+     */
+    private String extractValue(String raw) {
+        raw = raw.trim();
+
+        // remove trailing comments
+        raw = raw.replaceAll("#.*$", "").replaceAll("//.*$", "").trim();
+
+        // quoted string
+        if ((raw.startsWith("\"") && raw.endsWith("\"")) ||
+                (raw.startsWith("'") && raw.endsWith("'"))) {
+            return raw.substring(1, raw.length() - 1);
         }
-        return rez;
+
+        // unquoted value (env files, yaml)
+        return raw.split("\\s")[0];
+    }
+
+    /**
+     * Detect if value is hardcoded (NOT dynamic)
+     */
+    private boolean isHardcoded(String value) {
+
+        if (value.length() < 4) return false;
+
+        // ignore placeholders
+        if (value.contains("${") || value.contains("}")) return false;
+
+        // ignore env references
+        if (value.startsWith("env(") || value.startsWith("process.env")) return false;
+
+        // ignore method calls
+        if (value.contains("(") && value.contains(")")) return false;
+
+        // ignore obvious test values
+        String v = value.toLowerCase();
+        if (v.contains("test") || v.contains("dummy") || v.contains("example")) return false;
+
+        return true;
     }
 
     @Override
     public String name() {
         return "KeyBasedDetector";
-    }
-
-    @Override
-    public void setMultilingual(boolean multilingual) {
-        this.multilingual = multilingual;
     }
 }

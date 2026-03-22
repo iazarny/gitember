@@ -37,6 +37,9 @@ More info and documentation: https://gitember.org
 
 ### 3.1 · April 2026
 
+**GitHub,
+integration**
+
 ### 3.0 · March 2026
 * **GUI migrated from JavaFX to Swing** — dramatically faster startup, smaller install, lower memory footprint
 * **GitHub, GitLab, Bitbucket, Gitea integration** — browse and review Pull Requests directly inside Gitember, avatars, token support
@@ -87,3 +90,5 @@ More info and documentation: https://gitember.org
 ## Background
 
 Started in December 2016 as a weekend experiment to see if JavaFX was suitable for desktop GUI programming. It turned into a full-featured Git client. Version 3 marks the move to Swing for a lighter, faster experience.
+
+hGTwerg#4%fwerfFGWGT%TG

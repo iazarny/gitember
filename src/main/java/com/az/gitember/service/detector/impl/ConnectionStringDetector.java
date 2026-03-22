@@ -49,8 +49,4 @@ public class ConnectionStringDetector implements Detector {
         return "ConnectionStringDetector";
     }
 
-    @Override
-    public void setMultilingual(boolean multilingual) {
-
-    }
 }
