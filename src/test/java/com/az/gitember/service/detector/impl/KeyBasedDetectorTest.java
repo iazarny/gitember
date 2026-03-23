@@ -148,7 +148,6 @@ class KeyBasedDetectorTest {
         "berechtigungsnachweis=abc",
     })
     void detect_germanKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -161,7 +160,6 @@ class KeyBasedDetectorTest {
         "credencial=abc",
     })
     void detect_spanishKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -172,7 +170,6 @@ class KeyBasedDetectorTest {
         "identifiant=abc",
     })
     void detect_frenchKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -184,7 +181,6 @@ class KeyBasedDetectorTest {
         "credenziali=abc",
     })
     void detect_italianKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -197,7 +193,6 @@ class KeyBasedDetectorTest {
         "poswiadczenie=abc",
     })
     void detect_polishKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -211,7 +206,6 @@ class KeyBasedDetectorTest {
         "гасло=abc",
     })
     void detect_ukrainianKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 
@@ -225,7 +219,6 @@ class KeyBasedDetectorTest {
         "haslo=abc",
     })
     void detect_ukrainianTranslitKeyword_detectedWhenMultilingual(String line) {
-        detector.setMultilingual(true);
         assertFalse(detector.detect(context(line)).isEmpty(), "Expected finding for: " + line);
     }
 

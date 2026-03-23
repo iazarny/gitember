@@ -52,11 +52,7 @@ class ValuePatternDetectorTest {
         assertEquals("ValuePatternDetector", detector.name());
     }
 
-    @Test
-    void setMultilingual_doesNotThrow() {
-        assertDoesNotThrow(() -> detector.setMultilingual(true));
-        assertDoesNotThrow(() -> detector.setMultilingual(false));
-    }
+
 
     // --- no findings ---
 

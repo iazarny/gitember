@@ -145,11 +145,11 @@ public class MainMenuBar extends JMenuBar {
         repoMenu.addSeparator();
         repoMenu.add(lfsMenu);
         repoMenu.add(submodulesMenu);
-        repoMenu.addSeparator();
-        repoMenu.add(openTerminalItem);
-        repoMenu.addSeparator();
         repoMenu.add(credentialsItem);
         repoMenu.add(projectSettingsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(openTerminalItem);
+
 
         // ── Branch (repo-only) ────────────────────────────────────────────────
         branchMenu = new JMenu("Branch");
