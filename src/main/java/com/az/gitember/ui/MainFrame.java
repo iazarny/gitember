@@ -5,6 +5,7 @@ import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.dialog.InitDialog;
+import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.LfsManageDialog;
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.dialog.StatDialog;
@@ -285,6 +286,9 @@ public class MainFrame extends JFrame {
                     refreshProjectLists();
                     statusBar.clearProgress();
                     statusBar.setStatus("Repository opened");
+                    InteractiveContinueAbortDialog.showIfRebaseInProgress(
+                            MainFrame.this, statusBar,
+                            () -> historyPanel.loadHistory(null, true));
                 } catch (Exception e) {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
                     log.log(Level.WARNING, "Failed to open project", cause);

@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction;
 import com.az.gitember.service.Context;
@@ -56,36 +57,28 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
         RebaseResult.Status status = result.getStatus();
         statusBar.setStatus("Interactive rebase: " + status);
 
-        // Always refresh the caller's view after the operation completes
-        if (onComplete != null) onComplete.run();
-
         if (status.isSuccessful()) {
+            if (onComplete != null) onComplete.run();
             JOptionPane.showMessageDialog(parent,
                     "Interactive rebase completed successfully.",
                     "Interactive Rebase", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
-        // Non-fatal situations that need manual follow-up
-        StringBuilder msg = new StringBuilder("Interactive rebase finished with status: ")
-                .append(status);
-
-        if (result.getConflicts() != null && !result.getConflicts().isEmpty()) {
-            msg.append("\n\nConflicts detected in:");
-            result.getConflicts().forEach(f -> msg.append("\n  \u2022 ").append(f));
-            msg.append("\n\nResolve the conflicts, stage the files, then run"
-                     + "\n  git rebase --continue"
-                     + "\nor abort with"
-                     + "\n  git rebase --abort");
-        } else if (status == RebaseResult.Status.STOPPED) {
-            msg.append("\n\nThe rebase was paused (edit step or conflict)."
-                     + "\nResolve the issue, stage changes, then run"
-                     + "\n  git rebase --continue"
-                     + "\nor abort with"
-                     + "\n  git rebase --abort");
+        if (status == RebaseResult.Status.STOPPED) {
+            // Rebase paused on a conflict — show the floating continue/abort dialog.
+            // History refresh is delegated to that dialog's own onComplete callback.
+            Frame owner = parent instanceof Frame f
+                    ? f : (Frame) SwingUtilities.getWindowAncestor(parent);
+            InteractiveContinueAbortDialog.showIfRebaseInProgress(
+                    owner, result.getConflicts(), statusBar, onComplete);
+            return;
         }
 
-        JOptionPane.showMessageDialog(parent, msg.toString(),
+        // Other non-successful outcomes
+        if (onComplete != null) onComplete.run();
+        JOptionPane.showMessageDialog(parent,
+                "Interactive rebase finished with status: " + status,
                 "Interactive Rebase", JOptionPane.WARNING_MESSAGE);
     }
 

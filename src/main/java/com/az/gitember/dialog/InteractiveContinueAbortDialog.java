@@ -1,0 +1,223 @@
+package com.az.gitember.dialog;
+
+import com.az.gitember.service.Context;
+import com.az.gitember.ui.StatusBar;
+import com.az.gitember.ui.Util;
+import org.eclipse.jgit.api.RebaseResult;
+import org.eclipse.jgit.lib.RepositoryState;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Non-modal, always-on-top floating dialog shown while an interactive rebase
+ * is paused ({@link RepositoryState#REBASING_INTERACTIVE}).
+ *
+ * <p>Has exactly two buttons (created via {@link Util#createButton}):
+ * <ul>
+ *   <li><b>Continue</b> – after the user stages resolved files, runs
+ *       {@code git rebase --continue}.</li>
+ *   <li><b>Abort</b> – runs {@code git rebase --abort} and restores the
+ *       original branch state.</li>
+ * </ul>
+ *
+ * Both operations run on a background thread.  When done the dialog disposes
+ * itself and invokes the {@code onComplete} callback on the EDT (typically a
+ * history-panel refresh).
+ *
+ * <p>Use {@link #showIfRebaseInProgress} to open the dialog only when
+ * the repository is actually in the interactive-rebase paused state.
+ */
+public class InteractiveContinueAbortDialog extends JDialog {
+
+    private static final Logger log =
+            Logger.getLogger(InteractiveContinueAbortDialog.class.getName());
+
+    /** Singleton guard – never open more than one at a time. */
+    private static InteractiveContinueAbortDialog instance;
+
+    private final StatusBar statusBar;
+    private final Runnable  onComplete;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
+    /**
+     * @param owner      owning frame (may be {@code null})
+     * @param conflicts  list of conflicting file paths, or {@code null}/empty
+     * @param statusBar  application status bar for progress feedback
+     * @param onComplete called on the EDT after the operation finishes; may be {@code null}
+     */
+    public InteractiveContinueAbortDialog(Frame owner,
+                                          List<String> conflicts,
+                                          StatusBar statusBar,
+                                          Runnable onComplete) {
+        super(owner, "Interactive Rebase In Progress", false); // non-modal
+        this.statusBar  = statusBar;
+        this.onComplete = onComplete;
+
+        setAlwaysOnTop(true);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // prevent accidental dismiss
+        setResizable(false);
+        setIconImages(Util.appIcons());
+
+        // ── Message ───────────────────────────────────────────────────────────
+        JLabel titleLabel = new JLabel(
+                "<html><b>Interactive rebase paused.</b></html>");
+        titleLabel.setForeground(new Color(160, 80, 0));
+
+        String body;
+        if (conflicts != null && !conflicts.isEmpty()) {
+            StringBuilder sb = new StringBuilder(
+                    "<html>Conflicts detected in:<br><ul>");
+            for (String f : conflicts) {
+                sb.append("<li><tt>").append(f).append("</tt></li>");
+            }
+            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.</html>");
+            body = sb.toString();
+        } else {
+            body = "<html>Resolve any conflicts and <b>stage</b> the files,<br>"
+                 + "then click <b>Continue</b> — or <b>Abort</b> to cancel.</html>";
+        }
+        JLabel bodyLabel = new JLabel(body);
+
+        JPanel messagePanel = new JPanel(new BorderLayout(0, 6));
+        messagePanel.setBorder(BorderFactory.createEmptyBorder(12, 14, 8, 14));
+        messagePanel.add(titleLabel, BorderLayout.NORTH);
+        messagePanel.add(bodyLabel,  BorderLayout.CENTER);
+
+        // ── Buttons ───────────────────────────────────────────────────────────
+        JButton continueBtn = Util.createButton(
+                "Continue",
+                "Stage resolved files, then continue the rebase",
+                FontAwesomeSolid.PLAY);
+
+        JButton abortBtn = Util.createButton(
+                "Abort",
+                "Abort the interactive rebase and restore the original branch",
+                FontAwesomeSolid.BAN);
+
+        continueBtn.addActionListener(e -> performOperation(true));
+        abortBtn   .addActionListener(e -> performOperation(false));
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+        btnPanel.add(continueBtn);
+        btnPanel.add(abortBtn);
+
+        // ── Layout ────────────────────────────────────────────────────────────
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(messagePanel, BorderLayout.CENTER);
+        getContentPane().add(btnPanel,     BorderLayout.SOUTH);
+
+        pack();
+        setMinimumSize(new Dimension(360, getHeight()));
+
+        // Bottom-right of owner, or screen-centre as fallback
+        if (owner != null) {
+            Rectangle b = owner.getBounds();
+            setLocation(b.x + b.width  - getWidth()  - 20,
+                        b.y + b.height - getHeight() - 60);
+        } else {
+            setLocationRelativeTo(null);
+        }
+    }
+
+    // ── Private operations ────────────────────────────────────────────────────
+
+    private void performOperation(boolean doContinue) {
+        String label = doContinue ? "Rebase continue" : "Rebase abort";
+        statusBar.setStatus(label + "\u2026");
+        statusBar.showProgress(true);
+
+        // Disable buttons to prevent double-click
+        for (Component c : ((JPanel) getContentPane().getComponent(1)).getComponents()) {
+            c.setEnabled(false);
+        }
+
+        new SwingWorker<RebaseResult, Void>() {
+            @Override
+            protected RebaseResult doInBackground() throws Exception {
+                RebaseResult r = doContinue
+                        ? Context.getGitRepoService().rebaseContinue()
+                        : Context.getGitRepoService().rebaseAbort();
+                Context.updateAll();
+                return r;
+            }
+
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    RebaseResult result = get();
+                    RebaseResult.Status status = result.getStatus();
+                    statusBar.setStatus(label + ": " + status);
+
+                    if (doContinue && status == RebaseResult.Status.STOPPED) {
+                        // More conflicts — reopen with updated conflict list
+                        reopenWith(result.getConflicts());
+                        return;
+                    }
+
+                    disposeAndNotify();
+
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    log.log(Level.WARNING, label + " failed", cause);
+                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    disposeAndNotify();
+                    JOptionPane.showMessageDialog(null,
+                            label + " failed:\n" + cause.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    private void disposeAndNotify() {
+        instance = null;
+        dispose();
+        if (onComplete != null) onComplete.run();
+    }
+
+    private void reopenWith(List<String> newConflicts) {
+        Frame owner  = (Frame) SwingUtilities.getWindowAncestor(this);
+        Runnable cb  = onComplete;
+        StatusBar sb = statusBar;
+        instance = null;
+        dispose();
+        showIfRebaseInProgress(owner, newConflicts, sb, cb);
+    }
+
+    // ── Static factory ────────────────────────────────────────────────────────
+
+    /**
+     * Opens the dialog only when the repository is in
+     * {@link RepositoryState#REBASING_INTERACTIVE} state.
+     * If one is already showing this call is a no-op.
+     */
+    public static void showIfRebaseInProgress(Frame owner,
+                                              StatusBar statusBar,
+                                              Runnable onComplete) {
+        showIfRebaseInProgress(owner, null, statusBar, onComplete);
+    }
+
+    /**
+     * Same as {@link #showIfRebaseInProgress(Frame, StatusBar, Runnable)} but
+     * also accepts a pre-built conflict list to display immediately.
+     */
+    public static void showIfRebaseInProgress(Frame owner,
+                                              List<String> conflicts,
+                                              StatusBar statusBar,
+                                              Runnable onComplete) {
+        if (instance != null && instance.isDisplayable()) return;
+        if (Context.getGitRepoService().getRepositoryState()
+                != RepositoryState.REBASING_INTERACTIVE) return;
+
+        instance = new InteractiveContinueAbortDialog(
+                owner, conflicts, statusBar, onComplete);
+        instance.setVisible(true);
+    }
+}
