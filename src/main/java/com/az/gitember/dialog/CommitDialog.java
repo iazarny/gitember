@@ -8,6 +8,8 @@ import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -226,10 +228,10 @@ public class CommitDialog extends JDialog {
 
         try {
             var project = Context.getCurrentProject().orElse(null);
-            String authorName     = project != null ? project.getUserCommitName()  : null;
-            String authorEmail    = project != null ? project.getUserCommitEmail() : null;
-            String committerName  = project != null ? project.getCommitterName()   : null;
-            String committerEmail = project != null ? project.getCommitterEmail()  : null;
+            String authorName     = StringUtils.trimToNull(project.getUserCommitName());
+            String authorEmail    = StringUtils.trimToNull( project.getUserCommitEmail()) ;
+            String committerName  = StringUtils.trimToNull( project.getCommitterName()) ;
+            String committerEmail = StringUtils.trimToNull( project.getCommitterEmail()) ;
             Context.getGitRepoService().commit(message, authorName, authorEmail, committerName, committerEmail);
             Context.updateStatus(null);
             Context.updateBranches();
