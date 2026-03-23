@@ -2862,7 +2862,7 @@ public class GitRepoService {
         if (blame != null && blame.getResultContents() != null) {
             int lines = blame.getResultContents().size();
             for (int i = 0; i < lines; i++) {
-                String author = blame.getSourceCommitter(i).getName();
+                String author = blame.getSourceAuthor(i).getName();
                 Integer cnt = rez.getOrDefault(author, 0) + 1;
                 rez.put(author, cnt);
             }

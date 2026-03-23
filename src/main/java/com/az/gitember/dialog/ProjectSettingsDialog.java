@@ -19,7 +19,7 @@ public class ProjectSettingsDialog extends JDialog {
 
     public ProjectSettingsDialog(Frame owner) {
         super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
-        setSize(480, 280);
+        setSize(480, 320);
         setLocationRelativeTo(owner);
         setResizable(false);
 
