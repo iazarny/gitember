@@ -46,6 +46,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem pushItem;
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
+    private final JMenuItem interactiveRebaseItem;
 
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
@@ -155,16 +156,21 @@ public class MainMenuBar extends JMenuBar {
         branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem   = new JMenuItem("Pull",       KeyEvent.VK_L);
-        pushItem   = new JMenuItem("Push",       KeyEvent.VK_P);
-        fetchItem  = new JMenuItem("Fetch",      KeyEvent.VK_F);
-        commitItem = new JMenuItem("Commit...",  KeyEvent.VK_M);
+        pullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
+        pushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
+        fetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
+        commitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
+        interactiveRebaseItem.setToolTipText(
+                "Interactively rebase commits – right-click a commit in the history for the full workflow");
 
         branchMenu.add(pullItem);
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
         branchMenu.addSeparator();
         branchMenu.add(commitItem);
+        branchMenu.addSeparator();
+        branchMenu.add(interactiveRebaseItem);
 
         // ── Working copy (repo-only) ──────────────────────────────────────────
         workingCopyMenu = new JMenu("Working copy");
@@ -306,5 +312,6 @@ public class MainMenuBar extends JMenuBar {
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
     public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
+    public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
     public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
 }

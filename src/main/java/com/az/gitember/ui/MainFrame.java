@@ -211,6 +211,19 @@ public class MainFrame extends JFrame {
         menuBar.addCommitListener(e -> showCommitDialog());
         toolBar.addCommitListener(e -> showCommitDialog());
 
+        // Interactive Rebase (from menu: prompts for a base commit SHA)
+        menuBar.addInteractiveRebaseListener(e -> {
+            String sha = JOptionPane.showInputDialog(this,
+                    "Enter the SHA of the base commit\n"
+                    + "(all commits from HEAD down to, but not including, this commit will be rebased):",
+                    "Interactive Rebase", JOptionPane.PLAIN_MESSAGE);
+            if (sha != null && !sha.isBlank()) {
+                com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
+                        this, statusBar, sha.trim(),
+                        sha.trim().substring(0, Math.min(7, sha.trim().length())));
+            }
+        });
+
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());

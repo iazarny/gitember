@@ -566,6 +566,158 @@ public class GitRepoService {
     }
 
     /**
+     * Returns all commits reachable from HEAD that are <em>not</em> reachable
+     * from {@code baseCommitSha}, in newest-first order (HEAD first).
+     * These are the commits that would be rebased in an interactive rebase
+     * with the given commit as the upstream.
+     *
+     * @param baseCommitSha full or abbreviated SHA of the upstream/base commit
+     * @return ordered list of commits to rebase (newest first), empty if none
+     * @throws Exception on JGit errors
+     */
+    public List<RevCommit> getCommitsInRange(final String baseCommitSha) throws Exception {
+        try (Git git = new Git(repository)) {
+            ObjectId headId = repository.resolve(Constants.HEAD);
+            ObjectId baseId = repository.resolve(baseCommitSha);
+            if (headId == null || baseId == null) return Collections.emptyList();
+            List<RevCommit> result = new ArrayList<>();
+            for (RevCommit c : git.log().addRange(baseId, headId).call()) {
+                result.add(c);
+            }
+            return result;
+        }
+    }
+
+    /**
+     * Performs an interactive rebase of the current branch onto {@code upstream}.
+     *
+     * <p>The {@code steps} list must be in <em>newest-first display order</em>
+     * (as returned by {@link com.az.gitember.dialog.InteractiveRebaseDialog#getSteps()}).
+     * This method reverses the list internally before handing it to JGit, which
+     * applies commits oldest-first.
+     *
+     * <p>Steps marked {@code DROP} are excluded from the rebase plan entirely.
+     * For {@code REWORD} steps, the commit message in the step is used as the
+     * new message.  For {@code SQUASH}, the default combined message is kept.
+     *
+     * @param upstream full SHA of the base/upstream commit
+     * @param steps    ordered rebase plan from the interactive rebase dialog
+     * @return the result of the rebase operation
+     * @throws Exception on JGit errors
+     */
+    public RebaseResult interactiveRebase(
+            final String upstream,
+            final List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> steps)
+            throws Exception {
+
+        // Reverse to oldest-first (JGit applies from oldest commit to newest)
+        final List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> plan =
+                new ArrayList<>(steps);
+        Collections.reverse(plan);
+
+        // Queue of new messages for REWORD steps, in execution order
+        final java.util.Deque<String> rewordQueue = new java.util.ArrayDeque<>();
+        for (com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep s : plan) {
+            if (s.getAction() == com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.REWORD) {
+                rewordQueue.add(s.getMessage());
+            }
+        }
+
+        try (Git git = new Git(repository)) {
+            return git.rebase()
+                    .setUpstream(upstream)
+                    .runInteractively(new RebaseCommand.InteractiveHandler() {
+
+                        /**
+                         * Replace JGit's default plan with the user's plan.
+                         * Matches dialog steps to JGit steps by SHA prefix, reorders
+                         * them, sets the appropriate action, and skips DROP steps.
+                         */
+                        @Override
+                        public void prepareSteps(
+                                List<org.eclipse.jgit.lib.RebaseTodoLine> jgitSteps) {
+
+                            // Build lookup: abbreviated-sha-from-JGit → RebaseTodoLine
+                            Map<String, org.eclipse.jgit.lib.RebaseTodoLine> lookup =
+                                    new LinkedHashMap<>();
+                            for (org.eclipse.jgit.lib.RebaseTodoLine line : jgitSteps) {
+                                lookup.put(line.getCommit().name(), line);
+                            }
+
+                            List<org.eclipse.jgit.lib.RebaseTodoLine> reordered =
+                                    new ArrayList<>();
+                            for (com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep s
+                                    : plan) {
+                                // DROP: simply omit the step from the plan
+                                if (s.getAction() ==
+                                        com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.DROP) {
+                                    continue;
+                                }
+
+                                // Match by SHA prefix (dialog stores full SHA, JGit abbreviates)
+                                org.eclipse.jgit.lib.RebaseTodoLine matched = null;
+                                for (Map.Entry<String, org.eclipse.jgit.lib.RebaseTodoLine>
+                                        entry : lookup.entrySet()) {
+                                    String jSha = entry.getKey();
+                                    String dSha = s.getFullSha();
+                                    if (dSha.startsWith(jSha) || jSha.startsWith(dSha)) {
+                                        matched = entry.getValue();
+                                        break;
+                                    }
+                                }
+                                if (matched != null) {
+                                    org.eclipse.jgit.lib.RebaseTodoLine.Action jgitAction =
+                                            toJGitAction(s.getAction());
+                                    try {
+                                        matched.setAction(jgitAction);
+                                    } catch (org.eclipse.jgit.errors.IllegalTodoFileModification ex) {
+                                        log.log(Level.WARNING,
+                                                "Could not set rebase action to " + jgitAction, ex);
+                                    }
+                                    reordered.add(matched);
+                                }
+                            }
+
+                            jgitSteps.clear();
+                            jgitSteps.addAll(reordered);
+                        }
+
+                        /**
+                         * Called for REWORD steps (returns the user's new message) and
+                         * SQUASH steps (returns the combined template unchanged).
+                         */
+                        @Override
+                        public String modifyCommitMessage(String currentMessage) {
+                            // Squash/fixup combined messages start with a JGit comment header
+                            if (currentMessage != null
+                                    && currentMessage.contains("# This is a combination")) {
+                                return currentMessage;
+                            }
+                            return rewordQueue.isEmpty() ? currentMessage : rewordQueue.poll();
+                        }
+                    })
+                    .call();
+        }
+    }
+
+    /**
+     * Maps a {@link com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction} to the
+     * corresponding JGit {@link org.eclipse.jgit.lib.RebaseTodoLine.Action}.
+     * {@code DROP} is handled externally by excluding the step; this method
+     * must not be called for DROP.
+     */
+    private static org.eclipse.jgit.lib.RebaseTodoLine.Action toJGitAction(
+            com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction action) {
+        return switch (action) {
+            case PICK   -> org.eclipse.jgit.lib.RebaseTodoLine.Action.PICK;
+            case REWORD -> org.eclipse.jgit.lib.RebaseTodoLine.Action.REWORD;
+            case SQUASH -> org.eclipse.jgit.lib.RebaseTodoLine.Action.SQUASH;
+            case FIXUP  -> org.eclipse.jgit.lib.RebaseTodoLine.Action.FIXUP;
+            case DROP   -> org.eclipse.jgit.lib.RebaseTodoLine.Action.PICK; // fallback, never reached
+        };
+    }
+
+    /**
      * Get list of branches.
      *
      * @return list of local branches.

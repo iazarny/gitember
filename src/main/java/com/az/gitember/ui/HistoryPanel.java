@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.handler.InteractiveRebaseHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.eclipse.jgit.api.ResetCommand;
@@ -93,11 +94,12 @@ public class HistoryPanel extends JPanel {
 
         // ── Commit context menu ───────────────────────────────────────────
         JPopupMenu commitMenu = new JPopupMenu();
-        JMenuItem checkoutItem      = new JMenuItem("Checkout");
-        JMenuItem checkoutAsItem    = new JMenuItem("Checkout as…");
-        JMenuItem cherryPickItem    = new JMenuItem("Cherry-pick…");
-        JMenuItem revertItem        = new JMenuItem("Revert commit");
-        JMenuItem resetItem         = new JMenuItem("Reset to commit…");
+        JMenuItem checkoutItem         = new JMenuItem("Checkout");
+        JMenuItem checkoutAsItem       = new JMenuItem("Checkout as…");
+        JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
+        JMenuItem revertItem           = new JMenuItem("Revert commit");
+        JMenuItem resetItem            = new JMenuItem("Reset to commit…");
+        JMenuItem interactiveRebaseItem = new JMenuItem("Interactive Rebase onto here…");
 
         checkoutItem.addActionListener(e -> {
             PlotCommit<PlotLane> commit = selectedCommit();
@@ -170,6 +172,19 @@ public class HistoryPanel extends JPanel {
             }, true);
         });
 
+        interactiveRebaseItem.setToolTipText(
+                "Interactively rebase all commits from HEAD down to (but not including) this commit");
+        interactiveRebaseItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            String fullSha    = commit.getName();
+            String displaySha = fullSha.substring(0, 7);
+            InteractiveRebaseHandler.showAndExecute(
+                    SwingUtilities.getWindowAncestor(this), statusBar,
+                    fullSha, displaySha);
+            loadHistory(lastTreeName, lastAllHistory);
+        });
+
         commitMenu.add(checkoutItem);
         commitMenu.add(checkoutAsItem);
         commitMenu.addSeparator();
@@ -177,6 +192,8 @@ public class HistoryPanel extends JPanel {
         commitMenu.addSeparator();
         commitMenu.add(revertItem);
         commitMenu.add(resetItem);
+        commitMenu.addSeparator();
+        commitMenu.add(interactiveRebaseItem);
 
         commitTable.addMouseListener(new MouseAdapter() {
             @Override public void mousePressed(MouseEvent ev)  { maybeShowMenu(ev); }
