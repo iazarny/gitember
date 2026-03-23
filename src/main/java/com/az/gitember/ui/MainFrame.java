@@ -238,6 +238,10 @@ public class MainFrame extends JFrame {
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
 
+        // Project settings (author / committer identity)
+        menuBar.addProjectSettingsListener(e ->
+                new com.az.gitember.dialog.ProjectSettingsDialog(this).setVisible(true));
+
         // Settings
         menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
 

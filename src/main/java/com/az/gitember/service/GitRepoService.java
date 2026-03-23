@@ -312,10 +312,19 @@ public class GitRepoService {
      * @throws GitAPIException in case of error
      */
     public RevCommit commit(final String message, final String name, final String email) throws GitAPIException {
+        return commit(message, name, email, null, null);
+    }
+
+    public RevCommit commit(final String message,
+                            final String authorName, final String authorEmail,
+                            final String committerName, final String committerEmail) throws GitAPIException {
         try (Git git = new Git(repository)) {
             CommitCommand cmd = git.commit();
-            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(email)) {
-                cmd.setAuthor(name, email);
+            if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
+                cmd.setAuthor(authorName, authorEmail);
+            }
+            if (StringUtils.isNotBlank(committerName) && StringUtils.isNotBlank(committerEmail)) {
+                cmd.setCommitter(committerName, committerEmail);
             }
             return cmd.setMessage(message).call();
         } catch (GitAPIException e) {

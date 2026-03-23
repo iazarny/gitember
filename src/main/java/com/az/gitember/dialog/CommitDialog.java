@@ -225,7 +225,12 @@ public class CommitDialog extends JDialog {
         }
 
         try {
-            Context.getGitRepoService().commit(message, null, null);
+            var project = Context.getCurrentProject().orElse(null);
+            String authorName     = project != null ? project.getUserCommitName()  : null;
+            String authorEmail    = project != null ? project.getUserCommitEmail() : null;
+            String committerName  = project != null ? project.getCommitterName()   : null;
+            String committerEmail = project != null ? project.getCommitterEmail()  : null;
+            Context.getGitRepoService().commit(message, authorName, authorEmail, committerName, committerEmail);
             Context.updateStatus(null);
             Context.updateBranches();
             Context.updateWorkingBranch();

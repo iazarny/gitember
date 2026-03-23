@@ -28,6 +28,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem statisticsItem;
     private final JMenuItem openTerminalItem;
     private final JMenuItem credentialsItem;
+    private final JMenuItem projectSettingsItem;
 
     // LFS submenu (inside Repository menu)
     private final JMenu     lfsMenu;
@@ -106,7 +107,8 @@ public class MainMenuBar extends JMenuBar {
         statisticsItem.setToolTipText(
                 "Show per-developer commit / line statistics and monthly charts");
 
-        credentialsItem = new JMenuItem("Credentials…", KeyEvent.VK_E);
+        credentialsItem     = new JMenuItem("Credentials…", KeyEvent.VK_E);
+        projectSettingsItem = new JMenuItem("Project Settings…", KeyEvent.VK_P);
 
         openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
         openTerminalItem.setToolTipText("Open a terminal in the repository folder");
@@ -147,6 +149,7 @@ public class MainMenuBar extends JMenuBar {
         repoMenu.add(openTerminalItem);
         repoMenu.addSeparator();
         repoMenu.add(credentialsItem);
+        repoMenu.add(projectSettingsItem);
 
         // ── Branch (repo-only) ────────────────────────────────────────────────
         branchMenu = new JMenu("Branch");
@@ -291,7 +294,8 @@ public class MainMenuBar extends JMenuBar {
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
-    public void addCredentialsListener(ActionListener l)   { credentialsItem.addActionListener(l); }
+    public void addCredentialsListener(ActionListener l)      { credentialsItem.addActionListener(l); }
+    public void addProjectSettingsListener(ActionListener l)  { projectSettingsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }
     public void addCompareFilesListener(ActionListener l)  { compareFilesItem.addActionListener(l); }
     public void addCompareFoldersListener(ActionListener l){ compareFoldersItem.addActionListener(l); }
