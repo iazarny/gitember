@@ -1,5 +1,10 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.Context;
+import com.az.gitember.ui.Util;
+import org.apache.commons.lang3.StringUtils;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -116,10 +121,10 @@ public class InteractiveRebaseDialog extends JDialog {
                                    List<RebaseStep> initialSteps) {
         super(owner, "Interactive Rebase", Dialog.ModalityType.DOCUMENT_MODAL);
         this.steps = new ArrayList<>(initialSteps);
-        setSize(860, 540);
+        setSize(920, 00);
         setLocationRelativeTo(owner);
         setResizable(true);
-        setMinimumSize(new Dimension(600, 400));
+        setMinimumSize(new Dimension(640, 480));
 
         // ── Warning / info header ─────────────────────────────────────────────
         JLabel warningLabel = new JLabel(
@@ -128,9 +133,11 @@ public class InteractiveRebaseDialog extends JDialog {
         warningLabel.setForeground(new Color(160, 80, 0));
         warningLabel.setBorder(BorderFactory.createEmptyBorder(8, 12, 2, 12));
 
+        String workingBranchName = Context.getWorkingBranch() == null ? "HEAD" : Context.getWorkingBranch().getShortName();
+
         JLabel baseLabel = new JLabel(
-                "<html>Rebasing commits onto: <b>" + baseDisplaySha + "</b>"
-                + " &nbsp;—&nbsp; drag rows or use ▲/▼ to reorder; double-click a message to edit</html>");
+                "<html>Rebasing <b>" + workingBranchName + "</b> commits onto <b>" + baseDisplaySha + "</b>"
+                + " Drag rows or use ↑/↓ to reorder. Double-click a message to edit</html>");
         baseLabel.setBorder(BorderFactory.createEmptyBorder(2, 12, 8, 12));
 
         // ── Table ─────────────────────────────────────────────────────────────
@@ -168,21 +175,23 @@ public class InteractiveRebaseDialog extends JDialog {
         table.setTransferHandler(buildTransferHandler());
 
         // ── Tool-bar ──────────────────────────────────────────────────────────
-        JButton upBtn   = new JButton("▲ Up");
-        JButton downBtn = new JButton("▼ Down");
+        JPanel movePanel = new JPanel(new BorderLayout(8, 0));
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JButton upBtn   = Util.createButton("Up", "Move selected commit up (applied earlier)", FontAwesomeSolid.ARROW_UP);
+        JButton downBtn = Util.createButton("Down", "Move selected commit down (applied later)", FontAwesomeSolid.ARROW_DOWN);
         upBtn  .addActionListener(e -> moveSelectedRow(-1));
         downBtn.addActionListener(e -> moveSelectedRow(+1));
-        upBtn  .setToolTipText("Move selected commit up (applied earlier)");
-        downBtn.setToolTipText("Move selected commit down (applied later)");
+        left.add(upBtn);
+        left.add(downBtn);
 
-        JPanel movePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
-        movePanel.add(upBtn);
-        movePanel.add(downBtn);
-        movePanel.add(Box.createHorizontalStrut(12));
-        movePanel.add(new JLabel("Set: "));
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        right.add(new JLabel("Set: "));
         for (int i = 0; i < ORDERED_ACTIONS.length; i++) {
-            movePanel.add(quickActionButton(ORDERED_ACTIONS[i], ACTION_COLORS[i]));
+            right.add(quickActionButton(ORDERED_ACTIONS[i], ACTION_COLORS[i]));
         }
+        movePanel.add(left, BorderLayout.CENTER);
+        movePanel.add(right, BorderLayout.EAST);
 
         // ── OK / Cancel ───────────────────────────────────────────────────────
         JButton startBtn  = new JButton("Start Rebase");
@@ -198,13 +207,13 @@ public class InteractiveRebaseDialog extends JDialog {
         btnPanel.add(cancelBtn);
 
         // ── Legend ────────────────────────────────────────────────────────────
-        JPanel legendPanel = buildLegendPanel();
+        //JPanel legendPanel = buildLegendPanel();
 
         // ── Assembly ──────────────────────────────────────────────────────────
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.add(warningLabel, BorderLayout.NORTH);
         headerPanel.add(baseLabel,    BorderLayout.CENTER);
-        headerPanel.add(legendPanel,  BorderLayout.SOUTH);
+        //headerPanel.add(legendPanel,  BorderLayout.SOUTH);
 
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(movePanel, BorderLayout.NORTH);
@@ -230,10 +239,8 @@ public class InteractiveRebaseDialog extends JDialog {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private JButton quickActionButton(RebaseAction action, Color bg) {
-        JButton btn = new JButton(action.label());
+        JButton btn = Util.createButton(StringUtils.capitalize(action.label()), actionTooltip(action));
         btn.setBackground(bg);
-        btn.setOpaque(true);
-        btn.setToolTipText(actionTooltip(action));
         btn.addActionListener(e -> setSelectedAction(action));
         return btn;
     }

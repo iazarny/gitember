@@ -179,10 +179,11 @@ public class HistoryPanel extends JPanel {
             if (commit == null) return;
             String fullSha    = commit.getName();
             String displaySha = fullSha.substring(0, 7);
+            // Pass a callback so history reloads only after the rebase completes
             InteractiveRebaseHandler.showAndExecute(
                     SwingUtilities.getWindowAncestor(this), statusBar,
-                    fullSha, displaySha);
-            loadHistory(lastTreeName, lastAllHistory);
+                    fullSha, displaySha,
+                    () -> loadHistory(lastTreeName, lastAllHistory));
         });
 
         commitMenu.add(checkoutItem);

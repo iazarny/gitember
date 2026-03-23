@@ -218,9 +218,11 @@ public class MainFrame extends JFrame {
                     + "(all commits from HEAD down to, but not including, this commit will be rebased):",
                     "Interactive Rebase", JOptionPane.PLAIN_MESSAGE);
             if (sha != null && !sha.isBlank()) {
+                String trimmed = sha.trim();
                 com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
-                        this, statusBar, sha.trim(),
-                        sha.trim().substring(0, Math.min(7, sha.trim().length())));
+                        this, statusBar, trimmed,
+                        trimmed.substring(0, Math.min(7, trimmed.length())),
+                        () -> historyPanel.loadHistory(null, true));
             }
         });
 

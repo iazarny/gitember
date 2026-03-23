@@ -15,24 +15,28 @@ import java.util.List;
 /**
  * Handler for the interactive rebase workflow.
  *
- * <p>Call {@link #showAndExecute(Component, StatusBar, String, String)} from the
- * history-panel context menu or the Branch menu.  It will:
+ * <p>Call {@link #showAndExecute} from the history-panel context menu or the
+ * Branch menu.  It will:
  * <ol>
- *   <li>Load all commits between HEAD (exclusive) and the chosen base commit (inclusive)
- *       in newest-first order.</li>
+ *   <li>Load all commits between HEAD and the chosen base commit on a background
+ *       thread (history panel remains intact during this step).</li>
  *   <li>Open {@link InteractiveRebaseDialog} for the user to edit the plan.</li>
- *   <li>If confirmed, run the interactive rebase asynchronously and report the result.</li>
+ *   <li>If confirmed, run the interactive rebase asynchronously.</li>
+ *   <li>Invoke the supplied {@code onComplete} callback on the EDT so the caller
+ *       can refresh whatever UI it owns (e.g. reload the history panel).</li>
  * </ol>
  */
 public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult> {
 
-    private final String baseCommitSha;
+    private final String   baseCommitSha;
+    private final Runnable onComplete;
     private List<InteractiveRebaseDialog.RebaseStep> steps;
 
     private InteractiveRebaseHandler(Component parent, StatusBar statusBar,
-                                     String baseCommitSha) {
+                                     String baseCommitSha, Runnable onComplete) {
         super(parent, statusBar);
         this.baseCommitSha = baseCommitSha;
+        this.onComplete    = onComplete;
     }
 
     // ── AbstractAsyncHandler contract ─────────────────────────────────────────
@@ -52,6 +56,9 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
         RebaseResult.Status status = result.getStatus();
         statusBar.setStatus("Interactive rebase: " + status);
 
+        // Always refresh the caller's view after the operation completes
+        if (onComplete != null) onComplete.run();
+
         if (status.isSuccessful()) {
             JOptionPane.showMessageDialog(parent,
                     "Interactive rebase completed successfully.",
@@ -59,46 +66,65 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
             return;
         }
 
-        // Non-fatal situations that require manual intervention
-        StringBuilder msg = new StringBuilder("Interactive rebase finished with status: ");
-        msg.append(status);
+        // Non-fatal situations that need manual follow-up
+        StringBuilder msg = new StringBuilder("Interactive rebase finished with status: ")
+                .append(status);
 
         if (result.getConflicts() != null && !result.getConflicts().isEmpty()) {
             msg.append("\n\nConflicts detected in:");
-            result.getConflicts().forEach(f -> msg.append("\n  • ").append(f));
-            msg.append("\n\nResolve the conflicts, stage the files, then run\n"
-                     + "  git rebase --continue\n"
-                     + "or abort with\n"
-                     + "  git rebase --abort");
+            result.getConflicts().forEach(f -> msg.append("\n  \u2022 ").append(f));
+            msg.append("\n\nResolve the conflicts, stage the files, then run"
+                     + "\n  git rebase --continue"
+                     + "\nor abort with"
+                     + "\n  git rebase --abort");
         } else if (status == RebaseResult.Status.STOPPED) {
-            msg.append("\n\nThe rebase was paused (edit step or conflict).\n"
-                     + "Resolve the issue, stage changes, then run\n"
-                     + "  git rebase --continue\n"
-                     + "or abort with\n"
-                     + "  git rebase --abort");
+            msg.append("\n\nThe rebase was paused (edit step or conflict)."
+                     + "\nResolve the issue, stage changes, then run"
+                     + "\n  git rebase --continue"
+                     + "\nor abort with"
+                     + "\n  git rebase --abort");
         }
 
         JOptionPane.showMessageDialog(parent, msg.toString(),
                 "Interactive Rebase", JOptionPane.WARNING_MESSAGE);
     }
 
-    // ── Static entry point ────────────────────────────────────────────────────
+    @Override
+    protected void onError(Exception e) {
+        // Still refresh so the history panel shows the repo's current state
+        if (onComplete != null) onComplete.run();
+        super.onError(e);
+    }
+
+    // ── Static entry points ───────────────────────────────────────────────────
 
     /**
-     * Loads the commits in range, shows the dialog, then (if confirmed) runs
-     * the interactive rebase.
-     *
-     * @param parent          component for dialog parenting
-     * @param statusBar       status bar for progress messages
-     * @param baseCommitSha   full SHA of the upstream / base commit (excluded from rebase)
-     * @param baseDisplaySha  short SHA shown in the dialog title (may be abbreviated)
+     * Convenience overload — no post-completion callback.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar,
                                       String baseCommitSha, String baseDisplaySha) {
+        showAndExecute(parent, statusBar, baseCommitSha, baseDisplaySha, null);
+    }
+
+    /**
+     * Loads commits in range, opens the dialog, and (if confirmed) runs the
+     * interactive rebase.  The history panel is <em>not</em> touched until
+     * {@code onComplete} is called after the rebase finishes.
+     *
+     * @param parent         component used for dialog parenting
+     * @param statusBar      status bar for progress feedback
+     * @param baseCommitSha  full SHA of the upstream commit (excluded from rebase)
+     * @param baseDisplaySha abbreviated SHA shown in the dialog header
+     * @param onComplete     called on the EDT after success <em>or</em> error;
+     *                       may be {@code null}
+     */
+    public static void showAndExecute(Component parent, StatusBar statusBar,
+                                      String baseCommitSha, String baseDisplaySha,
+                                      Runnable onComplete) {
         Frame owner = parent instanceof Frame f
                 ? f : (Frame) SwingUtilities.getWindowAncestor(parent);
 
-        statusBar.setStatus("Loading commits for interactive rebase…");
+        statusBar.setStatus("Loading commits for interactive rebase\u2026");
         statusBar.showProgress(true);
 
         new SwingWorker<List<RevCommit>, Void>() {
@@ -123,27 +149,28 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
                         return;
                     }
 
-                    // Build the initial plan (newest-first, all actions = PICK)
+                    // Build initial plan: newest-first, all PICK
                     List<InteractiveRebaseDialog.RebaseStep> initialSteps = new ArrayList<>();
                     for (RevCommit c : commits) {
                         initialSteps.add(new InteractiveRebaseDialog.RebaseStep(
                                 RebaseAction.PICK,
-                                c.getName(),          // full SHA for matching
-                                c.getShortMessage())); // display message
+                                c.getName(),
+                                c.getShortMessage()));
                     }
 
+                    // Show the dialog — blocks the EDT until the user closes it
                     InteractiveRebaseDialog dialog =
                             new InteractiveRebaseDialog(owner, baseDisplaySha, initialSteps);
-                    dialog.setVisible(true);  // blocks until closed
+                    dialog.setVisible(true);
 
                     if (!dialog.isConfirmed()) {
                         statusBar.setStatus("Interactive rebase cancelled.");
                         return;
                     }
 
-                    // Wire up the background execution
                     InteractiveRebaseHandler handler =
-                            new InteractiveRebaseHandler(parent, statusBar, baseCommitSha);
+                            new InteractiveRebaseHandler(parent, statusBar,
+                                                         baseCommitSha, onComplete);
                     handler.steps = dialog.getSteps();
                     handler.execute();
 
