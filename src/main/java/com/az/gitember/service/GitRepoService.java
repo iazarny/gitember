@@ -543,6 +543,35 @@ public class GitRepoService {
     }
 
     /**
+     * Returns the current JGit {@link RepositoryState} (e.g.
+     * {@link RepositoryState#REBASING_INTERACTIVE} when an interactive rebase
+     * is paused waiting for conflict resolution).
+     */
+    public RepositoryState getRepositoryState() {
+        return repository != null ? repository.getRepositoryState() : RepositoryState.SAFE;
+    }
+
+    /**
+     * Continues an in-progress interactive rebase after conflicts have been
+     * resolved and staged ({@code git rebase --continue}).
+     */
+    public RebaseResult rebaseContinue() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase().setOperation(RebaseCommand.Operation.CONTINUE).call();
+        }
+    }
+
+    /**
+     * Aborts an in-progress interactive rebase and restores the original
+     * branch state ({@code git rebase --abort}).
+     */
+    public RebaseResult rebaseAbort() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+        }
+    }
+
+    /**
      * @param upstream the name of the upstream branch
      * @return rebase result
      * @throws Exception * @throws IOException in case of error
