@@ -26,7 +26,7 @@ To tag the current HEAD commit:
 3. Enter a tag name in the dialog (e.g. `v1.0`).
 4. Click **OK**.
 
-![Create tag dialog](tags-create-dialog.png)
+
 
 Gitember creates an annotated tag on the current HEAD.
 
