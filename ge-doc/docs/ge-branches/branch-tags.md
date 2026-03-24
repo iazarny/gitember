@@ -49,7 +49,7 @@ To remove a tag from your local repository:
 1. In the **Branches** panel, right-click the tag you want to remove.
 2. Select **Delete Tag**.
 
-![Delete tag menu](tags-delete-menu.png)
+
 
 :::caution
 Deleting a local tag does not remove it from the remote repository. Use **Delete Remote Tag** to remove a tag from the remote.
@@ -62,7 +62,7 @@ To share a tag with others by pushing it to the remote repository:
 1. Right-click the tag in the **Branches** panel.
 2. Select **Push Tag**.
 
-![Push tag menu](tags-push-menu.png)
+
 
 The tag is pushed to `origin` using the same credentials configured for the repository.
 

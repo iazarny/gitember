@@ -18,7 +18,7 @@ To stash your current changes:
 3. Optionally enter a description for the stash in the dialog that appears.
 4. Click **OK**.
 
-![Stash dialog](stash-create-dialog.png)
+TODO stash-create-dialog.png
 
 Gitember runs `git stash` in the background. Your working directory is restored to the last committed state, and all staged and unstaged tracked changes are saved.
 
@@ -33,7 +33,7 @@ To see all saved stashes:
 1. Open the **Branches** panel.
 2. Expand the **Stashes** section, or select **Stash → Show Stash List** from the menu.
 
-![Stash list](stash-list.png)
+TODO stash-list.png
 
 Each stash entry shows:
 
@@ -49,7 +49,7 @@ To restore stashed changes back to the working directory:
 
 1. Right-click the desired stash entry and select **Apply Stash**.
 
-![Stash apply menu](stash-apply-menu.png)
+TODO stash-apply-menu.png
 
 Gitember applies the stash without removing it from the stash list, so it remains available if needed again.
 
@@ -64,7 +64,7 @@ To permanently remove a stash entry:
 1. Right-click the stash entry.
 2. Select **Delete Stash**.
 
-![Stash delete menu](stash-delete-menu.png)
+TODO stash-delete-menu.png
 
 The entry is removed from the stash list. This operation cannot be undone.
 

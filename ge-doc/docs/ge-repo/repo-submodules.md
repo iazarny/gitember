@@ -13,7 +13,7 @@ See also [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) i
 
 When you open a repository that contains submodules, they are listed in the **Submodules** section of the Branches panel.
 
-![Submodules panel](submodules-panel.png)
+TODO submodules-panel.png
 
 Each entry shows:
 
@@ -30,7 +30,7 @@ After cloning a repository or after a pull that changed the recorded submodule c
 1. Open the **Repository** menu.
 2. Select **Update Submodules**.
 
-![Update submodules menu](submodules-update-menu.png)
+TODO submodules-update-menu.png
 
 Gitember runs `git submodule update --init --recursive` in the background. Progress is shown in the status bar.
 
@@ -50,7 +50,7 @@ To work inside a submodule as if it were a standalone repository:
 1. Double-click the submodule entry in the **Submodules** panel.
 2. Gitember opens the submodule in a new tab, allowing you to browse its history, create branches, commit, and push independently.
 
-![Submodule opened as tab](submodules-open-tab.png)
+TODO submodules-open-tab.png
 
 ## Summary
 

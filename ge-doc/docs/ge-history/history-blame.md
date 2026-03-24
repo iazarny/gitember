@@ -28,7 +28,8 @@ Lines that belong to the same commit are grouped by a shared background colour, 
 
 ## Navigating to a Commit
 
-Click any annotated line to highlight all lines belonging to the same commit. The commit details (message, author, date, full SHA) are displayed in the panel below the annotated file.
+Click any annotated line to highlight all lines belonging to the same commit. The commit details 
+(message, author, date, full SHA) are displayed in the panel below the annotated file.
 
 Double-click an annotated line to jump directly to that commit in the **History** view.
 
