@@ -97,7 +97,8 @@ The dialog lists all files with conflicts and stays on top of the main window so
 3. Stage the resolved file via the **Working Copy** page (check the checkbox next to the file).
 4. Click **Continue** in the floating dialog.
 
-Gitember runs `git rebase --continue`. If further commits also conflict, the dialog reappears with the new conflict list.
+Gitember runs command similar to original `git rebase --continue`. If further commits also conflict, 
+the dialog reappears with the new conflict list.
 
 ### Aborting the Rebase
 
