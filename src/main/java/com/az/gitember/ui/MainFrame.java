@@ -681,6 +681,17 @@ public class MainFrame extends JFrame {
         return icons;
     }
 
+    /**
+     * Switches the main content area to the history view and selects the commit
+     * whose full SHA starts with {@code sha} (7-char short SHA is sufficient).
+     * History is (re-)loaded from scratch so that the commit is always found.
+     */
+    public void showCommitInHistory(String sha) {
+        contentPanel.setContent(historyPanel);
+        toolBar.mergeHistoryToolbar(historyPanel);
+        historyPanel.loadHistoryAndSelect(sha);
+    }
+
     public StatusBar getStatusBar() {
         return statusBar;
     }

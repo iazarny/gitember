@@ -327,8 +327,46 @@ public class HistoryPanel extends JPanel {
 
     public JTextField getSearchField() { return searchField; }
 
-    @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
+        loadHistory(treeName, allHistory, null);
+    }
+
+    /** Loads all history and, once loaded, selects the commit whose SHA starts with {@code sha}. */
+    public void loadHistoryAndSelect(String sha) {
+        loadHistory(null, true, () -> selectCommitBySha(sha));
+    }
+
+    /**
+     * Selects the row whose commit SHA starts with {@code sha} and scrolls to it.
+     * Works in both full-history (PlotCommit) and file-history (revision) modes.
+     */
+    public void selectCommitBySha(String sha) {
+        if (sha == null || sha.isBlank()) return;
+        int rowCount = tableModel.getRowCount();
+        for (int i = 0; i < rowCount; i++) {
+            PlotCommit<PlotLane> pc = tableModel.getCommitAt(i);
+            if (pc != null && pc.getName().startsWith(sha)) {
+                commitTable.setRowSelectionInterval(i, i);
+                commitTable.scrollRectToVisible(commitTable.getCellRect(i, 0, true));
+                return;
+            }
+            if (!tableModel.revisions.isEmpty() && i < tableModel.revisions.size()) {
+                ScmRevisionInformation rev = tableModel.revisions.get(i);
+                if (rev != null) {
+                    String fullName = rev.getRevisionFullName();
+                    if (fullName != null && fullName.startsWith(sha)) {
+                        commitTable.setRowSelectionInterval(i, i);
+                        commitTable.scrollRectToVisible(commitTable.getCellRect(i, 0, true));
+                        return;
+                    }
+                }
+            }
+        }
+        log.fine("Commit with SHA prefix '" + sha + "' not found in loaded history");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadHistory(String treeName, boolean allHistory, Runnable afterLoad) {
         lastTreeName   = treeName;
         lastAllHistory = allHistory;
         if (!allHistory) {
@@ -362,6 +400,7 @@ public class HistoryPanel extends JPanel {
                     statusBar.clearProgress();
                     statusBar.setStatus(commits.size() + " commits loaded");
                     refreshLuceneState();
+                    if (afterLoad != null) afterLoad.run();
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load history", e);
                     statusBar.clearProgress();
