@@ -9,24 +9,7 @@ The Blame view (also called Annotation) shows, for every line in a file, which c
 
 See also [git-blame](https://git-scm.com/docs/git-blame) in Git documentation.
 
-## Opening the Blame View
 
-You can open the Blame view from two places:
-
-**From the Working Copy page:**
-
-1. Right-click the file you want to annotate.
-2. Select **Blame** from the context menu.
-
-![Blame from working copy](blame-wcopy-menu.png)
-
-**From the History commit details:**
-
-1. Click a commit in the History view to open its details.
-2. In the changed-files list, right-click a file.
-3. Select **Blame**.
-
-![Blame from history detail](blame-history-menu.png)
 
 ## Reading the Blame View
 
