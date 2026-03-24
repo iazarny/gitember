@@ -29,6 +29,7 @@ import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revplot.PlotWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
@@ -1041,6 +1042,34 @@ public class GitRepoService {
                     .setForceUpdate(true)
                     .setAnnotated(true)
                     .call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    /**
+     * Create new tag at a specific commit.
+     *
+     * @param tagName   tag name
+     * @param commitSha full or abbreviated commit SHA
+     */
+    public Ref createTag(String tagName, String commitSha) throws IOException {
+        try (Git git = new Git(repository)) {
+            ObjectId objectId = repository.resolve(commitSha);
+            if (objectId == null) {
+                throw new IOException("Cannot resolve commit: " + commitSha);
+            }
+            RevWalk revWalk = new RevWalk(repository);
+            RevObject revObject = revWalk.parseAny(objectId);
+            return git.tag()
+                    .setName(tagName)
+                    .setObjectId(revObject)
+                    .setForceUpdate(true)
+                    .setAnnotated(true)
+                    .call();
+        } catch (IOException e) {
+            throw e;
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
             throw new IOException(e.getMessage());

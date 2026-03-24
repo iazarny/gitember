@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.handler.CreateTagHandler;
 import com.az.gitember.handler.InteractiveRebaseHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -96,6 +97,7 @@ public class HistoryPanel extends JPanel {
         JPopupMenu commitMenu = new JPopupMenu();
         JMenuItem checkoutItem         = new JMenuItem("Checkout");
         JMenuItem checkoutAsItem       = new JMenuItem("Checkout as…");
+        JMenuItem createTagItem        = new JMenuItem("Create tag …");
         JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
         JMenuItem revertItem           = new JMenuItem("Revert commit");
         JMenuItem resetItem            = new JMenuItem("Reset to commit…");
@@ -122,6 +124,13 @@ public class HistoryPanel extends JPanel {
                 Context.getGitRepoService().checkoutRevCommit(commit, branchName.trim(), null);
                 return "Created and checked out branch '" + branchName.trim() + "'";
             });
+        });
+
+        createTagItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            CreateTagHandler.showAndExecute(
+                    SwingUtilities.getWindowAncestor(this), statusBar, commit.getName());
         });
 
         cherryPickItem.addActionListener(e -> {
@@ -188,6 +197,8 @@ public class HistoryPanel extends JPanel {
 
         commitMenu.add(checkoutItem);
         commitMenu.add(checkoutAsItem);
+        commitMenu.addSeparator();
+        commitMenu.add(createTagItem);
         commitMenu.addSeparator();
         commitMenu.add(cherryPickItem);
         commitMenu.addSeparator();
