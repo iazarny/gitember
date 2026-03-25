@@ -126,17 +126,17 @@ public final class SyntaxStyleUtil {
     // Highlight colors — two palettes selected at paint time based on active theme
     public static Color addedBg() {
         return isDarkTheme() ?
-                new Color(121, 197, 121) :
+                new Color(192, 236, 192) :
                 new Color(187, 236, 187);
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
-                new Color(202, 64, 64) :
+                new Color(251, 151, 171) :
                 new Color(235, 40, 40,200);
     }
     public static Color changedBg() {
         return isDarkTheme() ?
-                new Color(41, 127, 213) :
+                new Color(156, 187, 255) :
                 new Color(130, 221, 236);
     }
 
