@@ -1,51 +1,57 @@
-# Gitember 3 Is Here — and It Changes Everything About Git GUIs
+Gitember 3 Is Here
 
----
+Gitember started as a small experiment back in 2016. I wanted to explore desktop development with JavaFX and see if I could build a Git client that felt simple and fast.
 
-## Why Gitember 3?
+Over the years it grew into a full-featured Git GUI used by developers around the world.
 
-The previous version was built on JavaFX — a powerful but heavy runtime that made startup sluggish and installers bloated. Version 3 solves that completely.
+Gitember 3 is a new chapter for the project.
 
-**We rebuilt the entire UI layer using Java Swing.** The result: dramatically faster startup, a smaller download, lower memory usage — and a snappier experience on every platform.
+Why Version 3?
 
-Same power. Half the weight.
+Earlier versions of Gitember used JavaFX. It worked well, but it also brought a fairly heavy runtime. That meant slower startup times and larger downloads than I would have liked.
 
----
+For version 3, the entire UI was rebuilt using Java Swing.
 
-## What's New
+The change makes a big difference:
 
-**Blazing fast startup**
-No more waiting. Gitember 3 launches in a fraction of the time, with a noticeably smaller install footprint.
+faster startup
 
-**GitHub, GitLab, Bitbucket & Gitea — all in one place**
-Browse and review Pull Requests without ever leaving the app. Connect once, review everywhere. Works with self-hosted Gitea too — perfect for teams running private infrastructure.
+smaller installation size
 
-**Powerful File Diff Viewer**
-Three diff modes — unified, context, and side-by-side — with syntax highlighting for 40+ languages. Light and dark themes included.
+lower memory usage
 
-**Folder Comparison Tool**
-Compare entire directory trees at a glance. Color-coded additions, deletions, and modifications. Double-click any file to open a full side-by-side diff.
+smoother performance on most systems
 
-**Search Everything, Find Anything**
-Full-text search across commit history, source code, PDFs, Office documents, images, and even CAD files. One query. Instant results.
+The core idea stayed the same - a simple, capable Git GUI - but now it runs much lighter.
 
-**Repository Statistics & Insights**
-Commit frequency, lines changed per author, branch activity — visual analytics built right in. No external tools needed.
+What’s New in Gitember 3
 
-**Git LFS Ready**
-Manage large binary assets — 3D models, datasets, design files — with built-in Git Large File Storage support.
+Rebuilt UI  for faster startup and a smaller footprint
 
----
+Pull Request support for GitHub, GitLab, Bitbucket, and Gitea (including self-hosted)
 
-**Download Gitember 3.0 — March 2026**
-Available for Windows (x64), macOS (M1), and Linux (x64).
+Improved diff viewer with unified, context, and side-by-side modes
 
-More info and documentation: **https://gitember.app**
+New folder comparison tool for quickly reviewing directory changes
 
----
+Full-text repository search across commits, code, and common documents
 
-*Started in 2016 as a weekend experiment to explore JavaFX for desktop programming, Gitember became a full-featured Git client used by developers worldwide. Version 3 marks a new chapter — lighter, faster, and more connected.*
+Built-in repository statistics and activity insights
 
-*If you've been looking for a Git GUI that respects your time and your machine, give Gitember 3 a try. And if you find it useful, a ⭐ on GitHub goes a long way.*
+Git LFS support for working with large binary files
 
-#git #opensource #developer #devtools #productivity #github #gitlab #versioncontrol #java
+
+Availability
+
+Gitember 3.0 (March 2026) is available for:
+
+Windows (x64)
+
+macOS (Apple Silicon)
+
+Linux (x64)
+
+More information and downloads:
+https://gitember.org
+
+If you try Gitember and find it useful, a ⭐ on GitHub is always appreciated. Or give a feedback 
