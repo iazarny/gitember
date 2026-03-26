@@ -2350,9 +2350,9 @@ public class GitRepoService {
                     ? pullRez.getFetchResult().getMessages() : "";
 
             if (pullRez.isSuccessful()) {
-                Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
-                        oldHead, head, git, remoteBranch
-                );
+                Triple<List<String>,List<String>,List<String>> rez = (oldHead != null && head != null)
+                        ? getPullInfo(oldHead, head, git, remoteBranch)
+                        : Triple.of(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
                 String status = pullRez.getMergeResult().getMergeStatus().toString();
                 return new PullOperationResult(status, serverMessages,
                         rez.getLeft(), rez.getMiddle(), rez.getRight());
