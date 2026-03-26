@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg fill="#000000" stroke="#000000" width="1280px" height="960px"
-     viewBox="0 0 320 240" role="img" xmlns="http://www.w3.org/2000/svg">
+<svg fill="#dadada" stroke="#dadada" width="1140px" height="960px"
+     viewBox="0 0 280 240" role="img" filter="url(#emboss)"  xmlns="http://www.w3.org/2000/svg">
 
     <!-- ═══════════════════════════════════════════════════════════
          DEFINITIONS — shapes only, no positioning
          ═══════════════════════════════════════════════════════════ -->
     <defs>
 
+        <filter id="emboss">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+
+            <feSpecularLighting in="blur" surfaceScale="5" specularConstant="1"
+                                specularExponent="20" lighting-color="#ffffff" result="light">
+                <feDistantLight azimuth="45" elevation="45" />
+            </feSpecularLighting>
+
+            <feComposite in="light" in2="SourceAlpha" operator="in" result="lightOutline" />
+
+            <feComposite in="SourceGraphic" in2="lightOutline" operator="arithmetic"
+                         k1="0" k2="1" k3="1" k4="0" />
+        </filter>
+
         <symbol id="sym-gitee" viewBox="0 0 24 24">
-            <path transform="scale(0.9) translate(1, 2)"
+            <path  transform="scale(0.9) translate(1, 2)"
                     d="M11.984 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.016 0zm6.09 5.333c.328 0 .593.266.592.593v1.482a.594.594 0 0 1-.593.592H9.777c-.982 0-1.778.796-1.778 1.778v5.63c0 .327.266.592.593.592h5.63c.982 0 1.778-.796 1.778-1.778v-.296a.593.593 0 0 0-.592-.593h-4.15a.592.592 0 0 1-.592-.592v-1.482a.593.593 0 0 1 .593-.592h6.815c.327 0 .593.265.593.592v3.408a4 4 0 0 1-4 4H5.926a.593.593 0 0 1-.593-.593V9.778a4.444 4.444 0 0 1 4.445-4.444h8.296z"/>
         </symbol>
 
@@ -56,67 +70,62 @@
     </defs>
 
     <!-- ═══════════════════════════════════════════════════════════
-         DRAWING — placement only, no shape data
+         DRAWING — 7 columns × 6 rows, each cell 40×40 units
+         filling the full 280×240 viewBox
          ═══════════════════════════════════════════════════════════ -->
 
-    <use id="icon-gitee0"      href="#sym-gitee"      x="0"   y="0"   width="25"  height="25"/>
-    <use id="icon-gitlab0"     href="#sym-gitlab"     x="25"  y="0"  width="25"  height="25"/>
-    <use id="icon-bitbucket0"  href="#sym-bitbucket"  x="53"  y="0"   width="25"  height="25"/>
-    <use id="icon-gitea0"      href="#sym-gitea"      x="80"  y="0"   width="25"  height="25"/>
-    <use id="icon-github0"     href="#sym-github"     x="111" y="0"   width="25"  height="25"/>
-    <use id="icon-refresh0"    href="#sym-refresh"    x="138" y="0"   width="25"  height="25"/>
-    <use id="icon-git-branch0" href="#sym-git-branch" x="165" y="0"   width="25"  height="25"/>
+    <!-- Row 1 -->
+    <use id="icon-gitee0"      href="#sym-gitee"      x="0"   y="0"   width="40" height="40"/>
+    <use id="icon-gitlab0"     href="#sym-gitlab"     x="40"  y="0"   width="40" height="40"/>
+    <use id="icon-bitbucket0"  href="#sym-bitbucket"  x="80"  y="0"   width="40" height="40"/>
+    <use id="icon-gitea0"      href="#sym-gitea"      x="120" y="0"   width="40" height="40"/>
+    <use id="icon-github0"     href="#sym-github"     x="160" y="0"   width="40" height="40"/>
+    <use id="icon-refresh0"    href="#sym-refresh"    x="200" y="0"   width="40" height="40"/>
+    <use id="icon-git-branch0" href="#sym-git-branch" x="240" y="0"   width="40" height="40"/>
 
+    <!-- Row 2 -->
+    <use id="icon-gitee1"      href="#sym-gitlab"     x="0"   y="40"  width="40" height="40"/>
+    <use id="icon-gitlab1"     href="#sym-bitbucket"  x="40"  y="40"  width="40" height="40"/>
+    <use id="icon-bitbucket1"  href="#sym-gitea"      x="80"  y="40"  width="40" height="40"/>
+    <use id="icon-gitea1"      href="#sym-github"     x="120" y="40"  width="40" height="40"/>
+    <use id="icon-github1"     href="#sym-refresh"    x="160" y="40"  width="40" height="40"/>
+    <use id="icon-refresh1"    href="#sym-git-branch" x="200" y="40"  width="40" height="40"/>
+    <use id="icon-git-branch1" href="#sym-gitee"      x="240" y="40"  width="40" height="40"/>
 
-    <!-- ####################### Second row ################## -->
+    <!-- Row 3 -->
+    <use id="icon-gitee2"      href="#sym-bitbucket"  x="0"   y="80"  width="40" height="40"/>
+    <use id="icon-gitlab2"     href="#sym-gitea"      x="40"  y="80"  width="40" height="40"/>
+    <use id="icon-bitbucket2"  href="#sym-github"     x="80"  y="80"  width="40" height="40"/>
+    <use id="icon-gitea2"      href="#sym-refresh"    x="120" y="80"  width="40" height="40"/>
+    <use id="icon-github2"     href="#sym-git-branch" x="160" y="80"  width="40" height="40"/>
+    <use id="icon-refresh2"    href="#sym-gitee"      x="200" y="80"  width="40" height="40"/>
+    <use id="icon-git-branch2" href="#sym-gitlab"     x="240" y="80"  width="40" height="40"/>
 
-    <use id="icon-gitee1"      href="#sym-gitlab"       x="0"   y="25"   width="25"  height="25"/>
-    <use id="icon-gitlab1"     href="#sym-bitbucket"     x="25"  y="25"  width="25"  height="25"/>
-    <use id="icon-bitbucket1"  href="#sym-gitea"        x="53"  y="25"   width="25"  height="25"/>
-    <use id="icon-gitea1"      href="#sym-github"       x="80"  y="25"   width="25"  height="25"/>
-    <use id="icon-github1"     href="#sym-refresh"      x="111" y="25"   width="25"  height="25"/>
-    <use id="icon-refresh1"    href="#sym-git-branch"    x="138" y="25"   width="25"  height="25"/>
-    <use id="icon-git-branch1" href="#sym-gitee" x="165" y="25"   width="25"  height="25"/>
+    <!-- Row 4 -->
+    <use id="icon-gitee3"      href="#sym-gitea"      x="0"   y="120" width="40" height="40"/>
+    <use id="icon-gitlab3"     href="#sym-github"     x="40"  y="120" width="40" height="40"/>
+    <use id="icon-bitbucket3"  href="#sym-refresh"    x="80"  y="120" width="40" height="40"/>
+    <use id="icon-gitea3"      href="#sym-git-branch" x="120" y="120" width="40" height="40"/>
+    <use id="icon-github3"     href="#sym-gitee"      x="160" y="120" width="40" height="40"/>
+    <use id="icon-refresh3"    href="#sym-gitlab"     x="200" y="120" width="40" height="40"/>
+    <use id="icon-git-branch3" href="#sym-bitbucket"  x="240" y="120" width="40" height="40"/>
 
-    <!-- ####################### 3 row ################## -->
+    <!-- Row 5 -->
+    <use id="icon-gitee4"      href="#sym-github"     x="0"   y="160" width="40" height="40"/>
+    <use id="icon-gitlab4"     href="#sym-refresh"    x="40"  y="160" width="40" height="40"/>
+    <use id="icon-bitbucket4"  href="#sym-git-branch" x="80"  y="160" width="40" height="40"/>
+    <use id="icon-gitea4"      href="#sym-gitee"      x="120" y="160" width="40" height="40"/>
+    <use id="icon-github4"     href="#sym-gitlab"     x="160" y="160" width="40" height="40"/>
+    <use id="icon-refresh4"    href="#sym-bitbucket"  x="200" y="160" width="40" height="40"/>
+    <use id="icon-git-branch4" href="#sym-gitea"      x="240" y="160" width="40" height="40"/>
 
-    <use id="icon-gitee2"      href="#sym-bitbucket"       x="0"   y="50"   width="25"  height="25"/>
-    <use id="icon-gitlab2"     href="#sym-gitea"     x="25"  y="50"  width="25"  height="25"/>
-    <use id="icon-bitbucket2"  href="#sym-github"        x="53"  y="50"   width="25"  height="25"/>
-    <use id="icon-gitea2"      href="#sym-refresh"       x="80"  y="50"   width="25"  height="25"/>
-    <use id="icon-github2"     href="#sym-git-branch"      x="111" y="50"   width="25"  height="25"/>
-    <use id="icon-refresh2"    href="#sym-gitee"    x="138" y="50"   width="25"  height="25"/>
-    <use id="icon-git-branch2" href="#sym-gitlab"         x="165" y="50"   width="25"  height="25"/>
-
-    <!-- ####################### 4 row ################## -->
-
-    <use id="icon-gitee3"      href="#sym-gitea"          x="0"   y="75"   width="25"  height="25"/>
-    <use id="icon-gitlab3"     href="#sym-github"         x="25"  y="75"   width="25"  height="25"/>
-    <use id="icon-bitbucket3"  href="#sym-refresh"        x="53"  y="75"   width="25"  height="25"/>
-    <use id="icon-gitea3"      href="#sym-git-branch"     x="80"  y="75"   width="25"  height="25"/>
-    <use id="icon-github3"     href="#sym-gitee"          x="111" y="75"   width="25"  height="25"/>
-    <use id="icon-refresh3"    href="#sym-gitlab"         x="138" y="75"   width="25"  height="25"/>
-    <use id="icon-git-branch3" href="#sym-bitbucket"      x="165" y="75"   width="25"  height="25"/>
-
-    <!-- ####################### 5 row ################## -->
-
-    <use id="icon-gitee4"      href="#sym-github"         x="0"   y="100"  width="25"  height="25"/>
-    <use id="icon-gitlab4"     href="#sym-refresh"        x="25"  y="100"  width="25"  height="25"/>
-    <use id="icon-bitbucket4"  href="#sym-git-branch"     x="53"  y="100"  width="25"  height="25"/>
-    <use id="icon-gitea4"      href="#sym-gitee"          x="80"  y="100"  width="25"  height="25"/>
-    <use id="icon-github4"     href="#sym-gitlab"         x="111" y="100"  width="25"  height="25"/>
-    <use id="icon-refresh4"    href="#sym-bitbucket"      x="138" y="100"  width="25"  height="25"/>
-    <use id="icon-git-branch4" href="#sym-gitea"          x="165" y="100"  width="25"  height="25"/>
-
-    <!-- ####################### 6 row ################## -->
-
-    <use id="icon-gitee5"      href="#sym-refresh"        x="0"   y="125"  width="25"  height="25"/>
-    <use id="icon-gitlab5"     href="#sym-git-branch"     x="25"  y="125"  width="25"  height="25"/>
-    <use id="icon-bitbucket5"  href="#sym-gitee"          x="53"  y="125"  width="25"  height="25"/>
-    <use id="icon-gitea5"      href="#sym-gitlab"         x="80"  y="125"  width="25"  height="25"/>
-    <use id="icon-github5"     href="#sym-bitbucket"      x="111" y="125"  width="25"  height="25"/>
-    <use id="icon-refresh5"    href="#sym-gitea"          x="138" y="125"  width="25"  height="25"/>
-    <use id="icon-git-branch5" href="#sym-github"         x="165" y="125"  width="25"  height="25"/>
-
+    <!-- Row 6 -->
+    <use id="icon-gitee5"      href="#sym-refresh"    x="0"   y="200" width="40" height="40"/>
+    <use id="icon-gitlab5"     href="#sym-git-branch" x="40"  y="200" width="40" height="40"/>
+    <use id="icon-bitbucket5"  href="#sym-gitee"      x="80"  y="200" width="40" height="40"/>
+    <use id="icon-gitea5"      href="#sym-gitlab"     x="120" y="200" width="40" height="40"/>
+    <use id="icon-github5"     href="#sym-bitbucket"  x="160" y="200" width="40" height="40"/>
+    <use id="icon-refresh5"    href="#sym-gitea"      x="200" y="200" width="40" height="40"/>
+    <use id="icon-git-branch5" href="#sym-github"     x="240" y="200" width="40" height="40"/>
 
 </svg>

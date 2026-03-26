@@ -390,11 +390,32 @@ h6 {
 /*--------------------------------------------------------------
 # Hero Section
 --------------------------------------------------------------*/
+#hero-orig {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)), url("../img/3/gbsvg/bg6.svg") center top no-repeat;
+  background-size: cover;
+  position: relative;
+}
+
 #hero {
   width: 100%;
   height: 100vh;
-  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)), url("../img/hero-bg.jpg") center top no-repeat;
-  background-size: cover;
+  /* Keep your gradient and URL the same */
+  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)),
+              url("../img/3/gbsvg/bg6.svg");
+
+  /* 1. Scale down: 100% / 3 = 33.33% */
+  /* This sets the width to 1/3 of the container; height 'auto' maintains aspect ratio */
+  background-size: auto, 33.33% auto;
+
+  /* 2. Enable repeating for the image layer only */
+  /* The first 'no-repeat' is for the gradient, the second 'repeat' is for the SVG */
+  background-repeat: no-repeat, repeat;
+
+  /* 3. Positioning (optional) */
+  background-position: center, left top;
+
   position: relative;
 }
 

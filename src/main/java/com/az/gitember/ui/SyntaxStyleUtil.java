@@ -17,6 +17,7 @@ public final class SyntaxStyleUtil {
 
     private static final Map<String, String> EXT_TO_STYLE = Map.ofEntries(
             Map.entry("txt", SyntaxConstants.SYNTAX_STYLE_HTML),
+            Map.entry("svg", SyntaxConstants.SYNTAX_STYLE_HTML),
             Map.entry("java", SyntaxConstants.SYNTAX_STYLE_JAVA),
             Map.entry("kt", SyntaxConstants.SYNTAX_STYLE_KOTLIN),
             Map.entry("scala", SyntaxConstants.SYNTAX_STYLE_SCALA),
@@ -124,17 +125,34 @@ public final class SyntaxStyleUtil {
     }
 
     // Highlight colors — two palettes selected at paint time based on active theme
+
     public static Color addedBg() {
         return isDarkTheme() ?
-                new Color(192, 236, 192) :
+                new Color(83, 99, 83) :
                 new Color(187, 236, 187);
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
+                new Color(99, 67, 61) :
+                new Color(246, 129, 129,200);
+    }
+    public static Color changedBg() {
+        return isDarkTheme() ?
+                new Color(68, 78, 103) :
+                new Color(130, 221, 236);
+    }
+
+    public static Color addedBgDO() {
+        return isDarkTheme() ?
+                new Color(192, 236, 192) :
+                new Color(187, 236, 187);
+    }
+    public static Color deletedBgDO() {
+        return isDarkTheme() ?
                 new Color(251, 151, 171) :
                 new Color(235, 40, 40,200);
     }
-    public static Color changedBg() {
+    public static Color changedBgDO() {
         return isDarkTheme() ?
                 new Color(156, 187, 255) :
                 new Color(130, 221, 236);

@@ -167,9 +167,9 @@ class DiffOverviewPanel extends JPanel {
         if (editList != null) {
             for (Edit edit : editList) {
                 Color c = switch (edit.getType()) {
-                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBg() : null;
-                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBg( )  : null;
-                    case REPLACE -> SyntaxStyleUtil.changedBg();
+                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBgDO() : null;
+                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBgDO( )  : null;
+                    case REPLACE -> SyntaxStyleUtil.changedBgDO();
                     default      -> null;
                 };
                 if (c == null) continue;
