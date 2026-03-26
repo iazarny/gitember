@@ -1437,10 +1437,15 @@ section {
 .feature-detail + .feature-detail {
     border-top: 1px solid rgba(0,0,0,0.07);
 }
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
 .feature-icon-lg {
     font-size: 3rem;
     color: #4154f1;
-    margin-bottom: 16px;
 }
 .feature-detail h2 {
     font-size: 1.75rem;
@@ -1562,11 +1567,15 @@ section {
     transition: box-shadow 0.2s;
 }
 .audience-card:hover { box-shadow: 0 8px 28px rgba(65,84,241,0.12); }
+.audience-card .ac-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
 .audience-card .ac-icon {
     font-size: 2.4rem;
     color: #4154f1;
-
-    margin-bottom: 14px;
 }
-.audience-card h4 { font-weight: 700; margin-bottom: 10px; }
+.audience-card h4 { font-weight: 700; margin-bottom: 0; }
 .audience-card p  { color: #666; line-height: 1.75; font-size: 0.95rem; }
