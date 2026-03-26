@@ -27,16 +27,21 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        Context.getGitRepoService().deleteLocalBranch(branch.getFullName());
-
-        // If remote branch or tag, also push deletion to remote
-        if (branch.getBranchType() != ScmBranch.BranchType.LOCAL) {
+        if (branch.getBranchType() == ScmBranch.BranchType.REMOTE) {
+            // Push deletion to remote: fullName is "refs/remotes/origin/foo",
+            // but the remote server expects "refs/heads/foo"
             Optional<Project> project = Context.getCurrentProject();
             if (project.isPresent()) {
                 RemoteRepoParameters params = new RemoteRepoParameters(project.get());
-                RefSpec refSpec = new RefSpec().setSource(null).setDestination(branch.getFullName());
+                String remoteRef = branch.getFullName()
+                        .replaceFirst("^refs/remotes/[^/]+/", "refs/heads/");
+                RefSpec refSpec = new RefSpec().setSource(null).setDestination(remoteRef);
                 Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
             }
+            // Remove the local remote-tracking ref
+            Context.getGitRepoService().deleteRemoteTrackingBranch(branch.getFullName());
+        } else {
+            Context.getGitRepoService().deleteLocalBranch(branch.getFullName());
         }
 
         Context.updateBranches();

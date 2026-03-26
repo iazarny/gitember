@@ -530,7 +530,16 @@ public class GitRepoService {
         } catch (Exception e) {
             throw new IOException("Cannot delete branch " + name, e);
         }
+    }
 
+    public void deleteRemoteTrackingBranch(final String fullName) throws IOException {
+        try {
+            final org.eclipse.jgit.lib.RefUpdate update = repository.updateRef(fullName);
+            update.setForceUpdate(true);
+            update.delete();
+        } catch (Exception e) {
+            throw new IOException("Cannot delete remote-tracking branch " + fullName, e);
+        }
     }
 
     /**
