@@ -108,8 +108,10 @@ public class HistoryPanel extends JPanel {
             if (commit == null) return;
             runCommitAction("Checkout", () -> {
                 Context.getGitRepoService().checkoutRevCommit(commit, null);
+                Context.updateBranches();
+                Context.updateWorkingBranch();
                 return "Checked out " + commit.name().substring(0, 7);
-            });
+            }, true);
         });
 
         checkoutAsItem.addActionListener(e -> {
@@ -122,8 +124,10 @@ public class HistoryPanel extends JPanel {
             if (branchName == null || branchName.isBlank()) return;
             runCommitAction("Checkout as branch", () -> {
                 Context.getGitRepoService().checkoutRevCommit(commit, branchName.trim(), null);
+                Context.updateBranches();
+                Context.updateWorkingBranch();
                 return "Created and checked out branch '" + branchName.trim() + "'";
-            });
+            }, true);
         });
 
         createTagItem.addActionListener(e -> {
