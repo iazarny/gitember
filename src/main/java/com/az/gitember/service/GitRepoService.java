@@ -3239,5 +3239,31 @@ public class GitRepoService {
         }
     }
 
+    /**
+     * Returns {@code true} if the given commit SHA has not yet been pushed to the
+     * remote tracking branch of the current local branch.
+     * <p>
+     * If the current branch has no upstream configured, every commit is considered
+     * local (unpushed), so the method returns {@code true}.
+     */
+    public boolean isCommitUnpushed(String sha) throws Exception {
+        String branchName = repository.getBranch();
+        BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, branchName);
+        if (trackingStatus == null) {
+            return true; // no upstream — all commits are local
+        }
+        ObjectId remoteId = repository.resolve(trackingStatus.getRemoteTrackingBranch());
+        ObjectId commitId = repository.resolve(sha);
+        if (remoteId == null || commitId == null) {
+            return false;
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(commitId);
+            RevCommit remote = walk.parseCommit(remoteId);
+            // unpushed = commit is NOT yet reachable from the remote tracking tip
+            return !walk.isMergedInto(commit, remote);
+        }
+    }
+
 }
 

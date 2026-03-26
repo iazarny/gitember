@@ -7,6 +7,7 @@ import com.az.gitember.handler.InteractiveRebaseHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -219,8 +220,14 @@ public class HistoryPanel extends JPanel {
                 if (!ev.isPopupTrigger()) return;
                 int row = commitTable.rowAtPoint(ev.getPoint());
                 if (row < 0) return;
-                if (tableModel.getCommitAt(row) == null) return; // file-history mode
+                PlotCommit<PlotLane> commit = tableModel.getCommitAt(row);
+                if (commit == null) return; // file-history mode
                 commitTable.setRowSelectionInterval(row, row);
+                boolean unpushed = false;
+                try {
+                    unpushed = Context.getGitRepoService().isCommitUnpushed(commit.getName());
+                } catch (Exception ignored) {}
+                interactiveRebaseItem.setEnabled(unpushed);
                 commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
         });
@@ -477,12 +484,35 @@ public class HistoryPanel extends JPanel {
                     statusBar.setStatus(label + " cancelled.");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, label + " failed", ex);
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    CheckoutConflictException conflict = null;
+                    for (Throwable t = ex; t != null; t = t.getCause()) {
+                        if (t instanceof CheckoutConflictException cce) {
+                            conflict = cce;
+                            break;
+                        }
+                    }
+                    String message;
+                    if (conflict != null && !conflict.getConflictingPaths().isEmpty()) {
+                        message = "Checkout blocked by local changes in:\n\n"
+                                + String.join("\n", conflict.getConflictingPaths());
+                        statusBar.setStatus(label + " failed: checkout conflict in "
+                                + conflict.getConflictingPaths().size() + " file(s)");
+                    } else {
+                        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                        message = cause.getMessage();
+                        statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    }
                     JOptionPane.showMessageDialog(
                             SwingUtilities.getWindowAncestor(HistoryPanel.this),
-                            cause.getMessage(), label + " Error",
+                            message, label + " Error",
                             JOptionPane.ERROR_MESSAGE);
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateBranches();
+                            Context.updateWorkingBranch();
+                            return null;
+                        }
+                    }.execute();
                 }
             }
         }.execute();
