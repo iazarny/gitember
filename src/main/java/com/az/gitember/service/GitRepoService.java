@@ -566,10 +566,31 @@ public class GitRepoService {
         return repository != null ? repository.getRepositoryState() : RepositoryState.SAFE;
     }
 
+    /**
+     * A no-op {@link RebaseCommand.InteractiveHandler} that leaves the existing
+     * todo-list steps and commit messages untouched.  Required for
+     * {@code --continue} and {@code --skip} so JGit does not NPE when it
+     * processes SQUASH / FIXUP steps whose handler reference is {@code null}.
+     */
+    private static final RebaseCommand.InteractiveHandler PASSTHROUGH_HANDLER =
+            new RebaseCommand.InteractiveHandler() {
+                @Override
+                public void prepareSteps(List<org.eclipse.jgit.lib.RebaseTodoLine> steps) {
+                    // leave the existing plan unchanged
+                }
+                @Override
+                public String modifyCommitMessage(String msg) {
+                    return msg;
+                }
+            };
+
     /** Runs {@code git rebase --continue} after conflicts are staged. */
     public RebaseResult rebaseContinue() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase().setOperation(RebaseCommand.Operation.CONTINUE).call();
+            return git.rebase()
+                    .setOperation(RebaseCommand.Operation.CONTINUE)
+                    .runInteractively(PASSTHROUGH_HANDLER)
+                    .call();
         }
     }
 
@@ -588,7 +609,10 @@ public class GitRepoService {
      */
     public RebaseResult rebaseSkip() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase().setOperation(RebaseCommand.Operation.SKIP).call();
+            return git.rebase()
+                    .setOperation(RebaseCommand.Operation.SKIP)
+                    .runInteractively(PASSTHROUGH_HANDLER)
+                    .call();
         }
     }
 
