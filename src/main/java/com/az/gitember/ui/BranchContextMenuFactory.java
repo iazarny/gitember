@@ -110,6 +110,7 @@ public class BranchContextMenuFactory {
             JMenuItem deleteItem = new JMenuItem("Delete " + name + "...");
             deleteItem.addActionListener(e ->
                     DeleteBranchHandler.showAndExecute(parent, statusBar, branch));
+            deleteItem.setEnabled(!branch.isHead());
             menu.add(deleteItem);
         }
 
