@@ -38,12 +38,6 @@ public class MainToolBar extends JToolBar {
         pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.REPLY, -45);
         pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.REPLY, 135);
 
-        // Icon on top, text / count badge below
-        /*for (JButton btn : new JButton[]{pullBtn, pushBtn}) {
-            btn.setVerticalTextPosition(SwingConstants.BOTTOM);
-            btn.setHorizontalTextPosition(SwingConstants.CENTER);
-            btn.setMargin(new Insets(4, 12, 4, 12));
-        }*/
         fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
         commitBtn = Util.createButton("Commit", "Commit", FontAwesomeSolid.CHECK);
 
