@@ -46,13 +46,16 @@ public class InteractiveContinueAbortDialog extends JDialog {
     // ── Constructor ───────────────────────────────────────────────────────────
 
     /**
-     * @param owner      owning frame (may be {@code null})
-     * @param conflicts  list of conflicting file paths, or {@code null}/empty
-     * @param statusBar  application status bar for progress feedback
-     * @param onComplete called on the EDT after the operation finishes; may be {@code null}
+     * @param owner           owning frame (may be {@code null})
+     * @param conflicts       list of conflicting file paths, or {@code null}/empty
+     * @param currentRevision short description of the commit that caused the stop
+     *                        (e.g. "abc1234 - Commit message"), or {@code null}
+     * @param statusBar       application status bar for progress feedback
+     * @param onComplete      called on the EDT after the operation finishes; may be {@code null}
      */
     public InteractiveContinueAbortDialog(Frame owner,
                                           List<String> conflicts,
+                                          String currentRevision,
                                           StatusBar statusBar,
                                           Runnable onComplete) {
         super(owner, "Interactive Rebase In Progress", false); // non-modal
@@ -69,20 +72,22 @@ public class InteractiveContinueAbortDialog extends JDialog {
                 "<html><b>Interactive rebase paused.</b></html>");
         titleLabel.setForeground(new Color(160, 80, 0));
 
-        String body;
+        StringBuilder sb = new StringBuilder("<html>");
+        if (currentRevision != null && !currentRevision.isBlank()) {
+            sb.append("Stopped at revision: <tt><b>").append(currentRevision).append("</b></tt><br><br>");
+        }
         if (conflicts != null && !conflicts.isEmpty()) {
-            StringBuilder sb = new StringBuilder(
-                    "<html>Conflicts detected in:<br><ul>");
+            sb.append("Conflicts detected in:<br><ul>");
             for (String f : conflicts) {
                 sb.append("<li><tt>").append(f).append("</tt></li>");
             }
-            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.</html>");
-            body = sb.toString();
+            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.");
         } else {
-            body = "<html>Resolve any conflicts and <b>stage</b> the files,<br>"
-                 + "then click <b>Continue</b> — or <b>Abort</b> to cancel.</html>";
+            sb.append("Resolve any conflicts and <b>stage</b> the files,<br>"
+                    + "then click <b>Continue</b> — or <b>Abort</b> to cancel.");
         }
-        JLabel bodyLabel = new JLabel(body);
+        sb.append("</html>");
+        JLabel bodyLabel = new JLabel(sb.toString());
 
         JPanel messagePanel = new JPanel(new BorderLayout(0, 6));
         messagePanel.setBorder(BorderFactory.createEmptyBorder(12, 14, 8, 14));
@@ -156,8 +161,8 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     statusBar.setStatus(label + ": " + status);
 
                     if (doContinue && status == RebaseResult.Status.STOPPED) {
-                        // More conflicts — reopen with updated conflict list
-                        reopenWith(result.getConflicts());
+                        // More conflicts — reopen with updated result
+                        reopenWith(result);
                         return;
                     }
 
@@ -182,13 +187,13 @@ public class InteractiveContinueAbortDialog extends JDialog {
         if (onComplete != null) onComplete.run();
     }
 
-    private void reopenWith(List<String> newConflicts) {
+    private void reopenWith(RebaseResult newResult) {
         Frame owner  = (Frame) SwingUtilities.getWindowAncestor(this);
         Runnable cb  = onComplete;
         StatusBar sb = statusBar;
         instance = null;
         dispose();
-        showIfRebaseInProgress(owner, newConflicts, sb, cb);
+        showIfRebaseInProgress(owner, newResult, sb, cb);
     }
 
     // ── Static factory ────────────────────────────────────────────────────────
@@ -201,23 +206,39 @@ public class InteractiveContinueAbortDialog extends JDialog {
     public static void showIfRebaseInProgress(Frame owner,
                                               StatusBar statusBar,
                                               Runnable onComplete) {
-        showIfRebaseInProgress(owner, null, statusBar, onComplete);
+        showIfRebaseInProgress(owner, null, null, statusBar, onComplete);
     }
 
     /**
      * Same as {@link #showIfRebaseInProgress(Frame, StatusBar, Runnable)} but
-     * also accepts a pre-built conflict list to display immediately.
+     * also accepts a {@link RebaseResult} to display conflict files and the
+     * revision that caused the stop.
      */
     public static void showIfRebaseInProgress(Frame owner,
-                                              List<String> conflicts,
+                                              RebaseResult result,
                                               StatusBar statusBar,
                                               Runnable onComplete) {
+        String revision = null;
+        if (result != null && result.getCurrentCommit() != null) {
+            revision = result.getCurrentCommit().getName().substring(0, 7)
+                    + " – " + result.getCurrentCommit().getShortMessage();
+        }
+        showIfRebaseInProgress(owner,
+                result != null ? result.getConflicts() : null,
+                revision, statusBar, onComplete);
+    }
+
+    private static void showIfRebaseInProgress(Frame owner,
+                                               List<String> conflicts,
+                                               String currentRevision,
+                                               StatusBar statusBar,
+                                               Runnable onComplete) {
         if (instance != null && instance.isDisplayable()) return;
         if (Context.getGitRepoService().getRepositoryState()
                 != RepositoryState.REBASING_INTERACTIVE) return;
 
         instance = new InteractiveContinueAbortDialog(
-                owner, conflicts, statusBar, onComplete);
+                owner, conflicts, currentRevision, statusBar, onComplete);
         instance.setVisible(true);
     }
 }

@@ -71,7 +71,7 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
             Frame owner = parent instanceof Frame f
                     ? f : (Frame) SwingUtilities.getWindowAncestor(parent);
             InteractiveContinueAbortDialog.showIfRebaseInProgress(
-                    owner, result.getConflicts(), statusBar, onComplete);
+                    owner, result, statusBar, onComplete);
             return;
         }
 
