@@ -186,10 +186,15 @@ public class InteractiveContinueAbortDialog extends JDialog {
                         return;
                     }
 
-                    // Guard: if the rebase is still paused even though no STOPPED was
-                    // returned (e.g. NOTHING_TO_COMMIT after continue), the rebase is
-                    // NOT finished. Reopen the dialog so the user can skip or abort
-                    // rather than silently losing the in-progress state.
+                    // When continue produces an empty commit, skip it automatically
+                    // instead of showing the dialog again.
+                    if (op == Op.CONTINUE && status == RebaseResult.Status.NOTHING_TO_COMMIT) {
+                        statusBar.setStatus("Empty commit \u2014 skipping automatically\u2026");
+                        performOperation(Op.SKIP);
+                        return;
+                    }
+
+                    // Guard: if the rebase is still paused for any other reason, reopen
                     if (op != Op.ABORT
                             && Context.getGitRepoService().getRepositoryState()
                                == RepositoryState.REBASING_INTERACTIVE) {
