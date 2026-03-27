@@ -58,8 +58,16 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
      * Shows confirmation dialog and executes if confirmed.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar, ScmBranch branch) {
-        int result = JOptionPane.showConfirmDialog(parent,
-                "Delete branch \"" + branch.getShortName() + "\"?",
+        String message;
+        if (branch.getRemoteMergeName() != null && branch.getAheadCount() > 0) {
+            message = "<html>Delete branch <b>" + branch.getShortName() + "</b>?<br><br>"
+                    + "<b style='color:orange'>\u26a0 " + branch.getAheadCount()
+                    + " unpushed commit(s)</b> will be lost<br>"
+                    + "(not yet pushed to <tt>" + branch.getRemoteMergeName() + "</tt>).</html>";
+        } else {
+            message = "Delete branch \"" + branch.getShortName() + "\"?";
+        }
+        int result = JOptionPane.showConfirmDialog(parent, message,
                 "Delete Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             new DeleteBranchHandler(parent, statusBar, branch).execute();
