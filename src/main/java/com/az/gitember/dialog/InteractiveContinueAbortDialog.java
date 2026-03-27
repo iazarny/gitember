@@ -4,6 +4,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.Util;
 import org.eclipse.jgit.api.RebaseResult;
+import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.lib.RepositoryState;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -138,9 +139,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
         statusBar.showProgress(true);
 
         // Disable buttons to prevent double-click
-        for (Component c : ((JPanel) getContentPane().getComponent(1)).getComponents()) {
-            c.setEnabled(false);
-        }
+        disableButtons();
 
         new SwingWorker<RebaseResult, Void>() {
             @Override
@@ -172,6 +171,24 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, label + " failed", cause);
                     statusBar.setStatus(label + " failed: " + cause.getMessage());
+
+                    // If a 'continue' failed but the rebase is still in progress
+                    // (e.g. UnmergedPathsException — user clicked Continue before
+                    // staging all resolved files), keep the dialog open so they
+                    // can fix the issue and retry rather than leaving the repo stuck.
+                    if (doContinue && Context.getGitRepoService().getRepositoryState()
+                            == RepositoryState.REBASING_INTERACTIVE) {
+                        enableButtons();
+                        String msg = cause instanceof UnmergedPathsException
+                                ? "Some conflict markers are still present.\n"
+                                  + "Resolve and <b>stage</b> all conflicted files, then click <b>Continue</b>."
+                                : "Continue failed: " + cause.getMessage();
+                        JOptionPane.showMessageDialog(InteractiveContinueAbortDialog.this,
+                                "<html>" + msg + "</html>",
+                                "Rebase Continue Failed", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
                     disposeAndNotify();
                     JOptionPane.showMessageDialog(null,
                             label + " failed:\n" + cause.getMessage(),
@@ -179,6 +196,18 @@ public class InteractiveContinueAbortDialog extends JDialog {
                 }
             }
         }.execute();
+    }
+
+    private void disableButtons() {
+        for (Component c : ((JPanel) getContentPane().getComponent(1)).getComponents()) {
+            c.setEnabled(false);
+        }
+    }
+
+    private void enableButtons() {
+        for (Component c : ((JPanel) getContentPane().getComponent(1)).getComponents()) {
+            c.setEnabled(true);
+        }
     }
 
     private void disposeAndNotify() {

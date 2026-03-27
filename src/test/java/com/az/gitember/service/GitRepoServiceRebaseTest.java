@@ -1,5 +1,6 @@
 package com.az.gitember.service;
 
+import com.az.gitember.dialog.InteractiveRebaseDialog;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RebaseResult;
@@ -18,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -185,6 +187,148 @@ class GitRepoServiceRebaseTest {
         }
     }
 
+    // ── Tests: service.interactiveRebase() entry point ───────────────────────
+
+    /**
+     * The application always starts an interactive rebase through
+     * {@link GitRepoService#interactiveRebase}, not via the raw JGit API.
+     * This test verifies that the service method correctly stops on a conflict.
+     */
+    @Test
+    void interactiveRebase_viaService_stopsOnConflict() throws Exception {
+        String masterSha = setupTwoBranchConflictHistory();
+        List<InteractiveRebaseDialog.RebaseStep> steps = buildPickSteps(masterSha);
+
+        RebaseResult result = service.interactiveRebase(masterSha, steps);
+
+        assertEquals(RebaseResult.Status.STOPPED, result.getStatus(),
+                "service.interactiveRebase() must stop with STOPPED when a conflict is encountered");
+    }
+
+    /**
+     * Full round-trip: start via service → resolve conflict → continue via service → success.
+     * This is the exact code path exercised by InteractiveRebaseHandler +
+     * InteractiveContinueAbortDialog in the real application.
+     */
+    @Test
+    void interactiveRebase_viaService_continueAfterResolve_returnsSuccessful() throws Exception {
+        String masterSha = setupTwoBranchConflictHistory();
+        List<InteractiveRebaseDialog.RebaseStep> steps = buildPickSteps(masterSha);
+
+        service.interactiveRebase(masterSha, steps);
+        resolveConflict("resolved content\n");
+
+        RebaseResult result = service.rebaseContinue();
+
+        assertTrue(result.getStatus().isSuccessful(),
+                "rebaseContinue() after service.interactiveRebase() must succeed, got: "
+                + result.getStatus());
+    }
+
+    @Test
+    void interactiveRebase_viaService_continueAfterResolve_repositoryReturnedToSafeState()
+            throws Exception {
+        String masterSha = setupTwoBranchConflictHistory();
+        List<InteractiveRebaseDialog.RebaseStep> steps = buildPickSteps(masterSha);
+
+        service.interactiveRebase(masterSha, steps);
+        resolveConflict("resolved content\n");
+        service.rebaseContinue();
+
+        assertEquals(RepositoryState.SAFE, service.getRepositoryState());
+    }
+
+    // ── Tests: continue called before conflicts are staged ────────────────────
+
+    /**
+     * When the user clicks "Continue" before staging all resolved files, JGit
+     * throws {@code UnmergedPathsException} (unmerged paths remain in the index).
+     *
+     * <p>This is the root cause of the bug: the dialog's {@code performOperation(true)}
+     * caught this exception and called {@code disposeAndNotify()}, dismissing the dialog
+     * while the rebase was still paused.  The fix is to detect that the repository is
+     * still in {@link RepositoryState#REBASING_INTERACTIVE} after the exception and
+     * keep the dialog open so the user can retry.
+     */
+    @Test
+    void rebaseContinue_withUnresolvedConflicts_throwsException() throws Exception {
+        startConflictingRebase();
+        // Intentionally do NOT stage the resolved file — conflict markers still in the index
+
+        assertThrows(Exception.class, () -> service.rebaseContinue(),
+                "rebaseContinue() with unresolved conflicts must throw (UnmergedPathsException)");
+    }
+
+    /**
+     * After the exception from a failed continue the repository must still be in
+     * {@link RepositoryState#REBASING_INTERACTIVE} — the rebase has not been finished
+     * or abandoned, so the dialog must stay open for the user to fix and retry.
+     */
+    @Test
+    void rebaseContinue_withUnresolvedConflicts_repositoryRemainsInRebasingInteractiveState()
+            throws Exception {
+        startConflictingRebase();
+        // Intentionally do NOT stage the resolved file
+
+        try { service.rebaseContinue(); } catch (Exception ignored) { /* expected throw */ }
+
+        assertEquals(RepositoryState.REBASING_INTERACTIVE, service.getRepositoryState(),
+                "Repository must remain in REBASING_INTERACTIVE after a failed continue");
+    }
+
+    // ── Tests: multiple conflicting commits ───────────────────────────────────
+
+    /**
+     * Two feature commits both conflict with master.  After resolving the first
+     * conflict, {@code rebaseContinue()} must return {@code STOPPED} again (not
+     * {@code SUCCESSFUL}) so the dialog can handle the second conflict.
+     *
+     * <pre>
+     *   master : A ──► C  (file.txt = "master version")
+     *   feature: A ──► B  (file.txt = "feature-B") ──► D (file.txt = "feature-D")
+     *
+     *   rebase feature onto master:
+     *     1st continue resolves B → STOPPED (D also conflicts)
+     *     2nd continue resolves D → SUCCESSFUL
+     * </pre>
+     */
+    @Test
+    void rebaseContinue_firstOfTwoConflicts_returnsStoppedNotSuccessful() throws Exception {
+        startTwoConflictRebase();
+        resolveConflict("resolved-B\n");
+
+        RebaseResult firstContinue = service.rebaseContinue();
+
+        assertEquals(RebaseResult.Status.STOPPED, firstContinue.getStatus(),
+                "After resolving the first of two conflicts, rebaseContinue() must return STOPPED "
+                + "(second conflict pending), not SUCCESSFUL");
+    }
+
+    @Test
+    void rebaseContinue_bothConflictsResolved_returnsSuccessful() throws Exception {
+        startTwoConflictRebase();
+        resolveConflict("resolved-B\n");
+        service.rebaseContinue();           // first continue → STOPPED (second conflict)
+        resolveConflict("resolved-D\n");
+
+        RebaseResult secondContinue = service.rebaseContinue();
+
+        assertTrue(secondContinue.getStatus().isSuccessful(),
+                "After resolving both conflicts, second rebaseContinue() must succeed, got: "
+                + secondContinue.getStatus());
+    }
+
+    @Test
+    void rebaseContinue_bothConflictsResolved_repositoryReturnedToSafeState() throws Exception {
+        startTwoConflictRebase();
+        resolveConflict("resolved-B\n");
+        service.rebaseContinue();
+        resolveConflict("resolved-D\n");
+        service.rebaseContinue();
+
+        assertEquals(RepositoryState.SAFE, service.getRepositoryState());
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
@@ -256,6 +400,100 @@ class GitRepoServiceRebaseTest {
         writeFile("file.txt", content);
         try (Git git = new Git(repository)) {
             git.add().addFilepattern("file.txt").call();
+        }
+    }
+
+    /**
+     * Creates the two-branch history (A→C on master, A→B on feature) but does
+     * <em>not</em> start the rebase.  Returns the full SHA of master HEAD (C)
+     * for use as the upstream in {@link GitRepoService#interactiveRebase}.
+     *
+     * <pre>
+     *   master : A ──► C  (file.txt = "master version")
+     *   feature: A ──► B  (file.txt = "feature version")   ← HEAD
+     * </pre>
+     */
+    private String setupTwoBranchConflictHistory() throws Exception {
+        try (Git git = new Git(repository)) {
+            writeFile("file.txt", "original content\n");
+            git.add().addFilepattern("file.txt").call();
+            RevCommit commitA = git.commit().setMessage("initial commit").call();
+
+            writeFile("file.txt", "master version\n");
+            git.add().addFilepattern("file.txt").call();
+            RevCommit commitC = git.commit().setMessage("master change").call();
+            String masterSha = commitC.getName();
+
+            git.checkout().setCreateBranch(true).setName("feature")
+                    .setStartPoint(commitA).call();
+            writeFile("file.txt", "feature version\n");
+            git.add().addFilepattern("file.txt").call();
+            git.commit().setMessage("feature change").call();
+
+            return masterSha;
+        }
+    }
+
+    /**
+     * Builds a list of {@code PICK} {@link InteractiveRebaseDialog.RebaseStep}s for
+     * all commits between HEAD and {@code masterSha} (i.e. the commits that would be
+     * rebased), in the newest-first order expected by
+     * {@link GitRepoService#interactiveRebase}.
+     */
+    private List<InteractiveRebaseDialog.RebaseStep> buildPickSteps(String masterSha)
+            throws Exception {
+        return service.getCommitsInRange(masterSha).stream()
+                .map(c -> new InteractiveRebaseDialog.RebaseStep(
+                        InteractiveRebaseDialog.RebaseAction.PICK,
+                        c.getName(), c.getShortMessage()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Creates a history where <em>two</em> feature commits both conflict with master,
+     * and starts the interactive rebase (stops at the first conflict).
+     *
+     * <pre>
+     *   master : A ──► C  (file.txt = "master version")
+     *   feature: A ──► B  (file.txt = "feature-B")
+     *              └──► D  (file.txt = "feature-D")   ← HEAD
+     *
+     *   rebase feature onto master → stops at B (conflict)
+     * </pre>
+     *
+     * After resolving B, a second {@link GitRepoService#rebaseContinue()} stops at D
+     * (which also conflicts because file.txt baseline shifted under it).
+     */
+    private void startTwoConflictRebase() throws Exception {
+        try (Git git = new Git(repository)) {
+            writeFile("file.txt", "original content\n");
+            git.add().addFilepattern("file.txt").call();
+            RevCommit commitA = git.commit().setMessage("initial commit").call();
+
+            writeFile("file.txt", "master version\n");
+            git.add().addFilepattern("file.txt").call();
+            git.commit().setMessage("master change").call();
+
+            git.checkout().setCreateBranch(true).setName("feature")
+                    .setStartPoint(commitA).call();
+
+            writeFile("file.txt", "feature-B\n");
+            git.add().addFilepattern("file.txt").call();
+            git.commit().setMessage("feature change B").call();
+
+            writeFile("file.txt", "feature-D\n");
+            git.add().addFilepattern("file.txt").call();
+            git.commit().setMessage("feature change D").call();
+
+            git.rebase()
+                    .setUpstream("master")
+                    .runInteractively(new RebaseCommand.InteractiveHandler() {
+                        @Override
+                        public void prepareSteps(List<RebaseTodoLine> steps) { /* keep all as PICK */ }
+                        @Override
+                        public String modifyCommitMessage(String msg) { return msg; }
+                    })
+                    .call();
         }
     }
 
