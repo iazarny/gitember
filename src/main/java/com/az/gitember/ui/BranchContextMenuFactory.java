@@ -46,9 +46,10 @@ public class BranchContextMenuFactory {
         menu.add(checkoutItem);
 
         // Create branch
-        JMenuItem createBranchItem = new JMenuItem("Create branch ...");
+        boolean isRemote = ScmBranch.BranchType.REMOTE.equals(branch.getBranchType());
+        JMenuItem createBranchItem = new JMenuItem(isRemote ? "Create local branch ..." : "Create branch ...");
         createBranchItem.addActionListener(e ->
-                CreateBranchHandler.showAndExecute(parent, statusBar, branch.getFullName()));
+                CreateBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), isRemote));
         menu.add(createBranchItem);
 
         // Merge and Rebase - only if not current branch and not a tag

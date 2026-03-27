@@ -1,6 +1,7 @@
 package com.az.gitember.handler;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.StatusBar;
 
 import javax.swing.*;
@@ -40,9 +41,30 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     /**
      * Prompts user for branch name and executes if confirmed.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar, String baseBranchFullName) {
-        String name = JOptionPane.showInputDialog(parent,
-                "New branch name:", "Create Branch", JOptionPane.PLAIN_MESSAGE);
+    public static void showAndExecute(Component parent, StatusBar statusBar, String baseBranchFullName, boolean isRemote) {
+        String newBranchName = "New branch name:";
+        String branchTitle = "Create Branch";
+        if (isRemote) {
+             newBranchName = "New local branch name:";
+             branchTitle = "Create local branch";
+        }
+        //String name = JOptionPane.showInputDialog(parent, newBranchName, branchTitle , JOptionPane.PLAIN_MESSAGE);
+        String namePreset = "";
+        if (isRemote) {
+            namePreset = GitemberUtil.getLastPart(baseBranchFullName);
+        }
+
+
+        String name = (String) JOptionPane.showInputDialog(
+                parent,
+                newBranchName,
+                branchTitle,
+                JOptionPane.PLAIN_MESSAGE,
+                null,        // icon
+                null,        // selectionValues (null = free text)
+                namePreset
+        );
+
         if (name != null && !name.isBlank()) {
             new CreateBranchHandler(parent, statusBar, baseBranchFullName, name.trim()).execute();
         }
