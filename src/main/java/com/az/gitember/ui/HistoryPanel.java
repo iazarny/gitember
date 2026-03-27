@@ -253,6 +253,15 @@ public class HistoryPanel extends JPanel {
         splitPane.setResizeWeight(0.65);
 
         add(splitPane, BorderLayout.CENTER);
+
+        // Reload history whenever a pull (or other background operation) requests it
+        Context.addPropertyChangeListener(Context.PROP_HISTORY_REFRESH, evt ->
+                SwingUtilities.invokeLater(() -> {
+                    if (lastTreeName != null) {
+                        loadHistory(lastTreeName, lastAllHistory);
+                    }
+                })
+        );
     }
 
     // ── Search logic ──────────────────────────────────────────────────────────

@@ -36,6 +36,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     @Override
     protected void onSuccess(PullOperationResult result) {
         statusBar.setStatus("Pull completed: " + result.toStatusString());
+        Context.refreshHistory();
         new PullResultDialog(parent, result).setVisible(true);
     }
 }
