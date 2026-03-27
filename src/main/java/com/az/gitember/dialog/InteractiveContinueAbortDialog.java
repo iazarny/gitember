@@ -18,15 +18,18 @@ import java.util.logging.Logger;
  * Non-modal, always-on-top floating dialog shown while an interactive rebase
  * is paused ({@link RepositoryState#REBASING_INTERACTIVE}).
  *
- * <p>Has exactly two buttons (created via {@link Util#createButton}):
+ * <p>Has three buttons:
  * <ul>
  *   <li><b>Continue</b> – after the user stages resolved files, runs
  *       {@code git rebase --continue}.</li>
+ *   <li><b>Skip</b> – runs {@code git rebase --skip}, discarding the current
+ *       empty/unneeded commit (needed when {@code --continue} returns
+ *       {@link RebaseResult.Status#NOTHING_TO_COMMIT}).</li>
  *   <li><b>Abort</b> – runs {@code git rebase --abort} and restores the
  *       original branch state.</li>
  * </ul>
  *
- * Both operations run on a background thread.  When done the dialog disposes
+ * All operations run on a background thread.  When done the dialog disposes
  * itself and invokes the {@code onComplete} callback on the EDT (typically a
  * history-panel refresh).
  *
@@ -44,13 +47,16 @@ public class InteractiveContinueAbortDialog extends JDialog {
     private final StatusBar statusBar;
     private final Runnable  onComplete;
 
+    /** Which git rebase sub-command to invoke. */
+    private enum Op { CONTINUE, SKIP, ABORT }
+
     // ── Constructor ───────────────────────────────────────────────────────────
 
     /**
      * @param owner           owning frame (may be {@code null})
      * @param conflicts       list of conflicting file paths, or {@code null}/empty
      * @param currentRevision short description of the commit that caused the stop
-     *                        (e.g. "abc1234 - Commit message"), or {@code null}
+     *                        (e.g. "abc1234 – Commit message"), or {@code null}
      * @param statusBar       application status bar for progress feedback
      * @param onComplete      called on the EDT after the operation finishes; may be {@code null}
      */
@@ -82,10 +88,12 @@ public class InteractiveContinueAbortDialog extends JDialog {
             for (String f : conflicts) {
                 sb.append("<li><tt>").append(f).append("</tt></li>");
             }
-            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.");
+            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.<br>"
+                    + "If the commit becomes empty after resolution, use <b>Skip</b>.");
         } else {
             sb.append("Resolve any conflicts and <b>stage</b> the files,<br>"
-                    + "then click <b>Continue</b> — or <b>Abort</b> to cancel.");
+                    + "then click <b>Continue</b> — or <b>Skip</b> if the commit is empty,<br>"
+                    + "or <b>Abort</b> to cancel.");
         }
         sb.append("</html>");
         JLabel bodyLabel = new JLabel(sb.toString());
@@ -101,16 +109,23 @@ public class InteractiveContinueAbortDialog extends JDialog {
                 "Stage resolved files, then continue the rebase",
                 FontAwesomeSolid.PLAY);
 
+        JButton skipBtn = Util.createButton(
+                "Skip",
+                "Discard the current (empty) commit and continue with the next one",
+                FontAwesomeSolid.FORWARD);
+
         JButton abortBtn = Util.createButton(
                 "Abort",
                 "Abort the interactive rebase and restore the original branch",
                 FontAwesomeSolid.BAN);
 
-        continueBtn.addActionListener(e -> performOperation(true));
-        abortBtn   .addActionListener(e -> performOperation(false));
+        continueBtn.addActionListener(e -> performOperation(Op.CONTINUE));
+        skipBtn    .addActionListener(e -> performOperation(Op.SKIP));
+        abortBtn   .addActionListener(e -> performOperation(Op.ABORT));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
         btnPanel.add(continueBtn);
+        btnPanel.add(skipBtn);
         btnPanel.add(abortBtn);
 
         // ── Layout ────────────────────────────────────────────────────────────
@@ -119,7 +134,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
         getContentPane().add(btnPanel,     BorderLayout.SOUTH);
 
         pack();
-        setMinimumSize(new Dimension(360, getHeight()));
+        setMinimumSize(new Dimension(380, getHeight()));
 
         // Bottom-right of owner, or screen-centre as fallback
         if (owner != null) {
@@ -133,20 +148,26 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
     // ── Private operations ────────────────────────────────────────────────────
 
-    private void performOperation(boolean doContinue) {
-        String label = doContinue ? "Rebase continue" : "Rebase abort";
+    private void performOperation(Op op) {
+        String label = switch (op) {
+            case CONTINUE -> "Rebase continue";
+            case SKIP     -> "Rebase skip";
+            case ABORT    -> "Rebase abort";
+        };
         statusBar.setStatus(label + "\u2026");
         statusBar.showProgress(true);
 
-        // Disable buttons to prevent double-click
+        // Disable all buttons to prevent double-click
         disableButtons();
 
         new SwingWorker<RebaseResult, Void>() {
             @Override
             protected RebaseResult doInBackground() throws Exception {
-                RebaseResult r = doContinue
-                        ? Context.getGitRepoService().rebaseContinue()
-                        : Context.getGitRepoService().rebaseAbort();
+                RebaseResult r = switch (op) {
+                    case CONTINUE -> Context.getGitRepoService().rebaseContinue();
+                    case SKIP     -> Context.getGitRepoService().rebaseSkip();
+                    case ABORT    -> Context.getGitRepoService().rebaseAbort();
+                };
                 Context.updateAll();
                 return r;
             }
@@ -159,8 +180,19 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     RebaseResult.Status status = result.getStatus();
                     statusBar.setStatus(label + ": " + status);
 
-                    if (doContinue && status == RebaseResult.Status.STOPPED) {
-                        // More conflicts — reopen with updated result
+                    if (op != Op.ABORT && status == RebaseResult.Status.STOPPED) {
+                        // Another conflict — reopen with updated info
+                        reopenWith(result);
+                        return;
+                    }
+
+                    // Guard: if the rebase is still paused even though no STOPPED was
+                    // returned (e.g. NOTHING_TO_COMMIT after continue), the rebase is
+                    // NOT finished. Reopen the dialog so the user can skip or abort
+                    // rather than silently losing the in-progress state.
+                    if (op != Op.ABORT
+                            && Context.getGitRepoService().getRepositoryState()
+                               == RepositoryState.REBASING_INTERACTIVE) {
                         reopenWith(result);
                         return;
                     }
@@ -172,20 +204,21 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     log.log(Level.WARNING, label + " failed", cause);
                     statusBar.setStatus(label + " failed: " + cause.getMessage());
 
-                    // If a 'continue' failed but the rebase is still in progress
+                    // If continue/skip threw but the rebase is still in progress
                     // (e.g. UnmergedPathsException — user clicked Continue before
-                    // staging all resolved files), keep the dialog open so they
-                    // can fix the issue and retry rather than leaving the repo stuck.
-                    if (doContinue && Context.getGitRepoService().getRepositoryState()
-                            == RepositoryState.REBASING_INTERACTIVE) {
+                    // staging all resolved files), keep the dialog open so the
+                    // user can fix the issue and retry.
+                    if (op != Op.ABORT
+                            && Context.getGitRepoService().getRepositoryState()
+                               == RepositoryState.REBASING_INTERACTIVE) {
                         enableButtons();
                         String msg = cause instanceof UnmergedPathsException
-                                ? "Some conflict markers are still present.\n"
+                                ? "Some conflict markers are still present.<br>"
                                   + "Resolve and <b>stage</b> all conflicted files, then click <b>Continue</b>."
-                                : "Continue failed: " + cause.getMessage();
+                                : label + " failed: " + cause.getMessage();
                         JOptionPane.showMessageDialog(InteractiveContinueAbortDialog.this,
                                 "<html>" + msg + "</html>",
-                                "Rebase Continue Failed", JOptionPane.WARNING_MESSAGE);
+                                "Rebase Operation Failed", JOptionPane.WARNING_MESSAGE);
                         return;
                     }
 
@@ -250,7 +283,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
         String revision = null;
         if (result != null && result.getCurrentCommit() != null) {
             revision = result.getCurrentCommit().getName().substring(0, 7)
-                    + " – " + result.getCurrentCommit().getShortMessage();
+                    + " \u2013 " + result.getCurrentCommit().getShortMessage();
         }
         showIfRebaseInProgress(owner,
                 result != null ? result.getConflicts() : null,

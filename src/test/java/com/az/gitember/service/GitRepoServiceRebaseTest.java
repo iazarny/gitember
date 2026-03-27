@@ -276,6 +276,72 @@ class GitRepoServiceRebaseTest {
                 "Repository must remain in REBASING_INTERACTIVE after a failed continue");
     }
 
+    // ── Tests: NOTHING_TO_COMMIT and rebaseSkip ───────────────────────────────
+
+    /**
+     * When the user resolves a conflict by accepting the master (HEAD) version —
+     * i.e. the working-tree content after resolution is identical to the base —
+     * JGit's {@code rebaseContinue()} returns {@link RebaseResult.Status#NOTHING_TO_COMMIT}
+     * because the resulting commit would be empty.
+     */
+    @Test
+    void rebaseContinue_resolvedToSameContentAsHead_returnsNothingToCommit() throws Exception {
+        startConflictingRebase();
+        resolveConflict("master version\n"); // same content as HEAD → empty commit
+
+        RebaseResult result = service.rebaseContinue();
+
+        assertEquals(RebaseResult.Status.NOTHING_TO_COMMIT, result.getStatus(),
+                "Resolving to HEAD content should produce NOTHING_TO_COMMIT");
+    }
+
+    /**
+     * After {@code NOTHING_TO_COMMIT} the rebase is NOT finished — the repository
+     * must still be in {@link RepositoryState#REBASING_INTERACTIVE} so the dialog
+     * can prompt the user to click Skip or Abort.
+     */
+    @Test
+    void rebaseContinue_resolvedToSameContentAsHead_repositoryRemainsInRebasingInteractiveState()
+            throws Exception {
+        startConflictingRebase();
+        resolveConflict("master version\n");
+        service.rebaseContinue(); // returns NOTHING_TO_COMMIT
+
+        assertEquals(RepositoryState.REBASING_INTERACTIVE, service.getRepositoryState(),
+                "Repository must remain in REBASING_INTERACTIVE after NOTHING_TO_COMMIT");
+    }
+
+    /**
+     * After a {@code NOTHING_TO_COMMIT}, calling {@code rebaseSkip()} must
+     * discard the empty commit and complete the rebase successfully.
+     */
+    @Test
+    void rebaseSkip_afterNothingToCommit_returnsSuccessful() throws Exception {
+        startConflictingRebase();
+        resolveConflict("master version\n");
+        service.rebaseContinue(); // NOTHING_TO_COMMIT
+
+        RebaseResult result = service.rebaseSkip();
+
+        assertTrue(result.getStatus().isSuccessful(),
+                "rebaseSkip() after NOTHING_TO_COMMIT must return a successful status");
+    }
+
+    /**
+     * After {@code rebaseSkip()} the rebase must be fully finished —
+     * repository state must return to {@link RepositoryState#SAFE}.
+     */
+    @Test
+    void rebaseSkip_afterNothingToCommit_repositoryReturnedToSafeState() throws Exception {
+        startConflictingRebase();
+        resolveConflict("master version\n");
+        service.rebaseContinue(); // NOTHING_TO_COMMIT
+        service.rebaseSkip();
+
+        assertEquals(RepositoryState.SAFE, service.getRepositoryState(),
+                "Repository must be SAFE after rebaseSkip() completes");
+    }
+
     // ── Tests: multiple conflicting commits ───────────────────────────────────
 
     /**

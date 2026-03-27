@@ -581,6 +581,18 @@ public class GitRepoService {
     }
 
     /**
+     * Runs {@code git rebase --skip}, discarding the current commit and continuing
+     * with the next one.  Use this when {@link #rebaseContinue()} returns
+     * {@link RebaseResult.Status#NOTHING_TO_COMMIT} (the conflict was resolved by
+     * accepting the upstream version, producing an empty commit).
+     */
+    public RebaseResult rebaseSkip() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase().setOperation(RebaseCommand.Operation.SKIP).call();
+        }
+    }
+
+    /**
      * @param upstream the name of the upstream branch
      * @return rebase result
      * @throws Exception * @throws IOException in case of error
