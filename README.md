@@ -1,4 +1,6 @@
-# Gitember v 3
+#
+
+ Gitember v 3
 ---
 A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightweight, and packed with features that make everyday Git work a pleasure.
 
