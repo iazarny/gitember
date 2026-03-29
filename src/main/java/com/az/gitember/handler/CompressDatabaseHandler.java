@@ -3,6 +3,7 @@ package com.az.gitember.handler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -12,6 +13,23 @@ public class CompressDatabaseHandler extends AbstractAsyncHandler<Void> {
 
     public CompressDatabaseHandler(Component parent, StatusBar statusBar) {
         super(parent, statusBar);
+    }
+
+    @Override
+    public void execute() {
+        int choice = JOptionPane.showConfirmDialog(
+                parent,
+                "Database compression (git gc) can take a significant amount of time\n"
+                        + "depending on the repository size.\n\n"
+                        + "Do not perform any other git operations while compression is running.\n\n"
+                        + "Start compression?",
+                "Compress Database",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            super.execute();
+        }
     }
 
     @Override
@@ -28,5 +46,10 @@ public class CompressDatabaseHandler extends AbstractAsyncHandler<Void> {
     @Override
     protected void onSuccess(Void result) {
         statusBar.setStatus("Database compressed");
+        JOptionPane.showMessageDialog(
+                parent,
+                "Database compressed successfully.",
+                "Compress Database",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }
