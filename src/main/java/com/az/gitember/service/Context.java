@@ -399,11 +399,12 @@ public class Context {
         updateStatus(null);
         try {
             updateBranches();
+            updateTags();
+            updateStash();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot make updates  ", e);
         }
-        updateTags();
-        updateStash();
+
     }
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor) {

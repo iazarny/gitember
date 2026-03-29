@@ -969,8 +969,10 @@ public class GitRepoService {
                     log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
 
                     getSearchService().dropIndex();
-                    Context.getCurrentProject().get().setIndexed(false);
-                    Context.saveSettings();
+                    if (Context.getCurrentProject().isPresent()) {
+                        Context.getCurrentProject().get().setIndexed(false);
+                        Context.saveSettings();
+                    }
                 }
 
             }
@@ -983,7 +985,7 @@ public class GitRepoService {
             threadSearch2.join();
             threadSearch1.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "thread join excption ", e);
         }
 
         return searchResultMap;
@@ -1105,14 +1107,15 @@ public class GitRepoService {
             if (objectId == null) {
                 throw new IOException("Cannot resolve commit: " + commitSha);
             }
-            RevWalk revWalk = new RevWalk(repository);
-            RevObject revObject = revWalk.parseAny(objectId);
-            return git.tag()
-                    .setName(tagName)
-                    .setObjectId(revObject)
-                    .setForceUpdate(true)
-                    .setAnnotated(true)
-                    .call();
+            try (RevWalk revWalk = new RevWalk(repository))  {
+                RevObject revObject = revWalk.parseAny(objectId);
+                return git.tag()
+                        .setName(tagName)
+                        .setObjectId(revObject)
+                        .setForceUpdate(true)
+                        .setAnnotated(true)
+                        .call();
+            }
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
@@ -1459,29 +1462,6 @@ public class GitRepoService {
         }
     }
 
-    /**
-     * Get branch from given commit name. revCommit.getName()
-     *
-     * @param commitName or null ifcommit not found.
-     */
-    public String getBranchName(String commitName) {
-
-        try (Git git = new Git(repository)) {
-
-            List<Ref> branchLst = git.branchList().setContains(commitName).call();
-            if (!branchLst.isEmpty()) {
-                //TODO not sure is it right
-                return branchLst.get(0).getName();
-            }
-
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-
-    }
-
 
     public void removeFile(final String fileName) throws Exception {
         try (Git git = new Git(repository)) {
@@ -1784,6 +1764,7 @@ public class GitRepoService {
                     });
                 }
                 editor.commit();
+                dc.unlock();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
                 dc.unlock();
@@ -2803,14 +2784,14 @@ public class GitRepoService {
         }
 
         final String reporitoryUrl = params.getUrl();
+        if (StringUtils.isNotBlank(reporitoryUrl)) {
+            if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
+                StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
+                fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
+                fbcOrig.save();
 
-        if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
-            StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
-            fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
-            fbcOrig.save();
-
-        } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
-                || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
+            } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
+                    || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
             /*cmd.setTransportConfigCallback(
                     new SshTransportConfigCallback(
                             params.getPathToKey(),
@@ -2818,21 +2799,22 @@ public class GitRepoService {
                     )
             );*/
 
-            File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
+                File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
 
-            SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
-                    .setPreferredAuthentications("publickey")
-                    .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
-                    .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp) {
-                        @Override
-                        protected char[] getPassword(URIish uri, String message) {
-                            return "".toCharArray();//passphrase.toCharArray();
-                        }
-                    }).build(null);
+                SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
+                        .setPreferredAuthentications("publickey")
+                        .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
+                        .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp) {
+                            @Override
+                            protected char[] getPassword(URIish uri, String message) {
+                                return "".toCharArray();//passphrase.toCharArray();
+                            }
+                        }).build(null);
 
-            cmd.setTransportConfigCallback(
-                    transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
+                cmd.setTransportConfigCallback(
+                        transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
 
+            }
         }
 
     }

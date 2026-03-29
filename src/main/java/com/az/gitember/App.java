@@ -7,6 +7,9 @@ import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
+import org.eclipse.jgit.util.FS;
 
 import javax.swing.*;
 import java.io.File;
@@ -22,6 +25,14 @@ public class App {
     public static void main(String[] args) {
         // GPU acceleration — must be set before Java2D initialises (before invokeLater)
         setupAcceleration();
+
+        // Register apache sshd as the global default SSH factory.
+        // This ensures Ed25519 / ECDSA / OpenSSH-format keys work even when a transport
+        // callback is not explicitly set (e.g. when the remote URL is unavailable).
+        SshSessionFactory.setInstance(new SshdSessionFactoryBuilder()
+                .setHomeDirectory(FS.DETECTED.userHome())
+                .setSshDirectory(new File(FS.DETECTED.userHome(), ".ssh"))
+                .build(null));
 
         // Use native macOS screen menu bar
         System.setProperty("apple.laf.useScreenMenuBar", "true");
