@@ -61,6 +61,11 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.logging.Level;
@@ -3021,27 +3026,45 @@ public class GitRepoService {
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
         final Ref head = repository.exactRef(Constants.HEAD);
-        final Map<String, Map> rez = new TreeMap<>();
+        final ObjectId headId = head.getObjectId();
+        final ConcurrentHashMap<String, Map> rez = new ConcurrentHashMap<>();
         final Map<String, Integer> totalLines = new TreeMap<>();
         final Map<String, Integer> commitsMap = new HashMap<>();
 
-        try (RevWalk walk = new RevWalk(repository)) {
-            final RevCommit commit = walk.parseCommit(head.getObjectId());
-            final Iterator<String> pathIter = files.iterator();
+        int threads = Math.max(1, Math.min(files.size(), Runtime.getRuntime().availableProcessors()));
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        AtomicInteger done = new AtomicInteger(0);
 
-            progressMonitor.beginTask(taskName, files.size());
+        progressMonitor.beginTask(taskName, files.size());
 
-            int cnt = 0;
+        try {
+            List<Future<Void>> futures = files.stream()
+                    .map(path -> pool.submit((java.util.concurrent.Callable<Void>) () -> {
+                        BlameCommand blamer = new BlameCommand(repository);
+                        blamer.setStartCommit(headId);
+                        blamer.setFilePath(path);
+                        BlameResult blame = blamer.call();
+                        rez.put(path, countLines(blame));
+                        synchronized (progressMonitor) {
+                            progressMonitor.update(1);
+                        }
+                        done.incrementAndGet();
+                        return null;
+                    }))
+                    .toList();
 
-            while (pathIter.hasNext()) {
-                final String path = pathIter.next();
-                final BlameCommand blamer = new BlameCommand(repository);
-                blamer.setStartCommit(commit);
-                blamer.setFilePath(path);
-                final BlameResult blame = blamer.call();
-                rez.put(path, countLines(blame));
-                progressMonitor.update(cnt++);
+            pool.shutdown();
+
+            for (Future<Void> f : futures) {
+                try {
+                    f.get();
+                } catch (ExecutionException ex) {
+                    Throwable cause = ex.getCause();
+                    throw cause instanceof Exception e ? e : new RuntimeException(cause);
+                }
             }
+        } finally {
+            pool.shutdownNow();
         }
 
         rez.values().forEach(
