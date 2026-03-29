@@ -40,6 +40,9 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem updateSubmodulesItem;
     private final JMenuItem syncSubmodulesItem;
 
+    // Repository maintenance
+    private final JMenuItem compressDatabaseItem;
+
     // Branch menu (enabled only when a repo is open)
     private final JMenu     branchMenu;
     private final JMenuItem pullItem;
@@ -141,6 +144,9 @@ public class MainMenuBar extends JMenuBar {
         submodulesMenu.add(updateSubmodulesItem);
         submodulesMenu.add(syncSubmodulesItem);
 
+        compressDatabaseItem = new JMenuItem("Compress Database", KeyEvent.VK_Z);
+        compressDatabaseItem.setToolTipText("Run git gc — pack loose objects and prune unreachable data");
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
         repoMenu.addSeparator();
@@ -148,6 +154,8 @@ public class MainMenuBar extends JMenuBar {
         repoMenu.add(submodulesMenu);
         repoMenu.add(credentialsItem);
         repoMenu.add(projectSettingsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(compressDatabaseItem);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
 
@@ -310,6 +318,7 @@ public class MainMenuBar extends JMenuBar {
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
     public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
+    public void addCompressDatabaseListener(ActionListener l)    { compressDatabaseItem.addActionListener(l); }
     public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
     public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
