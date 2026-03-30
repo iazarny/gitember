@@ -51,10 +51,22 @@ public class Context {
     public static final String PROP_SCM_STAT_BRANCH_LIVE_TIME = "scmStatBranchLiveTime";
     public static final String PROP_SCM_STAT_LIST_PARAM = "scmStatListParam";
     public static final String PROP_SEARCH_VALUE = "searchValue";
-    public static final String PROP_HISTORY_REFRESH = "historyRefresh";
+    public static final String PROP_HISTORY_REFRESH      = "historyRefresh";
+    public static final String PROP_WORKING_COPY_REFRESH = "workingCopyRefresh";
     public static final String PROP_SEARCH_RESULT = "searchResult";
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
+
+    public enum ActiveView { WORKING_COPY, HISTORY }
+    private static ActiveView activeView = ActiveView.HISTORY;
+
+    public static void setActiveView(ActiveView view) { activeView = view; }
+    public static ActiveView getActiveView()          { return activeView; }
+
+    /** Signals listeners to reload the working-copy status list. */
+    public static void refreshWorkingCopy() {
+        pcs.firePropertyChange(PROP_WORKING_COPY_REFRESH, false, true);
+    }
 
     // Fields
     private static String repositoryPath;

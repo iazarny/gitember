@@ -139,6 +139,13 @@ public class MainFrame extends JFrame {
         Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, this::onWorkingBranchChanged);
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoPathChanged);
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, this::onStatusListChanged);
+        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, e ->
+                new SwingWorker<Void, Void>() {
+                    @Override protected Void doInBackground() {
+                        Context.updateStatus(null, true);
+                        return null;
+                    }
+                }.execute());
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
@@ -614,6 +621,7 @@ public class MainFrame extends JFrame {
 
             switch (data.type()) {
                 case WORKING_COPY -> {
+                    Context.setActiveView(Context.ActiveView.WORKING_COPY);
                     contentPanel.setContent(workingCopyPanel);
                     workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
                     toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
@@ -625,16 +633,19 @@ public class MainFrame extends JFrame {
                     }.execute();
                 }
                 case HISTORY -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     contentPanel.setContent(historyPanel);
                     historyPanel.loadHistory(null, true);
                 }
                 case BRANCH -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch branch) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(branch.getFullName(), false);
                     }
                 }
                 case TAG -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch tag) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(tag.getFullName(), false);
