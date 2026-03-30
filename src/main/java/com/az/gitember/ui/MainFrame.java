@@ -5,6 +5,7 @@ import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.dialog.InitDialog;
+import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.LfsManageDialog;
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.dialog.StatDialog;
@@ -211,6 +212,21 @@ public class MainFrame extends JFrame {
         menuBar.addCommitListener(e -> showCommitDialog());
         toolBar.addCommitListener(e -> showCommitDialog());
 
+        // Interactive Rebase (from menu: prompts for a base commit SHA)
+        menuBar.addInteractiveRebaseListener(e -> {
+            String sha = JOptionPane.showInputDialog(this,
+                    "Enter the SHA of the base commit\n"
+                    + "(all commits from HEAD down to, but not including, this commit will be rebased):",
+                    "Interactive Rebase", JOptionPane.PLAIN_MESSAGE);
+            if (sha != null && !sha.isBlank()) {
+                String trimmed = sha.trim();
+                com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
+                        this, statusBar, trimmed,
+                        trimmed.substring(0, Math.min(7, trimmed.length())),
+                        () -> historyPanel.loadHistory(null, true));
+            }
+        });
+
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());
@@ -232,11 +248,16 @@ public class MainFrame extends JFrame {
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
         menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
+        menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this, statusBar).execute());
         menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
         menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
         // Credentials
         menuBar.addCredentialsListener(e -> showCredentialsDialog());
+
+        // Project settings (author / committer identity)
+        menuBar.addProjectSettingsListener(e ->
+                new com.az.gitember.dialog.ProjectSettingsDialog(this).setVisible(true));
 
         // Settings
         menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
@@ -266,6 +287,9 @@ public class MainFrame extends JFrame {
                     refreshProjectLists();
                     statusBar.clearProgress();
                     statusBar.setStatus("Repository opened");
+                    InteractiveContinueAbortDialog.showIfRebaseInProgress(
+                            MainFrame.this, statusBar,
+                            () -> historyPanel.loadHistory(null, true));
                 } catch (Exception e) {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
                     log.log(Level.WARNING, "Failed to open project", cause);
@@ -656,6 +680,17 @@ public class MainFrame extends JFrame {
             }
         }
         return icons;
+    }
+
+    /**
+     * Switches the main content area to the history view and selects the commit
+     * whose full SHA starts with {@code sha} (7-char short SHA is sufficient).
+     * History is (re-)loaded from scratch so that the commit is always found.
+     */
+    public void showCommitInHistory(String sha) {
+        contentPanel.setContent(historyPanel);
+        toolBar.mergeHistoryToolbar(historyPanel);
+        historyPanel.loadHistoryAndSelect(sha);
     }
 
     public StatusBar getStatusBar() {

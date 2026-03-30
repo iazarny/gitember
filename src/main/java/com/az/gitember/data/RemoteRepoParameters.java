@@ -19,6 +19,8 @@ public class RemoteRepoParameters {
     private String url = "";
     private String destinationFolder = "";
     private String keyPassPhrase = "";
+    /** Shallow clone depth: 0 means full clone; positive N = last N commits only. */
+    private int depth = 0;
 
     public String getUrl() {
         return url;
@@ -191,6 +193,14 @@ public class RemoteRepoParameters {
         if (StringUtils.isBlank(accessToken) && StringUtils.isBlank(userName)) {
             extractCredentialsFromUrl(this.url);
         }
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = Math.max(0, depth);
     }
 
     public RemoteRepoParameters() {

@@ -155,18 +155,21 @@ class DiffOverviewPanel extends JPanel {
         int n = lines.length;
 
         // ── Build per-line colour lookup ──────────────────────────────────────
-        Color dimColor = SyntaxStyleUtil.isDarkTheme()
-                ? new Color(200, 200, 200, 70)
-                : new Color(50,  50,  50,  70);
+        Color dimColor = UIManager.getColor("Panel.background");
+        if (SyntaxStyleUtil.isDarkTheme()) {
+            dimColor = dimColor.brighter();
+        } else {
+            dimColor = new Color(dimColor.getRed()-16, dimColor.getBlue()-16, dimColor.getBlue()-16);//dimColor.darker();
+        }
         Color[] lineColor = new Color[n];
         java.util.Arrays.fill(lineColor, dimColor);
 
         if (editList != null) {
             for (Edit edit : editList) {
                 Color c = switch (edit.getType()) {
-                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBg() : null;
-                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBg( )  : null;
-                    case REPLACE -> SyntaxStyleUtil.changedBg();
+                    case DELETE  -> isLeft  ? SyntaxStyleUtil.deletedBgDO() : null;
+                    case INSERT  -> !isLeft ? SyntaxStyleUtil.addedBgDO( )  : null;
+                    case REPLACE -> SyntaxStyleUtil.changedBgDO();
                     default      -> null;
                 };
                 if (c == null) continue;
@@ -204,6 +207,10 @@ class DiffOverviewPanel extends JPanel {
 
             g2.setColor(lineColor[i]);
             g2.drawLine(xStart, lineToY(i, n, panelH), xEnd, lineToY(i, n, panelH));
+            if (dimColor != lineColor[i]) { //hilight changed line.  sense call equals
+                g2.drawLine(xStart, lineToY(i, n, panelH)+1, xEnd, lineToY(i, n, panelH)+1);
+                g2.drawLine(xStart, lineToY(i, n, panelH)+2, xEnd, lineToY(i, n, panelH)+2);
+            }
         }
     }
 

@@ -35,6 +35,11 @@ More info and documentation: https://gitember.org
 
 ## Changes
 
+### 3.1 · April 2026
+
+**GitHub,
+integration**
+
 ### 3.0 · March 2026
 * **GUI migrated from JavaFX to Swing** — dramatically faster startup, smaller install, lower memory footprint
 * **GitHub, GitLab, Bitbucket, Gitea integration** — browse and review Pull Requests directly inside Gitember, avatars, token support
@@ -85,3 +90,8 @@ More info and documentation: https://gitember.org
 ## Background
 
 Started in December 2016 as a weekend experiment to see if JavaFX was suitable for desktop GUI programming. It turned into a full-featured Git client. Version 3 marks the move to Swing for a lighter, faster experience.
+
+How to use
+
+1. From the history panel: right-click any commit → "Interactive Rebase onto here…" — rebases all commits from HEAD down to (but not including) the clicked commit
+2. From the Branch menu: "Interactive Rebase…" — prompts you to enter a base commit SHA

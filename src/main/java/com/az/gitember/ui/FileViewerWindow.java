@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +40,7 @@ public class FileViewerWindow extends JFrame {
     private String  blameCommitSha  = null;
     private String  blameFilePath   = null;
     private boolean blameLoaded     = false;
+    private String  lastBlameClickSha = null;
 
     public FileViewerWindow(String title, String content) {
         this(title, content, title);
@@ -85,6 +88,38 @@ public class FileViewerWindow extends JFrame {
                 0, 0, 0, 1,
                 dark ? new Color(70, 70, 80) : new Color(200, 200, 210)));
         blameScrollPane.setVisible(false);
+
+        // ── Blame context menu & mouse interactions ───────────────────────
+        JPopupMenu blameContextMenu = new JPopupMenu();
+        JMenuItem openInHistoryItem = new JMenuItem("Open commit in History");
+        openInHistoryItem.addActionListener(e -> {
+            if (lastBlameClickSha != null && !lastBlameClickSha.isBlank()) {
+                navigateToHistoryCommit(lastBlameClickSha);
+            }
+        });
+        blameContextMenu.add(openInHistoryItem);
+
+        blameTextArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    lastBlameClickSha = extractShaFromBlamePoint(e.getPoint());
+                    if (lastBlameClickSha != null && !lastBlameClickSha.isBlank()) {
+                        navigateToHistoryCommit(lastBlameClickSha);
+                    }
+                }
+            }
+
+            @Override public void mousePressed(MouseEvent e)  { maybeShowBlameMenu(e); }
+            @Override public void mouseReleased(MouseEvent e) { maybeShowBlameMenu(e); }
+
+            private void maybeShowBlameMenu(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                lastBlameClickSha = extractShaFromBlamePoint(e.getPoint());
+                openInHistoryItem.setEnabled(lastBlameClickSha != null && !lastBlameClickSha.isBlank());
+                blameContextMenu.show(blameTextArea, e.getX(), e.getY());
+            }
+        });
 
         // Sync blame viewport to follow the main viewport (one-way, no model conflicts)
         scrollPane.getViewport().addChangeListener(e -> {
@@ -159,6 +194,23 @@ public class FileViewerWindow extends JFrame {
         annotateBtn.setVisible(true);
     }
 
+    /**
+     * Scrolls to {@code lineNo} (1-based) and highlights that line in amber.
+     * Call after {@code setVisible(true)} or from {@code SwingUtilities.invokeLater}.
+     */
+    public void scrollToAndHighlight(int lineNo) {
+        if (lineNo <= 0) return;
+        try {
+            int zeroLine = lineNo - 1;
+            textArea.addLineHighlight(zeroLine, new Color(0xFF, 0xD0, 0x00, 120));
+            int offset = textArea.getLineStartOffset(zeroLine);
+            textArea.setCaretPosition(offset);
+            textArea.scrollRectToVisible(textArea.modelToView2D(offset).getBounds());
+        } catch (Exception ex) {
+            log.fine("scrollToAndHighlight failed at line " + lineNo + ": " + ex.getMessage());
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private void toggleAnnotation() {
@@ -215,6 +267,32 @@ public class FileViewerWindow extends JFrame {
                 }
             }
         }.execute();
+    }
+
+    /** Extracts the 7-char commit SHA from the annotation line under the given point. */
+    private String extractShaFromBlamePoint(Point p) {
+        try {
+            int offset = blameTextArea.viewToModel2D(p);
+            int line   = blameTextArea.getLineOfOffset(offset);
+            int start  = blameTextArea.getLineStartOffset(line);
+            int end    = blameTextArea.getLineEndOffset(line);
+            String lineText = blameTextArea.getText(start, end - start);
+            if (lineText == null || lineText.length() < 7) return null;
+            String sha = lineText.substring(0, 7).trim();
+            return sha.isEmpty() ? null : sha;
+        } catch (Exception ex) {
+            log.fine("Failed to extract blame SHA: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    /** Brings the main window to front and navigates the history view to the given short SHA. */
+    private void navigateToHistoryCommit(String sha) {
+        javax.swing.JFrame mf = Context.getMainFrame();
+        if (mf instanceof MainFrame mainFrame) {
+            mainFrame.toFront();
+            mainFrame.showCommitInHistory(sha);
+        }
     }
 
     private void saveContent() {

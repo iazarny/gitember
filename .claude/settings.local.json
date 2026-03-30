@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(mvn compile:*)",
+      "Bash(mvn test:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(find ~/.m2 -path \"*/jgit/org.eclipse.jgit/6*/*.jar\" 2>/dev/null | grep -v sources | grep -v javadoc | head -3)",
+      "Bash(jar tf /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar | grep ApplyResult)",
+      "Bash(javap -classpath /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar org.eclipse.jgit.api.ApplyResult)",
+      "Bash(javap -classpath /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar org.eclipse.jgit.api.errors.CheckoutConflictException)",
+      "Bash(grep -n \"class TreeNodeData\\\\|class MainTreeCellRenderer\" /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/*.java)",
+      "Bash(perl -pi -e 's/\\\\r\\\\n/\\\\n/g' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/SearchBar.java && file /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/SearchBar.java)",
+      "Bash(jar -tf /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs/6.8.0.202311291450-r/org.eclipse.jgit.lfs-6.8.0.202311291450-r.jar | grep \"\\\\.class$\" | sed 's/.class$//' | sed 's|/|.|g' | sort)",
+      "Bash(find ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs -name \"*.jar\" 2>/dev/null | head -5)",
+      "Bash(jar tf /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs/6.8.0.202311291450-r/org.eclipse.jgit.lfs-6.8.0.202311291450-r.jar | grep -i \"lfs\\\\|push\\\\|hook\\\\|download\" | head -30)",
+      "Bash(jar tf /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs/6.8.0.202311291450-r/org.eclipse.jgit.lfs-6.8.0.202311291450-r.jar | grep \"\\\\.class\" | grep -v \"internal\\\\|errors\" | head -30)",
+      "Bash(cd /tmp && jar xf /Users/igorazarny/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs/6.8.0.202311291450-r/org.eclipse.jgit.lfs-6.8.0.202311291450-r.jar org/eclipse/jgit/lfs/lib/LfsPointerFilter.class org/eclipse/jgit/lfs/LfsPointer.class && javap -p org/eclipse/jgit/lfs/lib/LfsPointerFilter.class org/eclipse/jgit/lfs/LfsPointer.class 2>&1)",
+      "Bash(jar tf ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar | grep \"CredentialsProvider\")",
+      "Bash(cd /tmp && jar xf ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar org/eclipse/jgit/transport/CredentialsProvider.class && javap -p org/eclipse/jgit/transport/CredentialsProvider.class 2>&1 | grep -i \"default\\\\|static\")",
+      "Bash(jar tf ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.ssh.apache/6.8.0.202311291450-r/org.eclipse.jgit.ssh.apache-6.8.0.202311291450-r.jar | grep -i \"SshdSessionFactory\")",
+      "Bash(javap -p ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.ssh.apache/6.8.0.202311291450-r/org.eclipse.jgit.ssh.apache-6.8.0.202311291450-r.jar org/eclipse/jgit/transport/sshd/SshdSessionFactoryBuilder.class 2>/dev/null | head -60)",
+      "Bash(perl -pi -e 's/\\\\r\\\\n/\\\\n/g' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/handler/LfsFetchHandler.java && file /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/handler/LfsFetchHandler.java)",
+      "Bash(cd /tmp && jar xf ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit.lfs/6.8.0.202311291450-r/org.eclipse.jgit.lfs-6.8.0.202311291450-r.jar org/eclipse/jgit/lfs/Lfs.class && javap -p org/eclipse/jgit/lfs/Lfs.class)",
+      "Bash(cd /tmp && jar xf ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.8.0.202311291450-r/org.eclipse.jgit-6.8.0.202311291450-r.jar org/eclipse/jgit/dircache/DirCacheEntry.class && javap -p org/eclipse/jgit/dircache/DirCacheEntry.class | grep -i \"modified\\\\|length\\\\|setLen\\\\|setLast\")",
+      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*.java\" | xargs file | grep CRLF | head -20)",
+      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*.java\" | xargs file | grep CRLF | wc -l)",
+      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*.java\" | xargs file | grep CRLF | cut -d: -f1 | while read f; do\n  sed -i '' 's/\\\\r//' \"$f\"\ndone\necho \"Done\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"\nimport json\nwith open\\('/Users/igorazarny/.gitember/gitember2.json'\\) as f:\n    d = json.load\\(f\\)\nprint\\('ignoreCompareFiles:', d.get\\('ignoreCompareFiles', 'KEY MISSING'\\)\\)\nprint\\('theme:', d.get\\('theme'\\)\\)\nprint\\('fontSize:', d.get\\('fontSize'\\)\\)\n\")",
+      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*Setting*\" -o -name \"*Config*\" -o -name \"*Preference*\" 2>/dev/null | grep -v target | grep -v \".class\")"
+    ]
+  }
+}

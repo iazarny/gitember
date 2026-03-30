@@ -1,0 +1,6 @@
+https://www.svgrepo.com/svg/447165/github-outline
+https://www.svgrepo.com/vectors/github/
+https://www.svgrepo.com/vectors/gitlab/
+https://www.svgrepo.com/vectors/bitbucket/
+https://www.svgrepo.com/vectors/gitea
+https://www.svgrepo.com/vectors/gitee

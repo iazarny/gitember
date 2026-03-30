@@ -2,9 +2,12 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.handler.CreateTagHandler;
+import com.az.gitember.handler.InteractiveRebaseHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -93,19 +96,23 @@ public class HistoryPanel extends JPanel {
 
         // ── Commit context menu ───────────────────────────────────────────
         JPopupMenu commitMenu = new JPopupMenu();
-        JMenuItem checkoutItem      = new JMenuItem("Checkout");
-        JMenuItem checkoutAsItem    = new JMenuItem("Checkout as…");
-        JMenuItem cherryPickItem    = new JMenuItem("Cherry-pick…");
-        JMenuItem revertItem        = new JMenuItem("Revert commit");
-        JMenuItem resetItem         = new JMenuItem("Reset to commit…");
+        JMenuItem checkoutItem         = new JMenuItem("Checkout");
+        JMenuItem checkoutAsItem       = new JMenuItem("Checkout as…");
+        JMenuItem createTagItem        = new JMenuItem("Create tag …");
+        JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
+        JMenuItem revertItem           = new JMenuItem("Revert commit");
+        JMenuItem resetItem            = new JMenuItem("Reset to commit…");
+        JMenuItem interactiveRebaseItem = new JMenuItem("Interactive Rebase onto here…");
 
         checkoutItem.addActionListener(e -> {
             PlotCommit<PlotLane> commit = selectedCommit();
             if (commit == null) return;
             runCommitAction("Checkout", () -> {
                 Context.getGitRepoService().checkoutRevCommit(commit, null);
+                Context.updateBranches();
+                Context.updateWorkingBranch();
                 return "Checked out " + commit.name().substring(0, 7);
-            });
+            }, true);
         });
 
         checkoutAsItem.addActionListener(e -> {
@@ -118,8 +125,17 @@ public class HistoryPanel extends JPanel {
             if (branchName == null || branchName.isBlank()) return;
             runCommitAction("Checkout as branch", () -> {
                 Context.getGitRepoService().checkoutRevCommit(commit, branchName.trim(), null);
+                Context.updateBranches();
+                Context.updateWorkingBranch();
                 return "Created and checked out branch '" + branchName.trim() + "'";
-            });
+            }, true);
+        });
+
+        createTagItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            CreateTagHandler.showAndExecute(
+                    SwingUtilities.getWindowAncestor(this), statusBar, commit.getName());
         });
 
         cherryPickItem.addActionListener(e -> {
@@ -170,13 +186,31 @@ public class HistoryPanel extends JPanel {
             }, true);
         });
 
+        interactiveRebaseItem.setToolTipText(
+                "Interactively rebase all commits from HEAD down to (but not including) this commit");
+        interactiveRebaseItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            String fullSha    = commit.getName();
+            String displaySha = fullSha.substring(0, 7);
+            // Pass a callback so history reloads only after the rebase completes
+            InteractiveRebaseHandler.showAndExecute(
+                    SwingUtilities.getWindowAncestor(this), statusBar,
+                    fullSha, displaySha,
+                    () -> loadHistory(lastTreeName, lastAllHistory));
+        });
+
         commitMenu.add(checkoutItem);
         commitMenu.add(checkoutAsItem);
+        commitMenu.addSeparator();
+        commitMenu.add(createTagItem);
         commitMenu.addSeparator();
         commitMenu.add(cherryPickItem);
         commitMenu.addSeparator();
         commitMenu.add(revertItem);
         commitMenu.add(resetItem);
+        commitMenu.addSeparator();
+        commitMenu.add(interactiveRebaseItem);
 
         commitTable.addMouseListener(new MouseAdapter() {
             @Override public void mousePressed(MouseEvent ev)  { maybeShowMenu(ev); }
@@ -186,8 +220,14 @@ public class HistoryPanel extends JPanel {
                 if (!ev.isPopupTrigger()) return;
                 int row = commitTable.rowAtPoint(ev.getPoint());
                 if (row < 0) return;
-                if (tableModel.getCommitAt(row) == null) return; // file-history mode
+                PlotCommit<PlotLane> commit = tableModel.getCommitAt(row);
+                if (commit == null) return; // file-history mode
                 commitTable.setRowSelectionInterval(row, row);
+                boolean unpushed = false;
+                try {
+                    unpushed = Context.getGitRepoService().isCommitUnpushed(commit.getName());
+                } catch (Exception ignored) {}
+                interactiveRebaseItem.setEnabled(unpushed);
                 commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
         });
@@ -213,6 +253,15 @@ public class HistoryPanel extends JPanel {
         splitPane.setResizeWeight(0.65);
 
         add(splitPane, BorderLayout.CENTER);
+
+        // Reload history whenever a pull (or other background operation) requests it
+        Context.addPropertyChangeListener(Context.PROP_HISTORY_REFRESH, evt ->
+                SwingUtilities.invokeLater(() -> {
+                    if (lastTreeName != null) {
+                        loadHistory(lastTreeName, lastAllHistory);
+                    }
+                })
+        );
     }
 
     // ── Search logic ──────────────────────────────────────────────────────────
@@ -298,8 +347,46 @@ public class HistoryPanel extends JPanel {
 
     public JTextField getSearchField() { return searchField; }
 
-    @SuppressWarnings("unchecked")
     public void loadHistory(String treeName, boolean allHistory) {
+        loadHistory(treeName, allHistory, null);
+    }
+
+    /** Loads all history and, once loaded, selects the commit whose SHA starts with {@code sha}. */
+    public void loadHistoryAndSelect(String sha) {
+        loadHistory(null, true, () -> selectCommitBySha(sha));
+    }
+
+    /**
+     * Selects the row whose commit SHA starts with {@code sha} and scrolls to it.
+     * Works in both full-history (PlotCommit) and file-history (revision) modes.
+     */
+    public void selectCommitBySha(String sha) {
+        if (sha == null || sha.isBlank()) return;
+        int rowCount = tableModel.getRowCount();
+        for (int i = 0; i < rowCount; i++) {
+            PlotCommit<PlotLane> pc = tableModel.getCommitAt(i);
+            if (pc != null && pc.getName().startsWith(sha)) {
+                commitTable.setRowSelectionInterval(i, i);
+                commitTable.scrollRectToVisible(commitTable.getCellRect(i, 0, true));
+                return;
+            }
+            if (!tableModel.revisions.isEmpty() && i < tableModel.revisions.size()) {
+                ScmRevisionInformation rev = tableModel.revisions.get(i);
+                if (rev != null) {
+                    String fullName = rev.getRevisionFullName();
+                    if (fullName != null && fullName.startsWith(sha)) {
+                        commitTable.setRowSelectionInterval(i, i);
+                        commitTable.scrollRectToVisible(commitTable.getCellRect(i, 0, true));
+                        return;
+                    }
+                }
+            }
+        }
+        log.fine("Commit with SHA prefix '" + sha + "' not found in loaded history");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadHistory(String treeName, boolean allHistory, Runnable afterLoad) {
         lastTreeName   = treeName;
         lastAllHistory = allHistory;
         if (!allHistory) {
@@ -333,6 +420,7 @@ public class HistoryPanel extends JPanel {
                     statusBar.clearProgress();
                     statusBar.setStatus(commits.size() + " commits loaded");
                     refreshLuceneState();
+                    if (afterLoad != null) afterLoad.run();
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load history", e);
                     statusBar.clearProgress();
@@ -405,12 +493,35 @@ public class HistoryPanel extends JPanel {
                     statusBar.setStatus(label + " cancelled.");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, label + " failed", ex);
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    CheckoutConflictException conflict = null;
+                    for (Throwable t = ex; t != null; t = t.getCause()) {
+                        if (t instanceof CheckoutConflictException cce) {
+                            conflict = cce;
+                            break;
+                        }
+                    }
+                    String message;
+                    if (conflict != null && !conflict.getConflictingPaths().isEmpty()) {
+                        message = "Checkout blocked by local changes in:\n\n"
+                                + String.join("\n", conflict.getConflictingPaths());
+                        statusBar.setStatus(label + " failed: checkout conflict in "
+                                + conflict.getConflictingPaths().size() + " file(s)");
+                    } else {
+                        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                        message = cause.getMessage();
+                        statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    }
                     JOptionPane.showMessageDialog(
                             SwingUtilities.getWindowAncestor(HistoryPanel.this),
-                            cause.getMessage(), label + " Error",
+                            message, label + " Error",
                             JOptionPane.ERROR_MESSAGE);
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateBranches();
+                            Context.updateWorkingBranch();
+                            return null;
+                        }
+                    }.execute();
                 }
             }
         }.execute();

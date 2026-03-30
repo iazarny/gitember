@@ -42,6 +42,15 @@ public class Settings {
 
     private String theme;
     private int fontSize = 13;
+    private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
+
+    public Boolean getEnableLeakDetector() {
+        return enableLeakDetector;
+    }
+
+    public void setEnableLeakDetector(Boolean enableLeakDetector) {
+        this.enableLeakDetector = enableLeakDetector;
+    }
 
     public TreeSet<Project> getProjects() {
         return projects;

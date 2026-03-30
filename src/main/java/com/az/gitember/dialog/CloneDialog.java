@@ -23,11 +23,13 @@ public class CloneDialog extends JDialog {
     private final JRadioButton pwdAuthBtn;
     private final JRadioButton tokenAuthBtn;
     private final JPanel authTypePanel;
+    private final JCheckBox shallowCheck;
+    private final JSpinner  depthSpinner;
     private boolean confirmed = false;
 
     public CloneDialog(Frame parent) {
         super(parent, "Clone Repository", true);
-        setSize(500, 370);
+        setSize(500, 400);
         setLocationRelativeTo(parent);
         setResizable(false);
 
@@ -101,6 +103,21 @@ public class CloneDialog extends JDialog {
         tokenField.setVisible(false);
         gbc.gridx = 1; gbc.weightx = 1;
         formPanel.add(sizePreservingWrapper(tokenField), gbc);
+
+        // Shallow clone row
+        shallowCheck = new JCheckBox("Clone last commits only (shallow clone)");
+        depthSpinner  = new JSpinner(new SpinnerNumberModel(100, 1, 999999, 1));
+        depthSpinner.setEnabled(false);
+        ((JSpinner.DefaultEditor) depthSpinner.getEditor()).getTextField().setColumns(6);
+        shallowCheck.addActionListener(e -> depthSpinner.setEnabled(shallowCheck.isSelected()));
+        JPanel shallowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        shallowPanel.setOpaque(false);
+        shallowPanel.add(shallowCheck);
+        shallowPanel.add(Box.createHorizontalStrut(8));
+        shallowPanel.add(depthSpinner);
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.weightx = 1;
+        formPanel.add(shallowPanel, gbc);
+        gbc.gridwidth = 1;
 
         // Wire the auth type radio buttons to switch visible credential rows
         pwdAuthBtn.addActionListener(e -> applyAuthMode());
@@ -221,6 +238,9 @@ public class CloneDialog extends JDialog {
         } else {
             params.setUserName(userField.getText().trim());
             params.setUserPwd(new String(pwdField.getPassword()));
+        }
+        if (shallowCheck.isSelected()) {
+            params.setDepth((Integer) depthSpinner.getValue());
         }
         return params;
     }

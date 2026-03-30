@@ -12,3 +12,8 @@ sequence of commits to a new base commit.
 Operation similar to a merge, use the "Rebase" button in the toolbar or rebase selected branch in to current from context menu.
 
 See also [Rebasing Branches](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) in Git documentation.
+
+## Interactive Rebase
+
+For more control over commit history — reordering, squashing, rewording, or dropping commits — use the
+**Interactive Rebase** feature. See [Interactive Rebase](branch-rebase-interactive.md) for a full walkthrough.

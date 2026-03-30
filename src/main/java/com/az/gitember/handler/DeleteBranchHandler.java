@@ -27,16 +27,21 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        Context.getGitRepoService().deleteLocalBranch(branch.getFullName());
-
-        // If remote branch or tag, also push deletion to remote
-        if (branch.getBranchType() != ScmBranch.BranchType.LOCAL) {
+        if (branch.getBranchType() == ScmBranch.BranchType.REMOTE) {
+            // Push deletion to remote: fullName is "refs/remotes/origin/foo",
+            // but the remote server expects "refs/heads/foo"
             Optional<Project> project = Context.getCurrentProject();
             if (project.isPresent()) {
                 RemoteRepoParameters params = new RemoteRepoParameters(project.get());
-                RefSpec refSpec = new RefSpec().setSource(null).setDestination(branch.getFullName());
+                String remoteRef = branch.getFullName()
+                        .replaceFirst("^refs/remotes/[^/]+/", "refs/heads/");
+                RefSpec refSpec = new RefSpec().setSource(null).setDestination(remoteRef);
                 Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
             }
+            // Remove the local remote-tracking ref
+            Context.getGitRepoService().deleteRemoteTrackingBranch(branch.getFullName());
+        } else {
+            Context.getGitRepoService().deleteLocalBranch(branch.getFullName());
         }
 
         Context.updateBranches();
@@ -53,8 +58,16 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
      * Shows confirmation dialog and executes if confirmed.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar, ScmBranch branch) {
-        int result = JOptionPane.showConfirmDialog(parent,
-                "Delete branch \"" + branch.getShortName() + "\"?",
+        String message;
+        if (branch.getRemoteMergeName() != null && branch.getAheadCount() > 0) {
+            message = "<html>Delete branch <b>" + branch.getShortName() + "</b>?<br><br>"
+                    + "<b style='color:orange'>\u26a0 " + branch.getAheadCount()
+                    + " unpushed commit(s)</b> will be lost<br>"
+                    + "(not yet pushed to <tt>" + branch.getRemoteMergeName() + "</tt>).</html>";
+        } else {
+            message = "Delete branch \"" + branch.getShortName() + "\"?";
+        }
+        int result = JOptionPane.showConfirmDialog(parent, message,
                 "Delete Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             new DeleteBranchHandler(parent, statusBar, branch).execute();

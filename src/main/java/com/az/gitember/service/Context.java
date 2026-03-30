@@ -51,6 +51,7 @@ public class Context {
     public static final String PROP_SCM_STAT_BRANCH_LIVE_TIME = "scmStatBranchLiveTime";
     public static final String PROP_SCM_STAT_LIST_PARAM = "scmStatListParam";
     public static final String PROP_SEARCH_VALUE = "searchValue";
+    public static final String PROP_HISTORY_REFRESH = "historyRefresh";
     public static final String PROP_SEARCH_RESULT = "searchResult";
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
@@ -389,15 +390,21 @@ public class Context {
         lastAllHistory = allHistory;
     }
 
+    /** Signals listeners (e.g. HistoryPanel) to reload the commit history. */
+    public static void refreshHistory() {
+        pcs.firePropertyChange(PROP_HISTORY_REFRESH, false, true);
+    }
+
     public static void updateAll() {
         updateStatus(null);
         try {
             updateBranches();
+            updateTags();
+            updateStash();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Cannot make updates  ", e);
         }
-        updateTags();
-        updateStash();
+
     }
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor) {

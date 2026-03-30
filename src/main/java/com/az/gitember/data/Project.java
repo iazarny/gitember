@@ -32,8 +32,10 @@ public class Project implements Serializable, Comparable<Project>  {
     @JsonDeserialize(using = MaskStringValueDeSerializer.class)
     @JsonSerialize(using = MaskStringValueSerializer.class)
     private String accessToken;
-    private String userCommitName;
-    private String userCommitEmail;
+    private String userCommitName;   // author name
+    private String userCommitEmail;  // author email
+    private String committerName;
+    private String committerEmail;
     private boolean indexed;
 
 
@@ -67,6 +69,22 @@ public class Project implements Serializable, Comparable<Project>  {
 
     public void setUserCommitEmail(String userCommitEmail) {
         this.userCommitEmail = userCommitEmail;
+    }
+
+    public String getCommitterName() {
+        return committerName;
+    }
+
+    public void setCommitterName(String committerName) {
+        this.committerName = committerName;
+    }
+
+    public String getCommitterEmail() {
+        return committerEmail;
+    }
+
+    public void setCommitterEmail(String committerEmail) {
+        this.committerEmail = committerEmail;
     }
 
     public String getProjectHomeFolder() {

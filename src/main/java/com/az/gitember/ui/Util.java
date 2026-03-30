@@ -34,24 +34,15 @@ public class Util {
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation, Dimension size) {
         JButton btn = new JButton();
 
-        //btn.setBackground(Color.CYAN);
-        //btn.setOpaque(true);
-        //btn.setForeground(Color.MAGENTA);
-
-        //btn.setVerticalTextPosition(SwingConstants.BOTTOM);
-        //btn.setHorizontalTextPosition(SwingConstants.CENTER);
-
         if (size != null) {
             btn.setPreferredSize(size);
             btn.setMinimumSize(size);
             btn.setMaximumSize(size);
         }
 
-
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(true);
-        //btn.setMargin(new Insets(5, 5, 5, 5));
 
         if (ikon != null) {
             Icon icon = themeAwareIcon(ikon, 16);

@@ -29,6 +29,7 @@ import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revplot.PlotWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
@@ -60,6 +61,11 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.logging.Level;
@@ -312,10 +318,19 @@ public class GitRepoService {
      * @throws GitAPIException in case of error
      */
     public RevCommit commit(final String message, final String name, final String email) throws GitAPIException {
+        return commit(message, name, email, null, null);
+    }
+
+    public RevCommit commit(final String message,
+                            final String authorName, final String authorEmail,
+                            final String committerName, final String committerEmail) throws GitAPIException {
         try (Git git = new Git(repository)) {
             CommitCommand cmd = git.commit();
-            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(email)) {
-                cmd.setAuthor(name, email);
+            if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
+                cmd.setAuthor(authorName, authorEmail);
+            }
+            if (StringUtils.isNotBlank(committerName) && StringUtils.isNotBlank(committerEmail)) {
+                cmd.setCommitter(committerName, committerEmail);
             }
             return cmd.setMessage(message).call();
         } catch (GitAPIException e) {
@@ -520,7 +535,16 @@ public class GitRepoService {
         } catch (Exception e) {
             throw new IOException("Cannot delete branch " + name, e);
         }
+    }
 
+    public void deleteRemoteTrackingBranch(final String fullName) throws IOException {
+        try {
+            final org.eclipse.jgit.lib.RefUpdate update = repository.updateRef(fullName);
+            update.setForceUpdate(true);
+            update.delete();
+        } catch (Exception e) {
+            throw new IOException("Cannot delete remote-tracking branch " + fullName, e);
+        }
     }
 
     /**
@@ -542,6 +566,61 @@ public class GitRepoService {
         }
     }
 
+    /** Returns the JGit {@link RepositoryState} (e.g. {@link RepositoryState#REBASING_INTERACTIVE}). */
+    public RepositoryState getRepositoryState() {
+        return repository != null ? repository.getRepositoryState() : RepositoryState.SAFE;
+    }
+
+    /**
+     * A no-op {@link RebaseCommand.InteractiveHandler} that leaves the existing
+     * todo-list steps and commit messages untouched.  Required for
+     * {@code --continue} and {@code --skip} so JGit does not NPE when it
+     * processes SQUASH / FIXUP steps whose handler reference is {@code null}.
+     */
+    private static final RebaseCommand.InteractiveHandler PASSTHROUGH_HANDLER =
+            new RebaseCommand.InteractiveHandler() {
+                @Override
+                public void prepareSteps(List<org.eclipse.jgit.lib.RebaseTodoLine> steps) {
+                    // leave the existing plan unchanged
+                }
+                @Override
+                public String modifyCommitMessage(String msg) {
+                    return msg;
+                }
+            };
+
+    /** Runs {@code git rebase --continue} after conflicts are staged. */
+    public RebaseResult rebaseContinue() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase()
+                    .setOperation(RebaseCommand.Operation.CONTINUE)
+                    .runInteractively(PASSTHROUGH_HANDLER)
+                    .call();
+        }
+    }
+
+    /** Runs {@code git rebase --abort} and restores the original branch state. */
+    public RebaseResult rebaseAbort() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+        }
+    }
+
+    /**
+     * Runs {@code git rebase --skip}, discarding the current commit and continuing
+     * with the next one.  Use this when {@link #rebaseContinue()} returns
+     * {@link RebaseResult.Status#NOTHING_TO_COMMIT} (the conflict was resolved by
+     * accepting the upstream version, producing an empty commit).
+     */
+    public RebaseResult rebaseSkip() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.rebase()
+                    .setOperation(RebaseCommand.Operation.SKIP)
+                    .runInteractively(PASSTHROUGH_HANDLER)
+                    .call();
+        }
+    }
+
     /**
      * @param upstream the name of the upstream branch
      * @return rebase result
@@ -554,6 +633,158 @@ public class GitRepoService {
                     .setPreserveMerges(true)
                     .call();
         }
+    }
+
+    /**
+     * Returns all commits reachable from HEAD that are <em>not</em> reachable
+     * from {@code baseCommitSha}, in newest-first order (HEAD first).
+     * These are the commits that would be rebased in an interactive rebase
+     * with the given commit as the upstream.
+     *
+     * @param baseCommitSha full or abbreviated SHA of the upstream/base commit
+     * @return ordered list of commits to rebase (newest first), empty if none
+     * @throws Exception on JGit errors
+     */
+    public List<RevCommit> getCommitsInRange(final String baseCommitSha) throws Exception {
+        try (Git git = new Git(repository)) {
+            ObjectId headId = repository.resolve(Constants.HEAD);
+            ObjectId baseId = repository.resolve(baseCommitSha);
+            if (headId == null || baseId == null) return Collections.emptyList();
+            List<RevCommit> result = new ArrayList<>();
+            for (RevCommit c : git.log().addRange(baseId, headId).call()) {
+                result.add(c);
+            }
+            return result;
+        }
+    }
+
+    /**
+     * Performs an interactive rebase of the current branch onto {@code upstream}.
+     *
+     * <p>The {@code steps} list must be in <em>newest-first display order</em>
+     * (as returned by {@link com.az.gitember.dialog.InteractiveRebaseDialog#getSteps()}).
+     * This method reverses the list internally before handing it to JGit, which
+     * applies commits oldest-first.
+     *
+     * <p>Steps marked {@code DROP} are excluded from the rebase plan entirely.
+     * For {@code REWORD} steps, the commit message in the step is used as the
+     * new message.  For {@code SQUASH}, the default combined message is kept.
+     *
+     * @param upstream full SHA of the base/upstream commit
+     * @param steps    ordered rebase plan from the interactive rebase dialog
+     * @return the result of the rebase operation
+     * @throws Exception on JGit errors
+     */
+    public RebaseResult interactiveRebase(
+            final String upstream,
+            final List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> steps)
+            throws Exception {
+
+        // Reverse to oldest-first (JGit applies from oldest commit to newest)
+        final List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> plan =
+                new ArrayList<>(steps);
+        Collections.reverse(plan);
+
+        // Queue of new messages for REWORD steps, in execution order
+        final java.util.Deque<String> rewordQueue = new java.util.ArrayDeque<>();
+        for (com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep s : plan) {
+            if (s.getAction() == com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.REWORD) {
+                rewordQueue.add(s.getMessage());
+            }
+        }
+
+        try (Git git = new Git(repository)) {
+            return git.rebase()
+                    .setUpstream(upstream)
+                    .runInteractively(new RebaseCommand.InteractiveHandler() {
+
+                        /**
+                         * Replace JGit's default plan with the user's plan.
+                         * Matches dialog steps to JGit steps by SHA prefix, reorders
+                         * them, sets the appropriate action, and skips DROP steps.
+                         */
+                        @Override
+                        public void prepareSteps(
+                                List<org.eclipse.jgit.lib.RebaseTodoLine> jgitSteps) {
+
+                            // Build lookup: abbreviated-sha-from-JGit → RebaseTodoLine
+                            Map<String, org.eclipse.jgit.lib.RebaseTodoLine> lookup =
+                                    new LinkedHashMap<>();
+                            for (org.eclipse.jgit.lib.RebaseTodoLine line : jgitSteps) {
+                                lookup.put(line.getCommit().name(), line);
+                            }
+
+                            List<org.eclipse.jgit.lib.RebaseTodoLine> reordered =
+                                    new ArrayList<>();
+                            for (com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep s
+                                    : plan) {
+                                // DROP: simply omit the step from the plan
+                                if (s.getAction() ==
+                                        com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.DROP) {
+                                    continue;
+                                }
+
+                                // Match by SHA prefix (dialog stores full SHA, JGit abbreviates)
+                                org.eclipse.jgit.lib.RebaseTodoLine matched = null;
+                                for (Map.Entry<String, org.eclipse.jgit.lib.RebaseTodoLine>
+                                        entry : lookup.entrySet()) {
+                                    String jSha = entry.getKey();
+                                    String dSha = s.getFullSha();
+                                    if (dSha.startsWith(jSha) || jSha.startsWith(dSha)) {
+                                        matched = entry.getValue();
+                                        break;
+                                    }
+                                }
+                                if (matched != null) {
+                                    org.eclipse.jgit.lib.RebaseTodoLine.Action jgitAction =
+                                            toJGitAction(s.getAction());
+                                    try {
+                                        matched.setAction(jgitAction);
+                                    } catch (org.eclipse.jgit.errors.IllegalTodoFileModification ex) {
+                                        log.log(Level.WARNING,
+                                                "Could not set rebase action to " + jgitAction, ex);
+                                    }
+                                    reordered.add(matched);
+                                }
+                            }
+
+                            jgitSteps.clear();
+                            jgitSteps.addAll(reordered);
+                        }
+
+                        /**
+                         * Called for REWORD steps (returns the user's new message) and
+                         * SQUASH steps (returns the combined template unchanged).
+                         */
+                        @Override
+                        public String modifyCommitMessage(String currentMessage) {
+                            // Squash/fixup combined messages start with a JGit comment header
+                            if (currentMessage != null
+                                    && currentMessage.contains("# This is a combination")) {
+                                return currentMessage;
+                            }
+                            return rewordQueue.isEmpty() ? currentMessage : rewordQueue.poll();
+                        }
+                    })
+                    .call();
+        }
+    }
+
+    /**
+     * Maps a {@link com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction} to the
+     * corresponding JGit {@link org.eclipse.jgit.lib.RebaseTodoLine.Action}.
+     * {@code DROP} is handled externally by excluding the step; this method
+     * must not be called for DROP.
+     */
+    private static org.eclipse.jgit.lib.RebaseTodoLine.Action toJGitAction(
+            com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction action) {
+        return switch (action) {
+            case PICK   -> org.eclipse.jgit.lib.RebaseTodoLine.Action.PICK;
+            case REWORD -> org.eclipse.jgit.lib.RebaseTodoLine.Action.REWORD;
+            case SQUASH -> org.eclipse.jgit.lib.RebaseTodoLine.Action.SQUASH;
+            case FIXUP  -> org.eclipse.jgit.lib.RebaseTodoLine.Action.FIXUP;
+            case DROP   -> org.eclipse.jgit.lib.RebaseTodoLine.Action.PICK; // fallback, never reached
+        };
     }
 
     /**
@@ -743,8 +974,10 @@ public class GitRepoService {
                     log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
 
                     getSearchService().dropIndex();
-                    Context.getCurrentProject().get().setIndexed(false);
-                    Context.saveSettings();
+                    if (Context.getCurrentProject().isPresent()) {
+                        Context.getCurrentProject().get().setIndexed(false);
+                        Context.saveSettings();
+                    }
                 }
 
             }
@@ -757,7 +990,7 @@ public class GitRepoService {
             threadSearch2.join();
             threadSearch1.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "thread join excption ", e);
         }
 
         return searchResultMap;
@@ -861,6 +1094,35 @@ public class GitRepoService {
                     .setForceUpdate(true)
                     .setAnnotated(true)
                     .call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    /**
+     * Create new tag at a specific commit.
+     *
+     * @param tagName   tag name
+     * @param commitSha full or abbreviated commit SHA
+     */
+    public Ref createTag(String tagName, String commitSha) throws IOException {
+        try (Git git = new Git(repository)) {
+            ObjectId objectId = repository.resolve(commitSha);
+            if (objectId == null) {
+                throw new IOException("Cannot resolve commit: " + commitSha);
+            }
+            try (RevWalk revWalk = new RevWalk(repository))  {
+                RevObject revObject = revWalk.parseAny(objectId);
+                return git.tag()
+                        .setName(tagName)
+                        .setObjectId(revObject)
+                        .setForceUpdate(true)
+                        .setAnnotated(true)
+                        .call();
+            }
+        } catch (IOException e) {
+            throw e;
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
             throw new IOException(e.getMessage());
@@ -1205,29 +1467,6 @@ public class GitRepoService {
         }
     }
 
-    /**
-     * Get branch from given commit name. revCommit.getName()
-     *
-     * @param commitName or null ifcommit not found.
-     */
-    public String getBranchName(String commitName) {
-
-        try (Git git = new Git(repository)) {
-
-            List<Ref> branchLst = git.branchList().setContains(commitName).call();
-            if (!branchLst.isEmpty()) {
-                //TODO not sure is it right
-                return branchLst.get(0).getName();
-            }
-
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-
-    }
-
 
     public void removeFile(final String fileName) throws Exception {
         try (Git git = new Git(repository)) {
@@ -1530,6 +1769,7 @@ public class GitRepoService {
                     });
                 }
                 editor.commit();
+                dc.unlock();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
                 dc.unlock();
@@ -1772,6 +2012,9 @@ public class GitRepoService {
                 .setCloneSubmodules(true)
                 //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
+        if (params.getDepth() > 0) {
+            cmd.setDepth(params.getDepth());
+        }
         configureTransportCommand(cmd, params);
 
         Git result = null;
@@ -2138,9 +2381,9 @@ public class GitRepoService {
                     ? pullRez.getFetchResult().getMessages() : "";
 
             if (pullRez.isSuccessful()) {
-                Triple<List<String>,List<String>,List<String>> rez = getPullInfo(
-                        oldHead, head, git, remoteBranch
-                );
+                Triple<List<String>,List<String>,List<String>> rez = (oldHead != null && head != null)
+                        ? getPullInfo(oldHead, head, git, remoteBranch)
+                        : Triple.of(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
                 String status = pullRez.getMergeResult().getMergeStatus().toString();
                 return new PullOperationResult(status, serverMessages,
                         rez.getLeft(), rez.getMiddle(), rez.getRight());
@@ -2546,14 +2789,14 @@ public class GitRepoService {
         }
 
         final String reporitoryUrl = params.getUrl();
+        if (StringUtils.isNotBlank(reporitoryUrl)) {
+            if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
+                StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
+                fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
+                fbcOrig.save();
 
-        if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
-            StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
-            fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
-            fbcOrig.save();
-
-        } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
-                || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
+            } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
+                    || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
             /*cmd.setTransportConfigCallback(
                     new SshTransportConfigCallback(
                             params.getPathToKey(),
@@ -2561,21 +2804,22 @@ public class GitRepoService {
                     )
             );*/
 
-            File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
+                File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
 
-            SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
-                    .setPreferredAuthentications("publickey")
-                    .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
-                    .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp) {
-                        @Override
-                        protected char[] getPassword(URIish uri, String message) {
-                            return "".toCharArray();//passphrase.toCharArray();
-                        }
-                    }).build(null);
+                SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
+                        .setPreferredAuthentications("publickey")
+                        .setHomeDirectory(FS.DETECTED.userHome()).setSshDirectory(sshDir)
+                        .setKeyPasswordProvider(cp -> new IdentityPasswordProvider(cp) {
+                            @Override
+                            protected char[] getPassword(URIish uri, String message) {
+                                return "".toCharArray();//passphrase.toCharArray();
+                            }
+                        }).build(null);
 
-            cmd.setTransportConfigCallback(
-                    transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
+                cmd.setTransportConfigCallback(
+                        transport -> ((SshTransport) transport).setSshSessionFactory(sshSessionFactory));
 
+            }
         }
 
     }
@@ -2782,27 +3026,45 @@ public class GitRepoService {
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
         final Ref head = repository.exactRef(Constants.HEAD);
-        final Map<String, Map> rez = new TreeMap<>();
+        final ObjectId headId = head.getObjectId();
+        final ConcurrentHashMap<String, Map> rez = new ConcurrentHashMap<>();
         final Map<String, Integer> totalLines = new TreeMap<>();
         final Map<String, Integer> commitsMap = new HashMap<>();
 
-        try (RevWalk walk = new RevWalk(repository)) {
-            final RevCommit commit = walk.parseCommit(head.getObjectId());
-            final Iterator<String> pathIter = files.iterator();
+        int threads = Math.max(1, Math.min(files.size(), Runtime.getRuntime().availableProcessors()));
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        AtomicInteger done = new AtomicInteger(0);
 
-            progressMonitor.beginTask(taskName, files.size());
+        progressMonitor.beginTask(taskName, files.size());
 
-            int cnt = 0;
+        try {
+            List<Future<Void>> futures = files.stream()
+                    .map(path -> pool.submit((java.util.concurrent.Callable<Void>) () -> {
+                        BlameCommand blamer = new BlameCommand(repository);
+                        blamer.setStartCommit(headId);
+                        blamer.setFilePath(path);
+                        BlameResult blame = blamer.call();
+                        rez.put(path, countLines(blame));
+                        synchronized (progressMonitor) {
+                            progressMonitor.update(1);
+                        }
+                        done.incrementAndGet();
+                        return null;
+                    }))
+                    .toList();
 
-            while (pathIter.hasNext()) {
-                final String path = pathIter.next();
-                final BlameCommand blamer = new BlameCommand(repository);
-                blamer.setStartCommit(commit);
-                blamer.setFilePath(path);
-                final BlameResult blame = blamer.call();
-                rez.put(path, countLines(blame));
-                progressMonitor.update(cnt++);
+            pool.shutdown();
+
+            for (Future<Void> f : futures) {
+                try {
+                    f.get();
+                } catch (ExecutionException ex) {
+                    Throwable cause = ex.getCause();
+                    throw cause instanceof Exception e ? e : new RuntimeException(cause);
+                }
             }
+        } finally {
+            pool.shutdownNow();
         }
 
         rez.values().forEach(
@@ -2850,7 +3112,7 @@ public class GitRepoService {
         if (blame != null && blame.getResultContents() != null) {
             int lines = blame.getResultContents().size();
             for (int i = 0; i < lines; i++) {
-                String author = blame.getSourceCommitter(i).getName();
+                String author = blame.getSourceAuthor(i).getName();
                 Integer cnt = rez.getOrDefault(author, 0) + 1;
                 rez.put(author, cnt);
             }
@@ -3015,6 +3277,32 @@ public class GitRepoService {
     public void syncSubmodules() throws Exception {
         try (Git git = new Git(repository)) {
             git.submoduleSync().call();
+        }
+    }
+
+    /**
+     * Returns {@code true} if the given commit SHA has not yet been pushed to the
+     * remote tracking branch of the current local branch.
+     * <p>
+     * If the current branch has no upstream configured, every commit is considered
+     * local (unpushed), so the method returns {@code true}.
+     */
+    public boolean isCommitUnpushed(String sha) throws Exception {
+        String branchName = repository.getBranch();
+        BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, branchName);
+        if (trackingStatus == null) {
+            return true; // no upstream — all commits are local
+        }
+        ObjectId remoteId = repository.resolve(trackingStatus.getRemoteTrackingBranch());
+        ObjectId commitId = repository.resolve(sha);
+        if (remoteId == null || commitId == null) {
+            return false;
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(commitId);
+            RevCommit remote = walk.parseCommit(remoteId);
+            // unpushed = commit is NOT yet reachable from the remote tracking tip
+            return !walk.isMergedInto(commit, remote);
         }
     }
 

@@ -390,11 +390,32 @@ h6 {
 /*--------------------------------------------------------------
 # Hero Section
 --------------------------------------------------------------*/
+#hero-orig {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)), url("../img/3/gbsvg/bg6.svg") center top no-repeat;
+  background-size: cover;
+  position: relative;
+}
+
 #hero {
   width: 100%;
   height: 100vh;
-  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)), url("../img/hero-bg.jpg") center top no-repeat;
-  background-size: cover;
+  /* Keep your gradient and URL the same */
+  background: linear-gradient(45deg, rgba(12, 99, 67, 0.8), rgba(13, 95, 98, 0.9)),
+              url("../img/3/gbsvg/bg6.svg");
+
+  /* 1. Scale down: 100% / 3 = 33.33% */
+  /* This sets the width to 1/3 of the container; height 'auto' maintains aspect ratio */
+  background-size: auto, 33.33% auto;
+
+  /* 2. Enable repeating for the image layer only */
+  /* The first 'no-repeat' is for the gradient, the second 'repeat' is for the SVG */
+  background-repeat: no-repeat, repeat;
+
+  /* 3. Positioning (optional) */
+  background-position: center, left top;
+
   position: relative;
 }
 
@@ -1416,10 +1437,15 @@ section {
 .feature-detail + .feature-detail {
     border-top: 1px solid rgba(0,0,0,0.07);
 }
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
 .feature-icon-lg {
     font-size: 3rem;
     color: #4154f1;
-    margin-bottom: 16px;
 }
 .feature-detail h2 {
     font-size: 1.75rem;
@@ -1541,11 +1567,15 @@ section {
     transition: box-shadow 0.2s;
 }
 .audience-card:hover { box-shadow: 0 8px 28px rgba(65,84,241,0.12); }
+.audience-card .ac-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
 .audience-card .ac-icon {
     font-size: 2.4rem;
     color: #4154f1;
-
-    margin-bottom: 14px;
 }
-.audience-card h4 { font-weight: 700; margin-bottom: 10px; }
+.audience-card h4 { font-weight: 700; margin-bottom: 0; }
 .audience-card p  { color: #666; line-height: 1.75; font-size: 0.95rem; }

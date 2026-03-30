@@ -28,6 +28,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem statisticsItem;
     private final JMenuItem openTerminalItem;
     private final JMenuItem credentialsItem;
+    private final JMenuItem projectSettingsItem;
 
     // LFS submenu (inside Repository menu)
     private final JMenu     lfsMenu;
@@ -39,12 +40,16 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem updateSubmodulesItem;
     private final JMenuItem syncSubmodulesItem;
 
+    // Repository maintenance
+    private final JMenuItem compressDatabaseItem;
+
     // Branch menu (enabled only when a repo is open)
     private final JMenu     branchMenu;
     private final JMenuItem pullItem;
     private final JMenuItem pushItem;
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
+    private final JMenuItem interactiveRebaseItem;
 
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
@@ -106,7 +111,8 @@ public class MainMenuBar extends JMenuBar {
         statisticsItem.setToolTipText(
                 "Show per-developer commit / line statistics and monthly charts");
 
-        credentialsItem = new JMenuItem("Credentials…", KeyEvent.VK_E);
+        credentialsItem     = new JMenuItem("Credentials…", KeyEvent.VK_E);
+        projectSettingsItem = new JMenuItem("Project Settings…", KeyEvent.VK_P);
 
         openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
         openTerminalItem.setToolTipText("Open a terminal in the repository folder");
@@ -138,30 +144,41 @@ public class MainMenuBar extends JMenuBar {
         submodulesMenu.add(updateSubmodulesItem);
         submodulesMenu.add(syncSubmodulesItem);
 
+        compressDatabaseItem = new JMenuItem("Compress Database", KeyEvent.VK_Z);
+        compressDatabaseItem.setToolTipText("Run git gc — pack loose objects and prune unreachable data");
+
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
         repoMenu.addSeparator();
         repoMenu.add(lfsMenu);
         repoMenu.add(submodulesMenu);
+        repoMenu.add(credentialsItem);
+        repoMenu.add(projectSettingsItem);
+        repoMenu.addSeparator();
+        repoMenu.add(compressDatabaseItem);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
-        repoMenu.addSeparator();
-        repoMenu.add(credentialsItem);
+
 
         // ── Branch (repo-only) ────────────────────────────────────────────────
         branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem   = new JMenuItem("Pull",       KeyEvent.VK_L);
-        pushItem   = new JMenuItem("Push",       KeyEvent.VK_P);
-        fetchItem  = new JMenuItem("Fetch",      KeyEvent.VK_F);
-        commitItem = new JMenuItem("Commit...",  KeyEvent.VK_M);
+        pullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
+        pushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
+        fetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
+        commitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
+        interactiveRebaseItem.setToolTipText(
+                "Interactively rebase commits – right-click a commit in the history for the full workflow");
 
         branchMenu.add(pullItem);
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
         branchMenu.addSeparator();
         branchMenu.add(commitItem);
+        branchMenu.addSeparator();
+        branchMenu.add(interactiveRebaseItem);
 
         // ── Working copy (repo-only) ──────────────────────────────────────────
         workingCopyMenu = new JMenu("Working copy");
@@ -210,7 +227,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3</b> — Git GUI Client<br><br>" +
+                    "<b>Gitember 3.1</b> — Git GUI Client<br><br>" +
                     "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
                     "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
                     "</body></html>");
@@ -291,7 +308,8 @@ public class MainMenuBar extends JMenuBar {
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
-    public void addCredentialsListener(ActionListener l)   { credentialsItem.addActionListener(l); }
+    public void addCredentialsListener(ActionListener l)      { credentialsItem.addActionListener(l); }
+    public void addProjectSettingsListener(ActionListener l)  { projectSettingsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }
     public void addCompareFilesListener(ActionListener l)  { compareFilesItem.addActionListener(l); }
     public void addCompareFoldersListener(ActionListener l){ compareFoldersItem.addActionListener(l); }
@@ -300,7 +318,9 @@ public class MainMenuBar extends JMenuBar {
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
     public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
+    public void addCompressDatabaseListener(ActionListener l)    { compressDatabaseItem.addActionListener(l); }
     public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
+    public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
     public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
 }

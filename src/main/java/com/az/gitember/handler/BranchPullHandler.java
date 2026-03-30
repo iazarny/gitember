@@ -27,15 +27,7 @@ public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult>
 
     @Override
     protected PullOperationResult doInBackground() throws Exception {
-        Optional<Project> project = Context.getCurrentProject();
-        RemoteRepoParameters params = new RemoteRepoParameters();
-        project.ifPresent(p -> {
-            params.setUserName(p.getUserName());
-            params.setUserPwd(p.getUserPwd());
-            params.setAccessToken(p.getAccessToken());
-            params.setKeyPassPhrase(p.getKeyPass());
-        });
-
+        RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
         PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(
                 params, branch.getRemoteMergeName(), progressMonitor);
         Context.updateAll();
@@ -45,6 +37,7 @@ public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult>
     @Override
     protected void onSuccess(PullOperationResult result) {
         statusBar.setStatus("Pull completed: " + result.toStatusString());
+        Context.refreshHistory();
         new PullResultDialog(parent, result).setVisible(true);
     }
 }

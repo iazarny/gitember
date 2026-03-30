@@ -9,10 +9,16 @@ import java.awt.*;
 public class CreateTagHandler extends AbstractAsyncHandler<String> {
 
     private final String tagName;
+    private final String commitSha;
 
     public CreateTagHandler(Component parent, StatusBar statusBar, String tagName) {
+        this(parent, statusBar, tagName, null);
+    }
+
+    public CreateTagHandler(Component parent, StatusBar statusBar, String tagName, String commitSha) {
         super(parent, statusBar);
         this.tagName = tagName;
+        this.commitSha = commitSha;
     }
 
     @Override
@@ -22,7 +28,11 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        Context.getGitRepoService().createTag(tagName);
+        if (commitSha != null) {
+            Context.getGitRepoService().createTag(tagName, commitSha);
+        } else {
+            Context.getGitRepoService().createTag(tagName);
+        }
         Context.updateTags();
         return tagName;
     }
@@ -36,10 +46,17 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
      * Prompts user for a tag name and executes if confirmed.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar) {
+        showAndExecute(parent, statusBar, null);
+    }
+
+    /**
+     * Prompts user for a tag name and creates a tag at {@code commitSha} (or HEAD if null).
+     */
+    public static void showAndExecute(Component parent, StatusBar statusBar, String commitSha) {
         String name = JOptionPane.showInputDialog(parent,
                 "Tag name:", "Create Tag", JOptionPane.PLAIN_MESSAGE);
         if (name != null && !name.isBlank()) {
-            new CreateTagHandler(parent, statusBar, name.trim()).execute();
+            new CreateTagHandler(parent, statusBar, name.trim(), commitSha).execute();
         }
     }
 }
