@@ -1,14 +1,14 @@
 
 rmdir /s /q Gitember
 
-del Gitember-3.0.msix
+del Gitember-3.1.msix
 
 jpackage ^
  --type app-image ^
  --input app ^
  --name Gitember ^
- --main-jar gitember-3.0-SNAPSHOT-boot.jar ^
- --app-version 3.0 ^
+ --main-jar gitember-3.1-SNAPSHOT-boot.jar ^
+ --app-version 3.1 ^
  --vendor "Igor Azarny" ^
  --icon src\main\resources\icon\gitember.ico 
 
@@ -20,5 +20,5 @@ copy inst\*.png Gitember\inst
 
 makeappx pack ^
   /d Gitember ^
-  /p Gitember-3.0.msix
+  /p Gitember-3.1.msix
  
