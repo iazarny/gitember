@@ -6,7 +6,7 @@
   <Identity
     Name="IhorAzarnyi.Gitember"
     Publisher="CN=2B3147FB-8354-4515-9961-6015CF812066"
-    Version="3.0.0.0" 
+    Version="3.1.0.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
