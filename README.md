@@ -15,20 +15,21 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Powerful diff viewer** — unified, context, and side-by-side modes with syntax highlighting for 40+ languages
 * **Folder comparison tool** — compare entire directory trees and spot added / removed / changed files at a glance
 * **Arbitrary file comparison tool** 
+* **Interactive rebase** 
 * **Pull Request review** — browse and review PRs from GitHub, GitLab, Bitbucket, and self-hosted Gitea without leaving the app
 * **Advanced full-text search** — search commits, file contents, Office documents, PDFs, images, and CAD files across the entire history
 * **Repository statistics** — commit frequency, lines changed per author, branch activity
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.0 · March 2026
+## Downloads — Version 3.1 Apr 2026
 
-| Platform         | Link                                                                               |
-|------------------|------------------------------------------------------------------------------------|
-| Windows (x64)    | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
-| macOS (M1)       | [Gitember-3.0.msi](https://gitember.org/Gitember-3.0.dmg)                          | 
-| Linux  (x64)     | [Gitember-3.0.deb](https://gitember.org/Gitember-3.0.deb)                          | 
-| Fat jar. java 21 | [Gitember-3.0.jar](https://gitember.org/Gitember-3.0.jar)                          | 
+| Platform         | Link                                                                                                                             |
+|------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| Windows (x64)    | [Gitember-3.1.msi](https://gitember.org/Gitember-3.1.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
+| macOS (M1)       | [Gitember-3.1.msi](https://gitember.org/Gitember-3.1.dmg)                                                                        | 
+| Linux  (x64)     | [Gitember-3.1.deb](https://gitember.org/Gitember-3.1.deb)                                                                        | 
+| Fat jar. java 21 | [Gitember-3.1.jar](https://gitember.org/Gitember-3.1.jar)                                                                        | 
 
 
 More info and documentation: https://gitember.org
@@ -37,8 +38,11 @@ More info and documentation: https://gitember.org
 
 ### 3.1 · April 2026
 
-**GitHub,
-integration**
+* **Interactive rebase** has beed added
+* Secret leak detection (experimental)
+* Author and Commiter overwrite 
+* Speedup statistics up to 3 times 
+* Small bug fixes
 
 ### 3.0 · March 2026
 * **GUI migrated from JavaFX to Swing** — dramatically faster startup, smaller install, lower memory footprint
