@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Submodule;
 import com.az.gitember.service.Context;
@@ -87,6 +88,7 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoChanged);
         Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, this::onPullRequestsChanged);
         Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   this::onStatusListChanged);
     }
 
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
@@ -284,6 +286,67 @@ public class MainTreePanel extends JPanel {
             treeModel.reload(pullRequestsNode);
         }
         //tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
+    }
+
+    private void onStatusListChanged(PropertyChangeEvent evt) {
+        SwingUtilities.invokeLater(this::updateWorkingCopyLabel);
+    }
+
+    private void updateWorkingCopyLabel() {
+        List<ScmItem> items = Context.getStatusList();
+        if (items == null || items.isEmpty()) {
+            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
+            treeModel.nodeChanged(workingCopyNode);
+            return;
+        }
+
+        int modified = 0, added = 0, deleted = 0, untracked = 0;
+        for (ScmItem item : items) {
+            String status = item.getAttribute().getStatus();
+            if (ScmItem.Status.MODIFIED.equals(status) || ScmItem.Status.CHANGED.equals(status)) {
+                modified++;
+            } else if (ScmItem.Status.ADDED.equals(status)) {
+                added++;
+            } else if (ScmItem.Status.REMOVED.equals(status) || ScmItem.Status.MISSED.equals(status)) {
+                deleted++;
+            } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
+                untracked++;
+            }
+        }
+
+        if (modified == 0 && added == 0 && deleted == 0 && untracked == 0) {
+            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
+            treeModel.nodeChanged(workingCopyNode);
+            return;
+        }
+
+        StringBuilder label = new StringBuilder("<html>Working Copy &nbsp;");
+        String sep = "/";
+        boolean any = false;
+
+
+        if (modified > 0) {
+            label.append("<font color='" + SyntaxStyleUtil.toWebColor(SyntaxStyleUtil.fgChangedExt()) + "'>").append(modified).append("&plusmn;</font>");
+            any = true;
+        }
+        if (added > 0) {
+            if (any) label.append(sep);
+            label.append("<font color='" + SyntaxStyleUtil.toWebColor(SyntaxStyleUtil.fgAddedExt()) + "'>").append(added).append("+</font>");
+            any = true;
+        }
+        if (deleted > 0) {
+            if (any) label.append(sep);
+            label.append("<font color='" + SyntaxStyleUtil.toWebColor(SyntaxStyleUtil.fgDeletedExt()) + "'>").append(deleted).append("-</font>");
+            any = true;
+        }
+        if (untracked > 0) {
+            if (any) label.append(sep);
+            label.append("<font color='" + SyntaxStyleUtil.toWebColor(SyntaxStyleUtil.fgUntrackedExt()) + "'>").append(untracked).append("?</font>");
+        }
+        label.append("</html>");
+
+        workingCopyNode.setUserObject(new TreeNodeData(label.toString(), NodeType.WORKING_COPY));
+        treeModel.nodeChanged(workingCopyNode);
     }
 
     private void updateSubmodulesNode(List<Submodule> subs) {

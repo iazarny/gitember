@@ -161,6 +161,21 @@ public final class SyntaxStyleUtil {
 
 
 
+    public static Color fgAddedExt()   { return isDarkTheme() ?
+            new Color(180, 240, 180) :
+            new Color(32, 168, 32); }
+    public static Color fgDeletedExt() { return isDarkTheme() ?
+            new Color(240, 160, 160) :
+            new Color(156, 27, 27); }
+    public static Color fgChangedExt() { return isDarkTheme() ?
+            new Color(160, 195, 255) :
+            new Color(30, 74, 154); }
+    public static Color fgUntrackedExt()   { return isDarkTheme() ?
+            new Color(204, 204, 204) :
+            new Color(67, 67, 67); }
+
+
+
     public static Color rowFgAdded()   { return isDarkTheme() ? new Color(180, 240, 180) : Color.BLACK; }
     public static Color rowFgDeleted() { return isDarkTheme() ? new Color(240, 160, 160) : Color.BLACK; }
     public static Color rowFgChanged() { return isDarkTheme() ? new Color(160, 195, 255) : Color.BLACK; }
@@ -184,6 +199,38 @@ public final class SyntaxStyleUtil {
             case "RENAMED",  "RENAME", "COPY"  -> dark ? new Color(220, 170,  60) : new Color(140,  80,  0);
             default                            -> null;
         };
+    }
+
+    /**
+     * Converts a java.awt.Color to a web color string (#RRGGBB).
+     * @param color the Color object (must not be null)
+     * @return the hex string in #RRGGBB format
+     */
+    public static String toWebColor(Color color) {
+        if (color == null) {
+            throw new IllegalArgumentException("Color cannot be null");
+        }
+        // Extract RGB components and format as hex
+        return String.format("#%02X%02X%02X",
+                color.getRed(),
+                color.getGreen(),
+                color.getBlue());
+    }
+
+    /**
+     * Converts a java.awt.Color to a web color string with alpha (#RRGGBBAA).
+     * @param color the Color object (must not be null)
+     * @return the hex string in #RRGGBBAA format
+     */
+    public static String toWebColorWithAlpha(Color color) {
+        if (color == null) {
+            throw new IllegalArgumentException("Color cannot be null");
+        }
+        return String.format("#%02X%02X%02X%02X",
+                color.getRed(),
+                color.getGreen(),
+                color.getBlue(),
+                color.getAlpha());
     }
 
 }
