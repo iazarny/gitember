@@ -1,5 +1,7 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.ui.SyntaxStyleUtil;
+
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
@@ -50,11 +52,12 @@ public class PushResultDialog extends JDialog {
         String text = (messages != null ? messages : "").trim();
         String displayText = text.isEmpty() ? "(no server messages)" : text;
 
-        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayText));
+        Font monoFont = SyntaxStyleUtil.monoFont();
+        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayText, monoFont.getSize()));
         msgArea.setEditable(false);
         msgArea.setOpaque(true);
         msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        msgArea.setFont(monoFont);
         msgArea.addHyperlinkListener(ev -> {
             if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                 try {
@@ -87,7 +90,7 @@ public class PushResultDialog extends JDialog {
     /**
      * Converts plain text to HTML, turning any http/https URLs into clickable links.
      */
-    private static String toHtml(String text) {
+    private static String toHtml(String text, int fontSize) {
         String escaped = text
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
@@ -102,6 +105,6 @@ public class PushResultDialog extends JDialog {
         m.appendTail(sb);
 
         String body = sb.toString().replace("\n", "<br>");
-        return "<html><body style='font-family:monospaced;font-size:12px'>" + body + "</body></html>";
+        return "<html><body style='font-family:monospaced;font-size:" + fontSize + "px'>" + body + "</body></html>";
     }
 }
