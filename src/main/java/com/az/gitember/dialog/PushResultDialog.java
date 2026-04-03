@@ -22,7 +22,7 @@ public class PushResultDialog extends JDialog {
         super(SwingUtilities.getWindowAncestor(parent), "Push Result",
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(520, 320);
+        setSize(600, 320);
         setLocationRelativeTo(parent);
 
         // ---- header ----
