@@ -1,13 +1,20 @@
 package com.az.gitember.dialog;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
+import java.net.URI;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Dialog that shows the result of a push operation:
  * remote URL and per-ref update statuses.
  */
 public class PushResultDialog extends JDialog {
+
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
 
     public PushResultDialog(Component parent, String remoteUrl, String messages) {
         super(SwingUtilities.getWindowAncestor(parent), "Push Result",
@@ -40,14 +47,23 @@ public class PushResultDialog extends JDialog {
         headerPanel.add(remoteRow);
 
         // ---- messages area ----
-        JTextArea msgArea = new JTextArea();
-        msgArea.setEditable(false);
-        msgArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        msgArea.setLineWrap(true);
-        msgArea.setWrapStyleWord(true);
-
         String text = (messages != null ? messages : "").trim();
-        msgArea.setText(text.isEmpty() ? "(no server messages)" : text);
+        String displayText = text.isEmpty() ? "(no server messages)" : text;
+
+        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayText));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));
@@ -66,5 +82,26 @@ public class PushResultDialog extends JDialog {
         setContentPane(mainPanel);
 
         getRootPane().setDefaultButton(closeBtn);
+    }
+
+    /**
+     * Converts plain text to HTML, turning any http/https URLs into clickable links.
+     */
+    private static String toHtml(String text) {
+        String escaped = text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+
+        Matcher m = URL_PATTERN.matcher(escaped);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String url = m.group();
+            m.appendReplacement(sb, "<a href='" + url + "'>" + url + "</a>");
+        }
+        m.appendTail(sb);
+
+        String body = sb.toString().replace("\n", "<br>");
+        return "<html><body style='font-family:monospaced;font-size:12px'>" + body + "</body></html>";
     }
 }
