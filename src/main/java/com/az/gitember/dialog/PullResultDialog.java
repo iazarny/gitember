@@ -1,12 +1,17 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.PullOperationResult;
+import com.az.gitember.ui.SyntaxStyleUtil;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.net.URI;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Dialog that shows the result of a pull operation:
@@ -105,15 +110,24 @@ public class PullResultDialog extends JDialog {
         JScrollPane tableScroll = new JScrollPane(table);
 
         // ---- server messages ----
-        JTextArea msgArea = new JTextArea();
-        msgArea.setEditable(false);
-        msgArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
-        msgArea.setLineWrap(true);
-        msgArea.setWrapStyleWord(true);
-
         String msgs = result.getServerMessages();
-        msgArea.setText(msgs.isEmpty() ? "(no server messages)" : msgs);
-        msgArea.setCaretPosition(0);
+        String displayMsgs = msgs.isEmpty() ? "(no server messages)" : msgs;
+
+        Font monoFont = SyntaxStyleUtil.monoFont();
+        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayMsgs, monoFont.getSize()));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(monoFont);
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
 
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Server messages"));
@@ -142,6 +156,27 @@ public class PullResultDialog extends JDialog {
 
     private static void addRows(DefaultTableModel model, List<String> files, String status) {
         for (String f : files) model.addRow(new Object[]{f, status});
+    }
+
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
+
+    static String toHtml(String text, int fontSize) {
+        String escaped = text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+
+        Matcher m = URL_PATTERN.matcher(escaped);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String url = m.group();
+            m.appendReplacement(sb, "<a href='" + url + "'>" + url + "</a>");
+        }
+        m.appendTail(sb);
+
+        String body = sb.toString().replace("\n", "<br>");
+        return "<html><body style='font-family:monospaced;font-size:" + fontSize + "px'>" + body + "</body></html>";
     }
 
     private static JLabel makeBadge(String text, Color bg, Color fg) {

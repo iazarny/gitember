@@ -53,7 +53,7 @@ public class PushResultDialog extends JDialog {
         String displayText = text.isEmpty() ? "(no server messages)" : text;
 
         Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayText, monoFont.getSize()));
+        JEditorPane msgArea = new JEditorPane("text/html", PullResultDialog.toHtml(displayText, monoFont.getSize()));
         msgArea.setEditable(false);
         msgArea.setOpaque(true);
         msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
@@ -87,24 +87,5 @@ public class PushResultDialog extends JDialog {
         getRootPane().setDefaultButton(closeBtn);
     }
 
-    /**
-     * Converts plain text to HTML, turning any http/https URLs into clickable links.
-     */
-    private static String toHtml(String text, int fontSize) {
-        String escaped = text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
 
-        Matcher m = URL_PATTERN.matcher(escaped);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            String url = m.group();
-            m.appendReplacement(sb, "<a href='" + url + "'>" + url + "</a>");
-        }
-        m.appendTail(sb);
-
-        String body = sb.toString().replace("\n", "<br>");
-        return "<html><body style='font-family:monospaced;font-size:" + (fontSize - 1) + "px'>" + body + "</body></html>";
-    }
 }
