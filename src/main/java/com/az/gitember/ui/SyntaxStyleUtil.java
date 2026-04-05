@@ -128,17 +128,17 @@ public final class SyntaxStyleUtil {
 
     public static Color addedBg() {
         return isDarkTheme() ?
-                new Color(83, 99, 83) :
+                new Color(25, 166, 25) :
                 new Color(187, 236, 187);
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
-                new Color(99, 67, 61) :
+                new Color(152, 40, 19) :
                 new Color(246, 129, 129,200);
     }
     public static Color changedBg() {
         return isDarkTheme() ?
-                new Color(68, 78, 103) :
+                new Color(18, 62, 156) :
                 new Color(130, 221, 236);
     }
 
