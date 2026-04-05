@@ -411,6 +411,11 @@ public class WorkingCopyPanel extends JPanel {
             useTheirs.addActionListener(e -> resolveConflict(item, org.eclipse.jgit.api.CheckoutCommand.Stage.THEIRS));
             resolveMenu.add(useTheirs);
 
+            resolveMenu.addSeparator();
+            JMenuItem mergeToolItem = new JMenuItem("Open in Merge Tool...");
+            mergeToolItem.addActionListener(e -> openMergeTool(item));
+            resolveMenu.add(mergeToolItem);
+
             menu.add(resolveMenu);
         }
 
@@ -663,6 +668,12 @@ public class WorkingCopyPanel extends JPanel {
             }
         };
         worker.execute();
+    }
+
+    private void openMergeTool(ScmItem item) {
+        String absPath = Context.getGitRepoService().getRepository().getWorkTree().getAbsolutePath()
+                + File.separator + item.getShortName().replace('/', File.separatorChar);
+        new ThreeWayMergeWindow(absPath);
     }
 
     private void showDiffWithRepo(ScmItem item) {

@@ -1282,6 +1282,30 @@ public class GitRepoService {
         }
     }
 
+    /**
+     * Returns the full text content of a conflicted file at the specified git stage:
+     * <ul>
+     *   <li>1 – BASE (common ancestor)</li>
+     *   <li>2 – OURS  (our HEAD version)</li>
+     *   <li>3 – THEIRS (incoming branch version)</li>
+     * </ul>
+     * Returns {@code null} if no staged entry exists for the given path and stage.
+     *
+     * @param relativePath path relative to the repository root (forward slashes)
+     * @param stage        git stage index (1, 2, or 3)
+     */
+    public String getStagedFileContent(String relativePath, int stage) throws IOException {
+        DirCache dirCache = repository.readDirCache();
+        for (int i = 0; i < dirCache.getEntryCount(); i++) {
+            DirCacheEntry entry = dirCache.getEntry(i);
+            if (entry.getStage() == stage && entry.getPathString().equals(relativePath)) {
+                ObjectLoader loader = repository.open(entry.getObjectId());
+                return new String(loader.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+        }
+        return null;
+    }
+
     public CherryPickResult cherryPick(RevCommit revCommit) throws IOException {
         try (Git git = new Git(repository)) {
             try {
