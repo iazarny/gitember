@@ -3,6 +3,7 @@ package com.az.gitember.ui;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.handler.*;
+import com.az.gitember.handler.AiBranchCompareHandler;
 import com.az.gitember.service.Context;
 
 import javax.swing.*;
@@ -122,10 +123,16 @@ public class BranchContextMenuFactory {
 
         if (totalBranches > 1) {
             menu.addSeparator();
+
             JMenu diffMenu = new JMenu("Diff with");
             fillDiffSubmenu(diffMenu, localBranches, branch.getFullName());
             fillDiffSubmenu(diffMenu, remoteBranches, branch.getFullName());
             menu.add(diffMenu);
+
+            JMenu aiMenu = new JMenu("AI compare with…");
+            fillAiCompareSubmenu(aiMenu, localBranches,  branch);
+            fillAiCompareSubmenu(aiMenu, remoteBranches, branch);
+            menu.add(aiMenu);
         }
 
         return menu;
@@ -142,6 +149,22 @@ public class BranchContextMenuFactory {
                 window.setVisible(true);
             });
             diffMenu.add(item);
+        }
+    }
+
+    private void fillAiCompareSubmenu(JMenu aiMenu, List<ScmBranch> branches, ScmBranch current) {
+        if (branches == null) return;
+        for (ScmBranch br : branches) {
+            if (br.getFullName().equals(current.getFullName())) continue;
+            JMenuItem item = new JMenuItem(br.getFullName());
+            item.addActionListener(e -> {
+                AiBranchCompareHandler handler = new AiBranchCompareHandler(
+                        parent, statusBar,
+                        current.getFullName(), current.getShortName(),
+                        br.getFullName(),      br.getShortName());
+                handler.showAndExecute();
+            });
+            aiMenu.add(item);
         }
     }
 

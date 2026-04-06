@@ -2233,6 +2233,62 @@ public class GitRepoService {
     }
 
     /**
+     * Generates a unified-diff text between two branch refs suitable for feeding
+     * to an AI model. The result is capped at {@code maxChars} characters; if
+     * truncated a notice is appended.
+     *
+     * @param branchARef full ref of the "old" side (e.g. {@code refs/heads/main})
+     * @param branchBRef full ref of the "new" side
+     * @param maxChars   maximum characters to return (0 = unlimited)
+     */
+    public String getBranchDiffText(String branchARef, String branchBRef, int maxChars)
+            throws Exception {
+
+        List<DiffEntry> entries = getBranchDiff(branchARef, branchBRef);
+        if (entries.isEmpty()) return "(no differences)";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DiffFormatter df = new DiffFormatter(baos)) {
+            df.setRepository(repository);
+            df.setContext(3);
+            for (DiffEntry entry : entries) {
+                df.format(entry);
+                df.flush();
+            }
+        }
+
+        String text = baos.toString(java.nio.charset.StandardCharsets.UTF_8);
+        if (maxChars > 0 && text.length() > maxChars) {
+            return text.substring(0, maxChars)
+                    + "\n\n[DIFF TRUNCATED — showing first "
+                    + maxChars + " of " + text.length() + " characters]";
+        }
+        return text;
+    }
+
+    /**
+     * Returns up to {@code maxCount} commit messages reachable from {@code headRef}
+     * but not from {@code baseRef} (i.e. commits unique to the head branch).
+     */
+    public List<String> getCommitLogBetween(String baseRef, String headRef, int maxCount)
+            throws Exception {
+        ObjectId baseId = repository.resolve(baseRef);
+        ObjectId headId = repository.resolve(headRef);
+        if (baseId == null || headId == null) return List.of();
+
+        List<String> messages = new ArrayList<>();
+        try (RevWalk walk = new RevWalk(repository)) {
+            walk.markStart(walk.parseCommit(headId));
+            walk.markUninteresting(walk.parseCommit(baseId));
+            for (RevCommit commit : walk) {
+                messages.add(commit.getShortMessage());
+                if (messages.size() >= maxCount) break;
+            }
+        }
+        return messages;
+    }
+
+    /**
      * Returns files changed in a pull/merge request: diff between targetBranch (base) and
      * sourceBranch (head). Tries remote-tracking refs before local refs.
      *

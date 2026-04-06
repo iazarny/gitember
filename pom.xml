@@ -24,6 +24,7 @@
         <slf4j.version>2.0.11</slf4j.version>
         <lucene.version>9.9.1</lucene.version>
         <tika.version>2.9.1</tika.version>
+        <langchain4j.version>0.36.2</langchain4j.version>
     </properties>
 <!--
     <dependency>
@@ -155,6 +156,13 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.4</version>
+        </dependency>
+
+        <!-- LangChain4j – Ollama (local AI) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+            <version>${langchain4j.version}</version>
         </dependency>
 
         <!-- Test -->
