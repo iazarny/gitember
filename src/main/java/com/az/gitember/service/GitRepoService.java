@@ -2165,6 +2165,7 @@ public class GitRepoService {
             final FetchCommand fetchCommand = git
                     .fetch()
                     .setCheckFetchedObjects(true)
+                    .setRemoveDeletedRefs(true)
                     .setProgressMonitor(progressMonitor);
 
             configureTransportCommand(fetchCommand, parameters);
@@ -2399,6 +2400,15 @@ public class GitRepoService {
 
             PullResult pullRez = pullCommand.call();
 
+            // Prune stale remote-tracking refs that the pull's implicit fetch may not remove
+            try {
+                FetchCommand pruneCmd = git.fetch().setRemoveDeletedRefs(true);
+                configureTransportCommand(pruneCmd, parameters);
+                pruneCmd.call();
+            } catch (Exception ignored) {
+                // Non-fatal: prune failure should not fail the pull
+            }
+
             ObjectId head = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
             String serverMessages = pullRez.getFetchResult() != null
@@ -2528,6 +2538,7 @@ public class GitRepoService {
             final FetchCommand cmd = git
                     .fetch()
                     .setCheckFetchedObjects(true)
+                    .setRemoveDeletedRefs(true)
                     .setProgressMonitor(progressMonitor);
 
             configureTransportCommand(cmd, parameters);
