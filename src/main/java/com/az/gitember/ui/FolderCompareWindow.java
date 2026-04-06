@@ -115,6 +115,8 @@ public class FolderCompareWindow extends JFrame {
         CompareFilesDialog.attachFileDrop(leftPathField,  true);
         CompareFilesDialog.attachFileDrop(rightPathField, true);
         compareBtn.addActionListener(e -> startScan());
+
+        Util.bindEscapeToDispose(this);
     }
 
     /** Pre-fill both paths and start the scan immediately (used by CLI invocation). */

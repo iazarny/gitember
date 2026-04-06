@@ -4,6 +4,8 @@ import com.az.gitember.service.Context;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 
+import com.az.gitember.ui.Util;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -110,6 +112,7 @@ public class IndexHistoryDialog extends JDialog {
         pack();
         setMinimumSize(new Dimension(480, getPreferredSize().height));
         setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
     }
 
     @SuppressWarnings("unchecked")

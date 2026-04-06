@@ -110,6 +110,8 @@ public class BranchDiffWindow extends JFrame {
         getContentPane().add(buildLegend(), BorderLayout.SOUTH);
 
         loadDiff();
+
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Widget factories ──────────────────────────────────────────────────────

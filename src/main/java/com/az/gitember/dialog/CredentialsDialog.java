@@ -2,6 +2,8 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.Project;
 
+import com.az.gitember.ui.Util;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -86,6 +88,7 @@ public class CredentialsDialog extends JDialog {
         getContentPane().add(form, BorderLayout.CENTER);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
         getRootPane().setDefaultButton(okBtn);
+        Util.bindEscapeToDispose(this);
     }
 
     public boolean isConfirmed() {

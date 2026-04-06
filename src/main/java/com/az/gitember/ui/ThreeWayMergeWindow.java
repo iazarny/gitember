@@ -124,6 +124,7 @@ public class ThreeWayMergeWindow extends JFrame {
 
         setSize(1400, 800);
         setLocationRelativeTo(null);
+        Util.bindEscapeToDispose(this);
         setVisible(true);
     }
 

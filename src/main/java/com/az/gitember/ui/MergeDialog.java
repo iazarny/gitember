@@ -97,6 +97,7 @@ public class MergeDialog extends JDialog {
         pack();
         setMinimumSize(new Dimension(420, getHeight()));
         setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
     }
 
     /** Returns the user's choices, or {@code null} if the dialog was cancelled. */

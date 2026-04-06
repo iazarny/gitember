@@ -2,6 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.Util;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -152,6 +153,7 @@ public class PullResultDialog extends JDialog {
         setContentPane(mainPanel);
 
         getRootPane().setDefaultButton(closeBtn);
+        Util.bindEscapeToDispose(this);
     }
 
     private static void addRows(DefaultTableModel model, List<String> files, String status) {

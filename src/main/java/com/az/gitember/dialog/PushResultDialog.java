@@ -1,6 +1,7 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.Util;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -85,6 +86,7 @@ public class PushResultDialog extends JDialog {
         setContentPane(mainPanel);
 
         getRootPane().setDefaultButton(closeBtn);
+        Util.bindEscapeToDispose(this);
     }
 
 

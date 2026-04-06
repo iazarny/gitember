@@ -5,6 +5,8 @@ import com.az.gitember.service.Context;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
+import com.az.gitember.ui.Util;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.TreeSet;
@@ -104,6 +106,7 @@ public class SettingsDialog extends JDialog {
         okBtn.addActionListener(e -> applyAndClose());
         cancelBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(okBtn);
+        Util.bindEscapeToDispose(this);
     }
 
     private void applyAndClose() {

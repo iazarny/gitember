@@ -8,6 +8,8 @@ import org.kordamp.ikonli.swing.FontIcon;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +81,22 @@ public class Util {
         }
         cachedAppIcons = icons;
         return icons;
+    }
+
+    /**
+     * Binds the ESC key to dispose the given window.
+     * Works for both JFrame and JDialog (both implement RootPaneContainer).
+     */
+    public static void bindEscapeToDispose(RootPaneContainer window) {
+        JRootPane rp = window.getRootPane();
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "ESCAPE");
+        rp.getActionMap().put("ESCAPE", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((java.awt.Window) window).dispose();
+            }
+        });
     }
 
     /**

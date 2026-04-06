@@ -171,6 +171,8 @@ public class FileViewerWindow extends JFrame {
         getRootPane().registerKeyboardAction(
                 e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
+        Util.bindEscapeToDispose(this);
+
         this.addPropertyChangeListener("graphicsConfiguration", evt -> {
             SwingUtilities.invokeLater(() -> {
                 textArea.revalidate();

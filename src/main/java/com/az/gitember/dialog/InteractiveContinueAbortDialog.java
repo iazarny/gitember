@@ -144,6 +144,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
         } else {
             setLocationRelativeTo(null);
         }
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Private operations ────────────────────────────────────────────────────

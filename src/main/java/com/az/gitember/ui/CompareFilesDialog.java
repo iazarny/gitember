@@ -88,6 +88,7 @@ public class CompareFilesDialog extends JDialog {
         leftField.setPreferredSize(new Dimension(420, leftField.getPreferredSize().height));
         pack();
         setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Actions ─────────────────────────────────────────────────────────────

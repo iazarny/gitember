@@ -8,6 +8,7 @@ import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.Util;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -147,6 +148,7 @@ public class CommitDialog extends JDialog {
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         getRootPane().setDefaultButton(commitBtn);
+        Util.bindEscapeToDispose(this);
 
         // Run detector after dialog is laid out
         SwingUtilities.invokeLater(this::runDetector);

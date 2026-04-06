@@ -2,6 +2,8 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.InitRepoParameters;
 
+import com.az.gitember.ui.Util;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -64,6 +66,7 @@ public class InitDialog extends JDialog {
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         getRootPane().setDefaultButton(initBtn);
+        Util.bindEscapeToDispose(this);
     }
 
     private void browseFolder() {

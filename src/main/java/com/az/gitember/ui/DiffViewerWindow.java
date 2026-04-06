@@ -295,6 +295,8 @@ public class DiffViewerWindow extends JFrame {
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
         getRootPane().registerKeyboardAction(
                 e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        Util.bindEscapeToDispose(this);
     }
 
     // ---- Layout ----

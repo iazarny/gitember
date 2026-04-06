@@ -236,6 +236,7 @@ public class InteractiveRebaseDialog extends JDialog {
         getContentPane().add(headerPanel,            BorderLayout.NORTH);
         getContentPane().add(new JScrollPane(table),  BorderLayout.CENTER);
         getContentPane().add(southPanel,              BorderLayout.SOUTH);
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Public accessors ─────────────────────────────────────────────────────
