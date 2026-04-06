@@ -227,7 +227,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3.1</b> — Git GUI Client<br><br>" +
+                    "<b>Gitember 3.2</b> — Git GUI Client<br><br>" +
                     "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
                     "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
                     "</body></html>");
