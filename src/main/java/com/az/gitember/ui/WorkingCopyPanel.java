@@ -1,9 +1,9 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmItemAttribute;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;

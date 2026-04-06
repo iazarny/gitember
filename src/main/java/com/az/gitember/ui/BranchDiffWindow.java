@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.diff.DiffEntry;
 
 import javax.swing.*;

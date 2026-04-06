@@ -2,7 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;

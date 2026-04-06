@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.MergeDialogResult;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.MergeCommand;
 
 import javax.swing.*;

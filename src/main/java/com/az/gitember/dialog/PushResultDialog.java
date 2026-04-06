@@ -1,13 +1,12 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.net.URI;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**

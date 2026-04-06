@@ -2,7 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.InitRepoParameters;
 
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import java.awt.*;

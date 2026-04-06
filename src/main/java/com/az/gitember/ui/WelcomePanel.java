@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -49,7 +50,7 @@ public class WelcomePanel extends JPanel {
         commandPanel.setLayout(new BoxLayout(commandPanel, BoxLayout.X_AXIS));
 
         JButton openRepoBtn  = createWellcomeButton("Open Repository", FontAwesomeSolid.FOLDER_OPEN);
-        JButton cloneRepoBtn = createWellcomeButton("Clone repository", FontAwesomeSolid.CLONE);
+        JButton cloneRepoBtn = createWellcomeButton("Clone repository", FontAwesomeSolid.FOLDER);
         JButton initRepoBtn  = createWellcomeButton("Init repository", FontAwesomeSolid.FOLDER_PLUS);
 
         openRepoBtn.addActionListener(e -> { if (onOpenRepo != null) onOpenRepo.run(); });
@@ -168,10 +169,11 @@ public class WelcomePanel extends JPanel {
         add(hint, BorderLayout.SOUTH);
     }
 
-    private JButton createWellcomeButton(String text, FontAwesomeSolid icon) {
+    private JButton createWellcomeButton(String text, FontAwesomeSolid  icon) {
         JButton btn = new JButton();
 
         btn.setIcon(Util.themeAwareIcon(icon, 64));
+
         btn.setText(text);
 
         btn.setHorizontalTextPosition(SwingConstants.CENTER);

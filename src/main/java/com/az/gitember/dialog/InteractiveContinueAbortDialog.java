@@ -2,7 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.lib.RepositoryState;

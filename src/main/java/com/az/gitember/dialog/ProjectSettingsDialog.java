@@ -3,7 +3,7 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import java.awt.*;

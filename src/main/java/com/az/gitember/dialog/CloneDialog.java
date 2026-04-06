@@ -3,7 +3,7 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.RemoteRepoParameters;
 import org.apache.commons.lang3.StringUtils;
 
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

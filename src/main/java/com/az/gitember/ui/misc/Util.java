@@ -1,8 +1,6 @@
-package com.az.gitember.ui;
+package com.az.gitember.ui.misc;
 
-import com.az.gitember.ui.misc.RotatedIcon;
 import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.imageio.ImageIO;
@@ -98,6 +96,7 @@ public class Util {
             }
         });
     }
+
 
     /**
      * Returns an Icon that derives its colour from the painting component's

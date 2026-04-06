@@ -5,6 +5,7 @@ import com.az.gitember.component.RRightTextScrollPane;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.diff.*;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;

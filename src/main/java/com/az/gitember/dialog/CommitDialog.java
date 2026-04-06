@@ -8,8 +8,7 @@ import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.Util;
-import org.apache.commons.lang3.ObjectUtils;
+import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;

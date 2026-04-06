@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
