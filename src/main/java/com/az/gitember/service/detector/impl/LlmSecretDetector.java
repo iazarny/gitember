@@ -85,27 +85,49 @@ public class LlmSecretDetector implements Detector {
         sb.append("```\n\n");
         sb.append("""
                 Return ONLY a JSON array of findings. Each element must have these fields:
-                  "lineNo"       : integer (1-based)
-                  "type"         : one of SECRET, TOKEN, API_KEY, PASSWORD, CREDENTIAL, CONNECTION_STRING
-                  "confidence"   : one of LOW, MEDIUM, HIGH, CRITICAL
-                  "description"  : short description (max 80 chars)
-                  "matchedValue" : suspicious value partially redacted (first 4 chars + ***)
-
-                Flag:
-                - Hardcoded passwords, secrets, tokens, API keys
-                - Private key material or certificates inline
-                - Database / service credentials in connection strings
-                - OAuth client secrets
-
-                Do NOT flag:
-                - Placeholder patterns: ${...}, <...>, %..%, example_*, *_here, changeme, YOUR_*
-                - Test/mock values that are obviously fake (e.g. "testpassword", "dummykey")
-                - Environment variable references
-                - Comments describing what a field does
-                - LOW, MEDIUM or HIGH
-
-                If nothing suspicious found, return exactly: []
-                Output valid JSON only — no explanation, no markdown fences:
+                                                                              "lineNo"       : integer (1-based)
+                                                                              "type"         : one of SECRET, TOKEN, API_KEY, PASSWORD, CREDENTIAL, CONNECTION_STRING
+                                                                              "confidence"   : one of LOW, MEDIUM, HIGH, CRITICAL
+                                                                              "description"  : short description (max 80 chars)
+                                                                              "matchedValue" : suspicious value partially redacted (first 4 chars + ***)
+                
+                                                                            Detection rules:
+                
+                                                                            Flag ONLY if at least one of the following is true:
+                                                                            - A hardcoded secret is assigned to a variable or field with sensitive name:
+                                                                              (password, passwd, pwd, secret, token, api_key, apikey, access_key, private_key, client_secret)
+                                                                            - A connection string contains embedded credentials (user:pass@, password=, pwd=)
+                                                                            - Private key or certificate material is present (e.g. "BEGIN PRIVATE KEY")
+                                                                            - OAuth client secrets or bearer tokens explicitly assigned
+                                                                            - High-entropy string (length >= 20, mixed case, digits, symbols) AND:
+                                                                                - appears in assignment (e.g. key = "...") OR
+                                                                                - appears in HTTP headers (Authorization, X-API-KEY)
+                
+                                                                            Additional constraints for HIGH/CRITICAL:
+                                                                            - CRITICAL: clear credential or private key exposure
+                                                                            - HIGH: strong indication of real secret with proper context
+                                                                            - MEDIUM/LOW: weaker signals
+                
+                                                                            Do NOT flag:
+                                                                            - Placeholder patterns: ${...}, <...>, %..%, example_*, *_here, changeme, YOUR_*
+                                                                            - Test/mock values: "test", "dummy", "sample", "fake", "123456", "password"
+                                                                            - UUIDs, hashes, or IDs (hex strings, GUIDs, SHA1/256, etc.)
+                                                                            - Environment variable references (process.env, System.getenv, $VAR)
+                                                                            - Constants without sensitive naming (e.g. VERSION_ID, REQUEST_ID)
+                                                                            - Comments or documentation lines
+                                                                            - Reserved keywords or syntax-only lines
+                                                                            - Strings shorter than 8 characters
+                                                                            - Base64 strings without sensitive context (e.g. not tied to key/token)
+                                                                            - empty lines
+                                                                            - lines which are have reserved programming languages words like "import", "include", etc
+                
+                                                                            Heuristics:
+                                                                            - Prefer variable name + assignment context over standalone strings
+                                                                            - Prefer structured secrets over random-looking values
+                                                                            - Reduce confidence if no clear sensitive context
+                
+                                                                            If nothing suspicious found, return exactly: []
+                                                                            Output valid JSON only — no explanation, no markdown fences.
                 """);
         return sb.toString();
     }
@@ -123,6 +145,9 @@ public class LlmSecretDetector implements Detector {
                 int    lineNo       = toInt(item.get("lineNo"), 0);
                 String type         = str(item.get("type"),        "SECRET");
                 String confStr      = str(item.get("confidence"),  "MEDIUM");
+                if (!"CRITICAL".equals(type)) {
+                    continue;
+                }
                 String description  = str(item.get("description"), "Potential secret");
                 String matchedValue = str(item.get("matchedValue"), "");
 

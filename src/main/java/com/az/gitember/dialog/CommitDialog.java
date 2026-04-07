@@ -217,7 +217,6 @@ public class CommitDialog extends JDialog {
         if (toScan.isEmpty()) return;
 
         scanStatusPanel.setVisible(true);
-        pack();
 
         String model = llmModel();
 
@@ -304,12 +303,12 @@ public class CommitDialog extends JDialog {
                             });
                         }
                         findingsPanel.setVisible(true);
+                        pack();
+                        setLocationRelativeTo(getOwner());
                     }
                 } catch (Exception ex) {
                     log.fine("Detector worker failed: " + ex.getMessage());
                 }
-                pack();
-                setLocationRelativeTo(getOwner());
             }
         }.execute();
     }
