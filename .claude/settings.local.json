@@ -30,7 +30,8 @@
       "Bash(python3 -m json.tool)",
       "Bash(python3 -c \"\nimport json\nwith open\\('/Users/igorazarny/.gitember/gitember2.json'\\) as f:\n    d = json.load\\(f\\)\nprint\\('ignoreCompareFiles:', d.get\\('ignoreCompareFiles', 'KEY MISSING'\\)\\)\nprint\\('theme:', d.get\\('theme'\\)\\)\nprint\\('fontSize:', d.get\\('fontSize'\\)\\)\n\")",
       "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*Setting*\" -o -name \"*Config*\" -o -name \"*Preference*\" 2>/dev/null | grep -v target | grep -v \".class\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(jar tf:*)"
     ]
   }
 }

@@ -43,6 +43,7 @@ public class Settings {
     private String theme;
     private int fontSize = 13;
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
+    private String  llmDetectorModel   = "llama3.2";
 
     public Boolean getEnableLeakDetector() {
         return enableLeakDetector;
@@ -50,6 +51,14 @@ public class Settings {
 
     public void setEnableLeakDetector(Boolean enableLeakDetector) {
         this.enableLeakDetector = enableLeakDetector;
+    }
+
+    public String getLlmDetectorModel() {
+        return llmDetectorModel != null ? llmDetectorModel : "llama3.2";
+    }
+
+    public void setLlmDetectorModel(String llmDetectorModel) {
+        this.llmDetectorModel = llmDetectorModel;
     }
 
     public TreeSet<Project> getProjects() {
