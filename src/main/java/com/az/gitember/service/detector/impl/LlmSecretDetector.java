@@ -75,7 +75,9 @@ public class LlmSecretDetector implements Detector {
 
     private static String buildPrompt(String fileName, List<String> lines) {
         StringBuilder sb = new StringBuilder(512 + lines.size() * 80);
-        sb.append("You are a security code scanner. Analyze the source file below for hardcoded secrets.\n\n");
+        sb.append("""
+           You are a security code scanner.
+           Analyze the source file below for hardcoded secrets.\n\n""");
         sb.append("File: ").append(fileName).append("\n```\n");
         for (int i = 0; i < lines.size(); i++) {
             sb.append(i + 1).append(": ").append(lines.get(i)).append('\n');
@@ -100,6 +102,7 @@ public class LlmSecretDetector implements Detector {
                 - Test/mock values that are obviously fake (e.g. "testpassword", "dummykey")
                 - Environment variable references
                 - Comments describing what a field does
+                - LOW, MEDIUM or HIGH
 
                 If nothing suspicious found, return exactly: []
                 Output valid JSON only — no explanation, no markdown fences:
