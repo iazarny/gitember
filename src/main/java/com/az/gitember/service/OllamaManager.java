@@ -57,7 +57,7 @@ public final class OllamaManager {
     public enum Status { RUNNING, STOPPED, NOT_INSTALLED }
 
     /** Returns the current status of Ollama on this machine. */
-    public static Status getStatus() {
+    public static  Status getStatus() {
         if (isRunning())              return Status.RUNNING;
         if (findBinary().isPresent()) return Status.STOPPED;
         return Status.NOT_INSTALLED;

@@ -43,7 +43,16 @@ public class Settings {
     private String theme;
     private int fontSize = 13;
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
+    private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
     private String  llmDetectorModel   = "llama3.2";
+
+    public Boolean getEnableBranchCompareDescription() {
+        return enableBranchCompareDescription;
+    }
+
+    public void setEnableBranchCompareDescription(Boolean enableBranchCompareDescription) {
+        this.enableBranchCompareDescription = enableBranchCompareDescription;
+    }
 
     public Boolean getEnableLeakDetector() {
         return enableLeakDetector;

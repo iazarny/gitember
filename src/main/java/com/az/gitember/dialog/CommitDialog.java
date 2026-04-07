@@ -230,13 +230,7 @@ public class CommitDialog extends JDialog {
                 try {
                     OllamaManager.Status status = OllamaManager.getStatus();
 
-                    if (status == OllamaManager.Status.NOT_INSTALLED) {
-                        publish("Downloading Ollama…");
-                        OllamaManager.download(b -> {}, t -> {});
-                        publish("Starting Ollama…");
-                        OllamaManager.startServerAndWait(30_000);
-                        status = OllamaManager.Status.RUNNING;
-                    } else if (status == OllamaManager.Status.STOPPED) {
+                    if (status == OllamaManager.Status.STOPPED) {
                         publish("Starting Ollama…");
                         OllamaManager.startServerAndWait(20_000);
                         status = OllamaManager.Status.RUNNING;
