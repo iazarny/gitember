@@ -1528,12 +1528,6 @@ public class GitRepoService {
 
             Status status = git.status().setProgressMonitor(progressMonitor).call();
 
-            Ref refHead = repository.exactRef(Constants.HEAD);
-            try (RevWalk revWalk = new RevWalk(repository)) {
-                RevCommit revCommitHead = revWalk.parseCommit(refHead.getObjectId());
-                // TreeWalk is not used after initialization, removing unused code
-            }
-
             status.getRemoved().forEach(item -> {
                         if (!filter.contains(item)) {
                             scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.REMOVED)));
