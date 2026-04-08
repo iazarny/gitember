@@ -19,6 +19,7 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         TAGS,
         STASHES,
         BRANCH,
+        BRANCH_FOLDER,
         TAG,
         STASH,
         ROOT,
@@ -55,6 +56,7 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case TAGS           -> Util.themeAwareIcon(FontAwesomeSolid.TAGS,        14);
             case STASHES        -> Util.themeAwareIcon(FontAwesomeSolid.ARCHIVE,     14);
             case BRANCH         -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
+            case BRANCH_FOLDER  -> Util.themeAwareIcon(FontAwesomeSolid.FOLDER,      14);
             case TAG            -> Util.themeAwareIcon(FontAwesomeSolid.TAG,         14);
             case STASH          -> Util.themeAwareIcon(FontAwesomeRegular.FILE,        14);
             case ROOT           -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);

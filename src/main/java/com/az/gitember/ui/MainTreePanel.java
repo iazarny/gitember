@@ -186,15 +186,38 @@ public class MainTreePanel extends JPanel {
         if (branches != null) {
             for (ScmBranch branch : branches) {
                 String name = branch.getShortName() != null ? branch.getShortName() : branch.getFullName();
-                if (branch.getRemoteMergeName() != null) {
-                    name = name + " (" + branch.getRemoteMergeName() + ")";
+                String[] parts = name.split("/");
+
+                DefaultMutableTreeNode target = parent;
+                if (parts.length > 1) {
+                    for (int i = 0; i < parts.length - 1; i++) {
+                        target = findOrCreateFolder(target, parts[i]);
+                    }
                 }
-                DefaultMutableTreeNode node = new DefaultMutableTreeNode(
-                        new TreeNodeData(name, type, branch));
-                parent.add(node);
+
+                String leafName = parts[parts.length - 1];
+                if (branch.getRemoteMergeName() != null) {
+                    leafName = leafName + " (" + branch.getRemoteMergeName() + ")";
+                }
+                target.add(new DefaultMutableTreeNode(new TreeNodeData(leafName, type, branch)));
             }
         }
         treeModel.reload(parent);
+    }
+
+    private DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) parent.getChildAt(i);
+            if (child.getUserObject() instanceof TreeNodeData data
+                    && data.type() == NodeType.BRANCH_FOLDER
+                    && folderName.equals(data.displayName())) {
+                return child;
+            }
+        }
+        DefaultMutableTreeNode folder = new DefaultMutableTreeNode(
+                new TreeNodeData(folderName, NodeType.BRANCH_FOLDER));
+        parent.add(folder);
+        return folder;
     }
 
     private void populateStashes(DefaultMutableTreeNode parent, List<ScmRevisionInformation> stashes) {
