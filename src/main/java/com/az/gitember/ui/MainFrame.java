@@ -458,21 +458,24 @@ public class MainFrame extends JFrame {
                 new com.az.gitember.dialog.WorktreesDialog(this);
         dlg.setVisible(true);
 
-        com.az.gitember.data.WorktreeInfo toOpen = dlg.getSelectedToOpen();
-        if (toOpen == null) return;
+        // Refresh tree so add/remove is reflected immediately
+        treePanel.refreshWorktrees();
 
-        String path = toOpen.getPath();
+        com.az.gitember.data.WorktreeInfo toOpen = dlg.getSelectedToOpen();
+        if (toOpen != null) {
+            openWorktree(toOpen.getPath());
+        }
+    }
+
+    private void openWorktree(String path) {
         statusBar.setStatus("Opening worktree: " + path + "…");
         statusBar.showProgress(true);
-
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() throws Exception {
+            @Override protected Void doInBackground() throws Exception {
                 Context.init(path);
                 return null;
             }
-            @Override
-            protected void done() {
+            @Override protected void done() {
                 statusBar.clearProgress();
                 try {
                     get();
@@ -706,6 +709,11 @@ public class MainFrame extends JFrame {
                 case SUBMODULES, SUBMODULE -> {
                     contentPanel.setContent(submodulePanel);
                     submodulePanel.setSubmodules(Context.getSubmodules());
+                }
+                case WORKTREE -> {
+                    if (data.data() instanceof com.az.gitember.data.WorktreeInfo wt) {
+                        openWorktree(wt.getPath());
+                    }
                 }
                 default -> contentPanel.setContent(null);
             }

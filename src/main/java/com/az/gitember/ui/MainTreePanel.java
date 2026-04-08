@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Submodule;
+import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
@@ -37,6 +38,7 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode stashesNode;
     private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
     private DefaultMutableTreeNode submodulesNode;    // null when no submodules
+    private DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
 
     private BranchContextMenuFactory contextMenuFactory;
 
@@ -153,6 +155,7 @@ public class MainTreePanel extends JPanel {
         rootNode.removeAllChildren();
         pullRequestsNode = null;
         submodulesNode   = null;
+        worktreesNode    = null;
 
         workingCopyNode = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
         historyNode = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY));
@@ -272,6 +275,62 @@ public class MainTreePanel extends JPanel {
             refreshTree();
             tree.setSelectionPath(new TreePath(new Object[]{rootNode, workingCopyNode}));
         });
+        refreshWorktrees();
+    }
+
+    /**
+     * Reloads linked worktrees in the background and updates the Worktrees section.
+     * Called on repo change and after the Worktrees dialog closes.
+     */
+    public void refreshWorktrees() {
+        if (Context.getGitRepoService() == null) return;
+        new SwingWorker<List<WorktreeInfo>, Void>() {
+            @Override protected List<WorktreeInfo> doInBackground() throws Exception {
+                return Context.getGitRepoService().listWorktrees();
+            }
+            @Override protected void done() {
+                try { updateWorktreesNode(get()); }
+                catch (Exception ex) { log.log(Level.FINE, "Cannot load worktrees", ex); }
+            }
+        }.execute();
+    }
+
+    private void updateWorktreesNode(List<WorktreeInfo> worktrees) {
+        // Show only linked (non-main) worktrees; the main IS the open repo
+        List<WorktreeInfo> linked = worktrees == null ? List.of()
+                : worktrees.stream().filter(w -> !w.isMain()).toList();
+
+        if (linked.isEmpty()) {
+            if (worktreesNode != null) {
+                treeModel.removeNodeFromParent(worktreesNode);
+                worktreesNode = null;
+            }
+            return;
+        }
+
+        boolean isNew = (worktreesNode == null);
+        if (isNew) {
+            worktreesNode = new DefaultMutableTreeNode(
+                    new TreeNodeData("Worktrees", NodeType.WORKTREES));
+        }
+
+        worktreesNode.removeAllChildren();
+        for (WorktreeInfo wt : linked) {
+            String branch = wt.getBranch();
+            String label  = branch != null ? branch : "(detached " + wt.getShortHead() + ")";
+            if (wt.isLocked())   label += " [locked]";
+            if (wt.isPrunable()) label += " [prunable]";
+            worktreesNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(label, NodeType.WORKTREE, wt)));
+        }
+
+        if (isNew) {
+            int historyIdx = rootNode.getIndex(historyNode);
+            treeModel.insertNodeInto(worktreesNode, rootNode, historyIdx + 1);
+        } else {
+            treeModel.reload(worktreesNode);
+        }
+        tree.expandPath(new TreePath(new Object[]{rootNode, worktreesNode}));
     }
 
     private void onPullRequestsChanged(PropertyChangeEvent evt) {

@@ -3,10 +3,13 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,6 +33,9 @@ public class WorktreesDialog extends JDialog {
 
     /** Set to the worktree the user wants to open; {@code null} if none chosen. */
     private WorktreeInfo selectedToOpen;
+
+    /** Latest worktree snapshot – passed to AddWorktreeDialog to derive next sequence number. */
+    private List<WorktreeInfo> currentWorktrees = new ArrayList<>();
 
     public WorktreesDialog(Frame parent) {
         super(parent, "Worktrees", true);
@@ -95,7 +101,8 @@ public class WorktreesDialog extends JDialog {
             @Override
             protected void done() {
                 try {
-                    model.setData(get());
+                    currentWorktrees = get();
+                    model.setData(currentWorktrees);
                     statusLbl.setText(model.getRowCount() + " worktree(s)");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to list worktrees", ex);
@@ -108,7 +115,7 @@ public class WorktreesDialog extends JDialog {
     }
 
     private void onAdd() {
-        AddWorktreeDialog dlg = new AddWorktreeDialog(this);
+        AddWorktreeDialog dlg = new AddWorktreeDialog(this, currentWorktrees);
         dlg.setVisible(true);
         if (!dlg.isConfirmed()) return;
 
@@ -290,16 +297,22 @@ public class WorktreesDialog extends JDialog {
 
     private static class AddWorktreeDialog extends JDialog {
 
-        private final JTextField pathField   = new JTextField(30);
-        private final JTextField branchField = new JTextField(20);
-        private final JCheckBox  newBranchCb = new JCheckBox("Create new branch");
+        private final JTextField pathField;
+        private final JTextField branchField;
+        private final JCheckBox  newBranchCb = new JCheckBox("Create new branch", true);
         private boolean confirmed;
 
-        AddWorktreeDialog(Dialog parent) {
+        AddWorktreeDialog(Dialog parent, List<WorktreeInfo> existingWorktrees) {
             super(parent, "Add Worktree", true);
-            setSize(480, 210);
+            setSize(540, 210);
             setLocationRelativeTo(parent);
             setResizable(false);
+
+            int    nextN   = nextFeatureNumber(existingWorktrees);
+            String paddedN = String.format("%03d", nextN);
+
+            pathField   = new JTextField(suggestedPath(paddedN), 34);
+            branchField = new JTextField("feature/" + paddedN, 20);
 
             JPanel form = new JPanel(new GridBagLayout());
             form.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
@@ -342,10 +355,56 @@ public class WorktreesDialog extends JDialog {
             Util.bindEscapeToDispose(this);
         }
 
+        /**
+         * Scans existing worktree branches for {@code feature/NNN} or {@code feature_NNN},
+         * returns max N + 1. Returns 1 if none found.
+         */
+        private static int nextFeatureNumber(List<WorktreeInfo> worktrees) {
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile("feature[/_](\\d+)");
+            int max = 0;
+            for (WorktreeInfo wt : worktrees) {
+                String branch = wt.getBranch();
+                if (branch == null) continue;
+                java.util.regex.Matcher m = p.matcher(branch);
+                if (m.find()) {
+                    try { max = Math.max(max, Integer.parseInt(m.group(1))); }
+                    catch (NumberFormatException ignored) {}
+                }
+            }
+            return max + 1;
+        }
+
+        /**
+         * Suggested path: sibling of the repo folder, named {@code <repoName>_feature_<nnn>}.
+         * Example: repo at {@code /home/user/myproject} → {@code /home/user/myproject_feature_001}.
+         */
+        private static String suggestedPath(String paddedN) {
+            String repoPath = Context.getProjectFolder();
+            if (repoPath == null || repoPath.isBlank()) {
+                return "";
+            } else {
+                Path repoDir = Paths.get(repoPath);
+                Path parent  = repoDir.getParent();
+                if (parent == null)  {
+                    return "";
+                } else {
+                    String repoName = repoDir.getFileName().toString();
+                    return parent.resolve(repoName + "_feature_" + paddedN).toString();
+                }
+            }
+        }
+
         private void browseFolder() {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             chooser.setDialogTitle("Select Worktree Folder");
+            String current = pathField.getText().trim();
+            if (StringUtils.isNotBlank(current)) {
+                java.io.File f = new java.io.File(current).getParentFile();
+                if (f != null && f.exists()) {
+                    chooser.setCurrentDirectory(f);
+                }
+            }
             if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                 pathField.setText(chooser.getSelectedFile().getAbsolutePath());
             }
