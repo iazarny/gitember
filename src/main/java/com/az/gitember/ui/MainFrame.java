@@ -711,8 +711,8 @@ public class MainFrame extends JFrame {
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 case WORKTREE -> {
-                    if (data.data() instanceof com.az.gitember.data.WorktreeInfo wt) {
-                        openWorktree(wt.getPath());
+                    if (data.data() instanceof WorktreeInfo wt) {
+                        //openWorktree(wt.getPath());
                     }
                 }
                 default -> contentPanel.setContent(null);

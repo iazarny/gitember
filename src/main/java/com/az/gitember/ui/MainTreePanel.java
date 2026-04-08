@@ -316,8 +316,15 @@ public class MainTreePanel extends JPanel {
 
         worktreesNode.removeAllChildren();
         for (WorktreeInfo wt : linked) {
+            // Folder name from path
+            java.nio.file.Path p = wt.getPath() != null
+                    ? java.nio.file.Paths.get(wt.getPath()).getFileName() : null;
+            String folderName = p != null ? p.toString() : wt.getPath();
+
             String branch = wt.getBranch();
-            String label  = branch != null ? branch : "(detached " + wt.getShortHead() + ")";
+            String branchPart = branch != null ? branch : "detached:" + wt.getShortHead();
+
+            String label = folderName + " (" + branchPart + ")";
             if (wt.isLocked())   label += " [locked]";
             if (wt.isPrunable()) label += " [prunable]";
             worktreesNode.add(new DefaultMutableTreeNode(
