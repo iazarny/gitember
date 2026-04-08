@@ -237,6 +237,7 @@ public class MainFrame extends JFrame {
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());
+        menuBar.addWorktreesListener(e -> showWorktreesDialog());
         menuBar.addCreateDiffListener(e -> createDiff());
         menuBar.addApplyDiffListener(e -> applyDiff());
 
@@ -445,6 +446,45 @@ public class MainFrame extends JFrame {
                     statusBar.setStatus("Stash failed: " + ex.getMessage());
                     JOptionPane.showMessageDialog(MainFrame.this,
                             "Cannot stash: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void showWorktreesDialog() {
+        com.az.gitember.dialog.WorktreesDialog dlg =
+                new com.az.gitember.dialog.WorktreesDialog(this);
+        dlg.setVisible(true);
+
+        com.az.gitember.data.WorktreeInfo toOpen = dlg.getSelectedToOpen();
+        if (toOpen == null) return;
+
+        String path = toOpen.getPath();
+        statusBar.setStatus("Opening worktree: " + path + "…");
+        statusBar.showProgress(true);
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Context.init(path);
+                return null;
+            }
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    addCurrentProjectToSettings();
+                    refreshProjectLists();
+                    statusBar.setStatus("Worktree opened: " + path);
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    log.log(Level.WARNING, "Failed to open worktree", cause);
+                    statusBar.setStatus("Failed to open worktree: " + cause.getMessage());
+                    JOptionPane.showMessageDialog(MainFrame.this,
+                            "Cannot open worktree:\n" + cause.getMessage(),
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }

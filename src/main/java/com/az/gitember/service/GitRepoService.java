@@ -3335,5 +3335,116 @@ public class GitRepoService {
         }
     }
 
+    // ── Git Worktree support ──────────────────────────────────────────────────
+
+    /**
+     * Returns all worktrees for this repository by parsing
+     * {@code git worktree list --porcelain} output.
+     */
+    public List<com.az.gitember.data.WorktreeInfo> listWorktrees() throws Exception {
+        List<String> lines = runGit("worktree", "list", "--porcelain");
+        List<com.az.gitember.data.WorktreeInfo> result = new ArrayList<>();
+
+        String path = null;
+        String head = null;
+        String branch = null;
+        boolean locked = false;
+        boolean prunable = false;
+        boolean first = true;   // first entry is always the main worktree
+
+        for (String line : lines) {
+            if (line.startsWith("worktree ")) {
+                if (path != null) {
+                    result.add(new com.az.gitember.data.WorktreeInfo(
+                            path, head, branch, result.isEmpty(), locked, prunable));
+                }
+                path     = line.substring("worktree ".length()).trim();
+                head     = null;
+                branch   = null;
+                locked   = false;
+                prunable = false;
+            } else if (line.startsWith("HEAD ")) {
+                head = line.substring("HEAD ".length()).trim();
+            } else if (line.startsWith("branch ")) {
+                branch = line.substring("branch ".length()).trim();
+            } else if (line.equals("locked") || line.startsWith("locked ")) {
+                locked = true;
+            } else if (line.equals("prunable") || line.startsWith("prunable ")) {
+                prunable = true;
+            }
+        }
+        if (path != null) {
+            result.add(new com.az.gitember.data.WorktreeInfo(
+                    path, head, branch, result.isEmpty(), locked, prunable));
+        }
+        return result;
+    }
+
+    /**
+     * Adds a new worktree at {@code path}, checking out {@code branchName}.
+     * If {@code newBranch} is {@code true} a new branch is created starting at HEAD.
+     */
+    public void addWorktree(String path, String branchName, boolean newBranch) throws Exception {
+        if (newBranch) {
+            runGit("worktree", "add", "-b", branchName, path);
+        } else {
+            runGit("worktree", "add", path, branchName);
+        }
+    }
+
+    /**
+     * Removes the worktree rooted at {@code path}.
+     *
+     * @param force pass {@code true} to remove even if the worktree has uncommitted changes
+     */
+    public void removeWorktree(String path, boolean force) throws Exception {
+        if (force) {
+            runGit("worktree", "remove", "--force", path);
+        } else {
+            runGit("worktree", "remove", path);
+        }
+    }
+
+    /** Prunes administrative files of worktrees that no longer exist on disk. */
+    public void pruneWorktrees() throws Exception {
+        runGit("worktree", "prune");
+    }
+
+    /**
+     * Runs a git command in the repository's working directory and returns stdout lines.
+     * Throws an {@link Exception} whose message is the git stderr if the process exits non-zero.
+     */
+    private List<String> runGit(String... args) throws Exception {
+        File workDir = repository.getWorkTree();
+        List<String> cmd = new ArrayList<>();
+        cmd.add("git");
+        cmd.addAll(Arrays.asList(args));
+
+        Process proc = new ProcessBuilder(cmd)
+                .directory(workDir)
+                .redirectErrorStream(false)
+                .start();
+
+        List<String> out  = new ArrayList<>();
+        List<String> err  = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) out.add(line);
+        }
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(proc.getErrorStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) err.add(line);
+        }
+
+        int exit = proc.waitFor();
+        if (exit != 0) {
+            throw new Exception(String.join("\n", err.isEmpty() ? out : err));
+        }
+        return out;
+    }
+
 }
 
