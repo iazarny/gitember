@@ -103,7 +103,7 @@
       <div class="hero-text" data-aos="zoom-out">
           <h2>The Git GUI Client that works <em>your</em> way</h2>
           <p>Gitember brings the full power of Git to a clean, intuitive interface </p>
-          <a href="#download" class="btn-get-started scrollto">Download Free V 3.1 Apr 2026</a>
+          <a href="#download" class="btn-get-started scrollto">Download Free V 3.2 May 2026</a>
           <p style="opacity:0.7; font-size:0.9rem;">Free &amp; Open Source &nbsp;·&nbsp; Windows · MacOS · Linux &nbsp;&nbsp;</p>
           <p style="opacity:0.7; font-size:0.9rem;">No account or registration required</p>
       </div>
@@ -128,42 +128,42 @@
     <section class="v3-banner" data-aos="fade-up">
       <div class="container">
         <div class="text-center mb-5">
-          <span class="v3-badge">New — Version 3</span>
-          <h2>Gitember 3: Lighter, Faster, More Connected</h2>
-          <p style="max-width:680px; margin:0 auto;">Version 3 is a complete rewrite of the UI layer. We dropped the heavy JavaFX runtime and rebuilt the GUI with lightweight Java Swing — resulting in dramatically faster startup, a smaller install footprint, and a snappier experience on every platform.</p>
+          <span class="v3-badge">New — Version 3.2</span>
+          <h2>Gitember 3.2: Lighter, Faster, More Connected</h2>
+          <p style="max-width:680px; margin:0 auto;">Version 3.2 has new features.</p>
         </div>
         <div class="row g-4">
           <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
             <div class="v3-card">
               <div class="v3-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-              <h5>Blazing Fast Startup</h5>
-              <p>Swing-based UI boots in a fraction of the time. Smaller download, less RAM, instant launch.</p>
+              <h5>Interactive rebase</h5>
+              <p>Powerful visual tool  to clean up, edit, squash, reorder, or delete local commits before sharing them.</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="80">
             <div class="v3-card">
               <div class="v3-icon"><i class="bi bi-github"></i></div>
-              <h5>GitHub Integration</h5>
-              <p>Browse and review GitHub Pull Requests, view open/closed PRs, and diff changed files — all without leaving Gitember.</p>
+              <h5>Visual conflict resolving</h5>
+              <p>Build in tool for visual conflicts resolution.</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="160">
             <div class="v3-card">
               <div class="v3-icon"><i class="bi bi-git"></i></div>
-              <h5>GitLab &amp; Bitbucket</h5>
-              <p>Native Merge Request and Pull Request support for GitLab and Bitbucket Cloud. Connect once, review everywhere.</p>
+              <h5>Working tree</h5>
+              <p>Multiple working trees supports, allowing you to check out more than one branch at a time.</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="240">
             <div class="v3-card">
               <div class="v3-icon"><i class="bi bi-server"></i></div>
-              <h5>Self-hosted Gitea</h5>
-              <p>Works with your self-hosted Gitea instance over HTTPS. Perfect for teams running private infrastructure.</p>
+              <h5>Experimental AI features</h5>
+              <p>Secret leak detections, branches compare</p>
             </div>
           </div>
         </div>
         <div class="text-center mt-5">
-          <a href="#download" class="btn-cta-white scrollto" style="background:#41f1d1; color:#0a4c4c;">Download v3 — It's Free</a>
+          <a href="#download" class="btn-cta-white scrollto" style="background:#41f1d1; color:#0a4c4c;">Download v3.3 — It's Free</a>
         </div>
       </div>
     </section>
@@ -202,8 +202,168 @@
       </div>
     </section>
 
+
+
+
+    <!-- ======= File Diff Deep-dive ======= -->
+    <section id="features" style="background:#fff;"></section>
+    <section id="diff-tool" style="background:#fff;">
+      <div class="container">
+        <div class="feature-detail" data-aos="fade-up">
+          <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+              <div class="feature-icon-lg"><i class="bi bi-file-earmark-diff"></i></div>
+              <h2>The File Diff Viewer Developers Love</h2>
+              <p>Gitember's built-in diff engine goes far beyond basic line highlighting. Whether you're reviewing a colleague's pull request or tracking down a regression, you'll see exactly what changed and why.</p>
+              <ul>
+                <li><strong>Unified diff</strong> — inline view with colour-coded additions and deletions</li>
+                <li><strong>Context diff</strong> — surrounding lines give you the full picture without scrolling</li>
+                <li><strong>Side-by-side diff</strong> — dual-pane view for effortless line-by-line comparison</li>
+                <li>Syntax highlighting for Java, Python, JavaScript, TypeScript, Kotlin, Go, Rust, C/C++, SQL, YAML, Markdown, and 30+ more</li>
+                <li>Light and dark themes that adapt to your system preference</li>
+              </ul>
+            </div>
+            <div class="col-lg-6">
+              <img src="assets/img/3/file-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <img src="assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+          </div>
+          <div class="col-lg-6 order-lg-2">
+            <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
+            <h2>Full Repository &amp; File History</h2>
+            <p>Navigate your entire commit history in a structured timeline. Click any commit to see its full diff, affected files, author details, and metadata. Filter by branch, author, date range, or keyword to find exactly what you need.</p>
+            <ul>
+              <li>Visual commit graph with branch and merge lines</li>
+              <li>File-level history — trace every change to a specific file across the project lifetime</li>
+              <li>One-click diff between any two commits</li>
+              <li>Restore any file to any historical version in two clicks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Folder Comparison Deep-dive ======= -->
+    <section id="folder-compare" class="features-row section-bg" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5" style="padding: 60px 0;">
+
+          <div class="col-lg-6">
+            <div class="feature-icon-lg"><i class="bi bi-intersect"></i></div>
+            <h2>Folder Comparison Tool — See the Whole Picture</h2>
+            <p>Need to compare a backup copy, a build output, or a feature branch's file structure against your working directory? Gitember's folder comparison tool scans both directories and presents them as synchronized, colour-coded tree views.</p>
+            <ul>
+              <li><span style="color:#28a745; font-weight:600;">Green</span> — files unique to the right folder (added)</li>
+              <li><span style="color:#dc3545; font-weight:600;">Red</span> — files unique to the left folder (removed)</li>
+              <li><span style="color:#4154f1; font-weight:600;">Blue</span> — files present in both but with different content</li>
+              <li>Configurable ignore list — skip compiled artifacts (.class, .jar, .dll, .pyc…) automatically</li>
+              <li>Double-click any changed file to open the full side-by-side diff viewer</li>
+              <li>Navigate between differences with Next / Previous buttons</li>
+            </ul>
+          </div>
+          <div class="col-lg-6">
+            <img src="assets/img/3/folder-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Pull Request Panel ======= -->
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <img src="assets/img/3/pull-request.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+
+          </div>
+
+          <div class="col-lg-6">
+            <div class="feature-icon-lg"><i class="bi bi-git"></i></div>
+            <h2>Pull Request Review — No Browser Required</h2>
+            <p>Connect Gitember to your GitHub, GitLab, Bitbucket, or self-hosted Gitea instance and review open Pull Requests without leaving the app. See the PR title, author, state, and the full list of changed files — colour-coded and ready to diff.</p>
+            <ul>
+              <li>Supports GitHub, GitLab, Bitbucket Cloud, and Gitea</li>
+              <li>Works with both HTTPS and SSH remote URLs</li>
+              <li>Changed files listed as Added / Modified / Deleted with colour coding</li>
+              <li>Double-click any file for a full side-by-side diff between base and head branches</li>
+              <li>One-click "Open in Browser" to jump to the PR page</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Advanced Search Deep-dive ======= -->
+    <section style="padding: 60px 0; background:#fafafa;" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5">
+
+          <div class="col-lg-6 order-lg-1">
+            <div class="feature-icon-lg"><i class="bi bi-search"></i></div>
+            <h2>Search Everything, Find Anything</h2>
+            <p>Gitember's indexing engine goes far beyond grepping text files. It extracts and indexes content from a wide variety of file formats, so you can search across your entire repository history with a single query.</p>
+            <ul>
+              <li>Search commit messages, tags, branch names, and file paths.</li>
+              <li>Full-text search inside source code, Markdown, and config files</li>
+              <li>Indexed content from graphics (PNG, JPEG, SVG), PDFs, Office documents (Word, Excel, PowerPoint), OpenDocument files, and CAD formats (DXF, STL)</li>
+              <li>Filter results by branch, author, or date range</li>
+            </ul>
+          </div>
+
+          <div class="col-lg-6 order-lg-2">
+            <img src="assets/img/3/search.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ======= Statistics ======= -->
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <img src="assets/img/3/mac10.png" style="width:100%; max-width:600px; height:auto;" alt="Commit history and statistics">
+          </div>
+
+          <div class="col-lg-6">
+            <div class="feature-icon-lg"><i class="bi bi-bar-chart-line"></i></div>
+            <h2>Repository Statistics at a Glance</h2>
+            <p>
+              Gitember provides clear insights into how your repository evolves over time.
+              Built-in analytics transform commit history into meaningful statistics, helping
+              you understand development activity, contributor dynamics, and project growth
+              without exporting data or running external tools.
+            </p>
+            <ul>
+              <li>Commit activity charts showing repository growth over time</li>
+              <li>Contributor statistics highlighting commits per author</li>
+              <li>Branch activity overview to identify active and inactive branches</li>
+              <li>Daily, weekly, and monthly commit distribution</li>
+              <li>Quick overview of repository size, commits, branches, and tags</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
     <!-- ======= Feature Cards Section ======= -->
-    <section id="features">
+    <section id="featurescards">
       <div class="container" data-aos="fade-up">
         <div class="row">
           <div class="col-lg-12">
@@ -213,40 +373,40 @@
             </div>
           </div>
 
-          <div class="col-lg-8 offset-lg-2">
+          <div class="col-lg-12 ">
             <div class="row">
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up">
                 <div class="icon"><i class="bi bi-git"></i></div>
                 <h4 class="title">Full Git Support</h4>
                 <p class="description">Clone, init, commit, push, pull, fetch, branch, merge, rebase, stash, tag — every essential Git command available through a clean visual interface. Supports SSH and HTTPS remotes.</p>
               </div>
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="50">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="50">
                 <div class="icon"><i class="bi bi-file-diff"></i></div>
                 <h4 class="title">Powerful File Diff Viewer</h4>
                 <p class="description">Unified, context, and side-by-side diff modes with full syntax highlighting for 40+ languages. Instantly see what changed, line by line, in any commit or working-copy file.</p>
               </div>
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="100">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="100">
                 <div class="icon"><i class="bi bi-folder2-open"></i></div>
                 <h4 class="title">Folder Comparison Tool</h4>
                 <p class="description">Compare two entire directory trees side-by-side in a synchronized tree view. Immediately spot files that were added, removed, or modified — even across large project structures.</p>
               </div>
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="150">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="150">
                 <div class="icon"><i class="bi bi-binoculars"></i></div>
                 <h4 class="title">Advanced Search</h4>
                 <p class="description">Search through commit messages, tags, branch names, and file contents — including text files, graphics, Office documents, PDFs, and CAD drawings — all indexed and instantly searchable.</p>
               </div>
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="200">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="200">
                 <div class="icon"><i class="bi bi-bar-chart-line"></i></div>
                 <h4 class="title">Statistics &amp; Insights</h4>
                 <p class="description">Understand project health at a glance with visual statistics: commit frequency, lines changed per author, branch activity, and more. Perfect for sprint reviews and code audits.</p>
               </div>
 
-              <div class="col-lg-6 col-md-6 box" data-aos="fade-up" data-aos-delay="250">
+              <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="250">
                 <div class="icon"><i class="bi bi-hdd-stack"></i></div>
                 <h4 class="title">Git LFS Ready</h4>
                 <p class="description">Manage large binary assets — images, videos, 3D models, datasets — with built-in Git Large File Storage support. Track patterns, fetch objects, and see LFS file status directly in the UI.</p>
@@ -292,30 +452,6 @@
         </div>
         <div class="row g-4 justify-content-center">
 
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="0">
-            <div class="audience-card">
-              <div class="ac-icon"><i class="bi bi-subtract"></i></div>
-              <h4>Branch Diff View</h4>
-              <p>Side-by-side comparison of two branches — see all commits and file changes that differ between them at a glance.</p>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="80">
-            <div class="audience-card">
-              <div class="ac-icon"><i class="bi bi-layout-split"></i></div>
-              <h4>Improved File Diff Overview</h4>
-              <p>Redesigned diff overview panel with a cleaner layout, better navigation controls, and adjustable split ratios.</p>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="160">
-            <div class="audience-card">
-              <div class="ac-icon"><i class="bi bi-arrow-repeat"></i></div>
-              <h4>Interactive Rebase</h4>
-              <p>Reorder, squash, edit, and drop commits visually — no more editing rebase todo files in a text editor.</p>
-            </div>
-          </div>
-
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="240">
             <div class="audience-card">
               <div class="ac-icon"><i class="bi bi-terminal"></i></div>
@@ -332,182 +468,10 @@
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
-            <div class="audience-card">
-              <div class="ac-icon"><i class="bi bi-shield-exclamation"></i></div>
-              <h4>Secret &amp; Dirty-Word Detector</h4>
-              <p>Pre-commit scanning that flags accidental secrets (API keys, tokens, passwords) and configurable word lists before they ever reach the remote.</p>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
-            <div class="audience-card">
-              <div class="ac-icon"><i class="bi bi-people"></i></div>
-              <h4>Accounts</h4>
-              <p>Support of multiple git identities or accounts.</p>
-            </div>
-          </div>
 
         </div>
       </div>
     </section>
-
-
-
-    <!-- ======= File Diff Deep-dive ======= -->
-    <section id="diff-tool" style="background:#fff;">
-      <div class="container">
-        <div class="feature-detail" data-aos="fade-up">
-          <div class="row align-items-center g-5">
-            <div class="col-lg-6">
-              <div class="feature-icon-lg"><i class="bi bi-file-earmark-diff"></i></div>
-              <h2>The File Diff Viewer Developers Love</h2>
-              <p>Gitember's built-in diff engine goes far beyond basic line highlighting. Whether you're reviewing a colleague's pull request or tracking down a regression, you'll see exactly what changed and why.</p>
-              <ul>
-                <li><strong>Unified diff</strong> — inline view with colour-coded additions and deletions</li>
-                <li><strong>Context diff</strong> — surrounding lines give you the full picture without scrolling</li>
-                <li><strong>Side-by-side diff</strong> — dual-pane view for effortless line-by-line comparison</li>
-                <li>Syntax highlighting for Java, Python, JavaScript, TypeScript, Kotlin, Go, Rust, C/C++, SQL, YAML, Markdown, and 30+ more</li>
-                <li>Light and dark themes that adapt to your system preference</li>
-              </ul>
-            </div>
-            <div class="col-lg-6">
-                <img src="assets/img/3/file-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
-      <div class="container">
-        <div class="row align-items-center g-5">
-          <div class="col-lg-6">
-            <img src="assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
-          </div>
-          <div class="col-lg-6 order-lg-2">
-            <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
-            <h2>Full Repository &amp; File History</h2>
-            <p>Navigate your entire commit history in a structured timeline. Click any commit to see its full diff, affected files, author details, and metadata. Filter by branch, author, date range, or keyword to find exactly what you need.</p>
-            <ul>
-              <li>Visual commit graph with branch and merge lines</li>
-              <li>File-level history — trace every change to a specific file across the project lifetime</li>
-              <li>One-click diff between any two commits</li>
-              <li>Restore any file to any historical version in two clicks</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======= Folder Comparison Deep-dive ======= -->
-    <section id="folder-compare" class="features-row section-bg" data-aos="fade-up">
-      <div class="container">
-        <div class="row align-items-center g-5" style="padding: 60px 0;">
-
-          <div class="col-lg-6">
-            <div class="feature-icon-lg"><i class="bi bi-intersect"></i></div>
-            <h2>Folder Comparison Tool — See the Whole Picture</h2>
-            <p>Need to compare a backup copy, a build output, or a feature branch's file structure against your working directory? Gitember's folder comparison tool scans both directories and presents them as synchronized, colour-coded tree views.</p>
-            <ul>
-              <li><span style="color:#28a745; font-weight:600;">Green</span> — files unique to the right folder (added)</li>
-              <li><span style="color:#dc3545; font-weight:600;">Red</span> — files unique to the left folder (removed)</li>
-              <li><span style="color:#4154f1; font-weight:600;">Blue</span> — files present in both but with different content</li>
-              <li>Configurable ignore list — skip compiled artifacts (.class, .jar, .dll, .pyc…) automatically</li>
-              <li>Double-click any changed file to open the full side-by-side diff viewer</li>
-              <li>Navigate between differences with Next / Previous buttons</li>
-            </ul>
-          </div>
-            <div class="col-lg-6">
-                <img src="assets/img/3/folder-compare.png" style="width:100%; max-width:600px; height:auto;" alt="Gitember folder comparison tool screenshot">
-            </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======= Pull Request Panel ======= -->
-    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
-      <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6">
-                <img src="assets/img/3/pull-request.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
-
-            </div>
-
-          <div class="col-lg-6">
-            <div class="feature-icon-lg"><i class="bi bi-git"></i></div>
-            <h2>Pull Request Review — No Browser Required</h2>
-            <p>Connect Gitember to your GitHub, GitLab, Bitbucket, or self-hosted Gitea instance and review open Pull Requests without leaving the app. See the PR title, author, state, and the full list of changed files — colour-coded and ready to diff.</p>
-            <ul>
-              <li>Supports GitHub, GitLab, Bitbucket Cloud, and Gitea</li>
-              <li>Works with both HTTPS and SSH remote URLs</li>
-              <li>Changed files listed as Added / Modified / Deleted with colour coding</li>
-              <li>Double-click any file for a full side-by-side diff between base and head branches</li>
-              <li>One-click "Open in Browser" to jump to the PR page</li>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ======= Advanced Search Deep-dive ======= -->
-    <section style="padding: 60px 0; background:#fafafa;" data-aos="fade-up">
-      <div class="container">
-        <div class="row align-items-center g-5">
-
-          <div class="col-lg-6 order-lg-1">
-            <div class="feature-icon-lg"><i class="bi bi-search"></i></div>
-            <h2>Search Everything, Find Anything</h2>
-            <p>Gitember's indexing engine goes far beyond grepping text files. It extracts and indexes content from a wide variety of file formats, so you can search across your entire repository history with a single query.</p>
-            <ul>
-              <li>Search commit messages, tags, branch names, and file paths.</li>
-              <li>Full-text search inside source code, Markdown, and config files</li>
-              <li>Indexed content from graphics (PNG, JPEG, SVG), PDFs, Office documents (Word, Excel, PowerPoint), OpenDocument files, and CAD formats (DXF, STL)</li>
-              <li>Filter results by branch, author, or date range</li>
-            </ul>
-          </div>
-
-            <div class="col-lg-6 order-lg-2">
-                <img src="assets/img/3/search.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
-
-            </div>
-        </div>
-      </div>
-    </section>
-
-
-      <!-- ======= Statistics ======= -->
-      <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
-          <div class="container">
-              <div class="row align-items-center g-5">
-                  <div class="col-lg-6">
-                      <img src="assets/img/3/mac10.png" style="width:100%; max-width:600px; height:auto;" alt="Commit history and statistics">
-                  </div>
-
-                  <div class="col-lg-6">
-                      <div class="feature-icon-lg"><i class="bi bi-bar-chart-line"></i></div>
-                      <h2>Repository Statistics at a Glance</h2>
-                      <p>
-                          Gitember provides clear insights into how your repository evolves over time.
-                          Built-in analytics transform commit history into meaningful statistics, helping
-                          you understand development activity, contributor dynamics, and project growth
-                          without exporting data or running external tools.
-                      </p>
-                      <ul>
-                          <li>Commit activity charts showing repository growth over time</li>
-                          <li>Contributor statistics highlighting commits per author</li>
-                          <li>Branch activity overview to identify active and inactive branches</li>
-                          <li>Daily, weekly, and monthly commit distribution</li>
-                          <li>Quick overview of repository size, commits, branches, and tags</li>
-                      </ul>
-                  </div>
-
-              </div>
-          </div>
-      </section>
 
 
 
@@ -534,19 +498,19 @@
                         <div class="col-lg-6 col-md-6">
                             <ul style="list-style-type: none;">
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.1.msi"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows MSI </span></a>
+                                    <a href="https://gitember.org/Gitember-3.2.msi"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows MSI </span></a>
                                 </li>
                                 <li>
                                     <a href="https://apps.microsoft.com/detail/9NXNMLLGBGD4"><span style="font-size: 36px;"><i class="bi bi-windows"></i> Windows store </span></a> <span style="display:inline-block; background:#28a745; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">better</span>
                                 </li>
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.1.dmg"><span style="font-size: 36px;"><i class="bi bi-apple"></i> Apple silicon DMG </span></a> <span style="display:inline-block; background:#6c757d; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">signed</span> <span style="display:inline-block; background:#0d6efd; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:2px;">notarized</span>
+                                    <a href="https://gitember.org/Gitember-3.2.dmg"><span style="font-size: 36px;"><i class="bi bi-apple"></i> Apple silicon DMG </span></a> <span style="display:inline-block; background:#6c757d; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">signed</span> <span style="display:inline-block; background:#0d6efd; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:2px;">notarized</span>
                                 </li>
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.1.deb"><span style="font-size: 36px;"><i class="bi bi-postcard-fill"></i> Linux DEB</span></a>
+                                    <a href="https://gitember.org/Gitember-3.2.deb"><span style="font-size: 36px;"><i class="bi bi-postcard-fill"></i> Linux DEB</span></a>
                                 </li>
                                 <li>
-                                    <a href="https://gitember.org/Gitember-3.1.jar">
+                                    <a href="https://gitember.org/Gitember-3.2.jar">
                                 <span style="font-size: 36px;">
                                     ♨ Fat jar
                                 </span>
@@ -571,7 +535,7 @@
             <div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 20px; margin-top: 10px;">
               <p style="color:#aaa; font-size:0.85rem; margin:0;">
                 <i class="bi bi-info-circle"></i>&nbsp;
-                Version 3.1 · Apr 2026<br>
+                Version 3.2 · May 2026<br>
                 Questions? Mail <a href="mailto:iazarny@yahoo.com" style="color:#aaa;">Igor Azarny</a>
               </p>
             </div>
