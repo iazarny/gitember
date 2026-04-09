@@ -420,7 +420,12 @@ public class HistoryPanel extends JPanel {
                     statusBar.clearProgress();
                     statusBar.setStatus(commits.size() + " commits loaded");
                     refreshLuceneState();
-                    if (afterLoad != null) afterLoad.run();
+                    if (afterLoad != null) {
+                        afterLoad.run();
+                    } else if (!commits.isEmpty()) {
+                        commitTable.setRowSelectionInterval(0, 0);
+                        commitTable.scrollRectToVisible(commitTable.getCellRect(0, 0, true));
+                    }
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load history", e);
                     statusBar.clearProgress();
@@ -454,6 +459,10 @@ public class HistoryPanel extends JPanel {
                     tableModel.setRevisions(revisions);
                     statusBar.clearProgress();
                     statusBar.setStatus(revisions.size() + " revisions loaded for " + fileName);
+                    if (!revisions.isEmpty()) {
+                        commitTable.setRowSelectionInterval(0, 0);
+                        commitTable.scrollRectToVisible(commitTable.getCellRect(0, 0, true));
+                    }
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load file history", e);
                     statusBar.clearProgress();
