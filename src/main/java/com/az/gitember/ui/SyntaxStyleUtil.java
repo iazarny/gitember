@@ -120,7 +120,7 @@ public final class SyntaxStyleUtil {
      */
     public static Font monoFont() {
         var settings = Context.getSettings();
-        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize() : 13;
+        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize() - 2 : 13;
         return new Font(Font.MONOSPACED, Font.PLAIN, size);
     }
 
