@@ -54,7 +54,7 @@ public class PushResultDialog extends JDialog {
 
         Font monoFont = SyntaxStyleUtil.monoFont();
         JEditorPane msgArea = new JEditorPane("text/html",
-                PullResultDialog.toHtml(displayText, monoFont.getSize()));
+                PullResultDialog.toHtml(displayText, monoFont.getSize()-2));
         msgArea.setEditable(false);
         msgArea.setOpaque(true);
         msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
