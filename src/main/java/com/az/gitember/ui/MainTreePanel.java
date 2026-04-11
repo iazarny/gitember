@@ -40,6 +40,9 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode submodulesNode;    // null when no submodules
     private DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
 
+    /** Linked (non-main) worktrees — kept in sync so branch labels can show the indicator. */
+    private List<WorktreeInfo> linkedWorktrees = List.of();
+
     private BranchContextMenuFactory contextMenuFactory;
 
     public MainTreePanel() {
@@ -147,6 +150,12 @@ public class MainTreePanel extends JPanel {
                 }
                 yield null;
             }
+            case WORKTREE -> {
+                if (data.data() instanceof WorktreeInfo wt) {
+                    yield contextMenuFactory.createWorktreeContextMenu(wt);
+                }
+                yield null;
+            }
             default -> null;
         };
     }
@@ -199,8 +208,21 @@ public class MainTreePanel extends JPanel {
                 }
 
                 String leafName = parts[parts.length - 1];
+                // Remote-tracking indicator: (origin/branch)
                 if (branch.getRemoteMergeName() != null) {
                     leafName = leafName + " (" + branch.getRemoteMergeName() + ")";
+                }
+                // Worktree indicator: [folder-name]
+                if (type == NodeType.BRANCH && branch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+                    WorktreeInfo wt = linkedWorktrees.stream()
+                            .filter(w -> branch.getShortName().equals(w.getBranch()))
+                            .findFirst().orElse(null);
+                    if (wt != null) {
+                        String wtFolder = wt.getPath() != null
+                                ? java.nio.file.Paths.get(wt.getPath()).getFileName().toString()
+                                : wt.getPath();
+                        leafName = leafName + " [" + wtFolder + "]";
+                    }
                 }
                 target.add(new DefaultMutableTreeNode(new TreeNodeData(leafName, type, branch)));
             }
@@ -299,6 +321,11 @@ public class MainTreePanel extends JPanel {
         // Show only linked (non-main) worktrees; the main IS the open repo
         List<WorktreeInfo> linked = worktrees == null ? List.of()
                 : worktrees.stream().filter(w -> !w.isMain()).toList();
+
+        // Keep the snapshot so populateBranches can show the worktree indicator
+        linkedWorktrees = linked;
+        // Re-render local branches to add/remove the [worktree] suffix
+        populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
 
         if (linked.isEmpty()) {
             if (worktreesNode != null) {

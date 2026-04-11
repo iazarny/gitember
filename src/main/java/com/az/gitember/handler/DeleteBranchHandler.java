@@ -3,12 +3,14 @@ package com.az.gitember.handler;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
+import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.transport.RefSpec;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.Optional;
 
 public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
@@ -58,6 +60,29 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
      * Shows confirmation dialog and executes if confirmed.
      */
     public static void showAndExecute(Component parent, StatusBar statusBar, ScmBranch branch) {
+        // Refuse deletion if the branch is checked out in a linked worktree
+        if (branch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+            try {
+                List<WorktreeInfo> worktrees = Context.getGitRepoService().listWorktrees();
+                WorktreeInfo conflict = worktrees.stream()
+                        .filter(wt -> !wt.isMain())
+                        .filter(wt -> branch.getShortName().equals(wt.getBranch()))
+                        .findFirst()
+                        .orElse(null);
+                if (conflict != null) {
+                    JOptionPane.showMessageDialog(parent,
+                            "<html>Cannot delete branch <b>" + branch.getShortName() + "</b>.<br><br>"
+                            + "It is currently checked out in a linked worktree at:<br>"
+                            + "<tt>" + conflict.getPath() + "</tt><br><br>"
+                            + "Remove or switch the worktree first.</html>",
+                            "Branch In Use", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (Exception ignored) {
+                // If listing worktrees fails, fall through and let git decide
+            }
+        }
+
         String message;
         if (branch.getRemoteMergeName() != null && branch.getAheadCount() > 0) {
             message = "<html>Delete branch <b>" + branch.getShortName() + "</b>?<br><br>"

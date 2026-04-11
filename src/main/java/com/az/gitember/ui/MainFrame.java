@@ -177,6 +177,8 @@ public class MainFrame extends JFrame {
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
+        contextMenuFactory.setWorktreeOpenAction(this::openWorktree);
+        contextMenuFactory.setWorktreeRefreshAction(treePanel::refreshWorktrees);
         treePanel.setContextMenuFactory(contextMenuFactory);
 
         // Start with welcome screen
@@ -710,11 +712,7 @@ public class MainFrame extends JFrame {
                     contentPanel.setContent(submodulePanel);
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
-                case WORKTREE -> {
-                    if (data.data() instanceof WorktreeInfo wt) {
-                        //openWorktree(wt.getPath());
-                    }
-                }
+                case WORKTREE -> { /* handled via context menu */ }
                 default -> contentPanel.setContent(null);
             }
         }
