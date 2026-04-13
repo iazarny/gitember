@@ -3,6 +3,7 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.OllamaManager;
+import com.az.gitember.ui.SyntaxStyleUtil;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -40,7 +41,7 @@ public class SettingsDialog extends JDialog {
         ignoreExtArea = new JTextArea(currentIgnore, 3, 30);
         ignoreExtArea.setLineWrap(true);
         ignoreExtArea.setWrapStyleWord(true);
-        ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, 11f));
+        ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, SyntaxStyleUtil.monoFont().getSize()-2));
 
         // Form panel
         JPanel form = new JPanel(new GridBagLayout());
