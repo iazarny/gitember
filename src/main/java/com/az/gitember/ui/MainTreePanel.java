@@ -50,6 +50,11 @@ public class MainTreePanel extends JPanel {
         tree.setCellRenderer(new MainTreeCellRenderer());
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
+        //tree.setBackground();
+        // Make tree transparent
+        tree.setOpaque(false);
+        tree.setBorder(BorderFactory.createEmptyBorder());
+        //tree.setBorder(BorderFactory.createLineBorder(Color.RED, 4));
 
         buildInitialTree();
 
@@ -78,7 +83,12 @@ public class MainTreePanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(tree);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setViewportBorder(null);
+        scrollPane.getViewport().setOpaque(false);
+
         add(scrollPane, BorderLayout.CENTER);
+        add(new JLabel("todotodo"), BorderLayout.SOUTH);
 
         // Listen for Context changes
         Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, this::onBranchesChanged);
@@ -90,7 +100,48 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   this::onStatusListChanged);
     }
+/*
+public void updateStateLabel() {
+        if (Context.getGitRepoService() == null) {
+            statePanel.setVisible(false);
+            return;
+        }
+        RepositoryState state = Context.getGitRepoService().getRepositoryState();
+        String text = toHumanState(state);
+        if (text == null) {
+            statePanel.setVisible(false);
+        } else {
+            stateLabel.setText(text);
+            Color fg = switch (state) {
+                case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED ->
+                        new Color(0x2E7D32); // green
+                default -> new Color(0xE65100); // orange
+            };
+            stateLabel.setForeground(fg);
+            statePanel.setVisible(true);
+        }
+    }
 
+    private static String toHumanState(RepositoryState state) {
+        if (state == null) return null;
+        return switch (state) {
+            case SAFE                     -> null;
+            case MERGING                  -> "Merge in progress";
+            case MERGING_RESOLVED         -> "Merge resolved \u2014 commit to finish";
+            case REBASING                 -> "Rebase in progress";
+            case REBASING_INTERACTIVE     -> "Interactive rebase in progress";
+            case REBASING_MERGE           -> "Rebase in progress (merge)";
+            case REBASING_REBASING        -> "Rebase in progress";
+            case APPLY                    -> "Applying patches (git am)";
+            case REVERTING                -> "Revert in progress";
+            case REVERTING_RESOLVED       -> "Revert resolved \u2014 commit to finish";
+            case BISECTING                -> "Bisecting";
+            case CHERRY_PICKING           -> "Cherry-pick in progress";
+            case CHERRY_PICKING_RESOLVED  -> "Cherry-pick resolved \u2014 commit to finish";
+            default -> state.getDescription();
+        };
+    }
+ */
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
         this.contextMenuFactory = factory;
     }
