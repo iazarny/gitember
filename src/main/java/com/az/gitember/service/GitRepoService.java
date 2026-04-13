@@ -1176,11 +1176,16 @@ public class GitRepoService {
     }
 
     public CommitInfo getHead() throws Exception {
-        final Ref head = repository.exactRef(Constants.HEAD);
-        return new CommitInfo(
-                head.getTarget().getName(),
-                head.getObjectId() == null ? null : head.getObjectId().getName()
-        );
+        // getFullBranch() + resolve() work in both main repos and linked worktrees;
+        // exactRef(HEAD) can return null in a linked worktree.
+        String branch = repository.getFullBranch();
+        ObjectId oid  = repository.resolve(Constants.HEAD);
+        if (branch != null) {
+            return new CommitInfo(branch, oid != null ? oid.getName() : null);
+        }
+        // Detached HEAD
+        String sha = oid != null ? oid.getName() : null;
+        return new CommitInfo(sha != null ? sha : Constants.HEAD, sha);
     }
 
     /**
@@ -1692,8 +1697,12 @@ public class GitRepoService {
      * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
      */
     public void fetchLfsObjects(RemoteRepoParameters params) throws IOException {
+        ObjectId headOid = repository.resolve(Constants.HEAD);
+        if (headOid == null) return;
         Ref head = repository.exactRef(Constants.HEAD);
-        if (head == null || head.getObjectId() == null) return;
+        if (head == null) head = new org.eclipse.jgit.lib.ObjectIdRef.Unpeeled(
+                Ref.Storage.LOOSE, Constants.HEAD, headOid);
+        if (head.getObjectId() == null) return;
         Lfs lfs = new Lfs(repository);
         List<LfsPointer> pointers = new ArrayList<>();
         List<String> paths = new ArrayList<>();
@@ -3054,8 +3063,7 @@ public class GitRepoService {
 
     ScmStat blame(final Set<String> files, final String taskName, final ProgressMonitor progressMonitor) throws Exception {
 
-        final Ref head = repository.exactRef(Constants.HEAD);
-        final ObjectId headId = head.getObjectId();
+        final ObjectId headId = repository.resolve(Constants.HEAD);
         final ConcurrentHashMap<String, Map> rez = new ConcurrentHashMap<>();
         final Map<String, Integer> totalLines = new TreeMap<>();
         final Map<String, Integer> commitsMap = new HashMap<>();
