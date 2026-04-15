@@ -8,6 +8,7 @@ import com.az.gitember.data.Submodule;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
+import org.eclipse.jgit.lib.RepositoryState;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -39,6 +40,7 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode submodulesNode;    // null when no submodules
 
     private BranchContextMenuFactory contextMenuFactory;
+    private JLabel statusLabel;
 
     public MainTreePanel() {
         setLayout(new BorderLayout());
@@ -53,7 +55,15 @@ public class MainTreePanel extends JPanel {
         //tree.setBackground();
         // Make tree transparent
         tree.setOpaque(false);
-        tree.setBorder(BorderFactory.createEmptyBorder());
+        tree.setBorder(
+                BorderFactory.createMatteBorder(
+                        0, // top
+                        0, // left
+                        0, // right
+                        0, // bottom
+                        Color.GREEN
+                )
+        );
         //tree.setBorder(BorderFactory.createLineBorder(Color.RED, 4));
 
         buildInitialTree();
@@ -82,13 +92,32 @@ public class MainTreePanel extends JPanel {
             }
         });
 
+        Color panelBorder = UIManager.getColor("controlShadow");
+
         JScrollPane scrollPane = new JScrollPane(tree);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBorder(                BorderFactory.createMatteBorder(
+                1, // top
+                0, // left
+                0, // bottom
+                1, // right
+                panelBorder
+        ));
         scrollPane.setViewportBorder(null);
         scrollPane.getViewport().setOpaque(false);
 
         add(scrollPane, BorderLayout.CENTER);
-        add(new JLabel("todotodo"), BorderLayout.SOUTH);
+
+        statusLabel = new JLabel("");
+        statusLabel.setBorder(
+                BorderFactory.createMatteBorder(
+                        0,
+                        1,
+                        1,
+                        1,
+                        panelBorder
+                )
+        );
+        add(statusLabel, BorderLayout.SOUTH);
 
         // Listen for Context changes
         Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, this::onBranchesChanged);
@@ -100,25 +129,26 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   this::onStatusListChanged);
     }
-/*
-public void updateStateLabel() {
+    private void updateStateLabel() {
         if (Context.getGitRepoService() == null) {
-            statePanel.setVisible(false);
+            statusLabel.setText("");
+            statusLabel.setVisible(false);
             return;
         }
         RepositoryState state = Context.getGitRepoService().getRepositoryState();
         String text = toHumanState(state);
         if (text == null) {
-            statePanel.setVisible(false);
+            statusLabel.setText("");
+            statusLabel.setVisible(false);
         } else {
-            stateLabel.setText(text);
+            statusLabel.setText(" " + text);
             Color fg = switch (state) {
                 case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED ->
                         new Color(0x2E7D32); // green
                 default -> new Color(0xE65100); // orange
             };
-            stateLabel.setForeground(fg);
-            statePanel.setVisible(true);
+            statusLabel.setForeground(fg);
+            statusLabel.setVisible(true);
         }
     }
 
@@ -127,21 +157,20 @@ public void updateStateLabel() {
         return switch (state) {
             case SAFE                     -> null;
             case MERGING                  -> "Merge in progress";
-            case MERGING_RESOLVED         -> "Merge resolved \u2014 commit to finish";
+            case MERGING_RESOLVED         -> "Merge resolved — commit to finish";
             case REBASING                 -> "Rebase in progress";
             case REBASING_INTERACTIVE     -> "Interactive rebase in progress";
             case REBASING_MERGE           -> "Rebase in progress (merge)";
             case REBASING_REBASING        -> "Rebase in progress";
             case APPLY                    -> "Applying patches (git am)";
             case REVERTING                -> "Revert in progress";
-            case REVERTING_RESOLVED       -> "Revert resolved \u2014 commit to finish";
+            case REVERTING_RESOLVED       -> "Revert resolved — commit to finish";
             case BISECTING                -> "Bisecting";
             case CHERRY_PICKING           -> "Cherry-pick in progress";
-            case CHERRY_PICKING_RESOLVED  -> "Cherry-pick resolved \u2014 commit to finish";
+            case CHERRY_PICKING_RESOLVED  -> "Cherry-pick resolved — commit to finish";
             default -> state.getDescription();
         };
     }
- */
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
         this.contextMenuFactory = factory;
     }
@@ -303,6 +332,7 @@ public void updateStateLabel() {
         SwingUtilities.invokeLater(() -> {
             populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
             populateBranches(remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
+            updateStateLabel();
         });
     }
 
@@ -321,6 +351,7 @@ public void updateStateLabel() {
     private void onRepoChanged(PropertyChangeEvent evt) {
         SwingUtilities.invokeLater(() -> {
             refreshTree();
+            updateStateLabel();
             tree.setSelectionPath(new TreePath(new Object[]{rootNode, workingCopyNode}));
         });
     }
@@ -363,7 +394,10 @@ public void updateStateLabel() {
     }
 
     private void onStatusListChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(this::updateWorkingCopyLabel);
+        SwingUtilities.invokeLater(() -> {
+            updateWorkingCopyLabel();
+            updateStateLabel();
+        });
     }
 
     private void updateWorkingCopyLabel() {
