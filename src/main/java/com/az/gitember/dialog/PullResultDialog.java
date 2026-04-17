@@ -178,7 +178,7 @@ public class PullResultDialog extends JDialog {
         m.appendTail(sb);
 
         String body = sb.toString().replace("\n", "<br>");
-        return "<html><body style='font-family:monospaced;font-size:" + (fontSize-1) + "px'>" + body + "</body></html>";
+        return "<html><body style='font-family:monospaced;font-size:" + (fontSize-2) + "px'>" + body + "</body></html>";
     }
 
     private static JLabel makeBadge(String text, Color bg, Color fg) {

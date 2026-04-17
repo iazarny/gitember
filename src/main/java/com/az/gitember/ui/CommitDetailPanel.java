@@ -741,9 +741,13 @@ public class CommitDetailPanel extends JPanel {
     }
 
     private static JTextField createReadOnlyField() {
-        JTextField field = new JTextField();
-        field.setEditable(false);
-        return field;
+        return new JTextField() {
+            @Override
+            public void setText(String t) {
+                super.setText(t);
+                setCaretPosition(0);
+            }
+        };
     }
 
     // --- File-name cell renderer: highlights rows whose file matched the Lucene search ---

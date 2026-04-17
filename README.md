@@ -91,11 +91,3 @@ More info and documentation: https://gitember.org
 * Mass operations — delete, stage, unstage, revert
 * Branch difference view
 
-## Background
-
-Started in December 2016 as a weekend experiment to see if JavaFX was suitable for desktop GUI programming. It turned into a full-featured Git client. Version 3 marks the move to Swing for a lighter, faster experience.
-
-How to use
-
-1. From the history panel: right-click any commit → "Interactive Rebase onto here…" — rebases all commits from HEAD down to (but not including) the clicked commit
-2. From the Branch menu: "Interactive Rebase…" — prompts you to enter a base commit SHA

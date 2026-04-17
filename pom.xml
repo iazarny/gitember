@@ -24,6 +24,7 @@
         <slf4j.version>2.0.11</slf4j.version>
         <lucene.version>9.9.1</lucene.version>
         <tika.version>2.9.1</tika.version>
+        <langchain4j.version>0.36.2</langchain4j.version>
     </properties>
 <!--
     <dependency>
@@ -45,7 +46,7 @@
         <dependency>
             <groupId>com.fifesoft</groupId>
             <artifactId>rsyntaxtextarea</artifactId>
-            <version>3.6.1</version>
+            <version>3.6.2</version>
             <scope>compile</scope>
         </dependency>
 
@@ -139,22 +140,29 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.14.0</version>
+            <version>3.20.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.15.1</version>
+            <version>2.21.0</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.16.0</version>
+            <version>1.21.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
+            <version>4.5.0</version>
+        </dependency>
+
+        <!-- LangChain4j – Ollama (local AI) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+            <version>${langchain4j.version}</version>
         </dependency>
 
         <!-- Test -->
