@@ -55,6 +55,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenu     workingCopyMenu;
     private final JMenuItem refreshItem;
     private final JMenuItem stashItem;
+    private final JMenuItem worktreesItem;
     private final JMenuItem createDiffItem;
     private final JMenuItem applyDiffItem;
 
@@ -187,11 +188,14 @@ public class MainMenuBar extends JMenuBar {
         refreshItem    = new JMenuItem("Refresh",        KeyEvent.VK_R);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
         stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
+        worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
+        worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
         createDiffItem = new JMenuItem("Create diff",    KeyEvent.VK_D);
         applyDiffItem  = new JMenuItem("Apply diff...",  KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
         workingCopyMenu.add(stashItem);
+        workingCopyMenu.add(worktreesItem);
         workingCopyMenu.addSeparator();
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
@@ -308,6 +312,7 @@ public class MainMenuBar extends JMenuBar {
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
+    public void addWorktreesListener(ActionListener l)     { worktreesItem.addActionListener(l); }
     public void addCredentialsListener(ActionListener l)      { credentialsItem.addActionListener(l); }
     public void addProjectSettingsListener(ActionListener l)  { projectSettingsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }

@@ -89,6 +89,13 @@ public class GitRepoService {
 
     private final Repository repository;
 
+    /**
+     * For linked worktrees: the worktree-specific git dir (e.g. {@code .git/worktrees/<name>}).
+     * {@code null} for regular (main) repositories.
+     * Used to read the worktree-local HEAD and to locate the worktree-specific index.
+     */
+    private final File worktreeGitDir;
+
     private final BranchLiveTimeAdapter branchLiveTimeAdapter = new BranchLiveTimeAdapter();
 
     static {
@@ -200,21 +207,79 @@ public class GitRepoService {
      * @throws IOException in case of error
      */
     public GitRepoService(final String gitFolder) throws IOException {
-        this.repository = new FileRepositoryBuilder()
-                .readEnvironment() // scan environment GIT_* variables
-                .setGitDir(new File(gitFolder))
-                .findGitDir()
-                .build();
+        File gitDirFile = new File(gitFolder);
+        if (gitDirFile.isFile()) {
+            // Linked worktree: .git is a FILE containing "gitdir: <path>" pointer.
+            // JGit 6.x does NOT support the git "commondir" mechanism, so we must
+            // manually resolve the common (main) .git directory and open that as the
+            // JGit gitDir.  This gives full access to all refs (branches, tags, remotes,
+            // stash) and the shared object database.  We then point JGit at the
+            // worktree-specific index so that status/diff work correctly against the
+            // files actually checked out in this worktree.
+            File resolvedWorktreeGitDir = resolveGitDirFromFile(gitDirFile);
+            File mainGitDir = resolveCommonDir(resolvedWorktreeGitDir);
+            this.worktreeGitDir = resolvedWorktreeGitDir;
+            this.repository = new FileRepositoryBuilder()
+                    .readEnvironment()
+                    .setGitDir(mainGitDir)
+                    .setWorkTree(gitDirFile.getParentFile())
+                    .setIndexFile(new File(resolvedWorktreeGitDir, "index"))
+                    .build();
+        } else {
+            this.worktreeGitDir = null;
+            this.repository = new FileRepositoryBuilder()
+                    .readEnvironment()
+                    .setGitDir(gitDirFile)
+                    .findGitDir()
+                    .build();
+        }
+    }
 
+    /**
+     * Reads a .git file (as found in a linked worktree) and returns the worktree-specific
+     * git directory it points to via the "gitdir: <path>" line.
+     */
+    private static File resolveGitDirFromFile(File dotGitFile) throws IOException {
+        String content = Files.readString(dotGitFile.toPath()).trim();
+        if (!content.startsWith("gitdir:")) {
+            throw new IOException("Not a valid .git file (missing 'gitdir:' line): " + dotGitFile);
+        }
+        String path = content.substring("gitdir:".length()).trim();
+        File resolved = new File(path);
+        if (!resolved.isAbsolute()) {
+            resolved = new File(dotGitFile.getParentFile(), path);
+        }
+        return resolved.getCanonicalFile();
+    }
+
+    /**
+     * Reads the {@code commondir} file inside a worktree-specific git directory and returns
+     * the main (common) git directory.  The commondir file typically contains {@code ../..}
+     * (relative) or an absolute path.
+     */
+    private static File resolveCommonDir(File worktreeGitDir) throws IOException {
+        File commondirFile = new File(worktreeGitDir, "commondir");
+        if (commondirFile.isFile()) {
+            String path = Files.readString(commondirFile.toPath()).trim();
+            File resolved = new File(path);
+            if (!resolved.isAbsolute()) {
+                resolved = new File(worktreeGitDir, path);
+            }
+            return resolved.getCanonicalFile();
+        }
+        // Fallback: assume standard layout .git/worktrees/<name>/ → parent's parent is main .git
+        return worktreeGitDir.getParentFile().getParentFile().getCanonicalFile();
     }
 
     public GitRepoService(final Repository repo) {
         this.repository = repo;
+        this.worktreeGitDir = null;
     }
 
     public GitRepoService() {
         super();
         repository = null;
+        this.worktreeGitDir = null;
     }
 
     public void shutdown() {
@@ -1176,11 +1241,50 @@ public class GitRepoService {
     }
 
     public CommitInfo getHead() throws Exception {
+        if (worktreeGitDir != null) {
+            // For a linked worktree the HEAD file lives in the worktree-specific git dir,
+            // not in the main .git that JGit is opened against.
+            File headFile = new File(worktreeGitDir, Constants.HEAD);
+            if (!headFile.isFile()) {
+                return new CommitInfo(null, null);
+            }
+            String headContent = Files.readString(headFile.toPath()).trim();
+            String refName;
+            if (headContent.startsWith("ref: ")) {
+                refName = headContent.substring("ref: ".length()).trim();
+            } else {
+                refName = headContent; // detached HEAD — SHA
+            }
+            ObjectId objectId = repository.resolve(refName);
+            return new CommitInfo(refName, objectId != null ? objectId.getName() : null);
+        }
         final Ref head = repository.exactRef(Constants.HEAD);
+        if (head == null) {
+            return new CommitInfo(null, null);
+        }
+        final String name = head.isSymbolic() ? head.getTarget().getName() : head.getName();
         return new CommitInfo(
-                head.getTarget().getName(),
+                name,
                 head.getObjectId() == null ? null : head.getObjectId().getName()
         );
+    }
+
+    /**
+     * Returns the short branch name for the current context: for a linked worktree this is
+     * read directly from the worktree-specific HEAD file; for a regular repository it
+     * delegates to {@link Repository#getBranch()}.
+     */
+    private String getEffectiveBranch() throws IOException {
+        if (worktreeGitDir != null) {
+            File headFile = new File(worktreeGitDir, Constants.HEAD);
+            if (!headFile.isFile()) return null;
+            String headContent = Files.readString(headFile.toPath()).trim();
+            if (headContent.startsWith("ref: " + Constants.R_HEADS)) {
+                return headContent.substring(("ref: " + Constants.R_HEADS).length()).trim();
+            }
+            return null; // detached HEAD
+        }
+        return repository.getBranch();
     }
 
     /**
@@ -1519,42 +1623,52 @@ public class GitRepoService {
      * @return list of ScmItem
      */
     public List<ScmItem> getStatuses(ProgressMonitor progressMonitor, boolean collectLastChanges) {
-
-
         final List<ScmItem> scmItems = new ArrayList<>();
-        try (Git git = new Git(repository)) {
+        try {
+            // Determine which HEAD commit to compare the index against.
+            // For a linked worktree the HEAD lives in the worktree-specific git dir, not in
+            // the main .git directory that JGit is opened with.
+            String headRevStr;
+            if (worktreeGitDir != null) {
+                File headFile = new File(worktreeGitDir, Constants.HEAD);
+                String headContent = Files.readString(headFile.toPath()).trim();
+                headRevStr = headContent.startsWith("ref: ")
+                        ? headContent.substring("ref: ".length()).trim()
+                        : headContent;
+            } else {
+                headRevStr = Constants.HEAD;
+            }
 
-            Set<String> filter = new HashSet<>();
+            ObjectId headId = repository.resolve(headRevStr);
 
-            Status status = git.status().setProgressMonitor(progressMonitor).call();
+            FileTreeIterator workingTreeIt = new FileTreeIterator(repository);
+            IndexDiff diff = new IndexDiff(repository, headId, workingTreeIt);
+            diff.diff();
 
-            status.getRemoved().forEach(item -> {
-                        if (!filter.contains(item)) {
-                            scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.REMOVED)));
-                        }
-                    }
-            );
-            status.getMissing().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MISSED))));
-            status.getAdded().forEach(item -> {
-                if (!filter.contains(item)) {
-                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.ADDED)));
-                }
-            });
-            status.getUntracked().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.UNTRACKED))));
-
-            status.getModified().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MODIFIED))));
-            status.getChanged().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CHANGED))));
-            status.getConflicting().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
-            //status.getUntrackedFolders().forEach(item -> scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.ScmItemStatus.UNTRACKED_FOLDER))));
+            diff.getRemoved().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.REMOVED))));
+            diff.getMissing().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MISSED))));
+            diff.getAdded().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.ADDED))));
+            diff.getUntracked().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.UNTRACKED))));
+            diff.getModified().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.MODIFIED))));
+            diff.getChanged().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CHANGED))));
+            diff.getConflicting().forEach(item ->
+                    scmItems.add(new ScmItem(item, new ScmItemAttribute().withStatus(ScmItem.Status.CONFLICT))));
 
             if (isLfsRepo()) {
-                mergeLfs(scmItems, getLfsFiles(Constants.HEAD));
+                mergeLfs(scmItems, getLfsFiles(headRevStr));
             }
 
             if (collectLastChanges) {
-                enrichWithLastChangesDetail(git, scmItems);
+                try (Git git = new Git(repository)) {
+                    enrichWithLastChangesDetail(git, scmItems);
+                }
             }
-
 
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot get statuses", e);
@@ -2776,7 +2890,7 @@ public class GitRepoService {
      */
     private Collection<RemoteRefUpdate> buildPushRefs(RefSpec refSpec) {
         try {
-            String branch = repository.getBranch();
+            String branch = getEffectiveBranch();
             String localRef = (refSpec != null && refSpec.getSource() != null)
                     ? refSpec.getSource()
                     : Constants.R_HEADS + branch;
@@ -3317,7 +3431,7 @@ public class GitRepoService {
      * local (unpushed), so the method returns {@code true}.
      */
     public boolean isCommitUnpushed(String sha) throws Exception {
-        String branchName = repository.getBranch();
+        String branchName = getEffectiveBranch();
         BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, branchName);
         if (trackingStatus == null) {
             return true; // no upstream — all commits are local
@@ -3333,6 +3447,117 @@ public class GitRepoService {
             // unpushed = commit is NOT yet reachable from the remote tracking tip
             return !walk.isMergedInto(commit, remote);
         }
+    }
+
+    // ── Git Worktree support ──────────────────────────────────────────────────
+
+    /**
+     * Returns all worktrees for this repository by parsing
+     * {@code git worktree list --porcelain} output.
+     */
+    public List<com.az.gitember.data.WorktreeInfo> listWorktrees() throws Exception {
+        List<String> lines = runGit("worktree", "list", "--porcelain");
+        List<com.az.gitember.data.WorktreeInfo> result = new ArrayList<>();
+
+        String path = null;
+        String head = null;
+        String branch = null;
+        boolean locked = false;
+        boolean prunable = false;
+        boolean first = true;   // first entry is always the main worktree
+
+        for (String line : lines) {
+            if (line.startsWith("worktree ")) {
+                if (path != null) {
+                    result.add(new com.az.gitember.data.WorktreeInfo(
+                            path, head, branch, result.isEmpty(), locked, prunable));
+                }
+                path     = line.substring("worktree ".length()).trim();
+                head     = null;
+                branch   = null;
+                locked   = false;
+                prunable = false;
+            } else if (line.startsWith("HEAD ")) {
+                head = line.substring("HEAD ".length()).trim();
+            } else if (line.startsWith("branch ")) {
+                branch = line.substring("branch ".length()).trim();
+            } else if (line.equals("locked") || line.startsWith("locked ")) {
+                locked = true;
+            } else if (line.equals("prunable") || line.startsWith("prunable ")) {
+                prunable = true;
+            }
+        }
+        if (path != null) {
+            result.add(new com.az.gitember.data.WorktreeInfo(
+                    path, head, branch, result.isEmpty(), locked, prunable));
+        }
+        return result;
+    }
+
+    /**
+     * Adds a new worktree at {@code path}, checking out {@code branchName}.
+     * If {@code newBranch} is {@code true} a new branch is created starting at HEAD.
+     */
+    public void addWorktree(String path, String branchName, boolean newBranch) throws Exception {
+        if (newBranch) {
+            runGit("worktree", "add", "-b", branchName, path);
+        } else {
+            runGit("worktree", "add", path, branchName);
+        }
+    }
+
+    /**
+     * Removes the worktree rooted at {@code path}.
+     *
+     * @param force pass {@code true} to remove even if the worktree has uncommitted changes
+     */
+    public void removeWorktree(String path, boolean force) throws Exception {
+        if (force) {
+            runGit("worktree", "remove", "--force", path);
+        } else {
+            runGit("worktree", "remove", path);
+        }
+    }
+
+    /** Prunes administrative files of worktrees that no longer exist on disk. */
+    public void pruneWorktrees() throws Exception {
+        runGit("worktree", "prune");
+    }
+
+    /**
+     * Runs a git command in the repository's working directory and returns stdout lines.
+     * Throws an {@link Exception} whose message is the git stderr if the process exits non-zero.
+     */
+    private List<String> runGit(String... args) throws Exception {
+        File workDir = repository.getWorkTree();
+        List<String> cmd = new ArrayList<>();
+        cmd.add("git");
+        cmd.addAll(Arrays.asList(args));
+
+        Process proc = new ProcessBuilder(cmd)
+                .directory(workDir)
+                .redirectErrorStream(false)
+                .start();
+
+        List<String> out  = new ArrayList<>();
+        List<String> err  = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) out.add(line);
+        }
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(proc.getErrorStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) err.add(line);
+        }
+
+        int exit = proc.waitFor();
+        if (exit != 0) {
+            throw new Exception(String.join("\n", err.isEmpty() ? out : err));
+        }
+        return out;
     }
 
 }

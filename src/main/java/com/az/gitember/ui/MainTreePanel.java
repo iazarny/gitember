@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Submodule;
+import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
@@ -38,6 +39,10 @@ public class MainTreePanel extends JPanel {
     private DefaultMutableTreeNode stashesNode;
     private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
     private DefaultMutableTreeNode submodulesNode;    // null when no submodules
+    private DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
+
+    /** Linked (non-main) worktrees — kept in sync so branch labels can show the indicator. */
+    private List<WorktreeInfo> linkedWorktrees = List.of();
 
     private BranchContextMenuFactory contextMenuFactory;
     private JLabel statusLabel;
@@ -225,6 +230,12 @@ public class MainTreePanel extends JPanel {
                 }
                 yield null;
             }
+            case WORKTREE -> {
+                if (data.data() instanceof WorktreeInfo wt) {
+                    yield contextMenuFactory.createWorktreeContextMenu(wt);
+                }
+                yield null;
+            }
             default -> null;
         };
     }
@@ -233,6 +244,7 @@ public class MainTreePanel extends JPanel {
         rootNode.removeAllChildren();
         pullRequestsNode = null;
         submodulesNode   = null;
+        worktreesNode    = null;
 
         workingCopyNode = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
         historyNode = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY));
@@ -276,8 +288,21 @@ public class MainTreePanel extends JPanel {
                 }
 
                 String leafName = parts[parts.length - 1];
+                // Remote-tracking indicator: (origin/branch)
                 if (branch.getRemoteMergeName() != null) {
                     leafName = leafName + " (" + branch.getRemoteMergeName() + ")";
+                }
+                // Worktree indicator: [folder-name]
+                if (type == NodeType.BRANCH && branch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+                    WorktreeInfo wt = linkedWorktrees.stream()
+                            .filter(w -> branch.getShortName().equals(w.getBranch()))
+                            .findFirst().orElse(null);
+                    if (wt != null) {
+                        String wtFolder = wt.getPath() != null
+                                ? java.nio.file.Paths.get(wt.getPath()).getFileName().toString()
+                                : wt.getPath();
+                        leafName = leafName + " [" + wtFolder + "]";
+                    }
                 }
                 target.add(new DefaultMutableTreeNode(new TreeNodeData(leafName, type, branch)));
             }
@@ -354,6 +379,87 @@ public class MainTreePanel extends JPanel {
             updateStateLabel();
             tree.setSelectionPath(new TreePath(new Object[]{rootNode, workingCopyNode}));
         });
+        refreshWorktrees();
+    }
+
+    /**
+     * Reloads linked worktrees in the background and updates the Worktrees section.
+     * Called on repo change and after the Worktrees dialog closes.
+     */
+    public void refreshWorktrees() {
+        if (Context.getGitRepoService() == null) return;
+        new SwingWorker<List<WorktreeInfo>, Void>() {
+            @Override protected List<WorktreeInfo> doInBackground() throws Exception {
+                return Context.getGitRepoService().listWorktrees();
+            }
+            @Override protected void done() {
+                try { updateWorktreesNode(get()); }
+                catch (Exception ex) { log.log(Level.FINE, "Cannot load worktrees", ex); }
+            }
+        }.execute();
+    }
+
+    private void updateWorktreesNode(List<WorktreeInfo> worktrees) {
+        List<WorktreeInfo> all    = worktrees == null ? List.of() : worktrees;
+        List<WorktreeInfo> linked = all.stream().filter(w -> !w.isMain()).toList();
+
+        // Keep the snapshot so populateBranches can show the worktree indicator
+        linkedWorktrees = linked;
+        // Re-render local branches to add/remove the [worktree] suffix
+        populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
+
+        // Show the section only when there are linked worktrees
+        if (linked.isEmpty()) {
+            if (worktreesNode != null) {
+                treeModel.removeNodeFromParent(worktreesNode);
+                worktreesNode = null;
+            }
+            return;
+        }
+
+        boolean isNew = (worktreesNode == null);
+        if (isNew) {
+            worktreesNode = new DefaultMutableTreeNode(
+                    new TreeNodeData("Worktrees", NodeType.WORKTREES));
+        }
+
+        worktreesNode.removeAllChildren();
+
+        // First item: main worktree (open-only)
+        WorktreeInfo main = all.stream().filter(WorktreeInfo::isMain).findFirst().orElse(null);
+        if (main != null) {
+            java.nio.file.Path mp = main.getPath() != null
+                    ? java.nio.file.Paths.get(main.getPath()).getFileName() : null;
+            String mainFolder = mp != null ? mp.toString() : main.getPath();
+            String mainBranch = main.getBranch();
+            String mainLabel  = mainFolder + " (" + (mainBranch != null ? mainBranch : "detached:" + main.getShortHead()) + ") [main]";
+            worktreesNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(mainLabel, NodeType.WORKTREE, main)));
+        }
+
+        // Remaining linked worktrees
+        for (WorktreeInfo wt : linked) {
+            java.nio.file.Path p = wt.getPath() != null
+                    ? java.nio.file.Paths.get(wt.getPath()).getFileName() : null;
+            String folderName = p != null ? p.toString() : wt.getPath();
+
+            String branch    = wt.getBranch();
+            String branchPart = branch != null ? branch : "detached:" + wt.getShortHead();
+
+            String label = folderName + " (" + branchPart + ")";
+            if (wt.isLocked())   label += " [locked]";
+            if (wt.isPrunable()) label += " [prunable]";
+            worktreesNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(label, NodeType.WORKTREE, wt)));
+        }
+
+        if (isNew) {
+            int historyIdx = rootNode.getIndex(historyNode);
+            treeModel.insertNodeInto(worktreesNode, rootNode, historyIdx + 1);
+        } else {
+            treeModel.reload(worktreesNode);
+        }
+        tree.expandPath(new TreePath(new Object[]{rootNode, worktreesNode}));
     }
 
     private void onPullRequestsChanged(PropertyChangeEvent evt) {

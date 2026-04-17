@@ -26,7 +26,9 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         PULL_REQUESTS,
         PULL_REQUEST,
         SUBMODULES,
-        SUBMODULE
+        SUBMODULE,
+        WORKTREES,
+        WORKTREE
     }
 
     @Override
@@ -64,6 +66,8 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case PULL_REQUEST   -> Util.themeAwareIcon(FontAwesomeSolid.EXCHANGE_ALT,14);
             case SUBMODULES     -> Util.themeAwareIcon(FontAwesomeSolid.CUBES,       14);
             case SUBMODULE      -> Util.themeAwareIcon(FontAwesomeSolid.CUBE,        14);
+            case WORKTREES      -> Util.themeAwareIcon(FontAwesomeSolid.SITEMAP,     14);
+            case WORKTREE       -> Util.themeAwareIcon(FontAwesomeSolid.FOLDER_OPEN, 14);
         };
     }
 
