@@ -31,7 +31,13 @@
       "Bash(python3 -c \"\nimport json\nwith open\\('/Users/igorazarny/.gitember/gitember2.json'\\) as f:\n    d = json.load\\(f\\)\nprint\\('ignoreCompareFiles:', d.get\\('ignoreCompareFiles', 'KEY MISSING'\\)\\)\nprint\\('theme:', d.get\\('theme'\\)\\)\nprint\\('fontSize:', d.get\\('fontSize'\\)\\)\n\")",
       "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*Setting*\" -o -name \"*Config*\" -o -name \"*Preference*\" 2>/dev/null | grep -v target | grep -v \".class\")",
       "Bash(find:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Read(//c/tmp/**)",
+      "Bash(jar xf *)",
+      "Bash(mkdir -p /tmp/jgit_src)",
+      "Read(//tmp/**)",
+      "Bash(unzip -o ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.10.1.202505221210-r/org.eclipse.jgit-6.10.1.202505221210-r-sources.jar \"org/eclipse/jgit/internal/storage/file/FileRepository.java\" \"org/eclipse/jgit/internal/storage/file/RefDirectory.java\")",
+      "Bash(unzip -o ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/6.10.1.202505221210-r/org.eclipse.jgit-6.10.1.202505221210-r-sources.jar \"org/eclipse/jgit/api/StatusCommand.java\")"
     ]
   }
 }

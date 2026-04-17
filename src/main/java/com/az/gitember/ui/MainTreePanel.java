@@ -318,15 +318,15 @@ public class MainTreePanel extends JPanel {
     }
 
     private void updateWorktreesNode(List<WorktreeInfo> worktrees) {
-        // Show only linked (non-main) worktrees; the main IS the open repo
-        List<WorktreeInfo> linked = worktrees == null ? List.of()
-                : worktrees.stream().filter(w -> !w.isMain()).toList();
+        List<WorktreeInfo> all    = worktrees == null ? List.of() : worktrees;
+        List<WorktreeInfo> linked = all.stream().filter(w -> !w.isMain()).toList();
 
         // Keep the snapshot so populateBranches can show the worktree indicator
         linkedWorktrees = linked;
         // Re-render local branches to add/remove the [worktree] suffix
         populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
 
+        // Show the section only when there are linked worktrees
         if (linked.isEmpty()) {
             if (worktreesNode != null) {
                 treeModel.removeNodeFromParent(worktreesNode);
@@ -342,13 +342,26 @@ public class MainTreePanel extends JPanel {
         }
 
         worktreesNode.removeAllChildren();
+
+        // First item: main worktree (open-only)
+        WorktreeInfo main = all.stream().filter(WorktreeInfo::isMain).findFirst().orElse(null);
+        if (main != null) {
+            java.nio.file.Path mp = main.getPath() != null
+                    ? java.nio.file.Paths.get(main.getPath()).getFileName() : null;
+            String mainFolder = mp != null ? mp.toString() : main.getPath();
+            String mainBranch = main.getBranch();
+            String mainLabel  = mainFolder + " (" + (mainBranch != null ? mainBranch : "detached:" + main.getShortHead()) + ") [main]";
+            worktreesNode.add(new DefaultMutableTreeNode(
+                    new TreeNodeData(mainLabel, NodeType.WORKTREE, main)));
+        }
+
+        // Remaining linked worktrees
         for (WorktreeInfo wt : linked) {
-            // Folder name from path
             java.nio.file.Path p = wt.getPath() != null
                     ? java.nio.file.Paths.get(wt.getPath()).getFileName() : null;
             String folderName = p != null ? p.toString() : wt.getPath();
 
-            String branch = wt.getBranch();
+            String branch    = wt.getBranch();
             String branchPart = branch != null ? branch : "detached:" + wt.getShortHead();
 
             String label = folderName + " (" + branchPart + ")";

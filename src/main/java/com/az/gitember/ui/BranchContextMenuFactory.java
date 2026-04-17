@@ -235,8 +235,8 @@ public class BranchContextMenuFactory {
     }
 
     /**
-     * Context menu for a linked worktree node.
-     * Operations: Open, Remove, Remove (force).
+     * Context menu for a worktree node.
+     * The main worktree only has "Open"; linked worktrees also have Remove actions.
      */
     public JPopupMenu createWorktreeContextMenu(WorktreeInfo wt) {
         JPopupMenu menu = new JPopupMenu();
@@ -247,15 +247,17 @@ public class BranchContextMenuFactory {
         });
         menu.add(openItem);
 
-        menu.addSeparator();
+        if (!wt.isMain()) {
+            menu.addSeparator();
 
-        JMenuItem removeItem = new JMenuItem("Remove…");
-        removeItem.addActionListener(e -> doRemoveWorktree(wt, false));
-        menu.add(removeItem);
+            JMenuItem removeItem = new JMenuItem("Remove…");
+            removeItem.addActionListener(e -> doRemoveWorktree(wt, false));
+            menu.add(removeItem);
 
-        JMenuItem forceRemoveItem = new JMenuItem("Remove (force)…");
-        forceRemoveItem.addActionListener(e -> doRemoveWorktree(wt, true));
-        menu.add(forceRemoveItem);
+            JMenuItem forceRemoveItem = new JMenuItem("Remove (force)…");
+            forceRemoveItem.addActionListener(e -> doRemoveWorktree(wt, true));
+            menu.add(forceRemoveItem);
+        }
 
         return menu;
     }

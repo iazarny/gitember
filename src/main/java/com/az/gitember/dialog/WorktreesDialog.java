@@ -60,12 +60,12 @@ public class WorktreesDialog extends JDialog {
         btnPanel.add(addBtn);
         btnPanel.add(removeBtn);
         btnPanel.add(openBtn);
-        btnPanel.add(pruneBtn);
+       // btnPanel.add(pruneBtn);
 
         // Status bar
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createEmptyBorder(2, 6, 4, 6));
-        statusPanel.add(statusLbl, BorderLayout.WEST);
+       // statusPanel.add(statusLbl, BorderLayout.WEST);
 
         JPanel south = new JPanel(new BorderLayout());
         south.add(btnPanel, BorderLayout.NORTH);
