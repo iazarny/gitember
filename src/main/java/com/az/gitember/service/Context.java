@@ -462,6 +462,7 @@ public class Context {
 
                 filterBranchesInternal();
             } catch (Exception e) {
+                e.printStackTrace();
                 log.log(Level.SEVERE, "Cannot update branch information");
             }
         }
