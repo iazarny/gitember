@@ -1,6 +1,7 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.service.Context;
 import org.apache.commons.lang3.StringUtils;
 
 import com.az.gitember.ui.misc.Util;
@@ -53,6 +54,7 @@ public class CloneDialog extends JDialog {
         formPanel.add(new JLabel("Destination:"), gbc);
         JPanel destPanel = new JPanel(new BorderLayout(5, 0));
         destField = new JTextField(25);
+        destField.setText(Context.getHomeFolder());
         JButton browseBtn = new JButton("...");
         browseBtn.addActionListener(e -> browseDestination());
         destPanel.add(destField, BorderLayout.CENTER);
@@ -156,6 +158,14 @@ public class CloneDialog extends JDialog {
         String url = urlField.getText().trim();
         cloneBtn.setEnabled(StringUtils.isNotBlank(url));
 
+        String repoName = repoNameFromUrl(url);
+        if (repoName != null) {
+            String home = Context.getHomeFolder();
+            destField.setText(home != null ? home + repoName : repoName);
+        } else {
+            destField.setText(Context.getHomeFolder());
+        }
+
         boolean isHttp = url.startsWith("https:") || url.startsWith("http:");
         authTypePanel.setVisible(isHttp);
         if (isHttp) {
@@ -202,6 +212,22 @@ public class CloneDialog extends JDialog {
         wrapper.setOpaque(false);
         wrapper.add(content, BorderLayout.CENTER);
         return wrapper;
+    }
+
+    /** Extracts the repository folder name from a clone URL, stripping trailing {@code .git}. */
+    private static String repoNameFromUrl(String url) {
+        if (url == null || url.isBlank()) return null;
+        // Strip trailing slashes
+        String u = url.stripTrailing();
+        while (u.endsWith("/")) u = u.substring(0, u.length() - 1);
+        // Take the last path segment
+        int slash = Math.max(u.lastIndexOf('/'), u.lastIndexOf(':'));
+        if (slash < 0 || slash == u.length() - 1) return null;
+        String name = u.substring(slash + 1);
+        if (name.toLowerCase().endsWith(".git")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        return name.isBlank() ? null : name;
     }
 
     private void browseDestination() {

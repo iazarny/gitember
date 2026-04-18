@@ -111,6 +111,9 @@ public class Context {
 
     private static JFrame mainFrame;
 
+    private static final Object branchLock = new Object();
+    private static final Object tagLock = new Object();
+
     public static JFrame getMainFrame() { return mainFrame; }
     public static void setMainFrame(JFrame frame) { mainFrame = frame; }
 
@@ -441,10 +444,10 @@ public class Context {
         );
     }
 
-    private static final Object branchLock = new Object();
-    private static final Object tagLock = new Object();
+
 
     public static void updateBranches() {
+
         synchronized (branchLock) {
             localBranchesRaw.clear();
             remoteBranchesRaw.clear();
@@ -606,5 +609,14 @@ public class Context {
 
     public static boolean isLinux() {
         return (OS.contains("linux"));
+    }
+
+    public static String getHomeFolder() {
+        // get users home folder , with last path delimiter
+        String home = System.getProperty("user.home");
+        if (home != null && !home.endsWith(java.io.File.separator)) {
+            home = home + java.io.File.separator;
+        }
+        return home;
     }
 }
