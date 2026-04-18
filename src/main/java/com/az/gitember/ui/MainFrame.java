@@ -13,6 +13,7 @@ import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
+import org.eclipse.jgit.lib.RepositoryState;
 import com.az.gitember.ui.misc.MainToolBar;
 
 import javax.swing.*;
@@ -397,6 +398,14 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
     }
 
+    private boolean isResolvableRepoState() {
+        if (Context.getGitRepoService() == null) return false;
+        RepositoryState s = Context.getGitRepoService().getRepositoryState();
+        return s == RepositoryState.MERGING_RESOLVED
+                || s == RepositoryState.CHERRY_PICKING_RESOLVED
+                || s == RepositoryState.REVERTING_RESOLVED;
+    }
+
     private void refreshWorkingCopy() {
         statusBar.setStatus("Refreshing...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -617,7 +626,7 @@ public class MainFrame extends JFrame {
     private void onStatusListChanged(PropertyChangeEvent evt) {
         SwingUtilities.invokeLater(() -> {
             workingCopyPanel.setItems(Context.getStatusList());
-            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
+            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
         });
     }
 
@@ -669,7 +678,7 @@ public class MainFrame extends JFrame {
                     Context.setActiveView(Context.ActiveView.WORKING_COPY);
                     contentPanel.setContent(workingCopyPanel);
                     workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
-                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
+                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
