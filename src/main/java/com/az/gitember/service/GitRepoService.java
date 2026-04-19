@@ -2342,6 +2342,43 @@ public class GitRepoService {
     }
 
     /**
+     * Returns a unified-diff text between two refs, truncated to {@code maxBytes}.
+     * Suitable for feeding to an LLM for diff description.
+     */
+    public String getBranchDiffText(String branchARef, String branchBRef, int maxBytes) throws Exception {
+        ObjectId aId = repository.resolve(branchARef);
+        ObjectId bId = repository.resolve(branchBRef);
+        if (aId == null) throw new IllegalArgumentException("Cannot resolve ref: " + branchARef);
+        if (bId == null) throw new IllegalArgumentException("Cannot resolve ref: " + branchBRef);
+
+        try (RevWalk walk = new RevWalk(repository);
+             ObjectReader reader = repository.newObjectReader()) {
+
+            RevCommit aCommit = walk.parseCommit(aId);
+            RevCommit bCommit = walk.parseCommit(bId);
+
+            CanonicalTreeParser oldTree = new CanonicalTreeParser();
+            oldTree.reset(reader, aCommit.getTree());
+
+            CanonicalTreeParser newTree = new CanonicalTreeParser();
+            newTree.reset(reader, bCommit.getTree());
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (DiffFormatter df = new DiffFormatter(out)) {
+                df.setRepository(repository);
+                df.setContext(3);
+                df.setDetectRenames(true);
+                df.format(oldTree, newTree);
+                df.flush();
+            }
+            byte[] bytes = out.toByteArray();
+            if (bytes.length <= maxBytes) return out.toString(java.nio.charset.StandardCharsets.UTF_8);
+            return new String(bytes, 0, maxBytes, java.nio.charset.StandardCharsets.UTF_8)
+                    + "\n... [diff truncated] ...";
+        }
+    }
+
+    /**
      * Returns files changed in a pull/merge request: diff between targetBranch (base) and
      * sourceBranch (head). Tries remote-tracking refs before local refs.
      *
