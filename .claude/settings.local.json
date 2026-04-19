@@ -34,7 +34,8 @@
       "Bash(xargs grep:*)",
       "Bash(grep -v \"^$\")",
       "Bash(sed -n '610,630p' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/MainFrame.java)",
-      "Bash(sed -n '665,680p' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/MainFrame.java)"
+      "Bash(sed -n '665,680p' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/MainFrame.java)",
+      "Bash(grep -i \"\\\\.java$\")"
     ]
   }
 }

@@ -17,8 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Fetches pull requests / merge requests from GitHub, GitLab, Bitbucket or Gitea
- * using their REST APIs. Returns an empty list silently when the host is unsupported.
+ * Fetches pull requests / merge requests from GitHub, GitLab, Bitbucket, Gitea
+ * or Azure DevOps using their REST APIs.
+ * Returns an empty list silently when the host is unsupported.
  * Works without a token for public repositories (rate limits may apply).
  */
 public class PullRequestService {
@@ -26,7 +27,7 @@ public class PullRequestService {
     private static final Logger log = Logger.getLogger(PullRequestService.class.getName());
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private enum Host { GITHUB, GITLAB, BITBUCKET, GITEA, UNKNOWN }
+    private enum Host { GITHUB, GITLAB, BITBUCKET, GITEA, AZURE_DEVOPS, UNKNOWN }
 
     /**
      * Fetches open PRs for the repository identified by {@code remoteUrl}.
@@ -44,11 +45,12 @@ public class PullRequestService {
 
         try {
             return switch (host) {
-                case GITHUB    -> fetchGitHub(remoteUrl, token);
-                case GITLAB    -> fetchGitLab(remoteUrl, token);
-                case BITBUCKET -> fetchBitbucket(remoteUrl, token);
-                case GITEA     -> fetchGitea(remoteUrl, token);
-                default        -> Collections.emptyList();
+                case GITHUB       -> fetchGitHub(remoteUrl, token);
+                case GITLAB       -> fetchGitLab(remoteUrl, token);
+                case BITBUCKET    -> fetchBitbucket(remoteUrl, token);
+                case GITEA        -> fetchGitea(remoteUrl, token);
+                case AZURE_DEVOPS -> fetchAzureDevOps(remoteUrl, token);
+                default           -> Collections.emptyList();
             };
         } catch (Exception e) {
             log.log(Level.WARNING, "Failed to fetch pull requests from " + remoteUrl, e);
@@ -59,10 +61,13 @@ public class PullRequestService {
     // ---- host detection ----
 
     private static Host detectHost(String url) {
-        if (url.contains("github.com"))                           return Host.GITHUB;
+        if (url.contains("github.com"))                             return Host.GITHUB;
         if (url.contains("gitlab.com") || url.contains("gitlab.")) return Host.GITLAB;
-        if (url.contains("bitbucket.org"))                        return Host.BITBUCKET;
-        if (url.contains("gitea."))                               return Host.GITEA;
+        if (url.contains("bitbucket.org"))                          return Host.BITBUCKET;
+        if (url.contains("gitea."))                                 return Host.GITEA;
+        if (url.contains("dev.azure.com")
+                || url.contains("visualstudio.com")
+                || url.contains("ssh.dev.azure.com"))               return Host.AZURE_DEVOPS;
         return Host.UNKNOWN;
     }
 
@@ -70,11 +75,12 @@ public class PullRequestService {
     private static String resolveToken(String projectToken, Host host) {
         if (projectToken != null && !projectToken.isBlank()) return projectToken;
         return switch (host) {
-            case GITHUB    -> System.getenv("GITHUB_TOKEN");
-            case GITLAB    -> System.getenv("GITLAB_TOKEN");
-            case BITBUCKET -> System.getenv("BITBUCKET_TOKEN");
-            case GITEA     -> System.getenv("GITEA_TOKEN");
-            default        -> null;
+            case GITHUB       -> System.getenv("GITHUB_TOKEN");
+            case GITLAB       -> System.getenv("GITLAB_TOKEN");
+            case BITBUCKET    -> System.getenv("BITBUCKET_TOKEN");
+            case GITEA        -> System.getenv("GITEA_TOKEN");
+            case AZURE_DEVOPS -> System.getenv("AZURE_DEVOPS_TOKEN");
+            default           -> null;
         };
     }
 
@@ -296,9 +302,10 @@ public class PullRequestService {
 
         try {
             return switch (host) {
-                case GITHUB -> fetchGitHubPrFiles(remoteUrl, token, prNumber);
-                case GITLAB -> fetchGitLabMrFiles(remoteUrl, token, prNumber);
-                default     -> Collections.emptyList();
+                case GITHUB       -> fetchGitHubPrFiles(remoteUrl, token, prNumber);
+                case GITLAB       -> fetchGitLabMrFiles(remoteUrl, token, prNumber);
+                case AZURE_DEVOPS -> fetchAzureDevOpsPrFiles(remoteUrl, token, prNumber);
+                default           -> Collections.emptyList();
             };
         } catch (Exception e) {
             log.log(Level.WARNING, "Failed to fetch PR files from API for PR #" + prNumber, e);
@@ -380,6 +387,171 @@ public class PullRequestService {
             result.add(new ScmItem(newPath, attr));
         }
         return result;
+    }
+
+    // ---- Azure DevOps ----
+
+    /**
+     * Holds the resolved API base URL and repository name for an Azure DevOps remote.
+     * <ul>
+     *   <li>apiBase — e.g. {@code https://dev.azure.com/myorg/myproject}</li>
+     *   <li>repoName — e.g. {@code myrepo}</li>
+     * </ul>
+     */
+    private record AzureRepo(String apiBase, String repoName) {}
+
+    /**
+     * Parses Azure DevOps remote URLs into an {@link AzureRepo}.
+     *
+     * Supported formats:
+     * <ul>
+     *   <li>{@code https://dev.azure.com/{org}/{project}/_git/{repo}}</li>
+     *   <li>{@code https://{org}.visualstudio.com/{project}/_git/{repo}}</li>
+     *   <li>{@code git@ssh.dev.azure.com:v3/{org}/{project}/{repo}}</li>
+     * </ul>
+     */
+    private static AzureRepo parseAzureRepo(String remoteUrl) {
+        if (remoteUrl == null) return null;
+        String u = remoteUrl.trim().replaceAll("\\.git$", "");
+
+        // dev.azure.com — HTTPS and SSH
+        if (u.contains("dev.azure.com")) {
+            int idx = u.indexOf("dev.azure.com");
+            String tail = u.substring(idx + "dev.azure.com".length());
+
+            // SSH: :v3/{org}/{project}/{repo}  — strip the :v{n}/ prefix
+            if (tail.startsWith(":")) {
+                int slash = tail.indexOf('/');
+                if (slash < 0) return null;
+                tail = tail.substring(slash + 1);
+            } else if (tail.startsWith("/")) {
+                tail = tail.substring(1);
+            } else {
+                return null;
+            }
+
+            String[] parts = tail.split("/");
+            if (parts.length < 3) return null;
+            String org     = parts[0];
+            String project = parts[1];
+            // HTTPS: [org, project, _git, repo]  SSH: [org, project, repo]
+            String repo = (parts.length >= 4 && "_git".equals(parts[2])) ? parts[3] : parts[2];
+            return new AzureRepo("https://dev.azure.com/" + org + "/" + project, repo);
+        }
+
+        // {org}.visualstudio.com — HTTPS
+        if (u.contains("visualstudio.com")) {
+            int schemeEnd = u.indexOf("://");
+            String rest = schemeEnd >= 0 ? u.substring(schemeEnd + 3) : u;
+            int dot = rest.indexOf(".visualstudio.com");
+            if (dot < 0) return null;
+            String org  = rest.substring(0, dot);
+            String tail = rest.substring(dot + ".visualstudio.com".length());
+            if (tail.startsWith("/")) tail = tail.substring(1);
+            String[] parts = tail.split("/");
+            // [project, _git, repo] or [project, repo]
+            if (parts.length >= 3 && "_git".equals(parts[1])) {
+                return new AzureRepo("https://" + org + ".visualstudio.com/" + parts[0], parts[2]);
+            } else if (parts.length >= 2) {
+                return new AzureRepo("https://" + org + ".visualstudio.com/" + parts[0], parts[1]);
+            }
+        }
+
+        return null;
+    }
+
+    private static List<PullRequest> fetchAzureDevOps(String remoteUrl, String token)
+            throws Exception {
+        AzureRepo ar = parseAzureRepo(remoteUrl);
+        if (ar == null) return Collections.emptyList();
+
+        String apiUrl = ar.apiBase() + "/_apis/git/repositories/" + ar.repoName()
+                + "/pullrequests?searchCriteria.status=active&$top=100&api-version=7.1";
+
+        HttpRequest.Builder req = HttpRequest.newBuilder()
+                .header("Accept", "application/json");
+        if (token != null && !token.isBlank()) {
+            req.header("Authorization", "Basic " + azureBasicAuth(token));
+        }
+
+        String body = get(apiUrl, req);
+        if (body == null) return Collections.emptyList();
+
+        List<PullRequest> result = new ArrayList<>();
+        for (JsonNode pr : MAPPER.readTree(body).path("value")) {
+            String sourceRef = pr.path("sourceRefName").asText("").replaceFirst("^refs/heads/", "");
+            String targetRef = pr.path("targetRefName").asText("").replaceFirst("^refs/heads/", "");
+            String webUrl    = pr.path("_links").path("web").path("href").asText("");
+            result.add(new PullRequest(
+                    pr.path("pullRequestId").asInt(),
+                    pr.path("title").asText(""),
+                    pr.path("createdBy").path("displayName").asText(""),
+                    sourceRef,
+                    targetRef,
+                    webUrl,
+                    pr.path("status").asText("active")));
+        }
+        return result;
+    }
+
+    private static List<ScmItem> fetchAzureDevOpsPrFiles(String remoteUrl, String token,
+                                                          int prNumber) throws Exception {
+        AzureRepo ar = parseAzureRepo(remoteUrl);
+        if (ar == null) return Collections.emptyList();
+
+        String auth = (token != null && !token.isBlank()) ? azureBasicAuth(token) : null;
+
+        // 1. Get the latest iteration ID for the PR
+        String iterUrl = ar.apiBase() + "/_apis/git/repositories/" + ar.repoName()
+                + "/pullRequests/" + prNumber + "/iterations?api-version=7.1";
+        HttpRequest.Builder iterReq = HttpRequest.newBuilder().header("Accept", "application/json");
+        if (auth != null) iterReq.header("Authorization", "Basic " + auth);
+
+        String iterBody = get(iterUrl, iterReq);
+        if (iterBody == null) return Collections.emptyList();
+
+        JsonNode iterations = MAPPER.readTree(iterBody).path("value");
+        if (iterations.isEmpty()) return Collections.emptyList();
+        int iterationId = iterations.get(iterations.size() - 1).path("id").asInt(-1);
+        if (iterationId < 0) return Collections.emptyList();
+
+        // 2. Get file changes for that iteration
+        String changesUrl = ar.apiBase() + "/_apis/git/repositories/" + ar.repoName()
+                + "/pullRequests/" + prNumber + "/iterations/" + iterationId
+                + "/changes?api-version=7.1";
+        HttpRequest.Builder changesReq = HttpRequest.newBuilder().header("Accept", "application/json");
+        if (auth != null) changesReq.header("Authorization", "Basic " + auth);
+
+        String changesBody = get(changesUrl, changesReq);
+        if (changesBody == null) return Collections.emptyList();
+
+        List<ScmItem> result = new ArrayList<>();
+        for (JsonNode entry : MAPPER.readTree(changesBody).path("changeEntries")) {
+            // Azure DevOps paths are always prefixed with "/"
+            String path    = entry.path("item").path("path").asText("").replaceFirst("^/", "");
+            String oldPath = entry.path("sourceServerItem").asText("").replaceFirst("^/", "");
+            String ct      = entry.path("changeType").asText("edit").toLowerCase();
+
+            String scmStatus;
+            if (ct.contains("delete"))      scmStatus = ScmItem.Status.REMOVED;
+            else if (ct.contains("add"))    scmStatus = ScmItem.Status.ADDED;
+            else if (ct.contains("rename")) scmStatus = ScmItem.Status.RENAMED;
+            else                            scmStatus = ScmItem.Status.MODIFIED;
+
+            ScmItemAttribute attr = new ScmItemAttribute().withStatus(scmStatus);
+            if (ScmItem.Status.RENAMED.equals(scmStatus)
+                    && !oldPath.isBlank() && !oldPath.equals(path)) {
+                attr.withOldName(oldPath);
+            }
+            result.add(new ScmItem(path, attr));
+        }
+        return result;
+    }
+
+    /** Encodes a PAT as HTTP Basic auth (empty username, PAT as password). */
+    private static String azureBasicAuth(String pat) {
+        return java.util.Base64.getEncoder()
+                .encodeToString((":" + pat).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     // ---- HTTP helper ----
