@@ -230,7 +230,7 @@ public class MainTreePanel extends JPanel {
                 }
                 yield null;
             }
-            case WORKTREE -> {
+            case WORKTREE, WORKTREE_MAIN -> {
                 if (data.data() instanceof WorktreeInfo wt) {
                     yield contextMenuFactory.createWorktreeContextMenu(wt);
                 }
@@ -434,7 +434,7 @@ public class MainTreePanel extends JPanel {
             String mainBranch = main.getBranch();
             String mainLabel  = mainFolder + " (" + (mainBranch != null ? mainBranch : "detached:" + main.getShortHead()) + ") [main]";
             worktreesNode.add(new DefaultMutableTreeNode(
-                    new TreeNodeData(mainLabel, NodeType.WORKTREE, main)));
+                    new TreeNodeData(mainLabel, NodeType.WORKTREE_MAIN, main)));
         }
 
         // Remaining linked worktrees

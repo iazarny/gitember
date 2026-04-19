@@ -28,7 +28,8 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         SUBMODULES,
         SUBMODULE,
         WORKTREES,
-        WORKTREE
+        WORKTREE,
+        WORKTREE_MAIN
     }
 
     @Override
@@ -67,7 +68,8 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case SUBMODULES     -> Util.themeAwareIcon(FontAwesomeSolid.CUBES,       14);
             case SUBMODULE      -> Util.themeAwareIcon(FontAwesomeSolid.CUBE,        14);
             case WORKTREES      -> Util.themeAwareIcon(FontAwesomeSolid.SITEMAP,     14);
-            case WORKTREE       -> Util.themeAwareIcon(FontAwesomeSolid.FOLDER_OPEN, 14);
+            case WORKTREE       -> Util.themeAwareIcon(FontAwesomeSolid.TREE, 14);
+            case WORKTREE_MAIN  -> Util.themeAwareIcon(FontAwesomeSolid.HOME,        14);
         };
     }
 

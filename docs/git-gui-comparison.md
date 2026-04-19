@@ -97,12 +97,9 @@
 
 | Feature | Leader | Notes |
 |---------|--------|-------|
-| Interactive rebase UI | Fork, Tower, GitKraken | Gitember uses CLI fallback |
-| Interactive rebase UI | Fork, Tower, GitKraken | Gitember uses CLI fallback |
-| Azure DevOps PRs | GitKraken, Fork, Tower | Not yet supported in Gitember |
 | Native speed on macOS | Fork, Tower | Native Swift/Obj-C apps are faster than JVM on macOS |
 | UI polish | Tower, Fork | Commercial apps have larger design budgets |
-| Conflict resolution UI | SmartGit, Tower | Gitember relies on external merge tool |
+
 
 ---
 
