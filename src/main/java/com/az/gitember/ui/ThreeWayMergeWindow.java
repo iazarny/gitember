@@ -5,6 +5,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -274,7 +275,7 @@ public class ThreeWayMergeWindow extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0; gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
         gbc.gridx = 0; gbc.weightx = 0.33;
-        center.add(titledPanel("Mine (OURS)",       oursScroll),   gbc);
+        center.add(titledPanel("Ours",       oursScroll),   gbc);
         gbc.gridx = 1; gbc.weightx = 0.0;
         center.add(leftConnector,                                  gbc);
         gbc.gridx = 2; gbc.weightx = 0.34;
@@ -316,14 +317,14 @@ public class ThreeWayMergeWindow extends JFrame {
     }
 
     private JPanel buildToolbar() {
-        prevBtn  = new JButton("◀ Prev");
-        nextBtn  = new JButton("Next ▶");
+        prevBtn  = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
+        nextBtn  = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
         conflictLabel      = new JLabel("—");
-        acceptOursBtn      = new JButton("← Accept Mine");
-        acceptTheirsBtn    = new JButton("Accept Theirs →");
-        acceptAllOursBtn   = new JButton("Accept All Mine");
-        acceptAllTheirsBtn = new JButton("Accept All Theirs");
-        saveBtn = new JButton("Save & Mark Resolved");
+        acceptOursBtn      = Util.createButton("Ours", null,  FontAwesomeSolid.ARROW_LEFT);
+        acceptTheirsBtn    = Util.createButton("Theirs",null,  FontAwesomeSolid.ARROW_RIGHT);
+        acceptAllOursBtn   = Util.createButton("All Ours", "Accept all ours(mine) changes");
+        acceptAllTheirsBtn = Util.createButton("All Theirs","Accept all theirs changes");
+        saveBtn = Util.createButton("Resolved", "Save and mark as resolved", FontAwesomeSolid.SAVE);
 
         prevBtn.addActionListener(e -> navigate(-1));
         nextBtn.addActionListener(e -> navigate(+1));

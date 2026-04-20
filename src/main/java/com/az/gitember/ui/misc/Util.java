@@ -27,7 +27,7 @@ public class Util {
     }
 
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
-        Dimension size = new Dimension(110, 40);
+        Dimension size = new Dimension(110, 36);
         return createButton(text, tooltip, ikon, rotation, size);
     }
 
@@ -41,7 +41,7 @@ public class Util {
         }
 
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
+        btn.setBorderPainted(true);
         btn.setContentAreaFilled(true);
 
         if (ikon != null) {

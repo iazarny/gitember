@@ -3,6 +3,7 @@ package com.az.gitember.ui;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
@@ -65,8 +66,8 @@ public class FolderCompareWindow extends JFrame {
     private final JLabel rightHeader = new JLabel(" ");
 
     private final JToggleButton diffsOnlyBtn = new JToggleButton("Differences only");
-    private final JButton prevBtn  = new JButton("<< Prev");
-    private final JButton nextBtn  = new JButton("Next >>");
+    private final JButton prevBtn  = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
+    private final JButton nextBtn  = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
     private final JLabel  statsLbl = new JLabel(" ");
 
     private final JTree          leftTree;
