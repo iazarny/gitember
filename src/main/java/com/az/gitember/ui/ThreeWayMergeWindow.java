@@ -662,7 +662,7 @@ public class ThreeWayMergeWindow extends JFrame {
             setMinimumSize  (new Dimension(CONNECTOR_WIDTH, 0));
             setMaximumSize  (new Dimension(CONNECTOR_WIDTH, Integer.MAX_VALUE));
             setOpaque(true);
-            setToolTipText(isLeft ? "Click → to accept Mine" : "Click ← to accept Theirs");
+            setToolTipText(isLeft ? "Click → to accept Ours" : "Click ← to accept Theirs");
 
             addMouseListener(new MouseAdapter() {
                 @Override public void mouseClicked(MouseEvent e) { handleClick(e); }
@@ -735,7 +735,7 @@ public class ThreeWayMergeWindow extends JFrame {
                 int btnX = (w - BTN_W) / 2;
                 int btnY = midY - BTN_H / 2;
                 Rectangle btn = new Rectangle(btnX, btnY, BTN_W, BTN_H);
-                drawArrowButton(g2, btn, isLeft ? "→" : "←");
+                drawArrowButton(g2, btn, isLeft ? FontAwesomeSolid.ARROW_RIGHT : FontAwesomeSolid.ARROW_LEFT);
                 btnRects.add(btn);
                 btnBlockIdx.add(i);
             }
@@ -759,7 +759,7 @@ public class ThreeWayMergeWindow extends JFrame {
             g2.draw(new java.awt.geom.CubicCurve2D.Float(0, lBot, cx1, lBot, cx2, rBot, w, rBot));
         }
 
-        private void drawArrowButton(Graphics2D g2, Rectangle r, String arrow) {
+        private void drawArrowButton(Graphics2D g2, Rectangle r, org.kordamp.ikonli.Ikon ikon) {
             Color bg = UIManager.getColor("Button.background");
             if (bg == null) bg = new Color(220, 220, 220);
             g2.setColor(bg);
@@ -768,12 +768,10 @@ public class ThreeWayMergeWindow extends JFrame {
             g2.setColor(fg != null ? fg : Color.DARK_GRAY);
             g2.setStroke(new java.awt.BasicStroke(1f));
             g2.drawRoundRect(r.x, r.y, r.width, r.height, 6, 6);
-            Font f = g2.getFont().deriveFont(Font.BOLD, 11f);
-            g2.setFont(f);
-            FontMetrics fm = g2.getFontMetrics();
-            int tx = r.x + (r.width  - fm.stringWidth(arrow)) / 2;
-            int ty = r.y + (r.height + fm.getAscent() - fm.getDescent()) / 2;
-            g2.drawString(arrow, tx, ty);
+            Icon icon = Util.themeAwareIcon(ikon, 12);
+            int ix = r.x + (r.width  - icon.getIconWidth())  / 2;
+            int iy = r.y + (r.height - icon.getIconHeight()) / 2;
+            icon.paintIcon(this, g2, ix, iy);
         }
 
         private void handleClick(MouseEvent e) {
