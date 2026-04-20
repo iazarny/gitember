@@ -191,6 +191,7 @@ public class MainMenuBar extends JMenuBar {
         worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
         worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
         createDiffItem = new JMenuItem("Create diff",    KeyEvent.VK_D);
+        createDiffItem.setEnabled(false);
         applyDiffItem  = new JMenuItem("Apply diff...",  KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
@@ -310,6 +311,7 @@ public class MainMenuBar extends JMenuBar {
     public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
     public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
+    public void setCreateDiffEnabled(boolean enabled)      { createDiffItem.setEnabled(enabled); }
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
     public void addWorktreesListener(ActionListener l)     { worktreesItem.addActionListener(l); }

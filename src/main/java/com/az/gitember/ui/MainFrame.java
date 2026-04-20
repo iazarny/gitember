@@ -625,8 +625,10 @@ public class MainFrame extends JFrame {
 
     private void onStatusListChanged(PropertyChangeEvent evt) {
         SwingUtilities.invokeLater(() -> {
-            workingCopyPanel.setItems(Context.getStatusList());
+            List<ScmItem> statusList = Context.getStatusList();
+            workingCopyPanel.setItems(statusList);
             toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+            menuBar.setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
         });
     }
 
@@ -677,8 +679,10 @@ public class MainFrame extends JFrame {
                 case WORKING_COPY -> {
                     Context.setActiveView(Context.ActiveView.WORKING_COPY);
                     contentPanel.setContent(workingCopyPanel);
-                    workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
+                    List<ScmItem> cachedStatus = Context.getStatusList();
+                    workingCopyPanel.setItems(cachedStatus); // show cached immediately
                     toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+                    menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
