@@ -25,44 +25,77 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Three-pane conflict resolution window with interactive connector panels.
+ * Three-pane conflict resolution window.
+ *
+ * Shows OURS (left), editable RESULT (centre), and THEIRS (right) side by side.
+ * Bezier connector panels in between draw coloured trapezoids that visually link
+ * each conflict region across the three panes, and host small arrow buttons so
+ * the user can accept one side with a single click.
  *
  * <pre>
  *  ┌──────────────┐  ┌──────────┐  ┌─────────────┐  ┌──────────┐  ┌────────────┐
- *  │ Mine (OURS)  │  │  LEFT    │  │   Result    │  │  RIGHT   │  │   Theirs   │
- *  │  stage 2     │  │connector │  │  editable   │  │connector │  │  stage 3   │
- *  │  (green)     │  │  [→] btn │  │             │  │  [←] btn │  │   (red)    │
+ *  │  Ours        │  │  LEFT    │  │   Result    │  │  RIGHT   │  │   Theirs   │
+ *  │  (stage 2)   │  │connector │  │  (editable) │  │connector │  │  (stage 3) │
+ *  │  green tint  │  │  [→] btn │  │             │  │  [←] btn │  │  red tint  │
  *  └──────────────┘  └──────────┘  └─────────────┘  └──────────┘  └────────────┘
  * </pre>
  *
- * OURS (left) and THEIRS (right) are loaded from git stages 2 and 3 respectively —
- * the real pre-merge versions, not text extracted from the conflict markers.
- * Bezier connector panels draw colour-coded trapezoids between each conflict
- * region in the static panes and the corresponding section in the editable result.
- * Clicking a [→] / [←] arrow button inside a connector accepts that side.
+ * OURS and THEIRS are loaded from the git object store (stages 2 and 3) so the
+ * user sees the real pre-merge content, not just what was extracted from the
+ * conflict markers. If the staged blobs are unavailable for any reason we fall
+ * back to text derived from the markers, which is usually good enough.
+ *
+ * Scroll position is synchronised across all three panes. The connector panels
+ * repaint on every scroll event so the trapezoids always line up correctly.
  */
 public class ThreeWayMergeWindow extends JFrame {
 
     private static final Logger log = Logger.getLogger(ThreeWayMergeWindow.class.getName());
 
-    private static final int CONNECTOR_WIDTH = 50;
+    // How wide the connector columns between the panes should be.
+    // Needs to be wide enough to fit the arrow button plus some breathing room
+    // for the bezier curves to look reasonable.
+    private static final int CONNECTOR_WIDTH = 54;
 
-    // ---- state ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // State
+    // -------------------------------------------------------------------------
+
+    /** Absolute path to the file being resolved. */
     private final String filePath;
+
+    /**
+     * All conflict blocks found in the file, in order.
+     * Each block knows its line ranges in the staged OURS and THEIRS blobs,
+     * which lets us highlight the corresponding lines in those panes.
+     */
     private final List<MergeConflictBlock> blocks = new ArrayList<>();
 
     /**
-     * Indices into {@link #blocks} that are still unresolved in the result pane.
-     * Maintained in sync when the user uses the accept buttons; trimmed on free edits.
+     * The subset of block indices that are still unresolved in the result pane.
+     * We keep this in sync with the accept buttons so that the connector panel
+     * knows which trapezoids to draw. When the user edits the result pane
+     * manually we reconcile this list against the actual marker count.
+     *
+     * Note: indices here refer to positions in {@link #blocks}, not sequential
+     * counters — after accepting block 1 the list might contain [0, 2, 3].
      */
     private final List<Integer> unresolvedIndices = new ArrayList<>();
 
-    /** Full text for the OURS (left) pane — loaded from git stage 2. */
+    /**
+     * Full text of the OURS version (git stage 2).
+     * Populated first from the markers as a fallback, then replaced with the
+     * real staged blob if that is available.
+     */
     private String oursFullText;
-    /** Full text for the THEIRS (right) pane — loaded from git stage 3. */
+
+    /** Full text of the THEIRS version (git stage 3). Same strategy as oursFullText. */
     private String theirsFullText;
 
-    // ---- RSyntaxTextArea panes -----------------------------------------------
+    // -------------------------------------------------------------------------
+    // UI components
+    // -------------------------------------------------------------------------
+
     private RSyntaxTextArea oursPane;
     private RSyntaxTextArea resultPane;
     private RSyntaxTextArea theirsPane;
@@ -71,56 +104,82 @@ public class ThreeWayMergeWindow extends JFrame {
     private RTextScrollPane resultScroll;
     private RTextScrollPane theirsScroll;
 
-    // ---- connector panels ----------------------------------------------------
-    private MergeConnectorPanel leftConnector;   // OURS ↔ RESULT
-    private MergeConnectorPanel rightConnector;  // RESULT ↔ THEIRS
+    /** Draws the bezier connection between oursPane and resultPane. */
+    private MergeConnectorPanel leftConnector;
 
-    // ---- toolbar controls ----------------------------------------------------
-    private JLabel  conflictLabel;
-    private JButton prevBtn, nextBtn;
-    private JButton acceptOursBtn, acceptTheirsBtn;
-    private JButton acceptAllOursBtn, acceptAllTheirsBtn;
+    /** Draws the bezier connection between resultPane and theirsPane. */
+    private MergeConnectorPanel rightConnector;
+
+    // toolbar stuff
+    private JLabel  conflictCountLabel;
+    private JButton prevBtn;
+    private JButton nextBtn;
+    private JButton acceptOursBtn;
+    private JButton acceptTheirsBtn;
+    private JButton acceptAllOursBtn;
+    private JButton acceptAllTheirsBtn;
     private JButton saveBtn;
 
-    private int     currentBlock  = 0;
+    /**
+     * Index of the conflict block the user is currently looking at.
+     * This is a position among the *remaining* conflicts, not the original block index.
+     */
+    private int currentBlock = 0;
+
+    /**
+     * Guard flag used during scroll synchronisation.
+     * Without it, each scroll event would trigger the listener on all three panes
+     * and they'd fight each other in an infinite loop.
+     */
     private boolean scrollSyncing = false;
 
-    // ==========================================================================
-    //  Construction
-    // ==========================================================================
+    // =========================================================================
+    // Constructor
+    // =========================================================================
 
     public ThreeWayMergeWindow(String filePath) {
         this.filePath = filePath;
+
         String fileName = Paths.get(filePath).getFileName().toString();
         setTitle("Merge conflict: " + fileName);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // 1. Read the conflicted working-tree file
+        // Read the conflicted file from disk. If this fails there is nothing we
+        // can do — show an error and bail out early rather than leaving an empty
+        // window open.
         String conflictedContent;
         try {
-            conflictedContent = new String(
-                    Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)
-                    .replace("\r\n", "\n").replace("\r", "\n");
+            byte[] raw = Files.readAllBytes(Paths.get(filePath));
+            conflictedContent = new String(raw, StandardCharsets.UTF_8)
+                    .replace("\r\n", "\n")   // normalise Windows line endings
+                    .replace("\r",   "\n");  // normalise old Mac line endings
         } catch (IOException e) {
-            log.log(Level.SEVERE, "Cannot read: " + filePath, e);
+            log.log(Level.SEVERE, "Cannot read conflicted file: " + filePath, e);
             JOptionPane.showMessageDialog(null,
-                    "Cannot read file:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    "Cannot open file for merge resolution:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 2. Parse conflict blocks; also build derived ours/theirs as fallback
+        // Parse the <<<<<<<  =======  >>>>>>> markers.
+        // This also builds fallback ours/theirs texts from the parsed content.
         parseConflicts(conflictedContent);
 
-        // 3. Replace ours/theirs with real git-staged content (stage 2 / stage 3)
+        // Try to replace the fallback texts with the real git-object-store content.
+        // Doing this after parsing means we always have something to show even if
+        // the staged blobs cannot be retrieved.
         loadStagedContent();
 
         String syntaxStyle = SyntaxStyleUtil.getSyntaxStyle(fileName);
         buildUI(conflictedContent, syntaxStyle);
 
+        // Scroll to the first conflict on open. We use invokeLater here because
+        // modelToView doesn't work until the component has been laid out.
         if (!blocks.isEmpty()) {
             currentBlock = 0;
             SwingUtilities.invokeLater(() -> scrollToDiff(0));
         }
+
         updateConflictLabel();
         updateButtonStates();
 
@@ -130,160 +189,214 @@ public class ThreeWayMergeWindow extends JFrame {
         setVisible(true);
     }
 
-    // ==========================================================================
-    //  Parsing conflict markers
-    // ==========================================================================
+    // =========================================================================
+    // Parsing conflict markers
+    // =========================================================================
 
     /**
-     * Parses the conflicted file to populate {@link #blocks}.
+     * Walks through the conflicted file line by line and collects all conflict
+     * blocks into {@link #blocks}.
      *
-     * <p>For each block the method computes line-number ranges in the staged files
-     * (stage 2 / stage 3) using context-line counting:
-     * <ul>
-     *   <li>context lines before block {@code i} are the same in every stage</li>
-     *   <li>block {@code i} in stage 2 starts at: (context lines before i) + (sum of ours lines in blocks 0..i-1)</li>
-     *   <li>block {@code i} in stage 3 starts at: (context lines before i) + (sum of theirs lines in blocks 0..i-1)</li>
-     * </ul>
+     * As a side-effect it also builds {@link #oursFullText} and
+     * {@link #theirsFullText} as fallback representations: context lines (lines
+     * outside any conflict marker) go into both, while the ours / theirs sections
+     * of each block go into the respective text. This gives us something sane to
+     * show in the side panes even if the staged blobs are not available.
      *
-     * Also builds fallback {@link #oursFullText} / {@link #theirsFullText} from the
-     * parsed content (used when the staged blob cannot be loaded).
+     * The tricky part is computing the line ranges in the *staged* files so that
+     * the line highlights in the ours/theirs panes actually line up with the right
+     * content. Context lines count the same in every stage; only the conflict
+     * sections differ — so we maintain separate line counters for each side.
      */
     private void parseConflicts(String content) {
         String[] lines = content.split("\n", -1);
 
-        // Fallback derived texts
-        StringBuilder oursSb   = new StringBuilder();
-        StringBuilder theirsSb = new StringBuilder();
+        StringBuilder oursText   = new StringBuilder();
+        StringBuilder theirsText = new StringBuilder();
 
+        // Small state machine: 0 = normal, 1 = inside ours section, 2 = inside theirs section
         int state = 0;
-        String oursMarker = null, theirsMarker;
-        List<String> curOurs   = new ArrayList<>();
-        List<String> curTheirs = new ArrayList<>();
+        String oursMarkerLine = null;
+        List<String> curOursLines   = new ArrayList<>();
+        List<String> curTheirsLines = new ArrayList<>();
 
-        // Running line counters in the staged files
-        int oursLine   = 0;  // next line index to be written in stage-2 file
-        int theirsLine = 0;  // next line index to be written in stage-3 file
+        // These track how many lines we've written to each staged-file representation
+        // so far. We need them to set the correct line highlight ranges later.
+        int oursLineCounter   = 0;
+        int theirsLineCounter = 0;
 
         for (String line : lines) {
             switch (state) {
                 case 0 -> {
                     if (line.startsWith("<<<<<<<")) {
-                        oursMarker = line;
-                        curOurs.clear();
-                        curTheirs.clear();
+                        // Start of a conflict block. Save the marker and clear our buffers.
+                        oursMarkerLine = line;
+                        curOursLines.clear();
+                        curTheirsLines.clear();
                         state = 1;
                     } else {
-                        // Context line: present in all stages
-                        oursSb.append(line).append('\n');
-                        theirsSb.append(line).append('\n');
-                        oursLine++;
-                        theirsLine++;
+                        // Ordinary context line — appears identically in both staged files.
+                        oursText.append(line).append('\n');
+                        theirsText.append(line).append('\n');
+                        oursLineCounter++;
+                        theirsLineCounter++;
                     }
                 }
                 case 1 -> {
-                    if (line.startsWith("=======")) state = 2;
-                    else curOurs.add(line);
+                    if (line.startsWith("=======")) {
+                        state = 2; // switch to collecting theirs lines
+                    } else {
+                        curOursLines.add(line);
+                    }
                 }
                 case 2 -> {
                     if (line.startsWith(">>>>>>>")) {
-                        theirsMarker = line;
+                        // End of block — assemble the MergeConflictBlock.
+                        String theirsMarkerLine = line;
                         MergeConflictBlock block = new MergeConflictBlock(
-                                blocks.size(), oursMarker, theirsMarker,
-                                new ArrayList<>(curOurs), new ArrayList<>(curTheirs));
+                                blocks.size(),
+                                oursMarkerLine,
+                                theirsMarkerLine,
+                                new ArrayList<>(curOursLines),
+                                new ArrayList<>(curTheirsLines));
 
-                        // Line ranges in staged files
-                        block.oursStartLine  = oursLine;
-                        block.oursEndLine    = oursLine + curOurs.size();
-                        block.theirsStartLine = theirsLine;
-                        block.theirsEndLine   = theirsLine + curTheirs.size();
+                        // Line ranges in the staged file representations.
+                        // These are used by applyOursHighlights / applyTheirsHighlights
+                        // to colour the right lines in the side panes.
+                        block.oursStartLine   = oursLineCounter;
+                        block.oursEndLine     = oursLineCounter + curOursLines.size();
+                        block.theirsStartLine = theirsLineCounter;
+                        block.theirsEndLine   = theirsLineCounter + curTheirsLines.size();
 
-                        // Advance line counters
-                        oursLine   += curOurs.size();
-                        theirsLine += curTheirs.size();
+                        oursLineCounter   += curOursLines.size();
+                        theirsLineCounter += curTheirsLines.size();
 
-                        // Build fallback derived texts
-                        for (String l : curOurs)   oursSb.append(l).append('\n');
-                        for (String l : curTheirs) theirsSb.append(l).append('\n');
+                        // Also append to the fallback texts
+                        for (String l : curOursLines)   oursText.append(l).append('\n');
+                        for (String l : curTheirsLines) theirsText.append(l).append('\n');
 
                         blocks.add(block);
                         state = 0;
                     } else {
-                        curTheirs.add(line);
+                        curTheirsLines.add(line);
                     }
                 }
             }
         }
 
-        oursFullText   = oursSb.toString();
-        theirsFullText = theirsSb.toString();
-        for (int i = 0; i < blocks.size(); i++) unresolvedIndices.add(i);
+        oursFullText   = oursText.toString();
+        theirsFullText = theirsText.toString();
+
+        // All blocks start off unresolved
+        for (int i = 0; i < blocks.size(); i++) {
+            unresolvedIndices.add(i);
+        }
     }
 
-    // ==========================================================================
-    //  Load real staged content (stage 2 = OURS, stage 3 = THEIRS)
-    // ==========================================================================
+    // =========================================================================
+    // Load real staged content from git object store
+    // =========================================================================
 
+    /**
+     * Replaces the fallback ours/theirs texts with the actual staged blobs from
+     * git stages 2 (ours) and 3 (theirs).
+     *
+     * Using the real staged content is important because it gives the user the
+     * full context of each side, not just the lines between the conflict markers.
+     * For example, a function signature might be outside the marked region but
+     * still changed on one side — you wouldn't see that with just the markers.
+     *
+     * This method is deliberately lenient: if we cannot load the blobs for any
+     * reason (new repo, detached HEAD, weird git state) we just log a warning and
+     * leave the fallback texts in place. The merge resolution still works, just
+     * with slightly less context.
+     */
     private void loadStagedContent() {
         try {
             var workTree = Context.getGitRepoService().getRepository().getWorkTree().toPath();
-            String relative = workTree.relativize(Paths.get(filePath)).toString()
+
+            // Git always uses forward slashes in paths, even on Windows
+            String relativePath = workTree.relativize(Paths.get(filePath))
+                    .toString()
                     .replace('\\', '/');
 
-            String staged2 = Context.getGitRepoService().getStagedFileContent(relative, 2);
+            String staged2 = Context.getGitRepoService().getStagedFileContent(relativePath, 2);
             if (staged2 != null && !staged2.isBlank()) {
                 oursFullText = staged2.replace("\r\n", "\n").replace("\r", "\n");
             }
 
-            String staged3 = Context.getGitRepoService().getStagedFileContent(relative, 3);
+            String staged3 = Context.getGitRepoService().getStagedFileContent(relativePath, 3);
             if (staged3 != null && !staged3.isBlank()) {
                 theirsFullText = staged3.replace("\r\n", "\n").replace("\r", "\n");
             }
+
         } catch (Exception e) {
+            // Not fatal — the fallback texts from parseConflicts() are still usable.
             log.log(Level.WARNING,
-                    "Cannot load staged blobs, using derived text from markers", e);
+                    "Could not load staged blobs for " + filePath
+                    + " — falling back to text derived from conflict markers", e);
         }
     }
 
-    // ==========================================================================
-    //  UI layout
-    // ==========================================================================
+    // =========================================================================
+    // UI construction
+    // =========================================================================
 
-    private void buildUI(String initialResult, String syntaxStyle) {
-        oursPane   = createEditor(syntaxStyle, false);
-        resultPane = createEditor(syntaxStyle, true);
-        theirsPane = createEditor(syntaxStyle, false);
+    private void buildUI(String initialResultText, String syntaxStyle) {
+        // Create the three editor panes. Only the result pane is editable.
+        oursPane   = createSyntaxEditor(syntaxStyle, false);
+        resultPane = createSyntaxEditor(syntaxStyle, true);
+        theirsPane = createSyntaxEditor(syntaxStyle, false);
 
         oursPane.setText(oursFullText);
-        resultPane.setText(initialResult);
-        resultPane.setCaretPosition(0);
         theirsPane.setText(theirsFullText);
+
+        // The result pane starts with the raw conflicted content including markers.
+        // The user resolves conflicts either by clicking accept buttons or by
+        // editing directly.
+        resultPane.setText(initialResultText);
+        resultPane.setCaretPosition(0);
 
         oursScroll   = new RTextScrollPane(oursPane);
         resultScroll = new RTextScrollPane(resultPane);
         theirsScroll = new RTextScrollPane(theirsPane);
-        for (RTextScrollPane sp : List.of(oursScroll, resultScroll, theirsScroll))
-            sp.setLineNumbersEnabled(true);
 
+        oursScroll.setLineNumbersEnabled(true);
+        resultScroll.setLineNumbersEnabled(true);
+        theirsScroll.setLineNumbersEnabled(true);
+
+        // Apply initial highlights before the connectors are added, so the pane
+        // colours are already correct when the window first appears.
         applyOursHighlights();
         applyTheirsHighlights();
         applyResultHighlights();
 
+        // isLeft=true  means this connector sits between oursPane and resultPane
+        // isLeft=false means it sits between resultPane and theirsPane
         leftConnector  = new MergeConnectorPanel(true);
         rightConnector = new MergeConnectorPanel(false);
 
+        // Five-column layout: ours | left-connector | result | right-connector | theirs
         JPanel center = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridy = 0; gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
+        gbc.gridy   = 0;
+        gbc.fill    = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
         gbc.gridx = 0; gbc.weightx = 0.33;
-        center.add(titledPanel("Ours",       oursScroll),   gbc);
+        center.add(titledPanel("Ours",               oursScroll),   gbc);
+
         gbc.gridx = 1; gbc.weightx = 0.0;
-        center.add(leftConnector,                                  gbc);
+        center.add(leftConnector,                                    gbc);
+
         gbc.gridx = 2; gbc.weightx = 0.34;
-        center.add(titledPanel("Result (editable)", resultScroll), gbc);
+        center.add(titledPanel("Result (editable)",  resultScroll), gbc);
+
         gbc.gridx = 3; gbc.weightx = 0.0;
-        center.add(rightConnector,                                 gbc);
+        center.add(rightConnector,                                   gbc);
+
         gbc.gridx = 4; gbc.weightx = 0.33;
-        center.add(titledPanel("Theirs",            theirsScroll), gbc);
+        center.add(titledPanel("Theirs",             theirsScroll), gbc);
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(buildToolbar(), BorderLayout.NORTH);
@@ -293,38 +406,58 @@ public class ThreeWayMergeWindow extends JFrame {
         setupResultDocumentListener();
     }
 
-    private static RSyntaxTextArea createEditor(String syntaxStyle, boolean editable) {
-        RSyntaxTextArea area = new RSyntaxTextArea();
-        area.setSyntaxEditingStyle(syntaxStyle);
-        area.setEditable(editable);
-        area.setCodeFoldingEnabled(false);
-        area.setAntiAliasingEnabled(true);
-        area.setLineWrap(false);
-        area.setHighlightCurrentLine(editable);
-        SyntaxStyleUtil.applyTheme(area);
-        area.setFont(SyntaxStyleUtil.monoFont());
-        return area;
+    /**
+     * Creates a read-only or editable RSyntaxTextArea with our standard settings.
+     *
+     * We disable code folding because the panes are supposed to show the complete
+     * file — folding sections away would confuse the line-number mapping that the
+     * connector panel relies on.
+     */
+    private static RSyntaxTextArea createSyntaxEditor(String syntaxStyle, boolean editable) {
+        RSyntaxTextArea editor = new RSyntaxTextArea();
+        editor.setSyntaxEditingStyle(syntaxStyle);
+        editor.setEditable(editable);
+        editor.setCodeFoldingEnabled(false);
+        editor.setAntiAliasingEnabled(true);
+        editor.setLineWrap(false);
+        editor.setHighlightCurrentLine(editable);  // cursor line highlight only in editable pane
+        SyntaxStyleUtil.applyTheme(editor);
+        editor.setFont(SyntaxStyleUtil.monoFont());
+        return editor;
     }
 
+    /**
+     * Wraps a scroll pane in a panel with a bold title bar at the top.
+     * Small but makes it much easier to see which pane is which.
+     */
     private static JPanel titledPanel(String title, JComponent content) {
-        JPanel p = new JPanel(new BorderLayout());
-        JLabel l = new JLabel(" " + title);
-        l.setFont(l.getFont().deriveFont(Font.BOLD));
-        l.setBorder(BorderFactory.createEmptyBorder(3, 4, 3, 4));
-        p.add(l,       BorderLayout.NORTH);
-        p.add(content, BorderLayout.CENTER);
-        return p;
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel(" " + title);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+        label.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0,
+                        UIManager.getColor("Separator.foreground")),
+                BorderFactory.createEmptyBorder(3, 4, 3, 4)));
+        panel.add(label,   BorderLayout.NORTH);
+        panel.add(content, BorderLayout.CENTER);
+        return panel;
     }
 
     private JPanel buildToolbar() {
-        prevBtn  = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
-        nextBtn  = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
-        conflictLabel      = new JLabel("—");
-        acceptOursBtn      = Util.createButton("Ours", null,  FontAwesomeSolid.ARROW_LEFT);
-        acceptTheirsBtn    = Util.createButton("Theirs",null,  FontAwesomeSolid.ARROW_RIGHT);
-        acceptAllOursBtn   = Util.createButton("All Ours", "Accept all ours(mine) changes");
-        acceptAllTheirsBtn = Util.createButton("All Theirs","Accept all theirs changes");
-        saveBtn = Util.createButton("Resolved", "Save and mark as resolved", FontAwesomeSolid.SAVE);
+        prevBtn  = Util.createButton("Prev",   "Previous conflict", FontAwesomeSolid.ARROW_UP);
+        nextBtn  = Util.createButton("Next",   "Next conflict",     FontAwesomeSolid.ARROW_DOWN);
+
+        conflictCountLabel = new JLabel("—");
+        conflictCountLabel.setFont(conflictCountLabel.getFont().deriveFont(Font.BOLD));
+
+        // The accept-current buttons apply the chosen side to whichever conflict
+        // currentBlock points at. The accept-all buttons loop through everything.
+        acceptOursBtn      = Util.createButton("Ours",       "Accept our version for this conflict",  FontAwesomeSolid.ARROW_LEFT);
+        acceptTheirsBtn    = Util.createButton("Theirs",     "Accept their version for this conflict", FontAwesomeSolid.ARROW_RIGHT);
+        acceptAllOursBtn   = Util.createButton("All Ours",   "Accept our version for all remaining conflicts");
+        acceptAllTheirsBtn = Util.createButton("All Theirs", "Accept their version for all remaining conflicts");
+
+        saveBtn = Util.createButton("Resolved", "Write file to disk and stage it", FontAwesomeSolid.SAVE);
 
         prevBtn.addActionListener(e -> navigate(-1));
         nextBtn.addActionListener(e -> navigate(+1));
@@ -334,46 +467,72 @@ public class ThreeWayMergeWindow extends JFrame {
         acceptAllTheirsBtn.addActionListener(e -> acceptAll(false));
         saveBtn.addActionListener(e -> saveAndMarkResolved());
 
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
-        p.add(prevBtn); p.add(conflictLabel); p.add(nextBtn);
-        p.add(Box.createHorizontalStrut(16));
-        p.add(acceptOursBtn); p.add(acceptTheirsBtn);
-        p.add(Box.createHorizontalStrut(8));
-        p.add(acceptAllOursBtn); p.add(acceptAllTheirsBtn);
-        p.add(Box.createHorizontalStrut(16));
-        p.add(saveBtn);
-        return p;
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
+        toolbar.add(prevBtn);
+        toolbar.add(conflictCountLabel);
+        toolbar.add(nextBtn);
+        toolbar.add(Box.createHorizontalStrut(16));
+        toolbar.add(acceptOursBtn);
+        toolbar.add(acceptTheirsBtn);
+        toolbar.add(Box.createHorizontalStrut(8));
+        toolbar.add(acceptAllOursBtn);
+        toolbar.add(acceptAllTheirsBtn);
+        toolbar.add(Box.createHorizontalStrut(16));
+        toolbar.add(saveBtn);
+        return toolbar;
     }
 
-    // ==========================================================================
-    //  Scroll synchronisation
-    // ==========================================================================
+    // =========================================================================
+    // Scroll synchronisation
+    // =========================================================================
 
+    /**
+     * Keeps all three panes at the same vertical scroll position.
+     *
+     * We add the same listener to all three scroll bars. The scrollSyncing flag
+     * prevents the recursive loop that would otherwise happen when one pane's
+     * scroll event triggers the others.
+     *
+     * The connector panels also repaint on every scroll so the trapezoids always
+     * connect to the correct lines — they use modelToView() internally which
+     * accounts for the current scroll offset.
+     */
     private void setupScrollSync() {
-        AdjustmentListener vertSync = e -> {
+        AdjustmentListener syncListener = e -> {
             if (scrollSyncing) return;
             scrollSyncing = true;
-            int v = e.getValue();
-            oursScroll  .getVerticalScrollBar().setValue(v);
-            resultScroll.getVerticalScrollBar().setValue(v);
-            theirsScroll.getVerticalScrollBar().setValue(v);
+            int scrollValue = e.getValue();
+            oursScroll.getVerticalScrollBar().setValue(scrollValue);
+            resultScroll.getVerticalScrollBar().setValue(scrollValue);
+            theirsScroll.getVerticalScrollBar().setValue(scrollValue);
             leftConnector.repaint();
             rightConnector.repaint();
             scrollSyncing = false;
         };
-        oursScroll  .getVerticalScrollBar().addAdjustmentListener(vertSync);
-        resultScroll.getVerticalScrollBar().addAdjustmentListener(vertSync);
-        theirsScroll.getVerticalScrollBar().addAdjustmentListener(vertSync);
+        oursScroll.getVerticalScrollBar().addAdjustmentListener(syncListener);
+        resultScroll.getVerticalScrollBar().addAdjustmentListener(syncListener);
+        theirsScroll.getVerticalScrollBar().addAdjustmentListener(syncListener);
     }
 
-    // ==========================================================================
-    //  Result pane document listener
-    // ==========================================================================
+    // =========================================================================
+    // Document listener on the result pane
+    // =========================================================================
 
+    /**
+     * Watches the result pane for any edits and keeps the highlight colours and
+     * connector drawings in sync.
+     *
+     * The "pending" flag de-duplicates rapid-fire events — for example, calling
+     * setText() fires many individual document events. We only want one refresh
+     * pass per logical edit, so we schedule it via invokeLater and skip
+     * subsequent events until that pass runs.
+     */
     private void setupResultDocumentListener() {
         resultPane.getDocument().addDocumentListener(new DocumentListener() {
+
             private boolean pending = false;
-            private void schedule() {
+
+            private void scheduleRefresh() {
                 if (pending) return;
                 pending = true;
                 SwingUtilities.invokeLater(() -> {
@@ -386,63 +545,123 @@ public class ThreeWayMergeWindow extends JFrame {
                     updateButtonStates();
                 });
             }
-            public void insertUpdate(DocumentEvent e)  { schedule(); }
-            public void removeUpdate(DocumentEvent e)  { schedule(); }
-            public void changedUpdate(DocumentEvent e) { /* style */ }
+
+            @Override public void insertUpdate(DocumentEvent e)  { scheduleRefresh(); }
+            @Override public void removeUpdate(DocumentEvent e)  { scheduleRefresh(); }
+            @Override public void changedUpdate(DocumentEvent e) { /* style change only — ignore */ }
         });
     }
 
-    /** Trim unresolvedIndices when the user manually removes conflict markers. */
+    /**
+     * Shrinks {@link #unresolvedIndices} to match the number of conflict markers
+     * actually present in the result pane.
+     *
+     * This is needed when the user removes markers manually by typing rather than
+     * using the accept buttons. We trim from the end because we don't know which
+     * block was removed without a full re-parse.
+     *
+     * TODO: a smarter approach would be to re-parse the result text and match
+     *       remaining markers back to their original blocks. For now this is
+     *       good enough for typical usage.
+     */
     private void reconcileUnresolved() {
-        int actual = countRemainingConflicts();
-        while (unresolvedIndices.size() > actual)
+        int actualRemaining = countRemainingConflicts();
+        while (unresolvedIndices.size() > actualRemaining) {
             unresolvedIndices.remove(unresolvedIndices.size() - 1);
+        }
     }
 
-    // ==========================================================================
-    //  Highlighting
-    // ==========================================================================
+    // =========================================================================
+    // Line highlighting
+    // =========================================================================
 
+    /**
+     * Highlights the ours-side lines in the left pane for all conflict blocks.
+     * We use the green "added" colour because these are lines that exist on our side.
+     *
+     * Line ranges come from the staged-file line numbers stored in each block —
+     * see parseConflicts() for how those are computed.
+     */
     private void applyOursHighlights() {
         oursPane.removeAllLineHighlights();
-        for (MergeConflictBlock b : blocks) {
-            for (int i = b.oursStartLine; i < b.oursEndLine; i++) {
-                try { oursPane.addLineHighlight(i, SyntaxStyleUtil.addedBg()); }
-                catch (Exception ex) { log.log(Level.FINE, "ours hl", ex); }
+        for (MergeConflictBlock block : blocks) {
+            for (int line = block.oursStartLine; line < block.oursEndLine; line++) {
+                try {
+                    oursPane.addLineHighlight(line, SyntaxStyleUtil.addedBg());
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Failed to add ours highlight at line " + line, ex);
+                }
             }
         }
     }
 
+    /**
+     * Highlights theirs-side lines in the right pane.
+     * Red "deleted" colour because these are lines that don't exist on our side.
+     */
     private void applyTheirsHighlights() {
         theirsPane.removeAllLineHighlights();
-        for (MergeConflictBlock b : blocks) {
-            for (int i = b.theirsStartLine; i < b.theirsEndLine; i++) {
-                try { theirsPane.addLineHighlight(i, SyntaxStyleUtil.deletedBg()); }
-                catch (Exception ex) { log.log(Level.FINE, "theirs hl", ex); }
+        for (MergeConflictBlock block : blocks) {
+            for (int line = block.theirsStartLine; line < block.theirsEndLine; line++) {
+                try {
+                    theirsPane.addLineHighlight(line, SyntaxStyleUtil.deletedBg());
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Failed to add theirs highlight at line " + line, ex);
+                }
             }
         }
     }
 
+    /**
+     * Highlights conflict markers and their content in the result pane.
+     *
+     * We use three colours:
+     *  - changedBg for the marker lines themselves (<<<, ===, >>>)
+     *  - addedBg   for the ours  section
+     *  - deletedBg for the theirs section
+     *
+     * This method is package-private because it is also called from the connector
+     * panel's doAccept pathway, which lives in the inner class.
+     */
     void applyResultHighlights() {
         resultPane.removeAllLineHighlights();
+
         String[] lines = resultPane.getText().split("\n", -1);
-        int state = 0;
+        int state = 0;  // 0=normal, 1=ours section, 2=theirs section
+
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             try {
-                if      (state == 0 && line.startsWith("<<<<<<<")) { resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());  state = 1; }
-                else if (state == 1 && line.startsWith("=======")) { resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());  state = 2; }
-                else if (state == 1)                                { resultPane.addLineHighlight(i, SyntaxStyleUtil.addedBg());             }
-                else if (state == 2 && line.startsWith(">>>>>>>")) { resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());  state = 0; }
-                else if (state == 2)                                { resultPane.addLineHighlight(i, SyntaxStyleUtil.deletedBg());           }
-            } catch (Exception ex) { log.log(Level.FINE, "result hl", ex); }
+                if (state == 0 && line.startsWith("<<<<<<<")) {
+                    resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());
+                    state = 1;
+                } else if (state == 1 && line.startsWith("=======")) {
+                    resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());
+                    state = 2;
+                } else if (state == 1) {
+                    resultPane.addLineHighlight(i, SyntaxStyleUtil.addedBg());
+                } else if (state == 2 && line.startsWith(">>>>>>>")) {
+                    resultPane.addLineHighlight(i, SyntaxStyleUtil.changedBg());
+                    state = 0;
+                } else if (state == 2) {
+                    resultPane.addLineHighlight(i, SyntaxStyleUtil.deletedBg());
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Failed to add result highlight at line " + i, ex);
+            }
         }
     }
 
-    // ==========================================================================
-    //  Navigation
-    // ==========================================================================
+    // =========================================================================
+    // Navigation between conflicts
+    // =========================================================================
 
+    /**
+     * Moves {@link #currentBlock} by {@code delta} and scrolls all three panes to
+     * show the corresponding conflict.
+     *
+     * @param delta +1 to go forward, -1 to go back
+     */
     private void navigate(int delta) {
         int remaining = countRemainingConflicts();
         if (remaining == 0) return;
@@ -452,58 +671,109 @@ public class ThreeWayMergeWindow extends JFrame {
         updateButtonStates();
     }
 
-    private void scrollToDiff(int nthBlock) {
-        // Scroll result to nth <<<<<<< line
-        String[] lines = resultPane.getText().split("\n", -1);
-        int count = 0;
-        for (int i = 0; i < lines.length; i++) {
-            if (lines[i].startsWith("<<<<<<<")) {
-                if (count == nthBlock) {
+    /**
+     * Scrolls all three panes so that the nth remaining conflict is visible.
+     *
+     * For the result pane we find the nth {@code <<<<<<<} line by scanning.
+     * For ours/theirs we look up the original block via unresolvedIndices and use
+     * the pre-computed staged-file line numbers.
+     *
+     * The two panes might end up at slightly different positions if the conflict
+     * regions have different lengths, but the sync listener will keep them at
+     * the same raw scroll value — so we just position the result pane and let
+     * the sync pull the others along.
+     */
+    private void scrollToDiff(int nthConflict) {
+        // Scan result text for the nth <<<<<<< marker
+        String[] resultLines = resultPane.getText().split("\n", -1);
+        int found = 0;
+        for (int i = 0; i < resultLines.length; i++) {
+            if (resultLines[i].startsWith("<<<<<<<")) {
+                if (found == nthConflict) {
                     scrollToLine(resultPane, resultScroll, i);
-                    if (nthBlock < unresolvedIndices.size()) {
-                        int origIdx = unresolvedIndices.get(nthBlock);
-                        MergeConflictBlock b = blocks.get(origIdx);
-                        scrollToLine(oursPane,   oursScroll,   b.oursStartLine);
-                        scrollToLine(theirsPane, theirsScroll, b.theirsStartLine);
+
+                    // Also position the side panes if we have the original block info
+                    if (nthConflict < unresolvedIndices.size()) {
+                        int origIdx = unresolvedIndices.get(nthConflict);
+                        MergeConflictBlock block = blocks.get(origIdx);
+                        scrollToLine(oursPane,   oursScroll,   block.oursStartLine);
+                        scrollToLine(theirsPane, theirsScroll, block.theirsStartLine);
                     }
                     return;
                 }
-                count++;
+                found++;
             }
         }
     }
 
+    /**
+     * Scrolls a single pane+scrollpane pair so that {@code lineNumber} is visible,
+     * with some margin above so there's context.
+     *
+     * RSyntaxTextArea.modelToView() can return null if the component hasn't been
+     * laid out yet, so we guard against that.
+     */
     private void scrollToLine(RSyntaxTextArea pane, RTextScrollPane scroll, int lineNumber) {
         try {
             if (lineNumber < 0 || lineNumber >= pane.getLineCount()) return;
-            int offset = pane.getLineStartOffset(lineNumber);
-            pane.setCaretPosition(offset);
-            Rectangle rect = pane.modelToView(offset);
-            if (rect == null) return;
-            JScrollBar bar = scroll.getVerticalScrollBar();
-            int margin = Math.max(40, scroll.getViewport().getHeight() / 4);
-            int target = Math.max(0, rect.y - margin);
-            bar.setValue(Math.min(target, bar.getMaximum() - bar.getModel().getExtent()));
-        } catch (Exception ex) { log.log(Level.FINE, "scroll", ex); }
+
+            int charOffset = pane.getLineStartOffset(lineNumber);
+            pane.setCaretPosition(charOffset);
+
+            Rectangle charRect = pane.modelToView(charOffset);
+            if (charRect == null) return;  // component not yet laid out
+
+            JScrollBar vertBar = scroll.getVerticalScrollBar();
+            // Show the target line roughly a quarter of the way down the viewport
+            int margin   = Math.max(40, scroll.getViewport().getHeight() / 4);
+            int targetY  = Math.max(0, charRect.y - margin);
+            int maxValue = vertBar.getMaximum() - vertBar.getModel().getExtent();
+            vertBar.setValue(Math.min(targetY, maxValue));
+
+        } catch (Exception ex) {
+            log.log(Level.FINE, "scrollToLine failed at line " + lineNumber, ex);
+        }
     }
 
-    // ==========================================================================
-    //  Accept operations
-    // ==========================================================================
+    // =========================================================================
+    // Accept operations
+    // =========================================================================
 
+    /** Accepts one side of the conflict that currentBlock points at. */
     private void acceptCurrent(boolean useOurs) {
         if (countRemainingConflicts() == 0) return;
         doAccept(currentBlock, useOurs);
     }
 
+    /**
+     * Accepts the same side for every remaining conflict block.
+     * We always accept block 0 in a loop because each accepted block removes
+     * itself from the text, shifting everything else down by one position.
+     */
     private void acceptAll(boolean useOurs) {
         int remaining = countRemainingConflicts();
-        for (int i = 0; i < remaining; i++) doAccept(0, useOurs);
+        for (int i = 0; i < remaining; i++) {
+            doAccept(0, useOurs);
+        }
     }
 
+    /**
+     * The core accept operation. Replaces the nth remaining conflict block in
+     * the result pane with either the ours or theirs section, then updates
+     * all display state.
+     *
+     * Package-private so the MergeConnectorPanel inner class can call it when
+     * the user clicks an arrow button.
+     *
+     * @param nthBlock zero-based index into the *remaining* conflicts (not the
+     *                 original block list)
+     * @param useOurs  true to keep our version, false to keep theirs
+     */
     void doAccept(int nthBlock, boolean useOurs) {
-        if (nthBlock < unresolvedIndices.size())
+        // Keep unresolvedIndices in sync before touching the text
+        if (nthBlock < unresolvedIndices.size()) {
             unresolvedIndices.remove(nthBlock);
+        }
 
         replaceConflictBlock(nthBlock, useOurs);
         applyResultHighlights();
@@ -515,285 +785,450 @@ public class ThreeWayMergeWindow extends JFrame {
         } else {
             currentBlock = 0;
         }
+
         leftConnector.repaint();
         rightConnector.repaint();
         updateConflictLabel();
         updateButtonStates();
     }
 
+    /**
+     * Finds the nth {@code <<<<<<<...>>>>>>>} block in the result pane text and
+     * replaces it with either the ours or theirs lines.
+     *
+     * We rebuild the full text from the split lines array because RSyntaxTextArea
+     * doesn't give us a nice way to replace a range of lines atomically. One
+     * setText() call is cleaner than multiple insert/remove pairs.
+     */
     private void replaceConflictBlock(int nthBlock, boolean useOurs) {
-        String[] raw = resultPane.getText().split("\n", -1);
-        int blockCount = -1, state = 0, blockStart = -1;
-        List<String> oursSec = new ArrayList<>(), theirsSec = new ArrayList<>();
+        String[] lines = resultPane.getText().split("\n", -1);
 
-        for (int i = 0; i < raw.length; i++) {
-            String line = raw[i];
+        int blocksSeen = -1;
+        int state = 0;
+        int blockStartLine = -1;
+        List<String> oursSection   = new ArrayList<>();
+        List<String> theirsSection = new ArrayList<>();
+
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+
             if (state == 0 && line.startsWith("<<<<<<<")) {
-                blockCount++;
-                if (blockCount == nthBlock) {
-                    blockStart = i; oursSec.clear(); theirsSec.clear(); state = 1;
+                blocksSeen++;
+                if (blocksSeen == nthBlock) {
+                    blockStartLine = i;
+                    oursSection.clear();
+                    theirsSection.clear();
+                    state = 1;
                 }
             } else if (state == 1) {
-                if (line.startsWith("=======")) state = 2; else oursSec.add(line);
+                if (line.startsWith("=======")) {
+                    state = 2;
+                } else {
+                    oursSection.add(line);
+                }
             } else if (state == 2) {
                 if (line.startsWith(">>>>>>>")) {
-                    final int blockEnd = i;
-                    List<String> chosen = useOurs ? oursSec : theirsSec;
-                    StringBuilder sb = new StringBuilder();
-                    for (int j = 0; j < raw.length; j++) {
-                        if (j == blockStart) {
-                            for (String cl : chosen) sb.append(cl).append('\n');
-                        } else if (j > blockStart && j <= blockEnd) {
-                            // replaced
+                    // Found the end of the block we want to replace.
+                    // Rebuild the full text, substituting the chosen side.
+                    final int blockEndLine = i;
+                    List<String> chosen = useOurs ? oursSection : theirsSection;
+
+                    StringBuilder rebuilt = new StringBuilder();
+                    for (int j = 0; j < lines.length; j++) {
+                        if (j == blockStartLine) {
+                            // Insert the chosen lines in place of the whole block
+                            for (String chosen_line : chosen) {
+                                rebuilt.append(chosen_line).append('\n');
+                            }
+                        } else if (j > blockStartLine && j <= blockEndLine) {
+                            // These are the original block lines — skip them
                         } else {
-                            sb.append(raw[j]);
-                            if (j < raw.length - 1) sb.append('\n');
+                            rebuilt.append(lines[j]);
+                            if (j < lines.length - 1) {
+                                rebuilt.append('\n');
+                            }
                         }
                     }
-                    resultPane.setText(sb.toString());
+                    resultPane.setText(rebuilt.toString());
                     return;
-                } else theirsSec.add(line);
+                } else {
+                    theirsSection.add(line);
+                }
             }
         }
+        // If we reach here the block wasn't found — shouldn't happen in practice
+        log.log(Level.WARNING, "replaceConflictBlock: block " + nthBlock + " not found in result text");
     }
 
-    // ==========================================================================
-    //  Save & stage
-    // ==========================================================================
+    // =========================================================================
+    // Save and stage
+    // =========================================================================
 
+    /**
+     * Writes the current result pane content to disk and stages the file
+     * (equivalent to {@code git add <file>}).
+     *
+     * We warn the user if there are still conflict markers in the text because
+     * committing those would almost certainly break the project. But we don't
+     * prevent it — sometimes people intentionally keep markers as placeholders
+     * while they figure out what to do.
+     */
     private void saveAndMarkResolved() {
         if (countRemainingConflicts() > 0) {
             int choice = JOptionPane.showConfirmDialog(this,
-                    "There are still unresolved conflict markers.\nSave and mark as resolved anyway?",
-                    "Unresolved conflicts", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    "There are still unresolved conflict markers in the file.\n"
+                    + "Saving with markers will likely break compilation or tests.\n\n"
+                    + "Save and mark as resolved anyway?",
+                    "Unresolved conflicts",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
             if (choice != JOptionPane.YES_OPTION) return;
         }
+
         try {
             Files.write(Paths.get(filePath),
                     resultPane.getText().getBytes(StandardCharsets.UTF_8));
+
+            // Stage the file via JGit — this is the "git add" step that tells git
+            // the conflict is resolved
             var workTree = Context.getGitRepoService().getRepository().getWorkTree().toPath();
-            String relative = workTree.relativize(Paths.get(filePath)).toString().replace('\\', '/');
-            Context.getGitRepoService().addFileToCommitStage(relative);
+            String relativePath = workTree.relativize(Paths.get(filePath))
+                    .toString()
+                    .replace('\\', '/');
+            Context.getGitRepoService().addFileToCommitStage(relativePath);
+
+            // Refresh the working copy panel so it picks up the new RESOLVED status
             Context.refreshWorkingCopy();
-            JOptionPane.showMessageDialog(this, "File saved and staged.",
+
+            JOptionPane.showMessageDialog(this,
+                    "File saved and staged as resolved.",
                     "Resolved", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+
         } catch (Exception ex) {
-            log.log(Level.SEVERE, "Cannot save: " + filePath, ex);
+            log.log(Level.SEVERE, "Failed to save resolved file: " + filePath, ex);
             JOptionPane.showMessageDialog(this,
-                    "Error saving:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    "Failed to save the file:\n" + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // ==========================================================================
-    //  Helpers
-    // ==========================================================================
+    // =========================================================================
+    // Helper methods
+    // =========================================================================
 
+    /**
+     * Counts how many {@code <<<<<<<} markers remain in the result pane.
+     * This is the ground truth for whether there are still unresolved conflicts.
+     */
     private int countRemainingConflicts() {
         String text = resultPane.getText();
-        int count = 0, idx = 0;
-        while (idx < text.length()) {
-            int pos = text.indexOf("<<<<<<<", idx);
+        int count = 0;
+        int searchFrom = 0;
+        while (true) {
+            int pos = text.indexOf("<<<<<<<", searchFrom);
             if (pos < 0) break;
-            count++; idx = pos + 7;
+            count++;
+            searchFrom = pos + 7;
         }
         return count;
     }
 
     /**
-     * Returns, for each remaining conflict block in the result pane, a triple:
-     * {@code [oursMarkerLine, sepLine, theirsMarkerLine]}.
+     * Scans the result pane text and returns the line-number triples for every
+     * remaining conflict block: {@code [oursMarkerLine, separatorLine, theirsMarkerLine]}.
+     *
+     * Used by the connector panel to determine where to draw the trapezoids.
      */
     private List<int[]> getResultConflictLineRanges() {
-        List<int[]> result = new ArrayList<>();
+        List<int[]> ranges = new ArrayList<>();
         String[] lines = resultPane.getText().split("\n", -1);
-        int state = 0, oursLine = -1, sepLine = -1;
+        int state = 0;
+        int oursMarkerLine = -1;
+        int separatorLine  = -1;
+
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            if      (state == 0 && line.startsWith("<<<<<<<")) { oursLine = i; state = 1; }
-            else if (state == 1 && line.startsWith("=======")) { sepLine  = i; state = 2; }
-            else if (state == 2 && line.startsWith(">>>>>>>")) { result.add(new int[]{oursLine, sepLine, i}); state = 0; }
+            if (state == 0 && line.startsWith("<<<<<<<")) {
+                oursMarkerLine = i;
+                state = 1;
+            } else if (state == 1 && line.startsWith("=======")) {
+                separatorLine = i;
+                state = 2;
+            } else if (state == 2 && line.startsWith(">>>>>>>")) {
+                ranges.add(new int[]{oursMarkerLine, separatorLine, i});
+                state = 0;
+            }
         }
-        return result;
+        return ranges;
     }
 
     private void updateConflictLabel() {
         int remaining = countRemainingConflicts();
-        conflictLabel.setText(remaining == 0
-                ? "All conflicts resolved ✓"
-                : "Conflict " + (currentBlock + 1) + " of " + remaining);
+        if (remaining == 0) {
+            conflictCountLabel.setText("All conflicts resolved ✓");
+        } else {
+            conflictCountLabel.setText("Conflict " + (currentBlock + 1) + " of " + remaining);
+        }
     }
 
     private void updateButtonStates() {
         int remaining = countRemainingConflicts();
-        boolean has = remaining > 0;
-        prevBtn.setEnabled(has && currentBlock > 0);
-        nextBtn.setEnabled(has && currentBlock < remaining - 1);
-        acceptOursBtn.setEnabled(has);
-        acceptTheirsBtn.setEnabled(has);
-        acceptAllOursBtn.setEnabled(has);
-        acceptAllTheirsBtn.setEnabled(has);
+        boolean hasConflicts = remaining > 0;
+        prevBtn.setEnabled(hasConflicts && currentBlock > 0);
+        nextBtn.setEnabled(hasConflicts && currentBlock < remaining - 1);
+        acceptOursBtn.setEnabled(hasConflicts);
+        acceptTheirsBtn.setEnabled(hasConflicts);
+        acceptAllOursBtn.setEnabled(hasConflicts);
+        acceptAllTheirsBtn.setEnabled(hasConflicts);
     }
 
-    // ==========================================================================
-    //  Inner class: MergeConnectorPanel
-    // ==========================================================================
+    // =========================================================================
+    // Inner class: MergeConnectorPanel
+    // =========================================================================
 
     /**
-     * Draws bezier trapezoids between a static OURS/THEIRS pane and the editable
-     * RESULT pane.  A small arrow button in the centre of each connector accepts
-     * the corresponding block when clicked.
+     * A narrow panel placed between two editor panes that draws bezier-curve
+     * trapezoids connecting each conflict region on the left to the corresponding
+     * region on the right.
      *
-     * <p>{@code isLeft == true}  → OURS ↔ RESULT  (click [→] to accept mine)</p>
-     * <p>{@code isLeft == false} → RESULT ↔ THEIRS (click [←] to accept theirs)</p>
+     * The trapezoids are colour-coded: green on the left connector (ours side),
+     * red on the right (theirs side). A small arrow button sits at the midpoint
+     * of each trapezoid; clicking it calls doAccept() on the outer class to
+     * accept that side of the conflict.
+     *
+     * Coordinates are computed fresh on every paintComponent() call using
+     * RSyntaxTextArea.modelToView() so they stay in sync with the scroll position.
+     * This is intentionally simple — no caching, because the number of conflict
+     * blocks is usually small (< 20) and the calculation is cheap.
+     *
+     * The isLeft flag controls which pair of panes this connector sits between:
+     *   isLeft == true  →  ours pane ↔ result pane   (shows [→] buttons)
+     *   isLeft == false →  result pane ↔ theirs pane  (shows [←] buttons)
      */
     private class MergeConnectorPanel extends JPanel {
 
-        private static final int BTN_W = 22;
-        private static final int BTN_H = 18;
+        private static final int BUTTON_WIDTH  = 22;
+        private static final int BUTTON_HEIGHT = 18;
 
         private final boolean isLeft;
-        private final List<Rectangle> btnRects    = new ArrayList<>();
-        private final List<Integer>   btnBlockIdx = new ArrayList<>();
+
+        /** Hit-test bounds for the arrow buttons, rebuilt on every paint. */
+        private final List<Rectangle> buttonBounds    = new ArrayList<>();
+        private final List<Integer>   buttonBlockIndex = new ArrayList<>();
 
         MergeConnectorPanel(boolean isLeft) {
             this.isLeft = isLeft;
             setPreferredSize(new Dimension(CONNECTOR_WIDTH, 0));
-            setMinimumSize  (new Dimension(CONNECTOR_WIDTH, 0));
-            setMaximumSize  (new Dimension(CONNECTOR_WIDTH, Integer.MAX_VALUE));
+            setMinimumSize(new Dimension(CONNECTOR_WIDTH, 0));
+            setMaximumSize(new Dimension(CONNECTOR_WIDTH, Integer.MAX_VALUE));
             setOpaque(true);
-            setToolTipText(isLeft ? "Click → to accept Ours" : "Click ← to accept Theirs");
+            setToolTipText(isLeft
+                    ? "Click → to accept our version of this conflict"
+                    : "Click ← to accept their version of this conflict");
 
             addMouseListener(new MouseAdapter() {
-                @Override public void mouseClicked(MouseEvent e) { handleClick(e); }
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    handleButtonClick(e);
+                }
             });
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            btnRects.clear();
-            btnBlockIdx.clear();
 
-            List<int[]> resultRanges = getResultConflictLineRanges();
-            int n = Math.min(unresolvedIndices.size(), resultRanges.size());
-            if (n == 0) return;
+            // Clear the hit-test lists — they'll be rebuilt as we paint
+            buttonBounds.clear();
+            buttonBlockIndex.clear();
+
+            List<int[]> conflictRanges = getResultConflictLineRanges();
+
+            // We only draw connectors for blocks that are still unresolved
+            int drawCount = Math.min(unresolvedIndices.size(), conflictRanges.size());
+            if (drawCount == 0) return;
 
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int w = getWidth(), panelH = getHeight();
 
-            for (int i = 0; i < n; i++) {
-                int origIdx = unresolvedIndices.get(i);
-                MergeConflictBlock block  = blocks.get(origIdx);
-                int[]              range  = resultRanges.get(i);
+            int panelWidth  = getWidth();
+            int panelHeight = getHeight();
 
-                // Y coords in the static pane (OURS or THEIRS)
-                int staticTop, staticBot;
+            for (int i = 0; i < drawCount; i++) {
+                int origBlockIdx = unresolvedIndices.get(i);
+                MergeConflictBlock block = blocks.get(origBlockIdx);
+                int[] range = conflictRanges.get(i);
+
+                // Get Y coordinates in the static pane (ours or theirs)
+                int staticTop, staticBottom;
                 if (isLeft) {
-                    staticTop = lineY(oursPane,   oursScroll,   block.oursStartLine);
-                    staticBot = lineY(oursPane,   oursScroll,   block.oursEndLine);
+                    staticTop    = lineYInPanel(oursPane, oursScroll, block.oursStartLine);
+                    staticBottom = lineYInPanel(oursPane, oursScroll, block.oursEndLine);
                 } else {
-                    staticTop = lineY(theirsPane, theirsScroll, block.theirsStartLine);
-                    staticBot = lineY(theirsPane, theirsScroll, block.theirsEndLine);
+                    staticTop    = lineYInPanel(theirsPane, theirsScroll, block.theirsStartLine);
+                    staticBottom = lineYInPanel(theirsPane, theirsScroll, block.theirsEndLine);
                 }
 
-                // Y coords in the result pane
-                // Left connector → ours section: <<<<<<< to =======
-                // Right connector → theirs section: ======= to >>>>>>>
-                int resultTop, resultBot;
+                // Get Y coordinates in the result pane.
+                // Left connector covers <<<<<<< to =======  (the ours section).
+                // Right connector covers ======= to >>>>>>>  (the theirs section).
+                int resultTop, resultBottom;
                 if (isLeft) {
-                    resultTop = lineY(resultPane, resultScroll, range[0]);
-                    resultBot = lineY(resultPane, resultScroll, range[1] + 1);
+                    resultTop    = lineYInPanel(resultPane, resultScroll, range[0]);       // <<< line
+                    resultBottom = lineYInPanel(resultPane, resultScroll, range[1] + 1);   // === line + 1
                 } else {
-                    resultTop = lineY(resultPane, resultScroll, range[1]);
-                    resultBot = lineY(resultPane, resultScroll, range[2] + 1);
+                    resultTop    = lineYInPanel(resultPane, resultScroll, range[1]);       // === line
+                    resultBottom = lineYInPanel(resultPane, resultScroll, range[2] + 1);   // >>> line + 1
                 }
 
-                if (staticBot < 0 && resultBot < 0) continue;
-                if (staticTop > panelH && resultTop > panelH) continue;
-                if (staticTop == staticBot) staticBot = staticTop + 2;
-                if (resultTop == resultBot) resultBot = resultTop + 2;
+                // Skip if both regions are entirely outside the visible area
+                if (staticBottom < 0 && resultBottom < 0) continue;
+                if (staticTop > panelHeight && resultTop > panelHeight) continue;
 
-                // Left connector: left=static, right=result
-                // Right connector: left=result, right=static
-                int lTop = isLeft ? staticTop : resultTop;
-                int lBot = isLeft ? staticBot : resultBot;
-                int rTop = isLeft ? resultTop  : staticTop;
-                int rBot = isLeft ? resultBot  : staticBot;
+                // Avoid zero-height regions — give them at least 2px so there's something to draw
+                if (staticTop == staticBottom) staticBottom = staticTop + 2;
+                if (resultTop == resultBottom) resultBottom = resultTop + 2;
 
-                boolean isCurrent = (i == currentBlock && currentBlock < n);
-                Color fill = isCurrent
+                // Arrange left/right edges depending on which side we're on.
+                // Left connector: static pane is on the left, result on the right.
+                // Right connector: result pane is on the left, static on the right.
+                int leftTop, leftBottom, rightTop, rightBottom;
+                if (isLeft) {
+                    leftTop    = staticTop;    leftBottom = staticBottom;
+                    rightTop   = resultTop;    rightBottom = resultBottom;
+                } else {
+                    leftTop    = resultTop;    leftBottom = resultBottom;
+                    rightTop   = staticTop;    rightBottom = staticBottom;
+                }
+
+                boolean isCurrentBlock = (i == currentBlock && currentBlock < drawCount);
+                Color fillColor = isCurrentBlock
                         ? SyntaxStyleUtil.changedBg()
                         : (isLeft ? SyntaxStyleUtil.addedBg() : SyntaxStyleUtil.deletedBg());
 
-                drawTrapezoid(g2, w, lTop, lBot, rTop, rBot,
-                        new Color(fill.getRed(), fill.getGreen(), fill.getBlue(), 210));
+                drawBezierTrapezoid(g2, panelWidth, leftTop, leftBottom, rightTop, rightBottom,
+                        new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 200));
 
-                // Arrow button at the midpoint of the connector
-                int midY = (Math.max(lTop, rTop) + Math.min(lBot, rBot)) / 2;
-                int btnX = (w - BTN_W) / 2;
-                int btnY = midY - BTN_H / 2;
-                Rectangle btn = new Rectangle(btnX, btnY, BTN_W, BTN_H);
-                drawArrowButton(g2, btn, isLeft ? FontAwesomeSolid.ARROW_RIGHT : FontAwesomeSolid.ARROW_LEFT);
-                btnRects.add(btn);
-                btnBlockIdx.add(i);
+                // Draw the accept button at the vertical midpoint of the visible connector region
+                int midY = (Math.max(leftTop, rightTop) + Math.min(leftBottom, rightBottom)) / 2;
+                int btnX = (panelWidth - BUTTON_WIDTH) / 2;
+                int btnY = midY - BUTTON_HEIGHT / 2;
+                Rectangle btnRect = new Rectangle(btnX, btnY, BUTTON_WIDTH, BUTTON_HEIGHT);
+                drawArrowButton(g2, btnRect,
+                        isLeft ? FontAwesomeSolid.ARROW_RIGHT : FontAwesomeSolid.ARROW_LEFT);
+                buttonBounds.add(btnRect);
+                buttonBlockIndex.add(i);
             }
+
             g2.dispose();
         }
 
-        private void drawTrapezoid(Graphics2D g2, int w,
-                                   int lTop, int lBot, int rTop, int rBot, Color color) {
-            float cx1 = w * 0.35f, cx2 = w * 0.65f;
-            GeneralPath path = new GeneralPath();
-            path.moveTo(0, lTop);
-            path.curveTo(cx1, lTop, cx2, rTop, w, rTop);
-            path.lineTo(w, rBot);
-            path.curveTo(cx2, rBot, cx1, lBot, 0, lBot);
-            path.closePath();
+        /**
+         * Draws the filled bezier trapezoid that connects two line ranges across
+         * the connector panel.
+         *
+         * The shape uses cubic bezier curves for the top and bottom edges to give
+         * a smooth S-curve appearance. The control points are placed at 35% and
+         * 65% of the panel width, which looks good for most connector widths.
+         *
+         * @param g2     graphics context (caller owns it, we don't dispose it here)
+         * @param w      panel width
+         * @param lTop   top Y of the left edge
+         * @param lBot   bottom Y of the left edge
+         * @param rTop   top Y of the right edge
+         * @param rBot   bottom Y of the right edge
+         * @param color  fill colour including desired alpha
+         */
+        private void drawBezierTrapezoid(Graphics2D g2, int w,
+                                         int lTop, int lBot,
+                                         int rTop, int rBot,
+                                         Color color) {
+            float cp1x = w * 0.35f;  // first control point x
+            float cp2x = w * 0.65f;  // second control point x
+
+            GeneralPath shape = new GeneralPath();
+            shape.moveTo(0, lTop);
+            shape.curveTo(cp1x, lTop, cp2x, rTop, w, rTop);   // top bezier edge
+            shape.lineTo(w, rBot);
+            shape.curveTo(cp2x, rBot, cp1x, lBot, 0, lBot);   // bottom bezier edge
+            shape.closePath();
+
+            // Fill
             g2.setColor(color);
-            g2.fill(path);
-            g2.setColor(color.darker());
-            g2.setStroke(new java.awt.BasicStroke(0.8f));
-            g2.draw(new java.awt.geom.CubicCurve2D.Float(0, lTop, cx1, lTop, cx2, rTop, w, rTop));
-            g2.draw(new java.awt.geom.CubicCurve2D.Float(0, lBot, cx1, lBot, cx2, rBot, w, rBot));
+            g2.fill(shape);
+
+            // Outline the curved edges with a slightly darker stroke
+            Color outline = new Color(
+                    Math.max(0, color.getRed()   - 30),
+                    Math.max(0, color.getGreen() - 30),
+                    Math.max(0, color.getBlue()  - 30),
+                    color.getAlpha());
+            g2.setColor(outline);
+            g2.setStroke(new BasicStroke(0.8f));
+            g2.draw(new java.awt.geom.CubicCurve2D.Float(0, lTop, cp1x, lTop, cp2x, rTop, w, rTop));
+            g2.draw(new java.awt.geom.CubicCurve2D.Float(0, lBot, cp1x, lBot, cp2x, rBot, w, rBot));
         }
 
-        private void drawArrowButton(Graphics2D g2, Rectangle r, org.kordamp.ikonli.Ikon ikon) {
+        /**
+         * Draws a small rounded-rectangle button with an arrow icon inside.
+         * The button look is deliberately minimal to match standard FlatLaf buttons.
+         */
+        private void drawArrowButton(Graphics2D g2, Rectangle bounds,
+                                     org.kordamp.ikonli.Ikon iconType) {
+            // Background
             Color bg = UIManager.getColor("Button.background");
             if (bg == null) bg = new Color(220, 220, 220);
             g2.setColor(bg);
-            g2.fillRoundRect(r.x, r.y, r.width, r.height, 6, 6);
+            g2.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
+
+            // Border
             Color fg = UIManager.getColor("Button.foreground");
             g2.setColor(fg != null ? fg : Color.DARK_GRAY);
-            g2.setStroke(new java.awt.BasicStroke(1f));
-            g2.drawRoundRect(r.x, r.y, r.width, r.height, 6, 6);
-            Icon icon = Util.themeAwareIcon(ikon, 12);
-            int ix = r.x + (r.width  - icon.getIconWidth())  / 2;
-            int iy = r.y + (r.height - icon.getIconHeight()) / 2;
-            icon.paintIcon(this, g2, ix, iy);
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
+
+            // Icon — centred inside the button
+            Icon icon = Util.themeAwareIcon(iconType, 12);
+            int iconX = bounds.x + (bounds.width  - icon.getIconWidth())  / 2;
+            int iconY = bounds.y + (bounds.height - icon.getIconHeight()) / 2;
+            icon.paintIcon(this, g2, iconX, iconY);
         }
 
-        private void handleClick(MouseEvent e) {
-            for (int i = 0; i < btnRects.size(); i++) {
-                if (btnRects.get(i).contains(e.getPoint())) {
-                    doAccept(btnBlockIdx.get(i), isLeft);
+        /** Handles a click on the connector panel. Checks all button hit rectangles. */
+        private void handleButtonClick(MouseEvent e) {
+            for (int i = 0; i < buttonBounds.size(); i++) {
+                if (buttonBounds.get(i).contains(e.getPoint())) {
+                    doAccept(buttonBlockIndex.get(i), isLeft);
                     return;
                 }
             }
         }
 
-        /** Y position (in this panel's coordinate space) of the given line in pane/scroll. */
-        private int lineY(RSyntaxTextArea pane, RTextScrollPane scroll, int lineNum) {
+        /**
+         * Returns the Y coordinate of {@code lineNum} in this panel's coordinate
+         * space, accounting for the current scroll position.
+         *
+         * The conversion goes: line number → character offset → pixel rect inside
+         * the text area → adjust for scroll offset → convert to panel coordinates.
+         *
+         * Returns 0 if anything goes wrong (e.g. line number out of range, or the
+         * component hasn't been laid out yet).
+         */
+        private int lineYInPanel(RSyntaxTextArea textArea, RTextScrollPane scrollPane, int lineNum) {
             try {
-                int lc = pane.getLineCount();
-                lineNum = Math.max(0, Math.min(lineNum, lc - 1));
-                int offset = pane.getLineStartOffset(lineNum);
-                Rectangle rect = pane.modelToView(offset);
-                if (rect == null) return 0;
-                int scrollY = scroll.getViewport().getViewPosition().y;
-                Point vpInPanel = SwingUtilities.convertPoint(scroll.getViewport(), 0, 0, this);
-                return rect.y - scrollY + vpInPanel.y;
+                int clamped = Math.max(0, Math.min(lineNum, textArea.getLineCount() - 1));
+                int charOffset = textArea.getLineStartOffset(clamped);
+                Rectangle charRect = textArea.modelToView(charOffset);
+                if (charRect == null) return 0;
+
+                // Subtract the scroll offset and convert from viewport coordinates
+                // to our panel's coordinate system
+                int scrollOffset = scrollPane.getViewport().getViewPosition().y;
+                Point viewportInPanel = SwingUtilities.convertPoint(
+                        scrollPane.getViewport(), 0, 0, this);
+                return charRect.y - scrollOffset + viewportInPanel.y;
+
             } catch (Exception ex) {
                 return 0;
             }
