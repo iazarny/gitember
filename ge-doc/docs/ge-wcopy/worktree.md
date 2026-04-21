@@ -14,11 +14,11 @@ See also [git worktree](https://git-scm.com/docs/git-worktree) in the Git docume
 
 ## Opening the Worktree Manager
 
-Go to **Working copy → Worktrees…** in the menu bar.
+Go to **tree bar** 
 
 ![Worktree manager](worktree-list.png)
 
-The dialog lists every linked worktree alongside its path, checked-out branch, and status.
+It has all worktrees and main working copy as well.
 
 ## Adding a Worktree
 
