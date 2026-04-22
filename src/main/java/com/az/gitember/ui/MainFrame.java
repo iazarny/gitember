@@ -148,6 +148,14 @@ public class MainFrame extends JFrame {
                     }
                 }.execute());
 
+        // After a successful pull: switch to history and highlight the pulled commit
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY,
+                e -> showCommitInHistory((String) e.getNewValue()));
+
+        // After a conflicting pull: switch to working copy so conflicts are visible
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY,
+                e -> showWorkingCopy());
+
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
 
@@ -758,9 +766,22 @@ public class MainFrame extends JFrame {
      * History is (re-)loaded from scratch so that the commit is always found.
      */
     public void showCommitInHistory(String sha) {
+        Context.setActiveView(Context.ActiveView.HISTORY);
         contentPanel.setContent(historyPanel);
         toolBar.mergeHistoryToolbar(historyPanel);
         historyPanel.loadHistoryAndSelect(sha);
+    }
+
+    /**
+     * Switches the main content area to the working copy view.
+     * Used after a pull that produced conflicts so the user immediately sees
+     * which files need resolution.
+     */
+    public void showWorkingCopy() {
+        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+        contentPanel.setContent(workingCopyPanel);
+        toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
+        Context.updateStatus(null, true);
     }
 
     public StatusBar getStatusBar() {

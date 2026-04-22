@@ -53,6 +53,19 @@ public class Context {
     public static final String PROP_SEARCH_VALUE = "searchValue";
     public static final String PROP_HISTORY_REFRESH      = "historyRefresh";
     public static final String PROP_WORKING_COPY_REFRESH = "workingCopyRefresh";
+
+    /**
+     * Fired after a successful pull to ask the main frame to switch to the
+     * history view and select the commit at the given SHA.
+     * The property's new value is the full or abbreviated SHA string.
+     */
+    public static final String PROP_NAVIGATE_TO_HISTORY      = "navigateToHistory";
+
+    /**
+     * Fired after a conflicting pull to ask the main frame to switch to the
+     * working copy view so the user sees the conflicted files immediately.
+     */
+    public static final String PROP_NAVIGATE_TO_WORKING_COPY = "navigateToWorkingCopy";
     public static final String PROP_SEARCH_RESULT = "searchResult";
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
@@ -408,6 +421,23 @@ public class Context {
     /** Signals listeners (e.g. HistoryPanel) to reload the commit history. */
     public static void refreshHistory() {
         pcs.firePropertyChange(PROP_HISTORY_REFRESH, false, true);
+    }
+
+    /**
+     * Asks the main frame to switch to the history view and scroll to / select
+     * the commit identified by {@code sha} (full or abbreviated SHA-1).
+     * Call this on the EDT after a successful pull.
+     */
+    public static void navigateToHistory(String sha) {
+        pcs.firePropertyChange(PROP_NAVIGATE_TO_HISTORY, null, sha);
+    }
+
+    /**
+     * Asks the main frame to switch to the working copy view.
+     * Call this on the EDT after a pull that produced conflicts.
+     */
+    public static void navigateToWorkingCopy() {
+        pcs.firePropertyChange(PROP_NAVIGATE_TO_WORKING_COPY, false, true);
     }
 
     public static void updateAll() {
