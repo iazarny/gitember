@@ -145,6 +145,30 @@ public class InteractiveContinueAbortDialog extends JDialog {
             setLocationRelativeTo(null);
         }
         Util.bindEscapeToDispose(this);
+
+        // On macOS + FlatLaf window decorations, setAlwaysOnTop() alone is not
+        // enough — clicking the main window can bury this dialog behind it.
+        // Re-assert our position whenever the owner regains focus.
+        if (owner != null) {
+            java.awt.event.WindowFocusListener bringToFront =
+                    new java.awt.event.WindowFocusListener() {
+                @Override
+                public void windowGainedFocus(java.awt.event.WindowEvent e) {
+                    if (isDisplayable() && isVisible()) {
+                        toFront();
+                    }
+                }
+                @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
+            };
+            owner.addWindowFocusListener(bringToFront);
+            // Remove the listener when this dialog is gone so we don't leak it
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent e) {
+                    owner.removeWindowFocusListener(bringToFront);
+                }
+            });
+        }
     }
 
     // ── Private operations ────────────────────────────────────────────────────
