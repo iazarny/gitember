@@ -7,14 +7,19 @@ jpackage ^
  --type app-image ^
  --input app ^
  --name Gitember ^
- --main-jar gitember-3.1-SNAPSHOT-boot.jar ^
+ --main-jar gitember-3.2-SNAPSHOT-boot.jar ^
  --app-version 3.2 ^
  --vendor "Igor Azarny" ^
  --icon src\main\resources\icon\gitember.ico 
 
+rem jpackage --type app-image --input app --name Gitember  --main-jar gitember-3.2-SNAPSHOT-boot.jar --app-version 3.2  --vendor "Igor Azarny"  --icon src\main\resources\icon\gitember.ico 
+
+mkdir Gitember
+mkdir Gitember\inst
+
+
 copy inst\AppxManifest.xml Gitember
 
-mkdir Gitember\inst
 
 copy inst\*.png Gitember\inst
 
