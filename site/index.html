@@ -98,7 +98,9 @@
   </header>
 
   <!-- ======= Hero Section ======= -->
-  <section id="hero">
+  <section id="hero" style="position:relative;">
+
+      <img src="assets/img/3/aiseal.png" alt="AI Seal" style="position:absolute; top:32px; right:16px; width:80px; height:auto; z-index:10;">
 
       <div class="hero-text" data-aos="zoom-out">
           <h2>The Git GUI Client that works <em>your</em> way</h2>
@@ -213,8 +215,74 @@
 
 
 
-    <!-- ======= File Diff Deep-dive ======= -->
+
     <section id="features" style="background:#fff;"></section>
+
+    <section class="v3-banner" data-aos="fade-up">
+      <div class="container">
+        <div class="text-center mb-5">
+          <span class="v3-badge">AI Features</span>
+          <h2>Gitember is starting to go beyond just showing changes - it helps you understand them</h2>
+          <p style="max-width:680px; margin:0 auto;">
+
+
+            Stop scanning endless diffs. Gitember’s AI summarizes what actually changed between branches in plain English:
+
+            What was added, removed, or refactored
+            Potential impact areas
+            The intent behind the change (not just the code)
+
+            It’s like turning a diff into a quick code review.
+            Smart secret & password leak detection
+            Accidentally committing sensitive data happens — Gitember helps catch it early:
+
+            Detects possible passwords, tokens, and secrets in commits
+            Flags risky patterns before they spread
+            Adds an extra layer of safety to your workflow
+
+
+            Experimental, but impactful
+
+            These features are still evolving, but they already:
+
+            Reduce time spent reviewing diffs
+            Help spot risky changes earlier
+            Improve overall development confidence
+            ⚡ The direction is clear
+
+            From showing code → to explaining code → to protecting your code.
+
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <img src="assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+          </div>
+          <div class="col-lg-6 order-lg-2">
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
+              <h2 class="mb-0">Full Repository &amp; File History</h2>
+            </div>
+            <p>Navigate your entire commit history in a structured timeline. Click any commit to see its full diff, affected files, author details, and metadata. Filter by branch, author, date range, or keyword to find exactly what you need.</p>
+            <ul>
+              <li>Visual commit graph with branch and merge lines</li>
+              <li>File-level history — trace every change to a specific file across the project lifetime</li>
+              <li>One-click diff between any two commits</li>
+              <li>Restore any file to any historical version in two clicks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= File Diff Deep-dive ======= -->
     <section id="diff-tool" style="background:#fff;">
       <div class="container">
         <div class="feature-detail" data-aos="fade-up">
@@ -246,19 +314,18 @@
       <div class="container">
         <div class="row align-items-center g-5">
           <div class="col-lg-6">
-            <img src="assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+            <img src="assets/img/3/3waymerge.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
           </div>
           <div class="col-lg-6 order-lg-2">
             <div class="d-flex align-items-center gap-3 mb-2">
-              <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
-              <h2 class="mb-0">Full Repository &amp; File History</h2>
+              <div class="feature-icon-lg"><i class="bi bi-sign-merge-right"></i></div>
+              <h2 class="mb-0">Conflict resolving. 3 Way merge</h2>
             </div>
-            <p>Navigate your entire commit history in a structured timeline. Click any commit to see its full diff, affected files, author details, and metadata. Filter by branch, author, date range, or keyword to find exactly what you need.</p>
+            <p>With our intuitive 3-way merge interface, you don’t just see “what changed” — you understand why it changed.</p>
             <ul>
-              <li>Visual commit graph with branch and merge lines</li>
-              <li>File-level history — trace every change to a specific file across the project lifetime</li>
-              <li>One-click diff between any two commits</li>
-              <li>Restore any file to any historical version in two clicks</li>
+              <li>Resolve conflicts with confidence. Instantly pick, combine, or edit changes with precision — without digging through cryptic markers.</li>
+              <li>Whether you’re rebasing, merging branches, or reviewing changes, Gitember keeps you focused and fast.</li>
+              <li>Visual clarity over chaos. Clean, distraction-free UI highlights differences in a way that actually makes sense (finally).</li>
             </ul>
           </div>
         </div>
