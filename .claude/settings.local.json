@@ -29,7 +29,13 @@
       "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*.java\" | xargs file | grep CRLF | cut -d: -f1 | while read f; do\n  sed -i '' 's/\\\\r//' \"$f\"\ndone\necho \"Done\")",
       "Bash(python3 -m json.tool)",
       "Bash(python3 -c \"\nimport json\nwith open\\('/Users/igorazarny/.gitember/gitember2.json'\\) as f:\n    d = json.load\\(f\\)\nprint\\('ignoreCompareFiles:', d.get\\('ignoreCompareFiles', 'KEY MISSING'\\)\\)\nprint\\('theme:', d.get\\('theme'\\)\\)\nprint\\('fontSize:', d.get\\('fontSize'\\)\\)\n\")",
-      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*Setting*\" -o -name \"*Config*\" -o -name \"*Preference*\" 2>/dev/null | grep -v target | grep -v \".class\")"
+      "Bash(find /Users/igorazarny/Projects/gitember/src -name \"*Setting*\" -o -name \"*Config*\" -o -name \"*Preference*\" 2>/dev/null | grep -v target | grep -v \".class\")",
+      "Bash(find:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(sed -n '610,630p' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/MainFrame.java)",
+      "Bash(sed -n '665,680p' /Users/igorazarny/Projects/gitember/src/main/java/com/az/gitember/ui/MainFrame.java)",
+      "Bash(grep -i \"\\\\.java$\")"
     ]
   }
 }

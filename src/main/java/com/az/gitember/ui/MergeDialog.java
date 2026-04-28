@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.MergeDialogResult;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.MergeCommand;
 
 import javax.swing.*;
@@ -97,6 +98,7 @@ public class MergeDialog extends JDialog {
         pack();
         setMinimumSize(new Dimension(420, getHeight()));
         setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
     }
 
     /** Returns the user's choices, or {@code null} if the dialog was cancelled. */

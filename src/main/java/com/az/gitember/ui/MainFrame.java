@@ -13,6 +13,7 @@ import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
+import org.eclipse.jgit.lib.RepositoryState;
 import com.az.gitember.ui.misc.MainToolBar;
 
 import javax.swing.*;
@@ -139,6 +140,21 @@ public class MainFrame extends JFrame {
         Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, this::onWorkingBranchChanged);
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoPathChanged);
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, this::onStatusListChanged);
+        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, e ->
+                new SwingWorker<Void, Void>() {
+                    @Override protected Void doInBackground() {
+                        Context.updateStatus(null, true);
+                        return null;
+                    }
+                }.execute());
+
+        // After a successful pull: switch to history and highlight the pulled commit
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY,
+                e -> showCommitInHistory((String) e.getNewValue()));
+
+        // After a conflicting pull: switch to working copy so conflicts are visible
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY,
+                e -> showWorkingCopy());
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
@@ -170,6 +186,8 @@ public class MainFrame extends JFrame {
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
+        contextMenuFactory.setWorktreeOpenAction(this::openWorktree);
+        contextMenuFactory.setWorktreeRefreshAction(treePanel::refreshWorktrees);
         treePanel.setContextMenuFactory(contextMenuFactory);
 
         // Start with welcome screen
@@ -230,6 +248,7 @@ public class MainFrame extends JFrame {
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());
+        menuBar.addWorktreesListener(e -> showWorktreesDialog());
         menuBar.addCreateDiffListener(e -> createDiff());
         menuBar.addApplyDiffListener(e -> applyDiff());
 
@@ -387,6 +406,14 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
     }
 
+    private boolean isResolvableRepoState() {
+        if (Context.getGitRepoService() == null) return false;
+        RepositoryState s = Context.getGitRepoService().getRepositoryState();
+        return s == RepositoryState.MERGING_RESOLVED
+                || s == RepositoryState.CHERRY_PICKING_RESOLVED
+                || s == RepositoryState.REVERTING_RESOLVED;
+    }
+
     private void refreshWorkingCopy() {
         statusBar.setStatus("Refreshing...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -438,6 +465,48 @@ public class MainFrame extends JFrame {
                     statusBar.setStatus("Stash failed: " + ex.getMessage());
                     JOptionPane.showMessageDialog(MainFrame.this,
                             "Cannot stash: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void showWorktreesDialog() {
+        com.az.gitember.dialog.WorktreesDialog dlg =
+                new com.az.gitember.dialog.WorktreesDialog(this);
+        dlg.setVisible(true);
+
+        // Refresh tree so add/remove is reflected immediately
+        treePanel.refreshWorktrees();
+
+        com.az.gitember.data.WorktreeInfo toOpen = dlg.getSelectedToOpen();
+        if (toOpen != null) {
+            openWorktree(toOpen.getPath());
+        }
+    }
+
+    private void openWorktree(String path) {
+        statusBar.setStatus("Opening worktree: " + path + "…");
+        statusBar.showProgress(true);
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override protected Void doInBackground() throws Exception {
+                Context.init(path);
+                return null;
+            }
+            @Override protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    addCurrentProjectToSettings();
+                    refreshProjectLists();
+                    statusBar.setStatus("Worktree opened: " + path);
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    log.log(Level.WARNING, "Failed to open worktree", cause);
+                    statusBar.setStatus("Failed to open worktree: " + cause.getMessage());
+                    JOptionPane.showMessageDialog(MainFrame.this,
+                            "Cannot open worktree:\n" + cause.getMessage(),
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -564,8 +633,10 @@ public class MainFrame extends JFrame {
 
     private void onStatusListChanged(PropertyChangeEvent evt) {
         SwingUtilities.invokeLater(() -> {
-            workingCopyPanel.setItems(Context.getStatusList());
-            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
+            List<ScmItem> statusList = Context.getStatusList();
+            workingCopyPanel.setItems(statusList);
+            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+            menuBar.setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
         });
     }
 
@@ -614,9 +685,12 @@ public class MainFrame extends JFrame {
 
             switch (data.type()) {
                 case WORKING_COPY -> {
+                    Context.setActiveView(Context.ActiveView.WORKING_COPY);
                     contentPanel.setContent(workingCopyPanel);
-                    workingCopyPanel.setItems(Context.getStatusList()); // show cached immediately
-                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems());
+                    List<ScmItem> cachedStatus = Context.getStatusList();
+                    workingCopyPanel.setItems(cachedStatus); // show cached immediately
+                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+                    menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
@@ -625,16 +699,19 @@ public class MainFrame extends JFrame {
                     }.execute();
                 }
                 case HISTORY -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     contentPanel.setContent(historyPanel);
                     historyPanel.loadHistory(null, true);
                 }
                 case BRANCH -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch branch) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(branch.getFullName(), false);
                     }
                 }
                 case TAG -> {
+                    Context.setActiveView(Context.ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch tag) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(tag.getFullName(), false);
@@ -656,6 +733,7 @@ public class MainFrame extends JFrame {
                     contentPanel.setContent(submodulePanel);
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
+                case WORKTREE -> { /* handled via context menu */ }
                 default -> contentPanel.setContent(null);
             }
         }
@@ -688,9 +766,22 @@ public class MainFrame extends JFrame {
      * History is (re-)loaded from scratch so that the commit is always found.
      */
     public void showCommitInHistory(String sha) {
+        Context.setActiveView(Context.ActiveView.HISTORY);
         contentPanel.setContent(historyPanel);
         toolBar.mergeHistoryToolbar(historyPanel);
         historyPanel.loadHistoryAndSelect(sha);
+    }
+
+    /**
+     * Switches the main content area to the working copy view.
+     * Used after a pull that produced conflicts so the user immediately sees
+     * which files need resolution.
+     */
+    public void showWorkingCopy() {
+        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+        contentPanel.setContent(workingCopyPanel);
+        toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
+        Context.updateStatus(null, true);
     }
 
     public StatusBar getStatusBar() {

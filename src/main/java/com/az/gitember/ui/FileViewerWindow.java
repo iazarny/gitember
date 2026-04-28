@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.misc.Util;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -170,6 +171,8 @@ public class FileViewerWindow extends JFrame {
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
         getRootPane().registerKeyboardAction(
                 e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        Util.bindEscapeToDispose(this);
 
         this.addPropertyChangeListener("graphicsConfiguration", evt -> {
             SwingUtilities.invokeLater(() -> {

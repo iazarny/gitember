@@ -1,9 +1,9 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmItemAttribute;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -365,9 +365,14 @@ public class WorkingCopyPanel extends JPanel {
 
     private void buildSingleItemMenu(JPopupMenu menu, ScmItem item) {
         String status = item.getAttribute().getStatus();
-        String fileName = item.getShortName();
 
-        // Stage / Unstage
+        boolean isConflict  = status != null && status.startsWith("Conflict");
+        boolean isModified  = ScmItem.Status.MODIFIED.equals(status);
+        boolean isChanged   = ScmItem.Status.CHANGED.equals(status);
+        boolean isMissed    = ScmItem.Status.MISSED.equals(status);
+        boolean isRemoved   = ScmItem.Status.REMOVED.equals(status);
+
+        // === Group 1: Stage / Unstage ===
         if (isStaged(status)) {
             JMenuItem unstage = new JMenuItem("Unstage");
             unstage.addActionListener(e -> doUnstage(item));
@@ -378,60 +383,68 @@ public class WorkingCopyPanel extends JPanel {
             menu.add(stage);
         }
 
-        menu.addSeparator();
-
-        // Diff with repository
-        if (ScmItem.Status.MODIFIED.equals(status) || ScmItem.Status.CHANGED.equals(status)) {
-            JMenuItem diff = new JMenuItem("Diff with repository");
-            diff.addActionListener(e -> showDiffWithRepo(item));
-            menu.add(diff);
-        }
-
-        // Revert
-        if (ScmItem.Status.MODIFIED.equals(status) || ScmItem.Status.MISSED.equals(status)) {
-            JMenuItem revert = new JMenuItem("Revert...");
-            revert.addActionListener(e -> revertItem(item));
-            menu.add(revert);
-        }
-
-        // Conflict resolution
-        if (status != null && status.startsWith("Conflict")) {
+        // === Group 2: Diff / Revert / Resolve conflict ===
+        // Only add separator when this group has at least one item.
+        boolean hasDiff    = isModified || isChanged;
+        boolean hasRevert  = isModified || isMissed;
+        if (hasDiff || hasRevert || isConflict) {
             menu.addSeparator();
-            JMenu resolveMenu = new JMenu("Resolve conflict");
 
-            JMenuItem markResolved = new JMenuItem("Mark resolved");
-            markResolved.addActionListener(e -> resolveConflict(item, null));
-            resolveMenu.add(markResolved);
+            if (hasDiff) {
+                JMenuItem diff = new JMenuItem("Diff with repository");
+                diff.addActionListener(e -> showDiffWithRepo(item));
+                menu.add(diff);
+            }
 
-            JMenuItem useOurs = new JMenuItem("Using mine (OURS)");
-            useOurs.addActionListener(e -> resolveConflict(item, org.eclipse.jgit.api.CheckoutCommand.Stage.OURS));
-            resolveMenu.add(useOurs);
+            if (hasRevert) {
+                JMenuItem revert = new JMenuItem("Revert...");
+                revert.addActionListener(e -> revertItem(item));
+                menu.add(revert);
+            }
 
-            JMenuItem useTheirs = new JMenuItem("Using theirs (THEIRS)");
-            useTheirs.addActionListener(e -> resolveConflict(item, org.eclipse.jgit.api.CheckoutCommand.Stage.THEIRS));
-            resolveMenu.add(useTheirs);
+            if (isConflict) {
+                JMenu resolveMenu = new JMenu("Resolve conflict");
 
-            menu.add(resolveMenu);
+                JMenuItem markResolved = new JMenuItem("Mark resolved");
+                markResolved.addActionListener(e -> resolveConflict(item, null));
+                resolveMenu.add(markResolved);
+
+                JMenuItem useOurs = new JMenuItem("Using mine (OURS)");
+                useOurs.addActionListener(e -> resolveConflict(item, org.eclipse.jgit.api.CheckoutCommand.Stage.OURS));
+                resolveMenu.add(useOurs);
+
+                JMenuItem useTheirs = new JMenuItem("Using theirs (THEIRS)");
+                useTheirs.addActionListener(e -> resolveConflict(item, org.eclipse.jgit.api.CheckoutCommand.Stage.THEIRS));
+                resolveMenu.add(useTheirs);
+
+                resolveMenu.addSeparator();
+                JMenuItem mergeToolItem = new JMenuItem("Open in Merge Tool...");
+                mergeToolItem.addActionListener(e -> openMergeTool(item));
+                resolveMenu.add(mergeToolItem);
+
+                menu.add(resolveMenu);
+            }
         }
 
-        // History
-        if (ScmItem.Status.MODIFIED.equals(status) || ScmItem.Status.MISSED.equals(status)
-                || ScmItem.Status.CHANGED.equals(status)) {
+        // === Group 3: History + Open ===
+        boolean hasHistory = isModified || isMissed || isChanged;
+        boolean hasOpen    = !isMissed && !isRemoved;
+        if (hasHistory || hasOpen) {
             menu.addSeparator();
-            JMenuItem history = new JMenuItem("History");
-            history.addActionListener(e -> showHistory(item));
-            menu.add(history);
+            if (hasHistory) {
+                JMenuItem history = new JMenuItem("History");
+                history.addActionListener(e -> showHistory(item));
+                menu.add(history);
+            }
+            if (hasOpen) {
+                JMenuItem open = new JMenuItem("Open");
+                open.addActionListener(e -> openFile(item));
+                menu.add(open);
+            }
         }
 
-        // Open
-        if (!ScmItem.Status.MISSED.equals(status) && !ScmItem.Status.REMOVED.equals(status)) {
-            JMenuItem open = new JMenuItem("Open");
-            open.addActionListener(e -> openFile(item));
-            menu.add(open);
-        }
-
-        // Physical delete
-        if (!ScmItem.Status.MISSED.equals(status) && !ScmItem.Status.REMOVED.equals(status)) {
+        // === Group 4: Physical delete ===
+        if (!isMissed && !isRemoved) {
             menu.addSeparator();
             JMenuItem delete = new JMenuItem("Physical delete...");
             delete.addActionListener(e -> physicalDelete(item));
@@ -663,6 +676,12 @@ public class WorkingCopyPanel extends JPanel {
             }
         };
         worker.execute();
+    }
+
+    private void openMergeTool(ScmItem item) {
+        String absPath = Context.getGitRepoService().getRepository().getWorkTree().getAbsolutePath()
+                + File.separator + item.getShortName().replace('/', File.separatorChar);
+        new ThreeWayMergeWindow(absPath);
     }
 
     private void showDiffWithRepo(ScmItem item) {

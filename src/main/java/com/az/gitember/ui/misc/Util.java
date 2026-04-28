@@ -1,13 +1,13 @@
-package com.az.gitember.ui;
+package com.az.gitember.ui.misc;
 
-import com.az.gitember.ui.misc.RotatedIcon;
 import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class Util {
     }
 
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
-        Dimension size = new Dimension(110, 40);
+        Dimension size = new Dimension(110, 36);
         return createButton(text, tooltip, ikon, rotation, size);
     }
 
@@ -41,7 +41,7 @@ public class Util {
         }
 
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
+        btn.setBorderPainted(true);
         btn.setContentAreaFilled(true);
 
         if (ikon != null) {
@@ -80,6 +80,23 @@ public class Util {
         cachedAppIcons = icons;
         return icons;
     }
+
+    /**
+     * Binds the ESC key to dispose the given window.
+     * Works for both JFrame and JDialog (both implement RootPaneContainer).
+     */
+    public static void bindEscapeToDispose(RootPaneContainer window) {
+        JRootPane rp = window.getRootPane();
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "ESCAPE");
+        rp.getActionMap().put("ESCAPE", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((java.awt.Window) window).dispose();
+            }
+        });
+    }
+
 
     /**
      * Returns an Icon that derives its colour from the painting component's

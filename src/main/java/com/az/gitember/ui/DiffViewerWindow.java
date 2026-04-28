@@ -5,9 +5,11 @@ import com.az.gitember.component.RRightTextScrollPane;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.diff.*;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -249,11 +251,11 @@ public class DiffViewerWindow extends JFrame {
         });
         syncScroll(leftScroll, rightScroll);
 
-        prevBtn = new JButton("<< Prev");
+        prevBtn = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
         prevBtn.setEnabled(false);
         prevBtn.addActionListener(e -> navigateDiff(-1));
 
-        nextBtn = new JButton("Next >>");
+        nextBtn = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
         nextBtn.setEnabled(false);
         nextBtn.addActionListener(e -> navigateDiff(1));
 
@@ -295,6 +297,8 @@ public class DiffViewerWindow extends JFrame {
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
         getRootPane().registerKeyboardAction(
                 e -> searchBar.activate(), ctrlF, JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        Util.bindEscapeToDispose(this);
     }
 
     // ---- Layout ----

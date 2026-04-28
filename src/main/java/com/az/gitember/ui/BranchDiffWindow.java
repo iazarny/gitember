@@ -1,7 +1,11 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.LlmDiffDescriptionService;
+import com.az.gitember.service.OllamaManager;
+import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
@@ -67,8 +71,14 @@ public class BranchDiffWindow extends JFrame {
     private final JLabel leftHeader  = new JLabel(" ");
     private final JLabel rightHeader = new JLabel(" ");
     private final JLabel statsLbl    = new JLabel(" ");
-    private final JButton prevBtn    = new JButton("<< Prev");
-    private final JButton nextBtn    = new JButton("Next >>");
+    private final JButton prevBtn    = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
+    private final JButton nextBtn    = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
+    private final JButton aiDescBtn  = Util.createButton("Describe", "Describe difference with AI ...");
+
+    // AI description panel (shown / hidden on demand)
+    private JPanel     aiPanel;
+    private JTextArea  aiTextArea;
+    private JSplitPane mainSplit;
 
     private final JTree          leftTree;
     private final JTree          rightTree;
@@ -104,12 +114,20 @@ public class BranchDiffWindow extends JFrame {
         prevBtn.addActionListener(e -> navigateDiff(-1));
         nextBtn.addActionListener(e -> navigateDiff(+1));
 
+        boolean aiEnabled = Boolean.TRUE.equals(
+                Context.getSettings() != null && Context.getSettings().getEnableBranchCompareDescription());
+        aiDescBtn.setVisible(aiEnabled);
+        aiDescBtn.setToolTipText("Ask the local Ollama LLM to describe the changes between these revisions");
+        aiDescBtn.addActionListener(e -> requestAiDescription());
+
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(buildNavBar(),  BorderLayout.NORTH);
-        getContentPane().add(buildSplit(),   BorderLayout.CENTER);
+        getContentPane().add(buildCenter(),  BorderLayout.CENTER);
         getContentPane().add(buildLegend(), BorderLayout.SOUTH);
 
         loadDiff();
+
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Widget factories ──────────────────────────────────────────────────────
@@ -170,7 +188,44 @@ public class BranchDiffWindow extends JFrame {
         bar.add(nextBtn);
         bar.add(Box.createHorizontalStrut(12));
         bar.add(statsLbl);
+        if (aiDescBtn.isVisible()) {
+            bar.add(Box.createHorizontalStrut(12));
+            bar.add(aiDescBtn);
+        }
         return bar;
+    }
+
+    /** Builds the central area: tree split pane + optional AI description panel below. */
+    private JComponent buildCenter() {
+        aiTextArea = new JTextArea();
+        aiTextArea.setEditable(false);
+        aiTextArea.setLineWrap(true);
+        aiTextArea.setWrapStyleWord(true);
+        aiTextArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        aiTextArea.setMargin(new Insets(8, 10, 8, 10));
+
+        JScrollPane aiScroll = new JScrollPane(aiTextArea);
+        aiScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0,
+                UIManager.getColor("Separator.foreground")));
+
+        JLabel aiHeader = new JLabel(" AI Change Description");
+        aiHeader.setFont(aiHeader.getFont().deriveFont(Font.BOLD, 12f));
+        aiHeader.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 1, 0,
+                        UIManager.getColor("Separator.foreground")),
+                BorderFactory.createEmptyBorder(3, 6, 3, 6)));
+        aiHeader.setOpaque(true);
+
+        aiPanel = new JPanel(new BorderLayout());
+        aiPanel.add(aiHeader, BorderLayout.NORTH);
+        aiPanel.add(aiScroll, BorderLayout.CENTER);
+        aiPanel.setVisible(false);
+
+        mainSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, buildSplit(), aiPanel);
+        mainSplit.setResizeWeight(0.65);
+        mainSplit.setDividerSize(5);
+        mainSplit.setDividerLocation(Integer.MAX_VALUE);  // hide until shown
+        return mainSplit;
     }
 
     private JSplitPane buildSplit() {
@@ -377,6 +432,48 @@ public class BranchDiffWindow extends JFrame {
                 + different + " modified  |  "
                 + leftOnly  + " deleted  |  "
                 + rightOnly + " added");
+    }
+
+    // ── AI description ────────────────────────────────────────────────────────
+
+    private void requestAiDescription() {
+        if (!OllamaManager.isRunning()) {
+            JOptionPane.showMessageDialog(this,
+                    "Ollama is not running.\n\n" +
+                    "Start Ollama first, or enable it in Settings → AI Features.",
+                    "Ollama Not Available", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        aiDescBtn.setEnabled(false);
+        aiTextArea.setText("Generating description…  (this may take a minute)");
+        aiPanel.setVisible(true);
+        mainSplit.setDividerLocation(0.65);
+
+        String ollamaUrl  = OllamaManager.BASE_URL;
+        String modelName  = Context.getSettings() != null
+                ? Context.getSettings().getLlmDetectorModel() : "llama3.2";
+
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                String diffText = Context.getGitRepoService()
+                        .getBranchDiffText(branchARef, branchBRef, LlmDiffDescriptionService.MAX_DIFF_CHARS);
+                return LlmDiffDescriptionService.describe(
+                        diffText, branchALabel, branchBLabel, ollamaUrl, modelName);
+            }
+            @Override
+            protected void done() {
+                aiDescBtn.setEnabled(true);
+                try {
+                    aiTextArea.setText(get());
+                    aiTextArea.setCaretPosition(0);
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "AI description failed", ex);
+                    aiTextArea.setText("Failed to generate description:\n" + ex.getMessage());
+                }
+            }
+        }.execute();
     }
 
     // ── Open actions ──────────────────────────────────────────────────────────

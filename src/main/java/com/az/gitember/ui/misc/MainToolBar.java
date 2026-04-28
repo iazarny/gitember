@@ -3,7 +3,6 @@ package com.az.gitember.ui.misc;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
-import com.az.gitember.ui.Util;
 import com.az.gitember.ui.HistoryPanel;
 import com.az.gitember.ui.PullRequestPanel;
 import com.az.gitember.ui.WorkingCopyPanel;

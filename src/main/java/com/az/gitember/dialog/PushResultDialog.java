@@ -1,7 +1,13 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.misc.Util;
+
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
+import java.net.URI;
+import java.util.regex.Pattern;
 
 /**
  * Dialog that shows the result of a push operation:
@@ -9,11 +15,14 @@ import java.awt.*;
  */
 public class PushResultDialog extends JDialog {
 
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
+
     public PushResultDialog(Component parent, String remoteUrl, String messages) {
         super(SwingUtilities.getWindowAncestor(parent), "Push Result",
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(520, 320);
+        setSize(600, 320);
         setLocationRelativeTo(parent);
 
         // ---- header ----
@@ -40,14 +49,25 @@ public class PushResultDialog extends JDialog {
         headerPanel.add(remoteRow);
 
         // ---- messages area ----
-        JTextArea msgArea = new JTextArea();
-        msgArea.setEditable(false);
-        msgArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        msgArea.setLineWrap(true);
-        msgArea.setWrapStyleWord(true);
-
         String text = (messages != null ? messages : "").trim();
-        msgArea.setText(text.isEmpty() ? "(no server messages)" : text);
+        String displayText = text.isEmpty() ? "(no server messages)" : text;
+
+        Font monoFont = SyntaxStyleUtil.monoFont();
+        JEditorPane msgArea = new JEditorPane("text/html",
+                PullResultDialog.toHtml(displayText, monoFont.getSize()));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(monoFont);
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));
@@ -66,5 +86,8 @@ public class PushResultDialog extends JDialog {
         setContentPane(mainPanel);
 
         getRootPane().setDefaultButton(closeBtn);
+        Util.bindEscapeToDispose(this);
     }
+
+
 }

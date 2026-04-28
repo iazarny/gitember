@@ -38,7 +38,24 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     @Override
     protected void onSuccess(PullOperationResult result) {
         statusBar.setStatus("Pull completed: " + result.toStatusString());
-        Context.refreshHistory();
+        if (Context.getActiveView() == Context.ActiveView.WORKING_COPY) {
+            Context.refreshWorkingCopy();
+        } else {
+            Context.refreshHistory();
+        }
+        // Show the result dialog first (it's modal, so this blocks until closed)
         new PullResultDialog(parent, result).setVisible(true);
+        // After the user closes the dialog, navigate to the appropriate view
+        navigateAfterPull(result);
+    }
+
+    private void navigateAfterPull(PullOperationResult result) {
+        if (result.isConflicting()) {
+            // Conflicts need the user's attention — take them straight to working copy
+            Context.navigateToWorkingCopy();
+        } else if (!result.isAlreadyUpToDate() && result.getNewHeadSha() != null) {
+            // Successful pull with new commits — show the pulled commit in history
+            Context.navigateToHistory(result.getNewHeadSha());
+        }
     }
 }

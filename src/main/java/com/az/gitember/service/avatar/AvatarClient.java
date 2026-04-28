@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 /**
  * Strategy interface for fetching a committer's avatar image from a specific
- * hosting provider (GitHub, GitLab, Bitbucket, Gravatar, …).
+ * hosting provider (GitHub, GitLab, Bitbucket, Gravatar, Azure DevOps PR, …).
  *
  * <p>Implementations must be stateless and thread-safe.</p>
  */

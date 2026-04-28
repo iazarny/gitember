@@ -14,11 +14,28 @@ public class StatusBar extends JPanel {
 
         statusLabel = new JLabel("Ready");
         progressBar = new JProgressBar();
-        progressBar.setPreferredSize(new Dimension(300, 16));
+        progressBar.setPreferredSize(new Dimension(300, 4));
         progressBar.setVisible(false);
 
+        // Wrapper keeps a fixed height in BorderLayout.SOUTH so the StatusBar
+        // does not resize when the progress bar is shown or hidden.
+        int barHeight = progressBar.getPreferredSize().height;
+        JPanel progressWrapper = new JPanel(new BorderLayout()) {
+            @Override public Dimension getPreferredSize() {
+                return new Dimension(super.getPreferredSize().width, barHeight);
+            }
+            @Override public Dimension getMinimumSize() {
+                return new Dimension(0, barHeight);
+            }
+            @Override public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, barHeight);
+            }
+        };
+        progressWrapper.setOpaque(false);
+        progressWrapper.add(progressBar, BorderLayout.CENTER);
+
         add(statusLabel, BorderLayout.WEST);
-        add(progressBar, BorderLayout.CENTER);
+        add(progressWrapper, BorderLayout.SOUTH);
     }
 
     public void setStatus(String text) {

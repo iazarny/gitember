@@ -37,7 +37,22 @@ public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult>
     @Override
     protected void onSuccess(PullOperationResult result) {
         statusBar.setStatus("Pull completed: " + result.toStatusString());
-        Context.refreshHistory();
+        if (Context.getActiveView() == Context.ActiveView.WORKING_COPY) {
+            Context.refreshWorkingCopy();
+        } else {
+            Context.refreshHistory();
+        }
+        // Show the result dialog first (it's modal, so this blocks until closed)
         new PullResultDialog(parent, result).setVisible(true);
+        // After the user closes the dialog, navigate to the appropriate view
+        navigateAfterPull(result);
+    }
+
+    private void navigateAfterPull(PullOperationResult result) {
+        if (result.isConflicting()) {
+            Context.navigateToWorkingCopy();
+        } else if (!result.isAlreadyUpToDate() && result.getNewHeadSha() != null) {
+            Context.navigateToHistory(result.getNewHeadSha());
+        }
     }
 }

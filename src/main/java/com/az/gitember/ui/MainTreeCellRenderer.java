@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeRegular;
 
@@ -18,13 +19,17 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         TAGS,
         STASHES,
         BRANCH,
+        BRANCH_FOLDER,
         TAG,
         STASH,
         ROOT,
         PULL_REQUESTS,
         PULL_REQUEST,
         SUBMODULES,
-        SUBMODULE
+        SUBMODULE,
+        WORKTREES,
+        WORKTREE,
+        WORKTREE_MAIN
     }
 
     @Override
@@ -54,6 +59,7 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case TAGS           -> Util.themeAwareIcon(FontAwesomeSolid.TAGS,        14);
             case STASHES        -> Util.themeAwareIcon(FontAwesomeSolid.ARCHIVE,     14);
             case BRANCH         -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
+            case BRANCH_FOLDER  -> Util.themeAwareIcon(FontAwesomeSolid.FOLDER,      14);
             case TAG            -> Util.themeAwareIcon(FontAwesomeSolid.TAG,         14);
             case STASH          -> Util.themeAwareIcon(FontAwesomeRegular.FILE,        14);
             case ROOT           -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);
@@ -61,6 +67,9 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
             case PULL_REQUEST   -> Util.themeAwareIcon(FontAwesomeSolid.EXCHANGE_ALT,14);
             case SUBMODULES     -> Util.themeAwareIcon(FontAwesomeSolid.CUBES,       14);
             case SUBMODULE      -> Util.themeAwareIcon(FontAwesomeSolid.CUBE,        14);
+            case WORKTREES      -> Util.themeAwareIcon(FontAwesomeSolid.SITEMAP,     14);
+            case WORKTREE       -> Util.themeAwareIcon(FontAwesomeSolid.TREE, 14);
+            case WORKTREE_MAIN  -> Util.themeAwareIcon(FontAwesomeSolid.HOME,        14);
         };
     }
 

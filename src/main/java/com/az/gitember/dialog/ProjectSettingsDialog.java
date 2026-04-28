@@ -3,6 +3,8 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 
+import com.az.gitember.ui.misc.Util;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -56,6 +58,7 @@ public class ProjectSettingsDialog extends JDialog {
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(form,     BorderLayout.CENTER);
         getContentPane().add(btnPanel, BorderLayout.SOUTH);
+        Util.bindEscapeToDispose(this);
     }
 
     private void applyAndClose() {

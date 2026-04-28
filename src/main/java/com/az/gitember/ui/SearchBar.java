@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.ui.misc.Util;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;

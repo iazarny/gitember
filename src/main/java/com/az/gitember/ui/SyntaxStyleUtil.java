@@ -120,7 +120,7 @@ public final class SyntaxStyleUtil {
      */
     public static Font monoFont() {
         var settings = Context.getSettings();
-        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize() : 13;
+        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize()  : 13;
         return new Font(Font.MONOSPACED, Font.PLAIN, size);
     }
 
@@ -128,17 +128,17 @@ public final class SyntaxStyleUtil {
 
     public static Color addedBg() {
         return isDarkTheme() ?
-                new Color(83, 99, 83) :
+                new Color(25, 166, 25) :
                 new Color(187, 236, 187);
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
-                new Color(99, 67, 61) :
+                new Color(152, 40, 19) :
                 new Color(246, 129, 129,200);
     }
     public static Color changedBg() {
         return isDarkTheme() ?
-                new Color(68, 78, 103) :
+                new Color(18, 62, 156) :
                 new Color(130, 221, 236);
     }
 
@@ -158,6 +158,21 @@ public final class SyntaxStyleUtil {
                 new Color(130, 221, 236);
     }
 
+
+
+
+    public static Color fgAddedExt()   { return isDarkTheme() ?
+            new Color(180, 240, 180) :
+            new Color(32, 168, 32); }
+    public static Color fgDeletedExt() { return isDarkTheme() ?
+            new Color(240, 160, 160) :
+            new Color(156, 27, 27); }
+    public static Color fgChangedExt() { return isDarkTheme() ?
+            new Color(160, 195, 255) :
+            new Color(30, 74, 154); }
+    public static Color fgUntrackedExt()   { return isDarkTheme() ?
+            new Color(204, 204, 204) :
+            new Color(67, 67, 67); }
 
 
 
@@ -184,6 +199,38 @@ public final class SyntaxStyleUtil {
             case "RENAMED",  "RENAME", "COPY"  -> dark ? new Color(220, 170,  60) : new Color(140,  80,  0);
             default                            -> null;
         };
+    }
+
+    /**
+     * Converts a java.awt.Color to a web color string (#RRGGBB).
+     * @param color the Color object (must not be null)
+     * @return the hex string in #RRGGBB format
+     */
+    public static String toWebColor(Color color) {
+        if (color == null) {
+            throw new IllegalArgumentException("Color cannot be null");
+        }
+        // Extract RGB components and format as hex
+        return String.format("#%02X%02X%02X",
+                color.getRed(),
+                color.getGreen(),
+                color.getBlue());
+    }
+
+    /**
+     * Converts a java.awt.Color to a web color string with alpha (#RRGGBBAA).
+     * @param color the Color object (must not be null)
+     * @return the hex string in #RRGGBBAA format
+     */
+    public static String toWebColorWithAlpha(Color color) {
+        if (color == null) {
+            throw new IllegalArgumentException("Color cannot be null");
+        }
+        return String.format("#%02X%02X%02X%02X",
+                color.getRed(),
+                color.getGreen(),
+                color.getBlue(),
+                color.getAlpha());
     }
 
 }

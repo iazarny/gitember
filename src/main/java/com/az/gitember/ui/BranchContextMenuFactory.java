@@ -2,12 +2,14 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,10 +25,18 @@ public class BranchContextMenuFactory {
     private final Frame parent;
     private final StatusBar statusBar;
 
+    /** Called with the worktree path when the user chooses "Open". */
+    private Consumer<String> worktreeOpenAction;
+    /** Called after a worktree add/remove to refresh the tree. */
+    private Runnable worktreeRefreshAction;
+
     public BranchContextMenuFactory(Frame parent, StatusBar statusBar) {
         this.parent = parent;
         this.statusBar = statusBar;
     }
+
+    public void setWorktreeOpenAction(Consumer<String> action)  { this.worktreeOpenAction   = action; }
+    public void setWorktreeRefreshAction(Runnable action)       { this.worktreeRefreshAction = action; }
 
     public JPopupMenu createBranchContextMenu(ScmBranch branch) {
         JPopupMenu menu = new JPopupMenu();
@@ -218,6 +228,70 @@ public class BranchContextMenuFactory {
                     statusBar.setStatus("Drop stash failed: " + ex.getMessage());
                     JOptionPane.showMessageDialog(parent,
                             "Cannot drop stash:\n" + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    /**
+     * Context menu for a worktree node.
+     * The main worktree only has "Open"; linked worktrees also have Remove actions.
+     */
+    public JPopupMenu createWorktreeContextMenu(WorktreeInfo wt) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem openItem = new JMenuItem("Open");
+        openItem.addActionListener(e -> {
+            if (worktreeOpenAction != null) worktreeOpenAction.accept(wt.getPath());
+        });
+        menu.add(openItem);
+
+        if (!wt.isMain()) {
+            menu.addSeparator();
+
+            JMenuItem removeItem = new JMenuItem("Remove…");
+            removeItem.addActionListener(e -> doRemoveWorktree(wt, false));
+            menu.add(removeItem);
+
+            JMenuItem forceRemoveItem = new JMenuItem("Remove (force)…");
+            forceRemoveItem.addActionListener(e -> doRemoveWorktree(wt, true));
+            menu.add(forceRemoveItem);
+        }
+
+        return menu;
+    }
+
+    private void doRemoveWorktree(WorktreeInfo wt, boolean force) {
+        String pathLabel = wt.getPath();
+        String msg = force
+                ? "Force-remove worktree at:\n" + pathLabel
+                  + "\n\nUncommitted changes will be discarded."
+                : "Remove worktree at:\n" + pathLabel + "?";
+        int choice = JOptionPane.showConfirmDialog(parent, msg,
+                "Remove Worktree", JOptionPane.OK_CANCEL_OPTION,
+                force ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
+        if (choice != JOptionPane.OK_OPTION) return;
+
+        statusBar.setStatus("Removing worktree…");
+        statusBar.showProgress(true);
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() throws Exception {
+                Context.getGitRepoService().removeWorktree(wt.getPath(), force);
+                return null;
+            }
+            @Override protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    statusBar.setStatus("Worktree removed");
+                    if (worktreeRefreshAction != null) worktreeRefreshAction.run();
+                } catch (Exception ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    log.log(Level.WARNING, "Remove worktree failed", cause);
+                    statusBar.setStatus("Remove worktree failed: " + cause.getMessage());
+                    JOptionPane.showMessageDialog(parent,
+                            "Cannot remove worktree:\n" + cause.getMessage(),
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }

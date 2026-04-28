@@ -12,6 +12,8 @@ import org.eclipse.jgit.revplot.PlotLane;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -118,6 +120,12 @@ public class StatDialog extends JFrame {
             computeBtn.setEnabled(false);
             statusBar.setStatus("Statistics: load commit history first (open History or Working Copy).");
         }
+
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "ESCAPE");
+        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { cancelWorker(); dispose(); }
+        });
     }
 
     private void cancelWorker() {

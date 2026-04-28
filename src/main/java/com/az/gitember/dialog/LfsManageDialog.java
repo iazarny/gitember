@@ -3,6 +3,8 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 
+import com.az.gitember.ui.misc.Util;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
@@ -113,6 +115,7 @@ public class LfsManageDialog extends JDialog {
         getContentPane().add(headerPanel,  BorderLayout.NORTH);
         getContentPane().add(centerPanel,  BorderLayout.CENTER);
         getContentPane().add(btnPanel,     BorderLayout.SOUTH);
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Private helpers ────────────────────────────────────────────────────

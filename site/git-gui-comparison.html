@@ -44,7 +44,7 @@
 
   <style>
     .comparison-hero {
-      background: linear-gradient(135deg, #37517e 0%, #4154f1 100%);
+      background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
       padding: 120px 0 60px;
       color: #fff;
       text-align: center;
@@ -85,7 +85,7 @@
       min-width: 700px;
     }
     .cmp-table thead th {
-      background: #37517e;
+      background: #377e71;
       color: #fff;
       font-weight: 600;
       padding: 12px 14px;
@@ -97,7 +97,7 @@
       width: 220px;
     }
     .cmp-table thead th.col-gitember {
-      background: #4154f1;
+      background: #41f1c2;
     }
     .cmp-table tbody tr:nth-child(even) {
       background: #f8f9ff;
@@ -780,7 +780,20 @@
             </tr>
             <tr>
               <td>Full-text history search</td>
-              <td>Indexes and searches inside source code, Office docs, PDFs, images, and CAD files across all commits</td>
+                <td>Indexes and searches inside source code:
+                    <ul>
+                        <li>Regular text</li>
+                        <li>HTML, XML and derived formats</li>
+                        <li>Microsoft Office, OpenDocument, iWorks, WordPerfect document formats</li>
+                        <li>PDF, Epub, RTF </li>
+                        <li>Compression and packaging </li>
+                        <li>Help ,Audio,Image,Video </li>
+                        <li>Mail,CAD,Font,Scientific formats </li>
+                        <li>Executable programs and libraries </li>
+                        <li>Crypto </li>
+                        <li>Database </li>
+                    </ul>
+                </td>
             </tr>
             <tr>
               <td>Context diff mode</td>
@@ -821,16 +834,6 @@
           </thead>
           <tbody>
             <tr>
-              <td>Interactive rebase UI</td>
-              <td>Fork, Tower, GitKraken</td>
-              <td>Gitember uses CLI fallback</td>
-            </tr>
-            <tr>
-              <td>Azure DevOps PRs</td>
-              <td>GitKraken, Fork, Tower</td>
-              <td>Not yet supported in Gitember</td>
-            </tr>
-            <tr>
               <td>Native speed on macOS</td>
               <td>Fork, Tower</td>
               <td>Native Swift/Obj-C apps are faster than JVM on macOS</td>
@@ -840,14 +843,8 @@
               <td>Tower, Fork</td>
               <td>Commercial apps have larger design budgets</td>
             </tr>
-            <tr>
-              <td>Conflict resolution UI</td>
-              <td>SmartGit, Tower</td>
-              <td>Gitember relies on external merge tool</td>
-            </tr>
           </tbody>
         </table>
-
         <p class="footnote mt-4">
           Sources: official product pages and documentation as of March 2026. Features may change. "Freemium" entries reflect the free tier limitations.
         </p>

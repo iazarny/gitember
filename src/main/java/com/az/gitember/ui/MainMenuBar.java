@@ -55,6 +55,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenu     workingCopyMenu;
     private final JMenuItem refreshItem;
     private final JMenuItem stashItem;
+    private final JMenuItem worktreesItem;
     private final JMenuItem createDiffItem;
     private final JMenuItem applyDiffItem;
 
@@ -187,11 +188,15 @@ public class MainMenuBar extends JMenuBar {
         refreshItem    = new JMenuItem("Refresh",        KeyEvent.VK_R);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
         stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
+        worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
+        worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
         createDiffItem = new JMenuItem("Create diff",    KeyEvent.VK_D);
+        createDiffItem.setEnabled(false);
         applyDiffItem  = new JMenuItem("Apply diff...",  KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
         workingCopyMenu.add(stashItem);
+        workingCopyMenu.add(worktreesItem);
         workingCopyMenu.addSeparator();
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
@@ -227,7 +232,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3.1</b> — Git GUI Client<br><br>" +
+                    "<b>Gitember 3.2</b> — Git GUI Client<br><br>" +
                     "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
                     "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
                     "</body></html>");
@@ -306,8 +311,10 @@ public class MainMenuBar extends JMenuBar {
     public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
     public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
+    public void setCreateDiffEnabled(boolean enabled)      { createDiffItem.setEnabled(enabled); }
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
+    public void addWorktreesListener(ActionListener l)     { worktreesItem.addActionListener(l); }
     public void addCredentialsListener(ActionListener l)      { credentialsItem.addActionListener(l); }
     public void addProjectSettingsListener(ActionListener l)  { projectSettingsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }

@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.ui.misc.Util;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -7,7 +9,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.*;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +89,7 @@ public class CompareFilesDialog extends JDialog {
         leftField.setPreferredSize(new Dimension(420, leftField.getPreferredSize().height));
         pack();
         setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Actions ─────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.Util;
+import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -236,6 +236,7 @@ public class InteractiveRebaseDialog extends JDialog {
         getContentPane().add(headerPanel,            BorderLayout.NORTH);
         getContentPane().add(new JScrollPane(table),  BorderLayout.CENTER);
         getContentPane().add(southPanel,              BorderLayout.SOUTH);
+        Util.bindEscapeToDispose(this);
     }
 
     // ── Public accessors ─────────────────────────────────────────────────────

@@ -14,10 +14,11 @@ import java.util.logging.Logger;
  *
  * <p>Resolution order for a given remote URL:</p>
  * <ol>
- *   <li>{@link GitHubAvatarClient}  — for {@code github.com} remotes</li>
- *   <li>{@link GitLabAvatarClient}  — for {@code gitlab.*} remotes</li>
- *   <li>{@link BitbucketAvatarClient} — for {@code bitbucket.org} remotes</li>
- *   <li>{@link GravatarClient}      — universal fallback (any remote)</li>
+ *   <li>{@link GitHubAvatarClient}       — for {@code github.com} remotes</li>
+ *   <li>{@link GitLabAvatarClient}       — for {@code gitlab.*} remotes</li>
+ *   <li>{@link BitbucketAvatarClient}    — for {@code bitbucket.org} remotes</li>
+ *   <li>{@link AzureDevOpsAvatarClient}  — for {@code dev.azure.com} / {@code visualstudio.com} remotes</li>
+ *   <li>{@link GravatarClient}           — universal fallback (any remote)</li>
  * </ol>
  *
  * <p>Each client's {@link AvatarClient#supports} gate ensures that only
@@ -37,6 +38,7 @@ public final class AvatarService {
             new GitHubAvatarClient(),
             new GitLabAvatarClient(),
             new BitbucketAvatarClient(),
+            new AzureDevOpsAvatarClient(),
             new GravatarClient()
     );
 

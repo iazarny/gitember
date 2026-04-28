@@ -16,6 +16,7 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Folder comparison tool** — compare entire directory trees and spot added / removed / changed files at a glance
 * **Arbitrary file comparison tool** 
 * **Interactive rebase** 
+* **3-way conflict resolution** 
 * **Pull Request review** — browse and review PRs from GitHub, GitLab, Bitbucket, and self-hosted Gitea without leaving the app
 * **Advanced full-text search** — search commits, file contents, Office documents, PDFs, images, and CAD files across the entire history
 * **Repository statistics** — commit frequency, lines changed per author, branch activity
@@ -26,15 +27,23 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 | Platform         | Link                                                                                                                             |
 |------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| Windows (x64)    | [Gitember-3.1.msi](https://gitember.org/Gitember-3.1.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
-| macOS (M1)       | [Gitember-3.1.msi](https://gitember.org/Gitember-3.1.dmg)                                                                        | 
-| Linux  (x64)     | [Gitember-3.1.deb](https://gitember.org/Gitember-3.1.deb)                                                                        | 
-| Fat jar. java 21 | [Gitember-3.1.jar](https://gitember.org/Gitember-3.1.jar)                                                                        | 
+| Windows (x64)    | [Gitember-3.1.msi](https://gitember.org/Gitember-3.2.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
+| macOS (M1)       | [Gitember-3.1.msi](https://gitember.org/Gitember-3.2.dmg)                                                                        | 
+| Linux  (x64)     | [Gitember-3.1.deb](https://gitember.org/Gitember-3.2.deb)                                                                        | 
+| Fat jar. java 21 | [Gitember-3.1.jar](https://gitember.org/Gitember-3.2.jar)                                                                        | 
 
 
 More info and documentation: https://gitember.org
 
 ## Changes
+
+### 3.2 · May 2026
+
+* Added 3 way merge for conflict resolving 
+* Worktree support
+* AI (experimental)
+  * Secret leak detection
+  * Branch difference description
 
 ### 3.1 · April 2026
 
@@ -50,52 +59,6 @@ More info and documentation: https://gitember.org
 * Improved rendering performance across all platforms
 * Reduced installer size
 
-### 2.5.8
-* Add ability to compare arbitrary files
-* Small bugfixes
+### 2.x.x
+The Fx version available by tags
 
-### 2.5.5
-* Initial revision of docs added
-* Small bugfixes
-
-### 2.5.4
-* Fix multi-monitor issues
-* Adjust look and feel
-* Minor refactoring
-
-### 2.5.3
-* Significant UI / UX changes
-
-### 2.5
-* Diff viewer updated
-* UI changes
-* Added support for Ed25519
-* Mac M1 Silicon support
-
-### 2.35
-* Minor changes related to search
-* Open files from stash
-* Add cherry-pick
-* Renamed to Geetember
-
-### 2.3
-* Full-text search across history, including binary files
-* Search in open files
-* Add change annotation
-* Branch differences with item details
-* Add overview for difference component
-
-### 2.2
-* Added LFS support (SSH only)
-* Fast file compare using RichTextFX
-* Mass operations — delete, stage, unstage, revert
-* Branch difference view
-
-## Background
-
-Started in December 2016 as a weekend experiment to see if JavaFX was suitable for desktop GUI programming. It turned into a full-featured Git client. Version 3 marks the move to Swing for a lighter, faster experience.
-
-How to use
-
-1. From the history panel: right-click any commit → "Interactive Rebase onto here…" — rebases all commits from HEAD down to (but not including) the clicked commit
-2. From the Branch menu: "Interactive Rebase…" — prompts you to enter a base commit SHA
