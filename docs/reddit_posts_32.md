@@ -8,18 +8,24 @@
 
 **What's new:**
 
-**Worktrees** — full UI support for creating, switching, and removing worktrees. Each one opens in its own window with correct status and diff. If you juggle hotfix branches while keeping a long-running feature branch alive, this is the workflow improvement you've been waiting for. No terminal commands needed.
+**Worktrees** — full UI support for creating, switching, and removing worktrees.  
+If you juggle hotfix branches while keeping a long-running feature branch alive, 
+this is the workflow improvement you've been waiting for. No terminal commands needed.
 
 **3-way merge conflict resolver** — BASE / OURS / THEIRS side-by-side. Pick a side, edit inline, stage with one click. No separate merge tool to install.
 
-**AI-assisted writing** — optional integration with any OpenAI-compatible API (works with Ollama too):
-- generate commit messages from staged diff
+**AI-assisted writing** :
 - generate PR descriptions from branch diff + commit history
 - explain what changed between two branches in plain language
 
-The rest of the feature set: full-text search across commits/code/docs (including Office and CAD files), Git LFS, GitHub/GitLab/Bitbucket/Gitea integration, interactive rebase, statistics.
+The rest of the feature set:t
+ - 
+ - full-text search across commits/code/docs (including Office and CAD files)
+ - Git LFS 
+ - GitHub/GitLab/Bitbucket/Gitea integration
+ - interactive rebase,
+ - statistics
 
-Runs on Java 17+, no installation needed beyond the JAR.
 
 Source and downloads: https://gitember.org | https://github.com/iazarny/gitember
 
@@ -33,7 +39,9 @@ What Git GUI features do you wish existed? Genuinely curious.
 
 In 2016 I started Gitember as an experiment: a Git desktop client in Java. I chose JavaFX because it looked modern and complete.
 
-By version 2, the cracks showed. JavaFX was removed from the JDK in Java 11, adding packaging complexity. Startup time was noticeable. The CSS engine added overhead that made no sense for a utility you open 20 times a day.
+By version 2, the cracks showed. JavaFX was removed from the JDK in Java 11, 
+adding packaging complexity. Startup time was noticeable. 
+The CSS engine added overhead that made no sense for a utility you open 20 times a day.
 
 So for version 3 I rewrote the entire UI layer in Swing.
 
@@ -150,11 +158,13 @@ https://gitember.org | https://github.com/iazarny/gitember
 
 ## r/foss
 
-**Title:** Gitember 3.2 — MIT-licensed Git GUI, no cloud, no tracking, local AI support via Ollama
+**Title:** Gitember 3.2 — MIT-licensed Git GUI client, no cloud, no tracking
 
 Sharing Gitember 3.2 here because the values fit: fully open-source (MIT), self-hostable, no telemetry, no accounts, no vendor lock-in.
 
-**What it is:** a Git desktop client that runs entirely on your machine. All Git operations go through JGit — no native git binary phoning home, no relay servers, no analytics. The only outbound connections are the ones you explicitly configure (your own remote, your own AI endpoint).
+**What it is:** 
+a Git desktop client . All Git operations go through JGit — no native git binary phoning home, no relay servers, no analytics. 
+The only outbound connections are the ones you explicitly configure (your own remote, your own AI endpoint).
 
 **Version 3.2 adds:**
 
@@ -182,3 +192,18 @@ GitHub: https://github.com/iazarny/gitember
 Site: https://gitember.org
 
 Pull requests welcome. Packaging help (Flatpak, AUR, Homebrew formula) especially appreciated.
+
+
+-----------------------
+I've been building Gitember since 2016 — a free, open-source Git desktop client. It has been started as weekend experiment. And now version 3.2 is out with new features:
+Worktrees - full UI support for creating, switching, and removing worktrees. If you juggle hotfix branches while keeping a long-running feature branch alive, this is the workflow improvement you've been waiting for.
+3-way merge conflict resolver - BASE / OURS / THEIRS side-by-side. Pick a side, edit inline, stage with one click. No separate merge tool to install.
+AI-assisted writing (experimental)- explain what changed between two branches in plain language, secret leak detection  ( is your GPU good enough ?)
+
+It also covers everyday Git stuff (commit, branch, diff, etc.), but one thing I personally rely on a lot:
+search through history including non-text formats (Office docs, DWG, PSD, etc.)
+arbitrary file/folder comparison
+The last one very useful feature in our days, when need quikly compare a lot of AI changes
+Site here https://gitember.org/ 
+
+Contributions, feedbacks, suggestions are welcome
