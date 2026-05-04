@@ -44,6 +44,7 @@ public class Settings {
     private int fontSize = 13;
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
+    private Boolean enableCommitMessageGeneration = false; //EXPERIMENTAL FEATURE
     private String  llmDetectorModel   = "llama3.2";
 
     public Boolean getEnableBranchCompareDescription() {
@@ -52,6 +53,14 @@ public class Settings {
 
     public void setEnableBranchCompareDescription(Boolean enableBranchCompareDescription) {
         this.enableBranchCompareDescription = enableBranchCompareDescription;
+    }
+
+    public Boolean getEnableCommitMessageGeneration() {
+        return enableCommitMessageGeneration;
+    }
+
+    public void setEnableCommitMessageGeneration(Boolean enableCommitMessageGeneration) {
+        this.enableCommitMessageGeneration = enableCommitMessageGeneration;
     }
 
     public Boolean getEnableLeakDetector() {

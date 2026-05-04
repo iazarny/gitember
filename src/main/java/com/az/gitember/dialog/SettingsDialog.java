@@ -20,10 +20,11 @@ public class SettingsDialog extends JDialog {
     private final JTextArea         ignoreExtArea;
     private final JCheckBox         leakDetectorCheck;
     private final JCheckBox         branchCompareDescCheck;
+    private final JCheckBox         commitMsgGenCheck;
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(460, 400);
+        setSize(460, 440);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -33,6 +34,7 @@ public class SettingsDialog extends JDialog {
         if (currentFontSize <= 0) currentFontSize = 13;
         boolean currentLeakDetector = settings == null || !Boolean.FALSE.equals(settings.getEnableLeakDetector());
         boolean currentBranchCompareDesc = settings != null && Boolean.TRUE.equals(settings.getEnableBranchCompareDescription());
+        boolean currentCommitMsgGen = settings != null && Boolean.TRUE.equals(settings.getEnableCommitMessageGeneration());
 
         // Show the stored ignore list (defaults are seeded at startup, so this is always populated)
         String currentIgnore = settings != null
@@ -105,7 +107,16 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(branchCompareDescCheck, gbc);
 
-        // When either AI feature is enabled, verify Ollama is present
+        // Commit message generation
+        gbc.gridx = 0; gbc.gridy = 6; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        form.add(new JLabel("AI commit message generation (AI experimental):"), gbc);
+
+        commitMsgGenCheck = new JCheckBox("", currentCommitMsgGen);
+        commitMsgGenCheck.setToolTipText("Generate commit message suggestions in the commit dialog");
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        form.add(commitMsgGenCheck, gbc);
+
+        // When any AI feature is enabled, verify Ollama is present
         leakDetectorCheck.addItemListener(e -> {
             if (leakDetectorCheck.isSelected() && !currentLeakDetector) {
                 ensureOllamaOrRevert(leakDetectorCheck);
@@ -114,6 +125,11 @@ public class SettingsDialog extends JDialog {
         branchCompareDescCheck.addItemListener(e -> {
             if (branchCompareDescCheck.isSelected() && !currentBranchCompareDesc) {
                 ensureOllamaOrRevert(branchCompareDescCheck);
+            }
+        });
+        commitMsgGenCheck.addItemListener(e -> {
+            if (commitMsgGenCheck.isSelected() && !currentCommitMsgGen) {
+                ensureOllamaOrRevert(commitMsgGenCheck);
             }
         });
 
@@ -162,6 +178,7 @@ public class SettingsDialog extends JDialog {
 
         settings.setEnableLeakDetector(leakDetectorCheck.isSelected());
         settings.setEnableBranchCompareDescription(branchCompareDescCheck.isSelected());
+        settings.setEnableCommitMessageGeneration(commitMsgGenCheck.isSelected());
 
         Context.saveSettings();
 

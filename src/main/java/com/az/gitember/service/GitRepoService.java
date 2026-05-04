@@ -16,6 +16,7 @@ import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheEditor;
 import org.eclipse.jgit.dircache.DirCacheEntry;
+import org.eclipse.jgit.dircache.DirCacheIterator;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
@@ -41,6 +42,7 @@ import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
@@ -2374,6 +2376,44 @@ public class GitRepoService {
             byte[] bytes = out.toByteArray();
             if (bytes.length <= maxBytes) return out.toString(java.nio.charset.StandardCharsets.UTF_8);
             return new String(bytes, 0, maxBytes, java.nio.charset.StandardCharsets.UTF_8)
+                    + "\n... [diff truncated] ...";
+        }
+    }
+
+    /**
+     * Returns a unified-diff text of the staged changes (index vs HEAD), truncated to
+     * {@code maxBytes}. Suitable for feeding to an LLM for commit message generation.
+     * On a brand-new repository with no commits yet, an empty-tree iterator is used as
+     * the base so the full index is shown as additions.
+     */
+    public String getStagedDiffText(int maxBytes) throws Exception {
+        try (ObjectReader reader = repository.newObjectReader()) {
+            AbstractTreeIterator oldTree;
+            ObjectId headId = repository.resolve(Constants.HEAD);
+            if (headId != null) {
+                try (RevWalk walk = new RevWalk(repository)) {
+                    RevCommit headCommit = walk.parseCommit(headId);
+                    CanonicalTreeParser tp = new CanonicalTreeParser();
+                    tp.reset(reader, headCommit.getTree());
+                    oldTree = tp;
+                }
+            } else {
+                oldTree = new EmptyTreeIterator();
+            }
+
+            DirCacheIterator newTree = new DirCacheIterator(repository.readDirCache());
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (DiffFormatter df = new DiffFormatter(out)) {
+                df.setRepository(repository);
+                df.setContext(3);
+                df.setDetectRenames(true);
+                df.format(oldTree, newTree);
+                df.flush();
+            }
+            byte[] bytes = out.toByteArray();
+            if (bytes.length <= maxBytes) return out.toString(StandardCharsets.UTF_8);
+            return new String(bytes, 0, maxBytes, StandardCharsets.UTF_8)
                     + "\n... [diff truncated] ...";
         }
     }
