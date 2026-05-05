@@ -180,10 +180,13 @@ public class CommitDialog extends JDialog {
         getRootPane().setDefaultButton(commitBtn);
         Util.bindEscapeToDispose(this);
 
-        // Run detector and AI commit message generation after dialog is laid out
+        // Run features sequentially: commit message generation first, then leak detection
         SwingUtilities.invokeLater(() -> {
-            startDetector();
-            startCommitMessageGeneration();
+            if (isCommitMessageGenEnabled()) {
+                startCommitMessageGeneration(isLeakDetectorEnabled());
+            } else {
+                startDetector();
+            }
         });
     }
 
@@ -248,27 +251,29 @@ public class CommitDialog extends JDialog {
     private void scheduleAiGeneration() {
         if (!isCommitMessageGenEnabled()) return;
         if (aiDebounceTimer != null) aiDebounceTimer.stop();
-        aiDebounceTimer = new Timer(900, e -> startCommitMessageGeneration());
+        aiDebounceTimer = new Timer(900, e -> startCommitMessageGeneration(false));
         aiDebounceTimer.setRepeats(false);
         aiDebounceTimer.start();
     }
 
-    private void startCommitMessageGeneration() {
+    private void startCommitMessageGeneration(boolean chainToDetector) {
         if (!isCommitMessageGenEnabled()) return;
 
         String model = llmModel();
         String hint  = userText;
 
-        // Show placeholder immediately so the user knows generation is running
         applyAiSuggestion("…");
+        scanStatusLabel.setText("Generating commit message…");
+        scanStatusPanel.setVisible(true);
 
-        new SwingWorker<String, Void>() {
+        new SwingWorker<String, String>() {
             @Override
             protected String doInBackground() throws Exception {
                 OllamaManager.Status status = OllamaManager.getStatus();
                 log.info("AI commit msg: Ollama status = " + status);
 
                 if (status == OllamaManager.Status.STOPPED) {
+                    publish("Starting Ollama…");
                     OllamaManager.startServerAndWait(20_000);
                     status = OllamaManager.Status.RUNNING;
                 }
@@ -277,17 +282,26 @@ public class CommitDialog extends JDialog {
                 }
                 if (!OllamaManager.isModelAvailable(model)) {
                     log.info("AI commit msg: pulling model " + model);
+                    publish("Pulling model \"" + model + "\" (first run, please wait)…");
                     Process pull = OllamaManager.startModelPull(model);
                     pull.waitFor();
                 }
                 if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
                     throw new IllegalStateException("Model '" + model + "' not available after pull");
                 }
+                publish("Generating commit message…");
                 String diff = Context.getGitRepoService() != null
                         ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
                         : null;
                 log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
                 return LlmCommitMessageService.generate(diff, hint, OllamaManager.BASE_URL, model);
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                if (!chunks.isEmpty()) {
+                    scanStatusLabel.setText(chunks.get(chunks.size() - 1));
+                }
             }
 
             @Override
@@ -302,6 +316,11 @@ public class CommitDialog extends JDialog {
                 } catch (Exception ex) {
                     log.warning("AI commit message generation failed: " + ex.getMessage());
                     clearAiSuggestion();
+                }
+                if (chainToDetector) {
+                    startDetector();
+                } else {
+                    scanStatusPanel.setVisible(false);
                 }
             }
         }.execute();
