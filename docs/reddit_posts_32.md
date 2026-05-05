@@ -204,6 +204,6 @@ It also covers everyday Git stuff (commit, branch, diff, etc.), but one thing I 
 search through history including non-text formats (Office docs, DWG, PSD, etc.)
 arbitrary file/folder comparison
 The last one very useful feature in our days, when need quikly compare a lot of AI changes
-Site here https://gitember.org/ 
+Site here https://gitember.org/
 
 Contributions, feedbacks, suggestions are welcome
