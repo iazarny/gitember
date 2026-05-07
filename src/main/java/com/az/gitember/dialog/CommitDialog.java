@@ -14,8 +14,6 @@ import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
@@ -56,12 +54,6 @@ public class CommitDialog extends JDialog {
     private final JProgressBar scanProgress;
     private final JPanel       scanStatusPanel;
 
-    // AI commit message generation state
-    private static final String AI_LINE_PREFIX = "AI: ";
-    private String  userText         = "";
-    private String  lastAiSuggestion = null;
-    private boolean updatingText     = false;
-    private Timer   aiDebounceTimer  = null;
 
     public CommitDialog(Frame parent) {
         super(parent, "Commit" + (Context.getWorkingBranch() != null
@@ -89,11 +81,6 @@ public class CommitDialog extends JDialog {
         messageArea = new JTextArea(5, 40);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
-        messageArea.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e)  { onMessageTextChanged(); }
-            @Override public void removeUpdate(DocumentEvent e)  { onMessageTextChanged(); }
-            @Override public void changedUpdate(DocumentEvent e) { onMessageTextChanged(); }
-        });
         JScrollPane msgScroll = new JScrollPane(messageArea);
 
         // Scan status panel (shown while LLM scan is in progress)
@@ -225,42 +212,10 @@ public class CommitDialog extends JDialog {
     //  AI commit message generation
     // -------------------------------------------------------------------------
 
-    private void onMessageTextChanged() {
-        if (updatingText) return;
-        String text = messageArea.getText();
-
-        // Determine the user-typed portion (everything before the first "\nAI: " line)
-        String newUserText;
-        int aiMarker = text.indexOf("\n" + AI_LINE_PREFIX);
-        if (aiMarker >= 0) {
-            newUserText = text.substring(0, aiMarker);
-        } else if (text.startsWith(AI_LINE_PREFIX)) {
-            newUserText = "";
-        } else {
-            // No AI line present — the entire content is user text, AI suggestion was removed
-            newUserText = text;
-            lastAiSuggestion = null;
-        }
-
-        if (!newUserText.equals(userText)) {
-            userText = newUserText;
-            scheduleAiGeneration();
-        }
-    }
-
-    private void scheduleAiGeneration() {
-        if (!isCommitMessageGenEnabled()) return;
-        if (aiDebounceTimer != null) aiDebounceTimer.stop();
-        aiDebounceTimer = new Timer(900, e -> startCommitMessageGeneration(false));
-        aiDebounceTimer.setRepeats(false);
-        aiDebounceTimer.start();
-    }
-
     private void startCommitMessageGeneration(boolean chainToDetector) {
         if (!isCommitMessageGenEnabled()) return;
 
         String model = llmModel();
-        String hint  = userText;
 
         applyAiSuggestion("…");
         scanStatusLabel.setText("Generating commit message…");
@@ -294,7 +249,7 @@ public class CommitDialog extends JDialog {
                         ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
                         : null;
                 log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
-                return LlmCommitMessageService.generate(diff, hint, OllamaManager.BASE_URL, model);
+                return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
             }
 
             @Override
@@ -327,31 +282,12 @@ public class CommitDialog extends JDialog {
     }
 
     private void applyAiSuggestion(String suggestion) {
-        lastAiSuggestion = suggestion;
-        updatingText = true;
-        try {
-            String newText = userText.isEmpty()
-                    ? AI_LINE_PREFIX + suggestion
-                    : userText + "\n" + AI_LINE_PREFIX + suggestion;
-            int caretPos = messageArea.getCaretPosition();
-            messageArea.setText(newText);
-            int safePos = Math.min(caretPos, userText.length());
-            messageArea.setCaretPosition(Math.max(0, safePos));
-        } finally {
-            updatingText = false;
-        }
+        messageArea.setText(suggestion);
+        messageArea.setCaretPosition(suggestion.length());
     }
 
-    /** Removes the AI suggestion line from the text area, leaving only the user text. */
     private void clearAiSuggestion() {
-        lastAiSuggestion = null;
-        updatingText = true;
-        try {
-            messageArea.setText(userText);
-            if (!userText.isEmpty()) messageArea.setCaretPosition(userText.length());
-        } finally {
-            updatingText = false;
-        }
+        messageArea.setText("");
     }
 
     // -------------------------------------------------------------------------
@@ -475,12 +411,7 @@ public class CommitDialog extends JDialog {
     // -------------------------------------------------------------------------
 
     private void onCommit() {
-        // Strip AI: prefix from any AI-suggestion lines so it doesn't appear in the commit log
-        String raw = messageArea.getText().trim();
-        String message = java.util.Arrays.stream(raw.split("\n", -1))
-                .map(line -> line.startsWith(AI_LINE_PREFIX) ? line.substring(AI_LINE_PREFIX.length()) : line)
-                .collect(java.util.stream.Collectors.joining("\n"))
-                .trim();
+        String message = messageArea.getText().trim();
         if (message.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Commit message is required",
                     "Validation", JOptionPane.WARNING_MESSAGE);
