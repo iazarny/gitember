@@ -2227,6 +2227,10 @@ public class GitRepoService {
     }
 
 
+    public String getOriginUrl() {
+        return repository.getConfig().getString("remote", "origin", "url");
+    }
+
     public void setRemoteUrl(String remoteUrl) throws Exception {
         try (Git git = new Git(repository)) {
             RemoteSetUrlCommand remoteSetUrlCommand = git.remoteSetUrl();

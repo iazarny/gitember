@@ -27,7 +27,6 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem indexHistoryItem;
     private final JMenuItem statisticsItem;
     private final JMenuItem openTerminalItem;
-    private final JMenuItem credentialsItem;
     private final JMenuItem projectSettingsItem;
 
     // LFS submenu (inside Repository menu)
@@ -112,7 +111,6 @@ public class MainMenuBar extends JMenuBar {
         statisticsItem.setToolTipText(
                 "Show per-developer commit / line statistics and monthly charts");
 
-        credentialsItem     = new JMenuItem("Credentials…", KeyEvent.VK_E);
         projectSettingsItem = new JMenuItem("Project Settings…", KeyEvent.VK_P);
 
         openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
@@ -153,7 +151,6 @@ public class MainMenuBar extends JMenuBar {
         repoMenu.addSeparator();
         repoMenu.add(lfsMenu);
         repoMenu.add(submodulesMenu);
-        repoMenu.add(credentialsItem);
         repoMenu.add(projectSettingsItem);
         repoMenu.addSeparator();
         repoMenu.add(compressDatabaseItem);
@@ -315,7 +312,6 @@ public class MainMenuBar extends JMenuBar {
     public void addCreateDiffListener(ActionListener l)    { createDiffItem.addActionListener(l); }
     public void addApplyDiffListener(ActionListener l)     { applyDiffItem.addActionListener(l); }
     public void addWorktreesListener(ActionListener l)     { worktreesItem.addActionListener(l); }
-    public void addCredentialsListener(ActionListener l)      { credentialsItem.addActionListener(l); }
     public void addProjectSettingsListener(ActionListener l)  { projectSettingsItem.addActionListener(l); }
     public void addSettingsListener(ActionListener l)      { settingsItem.addActionListener(l); }
     public void addCompareFilesListener(ActionListener l)  { compareFilesItem.addActionListener(l); }

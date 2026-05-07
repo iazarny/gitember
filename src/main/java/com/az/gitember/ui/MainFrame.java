@@ -3,7 +3,6 @@ package com.az.gitember.ui;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.CloneDialog;
 import com.az.gitember.dialog.CommitDialog;
-import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.dialog.InitDialog;
 import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.LfsManageDialog;
@@ -271,10 +270,7 @@ public class MainFrame extends JFrame {
         menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
         menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
-        // Credentials
-        menuBar.addCredentialsListener(e -> showCredentialsDialog());
-
-        // Project settings (author / committer identity)
+        // Project settings (author / committer identity + credentials)
         menuBar.addProjectSettingsListener(e ->
                 new com.az.gitember.dialog.ProjectSettingsDialog(this).setVisible(true));
 
@@ -374,23 +370,6 @@ public class MainFrame extends JFrame {
         if (dialog.isConfirmed()) {
             new CloneHandler(this, statusBar, dialog.getParameters()).execute();
         }
-    }
-
-    private void showCredentialsDialog() {
-        Context.getCurrentProject().ifPresentOrElse(project -> {
-            CredentialsDialog dialog = new CredentialsDialog(this, project);
-            dialog.setVisible(true);
-            dialog.setAccessToken(project.getAccessToken());
-            dialog.setUserName(project.getUserName());
-            dialog.setPassword(project.getUserPwd());
-            if (dialog.isConfirmed()) {
-                project.setAccessToken(dialog.getAccessToken());
-                project.setUserName(dialog.getUserName());
-                project.setUserPwd(dialog.getPassword());
-                Context.saveSettings();
-                statusBar.setStatus("Credentials saved");
-            }
-        }, () -> statusBar.setStatus("No repository open"));
     }
 
     private void showInitDialog() {
