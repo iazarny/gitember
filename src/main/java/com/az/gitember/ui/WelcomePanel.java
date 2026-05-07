@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.service.ActivityChartService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
@@ -9,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -233,6 +235,9 @@ public class WelcomePanel extends JPanel {
         private final JLabel pathLabel;
         private final JLabel dateLabel;
 
+        private BufferedImage currentChart;
+        private boolean       currentIsSelected;
+
         ProjectCellRenderer() {
             setLayout(new BorderLayout(8, 2));
             setBorder(BorderFactory.createCompoundBorder(
@@ -261,6 +266,16 @@ public class WelcomePanel extends JPanel {
         }
 
         @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (currentChart != null && !currentIsSelected) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.drawImage(currentChart, 0, 0, getWidth(), getHeight(), null);
+                g2.dispose();
+            }
+        }
+
+        @Override
         public Component getListCellRendererComponent(JList<? extends Project> list, Project project,
                                                        int index, boolean isSelected, boolean cellHasFocus) {
             String folder = project.getProjectHomeFolder();
@@ -273,6 +288,9 @@ public class WelcomePanel extends JPanel {
             } else {
                 dateLabel.setText("");
             }
+
+            currentIsSelected = isSelected;
+            currentChart = ActivityChartService.getOrSchedule(project, list::repaint);
 
             if (isSelected) {
                 setBackground(list.getSelectionBackground());
