@@ -460,7 +460,8 @@ public class BranchDiffWindow extends JFrame {
                 String diffText = Context.getGitRepoService()
                         .getBranchDiffText(branchARef, branchBRef, LlmDiffDescriptionService.MAX_DIFF_CHARS);
                 return LlmDiffDescriptionService.describe(
-                        diffText, branchALabel, branchBLabel, ollamaUrl, modelName);
+                        diffText, branchALabel, branchBLabel,
+                        Context.getProjectFolder(), ollamaUrl, modelName);
             }
             @Override
             protected void done() {
