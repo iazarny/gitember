@@ -231,12 +231,10 @@ public class WelcomePanel extends JPanel {
 
     private static class ProjectCellRenderer extends JPanel implements ListCellRenderer<Project> {
 
-        private final JLabel nameLabel;
-        private final JLabel pathLabel;
-        private final JLabel dateLabel;
-
-        private BufferedImage currentChart;
-        private boolean       currentIsSelected;
+        private final JLabel     nameLabel;
+        private final JLabel     pathLabel;
+        private final JLabel     dateLabel;
+        private final ChartPanel chartPanel;
 
         ProjectCellRenderer() {
             setLayout(new BorderLayout(8, 2));
@@ -255,24 +253,22 @@ public class WelcomePanel extends JPanel {
             dateLabel = new JLabel();
             dateLabel.setFont(dateLabel.getFont().deriveFont(Font.PLAIN, 11f));
             dateLabel.setForeground(Color.GRAY);
+            dateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+            chartPanel = new ChartPanel();
 
             JPanel textPanel = new JPanel(new BorderLayout(0, 2));
             textPanel.setOpaque(false);
             textPanel.add(nameLabel, BorderLayout.NORTH);
             textPanel.add(pathLabel, BorderLayout.SOUTH);
 
-            add(textPanel, BorderLayout.CENTER);
-            add(dateLabel, BorderLayout.EAST);
-        }
+            JPanel eastPanel = new JPanel(new BorderLayout(0, 2));
+            eastPanel.setOpaque(false);
+            eastPanel.add(dateLabel, BorderLayout.NORTH);
+            eastPanel.add(chartPanel, BorderLayout.CENTER);
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (currentChart != null && !currentIsSelected) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.drawImage(currentChart, 0, 0, getWidth(), getHeight(), null);
-                g2.dispose();
-            }
+            add(textPanel, BorderLayout.CENTER);
+            add(eastPanel, BorderLayout.EAST);
         }
 
         @Override
@@ -289,8 +285,8 @@ public class WelcomePanel extends JPanel {
                 dateLabel.setText("");
             }
 
-            currentIsSelected = isSelected;
-            currentChart = ActivityChartService.getOrSchedule(project, list::repaint);
+            BufferedImage chart = ActivityChartService.getOrSchedule(project, list::repaint);
+            chartPanel.setChart(isSelected ? null : chart);
 
             if (isSelected) {
                 setBackground(list.getSelectionBackground());
@@ -305,6 +301,27 @@ public class WelcomePanel extends JPanel {
             }
 
             return this;
+        }
+
+        private static class ChartPanel extends JPanel {
+            private BufferedImage chart;
+
+            ChartPanel() {
+                setOpaque(false);
+                setPreferredSize(new Dimension(120, 28));
+            }
+
+            void setChart(BufferedImage img) {
+                this.chart = img;
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (chart != null) {
+                    g.drawImage(chart, 0, 0, getWidth(), getHeight(), null);
+                }
+            }
         }
     }
 }

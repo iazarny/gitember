@@ -144,7 +144,7 @@ public class ActivityChartService {
                 int x    = Math.round(i * barW) + 1;
                 int y    = CHART_H - padV - barH;
                 int bw   = Math.max(1, Math.round(barW) - 2);
-                g.setColor(new Color(0.2f, 0.5f, 1.0f, 0.030f));
+                g.setColor(new Color(0.2f, 0.5f, 1.0f, 0.350f));
                 g.fillRoundRect(x, y, bw, barH, 3, 3);
             }
         }
