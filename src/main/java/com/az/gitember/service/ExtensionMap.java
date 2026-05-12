@@ -175,6 +175,8 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/x-patch", "diff", true));
         add(new ExtensionInfo("text/x-patch", "patch", true));
         add(new ExtensionInfo("text/plain", "tf", true));
+        add(new ExtensionInfo("text/plain", "tfvar", true));
+        add(new ExtensionInfo("text/plain", "tfvars", true));
         add(new ExtensionInfo("application/json", "libsonnet", true));
         add(new ExtensionInfo("application/json", "jsonnet", true));
         add(new ExtensionInfo("application/x-typescript", "tsx", true));
