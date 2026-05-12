@@ -1,17 +1,31 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.DiffViewerWindow;
+import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Interactive Rebase dialog.
@@ -28,6 +42,8 @@ import java.util.List;
  * it to JGit, which applies commits oldest-first.
  */
 public class InteractiveRebaseDialog extends JDialog {
+
+    private static final Logger log = Logger.getLogger(InteractiveRebaseDialog.class.getName());
 
     // ── Action enum ───────────────────────────────────────────────────────────
 
@@ -123,6 +139,13 @@ public class InteractiveRebaseDialog extends JDialog {
     /** Row grabbed at the start of a drag operation. */
     private int dragSourceRow = -1;
 
+    // ── Right-side panel state ────────────────────────────────────────────────
+    private final DefaultListModel<ScmItem> filesListModel = new DefaultListModel<>();
+    private final JList<ScmItem>            filesList      = new JList<>(filesListModel);
+    private final RSyntaxTextArea           diffArea       = new RSyntaxTextArea();
+    /** SHA of the commit whose files are currently shown on the right. */
+    private String currentCommitSha = null;
+
     // ── Constructor ───────────────────────────────────────────────────────────
 
     /**
@@ -134,10 +157,10 @@ public class InteractiveRebaseDialog extends JDialog {
                                    List<RebaseStep> initialSteps) {
         super(owner, "Interactive Rebase", Dialog.ModalityType.DOCUMENT_MODAL);
         this.steps = new ArrayList<>(initialSteps);
-        setSize(920, 00);
+        setSize(1400, 820);
         setLocationRelativeTo(owner);
         setResizable(true);
-        setMinimumSize(new Dimension(640, 480));
+        setMinimumSize(new Dimension(900, 600));
 
         // ── Warning / info header ─────────────────────────────────────────────
         JLabel warningLabel = new JLabel(
@@ -222,20 +245,77 @@ public class InteractiveRebaseDialog extends JDialog {
         // ── Legend ────────────────────────────────────────────────────────────
         //JPanel legendPanel = buildLegendPanel();
 
+        // ── Right panel: file list (top) + diff area (bottom) ─────────────────
+
+        // Selection listener: load changed files when a commit row is selected
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = table.getSelectedRow();
+                if (row >= 0 && row < steps.size()) {
+                    loadChangedFiles(steps.get(row).getFullSha());
+                }
+            }
+        });
+
+        filesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        filesList.setCellRenderer(new FilesListCellRenderer());
+        filesList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && currentCommitSha != null) {
+                ScmItem item = filesList.getSelectedValue();
+                if (item != null) loadDiff(currentCommitSha, item);
+            }
+        });
+        filesList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && currentCommitSha != null) {
+                    ScmItem item = filesList.getSelectedValue();
+                    if (item != null) openDiffWindow(currentCommitSha, item);
+                }
+            }
+        });
+
+        diffArea.setEditable(false);
+        diffArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+        diffArea.setCodeFoldingEnabled(false);
+        diffArea.setAntiAliasingEnabled(true);
+        SyntaxStyleUtil.applyTheme(diffArea);
+        diffArea.setFont(SyntaxStyleUtil.monoFont());
+
+        JLabel filesLabel = new JLabel("Changed files");
+        filesLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        JPanel filesPanel = new JPanel(new BorderLayout());
+        filesPanel.add(filesLabel, BorderLayout.NORTH);
+        filesPanel.add(new JScrollPane(filesList), BorderLayout.CENTER);
+
+        JLabel diffLabel = new JLabel("File diff");
+        diffLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        JPanel diffPanel = new JPanel(new BorderLayout());
+        diffPanel.add(diffLabel, BorderLayout.NORTH);
+        diffPanel.add(new RTextScrollPane(diffArea), BorderLayout.CENTER);
+
+        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, filesPanel, diffPanel);
+        rightSplit.setResizeWeight(0.30);
+        rightSplit.setDividerLocation(200);
+
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                new JScrollPane(table), rightSplit);
+        mainSplit.setResizeWeight(0.40);
+        mainSplit.setDividerLocation(520);
+
         // ── Assembly ──────────────────────────────────────────────────────────
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.add(warningLabel, BorderLayout.NORTH);
         headerPanel.add(baseLabel,    BorderLayout.CENTER);
-        //headerPanel.add(legendPanel,  BorderLayout.SOUTH);
 
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(movePanel, BorderLayout.NORTH);
         southPanel.add(btnPanel,  BorderLayout.SOUTH);
 
         getContentPane().setLayout(new BorderLayout(0, 4));
-        getContentPane().add(headerPanel,            BorderLayout.NORTH);
-        getContentPane().add(new JScrollPane(table),  BorderLayout.CENTER);
-        getContentPane().add(southPanel,              BorderLayout.SOUTH);
+        getContentPane().add(headerPanel, BorderLayout.NORTH);
+        getContentPane().add(mainSplit,   BorderLayout.CENTER);
+        getContentPane().add(southPanel,  BorderLayout.SOUTH);
         Util.bindEscapeToDispose(this);
     }
 
@@ -445,5 +525,140 @@ public class InteractiveRebaseDialog extends JDialog {
                 dragSourceRow = -1;
             }
         };
+    }
+
+    // ── Right-panel helpers ───────────────────────────────────────────────────
+
+    private void loadChangedFiles(String sha) {
+        currentCommitSha = sha;
+        filesListModel.clear();
+        diffArea.setText("");
+
+        new SwingWorker<List<ScmItem>, Void>() {
+            @Override
+            protected List<ScmItem> doInBackground() {
+                org.eclipse.jgit.revwalk.RevCommit commit =
+                        Context.getGitRepoService().getRevCommitBySha(sha);
+                if (commit == null) return List.of();
+                ScmRevisionInformation info = Context.getGitRepoService().adapt(commit, null);
+                return info != null && info.getAffectedItems() != null
+                        ? info.getAffectedItems() : List.of();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<ScmItem> items = get();
+                    for (ScmItem item : items) filesListModel.addElement(item);
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Failed to load changed files for " + sha, e);
+                }
+            }
+        }.execute();
+    }
+
+    private void loadDiff(String sha, ScmItem item) {
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() {
+                return Context.getGitRepoService().getRawDiff(sha, item.getShortName());
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    String diff = get();
+                    diffArea.setText(diff != null ? diff : "");
+                    diffArea.setCaretPosition(0);
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Failed to load diff", e);
+                    diffArea.setText("(Could not load diff: " + e.getCause().getMessage() + ")");
+                }
+            }
+        }.execute();
+    }
+
+    private void openDiffWindow(String sha, ScmItem item) {
+        if (!ExtensionMap.isTextExtension(item.getShortName())) return;
+
+        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+        boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);
+
+        if (isAdded) {
+            new SwingWorker<String, Void>() {
+                @Override
+                protected String doInBackground() throws Exception {
+                    String tempPath = Context.getGitRepoService().saveFile(sha, item.getShortName());
+                    return Files.readString(Paths.get(tempPath));
+                }
+                @Override
+                protected void done() {
+                    try {
+                        String content = get();
+                        FileViewerWindow viewer = new FileViewerWindow(
+                                item.getShortName() + " @ " + sha.substring(0, Math.min(8, sha.length())),
+                                content, item.getShortName());
+                        viewer.setVisible(true);
+                    } catch (Exception e) {
+                        log.log(Level.WARNING, "Failed to open file", e);
+                    }
+                }
+            }.execute();
+        } else {
+            new SwingWorker<List<ScmRevisionInformation>, Void>() {
+                @Override
+                protected List<ScmRevisionInformation> doInBackground() throws Exception {
+                    return Context.getGitRepoService().getFileHistory(item.getShortName(), sha);
+                }
+                @Override
+                protected void done() {
+                    try {
+                        List<ScmRevisionInformation> fileRevs = get();
+                        if (fileRevs.size() >= 2) {
+                            DiffViewerWindow w = new DiffViewerWindow(
+                                    item.getShortName(), fileRevs,
+                                    fileRevs.get(1).getRevisionFullName(),
+                                    fileRevs.get(0).getRevisionFullName());
+                            w.setVisible(true);
+                        } else if (fileRevs.size() == 1) {
+                            openDiffWindow(fileRevs.get(0).getRevisionFullName(), item);
+                        }
+                    } catch (Exception e) {
+                        log.log(Level.WARNING, "Failed to open diff window", e);
+                        JOptionPane.showMessageDialog(InteractiveRebaseDialog.this,
+                                "Failed to open diff: " + e.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }.execute();
+        }
+    }
+
+    // ── Files list cell renderer ──────────────────────────────────────────────
+
+    private class FilesListCellRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            Component c = super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+            if (value instanceof ScmItem item && c instanceof JLabel label) {
+                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                String shortStatus = switch (status) {
+                    case "ADDED",    "ADD"    -> "A";
+                    case "MODIFIED", "MODIFY" -> "M";
+                    case "REMOVED",  "DELETE" -> "D";
+                    case "RENAMED",  "RENAME" -> "R";
+                    case "COPIED",   "COPY"   -> "C";
+                    default                   -> "?";
+                };
+                label.setText("[" + shortStatus + "] " + item.getShortName());
+                if (!isSelected) {
+                    Color fg = SyntaxStyleUtil.statusColor(status);
+                    if (fg != null) label.setForeground(fg);
+                }
+            }
+            return c;
+        }
     }
 }
