@@ -75,26 +75,7 @@ public class InteractiveRebaseDialog extends JDialog {
                     .map(RebaseAction::label)
                     .toArray(String[]::new);
 
-    /** Background colours that visually distinguish each action row. */
-    static final Color[] ACTION_COLORS_LIGHT = {
-            new Color(220, 240, 220),  // pick   – soft green
-            new Color(210, 230, 255),  // reword – soft blue
-            new Color(255, 248, 210),  // squash – soft yellow
-            new Color(255, 235, 205),  // fixup  – soft orange
-            new Color(255, 215, 215)   // drop   – soft red
-    };
 
-    static final Color[] ACTION_COLORS_DARK = {
-            new Color(85, 92, 85),  // pick   – soft green
-            new Color(96, 105, 117),  // reword – soft blue
-            new Color(122, 119, 102),  // squash – soft yellow
-            new Color(126, 116, 102),  // fixup  – soft orange
-            new Color(120, 102, 102)   // drop   – soft red
-    };
-
-    private Color [] getRowColor() {
-        return SyntaxStyleUtil.isDarkTheme() ? ACTION_COLORS_DARK : ACTION_COLORS_LIGHT;
-    }
 
     // ── Data model ───────────────────────────────────────────────────────────
 
@@ -224,7 +205,7 @@ public class InteractiveRebaseDialog extends JDialog {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.add(new JLabel("Set: "));
         for (int i = 0; i < ORDERED_ACTIONS.length; i++) {
-            right.add(quickActionButton(ORDERED_ACTIONS[i], getRowColor()[i]));
+            right.add(quickActionButton(ORDERED_ACTIONS[i], SyntaxStyleUtil.getInteractiveRebaseRowColor()[i]));
         }
         movePanel.add(left, BorderLayout.CENTER);
         movePanel.add(right, BorderLayout.EAST);
@@ -285,6 +266,7 @@ public class InteractiveRebaseDialog extends JDialog {
         JLabel filesLabel = new JLabel("Changed files");
         filesLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         JPanel filesPanel = new JPanel(new BorderLayout());
+        filesPanel.setSize(400, 820);
         filesPanel.add(filesLabel, BorderLayout.NORTH);
         filesPanel.add(new JScrollPane(filesList), BorderLayout.CENTER);
 
@@ -361,7 +343,7 @@ public class InteractiveRebaseDialog extends JDialog {
         for (int i = 0; i < entries.length; i++) {
             JLabel chip = new JLabel("  ");
             chip.setOpaque(true);
-            chip.setBackground(getRowColor()[i]);
+            chip.setBackground(SyntaxStyleUtil.getInteractiveRebaseRowColor()[i]);
             chip.setBorder(BorderFactory.createLineBorder(Color.GRAY));
             p.add(chip);
             p.add(new JLabel("<html><b>" + entries[i][0] + "</b> – " + entries[i][1] + "</html>"));
@@ -453,7 +435,7 @@ public class InteractiveRebaseDialog extends JDialog {
             Component c = super.getTableCellRendererComponent(
                     t, value, isSelected, hasFocus, row, col);
             if (!isSelected && row < steps.size()) {
-                c.setBackground(getRowColor()[actionIndex(steps.get(row).getAction())]);
+                c.setBackground(SyntaxStyleUtil.getInteractiveRebaseRowColor()[actionIndex(steps.get(row).getAction())]);
                 c.setFont(c.getFont().deriveFont(Font.BOLD));
             }
             return c;
@@ -468,7 +450,7 @@ public class InteractiveRebaseDialog extends JDialog {
             Component c = super.getTableCellRendererComponent(
                     t, value, isSelected, hasFocus, row, col);
             if (!isSelected && row < steps.size()) {
-                c.setBackground(getRowColor()[actionIndex(steps.get(row).getAction())]);
+                c.setBackground(SyntaxStyleUtil.getInteractiveRebaseRowColor()[actionIndex(steps.get(row).getAction())]);
             }
             if (col == 1) {
                 c.setFont(new Font(Font.MONOSPACED, Font.PLAIN, t.getFont().getSize()));

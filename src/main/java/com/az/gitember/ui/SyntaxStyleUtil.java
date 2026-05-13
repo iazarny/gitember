@@ -233,4 +233,25 @@ public final class SyntaxStyleUtil {
                 color.getAlpha());
     }
 
+    /** Background colours that visually distinguish each action row. */
+    static final Color[] ACTION_COLORS_LIGHT = {
+            new Color(220, 240, 220),  // pick   – soft green
+            new Color(210, 230, 255),  // reword – soft blue
+            new Color(255, 248, 210),  // squash – soft yellow
+            new Color(255, 235, 205),  // fixup  – soft orange
+            new Color(255, 215, 215)   // drop   – soft red
+    };
+
+    static final Color[] ACTION_COLORS_DARK = {
+            new Color(85, 92, 85),  // pick   – soft green
+            new Color(96, 105, 117),  // reword – soft blue
+            new Color(122, 119, 102),  // squash – soft yellow
+            new Color(126, 116, 102),  // fixup  – soft orange
+            new Color(120, 102, 102)   // drop   – soft red
+    };
+
+    public  static  Color [] getInteractiveRebaseRowColor() {
+        return SyntaxStyleUtil.isDarkTheme() ? ACTION_COLORS_DARK : ACTION_COLORS_LIGHT;
+    }
+
 }
