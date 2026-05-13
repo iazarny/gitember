@@ -1367,6 +1367,31 @@ public class GitRepoService {
     }
 
     /**
+     * Renames a stash entry by rewriting the corresponding reflog line.
+     * Git stores stash messages as reflog messages in {@code .git/logs/refs/stash};
+     * stash@{0} is the last line, stash@{N} is at {@code size-1-N}.
+     *
+     * @param stashIndex 0-based stash index (stash@{N})
+     * @param newMessage new message to store
+     */
+    public void renameStash(int stashIndex, String newMessage) throws IOException {
+        File logFile = new File(repository.getDirectory(), "logs/refs/stash");
+        if (!logFile.exists()) throw new IOException("No stash log found");
+
+        List<String> lines = Files.readAllLines(logFile.toPath(), StandardCharsets.UTF_8);
+        int lineIndex = lines.size() - 1 - stashIndex;
+        if (lineIndex < 0 || lineIndex >= lines.size())
+            throw new IOException("Invalid stash index: " + stashIndex);
+
+        String line = lines.get(lineIndex);
+        int tabIdx = line.indexOf('\t');
+        if (tabIdx < 0) throw new IOException("Malformed stash log line at index " + stashIndex);
+
+        lines.set(lineIndex, line.substring(0, tabIdx + 1) + newMessage);
+        Files.write(logFile.toPath(), lines, StandardCharsets.UTF_8);
+    }
+
+    /**
      * Revert changes or reolve conflict
      *
      * @param fileName file name

@@ -165,11 +165,47 @@ public class BranchContextMenuFactory {
         applyItem.addActionListener(e -> doApplyStash(stash));
         menu.add(applyItem);
 
+        JMenuItem editItem = new JMenuItem("Edit Message…");
+        editItem.addActionListener(e -> doEditStashMessage(stash));
+        menu.add(editItem);
+
+        menu.addSeparator();
+
         JMenuItem dropItem = new JMenuItem("Drop Stash");
         dropItem.addActionListener(e -> doDropStash(stash));
         menu.add(dropItem);
 
         return menu;
+    }
+
+    private void doEditStashMessage(ScmRevisionInformation stash) {
+        String current = stash.getShortMessage() != null ? stash.getShortMessage() : "";
+        String newMessage = (String) JOptionPane.showInputDialog(
+                parent, "Stash message:", "Edit Stash Message",
+                JOptionPane.PLAIN_MESSAGE, null, null, current);
+        if (newMessage == null || newMessage.equals(current)) return;
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Context.getGitRepoService().renameStash(stash.getStashIndex(), newMessage);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    stash.setShortMessage(newMessage);
+                    Context.updateStash();
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Edit stash message failed", ex);
+                    JOptionPane.showMessageDialog(parent,
+                            "Cannot edit stash message:\n" + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 
     private void doApplyStash(ScmRevisionInformation stash) {
