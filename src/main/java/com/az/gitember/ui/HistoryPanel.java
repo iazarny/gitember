@@ -2,10 +2,12 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.dialog.InteractiveRebaseDialog;
 import com.az.gitember.handler.CreateTagHandler;
 import com.az.gitember.handler.InteractiveRebaseHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.revplot.PlotCommit;
@@ -102,6 +104,7 @@ public class HistoryPanel extends JPanel {
         JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
         JMenuItem revertItem           = new JMenuItem("Revert commit");
         JMenuItem resetItem            = new JMenuItem("Reset to commit…");
+        JMenuItem changeMessageItem      = new JMenuItem("Change commit message…");
         JMenuItem interactiveRebaseItem = new JMenuItem("Interactive Rebase onto here…");
 
         checkoutItem.addActionListener(e -> {
@@ -186,6 +189,53 @@ public class HistoryPanel extends JPanel {
             }, true);
         });
 
+        changeMessageItem.setToolTipText("Edit the commit message of this unpushed commit");
+        changeMessageItem.addActionListener(e -> {
+            PlotCommit<PlotLane> commit = selectedCommit();
+            if (commit == null) return;
+            if (commit.getParentCount() == 0) {
+                JOptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        "Cannot change the message of the initial (root) commit.",
+                        "Change Commit Message", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            String currentMessage = commit.getFullMessage();
+            JTextArea textArea = new JTextArea(currentMessage != null ? currentMessage : "", 6, 50);
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            JScrollPane sp = new JScrollPane(textArea);
+            sp.setPreferredSize(new Dimension(520, 150));
+            int choice = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    sp, "Change Commit Message",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (choice != JOptionPane.OK_OPTION) return;
+            String newMessage = textArea.getText().trim();
+            if (newMessage.isEmpty()) return;
+            if (newMessage.equals(currentMessage != null ? currentMessage.trim() : "")) return;
+
+            String parentSha = commit.getParent(0).getName();
+            runCommitAction("Change commit message", () -> {
+                List<RevCommit> range = Context.getGitRepoService().getCommitsInRange(parentSha);
+                List<InteractiveRebaseDialog.RebaseStep> steps = new ArrayList<>();
+                for (RevCommit c : range) {
+                    boolean isTarget = c.getName().equals(commit.getName());
+                    steps.add(new InteractiveRebaseDialog.RebaseStep(
+                            isTarget ? InteractiveRebaseDialog.RebaseAction.REWORD
+                                     : InteractiveRebaseDialog.RebaseAction.PICK,
+                            c.getName(),
+                            isTarget ? newMessage : c.getShortMessage()));
+                }
+                RebaseResult result = Context.getGitRepoService().interactiveRebase(parentSha, steps);
+                Context.updateAll();
+                if (!result.getStatus().isSuccessful()) {
+                    throw new RuntimeException("Rebase failed with status: " + result.getStatus());
+                }
+                return "Commit message updated";
+            }, true);
+        });
+
         interactiveRebaseItem.setToolTipText(
                 "Interactively rebase all commits from HEAD down to (but not including) this commit");
         interactiveRebaseItem.addActionListener(e -> {
@@ -210,6 +260,7 @@ public class HistoryPanel extends JPanel {
         commitMenu.add(revertItem);
         commitMenu.add(resetItem);
         commitMenu.addSeparator();
+        commitMenu.add(changeMessageItem);
         commitMenu.add(interactiveRebaseItem);
 
         commitTable.addMouseListener(new MouseAdapter() {
@@ -227,6 +278,7 @@ public class HistoryPanel extends JPanel {
                 try {
                     unpushed = Context.getGitRepoService().isCommitUnpushed(commit.getName());
                 } catch (Exception ignored) {}
+                changeMessageItem.setEnabled(unpushed && commit.getParentCount() > 0);
                 interactiveRebaseItem.setEnabled(unpushed);
                 commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
