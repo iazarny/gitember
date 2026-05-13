@@ -282,8 +282,7 @@ public class InteractiveRebaseDialog extends JDialog {
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 new JScrollPane(table), rightSplit);
-        mainSplit.setResizeWeight(0.40);
-        mainSplit.setDividerLocation(520);
+        mainSplit.setResizeWeight(0.70);
 
         // ── Assembly ──────────────────────────────────────────────────────────
         JPanel headerPanel = new JPanel(new BorderLayout());
@@ -531,7 +530,15 @@ public class InteractiveRebaseDialog extends JDialog {
             protected void done() {
                 try {
                     List<ScmItem> items = get();
-                    for (ScmItem item : items) filesListModel.addElement(item);
+                    for (ScmItem item : items) {
+                        filesListModel.addElement(item);
+                    }
+                    if (!items.isEmpty()) {
+                        filesList.setSelectedIndex(0);
+                    }
+
+
+
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load changed files for " + sha, e);
                 }
