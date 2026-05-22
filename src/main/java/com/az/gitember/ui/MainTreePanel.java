@@ -269,7 +269,8 @@ public class MainTreePanel extends JPanel {
             populateBranches(remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
             populateBranches(tagsNode, Context.getTags(), NodeType.TAG);
             populateStashes(stashesNode, Context.getStash());
-            expandAllNodes();
+            tree.expandRow(2); //ugly , expant local branches only
+            //expandAllNodes();
         });
     }
 
