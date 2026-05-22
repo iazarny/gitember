@@ -264,6 +264,7 @@ public class MainFrame extends JFrame {
         });
         menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
+        menuBar.addOpenExplorerListener(e -> openExplorerInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
         menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
         menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this, statusBar).execute());
@@ -772,6 +773,31 @@ public class MainFrame extends JFrame {
     }
 
     // ── Terminal launcher ─────────────────────────────────────────────────────
+
+    private void openExplorerInRepo() {
+        String path = Context.getProjectFolder();
+        if (path == null || path.isEmpty()) {
+            statusBar.setStatus("No repository open.");
+            return;
+        }
+        File dir = new File(path);
+        try {
+            if (Context.isWindows()) {
+                new ProcessBuilder("explorer.exe", dir.getAbsolutePath()).start();
+            } else if (Context.isMac()) {
+                new ProcessBuilder("open",  dir.getAbsolutePath()).start();
+            } else {
+                new ProcessBuilder("xdg-open", dir.getAbsolutePath()).start();
+            }
+            statusBar.setStatus("File manager opened in " + path);
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Cannot open file manager", ex);
+            statusBar.setStatus("Cannot open file manager: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Could not open a file manager:\n" + ex.getMessage(),
+                    "Open File Manager", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     private void openTerminalInRepo() {
         String path = Context.getProjectFolder();

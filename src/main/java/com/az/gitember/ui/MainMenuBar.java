@@ -1,7 +1,9 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -27,6 +29,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem indexHistoryItem;
     private final JMenuItem statisticsItem;
     private final JMenuItem openTerminalItem;
+    private final JMenuItem openExplorer;
     private final JMenuItem projectSettingsItem;
 
     // LFS submenu (inside Repository menu)
@@ -113,7 +116,30 @@ public class MainMenuBar extends JMenuBar {
 
         projectSettingsItem = new JMenuItem("Project Settings…", KeyEvent.VK_P);
 
-        openTerminalItem = new JMenuItem("Open Terminal", KeyEvent.VK_T);
+
+        String expMessage = null;
+        String expToolTip = null;
+        if (Context.isWindows()) {
+            expMessage = "Explorer";
+            expToolTip = "Open a explorer in the repository folder";
+        } else if (Context.isMac()) {
+            expMessage = "Finder";
+            expToolTip = "Open a finder in the repository folder";
+        } else if (Context.isLinux()) {
+            expMessage = "File manager";
+            expToolTip = "Open a file manage in the repository folder";
+        }
+
+        if (StringUtils.isNotBlank(expMessage)) {
+            openExplorer = new JMenuItem(expMessage, KeyEvent.VK_E);
+            openExplorer.setToolTipText(expToolTip);
+        } else {
+            openExplorer = null;
+        }
+
+
+
+        openTerminalItem = new JMenuItem("Terminal", KeyEvent.VK_T);
         openTerminalItem.setToolTipText("Open a terminal in the repository folder");
 
         // LFS submenu
@@ -156,6 +182,9 @@ public class MainMenuBar extends JMenuBar {
         repoMenu.add(compressDatabaseItem);
         repoMenu.addSeparator();
         repoMenu.add(openTerminalItem);
+        if (openExplorer != null) {
+            repoMenu.add(openExplorer);
+        }
 
 
         // ── Branch (repo-only) ────────────────────────────────────────────────
@@ -319,6 +348,11 @@ public class MainMenuBar extends JMenuBar {
     public void addIndexHistoryListener(ActionListener l)   { indexHistoryItem.addActionListener(l); }
     public void addStatisticsListener(ActionListener l)     { statisticsItem.addActionListener(l); }
     public void addOpenTerminalListener(ActionListener l)   { openTerminalItem.addActionListener(l); }
+    public void addOpenExplorerListener(ActionListener l)   {
+        if (openExplorer != null) {
+            openExplorer.addActionListener(l);
+        }
+    }
     public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
     public void addCompressDatabaseListener(ActionListener l)    { compressDatabaseItem.addActionListener(l); }
