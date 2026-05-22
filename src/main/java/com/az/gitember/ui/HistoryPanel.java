@@ -40,6 +40,7 @@ public class HistoryPanel extends JPanel {
     private final CommitDetailPanel detailPanel;
     private final StatusBar statusBar;
     private final CommitGraphRenderer graphRenderer = new CommitGraphRenderer();
+    private final boolean disableDetails;
 
     // Search components (merged into main toolbar when entire history is shown)
     private final JTextField searchField = new JTextField(20);
@@ -58,7 +59,12 @@ public class HistoryPanel extends JPanel {
     private boolean lastAllHistory = true;
 
     public HistoryPanel(StatusBar statusBar) {
+        this(statusBar, false);
+    }
+
+    public HistoryPanel(StatusBar statusBar, boolean disableDetails) {
         this.statusBar = statusBar;
+        this.disableDetails = disableDetails;
         setLayout(new BorderLayout());
 
         searchField.setPreferredSize(new Dimension(150, 25));
@@ -81,7 +87,7 @@ public class HistoryPanel extends JPanel {
         commitTable.getColumnModel().getColumn(2).setPreferredWidth(150);
         commitTable.getColumnModel().getColumn(2).setMaxWidth(200);
 
-        detailPanel = new CommitDetailPanel();
+        detailPanel = new CommitDetailPanel(statusBar);
         commitTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = commitTable.getSelectedRow();
@@ -299,12 +305,19 @@ public class HistoryPanel extends JPanel {
         });
 
         // ── Layout ────────────────────────────────────────────────────────
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(commitTable), detailPanel);
-        splitPane.setDividerLocation(400);
-        splitPane.setResizeWeight(0.65);
 
-        add(splitPane, BorderLayout.CENTER);
+        if (disableDetails) {
+            add(new JScrollPane(commitTable), BorderLayout.CENTER);
+        } else {
+            JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                    new JScrollPane(commitTable), detailPanel);
+            splitPane.setDividerLocation(400);
+            splitPane.setResizeWeight(0.65);
+
+            add(splitPane, BorderLayout.CENTER);
+        }
+
+
 
         // Reload history whenever a pull (or other background operation) requests it
         Context.addPropertyChangeListener(Context.PROP_HISTORY_REFRESH, evt ->

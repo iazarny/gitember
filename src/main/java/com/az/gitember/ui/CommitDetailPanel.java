@@ -69,8 +69,13 @@ public class CommitDetailPanel extends JPanel {
     /** File names (short paths) that matched the last Lucene search for the current commit. */
     private Set<String> matchedFiles = Set.of();
 
-    public CommitDetailPanel() {
+    private final StatusBar statusBar;
+
+
+    public CommitDetailPanel(StatusBar statusBar) {
         setLayout(new BorderLayout());
+
+        this.statusBar = statusBar;
 
         tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
 
@@ -462,8 +467,18 @@ public class CommitDetailPanel extends JPanel {
         worker.execute();
     }
 
+
     private void showFileHistory() {
-        
+        int row = filesTable.getSelectedRow();
+        ScmItem item = row >= 0 ? filesTableModel.getItemAt(row) : null;
+        if (item == null || currentRevision == null) return;
+        JFrame historyFrame = new JFrame("History: " + item.getShortName());
+        historyFrame.setSize(800, 600);
+        historyFrame.setLocationRelativeTo(this);
+        HistoryPanel hp = new HistoryPanel(statusBar, true);
+        historyFrame.getContentPane().add(hp);
+        historyFrame.setVisible(true);
+        hp.loadFileHistory(item.getShortName());
     }
 
     // --- Header panel ---

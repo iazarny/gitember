@@ -176,7 +176,7 @@ public class MainFrame extends JFrame {
 
         workingCopyPanel = new WorkingCopyPanel(statusBar);
         historyPanel = new HistoryPanel(statusBar);
-        stashDetailPanel = new CommitDetailPanel();
+        stashDetailPanel = new CommitDetailPanel(statusBar);
         pullRequestPanel = new PullRequestPanel();
         submodulePanel = new SubmodulePanel(statusBar);
 
