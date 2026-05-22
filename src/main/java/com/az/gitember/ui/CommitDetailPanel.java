@@ -175,12 +175,18 @@ public class CommitDetailPanel extends JPanel {
         JMenuItem diffDiskItem = new JMenuItem("Difference with file on disk");
         diffDiskItem.addActionListener(e -> diffWithDiskVersion());
 
+        JMenuItem fileHistoryItem = new JMenuItem("History");
+        fileHistoryItem.addActionListener(e -> showFileHistory());
+
         popup.add(openItem);
         popup.addSeparator();
         popup.add(showRawDiffItem);
         popup.add(diffPrevItem);
         popup.add(diffLatestItem);
         popup.add(diffDiskItem);
+        popup.addSeparator();
+        popup.add(fileHistoryItem);
+
 
         // Dynamic enable/disable based on selected file
         popup.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
@@ -454,6 +460,10 @@ public class CommitDetailPanel extends JPanel {
             }
         };
         worker.execute();
+    }
+
+    private void showFileHistory() {
+        
     }
 
     // --- Header panel ---

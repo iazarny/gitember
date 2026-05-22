@@ -27,15 +27,21 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 | Platform         | Link                                                                                                                             |
 |------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| Windows (x64)    | [Gitember-3.1.msi](https://gitember.org/Gitember-3.2.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
-| macOS (M1)       | [Gitember-3.1.msi](https://gitember.org/Gitember-3.2.dmg)                                                                        | 
-| Linux  (x64)     | [Gitember-3.1.deb](https://gitember.org/Gitember-3.2.deb)                                                                        | 
-| Fat jar. java 21 | [Gitember-3.1.jar](https://gitember.org/Gitember-3.2.jar)                                                                        | 
+| Windows (x64)    | [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
+| macOS (M1)       | [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.dmg)                                                                        | 
+| Linux  (x64)     | [Gitember-3.3.deb](https://gitember.org/Gitember-3.3.deb)                                                                        | 
+| Fat jar. java 21 | [Gitember-3.3.jar](https://gitember.org/Gitember-3.3.jar)                                                                        | 
 
 
 More info and documentation: https://gitember.org
 
 ## Changes
+
+### 3.3 · Jun 2026
+
+* **Interactive rebase** improvements
+* AI (experimental)
+  * Commit message generation 
 
 ### 3.2 · May 2026
 
