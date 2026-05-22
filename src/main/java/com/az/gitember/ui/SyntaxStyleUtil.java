@@ -71,6 +71,7 @@ public final class SyntaxStyleUtil {
 
     private static final String THEME_LIGHT = "/org/fife/ui/rsyntaxtextarea/themes/default.xml";
     private static final String THEME_DARK  = "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml";
+    private static Font monoFontCache = null;
 
     private SyntaxStyleUtil() {}
 
@@ -114,14 +115,29 @@ public final class SyntaxStyleUtil {
         return SyntaxConstants.SYNTAX_STYLE_NONE;
     }
 
+
     /**
      * Returns a monospaced font at the size configured in Settings (falls back to 13).
      * Use this wherever an RSyntaxTextArea font is set so the user's preference is honoured.
      */
     public static Font monoFont() {
+
+        if (monoFontCache == null) {
+            try {
+                monoFontCache = Font.createFont(
+                        Font.TRUETYPE_FONT,
+                        SyntaxStyleUtil.class.getResourceAsStream(
+                                "/fonts/JetBrainsMono-Regular.ttf"
+                        )
+                );
+            } catch (Exception e) {
+                monoFontCache = new Font(Font.MONOSPACED, Font.PLAIN,13);
+            }
+        }
         var settings = Context.getSettings();
         int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize()  : 13;
-        return new Font(Font.MONOSPACED, Font.PLAIN, size);
+        Font editorFont = monoFontCache.deriveFont(Font.PLAIN, size-1);
+        return editorFont;
     }
 
     // Highlight colors — two palettes selected at paint time based on active theme
