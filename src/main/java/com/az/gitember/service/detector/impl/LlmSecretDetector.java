@@ -62,7 +62,7 @@ public class LlmSecretDetector implements Detector {
 
         String response;
         try {
-            response = model.generate(prompt);
+            response = model.chat(prompt);
         } catch (Exception e) {
             log.log(Level.WARNING, "LLM secret scan failed for " + context.getFile(), e);
             return Collections.emptyList();

@@ -46,7 +46,7 @@ public final class LlmCommitMessageService {
 
         String prompt = buildPrompt(truncated, userHint);
         log.log(Level.FINE, "Requesting commit message from {0} ({1})", new Object[]{ollamaUrl, modelName});
-        return model.generate(prompt).trim();
+        return model.chat(prompt).trim();
     }
 
     private static String buildPrompt(String diff, String userHint) {

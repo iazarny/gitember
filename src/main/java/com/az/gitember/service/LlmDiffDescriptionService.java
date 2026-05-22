@@ -68,7 +68,7 @@ public final class LlmDiffDescriptionService {
         log.log(Level.FINE, "Requesting diff description from {0} ({1}), languages={2}",
                 new Object[]{ollamaUrl, modelName, languages});
 
-        return model.generate(prompt);
+        return model.chat(prompt);
     }
 
     private static Set<String> detectLanguages(String projectPath) {
