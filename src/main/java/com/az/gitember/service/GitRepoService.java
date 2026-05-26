@@ -3040,20 +3040,8 @@ public class GitRepoService {
 
         final String reporitoryUrl = params.getUrl();
         if (StringUtils.isNotBlank(reporitoryUrl)) {
-            if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.HTTPS)) {
-                StoredConfig fbcOrig = SystemReader.getInstance().getUserConfig();
-                fbcOrig.setBoolean(Const.Config.HTTP, null, Const.Config.SLL_VERIFY, false);
-                fbcOrig.save();
-
-            } else if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
+            if (reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.SSH)
                     || reporitoryUrl.toLowerCase(Locale.ROOT).startsWith(Const.Config.GIT)) {
-            /*cmd.setTransportConfigCallback(
-                    new SshTransportConfigCallback(
-                            params.getPathToKey(),
-                            params.getKeyPassPhrase()
-                    )
-            );*/
-
                 File sshDir = new File(FS.DETECTED.userHome(), File.separator + SshConstants.SSH_DIR);
 
                 SshdSessionFactory sshSessionFactory = new SshdSessionFactoryBuilder()
