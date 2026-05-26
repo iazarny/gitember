@@ -23,7 +23,7 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.1 Apr 2026
+## Downloads — Version 3.3 Jun 2026
 
 | Platform         | Link                                                                                                                             |
 |------------------|----------------------------------------------------------------------------------------------------------------------------------|
@@ -38,6 +38,12 @@ More info and documentation: https://gitember.org
 ## Changes
 
 ### 3.3 · Jun 2026
+
+The changes in this revision  focus on improving the usability and functionality of Gitember, a Git desktop client. Notable updates include:
+
+* Improvements to interactive rebase, AI-assisted writing, and three-way merge conflict resolver
+* Full UI support for worktrees with correct status and diff display
+* Enhanced GitHub/GitLab/Bitbucket/Gitea integration with optional AI-powered commit message generation
 
 * **Interactive rebase** improvements
 * AI (experimental)
