@@ -8,8 +8,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.*;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.LongConsumer;
@@ -48,7 +50,20 @@ public final class OllamaManager {
     private static final String GH_RELEASE =
             "https://github.com/ollama/ollama/releases/latest/download/";
 
+    private static final String CHECKSUM_FILE_URL = GH_RELEASE + "sha256sum.txt";
+
     private OllamaManager() {}
+
+    // =========================================================================
+    //  Exceptions
+    // =========================================================================
+
+    public static class ChecksumMismatchException extends IOException {
+        public ChecksumMismatchException(String archiveName, String expected, String actual) {
+            super("Checksum mismatch for " + archiveName
+                    + ": expected " + expected + ", got " + actual);
+        }
+    }
 
     // =========================================================================
     //  Status
@@ -58,8 +73,12 @@ public final class OllamaManager {
 
     /** Returns the current status of Ollama on this machine. */
     public static  Status getStatus() {
-        if (isRunning())              return Status.RUNNING;
-        if (findBinary().isPresent()) return Status.STOPPED;
+        if (isRunning())              {
+            return Status.RUNNING;
+        }
+        if (findBinary().isPresent()) {
+            return Status.STOPPED;
+        }
         return Status.NOT_INSTALLED;
     }
 
@@ -174,6 +193,13 @@ public final class OllamaManager {
             conn.disconnect();
         }
 
+        try {
+            verifyChecksum(dest, archiveFileName());
+        } catch (ChecksumMismatchException e) {
+            Files.deleteIfExists(dest);
+            throw e;
+        }
+
         // Extract if ZIP; mark executable if a raw binary
         if (archiveFileName().endsWith(".zip")) {
             extractZip(dest, OLLAMA_HOME);
@@ -272,6 +298,73 @@ public final class OllamaManager {
         ProcessBuilder pb = new ProcessBuilder(bin.toString(), "pull", modelName);
         pb.redirectErrorStream(true);
         return pb.start();
+    }
+
+    // =========================================================================
+    //  Checksum verification
+    // =========================================================================
+
+    /**
+     * Downloads {@code sha256sum.txt} from the Ollama release and verifies that
+     * {@code downloadedFile} matches the expected hash.
+     *
+     * @throws ChecksumMismatchException if the computed digest does not match
+     * @throws IOException               on network or digest errors
+     */
+    static void verifyChecksum(Path downloadedFile, String archiveName) throws IOException {
+        String checksumPage;
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(15))
+                    .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                    .build();
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(CHECKSUM_FILE_URL))
+                    .timeout(Duration.ofSeconds(30))
+                    .GET().build();
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() != 200) {
+                throw new IOException("Could not fetch checksum file (HTTP " + resp.statusCode() + ")");
+            }
+            checksumPage = resp.body();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Checksum download interrupted", e);
+        }
+
+        String expected = null;
+        for (String line : checksumPage.split("\\R")) {
+            // format: "<hash>  <filename>" or "<hash> <filename>"
+            String[] parts = line.trim().split("\\s+", 2);
+            if (parts.length == 2 && parts[1].trim().endsWith(archiveName)) {
+                expected = parts[0].trim().toLowerCase();
+                break;
+            }
+        }
+        if (expected == null) {
+            throw new IOException("No checksum entry found for " + archiveName + " in sha256sum.txt");
+        }
+
+        String actual;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buf = new byte[512 * 1024];
+            try (InputStream in = Files.newInputStream(downloadedFile)) {
+                int n;
+                while ((n = in.read(buf)) >= 0) {
+                    digest.update(buf, 0, n);
+                }
+            }
+
+            actual = HexFormat.of().formatHex(digest.digest());
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IOException("SHA-256 not available", e);
+        }
+
+        if (!expected.equals(actual)) {
+            throw new ChecksumMismatchException(archiveName, expected, actual);
+        }
+        log.info("Checksum verified for " + archiveName);
     }
 
     // =========================================================================

@@ -3,6 +3,8 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.OllamaManager;
+
+import java.util.concurrent.ExecutionException;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -271,8 +273,8 @@ public class SettingsDialog extends JDialog {
                         },
                         t -> total = t
                 );
-                publish("Starting Ollama…");
-                OllamaManager.startServerAndWait(30_000);
+                //publish("Starting Ollama…");
+                //OllamaManager.startServerAndWait(30_000);
                 return null;
             }
 
@@ -285,7 +287,24 @@ public class SettingsDialog extends JDialog {
             protected void done() {
                 progressDialog.dispose();
                 try {
-                    get(); // rethrow any exception
+                    get();
+                    publish("Starting Ollama…");
+                    OllamaManager.startServerAndWait(30_000);
+                } catch (ExecutionException ex) {
+                    if (ex.getCause() instanceof OllamaManager.ChecksumMismatchException) {
+                        JOptionPane.showMessageDialog(SettingsDialog.this,
+                                "Ollama checksum verification failed.\n" +
+                                "The downloaded file may be corrupt or tampered with.\n\n" +
+                                "All AI features have been disabled for security.",
+                                "Checksum Verification Failed", JOptionPane.ERROR_MESSAGE);
+                        disableAllAiFeatures();
+                    } else {
+                        String msg = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+                        JOptionPane.showMessageDialog(SettingsDialog.this,
+                                "Ollama installation failed:\n" + msg,
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                        checkbox.setSelected(false);
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(SettingsDialog.this,
                             "Ollama installation failed:\n" + ex.getMessage(),
@@ -296,6 +315,19 @@ public class SettingsDialog extends JDialog {
         }.execute();
 
         progressDialog.setVisible(true); // blocks until done() calls dispose()
+    }
+
+    private void disableAllAiFeatures() {
+        leakDetectorCheck.setSelected(false);
+        branchCompareDescCheck.setSelected(false);
+        commitMsgGenCheck.setSelected(false);
+        Settings settings = Context.getSettings();
+        if (settings != null) {
+            settings.setEnableLeakDetector(false);
+            settings.setEnableBranchCompareDescription(false);
+            settings.setEnableCommitMessageGeneration(false);
+            Context.saveSettings();
+        }
     }
 
     public static void applyFontSize(int size) {
