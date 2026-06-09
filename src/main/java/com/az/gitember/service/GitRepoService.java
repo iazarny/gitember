@@ -726,6 +726,23 @@ public class GitRepoService {
     }
 
     /**
+     * Returns commits reachable from {@code branchFullName} that are NOT reachable from HEAD,
+     * i.e. the commits that would be brought in by merging that branch, newest first.
+     */
+    public List<RevCommit> getCommitsToMerge(final String branchFullName) throws Exception {
+        try (Git git = new Git(repository)) {
+            ObjectId headId  = repository.resolve(Constants.HEAD);
+            ObjectId branchId = repository.resolve(branchFullName);
+            if (headId == null || branchId == null) return Collections.emptyList();
+            List<RevCommit> result = new ArrayList<>();
+            for (RevCommit c : git.log().addRange(headId, branchId).call()) {
+                result.add(c);
+            }
+            return result;
+        }
+    }
+
+    /**
      * Performs an interactive rebase of the current branch onto {@code upstream}.
      *
      * <p>The {@code steps} list must be in <em>newest-first display order</em>

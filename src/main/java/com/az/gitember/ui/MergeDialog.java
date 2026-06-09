@@ -6,6 +6,7 @@ import org.eclipse.jgit.api.MergeCommand;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 /**
  * Modal dialog for merge options — Swing equivalent of the JavaFX MergeDialog.
@@ -19,15 +20,16 @@ public class MergeDialog extends JDialog {
 
     private MergeDialogResult result;
 
-    public MergeDialog(Frame owner, String branchShortName, String workingBranchName) {
+    public MergeDialog(Frame owner, String branchShortName, String workingBranchName,
+                       List<String> commitMessages) {
         super(owner, "Merge Branch", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        String defaultMessage = "Merge " + branchShortName + " into " + workingBranchName;
+        String defaultMessage = buildDefaultMessage(branchShortName, workingBranchName, commitMessages);
 
         // ── Controls ────────────────────────────────────────────────────────
-        JTextArea messageArea = new JTextArea(defaultMessage, 4, 40);
+        JTextArea messageArea = new JTextArea(defaultMessage, 6, 40);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         JScrollPane messageScroll = new JScrollPane(messageArea);
@@ -87,7 +89,7 @@ public class MergeDialog extends JDialog {
         });
         cancelBtn.addActionListener(e -> dispose());
 
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 12));
         btnRow.add(cancelBtn);
         btnRow.add(okBtn);
 
@@ -107,6 +109,18 @@ public class MergeDialog extends JDialog {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static String buildDefaultMessage(String branchShortName, String workingBranchName,
+                                              List<String> commitMessages) {
+        String header = "Merge " + branchShortName + " into " + workingBranchName;
+        if (commitMessages == null || commitMessages.isEmpty()) return header;
+        StringBuilder sb = new StringBuilder(header);
+        sb.append("\n\n");
+        for (String msg : commitMessages) {
+            sb.append("* ").append(msg.trim()).append("\n");
+        }
+        return sb.toString().stripTrailing();
+    }
 
     private static String ffModeLabel(MergeCommand.FastForwardMode mode) {
         if (mode == null) return "";

@@ -5,9 +5,13 @@ import com.az.gitember.service.Context;
 import com.az.gitember.ui.MergeDialog;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
@@ -54,7 +58,17 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
 
-        MergeDialog dialog = new MergeDialog(parent, branchShortName, workingBranchName);
+        List<String> commitMessages;
+        try {
+            List<RevCommit> commits = Context.getGitRepoService().getCommitsToMerge(branchFullName);
+            commitMessages = commits.stream()
+                    .map(RevCommit::getShortMessage)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            commitMessages = Collections.emptyList();
+        }
+
+        MergeDialog dialog = new MergeDialog(parent, branchShortName, workingBranchName, commitMessages);
         dialog.setVisible(true);
 
         MergeDialogResult result = dialog.getResult();
