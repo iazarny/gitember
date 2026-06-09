@@ -165,6 +165,13 @@
             <version>${langchain4j.version}</version>
         </dependency>
 
+        <!-- OS keychain integration (macOS Keychain, Windows Credential Store, Linux Secret Service) -->
+        <dependency>
+            <groupId>com.github.javakeyring</groupId>
+            <artifactId>java-keyring</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
