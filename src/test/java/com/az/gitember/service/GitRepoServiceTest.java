@@ -190,13 +190,11 @@ class GitRepoServiceTest {
     @Test
     void mergeBranch_fastForward_branchHeadAdvances() throws Exception {
         makeInitialCommit();
-        // Create and checkout feature branch
         service.checkoutBranch("master", "feature", null);
         writeFile("feature.txt", "feature\n");
         service.addFileToCommitStage("feature.txt");
         RevCommit featureCommit = service.commit("feature commit", "U", "u@u.com");
 
-        // Switch back to master and merge
         service.checkoutBranch("master", null);
         var result = service.mergeBranch(
                 "refs/heads/feature", "merge feature",
@@ -207,6 +205,135 @@ class GitRepoServiceTest {
         assertEquals(featureCommit.getId(),
                 repository.resolve("HEAD"),
                 "After FF merge master HEAD must equal the feature commit");
+    }
+
+    @Test
+    void mergeBranch_noFastForward_createsMergeCommitWithTwoParents() throws Exception {
+        makeInitialCommit();
+        service.checkoutBranch("master", "feature-noff", null);
+        writeFile("feature-noff.txt", "feature\n");
+        service.addFileToCommitStage("feature-noff.txt");
+        service.commit("feature noff commit", "U", "u@u.com");
+        service.checkoutBranch("master", null);
+
+        var result = service.mergeBranch(
+                "refs/heads/feature-noff", "no-ff merge",
+                false, MergeCommand.FastForwardMode.NO_FF);
+
+        assertTrue(result.getMergeStatus().isSuccessful());
+        try (RevWalk rw = new RevWalk(repository)) {
+            RevCommit head = rw.parseCommit(repository.resolve("HEAD"));
+            assertEquals(2, head.getParentCount(),
+                    "NO_FF merge must always produce a merge commit with two parents");
+        }
+    }
+
+    @Test
+    void mergeBranch_noFastForward_customMessageAppearsInMergeCommit() throws Exception {
+        makeInitialCommit();
+        service.checkoutBranch("master", "feature-msg", null);
+        writeFile("msg.txt", "msg\n");
+        service.addFileToCommitStage("msg.txt");
+        service.commit("feature msg commit", "U", "u@u.com");
+        service.checkoutBranch("master", null);
+
+        service.mergeBranch(
+                "refs/heads/feature-msg", "my custom merge message",
+                false, MergeCommand.FastForwardMode.NO_FF);
+
+        try (RevWalk rw = new RevWalk(repository)) {
+            RevCommit head = rw.parseCommit(repository.resolve("HEAD"));
+            assertEquals("my custom merge message", head.getShortMessage(),
+                    "Merge commit message must match the supplied message");
+        }
+    }
+
+    @Test
+    void mergeBranch_ffOnly_divergedBranch_fails() throws Exception {
+        makeInitialCommit();
+        service.checkoutBranch("master", "feature-ffonly", null);
+        writeFile("feature-ffonly.txt", "feature\n");
+        service.addFileToCommitStage("feature-ffonly.txt");
+        service.commit("feature ffonly commit", "U", "u@u.com");
+        // Diverge master
+        service.checkoutBranch("master", null);
+        writeFile("master-extra.txt", "extra\n");
+        service.addFileToCommitStage("master-extra.txt");
+        service.commit("master diverge", "U", "u@u.com");
+
+        var result = service.mergeBranch(
+                "refs/heads/feature-ffonly", "ff-only merge",
+                false, MergeCommand.FastForwardMode.FF_ONLY);
+
+        assertFalse(result.getMergeStatus().isSuccessful(),
+                "FF_ONLY on a diverged branch must not succeed");
+    }
+
+    @Test
+    void mergeBranch_squash_stagesChangesWithoutCreatingMergeCommit() throws Exception {
+        RevCommit masterHead = makeInitialCommit();
+        service.checkoutBranch("master", "feature-squash", null);
+        writeFile("sq1.txt", "one\n");
+        service.addFileToCommitStage("sq1.txt");
+        service.commit("squash commit 1", "U", "u@u.com");
+        writeFile("sq2.txt", "two\n");
+        service.addFileToCommitStage("sq2.txt");
+        service.commit("squash commit 2", "U", "u@u.com");
+        service.checkoutBranch("master", null);
+
+        var result = service.mergeBranch(
+                "refs/heads/feature-squash", "squash merge",
+                true, MergeCommand.FastForwardMode.FF);
+
+        assertTrue(result.getMergeStatus().isSuccessful(),
+                "Squash merge must succeed");
+        assertEquals(masterHead.getId(), repository.resolve("HEAD"),
+                "Squash merge must not create a commit automatically");
+        try (Git git = new Git(repository)) {
+            var status = git.status().call();
+            assertTrue(status.getAdded().contains("sq1.txt") || status.getChanged().contains("sq1.txt"),
+                    "Squash merge must stage files from the feature branch");
+            assertTrue(status.getAdded().contains("sq2.txt") || status.getChanged().contains("sq2.txt"),
+                    "Squash merge must stage all files from the feature branch");
+        }
+    }
+
+    // ── getCommitsToMerge ─────────────────────────────────────────────────────
+
+    @Test
+    void getCommitsToMerge_branchWithTwoCommits_returnsTwoNewestFirst() throws Exception {
+        makeInitialCommit();
+        service.checkoutBranch("master", "to-merge", null);
+        writeFile("m1.txt", "one\n");
+        service.addFileToCommitStage("m1.txt");
+        RevCommit c1 = service.commit("merge commit 1", "U", "u@u.com");
+        writeFile("m2.txt", "two\n");
+        service.addFileToCommitStage("m2.txt");
+        RevCommit c2 = service.commit("merge commit 2", "U", "u@u.com");
+        service.checkoutBranch("master", null);
+
+        List<RevCommit> toMerge = service.getCommitsToMerge("refs/heads/to-merge");
+
+        assertEquals(2, toMerge.size());
+        assertEquals(c2.getId(), toMerge.get(0).getId(), "Newest commit must be first");
+        assertEquals(c1.getId(), toMerge.get(1).getId(), "Older commit must be second");
+    }
+
+    @Test
+    void getCommitsToMerge_branchAlreadyMerged_returnsEmpty() throws Exception {
+        makeInitialCommit();
+        service.checkoutBranch("master", "already-merged", null);
+        writeFile("am.txt", "am\n");
+        service.addFileToCommitStage("am.txt");
+        service.commit("am commit", "U", "u@u.com");
+        service.checkoutBranch("master", null);
+        service.mergeBranch("refs/heads/already-merged", "merge already-merged",
+                false, MergeCommand.FastForwardMode.FF);
+
+        List<RevCommit> toMerge = service.getCommitsToMerge("refs/heads/already-merged");
+
+        assertTrue(toMerge.isEmpty(),
+                "Already-merged branch must yield no commits to merge");
     }
 
     // ── branchDiff ────────────────────────────────────────────────────────────
