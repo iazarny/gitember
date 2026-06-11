@@ -32,7 +32,8 @@ public class LlmSecretDetector implements Detector {
 
     private static final Logger log = Logger.getLogger(LlmSecretDetector.class.getName());
 
-    /** Maximum lines fed to the model per file (~6 k tokens at ~20 chars/line). */
+    /** Maximum lines fed to the model per file (~6 k tokens at ~20 chars/line).
+     *  Only HIGH and CRITICAL confidence findings are surfaced; LOW/MEDIUM are discarded. */
     private static final int MAX_LINES = 300;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -75,60 +76,53 @@ public class LlmSecretDetector implements Detector {
 
     private static String buildPrompt(String fileName, List<String> lines) {
         StringBuilder sb = new StringBuilder(512 + lines.size() * 80);
-        sb.append("""
-           You are a security code scanner.
-           Analyze the source file below for hardcoded secrets.\n\n""");
+        sb.append("You are a security code scanner. Analyze the source file below for hardcoded secrets.\n\n");
         sb.append("File: ").append(fileName).append("\n```\n");
         for (int i = 0; i < lines.size(); i++) {
             sb.append(i + 1).append(": ").append(lines.get(i)).append('\n');
         }
         sb.append("```\n\n");
         sb.append("""
-                Return ONLY a JSON array of findings. Each element must have these fields:
-                                                                              "lineNo"       : integer (1-based)
-                                                                              "type"         : one of SECRET, TOKEN, API_KEY, PASSWORD, CREDENTIAL, CONNECTION_STRING
-                                                                              "confidence"   : one of LOW, MEDIUM, HIGH, CRITICAL
-                                                                              "description"  : short description (max 80 chars)
-                                                                              "matchedValue" : suspicious value partially redacted (first 4 chars + ***)
-                
-                                                                            Detection rules:
-                
-                                                                            Flag ONLY if at least one of the following is true:
-                                                                            - A hardcoded secret is assigned to a variable or field with sensitive name:
-                                                                              (password, passwd, pwd, secret, token, api_key, apikey, access_key, private_key, client_secret)
-                                                                            - A connection string contains embedded credentials (user:pass@, password=, pwd=)
-                                                                            - Private key or certificate material is present (e.g. "BEGIN PRIVATE KEY")
-                                                                            - OAuth client secrets or bearer tokens explicitly assigned
-                                                                            - High-entropy string (length >= 20, mixed case, digits, symbols) AND:
-                                                                                - appears in assignment (e.g. key = "...") OR
-                                                                                - appears in HTTP headers (Authorization, X-API-KEY)
-                
-                                                                            Additional constraints for HIGH/CRITICAL:
-                                                                            - CRITICAL: clear credential or private key exposure
-                                                                            - HIGH: strong indication of real secret with proper context
-                                                                            - MEDIUM/LOW: weaker signals
-                
-                                                                            Do NOT flag:
-                                                                            - Placeholder patterns: ${...}, <...>, %..%, example_*, *_here, changeme, YOUR_*
-                                                                            - Test/mock values: "test", "dummy", "sample", "fake", "123456", "password"
-                                                                            - UUIDs, hashes, or IDs (hex strings, GUIDs, SHA1/256, etc.)
-                                                                            - Environment variable references (process.env, System.getenv, $VAR)
-                                                                            - Constants without sensitive naming (e.g. VERSION_ID, REQUEST_ID)
-                                                                            - Comments or documentation lines
-                                                                            - Reserved keywords or syntax-only lines
-                                                                            - Strings shorter than 8 characters
-                                                                            - Base64 strings without sensitive context (e.g. not tied to key/token)
-                                                                            - empty lines
-                                                                            - lines which are have reserved programming languages words like "import", "include", etc
-                
-                                                                            Heuristics:
-                                                                            - Prefer variable name + assignment context over standalone strings
-                                                                            - Prefer structured secrets over random-looking values
-                                                                            - Reduce confidence if no clear sensitive context
-                
-                                                                            If nothing suspicious found, return exactly: []
-                                                                            Output valid JSON only — no explanation, no markdown fences.
-                """);
+Return ONLY a JSON array. Each element must have exactly these fields:
+  "lineNo"       : integer (1-based line number)
+  "type"         : one of SECRET, TOKEN, API_KEY, PASSWORD, CREDENTIAL, CONNECTION_STRING
+  "confidence"   : one of HIGH, CRITICAL
+  "description"  : short description (max 80 chars)
+  "matchedValue" : suspicious value with middle redacted (first 4 chars + *** + last 2 chars)
+
+Flag ONLY when ALL of the following are true:
+  1. A literal string value is present (not a variable reference, not a template expression)
+  2. The value is assigned in a sensitive context — one of:
+       - Variable/field name contains: password, passwd, pwd, secret, token, api_key, apikey,
+         access_key, private_key, client_secret, auth_token, bearer, credentials
+       - Connection string with embedded credentials (user:pass@host, password=, pwd=)
+       - Private key / certificate block (BEGIN PRIVATE KEY, BEGIN RSA PRIVATE KEY, etc.)
+       - HTTP header assignment with Authorization or X-API-Key as the header name
+  3. The value itself looks like a real secret:
+       - Length >= 8 characters
+       - Not a well-known placeholder (see exclusion list below)
+
+Confidence levels:
+  CRITICAL — clear credential: private key block, known token format (AWS AKIA*, GitHub ghp_*, etc.)
+  HIGH     — strong context: sensitive variable name + non-trivial literal value
+
+NEVER flag:
+  - Placeholder values: ${...}, {{...}}, <...>, %VAR%, changeme, replace_me, YOUR_*, *_HERE, TODO
+  - Obvious test/example values: "test", "dummy", "sample", "fake", "example", "demo", "mock",
+    "password", "secret", "12345678", "qwerty", "admin", "user", "pass"
+  - Dynamic references: System.getenv(...), process.env.*, getProperty(...), @Value("${...}")
+  - Method calls as values: anything containing () on the right-hand side of the assignment
+  - UUIDs and hex digests: standard 8-4-4-4-12 UUIDs, 40-char SHA-1, 64-char SHA-256
+  - URLs without credentials: http/https/ftp links with no embedded user:password
+  - File paths, version strings, class names, log messages
+  - SQL queries and regex patterns
+  - Lines that are comments (// ... or # ... or /* ... */)
+  - Import / include / require / package statements
+  - Strings shorter than 8 characters
+
+If nothing meets the above criteria, return exactly: []
+Output valid JSON only — no explanation, no markdown fences, no trailing text.
+""");
         return sb.toString();
     }
 
@@ -145,15 +139,14 @@ public class LlmSecretDetector implements Detector {
                 int    lineNo       = toInt(item.get("lineNo"), 0);
                 String type         = str(item.get("type"),        "SECRET");
                 String confStr      = str(item.get("confidence"),  "MEDIUM");
-                if (!"CRITICAL".equals(type)) {
-                    continue;
-                }
                 String description  = str(item.get("description"), "Potential secret");
                 String matchedValue = str(item.get("matchedValue"), "");
 
                 Confidence confidence;
                 try { confidence = Confidence.valueOf(confStr.toUpperCase()); }
                 catch (IllegalArgumentException e) { confidence = Confidence.MEDIUM; }
+
+                if (confidence != Confidence.HIGH && confidence != Confidence.CRITICAL) continue;
 
                 String lineContent = (lineNo >= 1 && lineNo <= lines.size())
                         ? lines.get(lineNo - 1) : "";
