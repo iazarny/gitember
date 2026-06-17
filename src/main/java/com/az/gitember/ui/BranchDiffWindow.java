@@ -452,7 +452,7 @@ public class BranchDiffWindow extends JFrame {
 
         String ollamaUrl  = OllamaManager.BASE_URL;
         String modelName  = Context.getSettings() != null
-                ? Context.getSettings().getLlmDetectorModel() : "llama3.2";
+                ? Context.getSettings().getLlmDetectorModel() : "qwen2.5-coder";
 
         new SwingWorker<String, Void>() {
             @Override

@@ -440,9 +440,10 @@ public final class OllamaManager {
                     try (OutputStream out = Files.newOutputStream(target)) {
                         zis.transferTo(out);
                     }
-                    if (entry.getName().endsWith("/ollama")
-                            || entry.getName().equals("ollama")
-                            || entry.getName().endsWith(".exe")) {
+                    String entryFileName = entry.getName().contains("/")
+                            ? entry.getName().substring(entry.getName().lastIndexOf('/') + 1)
+                            : entry.getName();
+                    if (!entryFileName.contains(".") || entryFileName.endsWith(".exe")) {
                         target.toFile().setExecutable(true, false);
                     }
                 }

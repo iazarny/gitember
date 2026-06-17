@@ -48,6 +48,11 @@ The changes in this revision  focus on improving the usability and functionality
 * **Interactive rebase** improvements
 * AI (experimental)
   * Commit message generation 
+  * Change default model from llama3.2 to qwen2.5-coder
+* Security fixes
+  * Verify ollama checksum after installation
+  * Integrate Java Keyring with CipherService for OS keychain integration
+  * Do not disable TLS certificate verification
 
 ### 3.2 · May 2026
 

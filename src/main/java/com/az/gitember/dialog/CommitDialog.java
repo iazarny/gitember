@@ -200,7 +200,7 @@ public class CommitDialog extends JDialog {
     private String llmModel() {
         return Context.getSettings() != null
                 ? Context.getSettings().getLlmDetectorModel()
-                : "llama3.2";
+                : "qwen2.5-coder";
     }
 
     private boolean isCommitMessageGenEnabled() {

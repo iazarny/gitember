@@ -45,7 +45,7 @@ public class Settings {
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
     private Boolean enableCommitMessageGeneration = false; //EXPERIMENTAL FEATURE
-    private String  llmDetectorModel   = "llama3.2";
+    private String  llmDetectorModel   = "qwen2.5-coder";
 
     public Boolean getEnableBranchCompareDescription() {
         return enableBranchCompareDescription;
@@ -72,7 +72,7 @@ public class Settings {
     }
 
     public String getLlmDetectorModel() {
-        return llmDetectorModel != null ? llmDetectorModel : "llama3.2";
+        return llmDetectorModel != null ? llmDetectorModel : "qwen2.5-coder";
     }
 
     public void setLlmDetectorModel(String llmDetectorModel) {
