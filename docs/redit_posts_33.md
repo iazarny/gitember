@@ -239,3 +239,35 @@ Sharing Gitember 3.3 here because the values fit: fully open-source (MIT), no te
 
 GitHub: https://github.com/iazarny/gitember
 Site: https://gitember.org
+
+---
+
+## LinkedIn
+
+🚀 Gitember 3.3 is out — and I'm looking for people to build it with.
+
+Back in 2016 I started Gitember as a weekend experiment: a free, open-source Git desktop client in Java. Nine years later it runs on Windows, macOS, and Linux, and version 3.3 just shipped.
+
+Here's what's new in this release:
+
+🔧 Interactive rebase — a cleaner UI for reorder, squash, fixup, drop, and reword.
+🌿 Worktrees — full UI support with correct per-worktree status and diff. Stay on a stable branch while you work a feature in another.
+⚔️ 3-way merge conflict resolver — BASE / OURS / THEIRS side by side, edit inline, stage with one click. No external merge tool needed.
+🤖 AI, local-first — commit message generation and branch-diff explanations run against a local Ollama model (now defaulting to qwen2.5-coder). Your code never leaves your machine unless you choose otherwise.
+🔒 Security hardening — Ollama checksum verification, OS keychain integration via Java Keyring, and TLS certificate verification always on.
+
+It also does all the everyday Git work — full-text search across history (including Office, PDF, and CAD files), Git LFS, GitHub/GitLab/Bitbucket/Gitea integration, statistics, and arbitrary file & folder comparison.
+
+The stack: Java 21, Swing + FlatLaf, JGit, Apache Lucene, and LangChain4j. MIT licensed. No telemetry, no accounts.
+
+🙋 The project is open, and I'd love help. I'm looking for:
+• Developers who enjoy Java / Swing / JGit — there's interesting work in AI features, packaging, and UI.
+• Testers willing to try it across different OSes and repositories and file issues.
+• Anyone with feedback, ideas, or bug reports.
+
+Whether you want real-world open-source experience or just to make a tool you use better — you're welcome to jump in.
+
+⭐ GitHub: https://github.com/iazarny/gitember
+🌐 Site: https://gitember.org
+
+#git #opensource #java #softwaredevelopment #developertools #devtools #swing #foss
