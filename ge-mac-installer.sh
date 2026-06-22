@@ -82,40 +82,46 @@ run jar xf ${BOOT_JAR}
 ok "Boot jar unpacked"
 
 # ─────────────────────────────────────────────
-# Step 3 — Patch and sign FlatLaf
+# Step 3 — Sign all native libraries in dependency JARs
 # ─────────────────────────────────────────────
 
-step "Signing FlatLaf native libraries"
+step "Signing native libraries in dependency JARs"
 
-FLATLAF_JAR=$(find BOOT-INF/lib -name "flatlaf*.jar")
+sign_natives_in_jar() {
+    local jar_file="$1"
+    local abs_jar jar_name tmp_dir
+    abs_jar="$(pwd)/$jar_file"
+    jar_name=$(basename "$jar_file")
 
-[ -f "$FLATLAF_JAR" ] || fail "FlatLaf jar not found"
+    # Skip jars that contain no macOS native binaries
+    if ! jar tf "$jar_file" 2>/dev/null | grep -qE '\.(dylib|jnilib|so)$'; then
+        return 0
+    fi
 
-mkdir flatlaf_tmp
-cd flatlaf_tmp
+    echo "  Signing natives in $jar_name"
+    tmp_dir=$(mktemp -d)
 
-run jar xf ../${FLATLAF_JAR}
+    (cd "$tmp_dir" && jar xf "$abs_jar")
 
-for dylib in $(find . -name "*.dylib"); do
-echo "Signing $dylib"
-run codesign \
---force \
---options runtime \
---timestamp \
---sign "$CERT" \
-"$dylib"
+    while IFS= read -r -d '' native; do
+        echo "    codesign $native"
+        codesign \
+            --force \
+            --options runtime \
+            --timestamp \
+            --sign "$CERT" \
+            "$native" || fail "codesign failed: $native"
+    done < <(find "$tmp_dir" -type f \( -name "*.dylib" -o -name "*.jnilib" -o -name "*.so" \) -print0)
+
+    (cd "$tmp_dir" && jar cf "$abs_jar" .)
+    rm -rf "$tmp_dir"
+}
+
+for jar in BOOT-INF/lib/*.jar; do
+    sign_natives_in_jar "$jar"
 done
 
-run jar cf ../flatlaf-signed.jar .
-
-cd ..
-
-rm "$FLATLAF_JAR"
-mv flatlaf-signed.jar "$FLATLAF_JAR"
-
-rm -rf flatlaf_tmp
-
-ok "FlatLaf dylibs signed"
+ok "All native libraries signed"
 
 # ─────────────────────────────────────────────
 # Step 4 — Rebuild Spring Boot jar
