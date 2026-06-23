@@ -98,8 +98,6 @@ public class App {
             setIfAbsent("sun.java2d.ddforcevram", "true");   // keep images in VRAM
             setIfAbsent("sun.java2d.translaccel", "true");   // hw-accelerate translucency
             setIfAbsent("sun.java2d.noddraw",     "false");  // keep DirectDraw active
-        } else if (os.contains("linux") || os.contains("nix") || os.contains("nux")) {
-            setIfAbsent("sun.java2d.opengl", "true");
         }
         // macOS: no property needed — the JDK uses the Metal pipeline automatically
     }
