@@ -35,6 +35,32 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 More info and documentation: https://gitember.org
 
+## Building from Source
+
+**Requirements:** Java 21, Maven 3.x
+
+```bash
+# Clone the repository
+git clone https://github.com/iazarny/gitember.git
+cd gitember
+
+# Build (skip tests)
+mvn package -DskipTests
+
+# Build and run tests
+mvn package
+
+# Run directly via Maven
+mvn exec:java
+
+# Run a single test class
+mvn test -Dtest=GitRepoServiceTest
+
+# Produce the runnable fat jar
+mvn package -DskipTests
+java -jar target/gitember-3.3-SNAPSHOT-boot.jar
+```
+
 ## Changes
 
 ### 3.3 · Jun 2026
