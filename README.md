@@ -25,12 +25,12 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 ## Downloads — Version 3.3 Jun 2026
 
-| Platform         | Link                                                                                                                             |
-|------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| Windows (x64)    | [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.msi) or from Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 |
-| macOS (M1)       | [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.dmg)                                                                        | 
-| Linux  (x64)     | [Gitember-3.3.deb](https://gitember.org/Gitember-3.3.deb)                                                                        | 
-| Fat jar. java 21 | [Gitember-3.3.jar](https://gitember.org/Gitember-3.3.jar)                                                                        | 
+| Platform         | Link                                                                                                                                                                                                       |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Windows (x64)    | MSI [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.3.zip](https://gitember.org/Gitember-3.3.zip) |
+| macOS (M1)       | [Gitember-3.3.dmg](https://gitember.org/Gitember-3.3.dmg)                                                                                                                                                  | 
+| Linux  (x64)     | [Gitember-3.3.deb](https://gitember.org/Gitember-3.3.deb)                                                                                                                                                  | 
+| Fat jar. java 21 | [Gitember-3.3.jar](https://gitember.org/Gitember-3.3.jar)                                                                                                                                                  | 
 
 
 More info and documentation: https://gitember.org
