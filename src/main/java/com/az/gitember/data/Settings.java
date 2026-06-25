@@ -1,8 +1,12 @@
 package com.az.gitember.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -37,8 +41,11 @@ public class Settings {
     @JsonDeserialize(as = TreeSet.class)
     private TreeSet<String> searchTerms = new TreeSet<>();
 
-    @JsonDeserialize(as = TreeSet.class)
-    private TreeSet<Project> projects = new TreeSet<>();
+    /** All workspaces. Always contains at least one workspace once accessed (see {@link #getActiveWorkspace()}). */
+    private List<Workspace> workspaces = new ArrayList<>();
+
+    /** Name of the currently selected workspace. */
+    private String currentWorkspace;
 
     private String theme;
     private int fontSize = 13;
@@ -79,12 +86,89 @@ public class Settings {
         this.llmDetectorModel = llmDetectorModel;
     }
 
-    public TreeSet<Project> getProjects() {
-        return projects;
+    public List<Workspace> getWorkspaces() {
+        return workspaces;
     }
 
+    public void setWorkspaces(List<Workspace> workspaces) {
+        this.workspaces = workspaces != null ? workspaces : new ArrayList<>();
+    }
+
+    public String getCurrentWorkspace() {
+        return currentWorkspace;
+    }
+
+    public void setCurrentWorkspace(String currentWorkspace) {
+        this.currentWorkspace = currentWorkspace;
+    }
+
+    /**
+     * Returns the currently selected workspace, creating a default one if none exist
+     * (e.g. on first run or for settings migrated from the pre-workspace format).
+     * Never returns {@code null}.
+     */
+    @JsonIgnore
+    public Workspace getActiveWorkspace() {
+        if (workspaces == null) {
+            workspaces = new ArrayList<>();
+        }
+        if (workspaces.isEmpty()) {
+            Workspace def = new Workspace(Workspace.DEFAULT_NAME);
+            workspaces.add(def);
+        }
+        Workspace active = null;
+        if (currentWorkspace != null) {
+            active = workspaces.stream()
+                    .filter(w -> currentWorkspace.equals(w.getName()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (active == null) {
+            active = workspaces.get(0);
+            currentWorkspace = active.getName();
+        }
+        return active;
+    }
+
+    /**
+     * Backward-compatible view of the active workspace's projects. Existing callers
+     * (UI panels, {@code Context}) continue to operate on the selected workspace.
+     */
+    @JsonIgnore
+    public TreeSet<Project> getProjects() {
+        return getActiveWorkspace().getProjects();
+    }
+
+    @JsonIgnore
     public void setProjects(TreeSet<Project> projects) {
-        this.projects = projects;
+        getActiveWorkspace().setProjects(projects);
+    }
+
+    /**
+     * Legacy migration hook: settings written before workspaces existed stored a flat
+     * {@code projects} list. When such a file is read, fold those projects into the
+     * default workspace. Deserialize-only — never written back (see {@link #getProjects()}).
+     */
+    @JsonSetter("projects")
+    public void setLegacyProjects(TreeSet<Project> legacyProjects) {
+        if (legacyProjects == null || legacyProjects.isEmpty()) {
+            return;
+        }
+        if (workspaces == null) {
+            workspaces = new ArrayList<>();
+        }
+        Workspace target = workspaces.stream()
+                .filter(w -> Workspace.DEFAULT_NAME.equals(w.getName()))
+                .findFirst()
+                .orElse(null);
+        if (target == null) {
+            target = new Workspace(Workspace.DEFAULT_NAME);
+            workspaces.add(target);
+        }
+        target.getProjects().addAll(legacyProjects);
+        if (currentWorkspace == null) {
+            currentWorkspace = target.getName();
+        }
     }
 
     public TreeSet<String> getSearchTerms() {

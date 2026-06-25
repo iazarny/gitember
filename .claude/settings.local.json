@@ -40,7 +40,8 @@
       "Bash(Select-Object FullName, PSIsContainer)",
       "Bash(Format-Table -AutoSize)",
       "Bash(jar tf *)",
-      "Bash(mvn package *)"
+      "Bash(mvn package *)",
+      "PowerShell(mvn *)"
     ]
   }
 }
