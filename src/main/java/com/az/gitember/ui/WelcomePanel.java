@@ -27,6 +27,7 @@ public class WelcomePanel extends JPanel {
     private Runnable onOpenRepo;
     private Runnable onCloneRepo;
     private Runnable onInitRepo;
+    private Runnable onInitWorkspace;
     private final JPopupMenu contextMenu;
     private final JMenuItem openMenuItem;
     private final JMenuItem removeMenuItem;
@@ -54,10 +55,14 @@ public class WelcomePanel extends JPanel {
         JButton openRepoBtn  = createWellcomeButton("Open Repository", FontAwesomeSolid.FOLDER_OPEN);
         JButton cloneRepoBtn = createWellcomeButton("Clone repository", FontAwesomeSolid.FOLDER);
         JButton initRepoBtn  = createWellcomeButton("Init repository", FontAwesomeSolid.FOLDER_PLUS);
+        JButton initWorkpaceBtn  = createWellcomeButton("Init workspace", FontAwesomeSolid.FOLDER_PLUS);
+
 
         openRepoBtn.addActionListener(e -> { if (onOpenRepo != null) onOpenRepo.run(); });
         cloneRepoBtn.addActionListener(e -> { if (onCloneRepo != null) onCloneRepo.run(); });
         initRepoBtn.addActionListener(e -> { if (onInitRepo != null) onInitRepo.run(); });
+        initWorkpaceBtn.addActionListener(e -> {
+            if (onInitWorkspace != null) onInitWorkspace.run(); });
 
         commandPanel.add(Box.createHorizontalGlue());
         commandPanel.add(openRepoBtn);
@@ -65,6 +70,8 @@ public class WelcomePanel extends JPanel {
         commandPanel.add(cloneRepoBtn);
         commandPanel.add(Box.createHorizontalStrut(20));
         commandPanel.add(initRepoBtn);
+        commandPanel.add(Box.createHorizontalStrut(20));
+        commandPanel.add(initWorkpaceBtn);
         commandPanel.add(Box.createHorizontalGlue());
 
 
@@ -72,12 +79,6 @@ public class WelcomePanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.add(header, BorderLayout.NORTH);
 
-
-        /*        JLabel subtitle = new JLabel("Recent Projects", SwingConstants.CENTER);
-        subtitle.setFont(subtitle.getFont().deriveFont(Font.PLAIN, 14f));
-        subtitle.setForeground(Color.GRAY);
-        subtitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        headerPanel.add(subtitle, BorderLayout.SOUTH);*/
 
         // Project list
         listModel = new DefaultListModel<>();
@@ -212,6 +213,11 @@ public class WelcomePanel extends JPanel {
 
     public void setOnInitRepo(Runnable handler) {
         this.onInitRepo = handler;
+    }
+
+
+    public void setOnInitWorkspace(Runnable handler) {
+        this.onInitWorkspace = handler;
     }
 
     public void setProjects(Collection<Project> projects) {

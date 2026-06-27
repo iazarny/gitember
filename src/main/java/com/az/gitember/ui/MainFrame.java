@@ -1,13 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.*;
-import com.az.gitember.dialog.CloneDialog;
-import com.az.gitember.dialog.CommitDialog;
-import com.az.gitember.dialog.InitDialog;
-import com.az.gitember.dialog.InteractiveContinueAbortDialog;
-import com.az.gitember.dialog.LfsManageDialog;
-import com.az.gitember.dialog.SettingsDialog;
-import com.az.gitember.dialog.StatDialog;
+import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
@@ -52,6 +46,8 @@ public class MainFrame extends JFrame {
     private CommitDetailPanel stashDetailPanel;
     private PullRequestPanel pullRequestPanel;
     private SubmodulePanel submodulePanel;
+
+    private boolean confirmed = false;
 
     public MainFrame() {
         Context.setMainFrame(this);
@@ -212,6 +208,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this, statusBar).execute());
         welcomePanel.setOnCloneRepo(this::showCloneDialog);
         welcomePanel.setOnInitRepo(this::showInitDialog);
+        welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
 
         // Pull
         menuBar.addPullListener(e -> new PullHandler(this, statusBar).execute());
@@ -371,6 +368,24 @@ public class MainFrame extends JFrame {
         if (dialog.isConfirmed()) {
             new CloneHandler(this, statusBar, dialog.getParameters()).execute();
         }
+    }
+
+    private void showWorkspaceDialog() {
+        WorkspaceDialog workspaceDialog =  new
+                WorkspaceDialog(this,
+                this::workSpaceOpened);
+
+        workspaceDialog.nameField.setText(
+                Context.getSettings().createNewWorkspaceName());
+
+        workspaceDialog.setVisible(true);
+        if (workspaceDialog.isConfirmed()) {
+
+        }
+    }
+
+    private void workSpaceOpened(Workspace workspace) {
+        //
     }
 
     private void showInitDialog() {

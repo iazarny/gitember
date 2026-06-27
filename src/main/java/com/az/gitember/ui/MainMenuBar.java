@@ -19,7 +19,8 @@ public class MainMenuBar extends JMenuBar {
     // File menu items
     private final JMenuItem openItem;
     private final JMenuItem cloneItem;
-    private final JMenuItem initItem;
+    private final JMenuItem initRepository;
+    private final JMenuItem initWorkspaceItem;
     private final JMenu     openRecentMenu;
     private final JMenuItem settingsItem;
     private final JMenuItem exitItem;
@@ -81,7 +82,8 @@ public class MainMenuBar extends JMenuBar {
         openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
-        initItem  = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initWorkspaceItem  = new JMenuItem("Init Workspace...",  KeyEvent.VK_W);
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
@@ -94,7 +96,9 @@ public class MainMenuBar extends JMenuBar {
 
         fileMenu.add(openItem);
         fileMenu.add(cloneItem);
-        fileMenu.add(initItem);
+        fileMenu.add(initRepository);
+        fileMenu.addSeparator();
+        fileMenu.add(initWorkspaceItem);
         fileMenu.addSeparator();
         fileMenu.add(openRecentMenu);
         fileMenu.addSeparator();
@@ -330,7 +334,7 @@ public class MainMenuBar extends JMenuBar {
 
     public void addOpenListener(ActionListener l)          { openItem.addActionListener(l); }
     public void addCloneListener(ActionListener l)         { cloneItem.addActionListener(l); }
-    public void addInitListener(ActionListener l)          { initItem.addActionListener(l); }
+    public void addInitListener(ActionListener l)          { initRepository.addActionListener(l); }
     public void addPullListener(ActionListener l)          { pullItem.addActionListener(l); }
     public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
     public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }

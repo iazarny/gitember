@@ -3,8 +3,11 @@ package com.az.gitember.data;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
@@ -39,6 +42,13 @@ public class Settings {
 
     @JsonDeserialize(as = TreeSet.class)
     private TreeSet<Project> projects = new TreeSet<>();
+
+    /**
+     * Named groups of projects/repositories. Independent of the flat {@link #projects}
+     * recent-projects list above — a project may appear in both, in several workspaces, or
+     * in none.
+     */
+    private List<Workspace> workspaces = new ArrayList<>();
 
     private String theme;
     private int fontSize = 13;
@@ -85,6 +95,17 @@ public class Settings {
 
     public void setProjects(TreeSet<Project> projects) {
         this.projects = projects;
+    }
+
+    public List<Workspace> getWorkspaces() {
+        if (workspaces == null) {
+            workspaces = new ArrayList<>();
+        }
+        return workspaces;
+    }
+
+    public void setWorkspaces(List<Workspace> workspaces) {
+        this.workspaces = workspaces != null ? workspaces : new ArrayList<>();
     }
 
     public TreeSet<String> getSearchTerms() {
@@ -137,5 +158,27 @@ public class Settings {
      */
     public Set<String> getEffectiveIgnoreCompareFiles() {
         return ignoreCompareFiles != null ? ignoreCompareFiles : DEFAULT_IGNORE_COMPARE_FILES;
+    }
+
+    /**
+     * Returns a workspace name not already in use, e.g. "New workspace",
+     * then "New workspace 2", "New workspace 3", and so on.
+     */
+    public String createNewWorkspaceName() {
+        final String base = "New workspace";
+
+        Set<String> existingNames = workspaces.stream()
+                .map(Workspace::getName)
+                .collect(Collectors.toSet());
+
+        if (!existingNames.contains(base)) {
+            return base;
+        }
+        for (int i = 1; ; i++) {
+            String candidate = base + " " + i;
+            if (!existingNames.contains(candidate)) {
+                return candidate;
+            }
+        }
     }
 }
