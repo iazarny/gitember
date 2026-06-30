@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.TreeNodeData;
 import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeRegular;
@@ -12,6 +13,8 @@ import java.awt.*;
 public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
 
     public enum NodeType {
+        WORKSPACE,
+        REPOSITORY,
         WORKING_COPY,
         HISTORY,
         LOCAL_BRANCHES,
@@ -52,6 +55,8 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
 
     private Icon getIconForType(NodeType type) {
         return switch (type) {
+            case WORKSPACE      -> Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 14);
+            case REPOSITORY     -> Util.themeAwareIcon(FontAwesomeSolid.DATABASE,    14);
             case WORKING_COPY   -> Util.themeAwareIcon(FontAwesomeSolid.EDIT,        14);
             case HISTORY        -> Util.themeAwareIcon(FontAwesomeSolid.HISTORY,     14);
             case LOCAL_BRANCHES -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
@@ -73,14 +78,4 @@ public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
         };
     }
 
-    public record TreeNodeData(String displayName, NodeType type, Object data) {
-        public TreeNodeData(String displayName, NodeType type) {
-            this(displayName, type, null);
-        }
-
-        @Override
-        public String toString() {
-            return displayName;
-        }
-    }
 }

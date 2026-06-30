@@ -5,7 +5,6 @@ import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
 import org.eclipse.jgit.lib.RepositoryState;
 import com.az.gitember.ui.misc.MainToolBar;
 
@@ -46,6 +45,9 @@ public class MainFrame extends JFrame {
     private CommitDetailPanel stashDetailPanel;
     private PullRequestPanel pullRequestPanel;
     private SubmodulePanel submodulePanel;
+
+    // Workspace dashboard (shown when the workspace root node is selected)
+    private final WorkspaceDashboardPanel workspaceDashboardPanel = new WorkspaceDashboardPanel();
 
     private boolean confirmed = false;
 
@@ -385,7 +387,19 @@ public class MainFrame extends JFrame {
     }
 
     private void workSpaceOpened(Workspace workspace) {
-        //
+        if (workspace == null) return;
+
+        Context.setWorkspace(workspace);
+        treePanel.rebuild();                       // build workspace tree (selects workspace node)
+        workspaceDashboardPanel.setWorkspace(workspace);
+        contentPanel.setContent(workspaceDashboardPanel);
+
+        // No single repository is open yet — keep repo-only toolbar/menu actions disabled.
+        setRepoActionsEnabled(false);
+        toolBar.setVisible(false);
+        mainCardLayout.show(mainCardPanel, CARD_REPO);
+        setTitle("Gitember - " + workspace.getName());
+        statusBar.setStatus("Workspace opened: " + workspace.getName());
     }
 
     private void showInitDialog() {
@@ -653,6 +667,17 @@ public class MainFrame extends JFrame {
 
         Object userObject = node.getUserObject();
         if (userObject instanceof TreeNodeData data) {
+            // Workspace mode: only the workspace node has an action (the dashboard).
+            // Per-project repository navigation is wired in a later step.
+            if (Context.isWorkspaceMode()) {
+                if (data.type() == MainTreeCellRenderer.NodeType.WORKSPACE
+                        && data.data() instanceof Workspace ws) {
+                    workspaceDashboardPanel.setWorkspace(ws);
+                    contentPanel.setContent(workspaceDashboardPanel);
+                }
+                return;
+            }
+
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
             boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;

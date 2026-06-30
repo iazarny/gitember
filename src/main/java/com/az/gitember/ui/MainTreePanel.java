@@ -1,14 +1,9 @@
 package com.az.gitember.ui;
 
-import com.az.gitember.data.PullRequest;
-import com.az.gitember.data.ScmBranch;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.ScmRevisionInformation;
-import com.az.gitember.data.Submodule;
-import com.az.gitember.data.WorktreeInfo;
+import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
-import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import javax.swing.*;
@@ -31,6 +26,7 @@ public class MainTreePanel extends JPanel {
     private final DefaultTreeModel treeModel;
     private final DefaultMutableTreeNode rootNode;
 
+    private DefaultMutableTreeNode workspaceNode;
     private DefaultMutableTreeNode workingCopyNode;
     private DefaultMutableTreeNode historyNode;
     private DefaultMutableTreeNode localBranchesNode;
@@ -134,6 +130,7 @@ public class MainTreePanel extends JPanel {
         Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   this::onStatusListChanged);
     }
+
     private void updateStateLabel() {
         if (Context.getGitRepoService() == null) {
             statusLabel.setText("");
@@ -240,30 +237,158 @@ public class MainTreePanel extends JPanel {
         };
     }
 
+    /**
+     * (Re)builds the tree from scratch, choosing the layout based on whether a workspace is
+     * currently open. Safe to call whenever {@link Context#getWorkspace()} changes.
+     */
+    public void rebuild() {
+        SwingUtilities.invokeLater(this::buildInitialTree);
+    }
+
     private void buildInitialTree() {
         rootNode.removeAllChildren();
         pullRequestsNode = null;
         submodulesNode   = null;
         worktreesNode    = null;
 
-        workingCopyNode = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
-        historyNode = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY));
-        localBranchesNode = new DefaultMutableTreeNode(new TreeNodeData("Local Branches", NodeType.LOCAL_BRANCHES));
-        remoteBranchesNode = new DefaultMutableTreeNode(new TreeNodeData("Remote Branches", NodeType.REMOTE_BRANCHES));
-        tagsNode = new DefaultMutableTreeNode(new TreeNodeData("Tags", NodeType.TAGS));
-        stashesNode = new DefaultMutableTreeNode(new TreeNodeData("Stashes", NodeType.STASHES));
-
-        rootNode.add(workingCopyNode);
-        rootNode.add(historyNode);
-        rootNode.add(localBranchesNode);
-        rootNode.add(remoteBranchesNode);
-        rootNode.add(tagsNode);
-        rootNode.add(stashesNode);
+        Workspace workspace = Context.getWorkspace();
+        if (workspace != null) {
+            buildWorkspaceTree(workspace);
+        } else {
+            workspaceNode = null;
+            assignSharedCategoryNodes(addRepositoryCategories(rootNode, null));
+        }
 
         treeModel.reload();
+
+        if (workspace != null && workspaceNode != null) {
+            TreePath workspacePath = new TreePath(new Object[]{rootNode, workspaceNode});
+            tree.expandPath(workspacePath);
+            tree.setSelectionPath(workspacePath);
+        }
+    }
+
+    /**
+     * Workspace layout: the workspace is the single top-level node; each project/repository
+     * is an expandable child whose own children are the standard repository categories
+     * (Working Copy, History, branches, …), populated asynchronously from that repo.
+     */
+    private void buildWorkspaceTree(Workspace workspace) {
+        workspaceNode = new DefaultMutableTreeNode(
+                new TreeNodeData(workspace.getName(), NodeType.WORKSPACE, workspace));
+        rootNode.add(workspaceNode);
+
+        for (Project project : workspace.getProjects()) {
+            DefaultMutableTreeNode projectNode = new DefaultMutableTreeNode(
+                    new TreeNodeData(projectLabel(project), NodeType.REPOSITORY, project));
+            RepoCategoryNodes nodes = addRepositoryCategories(projectNode, project);
+            workspaceNode.add(projectNode);
+            loadProjectData(project, nodes);
+        }
+    }
+
+    private static String projectLabel(Project project) {
+        String folder = project.getProjectHomeFolder();
+        if (folder == null || folder.isBlank()) {
+            return "(unknown)";
+        }
+        String name = new java.io.File(folder).getName();
+        return name.isEmpty() ? folder : name;
+    }
+
+    /**
+     * Creates the standard per-repository category nodes under {@code parent} and returns
+     * references to them so the caller can populate them (per project in workspace mode, or
+     * via the shared node fields in single-repository mode).
+     */
+    private RepoCategoryNodes addRepositoryCategories(DefaultMutableTreeNode parent, Project project) {
+        DefaultMutableTreeNode workingCopy = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY, project));
+        DefaultMutableTreeNode history = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY, project));
+        DefaultMutableTreeNode localBranches = new DefaultMutableTreeNode(new TreeNodeData("Local Branches", NodeType.LOCAL_BRANCHES, project));
+        DefaultMutableTreeNode remoteBranches = new DefaultMutableTreeNode(new TreeNodeData("Remote Branches", NodeType.REMOTE_BRANCHES, project));
+        DefaultMutableTreeNode tags = new DefaultMutableTreeNode(new TreeNodeData("Tags", NodeType.TAGS, project));
+        DefaultMutableTreeNode stashes = new DefaultMutableTreeNode(new TreeNodeData("Stashes", NodeType.STASHES, project));
+
+        parent.add(workingCopy);
+        parent.add(history);
+        parent.add(localBranches);
+        parent.add(remoteBranches);
+        parent.add(tags);
+        parent.add(stashes);
+
+        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes);
+    }
+
+    private void assignSharedCategoryNodes(RepoCategoryNodes nodes) {
+        workingCopyNode    = nodes.workingCopy();
+        historyNode        = nodes.history();
+        localBranchesNode  = nodes.localBranches();
+        remoteBranchesNode = nodes.remoteBranches();
+        tagsNode           = nodes.tags();
+        stashesNode        = nodes.stashes();
+    }
+
+    /**
+     * Loads a workspace project's branches/tags/stashes off the EDT (using a throwaway
+     * {@link GitRepoService} for that repo) and fills the project's subtree on completion.
+     */
+    private void loadProjectData(Project project, RepoCategoryNodes nodes) {
+        String home = project.getProjectHomeFolder();
+        if (home == null || home.isBlank()) {
+            return;
+        }
+        String gitFolder = home + java.io.File.separator + Const.GIT_FOLDER;
+
+        new SwingWorker<RepoData, Void>() {
+            @Override
+            protected RepoData doInBackground() throws Exception {
+                GitRepoService svc = new GitRepoService(gitFolder);
+                try {
+                    return new RepoData(
+                            svc.getBranches(),
+                            svc.getRemoteBranches(),
+                            svc.getTags(),
+                            svc.getStashList());
+                } finally {
+                    svc.shutdown();
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    RepoData data = get();
+                    populateBranches(nodes.localBranches(),  data.localBranches(),  NodeType.BRANCH);
+                    populateBranches(nodes.remoteBranches(), data.remoteBranches(), NodeType.BRANCH);
+                    populateBranches(nodes.tags(),           data.tags(),           NodeType.TAG);
+                    populateStashes(nodes.stashes(),         data.stashes());
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Cannot load workspace project data: " + home, ex);
+                }
+            }
+        }.execute();
+    }
+
+    /** References to one repository's category nodes, so each can be populated independently. */
+    private record RepoCategoryNodes(
+            DefaultMutableTreeNode workingCopy,
+            DefaultMutableTreeNode history,
+            DefaultMutableTreeNode localBranches,
+            DefaultMutableTreeNode remoteBranches,
+            DefaultMutableTreeNode tags,
+            DefaultMutableTreeNode stashes) {
+    }
+
+    /** Data read from a single repository for its workspace subtree. */
+    private record RepoData(
+            List<ScmBranch> localBranches,
+            List<ScmBranch> remoteBranches,
+            List<ScmBranch> tags,
+            List<ScmRevisionInformation> stashes) {
     }
 
     public void refreshTree() {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {
             populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
             populateBranches(remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
@@ -355,6 +480,7 @@ public class MainTreePanel extends JPanel {
 
     // Property change handlers
     private void onBranchesChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {
             populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
             populateBranches(remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
@@ -363,18 +489,26 @@ public class MainTreePanel extends JPanel {
     }
 
     private void onTagsChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {
             populateBranches(tagsNode, Context.getTags(), NodeType.TAG);
         });
     }
 
     private void onStashChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {
             populateStashes(stashesNode, Context.getStash());
         });
     }
 
     private void onRepoChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) {
+            // The repository categories belong to per-project subtrees in workspace mode;
+            // populating the shared node fields here is handled in a later step.
+            SwingUtilities.invokeLater(this::updateStateLabel);
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             refreshTree();
             updateStateLabel();
@@ -388,6 +522,7 @@ public class MainTreePanel extends JPanel {
      * Called on repo change and after the Worktrees dialog closes.
      */
     public void refreshWorktrees() {
+        if (Context.isWorkspaceMode()) return;
         if (Context.getGitRepoService() == null) return;
         new SwingWorker<List<WorktreeInfo>, Void>() {
             @Override protected List<WorktreeInfo> doInBackground() throws Exception {
@@ -464,10 +599,12 @@ public class MainTreePanel extends JPanel {
     }
 
     private void onPullRequestsChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> updatePullRequestsNode(Context.getPullRequests()));
     }
 
     private void onSubmodulesChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> updateSubmodulesNode(Context.getSubmodules()));
     }
 
@@ -501,6 +638,7 @@ public class MainTreePanel extends JPanel {
     }
 
     private void onStatusListChanged(PropertyChangeEvent evt) {
+        if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {
             updateWorkingCopyLabel();
             updateStateLabel();

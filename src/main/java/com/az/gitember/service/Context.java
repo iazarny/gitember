@@ -22,6 +22,7 @@ public class Context {
 
     private final static String OS = System.getProperty("os.name").toLowerCase();
 
+    private static Workspace workspace = null;
     private static GitRepoService gitRepoService = new GitRepoService();
     private final static SettingService settingService = new SettingService();
 
@@ -85,6 +86,7 @@ public class Context {
     private static String repositoryPath;
     private static ScmBranch workingBranch;
     private static Settings settings;
+
     private static ScmRevisionInformation scmRevCommitDetails;
     private static boolean lastChanges;
     private static boolean lfsRepo;
@@ -176,6 +178,19 @@ public class Context {
         Settings old = settings;
         settings = value;
         pcs.firePropertyChange(PROP_SETTINGS, old, value);
+    }
+
+    public static Workspace getWorkspace() {
+        return workspace;
+    }
+
+    public static void setWorkspace(Workspace workspace) {
+        Context.workspace = workspace;
+    }
+
+    /** True when the tree should represent a workspace (a set of repositories). */
+    public static boolean isWorkspaceMode() {
+        return Context.getWorkspace() != null;
     }
 
     public static ScmRevisionInformation getScmRevCommitDetails() {
@@ -340,9 +355,7 @@ public class Context {
         projectWatcherThread.start();
     }
 
-    public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
-        String gitFolder = remoteRepoParameters.getDestinationFolder();
-
+    public static void init(String gitFolder) throws Exception {
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
             gitFolder += File.separator + Const.GIT_FOLDER;
         }
@@ -374,12 +387,6 @@ public class Context {
         initProjectWatcher(gitFolder);
         updatePullRequests();
         updateSubmodules();
-    }
-
-    public static void init(String gitFolder) throws Exception {
-        RemoteRepoParameters params = new RemoteRepoParameters();
-        params.setDestinationFolder(gitFolder);
-        init(params);
     }
 
     public static void saveSettings() {
