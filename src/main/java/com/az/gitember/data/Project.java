@@ -37,6 +37,7 @@ public class Project implements Serializable, Comparable<Project>  {
     private String committerName;
     private String committerEmail;
     private boolean indexed;
+    private boolean showAllPullRequests = false; // when true, merged/closed PRs are listed too
 
 
     public Project() {
@@ -53,6 +54,14 @@ public class Project implements Serializable, Comparable<Project>  {
 
     public void setIndexed(boolean indexed) {
         this.indexed = indexed;
+    }
+
+    public boolean isShowAllPullRequests() {
+        return showAllPullRequests;
+    }
+
+    public void setShowAllPullRequests(boolean showAllPullRequests) {
+        this.showAllPullRequests = showAllPullRequests;
     }
 
     public String getUserCommitName() {

@@ -625,8 +625,9 @@ public class MainTreePanel extends JPanel {
 
         pullRequestsNode.removeAllChildren();
         for (PullRequest pr : prs) {
+            String label = pr.isOpen() ? pr.toString() : pr.toString() + "  [" + pr.state() + "]";
             pullRequestsNode.add(new DefaultMutableTreeNode(
-                    new TreeNodeData(pr.toString(), NodeType.PULL_REQUEST, pr)));
+                    new TreeNodeData(label, NodeType.PULL_REQUEST, pr)));
         }
 
         if (isNew) {
