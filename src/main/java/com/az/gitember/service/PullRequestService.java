@@ -36,20 +36,34 @@ public class PullRequestService {
      * @param accessToken project-level token (may be null; env fallback is tried)
      */
     public static List<PullRequest> fetch(String remoteUrl, String accessToken) {
+        return fetch(remoteUrl, accessToken, false);
+    }
+
+    /**
+     * Fetches PRs for the repository identified by {@code remoteUrl}.
+     *
+     * @param remoteUrl     git remote URL (HTTPS, SSH, git://)
+     * @param accessToken   project-level token (may be null; env fallback is tried)
+     * @param includeClosed when true, merged/closed (declined) PRs are listed too;
+     *                      when false, only open PRs are returned
+     */
+    public static List<PullRequest> fetch(String remoteUrl, String accessToken, boolean includeClosed) {
         if (remoteUrl == null || remoteUrl.isBlank()) return Collections.emptyList();
 
         Host host = detectHost(remoteUrl);
         if (host == Host.UNKNOWN) return Collections.emptyList();
 
-        String token = resolveToken(accessToken, host);
+        // Use the same auth as the project remote URL: prefer credentials embedded in
+        // the URL; for SSH URLs there is no usable HTTP credential, so try without auth.
+        String token = resolveToken(remoteUrl, accessToken, host);
 
         try {
             return switch (host) {
-                case GITHUB       -> fetchGitHub(remoteUrl, token);
-                case GITLAB       -> fetchGitLab(remoteUrl, token);
-                case BITBUCKET    -> fetchBitbucket(remoteUrl, token);
-                case GITEA        -> fetchGitea(remoteUrl, token);
-                case AZURE_DEVOPS -> fetchAzureDevOps(remoteUrl, token);
+                case GITHUB       -> fetchGitHub(remoteUrl, token, includeClosed);
+                case GITLAB       -> fetchGitLab(remoteUrl, token, includeClosed);
+                case BITBUCKET    -> fetchBitbucket(remoteUrl, token, includeClosed);
+                case GITEA        -> fetchGitea(remoteUrl, token, includeClosed);
+                case AZURE_DEVOPS -> fetchAzureDevOps(remoteUrl, token, includeClosed);
                 default           -> Collections.emptyList();
             };
         } catch (Exception e) {
@@ -71,8 +85,21 @@ public class PullRequestService {
         return Host.UNKNOWN;
     }
 
-    /** Project token first; fall back to well-known environment variable. */
-    private static String resolveToken(String projectToken, Host host) {
+    /**
+     * Resolves the API auth token, using the same auth as the project remote URL.
+     * <ol>
+     *   <li>Credentials embedded in an HTTPS remote URL ({@code https://token@host/…}
+     *       or {@code https://user:token@host/…}) — same auth git uses for the remote.</li>
+     *   <li>Project-level token, then the well-known environment variable, for HTTPS
+     *       remotes without embedded credentials.</li>
+     * </ol>
+     * For SSH/SCP remotes there is no usable HTTP credential, so {@code null} is
+     * returned and the request is attempted without auth.
+     */
+    private static String resolveToken(String remoteUrl, String projectToken, Host host) {
+        String urlToken = extractToken(remoteUrl);
+        if (urlToken != null) return urlToken;
+        if (isSshUrl(remoteUrl)) return null; // ssh remote → try without auth
         if (projectToken != null && !projectToken.isBlank()) return projectToken;
         return switch (host) {
             case GITHUB       -> System.getenv("GITHUB_TOKEN");
@@ -82,6 +109,46 @@ public class PullRequestService {
             case AZURE_DEVOPS -> System.getenv("AZURE_DEVOPS_TOKEN");
             default           -> null;
         };
+    }
+
+    /** True for SSH remotes: {@code ssh://…} scheme or SCP form {@code git@host:path}. */
+    private static boolean isSshUrl(String url) {
+        if (url == null) return false;
+        String u = url.trim();
+        if (u.startsWith("ssh://")) return true;
+        // SCP style has no scheme but has a "user@host:" prefix
+        return !u.contains("://") && u.contains("@") && u.contains(":");
+    }
+
+    /**
+     * Extracts an API token from credentials embedded in an HTTP(S) remote URL.
+     * Returns null for SSH/SCP URLs or when no credentials are present.
+     *
+     * Examples:
+     *   https://ghp_xxx@github.com/o/r.git           → "ghp_xxx"
+     *   https://user:ghp_xxx@github.com/o/r.git       → "ghp_xxx"
+     *   https://ghp_xxx:x-oauth-basic@github.com/o/r  → "ghp_xxx"
+     *   git@github.com:o/r.git                        → null (ssh)
+     */
+    private static String extractToken(String remoteUrl) {
+        if (remoteUrl == null) return null;
+        String u = remoteUrl.trim();
+        int scheme = u.indexOf("://");
+        if (scheme < 0) return null; // SCP form — ssh, no HTTP credential
+        String proto = u.substring(0, scheme).toLowerCase();
+        if (!proto.equals("https") && !proto.equals("http")) return null; // ssh:// etc.
+        String rest = u.substring(scheme + 3);
+        int at = rest.indexOf('@');
+        if (at < 0) return null; // no embedded credentials
+        String userInfo = rest.substring(0, at);
+        if (userInfo.isBlank()) return null;
+        int colon = userInfo.indexOf(':');
+        if (colon < 0) return userInfo; // bare token as username
+        String first  = userInfo.substring(0, colon);
+        String second = userInfo.substring(colon + 1);
+        // GitHub PAT forms: "user:token", "x-access-token:token", "token:x-oauth-basic"
+        if ("x-oauth-basic".equalsIgnoreCase(second)) return first;
+        return second.isBlank() ? first : second;
     }
 
     // ---- URL parsing ----
@@ -165,12 +232,13 @@ public class PullRequestService {
 
     // ---- GitHub ----
 
-    private static List<PullRequest> fetchGitHub(String remoteUrl, String token) throws Exception {
+    private static List<PullRequest> fetchGitHub(String remoteUrl, String token, boolean includeClosed)
+            throws Exception {
         String[] parts = parsePathSegments(remoteUrl, "github.com");
         if (parts == null) return Collections.emptyList();
 
         String apiUrl = "https://api.github.com/repos/" + parts[0] + "/" + parts[1]
-                + "/pulls?state=open&per_page=100";
+                + "/pulls?state=" + (includeClosed ? "all" : "open") + "&per_page=100";
 
         HttpRequest.Builder req = HttpRequest.newBuilder()
                 .header("Accept", "application/vnd.github+json")
@@ -181,6 +249,12 @@ public class PullRequestService {
 
         List<PullRequest> result = new ArrayList<>();
         for (JsonNode pr : MAPPER.readTree(body)) {
+            // GitHub reports merged PRs as state "closed"; surface "merged" when merged_at is set
+            String state = pr.path("state").asText("open");
+            if ("closed".equals(state) && !pr.path("merged_at").isNull()
+                    && !pr.path("merged_at").asText("").isBlank()) {
+                state = "merged";
+            }
             result.add(new PullRequest(
                     pr.get("number").asInt(),
                     pr.get("title").asText(""),
@@ -188,21 +262,22 @@ public class PullRequestService {
                     pr.path("head").path("ref").asText(""),
                     pr.path("base").path("ref").asText(""),
                     pr.path("html_url").asText(""),
-                    pr.path("state").asText("open")));
+                    state));
         }
         return result;
     }
 
     // ---- GitLab ----
 
-    private static List<PullRequest> fetchGitLab(String remoteUrl, String token) throws Exception {
+    private static List<PullRequest> fetchGitLab(String remoteUrl, String token, boolean includeClosed)
+            throws Exception {
         String[] parts = parsePathSegments(remoteUrl, "gitlab.com");
         if (parts == null) return Collections.emptyList();
 
         // Join all segments with %2F for the project path (handles nested groups)
         String encodedPath = String.join("%2F", parts);
         String apiUrl = "https://gitlab.com/api/v4/projects/" + encodedPath
-                + "/merge_requests?state=opened&per_page=100";
+                + "/merge_requests?state=" + (includeClosed ? "all" : "opened") + "&per_page=100";
 
         HttpRequest.Builder req = HttpRequest.newBuilder();
         if (token != null && !token.isBlank()) req.header("PRIVATE-TOKEN", token);
@@ -225,12 +300,17 @@ public class PullRequestService {
 
     // ---- Bitbucket ----
 
-    private static List<PullRequest> fetchBitbucket(String remoteUrl, String token) throws Exception {
+    private static List<PullRequest> fetchBitbucket(String remoteUrl, String token, boolean includeClosed)
+            throws Exception {
         String[] parts = parsePathSegments(remoteUrl, "bitbucket.org");
         if (parts == null) return Collections.emptyList();
 
+        // Bitbucket accepts repeated state params; include the closed states for "all"
+        String stateQuery = includeClosed
+                ? "state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED"
+                : "state=OPEN";
         String apiUrl = "https://api.bitbucket.org/2.0/repositories/" + parts[0] + "/" + parts[1]
-                + "/pullrequests?state=OPEN&pagelen=50";
+                + "/pullrequests?" + stateQuery + "&pagelen=50";
 
         HttpRequest.Builder req = HttpRequest.newBuilder();
         if (token != null && !token.isBlank()) req.header("Authorization", "Bearer " + token);
@@ -253,7 +333,8 @@ public class PullRequestService {
 
     // ---- Gitea ----
 
-    private static List<PullRequest> fetchGitea(String remoteUrl, String token) throws Exception {
+    private static List<PullRequest> fetchGitea(String remoteUrl, String token, boolean includeClosed)
+            throws Exception {
         String host = extractHostname(remoteUrl);
         if (host == null) return Collections.emptyList();
 
@@ -261,7 +342,7 @@ public class PullRequestService {
         if (parts == null) return Collections.emptyList();
 
         String apiUrl = "https://" + host + "/api/v1/repos/" + parts[0] + "/" + parts[1]
-                + "/pulls?state=open&limit=50";
+                + "/pulls?state=" + (includeClosed ? "all" : "open") + "&limit=50";
 
         HttpRequest.Builder req = HttpRequest.newBuilder();
         // Gitea uses "token <token>", not "Bearer"
@@ -298,7 +379,7 @@ public class PullRequestService {
         if (remoteUrl == null || remoteUrl.isBlank()) return Collections.emptyList();
 
         Host host = detectHost(remoteUrl);
-        String token = resolveToken(accessToken, host);
+        String token = resolveToken(remoteUrl, accessToken, host);
 
         try {
             return switch (host) {
@@ -460,13 +541,14 @@ public class PullRequestService {
         return null;
     }
 
-    private static List<PullRequest> fetchAzureDevOps(String remoteUrl, String token)
+    private static List<PullRequest> fetchAzureDevOps(String remoteUrl, String token, boolean includeClosed)
             throws Exception {
         AzureRepo ar = parseAzureRepo(remoteUrl);
         if (ar == null) return Collections.emptyList();
 
         String apiUrl = ar.apiBase() + "/_apis/git/repositories/" + ar.repoName()
-                + "/pullrequests?searchCriteria.status=active&$top=100&api-version=7.1";
+                + "/pullrequests?searchCriteria.status=" + (includeClosed ? "all" : "active")
+                + "&$top=100&api-version=7.1";
 
         HttpRequest.Builder req = HttpRequest.newBuilder()
                 .header("Accept", "application/json");

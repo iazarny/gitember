@@ -23,9 +23,11 @@ public class ProjectSettingsDialog extends JDialog {
     private final JTextField     userField;
     private final JPasswordField pwdField;
 
+    private final JCheckBox showAllPullRequestsCheck;
+
     public ProjectSettingsDialog(Frame owner) {
         super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
-        setSize(480, 580);
+        setSize(480, 640);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -39,10 +41,14 @@ public class ProjectSettingsDialog extends JDialog {
         tokenField = new JPasswordField(25);
         userField  = new JTextField(25);
         pwdField   = new JPasswordField(25);
+        showAllPullRequestsCheck = new JCheckBox("Show all pull requests (including merged / closed)");
+        showAllPullRequestsCheck.setToolTipText(
+                "When off, only open pull/merge requests are listed; when on, merged and closed ones are shown too");
         if (project != null) {
             if (project.getAccessToken() != null) tokenField.setText(project.getAccessToken());
             if (project.getUserName()    != null) userField.setText(project.getUserName());
             if (project.getUserPwd()     != null) pwdField.setText(project.getUserPwd());
+            showAllPullRequestsCheck.setSelected(project.isShowAllPullRequests());
         }
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -86,6 +92,12 @@ public class ProjectSettingsDialog extends JDialog {
         remoteUrlField.setBackground(UIManager.getColor("TextField.inactiveBackground"));
         addRow(form, gbc, 12, "Origin:", remoteUrlField);
 
+        addSeparatorLabel(form, gbc, 13, "Pull Requests");
+        gbc.gridx = 0; gbc.gridy = 14; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        form.add(showAllPullRequestsCheck, gbc);
+        gbc.gridwidth = 1;
+
         JButton okBtn     = new JButton("OK");
         JButton cancelBtn = new JButton("Cancel");
         okBtn.addActionListener(e -> applyAndClose());
@@ -115,7 +127,12 @@ public class ProjectSettingsDialog extends JDialog {
         project.setAccessToken(new String(tokenField.getPassword()).trim());
         project.setUserName   (userField.getText().trim());
         project.setUserPwd    (new String(pwdField.getPassword()));
+        boolean prVisibilityChanged = project.isShowAllPullRequests() != showAllPullRequestsCheck.isSelected();
+        project.setShowAllPullRequests(showAllPullRequestsCheck.isSelected());
         Context.saveSettings();
+        if (prVisibilityChanged) {
+            Context.updatePullRequests();
+        }
         dispose();
     }
 

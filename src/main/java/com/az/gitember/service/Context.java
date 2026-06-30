@@ -601,7 +601,8 @@ public class Context {
             try {
                 String remoteUrl = gitRepoService.getRepositoryRemoteUrl();
                 String token = getCurrentProject().map(Project::getAccessToken).orElse(null);
-                List<PullRequest> prs = PullRequestService.fetch(remoteUrl, token);
+                boolean includeClosed = getCurrentProject().map(Project::isShowAllPullRequests).orElse(false);
+                List<PullRequest> prs = PullRequestService.fetch(remoteUrl, token, includeClosed);
                 SwingUtilities.invokeLater(() -> setPullRequests(prs));
             } catch (Exception e) {
                 log.log(Level.WARNING, "Failed to update pull requests", e);
