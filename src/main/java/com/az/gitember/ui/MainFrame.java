@@ -5,6 +5,8 @@ import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.maintree.MainTreeCellRenderer;
+import com.az.gitember.ui.maintree.MainTreePanel;
 import org.eclipse.jgit.lib.RepositoryState;
 import com.az.gitember.ui.misc.MainToolBar;
 

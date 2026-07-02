@@ -1,9 +1,11 @@
-package com.az.gitember.ui;
+package com.az.gitember.ui.maintree;
 
 import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
-import com.az.gitember.ui.MainTreeCellRenderer.NodeType;
+import com.az.gitember.ui.BranchContextMenuFactory;
+import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.maintree.MainTreeCellRenderer.NodeType;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import javax.swing.*;
@@ -13,7 +15,6 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -24,17 +25,17 @@ public class MainTreePanel extends JPanel {
 
     private static final Logger log = Logger.getLogger(MainTreePanel.class.getName());
 
-    private final JTree tree;
+    final JTree tree;
     private final DefaultTreeModel treeModel;
-    private final DefaultMutableTreeNode rootNode;
+    final DefaultMutableTreeNode rootNode;
 
     private DefaultMutableTreeNode workspaceNode;
-    private DefaultMutableTreeNode workingCopyNode;
+    DefaultMutableTreeNode workingCopyNode;
     private DefaultMutableTreeNode historyNode;
-    private DefaultMutableTreeNode localBranchesNode;
-    private DefaultMutableTreeNode remoteBranchesNode;
-    private DefaultMutableTreeNode tagsNode;
-    private DefaultMutableTreeNode stashesNode;
+    DefaultMutableTreeNode localBranchesNode;
+    DefaultMutableTreeNode remoteBranchesNode;
+    DefaultMutableTreeNode tagsNode;
+    DefaultMutableTreeNode stashesNode;
     private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
     private DefaultMutableTreeNode submodulesNode;    // null when no submodules
     private DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
@@ -112,17 +113,23 @@ public class MainTreePanel extends JPanel {
         add(statusLabel, BorderLayout.SOUTH);
 
         // Listen for Context changes
-        Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, this::onBranchesChanged);
-        Context.addPropertyChangeListener(Context.PROP_REMOTE_BRANCHES, this::onBranchesChanged);
-        Context.addPropertyChangeListener(Context.PROP_TAGS, this::onTagsChanged);
-        Context.addPropertyChangeListener(Context.PROP_STASH, this::onStashChanged);
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoChanged);
-        Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, this::onPullRequestsChanged);
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    this::onSubmodulesChanged);
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   this::onStatusListChanged);
+        MainTreePanelOnBranchChanged onBranchesChanged = new MainTreePanelOnBranchChanged(this);
+        Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, onBranchesChanged);
+        Context.addPropertyChangeListener(Context.PROP_REMOTE_BRANCHES, onBranchesChanged);
+
+        Context.addPropertyChangeListener(Context.PROP_TAGS, new MainTreePanelOnTagsChanged(this));
+
+        Context.addPropertyChangeListener(Context.PROP_STASH, new MainTreePanelOnStashChanged(this));
+
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainTreePanelOnRepoChanged(this));
+
+        Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, new MainTreePanelOnPullRequestsChanged(this));
+
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    new MainTreePanelOnSubmodulesChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   new MainTreePanelOnStatusListChanged(this));
     }
 
-    private void updateStateLabel() {
+    void updateStateLabel() {
         if (Context.getGitRepoService() == null) {
             statusLabel.setText("");
             statusLabel.setVisible(false);
@@ -397,7 +404,7 @@ public class MainTreePanel extends JPanel {
         });
     }
 
-    private void populateBranches(DefaultMutableTreeNode parent, List<ScmBranch> branches, NodeType type) {
+    void populateBranches(DefaultMutableTreeNode parent, List<ScmBranch> branches, NodeType type) {
         parent.removeAllChildren();
         if (branches != null) {
             for (ScmBranch branch : branches) {
@@ -449,7 +456,7 @@ public class MainTreePanel extends JPanel {
         return folder;
     }
 
-    private void populateStashes(DefaultMutableTreeNode parent, List<ScmRevisionInformation> stashes) {
+    void populateStashes(DefaultMutableTreeNode parent, List<ScmRevisionInformation> stashes) {
         parent.removeAllChildren();
         if (stashes != null) {
             for (ScmRevisionInformation stash : stashes) {
@@ -477,44 +484,6 @@ public class MainTreePanel extends JPanel {
     }
 
     // Property change handlers
-    private void onBranchesChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> {
-            populateBranches(localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
-            populateBranches(remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
-            updateStateLabel();
-        });
-    }
-
-    private void onTagsChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> {
-            populateBranches(tagsNode, Context.getTags(), NodeType.TAG);
-        });
-    }
-
-    private void onStashChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> {
-            populateStashes(stashesNode, Context.getStash());
-        });
-    }
-
-    private void onRepoChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) {
-            // The repository categories belong to per-project subtrees in workspace mode;
-            // populating the shared node fields here is handled in a later step.
-            SwingUtilities.invokeLater(this::updateStateLabel);
-            return;
-        }
-        SwingUtilities.invokeLater(() -> {
-            refreshTree();
-            updateStateLabel();
-            tree.setSelectionPath(new TreePath(new Object[]{rootNode, workingCopyNode}));
-        });
-        refreshWorktrees();
-    }
-
     /**
      * Reloads linked worktrees in the background and updates the Worktrees section.
      * Called on repo change and after the Worktrees dialog closes.
@@ -596,17 +565,7 @@ public class MainTreePanel extends JPanel {
         tree.expandPath(new TreePath(new Object[]{rootNode, worktreesNode}));
     }
 
-    private void onPullRequestsChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> updatePullRequestsNode(Context.getPullRequests()));
-    }
-
-    private void onSubmodulesChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> updateSubmodulesNode(Context.getSubmodules()));
-    }
-
-    private void updatePullRequestsNode(List<PullRequest> prs) {
+    void updatePullRequestsNode(List<PullRequest> prs) {
         if (prs == null || prs.isEmpty()) {
             if (pullRequestsNode != null) {
                 treeModel.removeNodeFromParent(pullRequestsNode);
@@ -636,15 +595,7 @@ public class MainTreePanel extends JPanel {
         //tree.expandPath(new TreePath(new Object[]{rootNode, pullRequestsNode}));
     }
 
-    private void onStatusListChanged(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> {
-            updateWorkingCopyLabel();
-            updateStateLabel();
-        });
-    }
-
-    private void updateWorkingCopyLabel() {
+    void updateWorkingCopyLabel() {
         List<ScmItem> items = Context.getStatusList();
         if (items == null || items.isEmpty()) {
             workingCopyNode.setUserObject(
@@ -703,7 +654,7 @@ public class MainTreePanel extends JPanel {
         treeModel.nodeChanged(workingCopyNode);
     }
 
-    private void updateSubmodulesNode(List<Submodule> subs) {
+    void updateSubmodulesNode(List<Submodule> subs) {
         if (subs == null || subs.isEmpty()) {
             if (submodulesNode != null) {
                 treeModel.removeNodeFromParent(submodulesNode);

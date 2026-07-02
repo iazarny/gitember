@@ -1,4 +1,4 @@
-package com.az.gitember.ui;
+package com.az.gitember.ui.maintree;
 
 import com.az.gitember.data.TreeNodeData;
 import com.az.gitember.ui.misc.Util;
