@@ -94,6 +94,9 @@ public class Context {
     private static String selectedTreeName;
     private static String branchFilter = "";
 
+    private static String lastTreeName;
+    private static boolean lastAllHistory;
+
     private static final List<ScmBranch> remoteBranchesRaw = new ArrayList<>();
     private static final List<ScmBranch> localBranchesRaw = new ArrayList<>();
     private static final List<ScmBranch> tagsRaw = new ArrayList<>();
@@ -152,6 +155,17 @@ public class Context {
     // Getters and setters with property change firing
     public static String getRepositoryPath() {
         return repositoryPath;
+    }
+
+    public static String getProjectFolder() {
+        return (repositoryPath != null ? repositoryPath : "").replace(Const.GIT_FOLDER, "");
+    }
+
+    public static Optional<Project> getCurrentProject() {
+        String folder = getProjectFolder().replaceAll("[/\\\\]+$", "");
+        return settings.getProjects().stream()
+                .filter(p -> p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "").equalsIgnoreCase(folder))
+                .findFirst();
     }
 
     public static void setRepositoryPath(String value) {
@@ -396,15 +410,9 @@ public class Context {
         settingService.write(settings);
     }
 
-    public static Optional<Project> getCurrentProject() {
-        String folder = getProjectFolder().replaceAll("[/\\\\]+$", "");
-        return settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "").equalsIgnoreCase(folder))
-                .findFirst();
-    }
 
-    private static String lastTreeName;
-    private static boolean lastAllHistory;
+
+
 
     public static void updatePlotCommitList(final ProgressMonitor progressMonitor) {
         updatePlotCommitList(lastTreeName, lastAllHistory, progressMonitor);
@@ -633,9 +641,7 @@ public class Context {
         return settingService;
     }
 
-    public static String getProjectFolder() {
-        return (repositoryPath != null ? repositoryPath : "").replace(Const.GIT_FOLDER, "");
-    }
+
 
     public static boolean isWindows() {
         return (OS.contains("win"));

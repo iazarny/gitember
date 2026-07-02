@@ -2,6 +2,7 @@ package com.az.gitember.handler;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,7 +26,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
         chooser.setDialogTitle("Select Git Repository");
 
         // Start from last known location
-        if (Context.getRepositoryPath() != null) {
+        if (StringUtils.isEmpty(Context.getRepositoryPath())) {
             chooser.setCurrentDirectory(new File(Context.getProjectFolder()));
         }
 

@@ -15,6 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +49,7 @@ public class MainTreePanel extends JPanel {
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(250, 0));
 
-        rootNode = new DefaultMutableTreeNode(new TreeNodeData("Repository", NodeType.ROOT));
+        rootNode = new DefaultMutableTreeNode(new TreeNodeData("Repository", NodeType.ROOT, null));
         treeModel = new DefaultTreeModel(rootNode);
         tree = new JTree(treeModel);
         tree.setCellRenderer(new MainTreeCellRenderer());
@@ -57,15 +59,8 @@ public class MainTreePanel extends JPanel {
         // Make tree transparent
         tree.setOpaque(false);
         tree.setBorder(
-                BorderFactory.createMatteBorder(
-                        0, // top
-                        0, // left
-                        0, // right
-                        0, // bottom
-                        Color.GREEN
-                )
+                BorderFactory.createMatteBorder(0,0,0, 0,Color.GREEN)
         );
-        //tree.setBorder(BorderFactory.createLineBorder(Color.RED, 4));
 
         buildInitialTree();
 
@@ -97,11 +92,7 @@ public class MainTreePanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setBorder(                BorderFactory.createMatteBorder(
-                1, // top
-                0, // left
-                0, // bottom
-                1, // right
-                panelBorder
+                1, 0, 0, 1,  panelBorder
         ));
         scrollPane.setViewportBorder(null);
         scrollPane.getViewport().setOpaque(false);
@@ -256,7 +247,7 @@ public class MainTreePanel extends JPanel {
             buildWorkspaceTree(workspace);
         } else {
             workspaceNode = null;
-            assignSharedCategoryNodes(addRepositoryCategories(rootNode, null));
+            assignSharedCategoryNodes(addRepositoryCategories(rootNode, () -> Context.getCurrentProject()));
         }
 
         treeModel.reload();
@@ -281,7 +272,7 @@ public class MainTreePanel extends JPanel {
         for (Project project : workspace.getProjects()) {
             DefaultMutableTreeNode projectNode = new DefaultMutableTreeNode(
                     new TreeNodeData(projectLabel(project), NodeType.REPOSITORY, project));
-            RepoCategoryNodes nodes = addRepositoryCategories(projectNode, project);
+            RepoCategoryNodes nodes = addRepositoryCategories(projectNode, () -> Optional.of(project));
             workspaceNode.add(projectNode);
             loadProjectData(project, nodes);
         }
@@ -301,13 +292,20 @@ public class MainTreePanel extends JPanel {
      * references to them so the caller can populate them (per project in workspace mode, or
      * via the shared node fields in single-repository mode).
      */
-    private RepoCategoryNodes addRepositoryCategories(DefaultMutableTreeNode parent, Project project) {
-        DefaultMutableTreeNode workingCopy = new DefaultMutableTreeNode(new TreeNodeData("Working Copy", NodeType.WORKING_COPY, project));
-        DefaultMutableTreeNode history = new DefaultMutableTreeNode(new TreeNodeData("History", NodeType.HISTORY, project));
-        DefaultMutableTreeNode localBranches = new DefaultMutableTreeNode(new TreeNodeData("Local Branches", NodeType.LOCAL_BRANCHES, project));
-        DefaultMutableTreeNode remoteBranches = new DefaultMutableTreeNode(new TreeNodeData("Remote Branches", NodeType.REMOTE_BRANCHES, project));
-        DefaultMutableTreeNode tags = new DefaultMutableTreeNode(new TreeNodeData("Tags", NodeType.TAGS, project));
-        DefaultMutableTreeNode stashes = new DefaultMutableTreeNode(new TreeNodeData("Stashes", NodeType.STASHES, project));
+    private RepoCategoryNodes addRepositoryCategories(DefaultMutableTreeNode parent,
+                                                      Supplier<Optional<Project>> projectSupplier) {
+        DefaultMutableTreeNode workingCopy = new DefaultMutableTreeNode(
+                new TreeNodeData("Working Copy", NodeType.WORKING_COPY, projectSupplier));
+        DefaultMutableTreeNode history = new DefaultMutableTreeNode(
+                new TreeNodeData("History", NodeType.HISTORY, projectSupplier));
+        DefaultMutableTreeNode localBranches = new DefaultMutableTreeNode(
+                new TreeNodeData("Local Branches", NodeType.LOCAL_BRANCHES, projectSupplier));
+        DefaultMutableTreeNode remoteBranches = new DefaultMutableTreeNode(
+                new TreeNodeData("Remote Branches", NodeType.REMOTE_BRANCHES, projectSupplier));
+        DefaultMutableTreeNode tags = new DefaultMutableTreeNode(
+                new TreeNodeData("Tags", NodeType.TAGS, projectSupplier));
+        DefaultMutableTreeNode stashes = new DefaultMutableTreeNode(
+                new TreeNodeData("Stashes", NodeType.STASHES, projectSupplier));
 
         parent.add(workingCopy);
         parent.add(history);
@@ -446,7 +444,7 @@ public class MainTreePanel extends JPanel {
             }
         }
         DefaultMutableTreeNode folder = new DefaultMutableTreeNode(
-                new TreeNodeData(folderName, NodeType.BRANCH_FOLDER));
+                new TreeNodeData(folderName, NodeType.BRANCH_FOLDER, Context.getCurrentProject()));
         parent.add(folder);
         return folder;
     }
@@ -556,7 +554,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = (worktreesNode == null);
         if (isNew) {
             worktreesNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Worktrees", NodeType.WORKTREES));
+                    new TreeNodeData("Worktrees", NodeType.WORKTREES, Context.getCurrentProject()));
         }
 
         worktreesNode.removeAllChildren();
@@ -620,7 +618,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = pullRequestsNode == null;
         if (isNew) {
             pullRequestsNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS));
+                    new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS, Context.getCurrentProject()));
         }
 
         pullRequestsNode.removeAllChildren();
@@ -649,7 +647,9 @@ public class MainTreePanel extends JPanel {
     private void updateWorkingCopyLabel() {
         List<ScmItem> items = Context.getStatusList();
         if (items == null || items.isEmpty()) {
-            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
+            workingCopyNode.setUserObject(
+                    new TreeNodeData("Working Copy", NodeType.WORKING_COPY, Context.getCurrentProject())
+            );
             treeModel.nodeChanged(workingCopyNode);
             return;
         }
@@ -669,7 +669,7 @@ public class MainTreePanel extends JPanel {
         }
 
         if (modified == 0 && added == 0 && deleted == 0 && untracked == 0) {
-            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY));
+            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY, Context.getCurrentProject()));
             treeModel.nodeChanged(workingCopyNode);
             return;
         }
@@ -699,7 +699,7 @@ public class MainTreePanel extends JPanel {
         }
         label.append("</html>");
 
-        workingCopyNode.setUserObject(new TreeNodeData(label.toString(), NodeType.WORKING_COPY));
+        workingCopyNode.setUserObject(new TreeNodeData(label.toString(), NodeType.WORKING_COPY, Context.getCurrentProject()));
         treeModel.nodeChanged(workingCopyNode);
     }
 
@@ -715,7 +715,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = submodulesNode == null;
         if (isNew) {
             submodulesNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Submodules", NodeType.SUBMODULES));
+                    new TreeNodeData("Submodules", NodeType.SUBMODULES, Context.getCurrentProject()));
         }
 
         submodulesNode.removeAllChildren();
