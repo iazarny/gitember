@@ -26,21 +26,25 @@ public class MainTreePanel extends JPanel {
     private static final Logger log = Logger.getLogger(MainTreePanel.class.getName());
 
     final JTree tree;
-    private final DefaultTreeModel treeModel;
+
+    final DefaultTreeModel treeModel;
+
     final DefaultMutableTreeNode rootNode;
 
-    private DefaultMutableTreeNode workspaceNode;
+    DefaultMutableTreeNode workspaceNode;
     DefaultMutableTreeNode workingCopyNode;
-    private DefaultMutableTreeNode historyNode;
+    DefaultMutableTreeNode historyNode;
     DefaultMutableTreeNode localBranchesNode;
     DefaultMutableTreeNode remoteBranchesNode;
     DefaultMutableTreeNode tagsNode;
     DefaultMutableTreeNode stashesNode;
-    private DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
-    private DefaultMutableTreeNode submodulesNode;    // null when no submodules
-    private DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
+    DefaultMutableTreeNode pullRequestsNode;  // null when no PRs
+    DefaultMutableTreeNode submodulesNode;    // null when no submodules
+    DefaultMutableTreeNode worktreesNode;     // null when no linked worktrees
 
-    /** Linked (non-main) worktrees — kept in sync so branch labels can show the indicator. */
+    /**
+     * Linked (non-main) worktrees — kept in sync so branch labels can show the indicator.
+     */
     private List<WorktreeInfo> linkedWorktrees = List.of();
 
     private BranchContextMenuFactory contextMenuFactory;
@@ -60,7 +64,7 @@ public class MainTreePanel extends JPanel {
         // Make tree transparent
         tree.setOpaque(false);
         tree.setBorder(
-                BorderFactory.createMatteBorder(0,0,0, 0,Color.GREEN)
+                BorderFactory.createMatteBorder(0, 0, 0, 0, Color.GREEN)
         );
 
         buildInitialTree();
@@ -92,8 +96,8 @@ public class MainTreePanel extends JPanel {
         Color panelBorder = UIManager.getColor("controlShadow");
 
         JScrollPane scrollPane = new JScrollPane(tree);
-        scrollPane.setBorder(                BorderFactory.createMatteBorder(
-                1, 0, 0, 1,  panelBorder
+        scrollPane.setBorder(BorderFactory.createMatteBorder(
+                1, 0, 0, 1, panelBorder
         ));
         scrollPane.setViewportBorder(null);
         scrollPane.getViewport().setOpaque(false);
@@ -116,17 +120,55 @@ public class MainTreePanel extends JPanel {
         MainTreePanelOnBranchChanged onBranchesChanged = new MainTreePanelOnBranchChanged(this);
         Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, onBranchesChanged);
         Context.addPropertyChangeListener(Context.PROP_REMOTE_BRANCHES, onBranchesChanged);
-
         Context.addPropertyChangeListener(Context.PROP_TAGS, new MainTreePanelOnTagsChanged(this));
-
         Context.addPropertyChangeListener(Context.PROP_STASH, new MainTreePanelOnStashChanged(this));
-
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainTreePanelOnRepoChanged(this));
-
         Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, new MainTreePanelOnPullRequestsChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new MainTreePanelOnSubmodulesChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new MainTreePanelOnStatusListChanged(this));
+    }
 
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,    new MainTreePanelOnSubmodulesChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST,   new MainTreePanelOnStatusListChanged(this));
+
+    private void buildInitialTree() {
+        rootNode.removeAllChildren();
+        pullRequestsNode = null;
+        submodulesNode = null;
+        worktreesNode = null;
+
+        Workspace workspace = Context.getWorkspace();
+        if (workspace != null) {
+            buildWorkspaceTree(workspace);
+        } else {
+            workspaceNode = null;
+            assignSharedCategoryNodes(addRepositoryCategories(rootNode, () -> Context.getCurrentProject()));
+        }
+
+        treeModel.reload();
+
+        if (workspace != null && workspaceNode != null) {
+            TreePath workspacePath = new TreePath(new Object[]{rootNode, workspaceNode});
+            tree.expandPath(workspacePath);
+            tree.setSelectionPath(workspacePath);
+        }
+    }
+
+    /**
+     * Workspace layout: the workspace is the single top-level node; each project/repository
+     * is an expandable child whose own children are the standard repository categories
+     * (Working Copy, History, branches, …), populated asynchronously from that repo.
+     */
+    private void buildWorkspaceTree(Workspace workspace) {
+        workspaceNode = new DefaultMutableTreeNode(
+                new TreeNodeData(workspace.getName(), NodeType.WORKSPACE, workspace));
+        rootNode.add(workspaceNode);
+
+        for (Project project : workspace.getProjects()) {
+            DefaultMutableTreeNode projectNode = new DefaultMutableTreeNode(
+                    new TreeNodeData(projectLabel(project), NodeType.REPOSITORY, project));
+            RepoCategoryNodes nodes = addRepositoryCategories(projectNode, () -> Optional.of(project));
+            workspaceNode.add(projectNode);
+            loadProjectData(project, nodes);
+        }
     }
 
     void updateStateLabel() {
@@ -143,8 +185,7 @@ public class MainTreePanel extends JPanel {
         } else {
             statusLabel.setText(" " + text);
             Color fg = switch (state) {
-                case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED ->
-                        new Color(0x2E7D32); // green
+                case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED -> new Color(0x2E7D32); // green
                 default -> new Color(0xE65100); // orange
             };
             statusLabel.setForeground(fg);
@@ -155,22 +196,23 @@ public class MainTreePanel extends JPanel {
     private static String toHumanState(RepositoryState state) {
         if (state == null) return null;
         return switch (state) {
-            case SAFE                     -> null;
-            case MERGING                  -> "Merge in progress";
-            case MERGING_RESOLVED         -> "Merge resolved — commit to finish";
-            case REBASING                 -> "Rebase in progress";
-            case REBASING_INTERACTIVE     -> "Interactive rebase in progress";
-            case REBASING_MERGE           -> "Rebase in progress (merge)";
-            case REBASING_REBASING        -> "Rebase in progress";
-            case APPLY                    -> "Applying patches (git am)";
-            case REVERTING                -> "Revert in progress";
-            case REVERTING_RESOLVED       -> "Revert resolved — commit to finish";
-            case BISECTING                -> "Bisecting";
-            case CHERRY_PICKING           -> "Cherry-pick in progress";
-            case CHERRY_PICKING_RESOLVED  -> "Cherry-pick resolved — commit to finish";
+            case SAFE -> null;
+            case MERGING -> "Merge in progress";
+            case MERGING_RESOLVED -> "Merge resolved — commit to finish";
+            case REBASING -> "Rebase in progress";
+            case REBASING_INTERACTIVE -> "Interactive rebase in progress";
+            case REBASING_MERGE -> "Rebase in progress (merge)";
+            case REBASING_REBASING -> "Rebase in progress";
+            case APPLY -> "Applying patches (git am)";
+            case REVERTING -> "Revert in progress";
+            case REVERTING_RESOLVED -> "Revert resolved — commit to finish";
+            case BISECTING -> "Bisecting";
+            case CHERRY_PICKING -> "Cherry-pick in progress";
+            case CHERRY_PICKING_RESOLVED -> "Cherry-pick resolved — commit to finish";
             default -> state.getDescription();
         };
     }
+
     public void setContextMenuFactory(BranchContextMenuFactory factory) {
         this.contextMenuFactory = factory;
     }
@@ -243,47 +285,9 @@ public class MainTreePanel extends JPanel {
         SwingUtilities.invokeLater(this::buildInitialTree);
     }
 
-    private void buildInitialTree() {
-        rootNode.removeAllChildren();
-        pullRequestsNode = null;
-        submodulesNode   = null;
-        worktreesNode    = null;
 
-        Workspace workspace = Context.getWorkspace();
-        if (workspace != null) {
-            buildWorkspaceTree(workspace);
-        } else {
-            workspaceNode = null;
-            assignSharedCategoryNodes(addRepositoryCategories(rootNode, () -> Context.getCurrentProject()));
-        }
 
-        treeModel.reload();
 
-        if (workspace != null && workspaceNode != null) {
-            TreePath workspacePath = new TreePath(new Object[]{rootNode, workspaceNode});
-            tree.expandPath(workspacePath);
-            tree.setSelectionPath(workspacePath);
-        }
-    }
-
-    /**
-     * Workspace layout: the workspace is the single top-level node; each project/repository
-     * is an expandable child whose own children are the standard repository categories
-     * (Working Copy, History, branches, …), populated asynchronously from that repo.
-     */
-    private void buildWorkspaceTree(Workspace workspace) {
-        workspaceNode = new DefaultMutableTreeNode(
-                new TreeNodeData(workspace.getName(), NodeType.WORKSPACE, workspace));
-        rootNode.add(workspaceNode);
-
-        for (Project project : workspace.getProjects()) {
-            DefaultMutableTreeNode projectNode = new DefaultMutableTreeNode(
-                    new TreeNodeData(projectLabel(project), NodeType.REPOSITORY, project));
-            RepoCategoryNodes nodes = addRepositoryCategories(projectNode, () -> Optional.of(project));
-            workspaceNode.add(projectNode);
-            loadProjectData(project, nodes);
-        }
-    }
 
     private static String projectLabel(Project project) {
         String folder = project.getProjectHomeFolder();
@@ -325,12 +329,12 @@ public class MainTreePanel extends JPanel {
     }
 
     private void assignSharedCategoryNodes(RepoCategoryNodes nodes) {
-        workingCopyNode    = nodes.workingCopy();
-        historyNode        = nodes.history();
-        localBranchesNode  = nodes.localBranches();
+        workingCopyNode = nodes.workingCopy();
+        historyNode = nodes.history();
+        localBranchesNode = nodes.localBranches();
         remoteBranchesNode = nodes.remoteBranches();
-        tagsNode           = nodes.tags();
-        stashesNode        = nodes.stashes();
+        tagsNode = nodes.tags();
+        stashesNode = nodes.stashes();
     }
 
     /**
@@ -363,10 +367,10 @@ public class MainTreePanel extends JPanel {
             protected void done() {
                 try {
                     RepoData data = get();
-                    populateBranches(nodes.localBranches(),  data.localBranches(),  NodeType.BRANCH);
+                    populateBranches(nodes.localBranches(), data.localBranches(), NodeType.BRANCH);
                     populateBranches(nodes.remoteBranches(), data.remoteBranches(), NodeType.BRANCH);
-                    populateBranches(nodes.tags(),           data.tags(),           NodeType.TAG);
-                    populateStashes(nodes.stashes(),         data.stashes());
+                    populateBranches(nodes.tags(), data.tags(), NodeType.TAG);
+                    populateStashes(nodes.stashes(), data.stashes());
                 } catch (Exception ex) {
                     log.log(Level.FINE, "Cannot load workspace project data: " + home, ex);
                 }
@@ -374,7 +378,9 @@ public class MainTreePanel extends JPanel {
         }.execute();
     }
 
-    /** References to one repository's category nodes, so each can be populated independently. */
+    /**
+     * References to one repository's category nodes, so each can be populated independently.
+     */
     private record RepoCategoryNodes(
             DefaultMutableTreeNode workingCopy,
             DefaultMutableTreeNode history,
@@ -384,7 +390,9 @@ public class MainTreePanel extends JPanel {
             DefaultMutableTreeNode stashes) {
     }
 
-    /** Data read from a single repository for its workspace subtree. */
+    /**
+     * Data read from a single repository for its workspace subtree.
+     */
     private record RepoData(
             List<ScmBranch> localBranches,
             List<ScmBranch> remoteBranches,
@@ -484,6 +492,7 @@ public class MainTreePanel extends JPanel {
     }
 
     // Property change handlers
+
     /**
      * Reloads linked worktrees in the background and updates the Worktrees section.
      * Called on repo change and after the Worktrees dialog closes.
@@ -492,18 +501,24 @@ public class MainTreePanel extends JPanel {
         if (Context.isWorkspaceMode()) return;
         if (Context.getGitRepoService() == null) return;
         new SwingWorker<List<WorktreeInfo>, Void>() {
-            @Override protected List<WorktreeInfo> doInBackground() throws Exception {
+            @Override
+            protected List<WorktreeInfo> doInBackground() throws Exception {
                 return Context.getGitRepoService().listWorktrees();
             }
-            @Override protected void done() {
-                try { updateWorktreesNode(get()); }
-                catch (Exception ex) { log.log(Level.FINE, "Cannot load worktrees", ex); }
+
+            @Override
+            protected void done() {
+                try {
+                    updateWorktreesNode(get());
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Cannot load worktrees", ex);
+                }
             }
         }.execute();
     }
 
     private void updateWorktreesNode(List<WorktreeInfo> worktrees) {
-        List<WorktreeInfo> all    = worktrees == null ? List.of() : worktrees;
+        List<WorktreeInfo> all = worktrees == null ? List.of() : worktrees;
         List<WorktreeInfo> linked = all.stream().filter(w -> !w.isMain()).toList();
 
         // Keep the snapshot so populateBranches can show the worktree indicator
@@ -535,7 +550,7 @@ public class MainTreePanel extends JPanel {
                     ? java.nio.file.Paths.get(main.getPath()).getFileName() : null;
             String mainFolder = mp != null ? mp.toString() : main.getPath();
             String mainBranch = main.getBranch();
-            String mainLabel  = mainFolder + " (" + (mainBranch != null ? mainBranch : "detached:" + main.getShortHead()) + ") [main]";
+            String mainLabel = mainFolder + " (" + (mainBranch != null ? mainBranch : "detached:" + main.getShortHead()) + ") [main]";
             worktreesNode.add(new DefaultMutableTreeNode(
                     new TreeNodeData(mainLabel, NodeType.WORKTREE_MAIN, main)));
         }
@@ -546,11 +561,11 @@ public class MainTreePanel extends JPanel {
                     ? java.nio.file.Paths.get(wt.getPath()).getFileName() : null;
             String folderName = p != null ? p.toString() : wt.getPath();
 
-            String branch    = wt.getBranch();
+            String branch = wt.getBranch();
             String branchPart = branch != null ? branch : "detached:" + wt.getShortHead();
 
             String label = folderName + " (" + branchPart + ")";
-            if (wt.isLocked())   label += " [locked]";
+            if (wt.isLocked()) label += " [locked]";
             if (wt.isPrunable()) label += " [prunable]";
             worktreesNode.add(new DefaultMutableTreeNode(
                     new TreeNodeData(label, NodeType.WORKTREE, wt)));
