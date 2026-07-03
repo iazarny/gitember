@@ -671,12 +671,17 @@ public class MainFrame extends JFrame {
             if (current instanceof DefaultMutableTreeNode treeNode) {
                 Object userObject = treeNode.getUserObject();
 
-                if (userObject instanceof TreeNodeData treeNodeData &&
-                        treeNodeData.data() instanceof Supplier<?> supplier) {
+                if (userObject instanceof TreeNodeData treeNodeData) {
+                    Object data = treeNodeData.data();
 
-                    Object value = supplier.get();
+                    // A repository node carries its Project directly.
+                    if (data instanceof Project project) {
+                        return Optional.of(project);
+                    }
 
-                    if (value instanceof Optional<?> optional) {
+                    // Category nodes carry a Supplier<Optional<Project>>.
+                    if (data instanceof Supplier<?> supplier
+                            && supplier.get() instanceof Optional<?> optional) {
                         return optional
                                 .filter(Project.class::isInstance)
                                 .map(Project.class::cast);
@@ -745,6 +750,12 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKSPACE -> {
                     contentPanel.setContent(workspaceDashboardPanel);
+                }
+                case REPOSITORY -> {
+                    // Clicking a workspace repository opens that project's history.
+                    Context.setActiveView(Context.ActiveView.HISTORY);
+                    contentPanel.setContent(historyPanel);
+                    historyPanel.loadHistory(null, true);
                 }
                 case WORKING_COPY -> {
                     Context.setActiveView(Context.ActiveView.WORKING_COPY);
