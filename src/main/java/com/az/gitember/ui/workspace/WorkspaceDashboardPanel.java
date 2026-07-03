@@ -66,8 +66,13 @@ public class WorkspaceDashboardPanel extends JPanel {
     private final RepoTableModel tableModel = new RepoTableModel();
     private final JTable table = new JTable(tableModel);
 
-    /** Vertical stack of per-project working-copy trees (one section per repository). */
-    private final JPanel workingCopyContainer = new JPanel();
+    /**
+     * Single combined working-copy tree: top-level nodes are the projects, and each project's
+     * changes hang beneath it as a folders/files hierarchy.
+     */
+    private final DefaultMutableTreeNode workingCopyRoot = new DefaultMutableTreeNode("Workspace");
+    private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
+    private final JTree workingCopyTree = new JTree(workingCopyModel);
 
     private Workspace workspace;
 
@@ -161,72 +166,63 @@ public class WorkspaceDashboardPanel extends JPanel {
     // ── Working Copy tab ─────────────────────────────────────────────────────────
 
     private JComponent buildWorkingCopyTab() {
-        workingCopyContainer.setLayout(new BoxLayout(workingCopyContainer, BoxLayout.Y_AXIS));
-        workingCopyContainer.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        workingCopyTree.setRootVisible(false);
+        workingCopyTree.setShowsRootHandles(true);
 
-        JScrollPane scroll = new JScrollPane(workingCopyContainer);
+        JScrollPane scroll = new JScrollPane(workingCopyTree);
+        scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         return scroll;
     }
 
-
+    /**
+     * Rebuilds the combined working-copy tree: one top-level node per project (shown with a
+     * "Loading…" placeholder), each populated asynchronously with its working-copy changes.
+     */
     private void rebuildWorkingCopy() {
-        workingCopyContainer.removeAll();
+        workingCopyRoot.removeAllChildren();
 
         java.util.Collection<Project> projects =
                 workspace == null ? List.of() : workspace.getProjects();
         if (projects.isEmpty()) {
-            JLabel empty = new JLabel("No repositories in this workspace.");
-            empty.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-            empty.setAlignmentX(Component.LEFT_ALIGNMENT);
-            workingCopyContainer.add(empty);
-        } else {
-            for (Project project : projects) {
-                workingCopyContainer.add(buildProjectSection(project));
-                //workingCopyContainer.add(Box.createVerticalStrut(8));
-            }
+            workingCopyRoot.add(new DefaultMutableTreeNode("No repositories in this workspace."));
+            workingCopyModel.reload();
+            return;
         }
 
-        workingCopyContainer.revalidate();
-        workingCopyContainer.repaint();
-    }
+        for (Project project : projects) {
+            String name = new File(nz(project.getProjectHomeFolder())).getName();
+            DefaultMutableTreeNode projectNode =
+                    new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
+            projectNode.add(new DefaultMutableTreeNode("Loading…"));
+            workingCopyRoot.add(projectNode);
+            loadProjectWorkingCopy(project, projectNode);
+        }
 
-    /** One collapsible-looking section: project name border + a working-copy tree loaded async. */
-    private JComponent buildProjectSection(Project project) {
-        String name = new File(nz(project.getProjectHomeFolder())).getName();
-
-        JPanel section = new JPanel(new BorderLayout());
-        section.setBorder(BorderFactory.createTitledBorder(name.isEmpty() ? "(unknown)" : name));
-        section.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTree tree = new JTree(new DefaultMutableTreeNode("Loading…"));
-        tree.setRootVisible(true);
-        tree.setShowsRootHandles(true);
-        section.add(tree, BorderLayout.CENTER);
-
-        loadProjectWorkingCopy(project, tree);
-        return section;
+        workingCopyModel.reload();
+        expandAll(workingCopyTree);
     }
 
     /**
      * Reads a project's working-copy status off the EDT (using a throwaway
-     * {@link GitRepoService}) and fills the tree with a folders/files hierarchy.
+     * {@link GitRepoService}) and fills the project node with a folders/files hierarchy.
      */
-    private void loadProjectWorkingCopy(Project project, JTree tree) {
+    private void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
         String home = project.getProjectHomeFolder();
         if (home == null || home.isBlank()) {
-            tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("(unknown location)")));
+            setChildren(projectNode, List.of(new DefaultMutableTreeNode("(unknown location)")));
             return;
         }
         String gitFolder = home + File.separator + Const.GIT_FOLDER;
-        String rootName = new File(home).getName();
 
         new SwingWorker<DefaultMutableTreeNode, Void>() {
             @Override
             protected DefaultMutableTreeNode doInBackground() throws Exception {
                 GitRepoService svc = new GitRepoService(gitFolder);
                 try {
-                    return buildFileTree(rootName, svc.getStatuses(null, false));
+                    DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
+                    populateFileTree(holder, svc.getStatuses(null, false));
+                    return holder;
                 } finally {
                     svc.shutdown();
                 }
@@ -234,26 +230,26 @@ public class WorkspaceDashboardPanel extends JPanel {
 
             @Override
             protected void done() {
+                DefaultMutableTreeNode holder;
                 try {
-                    tree.setModel(new DefaultTreeModel(get()));
-                    expandAll(tree);
+                    holder = get();
                 } catch (Exception ex) {
                     log.log(Level.FINE, "Cannot load working copy for " + home, ex);
-                    tree.setModel(new DefaultTreeModel(
-                            new DefaultMutableTreeNode("(cannot read working copy)")));
+                    holder = new DefaultMutableTreeNode();
+                    holder.add(new DefaultMutableTreeNode("(cannot read working copy)"));
                 }
+                moveChildren(holder, projectNode);
+                workingCopyModel.reload(projectNode);
+                expandAll(workingCopyTree);
             }
         }.execute();
     }
 
-    /** Builds a folders/files tree from a flat list of working-copy items. */
-    private DefaultMutableTreeNode buildFileTree(String rootName, List<ScmItem> items) {
-        DefaultMutableTreeNode root =
-                new DefaultMutableTreeNode(rootName == null || rootName.isEmpty() ? "Working Copy" : rootName);
-
+    /** Populates {@code parent} with a folders/files hierarchy from a flat list of items. */
+    private void populateFileTree(DefaultMutableTreeNode parent, List<ScmItem> items) {
         if (items == null || items.isEmpty()) {
-            root.add(new DefaultMutableTreeNode("(no changes)"));
-            return root;
+            parent.add(new DefaultMutableTreeNode("(no changes)"));
+            return;
         }
 
         List<ScmItem> sorted = new ArrayList<>(items);
@@ -264,7 +260,7 @@ public class WorkspaceDashboardPanel extends JPanel {
             if (path == null || path.isEmpty()) continue;
 
             String[] parts = path.replace('\\', '/').split("/");
-            DefaultMutableTreeNode current = root;
+            DefaultMutableTreeNode current = parent;
             for (int i = 0; i < parts.length - 1; i++) {
                 current = findOrCreateFolder(current, parts[i]);
             }
@@ -276,7 +272,21 @@ public class WorkspaceDashboardPanel extends JPanel {
             }
             current.add(new DefaultMutableTreeNode(leaf));
         }
-        return root;
+    }
+
+    /** Replaces {@code node}'s children with the supplied nodes. */
+    private void setChildren(DefaultMutableTreeNode node, List<DefaultMutableTreeNode> children) {
+        node.removeAllChildren();
+        children.forEach(node::add);
+        workingCopyModel.reload(node);
+    }
+
+    /** Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children. */
+    private static void moveChildren(DefaultMutableTreeNode from, DefaultMutableTreeNode to) {
+        to.removeAllChildren();
+        while (from.getChildCount() > 0) {
+            to.add((DefaultMutableTreeNode) from.getChildAt(0));
+        }
     }
 
     private DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
