@@ -13,12 +13,15 @@ import com.az.gitember.ui.misc.MainToolBar;
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -663,22 +666,45 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private Optional<Project> getProject(DefaultMutableTreeNode node) {
+        for (TreeNode current = node; current != null; current = current.getParent()) {
+            if (current instanceof DefaultMutableTreeNode treeNode) {
+                Object userObject = treeNode.getUserObject();
+
+                if (userObject instanceof TreeNodeData treeNodeData &&
+                        treeNodeData.data() instanceof Supplier<?> supplier) {
+
+                    Object value = supplier.get();
+
+                    if (value instanceof Optional<?> optional) {
+                        return optional
+                                .filter(Project.class::isInstance)
+                                .map(Project.class::cast);
+                    }
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
     private void onTreeSelection(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePanel.getTree().getLastSelectedPathComponent();
         if (node == null) return;
+        getProject(node).ifPresent(
+                p-> {
+                    try {
+                        Context.init(p.getProjectHomeFolder());
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+        );
 
         Object userObject = node.getUserObject();
         if (userObject instanceof TreeNodeData data) {
-            // Workspace mode: only the workspace node has an action (the dashboard).
-            // Per-project repository navigation is wired in a later step.
-            if (Context.isWorkspaceMode()) {
-                if (data.type() == MainTreeCellRenderer.NodeType.WORKSPACE
-                        && data.data() instanceof Workspace ws) {
-                    workspaceDashboardPanel.setWorkspace(ws);
-                    contentPanel.setContent(workspaceDashboardPanel);
-                }
-                return;
-            }
+
 
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
@@ -705,7 +731,21 @@ public class MainFrame extends JFrame {
                 toolBar.unmergePullRequestToolbar();
             }
 
+            /*// Workspace mode: only the workspace node has an action (the dashboard).
+            // Per-project repository navigation is wired in a later step.
+            if (Context.isWorkspaceMode()) {
+                if (data.type() == MainTreeCellRenderer.NodeType.WORKSPACE
+                        && data.data() instanceof Workspace ws) {
+                    workspaceDashboardPanel.setWorkspace(ws);
+
+                }
+                //return;
+            }*/
+
             switch (data.type()) {
+                case WORKSPACE -> {
+                    contentPanel.setContent(workspaceDashboardPanel);
+                }
                 case WORKING_COPY -> {
                     Context.setActiveView(Context.ActiveView.WORKING_COPY);
                     contentPanel.setContent(workingCopyPanel);

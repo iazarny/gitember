@@ -107,11 +107,7 @@ public class MainTreePanel extends JPanel {
         statusLabel = new JLabel("");
         statusLabel.setBorder(
                 BorderFactory.createMatteBorder(
-                        0,
-                        1,
-                        1,
-                        1,
-                        panelBorder
+                        0,1,1,1, panelBorder
                 )
         );
         add(statusLabel, BorderLayout.SOUTH);
