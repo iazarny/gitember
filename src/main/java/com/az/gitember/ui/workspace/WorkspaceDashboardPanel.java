@@ -169,6 +169,7 @@ public class WorkspaceDashboardPanel extends JPanel {
         return scroll;
     }
 
+
     private void rebuildWorkingCopy() {
         workingCopyContainer.removeAll();
 
@@ -182,7 +183,7 @@ public class WorkspaceDashboardPanel extends JPanel {
         } else {
             for (Project project : projects) {
                 workingCopyContainer.add(buildProjectSection(project));
-                workingCopyContainer.add(Box.createVerticalStrut(8));
+                //workingCopyContainer.add(Box.createVerticalStrut(8));
             }
         }
 
