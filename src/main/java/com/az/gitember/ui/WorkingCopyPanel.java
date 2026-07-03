@@ -37,12 +37,7 @@ public class WorkingCopyPanel extends JPanel {
     private final JTextField searchField;
     private final StatusBar statusBar;
 
-    // Colors matching original gitember
-    private static final Color STAGED_COLOR = new Color(16, 234, 16);     // green - staged
-    private static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
-    private static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
-    private static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
-    private static final Color LFS_COLOR = new Color(0, 153, 204);        // blue - LFS files
+
 
     public WorkingCopyPanel(StatusBar statusBar) {
         this.statusBar = statusBar;
@@ -871,15 +866,15 @@ public class WorkingCopyPanel extends JPanel {
 
             Color color;
             if (isStaged(status)) {
-                color = STAGED_COLOR;
+                color = SyntaxStyleUtil.STAGED_COLOR;
             } else if (status.startsWith("Conflict")) {
-                color = CONFLICT_COLOR;
+                color = SyntaxStyleUtil.CONFLICT_COLOR;
             } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
-                color = UNTRACKED_COLOR;
+                color = SyntaxStyleUtil.UNTRACKED_COLOR;
             } else if (ScmItem.Status.LFS.equals(status)) {
-                color = LFS_COLOR;
+                color = SyntaxStyleUtil.LFS_COLOR;
             } else {
-                color = UNSTAGED_COLOR;
+                color = SyntaxStyleUtil.UNSTAGED_COLOR;
             }
 
             if (!isSelected) {
@@ -898,15 +893,15 @@ public class WorkingCopyPanel extends JPanel {
 
             if (!isSelected) {
                 if (isStaged(status)) {
-                    label.setForeground(STAGED_COLOR.darker());
+                    label.setForeground(SyntaxStyleUtil.STAGED_COLOR.darker());
                 } else if (status.startsWith("Conflict")) {
-                    label.setForeground(CONFLICT_COLOR);
+                    label.setForeground(SyntaxStyleUtil.CONFLICT_COLOR);
                 } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
-                    label.setForeground(UNTRACKED_COLOR);
+                    label.setForeground(SyntaxStyleUtil.UNTRACKED_COLOR);
                 } else if (ScmItem.Status.LFS.equals(status)) {
-                    label.setForeground(LFS_COLOR);
+                    label.setForeground(SyntaxStyleUtil.LFS_COLOR);
                 } else {
-                    label.setForeground(UNSTAGED_COLOR);
+                    label.setForeground(SyntaxStyleUtil.UNSTAGED_COLOR);
                 }
             }
 

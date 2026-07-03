@@ -140,6 +140,13 @@ public final class SyntaxStyleUtil {
         return editorFont;
     }
 
+    // Colors matching original gitember
+    public static final Color STAGED_COLOR = new Color(16, 234, 16);     // green - staged
+    public static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
+    public static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
+    public static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
+    public static final Color LFS_COLOR = new Color(0, 153, 204);        // blue - LFS files
+
     // Highlight colors — two palettes selected at paint time based on active theme
 
     public static Color addedBg() {

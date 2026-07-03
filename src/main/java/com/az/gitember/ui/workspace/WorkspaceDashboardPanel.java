@@ -5,12 +5,18 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.ui.SyntaxStyleUtil;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -73,6 +79,10 @@ public class WorkspaceDashboardPanel extends JPanel {
     private final DefaultMutableTreeNode workingCopyRoot = new DefaultMutableTreeNode("Workspace");
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
+
+    /** Pixel width of the leading checkbox, used to hit-test stage/unstage clicks. */
+    private final int checkboxWidth = new JCheckBox().getPreferredSize().width;
+
 
     private Workspace workspace;
 
@@ -168,6 +178,27 @@ public class WorkspaceDashboardPanel extends JPanel {
     private JComponent buildWorkingCopyTab() {
         workingCopyTree.setRootVisible(false);
         workingCopyTree.setShowsRootHandles(true);
+        workingCopyTree.setRowHeight(22);
+        workingCopyTree.setCellRenderer(new FileNodeRenderer());
+
+        // A single click on a file node's leading checkbox toggles stage/unstage,
+        // mirroring the checkbox in WorkingCopyPanel.
+        workingCopyTree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
+                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) {
+                    return;
+                }
+                if (!(node.getUserObject() instanceof FileNode fileNode)) return;
+
+                Rectangle bounds = workingCopyTree.getPathBounds(path);
+                if (bounds != null && e.getX() <= bounds.x + checkboxWidth) {
+                    toggleStage(node, fileNode);
+                }
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(workingCopyTree);
         scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -221,7 +252,7 @@ public class WorkspaceDashboardPanel extends JPanel {
                 GitRepoService svc = new GitRepoService(gitFolder);
                 try {
                     DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
-                    populateFileTree(holder, svc.getStatuses(null, false));
+                    populateFileTree(project, holder, svc.getStatuses(null, false));
                     return holder;
                 } finally {
                     svc.shutdown();
@@ -246,7 +277,7 @@ public class WorkspaceDashboardPanel extends JPanel {
     }
 
     /** Populates {@code parent} with a folders/files hierarchy from a flat list of items. */
-    private void populateFileTree(DefaultMutableTreeNode parent, List<ScmItem> items) {
+    private void populateFileTree(Project project, DefaultMutableTreeNode parent, List<ScmItem> items) {
         if (items == null || items.isEmpty()) {
             parent.add(new DefaultMutableTreeNode("(no changes)"));
             return;
@@ -265,12 +296,7 @@ public class WorkspaceDashboardPanel extends JPanel {
                 current = findOrCreateFolder(current, parts[i]);
             }
 
-            String status = item.getAttribute() != null ? item.getAttribute().getStatus() : null;
-            String leaf = parts[parts.length - 1];
-            if (status != null && !status.isEmpty()) {
-                leaf = leaf + "  [" + status + "]";
-            }
-            current.add(new DefaultMutableTreeNode(leaf));
+            current.add(new DefaultMutableTreeNode(new FileNode(project, item, parts[parts.length - 1])));
         }
     }
 
@@ -304,6 +330,149 @@ public class WorkspaceDashboardPanel extends JPanel {
     private static void expandAll(JTree tree) {
         for (int i = 0; i < tree.getRowCount(); i++) {
             tree.expandRow(i);
+        }
+    }
+
+    // ── Stage / unstage ──────────────────────────────────────────────────────────
+
+    /**
+     * Toggles the staged state of a single file using its <em>own</em> project's repository
+     * (a throwaway {@link GitRepoService}), then reloads that project's subtree.
+     */
+    private void toggleStage(DefaultMutableTreeNode node, FileNode fileNode) {
+        Project project = fileNode.project();
+        ScmItem item = fileNode.item();
+        boolean staged = isStaged(fileNode.status());
+
+        String home = project.getProjectHomeFolder();
+        if (home == null || home.isBlank()) return;
+        String gitFolder = home + File.separator + Const.GIT_FOLDER;
+
+        DefaultMutableTreeNode projectNode = projectNodeOf(node);
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                GitRepoService svc = new GitRepoService(gitFolder);
+                try {
+                    if (staged) {
+                        svc.removeFileFromCommitStage(item.getShortName());
+                    } else {
+                        stageItem(svc, item);
+                    }
+                } finally {
+                    svc.shutdown();
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Stage/unstage failed for " + item.getShortName(), ex);
+                }
+                if (projectNode != null) {
+                    loadProjectWorkingCopy(project, projectNode);
+                }
+            }
+        }.execute();
+    }
+
+    /** Stages {@code item} on the supplied service, mirroring WorkingCopyPanel's stage semantics. */
+    private void stageItem(GitRepoService svc, ScmItem item) throws Exception {
+        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : null;
+        String fileName = item.getShortName();
+
+        if (ScmItem.Status.RENAMED.equals(status)) {
+            String oldName = item.getAttribute().getOldName();
+            if (oldName != null) {
+                svc.renameFile(oldName, fileName);
+            }
+        } else if (ScmItem.Status.MISSED.equals(status)) {
+            svc.removeFile(fileName);
+        } else {
+            svc.addFileToCommitStage(fileName);
+        }
+    }
+
+    /** Walks up from a file node to its owning project node (direct child of the hidden root). */
+    private DefaultMutableTreeNode projectNodeOf(DefaultMutableTreeNode node) {
+        DefaultMutableTreeNode current = node;
+        while (current.getParent() != null && current.getParent() != workingCopyRoot) {
+            current = (DefaultMutableTreeNode) current.getParent();
+        }
+        return current.getParent() == workingCopyRoot ? current : null;
+    }
+
+    private static boolean isStaged(String status) {
+        return ScmItem.Status.ADDED.equals(status)
+                || ScmItem.Status.CHANGED.equals(status)
+                || ScmItem.Status.RENAMED.equals(status)
+                || ScmItem.Status.REMOVED.equals(status);
+    }
+
+    private static Color statusColor(String status) {
+        if (status == null) {
+            return SyntaxStyleUtil.UNSTAGED_COLOR;
+        }
+        if (isStaged(status)) {
+            return SyntaxStyleUtil.STAGED_COLOR.darker();
+        } else if (status.startsWith("Conflict")) {
+            return SyntaxStyleUtil.CONFLICT_COLOR;
+        } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
+            return SyntaxStyleUtil.UNTRACKED_COLOR;
+        } else if (ScmItem.Status.LFS.equals(status)) {
+            return SyntaxStyleUtil.LFS_COLOR;
+        }
+        return SyntaxStyleUtil.UNSTAGED_COLOR;
+    }
+
+    /** Leaf tree data: a working-copy change tied to the project it belongs to. */
+    private record FileNode(Project project, ScmItem item, String leafName) {
+        String status() {
+            return item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+        }
+    }
+
+    /**
+     * Renders file nodes as {@code [checkbox] name  [status]} with a status-colored label;
+     * all other nodes fall back to the default tree renderer.
+     */
+    private class FileNodeRenderer implements TreeCellRenderer {
+
+        private final DefaultTreeCellRenderer delegate = new DefaultTreeCellRenderer();
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        private final JCheckBox checkBox = new JCheckBox();
+        private final JLabel label = new JLabel();
+
+        FileNodeRenderer() {
+            panel.setOpaque(false);
+            checkBox.setOpaque(false);
+            checkBox.setBorder(BorderFactory.createEmptyBorder());
+            panel.add(checkBox);
+            panel.add(label);
+        }
+
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
+                                                      boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            Object userObject = value instanceof DefaultMutableTreeNode n ? n.getUserObject() : null;
+            if (!(userObject instanceof FileNode fileNode)) {
+                return delegate.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+            }
+
+            String status = fileNode.status();
+            checkBox.setSelected(isStaged(status));
+
+            String text = fileNode.leafName();
+            if (status != null && !status.isEmpty()) {
+                text = text + "  [" + status + "]";
+            }
+            label.setText(text);
+            label.setForeground(statusColor(status));
+            return panel;
         }
     }
 
