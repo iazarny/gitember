@@ -7,6 +7,7 @@ import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.maintree.MainTreeCellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
+import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
 import org.eclipse.jgit.lib.RepositoryState;
 import com.az.gitember.ui.misc.MainToolBar;
 
@@ -657,7 +658,9 @@ public class MainFrame extends JFrame {
     private void updateTitle() {
         String path = Context.getRepositoryPath();
         ScmBranch branch = Context.getWorkingBranch();
-        if (path != null) {
+        if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+            setTitle("Gitember - " + Context.getWorkspace().getName());
+        } else if (path != null) {
             String folder = Context.getProjectFolder();
             String branchName = branch != null ? " [" + branch.getShortName() + "]" : "";
             setTitle("Gitember - " + folder + branchName);
@@ -749,7 +752,9 @@ public class MainFrame extends JFrame {
 
             switch (data.type()) {
                 case WORKSPACE -> {
+                    Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
+                    updateTitle();
                 }
                 case REPOSITORY -> {
                     // Clicking a workspace repository opens that project's history.

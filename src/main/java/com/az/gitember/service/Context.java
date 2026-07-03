@@ -71,7 +71,7 @@ public class Context {
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
 
-    public enum ActiveView { WORKING_COPY, HISTORY }
+    public enum ActiveView { WORKING_COPY, HISTORY, WORKSPACE }
     private static ActiveView activeView = ActiveView.HISTORY;
 
     public static void setActiveView(ActiveView view) { activeView = view; }
