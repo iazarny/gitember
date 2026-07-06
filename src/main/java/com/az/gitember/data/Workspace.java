@@ -1,9 +1,11 @@
 package com.az.gitember.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.TreeSet;
 
 /**
@@ -20,6 +22,9 @@ import java.util.TreeSet;
 public class Workspace implements Serializable, Comparable<Workspace> {
 
     private String name;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date openTime;
 
     @JsonDeserialize(as = TreeSet.class)
     private TreeSet<Project> projects = new TreeSet<>();
@@ -42,6 +47,14 @@ public class Workspace implements Serializable, Comparable<Workspace> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Date getOpenTime() {
+        return openTime;
+    }
+
+    public void setOpenTime(Date openTime) {
+        this.openTime = openTime;
     }
 
     public TreeSet<Project> getProjects() {

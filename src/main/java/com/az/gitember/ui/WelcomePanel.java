@@ -256,8 +256,14 @@ public class WelcomePanel extends JPanel {
     public void setItems(Collection<Project> projects, List<Workspace> workspaces) {
         listModel.clear();
         if (workspaces != null) {
+            // Show most recently opened first
             workspaces.stream()
-                    .sorted()
+                    .sorted((a, b) -> {
+                        if (a.getOpenTime() == null && b.getOpenTime() == null) return 0;
+                        if (a.getOpenTime() == null) return 1;
+                        if (b.getOpenTime() == null) return -1;
+                        return b.getOpenTime().compareTo(a.getOpenTime());
+                    })
                     .forEach(listModel::addElement);
         }
         if (projects != null) {
@@ -323,7 +329,11 @@ public class WelcomePanel extends JPanel {
                 nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 16));
                 nameLabel.setText(workspace.getName());
                 pathLabel.setText("");
-                dateLabel.setText("");
+                if (workspace.getOpenTime() != null) {
+                    dateLabel.setText(GitemberUtil.formatDate(workspace.getOpenTime()));
+                } else {
+                    dateLabel.setText("");
+                }
                 chartPanel.setChart(null);
             } else if (value instanceof Project project) {
                 String folder = project.getProjectHomeFolder();

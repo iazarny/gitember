@@ -404,6 +404,9 @@ public class MainFrame extends JFrame {
     private void workSpaceOpened(Workspace workspace) {
         if (workspace == null) return;
 
+        workspace.setOpenTime(new Date());
+        Context.saveSettings();
+
         Context.setWorkspace(workspace);
         treePanel.rebuild();                       // build workspace tree (selects workspace node)
         workspaceDashboardPanel.setWorkspace(workspace);
