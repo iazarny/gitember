@@ -74,13 +74,7 @@ public class Context {
     public enum ActiveView { WORKING_COPY, HISTORY, WORKSPACE }
     private static ActiveView activeView = ActiveView.HISTORY;
 
-    public static void setActiveView(ActiveView view) { activeView = view; }
-    public static ActiveView getActiveView()          { return activeView; }
 
-    /** Signals listeners to reload the working-copy status list. */
-    public static void refreshWorkingCopy() {
-        pcs.firePropertyChange(PROP_WORKING_COPY_REFRESH, false, true);
-    }
 
     // Fields
     private static String repositoryPath;
@@ -134,6 +128,19 @@ public class Context {
 
     public static JFrame getMainFrame() { return mainFrame; }
     public static void setMainFrame(JFrame frame) { mainFrame = frame; }
+
+
+    public static void setActiveView(ActiveView view) {
+        activeView = view;
+    }
+    public static ActiveView getActiveView()          {
+        return activeView;
+    }
+
+    /** Signals listeners to reload the working-copy status list. */
+    public static void refreshWorkingCopy() {
+        pcs.firePropertyChange(PROP_WORKING_COPY_REFRESH, false, true);
+    }
 
     // Property change listener support
     public static void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -472,15 +479,17 @@ public class Context {
     }
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges);
-        List<ScmItem> old = statusList;
-        if (!workingCopyOnly) {
-            List<PlotCommit> oldPlot = plotCommitList;
-            plotCommitList = new ArrayList<>();
-            pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
+        if (Context.getRepositoryPath() != null) {
+            List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges);
+            List<ScmItem> old = statusList;
+            if (!workingCopyOnly) {
+                List<PlotCommit> oldPlot = plotCommitList;
+                plotCommitList = new ArrayList<>();
+                pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
+            }
+            statusList = new ArrayList<>(statuses);
+            pcs.firePropertyChange(PROP_STATUS_LIST, old, statusList);
         }
-        statusList = new ArrayList<>(statuses);
-        pcs.firePropertyChange(PROP_STATUS_LIST, old, statusList);
     }
 
     public static void updateWorkingBranch() {

@@ -91,6 +91,12 @@ public class WorkspaceDashboardPanel extends JPanel {
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
 
+    private static final String TAB_MAIN         = "Main";
+    private static final String TAB_WORKING_COPY = "Working Copy";
+    private static final String TAB_SEARCH       = "Search";
+
+    private final JTabbedPane tabs = new JTabbedPane();
+
     /** Pixel width of the leading checkbox, used to hit-test stage/unstage clicks. */
     private final int checkboxWidth = new JCheckBox().getPreferredSize().width;
 
@@ -102,26 +108,49 @@ public class WorkspaceDashboardPanel extends JPanel {
 
         add(buildHeader(), BorderLayout.NORTH);
 
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Main", buildMainTab());
-        tabs.addTab("Working Copy", buildWorkingCopyTab());
-        tabs.addTab("Search", buildSearchTab());
+        tabs.addTab(TAB_MAIN, buildMainTab());
+        tabs.addTab(TAB_WORKING_COPY, buildWorkingCopyTab());
+        tabs.addTab(TAB_SEARCH, buildSearchTab());
+        // Reload the tab's content each time the user switches to it.
+        tabs.addChangeListener(e -> reloadSelectedTab());
         add(tabs, BorderLayout.CENTER);
     }
 
     public void setWorkspace(Workspace workspace) {
         this.workspace = workspace;
-        refresh();
+        titleLabel.setText(workspace == null ? "" : workspace.getName());
+        // Reload whatever tab is currently visible when the dashboard is (re)opened.
+        reloadSelectedTab();
     }
 
-    public void refresh() {
+    /**
+     * Reloads the currently visible tab — invoked when the main window regains focus while the
+     * dashboard is showing, mirroring the repository view's focus-driven refresh.
+     */
+    public void reloadActiveTab() {
+        if (workspace != null) {
+            reloadSelectedTab();
+        }
+    }
+
+    /** Reloads the content of the currently selected tab. */
+    private void reloadSelectedTab() {
+        int index = tabs.getSelectedIndex();
+        String title = index >= 0 ? tabs.getTitleAt(index) : null;
+        if (TAB_WORKING_COPY.equals(title)) {
+            reloadWorkingCopyTab();
+        } else if (TAB_MAIN.equals(title)) {
+            reloadMainTab();
+        }
+    }
+
+    /** Recomputes the per-repository table and the header summaries. */
+    private void reloadMainTab() {
         statsByProject.clear();
         if (workspace == null) {
-            titleLabel.setText("");
             metricsPanel.removeAll();
             tableModel.setRows(List.of());
         } else {
-            titleLabel.setText(workspace.getName());
             List<Project> projects = new ArrayList<>(workspace.getProjects());
             tableModel.setRows(projects);
             rebuildMetrics();
@@ -129,7 +158,10 @@ public class WorkspaceDashboardPanel extends JPanel {
         }
         metricsPanel.revalidate();
         metricsPanel.repaint();
+    }
 
+    /** Rebuilds the combined working-copy tree. */
+    private void reloadWorkingCopyTab() {
         rebuildWorkingCopy();
     }
 

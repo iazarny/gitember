@@ -175,14 +175,27 @@ public class MainFrame extends JFrame {
         addWindowFocusListener(new java.awt.event.WindowFocusListener() {
             @Override
             public void windowGainedFocus(java.awt.event.WindowEvent e) {
-                if (Context.getRepositoryPath() != null) {
-                    new SwingWorker<Void, Void>() {
-                        @Override protected Void doInBackground() {
-                            Context.updateStatus(null, true);
-                            return null;
-                        }
-                    }.execute();
+                if (Context.isWorkspaceMode()) {
+
+                    if (workspaceDashboardPanel.isShowing()) { //Context.getActiveView() == Context.ActiveView.WORKSPACE
+                        workspaceDashboardPanel.reloadActiveTab();
+                    } else {
+                            new SwingWorker<Void, Void>() {
+                                @Override protected Void doInBackground() {
+                                    Context.updateStatus(null, true);
+                                    return null;
+                                }
+                            }.execute();
+                    }
+                } else {
+                        new SwingWorker<Void, Void>() {
+                            @Override protected Void doInBackground() {
+                                Context.updateStatus(null, true);
+                                return null;
+                            }
+                        }.execute();
                 }
+
             }
             @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
         });
@@ -711,7 +724,7 @@ public class MainFrame extends JFrame {
 
     private void onTreeSelection(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePanel.getTree().getLastSelectedPathComponent();
-        if (node == null) return;
+        if (node == null)  return;
         getProject(node).ifPresent(
                 p-> {
                     try {
