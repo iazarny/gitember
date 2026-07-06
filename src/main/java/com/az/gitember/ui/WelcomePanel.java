@@ -13,7 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -250,33 +252,31 @@ public class WelcomePanel extends JPanel {
     }
 
     /**
-     * Populates the list with workspaces first, then git projects (most recently opened first).
-     * Workspaces have no path, so they render without one.
+     * Populates the list with git projects and workspaces intermixed, most recently opened
+     * first. Workspaces have no path, so they render without one.
      */
     public void setItems(Collection<Project> projects, List<Workspace> workspaces) {
         listModel.clear();
-        if (workspaces != null) {
-            // Show most recently opened first
-            workspaces.stream()
-                    .sorted((a, b) -> {
-                        if (a.getOpenTime() == null && b.getOpenTime() == null) return 0;
-                        if (a.getOpenTime() == null) return 1;
-                        if (b.getOpenTime() == null) return -1;
-                        return b.getOpenTime().compareTo(a.getOpenTime());
-                    })
-                    .forEach(listModel::addElement);
-        }
-        if (projects != null) {
-            // Show most recently opened first
-            projects.stream()
-                    .sorted((a, b) -> {
-                        if (a.getOpenTime() == null && b.getOpenTime() == null) return 0;
-                        if (a.getOpenTime() == null) return 1;
-                        if (b.getOpenTime() == null) return -1;
-                        return b.getOpenTime().compareTo(a.getOpenTime());
-                    })
-                    .forEach(listModel::addElement);
-        }
+        List<Object> items = new ArrayList<>();
+        if (projects != null) items.addAll(projects);
+        if (workspaces != null) items.addAll(workspaces);
+
+        items.sort((a, b) -> {
+            Date ta = openTimeOf(a);
+            Date tb = openTimeOf(b);
+            if (ta == null && tb == null) return 0;
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return tb.compareTo(ta);
+        });
+
+        items.forEach(listModel::addElement);
+    }
+
+    private static Date openTimeOf(Object item) {
+        if (item instanceof Project project) return project.getOpenTime();
+        if (item instanceof Workspace workspace) return workspace.getOpenTime();
+        return null;
     }
 
     private static class ProjectCellRenderer extends JPanel implements ListCellRenderer<Object> {
@@ -328,7 +328,15 @@ public class WelcomePanel extends JPanel {
                 // Workspaces have no path — show the name only.
                 nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 16));
                 nameLabel.setText(workspace.getName());
-                pathLabel.setText("");
+                StringBuilder pathLabelBuilder = new StringBuilder();
+                workspace.getProjects().stream().forEach(
+                        p -> {
+                            pathLabelBuilder
+                                    .append(new File(p.getProjectHomeFolder()).getName())
+                                    .append(" ");
+                        }
+                );
+                pathLabel.setText(pathLabelBuilder.toString());
                 if (workspace.getOpenTime() != null) {
                     dateLabel.setText(GitemberUtil.formatDate(workspace.getOpenTime()));
                 } else {
