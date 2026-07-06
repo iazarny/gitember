@@ -204,8 +204,8 @@ public class MainFrame extends JFrame {
 
         // Start with welcome screen
         refreshProjectLists();
-        setRepoActionsEnabled(false);
-        toolBar.setVisible(false);
+        //setRepoActionsEnabled(false);
+        //toolBar.setVisible(false);
         mainCardLayout.show(mainCardPanel, CARD_WELCOME);
     }
 
@@ -294,6 +294,7 @@ public class MainFrame extends JFrame {
 
         // Recent project handlers
         menuBar.setRecentProjectHandler(this::openProject);
+        menuBar.setRecentWorkspaceHandler(this::workSpaceOpened);
         toolBar.setProjectSelectionHandler(this::openProject);
     }
 
@@ -370,7 +371,7 @@ public class MainFrame extends JFrame {
         Settings settings = Context.getSettings();
         if (settings == null) return;
 
-        menuBar.refreshRecentProjects(settings.getProjects());
+        menuBar.refreshRecent(settings.getProjects(), settings.getWorkspaces());
 
         Project current = Context.getCurrentProject().orElse(null);
         toolBar.refreshProjects(settings.getProjects(), current);
@@ -402,22 +403,22 @@ public class MainFrame extends JFrame {
     }
 
     private void workSpaceOpened(Workspace workspace) {
-        if (workspace == null) return;
+        if (workspace != null)  {
+            workspace.setOpenTime(new Date());
+            Context.saveSettings();
 
-        workspace.setOpenTime(new Date());
-        Context.saveSettings();
+            Context.setWorkspace(workspace);
+            treePanel.rebuild();                       // build workspace tree (selects workspace node)
+            workspaceDashboardPanel.setWorkspace(workspace);
+            contentPanel.setContent(workspaceDashboardPanel);
 
-        Context.setWorkspace(workspace);
-        treePanel.rebuild();                       // build workspace tree (selects workspace node)
-        workspaceDashboardPanel.setWorkspace(workspace);
-        contentPanel.setContent(workspaceDashboardPanel);
-
-        // No single repository is open yet — keep repo-only toolbar/menu actions disabled.
-        setRepoActionsEnabled(false);
-        toolBar.setVisible(false);
-        mainCardLayout.show(mainCardPanel, CARD_REPO);
-        setTitle("Gitember - " + workspace.getName());
-        statusBar.setStatus("Workspace opened: " + workspace.getName());
+            // No single repository is open yet — keep repo-only toolbar/menu actions disabled.
+            //setRepoActionsEnabled(false);
+            //toolBar.setVisible(false);
+            mainCardLayout.show(mainCardPanel, CARD_REPO);
+            setTitle("Gitember - " + workspace.getName());
+            statusBar.setStatus("Workspace opened: " + workspace.getName());
+        }
     }
 
     private void showInitDialog() {

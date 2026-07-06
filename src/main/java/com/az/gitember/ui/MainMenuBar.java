@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -71,6 +73,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem aboutItem;
 
     private Consumer<Project> recentProjectHandler;
+    private Consumer<Workspace> recentWorkspaceHandler;
 
     public MainMenuBar() {
 
@@ -262,7 +265,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3.3.1</b> — Git GUI Client<br><br>" +
+                    "<b>Gitember 3.4.0</b> — Git GUI Client<br><br>" +
                     "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
                     "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
                     "</body></html>");
@@ -293,28 +296,59 @@ public class MainMenuBar extends JMenuBar {
         setRepoActionsEnabled(false);
     }
 
-    // ── Recent projects ───────────────────────────────────────────────────────
+    // ── Recent projects & workspaces ──────────────────────────────────────────
 
     public void refreshRecentProjects(Set<Project> projects) {
+        refreshRecent(projects, null);
+    }
+
+    /**
+     * Rebuilds the "Open Recent" menu with recent git projects and, below a separator,
+     * recent workspaces. The menu is disabled when both are empty.
+     */
+    public void refreshRecent(Set<Project> projects, List<Workspace> workspaces) {
         openRecentMenu.removeAll();
-        if (projects == null || projects.isEmpty()) {
+
+        boolean hasProjects   = projects != null && !projects.isEmpty();
+        boolean hasWorkspaces = workspaces != null && !workspaces.isEmpty();
+
+        if (!hasProjects && !hasWorkspaces) {
             openRecentMenu.setEnabled(false);
             return;
         }
-        for (Project project : projects) {
-            String label = GitemberUtil.getFolderName(project.getProjectHomeFolder());
-            JMenuItem item = new JMenuItem(label);
-            item.setToolTipText(project.getProjectHomeFolder());
-            item.addActionListener(e -> {
-                if (recentProjectHandler != null) recentProjectHandler.accept(project);
-            });
-            openRecentMenu.add(item);
+
+        if (hasProjects) {
+            for (Project project : projects) {
+                String label = GitemberUtil.getFolderName(project.getProjectHomeFolder());
+                JMenuItem item = new JMenuItem(label);
+                item.setToolTipText(project.getProjectHomeFolder());
+                item.addActionListener(e -> {
+                    if (recentProjectHandler != null) recentProjectHandler.accept(project);
+                });
+                openRecentMenu.add(item);
+            }
         }
+
+        if (hasWorkspaces) {
+            if (hasProjects) openRecentMenu.addSeparator();
+            for (Workspace workspace : workspaces) {
+                JMenuItem item = new JMenuItem(workspace.getName());
+                item.addActionListener(e -> {
+                    if (recentWorkspaceHandler != null) recentWorkspaceHandler.accept(workspace);
+                });
+                openRecentMenu.add(item);
+            }
+        }
+
         openRecentMenu.setEnabled(true);
     }
 
     public void setRecentProjectHandler(Consumer<Project> handler) {
         this.recentProjectHandler = handler;
+    }
+
+    public void setRecentWorkspaceHandler(Consumer<Workspace> handler) {
+        this.recentWorkspaceHandler = handler;
     }
 
     // ── Enable / disable all repo-dependent menus at once ─────────────────────
