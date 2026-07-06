@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.Workspace;
 import com.az.gitember.service.ActivityChartService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
@@ -13,17 +14,22 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Welcome screen shown on startup with a list of recent projects.
+ * Welcome screen shown on startup with a list of recent projects and workspaces.
+ * List elements are either {@link Project} or {@link Workspace}; the renderer and
+ * mouse handlers route by type.
  */
 public class WelcomePanel extends JPanel {
 
-    private final DefaultListModel<Project> listModel;
-    private final JList<Project> projectList;
+    private final DefaultListModel<Object> listModel;
+    private final JList<Object> projectList;
     private Consumer<Project> onProjectSelected;
     private Consumer<Project> onProjectRemoved;
+    private Consumer<Workspace> onWorkspaceSelected;
+    private Consumer<Workspace> onWorkspaceRemoved;
     private Runnable onOpenRepo;
     private Runnable onCloneRepo;
     private Runnable onInitRepo;
@@ -93,10 +99,7 @@ public class WelcomePanel extends JPanel {
                 if (e.getClickCount() == 1 && !SwingUtilities.isRightMouseButton(e)) {
                     int index = projectList.locationToIndex(e.getPoint());
                     if (index >= 0 && projectList.getCellBounds(index, index).contains(e.getPoint())) {
-                        Project project = listModel.getElementAt(index);
-                        if (onProjectSelected != null) {
-                            onProjectSelected.accept(project);
-                        }
+                        selectItem(listModel.getElementAt(index));
                     }
                 }
             }
@@ -116,18 +119,14 @@ public class WelcomePanel extends JPanel {
                 int index = projectList.locationToIndex(e.getPoint());
                 if (index < 0 || !projectList.getCellBounds(index, index).contains(e.getPoint())) return;
                 projectList.setSelectedIndex(index);
-                Project project = listModel.getElementAt(index);
+                Object item = listModel.getElementAt(index);
                 // Replace listeners each time to avoid accumulation
                 for (java.awt.event.ActionListener al : openMenuItem.getActionListeners())
                     openMenuItem.removeActionListener(al);
                 for (java.awt.event.ActionListener al : removeMenuItem.getActionListeners())
                     removeMenuItem.removeActionListener(al);
-                openMenuItem.addActionListener(ev -> {
-                    if (onProjectSelected != null) onProjectSelected.accept(project);
-                });
-                removeMenuItem.addActionListener(ev -> {
-                    if (onProjectRemoved != null) onProjectRemoved.accept(project);
-                });
+                openMenuItem.addActionListener(ev -> selectItem(item));
+                removeMenuItem.addActionListener(ev -> removeItem(item));
                 contextMenu.show(projectList, e.getX(), e.getY());
             }
         });
@@ -195,12 +194,38 @@ public class WelcomePanel extends JPanel {
         return btn;
     }
 
+    /** Routes a single click / "Open" on a list element to the type-specific handler. */
+    private void selectItem(Object item) {
+        if (item instanceof Project project) {
+            if (onProjectSelected != null) onProjectSelected.accept(project);
+        } else if (item instanceof Workspace workspace) {
+            if (onWorkspaceSelected != null) onWorkspaceSelected.accept(workspace);
+        }
+    }
+
+    /** Routes "Remove from list" on a list element to the type-specific handler. */
+    private void removeItem(Object item) {
+        if (item instanceof Project project) {
+            if (onProjectRemoved != null) onProjectRemoved.accept(project);
+        } else if (item instanceof Workspace workspace) {
+            if (onWorkspaceRemoved != null) onWorkspaceRemoved.accept(workspace);
+        }
+    }
+
     public void setOnProjectSelected(Consumer<Project> handler) {
         this.onProjectSelected = handler;
     }
 
     public void setOnProjectRemoved(Consumer<Project> handler) {
         this.onProjectRemoved = handler;
+    }
+
+    public void setOnWorkspaceSelected(Consumer<Workspace> handler) {
+        this.onWorkspaceSelected = handler;
+    }
+
+    public void setOnWorkspaceRemoved(Consumer<Workspace> handler) {
+        this.onWorkspaceRemoved = handler;
     }
 
     public void setOnOpenRepo(Runnable handler) {
@@ -221,7 +246,20 @@ public class WelcomePanel extends JPanel {
     }
 
     public void setProjects(Collection<Project> projects) {
+        setItems(projects, null);
+    }
+
+    /**
+     * Populates the list with workspaces first, then git projects (most recently opened first).
+     * Workspaces have no path, so they render without one.
+     */
+    public void setItems(Collection<Project> projects, List<Workspace> workspaces) {
         listModel.clear();
+        if (workspaces != null) {
+            workspaces.stream()
+                    .sorted()
+                    .forEach(listModel::addElement);
+        }
         if (projects != null) {
             // Show most recently opened first
             projects.stream()
@@ -235,7 +273,7 @@ public class WelcomePanel extends JPanel {
         }
     }
 
-    private static class ProjectCellRenderer extends JPanel implements ListCellRenderer<Project> {
+    private static class ProjectCellRenderer extends JPanel implements ListCellRenderer<Object> {
 
         private final JLabel     nameLabel;
         private final JLabel     pathLabel;
@@ -278,21 +316,31 @@ public class WelcomePanel extends JPanel {
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends Project> list, Project project,
+        public Component getListCellRendererComponent(JList<?> list, Object value,
                                                        int index, boolean isSelected, boolean cellHasFocus) {
-            String folder = project.getProjectHomeFolder();
-            String name = new File(folder).getName();
-            nameLabel.setText(name);
-            pathLabel.setText(folder);
-
-            if (project.getOpenTime() != null) {
-                dateLabel.setText(GitemberUtil.formatDate(project.getOpenTime()));
-            } else {
+            if (value instanceof Workspace workspace) {
+                // Workspaces have no path — show the name only.
+                nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 16));
+                nameLabel.setText(workspace.getName());
+                pathLabel.setText("");
                 dateLabel.setText("");
-            }
+                chartPanel.setChart(null);
+            } else if (value instanceof Project project) {
+                String folder = project.getProjectHomeFolder();
+                String name = new File(folder).getName();
+                nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.DATABASE, 16));
+                nameLabel.setText(name);
+                pathLabel.setText(folder);
 
-            BufferedImage chart = ActivityChartService.getOrSchedule(project, list::repaint);
-            chartPanel.setChart(isSelected ? null : chart);
+                if (project.getOpenTime() != null) {
+                    dateLabel.setText(GitemberUtil.formatDate(project.getOpenTime()));
+                } else {
+                    dateLabel.setText("");
+                }
+
+                BufferedImage chart = ActivityChartService.getOrSchedule(project, list::repaint);
+                chartPanel.setChart(isSelected ? null : chart);
+            }
 
             if (isSelected) {
                 setBackground(list.getSelectionBackground());

@@ -115,6 +115,15 @@ public class MainFrame extends JFrame {
                 refreshProjectLists();
             }
         });
+        welcomePanel.setOnWorkspaceSelected(this::workSpaceOpened);
+        welcomePanel.setOnWorkspaceRemoved(workspace -> {
+            Settings settings = Context.getSettings();
+            if (settings != null) {
+                settings.getWorkspaces().remove(workspace);
+                Context.saveSettings();
+                refreshProjectLists();
+            }
+        });
 
         // Layout
         setJMenuBar(menuBar);
@@ -366,8 +375,8 @@ public class MainFrame extends JFrame {
         Project current = Context.getCurrentProject().orElse(null);
         toolBar.refreshProjects(settings.getProjects(), current);
 
-        // Update welcome panel
-        welcomePanel.setProjects(settings.getProjects());
+        // Update welcome panel (git projects + workspaces)
+        welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
     }
 
     private void showCloneDialog() {
