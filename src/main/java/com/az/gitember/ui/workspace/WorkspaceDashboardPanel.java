@@ -1,10 +1,9 @@
 package com.az.gitember.ui.workspace;
 
-import com.az.gitember.data.Const;
-import com.az.gitember.data.Project;
-import com.az.gitember.data.ScmItem;
-import com.az.gitember.data.Workspace;
+import com.az.gitember.data.*;
+import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.SyntaxStyleUtil;
 
 import javax.swing.*;
@@ -20,8 +19,12 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,29 +45,37 @@ public class WorkspaceDashboardPanel extends JPanel {
 
     private static final Logger log = Logger.getLogger(WorkspaceDashboardPanel.class.getName());
 
-    static final String PLACEHOLDER = "—";
+    static final String PLACEHOLDER = " ";
+
+    /** Shown in a cell while its repository's stats are still being read off the EDT. */
+    static final String LOADING = "…";
 
     private record Column(String title, Function<Project, Object> value) {}
 
     private record Summary(String label, Function<Workspace, Object> value) {}
 
+
+
+    /** Computed stats keyed by project; absent while a project is still loading. */
+    private final Map<Project, RepoStats> statsByProject = new HashMap<>();
+
     private final List<Column> columns = List.of(
             new Column("Repository", p -> new File(nz(p.getProjectHomeFolder())).getName()),
-            new Column("Branch",     p -> PLACEHOLDER),
-            new Column("Status",     p -> PLACEHOLDER),
-            new Column("Modified",   p -> PLACEHOLDER),
-            new Column("Ahead",      p -> PLACEHOLDER),
-            new Column("Behind",     p -> PLACEHOLDER),
-            new Column("Last Fetch", p -> PLACEHOLDER)
+            new Column("Branch",     p -> cell(p, RepoStats::branch)),
+            new Column("Status",     this::statusCell),
+            new Column("Modified",   p -> cellInt(p, RepoStats::modified)),
+            new Column("Ahead",      p -> cellInt(p, RepoStats::ahead)),
+            new Column("Behind",     p -> cellInt(p, RepoStats::behind)),
+            new Column("Last Fetch", this::fetchCell)
     );
 
     private final List<Summary> summaries = List.of(
             new Summary("Repositories", ws -> ws.getProjects().size()),
-            new Summary("Modified",     ws -> PLACEHOLDER),
-            new Summary("Ahead",        ws -> PLACEHOLDER),
-            new Summary("Behind",       ws -> PLACEHOLDER),
-            new Summary("Conflicts",    ws -> PLACEHOLDER),
-            new Summary("Last Fetch",   ws -> PLACEHOLDER)
+            new Summary("Modified",     ws -> sumInt(RepoStats::modified)),
+            new Summary("Ahead",        ws -> sumInt(RepoStats::ahead)),
+            new Summary("Behind",       ws -> sumInt(RepoStats::behind)),
+            new Summary("Conflicts",    ws -> sumInt(RepoStats::conflicts)),
+            new Summary("Last Fetch",   ws -> latestFetch())
     );
 
     private final JLabel titleLabel = new JLabel("Workspace");
@@ -89,6 +100,8 @@ public class WorkspaceDashboardPanel extends JPanel {
     public WorkspaceDashboardPanel() {
         setLayout(new BorderLayout());
 
+        add(buildHeader(), BorderLayout.NORTH);
+
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Main", buildMainTab());
         tabs.addTab("Working Copy", buildWorkingCopyTab());
@@ -102,14 +115,17 @@ public class WorkspaceDashboardPanel extends JPanel {
     }
 
     public void refresh() {
+        statsByProject.clear();
         if (workspace == null) {
-            titleLabel.setText("Workspace");
+            titleLabel.setText("");
             metricsPanel.removeAll();
             tableModel.setRows(List.of());
         } else {
-            titleLabel.setText("Workspace: " + workspace.getName());
+            titleLabel.setText(workspace.getName());
+            List<Project> projects = new ArrayList<>(workspace.getProjects());
+            tableModel.setRows(projects);
             rebuildMetrics();
-            tableModel.setRows(new ArrayList<>(workspace.getProjects()));
+            loadAllStats(projects);
         }
         metricsPanel.revalidate();
         metricsPanel.repaint();
@@ -117,11 +133,105 @@ public class WorkspaceDashboardPanel extends JPanel {
         rebuildWorkingCopy();
     }
 
+    // ── Per-repository stats (async) ──────────────────────────────────────────────
+
+    /** Kicks off one background read per project; the table and header update as each returns. */
+    private void loadAllStats(List<Project> projects) {
+        for (Project project : projects) {
+            String home = project.getProjectHomeFolder();
+            if (home == null || home.isBlank()) {
+                statsByProject.put(project, RepoStats.failed());
+                continue;
+            }
+            new SwingWorker<RepoStats, Void>() {
+                @Override
+                protected RepoStats doInBackground() {
+                    try {
+
+                        return new GetRepoStatService().computeStats(project.getProjectHomeFolder());
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Cannot read stats for " + home, ex);
+                        return RepoStats.failed();
+                    }
+                }
+
+                @Override
+                protected void done() {
+                    RepoStats stats;
+                    try {
+                        stats = get();
+                    } catch (Exception ex) {
+                        stats = RepoStats.failed();
+                    }
+                    statsByProject.put(project, stats);
+                    int row = tableModel.indexOf(project);
+                    if (row >= 0) tableModel.fireTableRowsUpdated(row, row);
+                    rebuildMetrics();
+                    metricsPanel.revalidate();
+                    metricsPanel.repaint();
+                }
+            }.execute();
+        }
+    }
+
+
+
+    // ── Cell / summary formatting ─────────────────────────────────────────────────
+
+    private Object cell(Project project, Function<RepoStats, Object> mapper) {
+        RepoStats stats = statsByProject.get(project);
+        if (stats == null) return LOADING;
+        if (stats.error()) return PLACEHOLDER;
+        return mapper.apply(stats);
+    }
+
+    private Object cellInt(Project project, ToIntFunction<RepoStats> mapper) {
+        RepoStats stats = statsByProject.get(project);
+        if (stats == null) return LOADING;
+        if (stats.error()) return PLACEHOLDER;
+        return mapper.applyAsInt(stats);
+    }
+
+    private Object statusCell(Project project) {
+        RepoStats stats = statsByProject.get(project);
+        if (stats == null) return LOADING;
+        if (stats.error()) return PLACEHOLDER;
+        if (stats.conflicts() > 0) return stats.conflicts() + (stats.conflicts() > 1 ? " conflicts" : " conflict");
+        if (stats.modified() > 0) return "Modified";
+        return "Clean";
+    }
+
+    private Object fetchCell(Project project) {
+        RepoStats stats = statsByProject.get(project);
+        if (stats == null) return LOADING;
+        if (stats.error() || stats.lastFetch() == null) return PLACEHOLDER;
+        return GitemberUtil.formatDate(stats.lastFetch());
+    }
+
+    /** Sums a per-repository integer over all successfully loaded repositories. */
+    private int sumInt(ToIntFunction<RepoStats> mapper) {
+        int sum = 0;
+        for (RepoStats stats : statsByProject.values()) {
+            if (!stats.error()) sum += mapper.applyAsInt(stats);
+        }
+        return sum;
+    }
+
+    /** Most recent last-fetch time across the workspace, or the placeholder if none is known. */
+    private Object latestFetch() {
+        Date latest = null;
+        for (RepoStats stats : statsByProject.values()) {
+            if (stats.error() || stats.lastFetch() == null) continue;
+            if (latest == null || stats.lastFetch().after(latest)) latest = stats.lastFetch();
+        }
+        return latest == null ? PLACEHOLDER : GitemberUtil.formatDate(latest);
+    }
+
     // ── Main tab (dashboard) ─────────────────────────────────────────────────────
 
     private JComponent buildMainTab() {
         JPanel main = new JPanel(new BorderLayout());
-        main.add(buildHeader(), BorderLayout.NORTH);
+        //main.add(buildHeader(), BorderLayout.NORTH);
 
         table.setFillsViewportHeight(true);
         table.setRowHeight(24);
@@ -497,6 +607,10 @@ public class WorkspaceDashboardPanel extends JPanel {
         void setRows(List<Project> rows) {
             this.rows = rows != null ? rows : new ArrayList<>();
             fireTableDataChanged();
+        }
+
+        int indexOf(Project project) {
+            return rows.indexOf(project);
         }
 
         @Override public int getRowCount() { return rows.size(); }
