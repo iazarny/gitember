@@ -5,11 +5,11 @@ import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.maintree.MainTreeCellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
 import org.eclipse.jgit.lib.RepositoryState;
-import com.az.gitember.ui.misc.MainToolBar;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -676,10 +676,31 @@ public class MainFrame extends JFrame {
         SwingUtilities.invokeLater(() -> {
             List<ScmItem> statusList = Context.getStatusList();
             workingCopyPanel.setItems(statusList);
-            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+            toolBar.setCommitEnabled( isCommitEnabled());
             menuBar.setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
         });
     }
+
+    private boolean isCommitEnabled() {
+        boolean commitEnabled;
+        if (Context.isWorkspaceMode()) {
+            commitEnabled = true;
+            for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
+               //!!!!!! GitRepoService svc = new GitRepoService(project.getProjectHomeFolder())
+            }
+        } else {
+            commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
+        }
+        return commitEnabled;
+    }
+
+    /*    private void updateButtonStates() {
+        List<ScmItem> items = tableModel.getAllItems();
+        boolean hasUnstaged = items.stream().anyMatch(i -> !isStaged(i.getAttribute().getStatus()));
+        boolean hasStaged = items.stream().anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+        stageAllBtn.setEnabled(hasUnstaged);
+        unstageAllBtn.setEnabled(hasStaged);
+    }*/
 
     private void updateTitle() {
         String path = Context.getRepositoryPath();

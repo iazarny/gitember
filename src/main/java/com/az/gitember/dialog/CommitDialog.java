@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.LlmCommitMessageService;
@@ -12,6 +13,7 @@ import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -415,25 +417,39 @@ public class CommitDialog extends JDialog {
         if (message.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Commit message is required",
                     "Validation", JOptionPane.WARNING_MESSAGE);
-            return;
+        } else {
+            try {
+                //This is initial implementation. Without any distributed transactions support.
+                if (Context.isWorkspaceMode()) {
+                    //TODO commit rollback all if failed
+                    for(Project project : Context.getWorkspace().getProjects()) {
+                        commitSingleProject(project, message);
+                    }
+                } else {
+                    Project project = Context.getCurrentProject().orElse(null);
+                    commitSingleProject(project, message);
+
+                }
+                dispose();
+            } catch (Exception e) {
+                log.warning("Commit failed: " + e.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Commit failed: " + e.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
-        try {
-            var project = Context.getCurrentProject().orElse(null);
-            String authorName     = StringUtils.trimToNull(project.getUserCommitName());
-            String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
-            String committerName  = StringUtils.trimToNull(project.getCommitterName());
-            String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-            Context.getGitRepoService().commit(message, authorName, authorEmail, committerName, committerEmail);
-            Context.updateStatus(null);
-            Context.updateBranches();
-            Context.updateWorkingBranch();
-            dispose();
-        } catch (Exception e) {
-            log.warning("Commit failed: " + e.getMessage());
-            JOptionPane.showMessageDialog(this,
-                    "Commit failed: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        }
+
+    }
+
+    private void commitSingleProject(Project project, String message) throws GitAPIException {
+        String authorName     = StringUtils.trimToNull(project.getUserCommitName());
+        String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
+        String committerName  = StringUtils.trimToNull(project.getCommitterName());
+        String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
+        Context.getGitRepoService().commit(message, authorName, authorEmail, committerName, committerEmail);
+        Context.updateStatus(null);
+        Context.updateBranches();
+        Context.updateWorkingBranch();
     }
 
     private void openFinding(int row) {

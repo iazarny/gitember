@@ -33,7 +33,6 @@ public class Context {
     public static final String PROP_WORKING_BRANCH = "workingBranch";
     public static final String PROP_SETTINGS = "settings";
     public static final String PROP_SCM_REV_COMMIT_DETAILS = "scmRevCommitDetails";
-    public static final String PROP_LAST_CHANGES = "lastChanges";
     public static final String PROP_LFS_REPO = "lfsRepo";
     public static final String PROP_SHOW_LFS_FILES = "showLfsFiles";
     public static final String PROP_SELECTED_TREE_NAME = "selectedTreeName";
@@ -82,7 +81,6 @@ public class Context {
     private static Settings settings;
 
     private static ScmRevisionInformation scmRevCommitDetails;
-    private static boolean lastChanges;
     private static boolean lfsRepo;
     private static boolean showLfsFiles;
     private static String selectedTreeName;
@@ -222,16 +220,6 @@ public class Context {
         ScmRevisionInformation old = scmRevCommitDetails;
         scmRevCommitDetails = value;
         pcs.firePropertyChange(PROP_SCM_REV_COMMIT_DETAILS, old, value);
-    }
-
-    public static boolean isLastChanges() {
-        return lastChanges;
-    }
-
-    public static void setLastChanges(boolean value) {
-        boolean old = lastChanges;
-        lastChanges = value;
-        pcs.firePropertyChange(PROP_LAST_CHANGES, old, value);
     }
 
     public static boolean isLfsRepo() {
@@ -480,7 +468,7 @@ public class Context {
 
     public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
         if (Context.getRepositoryPath() != null) {
-            List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges);
+            List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor);
             List<ScmItem> old = statusList;
             if (!workingCopyOnly) {
                 List<PlotCommit> oldPlot = plotCommitList;

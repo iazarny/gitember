@@ -34,7 +34,7 @@ public class GetRepoStatService {
 
             int modified = 0;
             int conflicts = 0;
-            List<ScmItem> items = svc.getStatuses(null, false);
+            List<ScmItem> items = svc.getStatuses(null);
             if (items != null) {
                 for (ScmItem item : items) {
                     String status = item.getAttribute() != null ? item.getAttribute().getStatus() : null;

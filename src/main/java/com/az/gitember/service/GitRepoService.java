@@ -1666,7 +1666,7 @@ public class GitRepoService {
      *
      * @return list of ScmItem
      */
-    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor, boolean collectLastChanges) {
+    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor) {
         final List<ScmItem> scmItems = new ArrayList<>();
         try {
             // Determine which HEAD commit to compare the index against.
@@ -1706,12 +1706,6 @@ public class GitRepoService {
 
             if (isLfsRepo()) {
                 mergeLfs(scmItems, getLfsFiles(headRevStr));
-            }
-
-            if (collectLastChanges) {
-                try (Git git = new Git(repository)) {
-                    enrichWithLastChangesDetail(git, scmItems);
-                }
             }
 
         } catch (Exception e) {

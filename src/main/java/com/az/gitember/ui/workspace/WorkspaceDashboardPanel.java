@@ -394,7 +394,7 @@ public class WorkspaceDashboardPanel extends JPanel {
                 GitRepoService svc = new GitRepoService(gitFolder);
                 try {
                     DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
-                    populateFileTree(project, holder, svc.getStatuses(null, false));
+                    populateFileTree(project, holder, svc.getStatuses(null));
                     return holder;
                 } finally {
                     svc.shutdown();

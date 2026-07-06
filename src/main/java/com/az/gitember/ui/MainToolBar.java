@@ -1,11 +1,9 @@
-package com.az.gitember.ui.misc;
+package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
-import com.az.gitember.ui.HistoryPanel;
-import com.az.gitember.ui.PullRequestPanel;
-import com.az.gitember.ui.WorkingCopyPanel;
+import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -282,5 +280,7 @@ public class MainToolBar extends JToolBar {
     public void addPullListener(ActionListener l) { pullBtn.addActionListener(l); }
     public void addPushListener(ActionListener l) { pushBtn.addActionListener(l); }
     public void addFetchListener(ActionListener l) { fetchBtn.addActionListener(l); }
-    public void addCommitListener(ActionListener l) { commitBtn.addActionListener(l); }
+    public void addCommitListener(ActionListener l) {
+        commitBtn.addActionListener(l);
+    }
 }

@@ -580,7 +580,7 @@ class GitRepoServiceTest {
         makeInitialCommit();
         writeFile("untracked.txt", "untracked\n");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("untracked.txt")
@@ -593,7 +593,7 @@ class GitRepoServiceTest {
         writeFile("staged.txt", "staged\n");
         service.addFileToCommitStage("staged.txt");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("staged.txt")
@@ -608,7 +608,7 @@ class GitRepoServiceTest {
         service.commit("add mod", "U", "u@u.com");
         writeFile("mod.txt", "changed\n");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("mod.txt")
@@ -619,7 +619,7 @@ class GitRepoServiceTest {
     void getStatuses_cleanWorkingTree_returnsEmptyList() throws Exception {
         makeInitialCommit();
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.isEmpty(), "Clean working tree must yield no status entries");
     }
