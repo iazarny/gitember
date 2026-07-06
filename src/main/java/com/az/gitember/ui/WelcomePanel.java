@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.ActivityChartService;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.service.WorkspaceChartService;
 import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -342,7 +343,8 @@ public class WelcomePanel extends JPanel {
                 } else {
                     dateLabel.setText("");
                 }
-                chartPanel.setChart(null);
+                BufferedImage chart = WorkspaceChartService.getOrSchedule(workspace, list::repaint);
+                chartPanel.setChart(isSelected ? null : chart);
             } else if (value instanceof Project project) {
                 String folder = project.getProjectHomeFolder();
                 String name = new File(folder).getName();
