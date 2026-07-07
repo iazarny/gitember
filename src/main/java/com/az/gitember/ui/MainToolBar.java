@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
+import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -26,6 +27,10 @@ public class MainToolBar extends JToolBar {
 
     private Consumer<Project> projectSelectionHandler;
     private boolean suppressComboEvents = false;
+
+    private final java.util.List<Component> mergedWorkspaceComponents = new java.util.ArrayList<>();
+    private final java.util.List<Component> mergedHistoryComponents = new java.util.ArrayList<>();
+    private final java.util.List<Component> mergedComponents = new java.util.ArrayList<>();
 
     public MainToolBar() {
         setFloatable(false);
@@ -122,86 +127,119 @@ public class MainToolBar extends JToolBar {
         branchLabel.setText(name != null ? name : "");
     }
 
-    // Working copy toolbar components merged into main toolbar
-    private java.util.List<Component> mergedComponents = new java.util.ArrayList<>();
 
-    public void mergeWorkingCopyToolbar(WorkingCopyPanel wcp) {
-        if (!mergedComponents.isEmpty()) return; // already merged
+    public void mergeWorkSpaceToolbar(WorkspaceDashboardPanel workspaceDashboardPanel) {
+        if (mergedWorkspaceComponents.isEmpty()) { //do not merge twice
+            Component glue = Box.createHorizontalGlue();
+            mergedWorkspaceComponents.add(glue);
+            add(glue);
 
-        JSeparator sep = new JToolBar.Separator();
-        mergedComponents.add(sep);
-        add(sep);
+            JLabel searchLabel = new JLabel("Search:");
+            searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+            mergedWorkspaceComponents.add(searchLabel);
+            add(searchLabel);
 
-        mergedComponents.add(wcp.getStageAllBtn());
-        add(wcp.getStageAllBtn());
+            //mergedWorkspaceComponents.add(hp.getSearchField());
+            //add(hp.getSearchField());
 
-        mergedComponents.add(wcp.getUnstageAllBtn());
-        add(wcp.getUnstageAllBtn());
+            revalidate();
+            repaint();
+        }
+    }
 
-        JSeparator sep2 = new JToolBar.Separator();
-        mergedComponents.add(sep2);
-        add(sep2);
-
-        mergedComponents.add(wcp.getRefreshBtn());
-        add(wcp.getRefreshBtn());
-
-        Component glue = Box.createHorizontalGlue();
-        mergedComponents.add(glue);
-        add(glue);
-
-        JLabel filterLabel = new JLabel("Search:");
-        filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
-        mergedComponents.add(filterLabel);
-        add(filterLabel);
-
-        mergedComponents.add(wcp.getSearchField());
-        add(wcp.getSearchField());
-
-        revalidate();
-        repaint();
+    public void unmergeWorkSpaceToolbar() {
+        System.out.println("un   mergeWorkSpaceToolbar");
+        if (!mergedWorkspaceComponents.isEmpty())  {
+            for (Component c : mergedWorkspaceComponents) {
+                remove(c);
+            }
+            mergedWorkspaceComponents.clear();
+            revalidate();
+            repaint();
+        }
     }
 
     public void unmergeWorkingCopyToolbar() {
-        if (mergedComponents.isEmpty()) return;
-        for (Component c : mergedComponents) {
-            remove(c);
+        if (!mergedComponents.isEmpty())  {
+            for (Component c : mergedComponents) {
+                remove(c);
+            }
+            mergedComponents.clear();
+            revalidate();
+            repaint();
         }
-        mergedComponents.clear();
-        revalidate();
-        repaint();
-    }
-
-    // History search components merged into main toolbar
-    private final java.util.List<Component> mergedHistoryComponents = new java.util.ArrayList<>();
-
-    public void mergeHistoryToolbar(HistoryPanel hp) {
-        if (!mergedHistoryComponents.isEmpty()) return; // already merged
-
-        Component glue = Box.createHorizontalGlue();
-        mergedHistoryComponents.add(glue);
-        add(glue);
-
-        JLabel searchLabel = new JLabel("Search:");
-        searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
-        mergedHistoryComponents.add(searchLabel);
-        add(searchLabel);
-
-        mergedHistoryComponents.add(hp.getSearchField());
-        add(hp.getSearchField());
-
-        revalidate();
-        repaint();
     }
 
     public void unmergeHistoryToolbar() {
-        if (mergedHistoryComponents.isEmpty()) return;
-        for (Component c : mergedHistoryComponents) {
-            remove(c);
+        if (!mergedHistoryComponents.isEmpty()) {
+            for (Component c : mergedHistoryComponents) {
+                remove(c);
+            }
+            mergedHistoryComponents.clear();
+            revalidate();
+            repaint();
         }
-        mergedHistoryComponents.clear();
-        revalidate();
-        repaint();
     }
+
+    public void mergeWorkingCopyToolbar(WorkingCopyPanel wcp) {
+        if (mergedComponents.isEmpty()) { // do not merge twice
+            JSeparator sep = new JToolBar.Separator();
+            mergedComponents.add(sep);
+            add(sep);
+
+            mergedComponents.add(wcp.getStageAllBtn());
+            add(wcp.getStageAllBtn());
+
+            mergedComponents.add(wcp.getUnstageAllBtn());
+            add(wcp.getUnstageAllBtn());
+
+            JSeparator sep2 = new JToolBar.Separator();
+            mergedComponents.add(sep2);
+            add(sep2);
+
+            mergedComponents.add(wcp.getRefreshBtn());
+            add(wcp.getRefreshBtn());
+
+            Component glue = Box.createHorizontalGlue();
+            mergedComponents.add(glue);
+            add(glue);
+
+            JLabel filterLabel = new JLabel("Search:");
+            filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+            mergedComponents.add(filterLabel);
+            add(filterLabel);
+
+            mergedComponents.add(wcp.getSearchField());
+            add(wcp.getSearchField());
+
+            revalidate();
+            repaint();
+        }
+    }
+
+
+
+
+    public void mergeHistoryToolbar(HistoryPanel hp) {
+        if (mergedHistoryComponents.isEmpty()) { //do not merge twice
+            Component glue = Box.createHorizontalGlue();
+            mergedHistoryComponents.add(glue);
+            add(glue);
+
+            JLabel searchLabel = new JLabel("Search:");
+            searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+            mergedHistoryComponents.add(searchLabel);
+            add(searchLabel);
+
+            mergedHistoryComponents.add(hp.getSearchField());
+            add(hp.getSearchField());
+
+            revalidate();
+            repaint();
+        }
+    }
+
+
 
     // Pull-request file filter component merged into main toolbar
     private final java.util.List<Component> mergedPrComponents = new java.util.ArrayList<>();
@@ -283,4 +321,6 @@ public class MainToolBar extends JToolBar {
     public void addCommitListener(ActionListener l) {
         commitBtn.addActionListener(l);
     }
+
+
 }

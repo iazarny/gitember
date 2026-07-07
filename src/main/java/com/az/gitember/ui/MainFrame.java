@@ -685,29 +685,32 @@ public class MainFrame extends JFrame {
     private boolean isCommitEnabled() {
         boolean commitEnabled = false;
         if (Context.isWorkspaceMode()) {
-            commitEnabled = true;
-            for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                try {
-                    GitRepoService svc = new GitRepoService(project.getProjectHomeFolder());
-                    List<ScmItem> items = svc.getStatuses(null);
-                    
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+            if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+                for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
+                    try {
+                        GitRepoService svc = new GitRepoService(project.getProjectHomeFolder());
+                        List<ScmItem> items = svc.getStatuses(null);
+                        //boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
+                        boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());
+                        if (hasStaged) {
+                            commitEnabled = hasStaged;
+                            break;
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
+            } else { // workspace , but selected particular project
+                commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
             }
+
         } else {
             commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
         }
         return commitEnabled;
     }
 
-    /*    private void updateButtonStates() {
-        List<ScmItem> items = tableModel.getAllItems();
-        boolean hasUnstaged = items.stream().anyMatch(i -> !isStaged(i.getAttribute().getStatus()));
-        boolean hasStaged = items.stream().anyMatch(i -> isStaged(i.getAttribute().getStatus()));
-        stageAllBtn.setEnabled(hasUnstaged);
-        unstageAllBtn.setEnabled(hasStaged);
-    }*/
+
 
     private void updateTitle() {
         String path = Context.getRepositoryPath();
@@ -768,11 +771,19 @@ public class MainFrame extends JFrame {
         if (userObject instanceof TreeNodeData data) {
 
 
+            boolean isWorkSpace = data.type() == MainTreeCellRenderer.NodeType.WORKSPACE;
             boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
             boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;
 
             // Merge/unmerge working copy toolbar
+
+            if (isWorkSpace) {
+                toolBar.mergeWorkSpaceToolbar(workspaceDashboardPanel);
+            } else {
+                toolBar.unmergeWorkSpaceToolbar();
+            }
+
             if (isWorkingCopy) {
                 toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
             } else {
@@ -792,17 +803,6 @@ public class MainFrame extends JFrame {
             } else {
                 toolBar.unmergePullRequestToolbar();
             }
-
-            /*// Workspace mode: only the workspace node has an action (the dashboard).
-            // Per-project repository navigation is wired in a later step.
-            if (Context.isWorkspaceMode()) {
-                if (data.type() == MainTreeCellRenderer.NodeType.WORKSPACE
-                        && data.data() instanceof Workspace ws) {
-                    workspaceDashboardPanel.setWorkspace(ws);
-
-                }
-                //return;
-            }*/
 
             switch (data.type()) {
                 case WORKSPACE -> {

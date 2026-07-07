@@ -165,13 +165,13 @@ public class WorkingCopyPanel extends JPanel {
 
     public boolean hasStagedItems() {
         return tableModel.getAllItems().stream()
-                .anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+                .anyMatch(i -> i.isStaged());
     }
 
     private void updateButtonStates() {
         List<ScmItem> items = tableModel.getAllItems();
-        boolean hasUnstaged = items.stream().anyMatch(i -> !isStaged(i.getAttribute().getStatus()));
-        boolean hasStaged = items.stream().anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+        boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
+        boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());
         stageAllBtn.setEnabled(hasUnstaged);
         unstageAllBtn.setEnabled(hasStaged);
     }
@@ -190,7 +190,7 @@ public class WorkingCopyPanel extends JPanel {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                if (isStaged(status)) {
+                if (ScmItem.isStaged(status)) {
                     unstageItem(item);
                 } else {
                     stageItem(item);
@@ -237,7 +237,7 @@ public class WorkingCopyPanel extends JPanel {
     private void stageAll() {
         List<ScmItem> items = tableModel.getAllItems();
         List<ScmItem> toStage = items.stream()
-                .filter(i -> !isStaged(i.getAttribute().getStatus()))
+                .filter(i -> !i.isStaged())
                 .toList();
         if (toStage.isEmpty()) return;
 
@@ -271,7 +271,7 @@ public class WorkingCopyPanel extends JPanel {
     private void unstageAll() {
         List<ScmItem> items = tableModel.getAllItems();
         List<ScmItem> toUnstage = items.stream()
-                .filter(i -> isStaged(i.getAttribute().getStatus()))
+                .filter(i -> i.isStaged())
                 .toList();
         if (toUnstage.isEmpty()) return;
 
@@ -368,7 +368,7 @@ public class WorkingCopyPanel extends JPanel {
         boolean isRemoved   = ScmItem.Status.REMOVED.equals(status);
 
         // === Group 1: Stage / Unstage ===
-        if (isStaged(status)) {
+        if (ScmItem.isStaged(status)) {
             JMenuItem unstage = new JMenuItem("Unstage");
             unstage.addActionListener(e -> doUnstage(item));
             menu.add(unstage);
@@ -448,8 +448,8 @@ public class WorkingCopyPanel extends JPanel {
     }
 
     private void buildMultiItemMenu(JPopupMenu menu, List<ScmItem> items) {
-        boolean hasUnstaged = items.stream().anyMatch(i -> !isStaged(i.getAttribute().getStatus()));
-        boolean hasStaged = items.stream().anyMatch(i -> isStaged(i.getAttribute().getStatus()));
+        boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
+        boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());
         boolean hasRevertable = items.stream().anyMatch(i -> {
             String s = i.getAttribute().getStatus();
             return ScmItem.Status.MODIFIED.equals(s) || ScmItem.Status.MISSED.equals(s);
@@ -460,14 +460,14 @@ public class WorkingCopyPanel extends JPanel {
         });
 
         if (hasUnstaged) {
-            JMenuItem stage = new JMenuItem("Stage selected (" + items.stream().filter(i -> !isStaged(i.getAttribute().getStatus())).count() + ")");
-            stage.addActionListener(e -> doStageMultiple(items.stream().filter(i -> !isStaged(i.getAttribute().getStatus())).toList()));
+            JMenuItem stage = new JMenuItem("Stage selected (" + items.stream().filter(i -> !i.isStaged()).count() + ")");
+            stage.addActionListener(e -> doStageMultiple(items.stream().filter(i -> !i.isStaged()).toList()));
             menu.add(stage);
         }
 
         if (hasStaged) {
-            JMenuItem unstage = new JMenuItem("Unstage selected (" + items.stream().filter(i -> isStaged(i.getAttribute().getStatus())).count() + ")");
-            unstage.addActionListener(e -> doUnstageMultiple(items.stream().filter(i -> isStaged(i.getAttribute().getStatus())).toList()));
+            JMenuItem unstage = new JMenuItem("Unstage selected (" + items.stream().filter(i -> i.isStaged()).count() + ")");
+            unstage.addActionListener(e -> doUnstageMultiple(items.stream().filter(i -> i.isStaged()).toList()));
             menu.add(unstage);
         }
 
@@ -764,13 +764,6 @@ public class WorkingCopyPanel extends JPanel {
         }
     }
 
-    private static boolean isStaged(String status) {
-        return ScmItem.Status.ADDED.equals(status)
-                || ScmItem.Status.CHANGED.equals(status)
-                || ScmItem.Status.RENAMED.equals(status)
-                || ScmItem.Status.REMOVED.equals(status);
-    }
-
     // --- Table Model ---
 
     private static class WorkingCopyTableModel extends AbstractTableModel {
@@ -840,7 +833,7 @@ public class WorkingCopyPanel extends JPanel {
             String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
             return switch (columnIndex) {
                 case 0 -> status; // color indicator
-                case 1 -> isStaged(status); // checkbox
+                case 1 -> item.isStaged(); // checkbox
                 case 2 -> {
                     // For LFS items show the sub-status (lfs_file / lfs_pointer)
                     if (ScmItem.Status.LFS.equals(status) && item.getAttribute().getSubstatus() != null) {
@@ -865,7 +858,7 @@ public class WorkingCopyPanel extends JPanel {
             label.setOpaque(true);
 
             Color color;
-            if (isStaged(status)) {
+            if (ScmItem.isStaged(status)) {
                 color = SyntaxStyleUtil.STAGED_COLOR;
             } else if (status.startsWith("Conflict")) {
                 color = SyntaxStyleUtil.CONFLICT_COLOR;
@@ -892,7 +885,7 @@ public class WorkingCopyPanel extends JPanel {
             String status = value != null ? value.toString() : "";
 
             if (!isSelected) {
-                if (isStaged(status)) {
+                if (ScmItem.isStaged(status)) {
                     label.setForeground(SyntaxStyleUtil.STAGED_COLOR.darker());
                 } else if (status.startsWith("Conflict")) {
                     label.setForeground(SyntaxStyleUtil.CONFLICT_COLOR);
