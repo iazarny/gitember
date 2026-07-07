@@ -1709,6 +1709,8 @@ public class GitRepoService {
             }
 
         } catch (Exception e) {
+            System.out.println(e.getMessage() + " " + repository.getDirectory());
+            e.printStackTrace();
             log.log(Level.SEVERE, "Cannot get statuses", e);
         }
 

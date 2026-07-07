@@ -688,7 +688,7 @@ public class MainFrame extends JFrame {
             if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
                     try {
-                        GitRepoService svc = new GitRepoService(project.getProjectHomeFolder());
+                        GitRepoService svc = new GitRepoService(project.getProjectHomeFolder()  + File.separator + Const.GIT_FOLDER); //TODO eliminate such constructions project.getProjectHomeFolder()  + File.separator + Const.GIT_FOLDER
                         List<ScmItem> items = svc.getStatuses(null);
                         //boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
                         boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());
@@ -808,6 +808,7 @@ public class MainFrame extends JFrame {
                 case WORKSPACE -> {
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
+                    toolBar.setCommitEnabled(isCommitEnabled());
                     updateTitle();
                 }
                 case REPOSITORY -> {
@@ -821,7 +822,7 @@ public class MainFrame extends JFrame {
                     contentPanel.setContent(workingCopyPanel);
                     List<ScmItem> cachedStatus = Context.getStatusList();
                     workingCopyPanel.setItems(cachedStatus); // show cached immediately
-                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
+                    toolBar.setCommitEnabled(isCommitEnabled());
                     menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
