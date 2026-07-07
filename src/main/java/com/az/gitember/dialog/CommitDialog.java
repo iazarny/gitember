@@ -200,7 +200,7 @@ public class CommitDialog extends JDialog {
     private void populateFiles() {
         tableModel.setRowCount(0);
 
-        if (Context.isWorkspaceMode()) {
+        if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
             populateWorkspaceFiles();
         } else {
             populateSingleRepoFiles(Context.getStatusList());
@@ -470,7 +470,7 @@ public class CommitDialog extends JDialog {
         } else {
             try {
                 //This is initial implementation. Without any distributed transactions support.
-                if (Context.isWorkspaceMode()) {
+                if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
                     //TODO commit rollback all if failed
                     for(Project project : Context.getWorkspace().getProjects()) {
                         commitSingleProject(project, message);
@@ -478,7 +478,9 @@ public class CommitDialog extends JDialog {
                 } else {
                     Project project = Context.getCurrentProject().orElse(null);
                     commitSingleProject(project, message);
-
+                    Context.updateStatus(null);
+                    Context.updateBranches();
+                    Context.updateWorkingBranch();
                 }
                 dispose();
             } catch (Exception e) {
@@ -491,15 +493,16 @@ public class CommitDialog extends JDialog {
 
     }
 
-    private void commitSingleProject(Project project, String message) throws GitAPIException {
-        String authorName     = StringUtils.trimToNull(project.getUserCommitName());
-        String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
-        String committerName  = StringUtils.trimToNull(project.getCommitterName());
-        String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-        Context.getGitRepoService().commit(message, authorName, authorEmail, committerName, committerEmail);
-        Context.updateStatus(null);
-        Context.updateBranches();
-        Context.updateWorkingBranch();
+    private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
+        try (GitRepoService svc = GitRepoService.of(project)) {
+            String authorName     = StringUtils.trimToNull(project.getUserCommitName());
+            String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
+            String committerName  = StringUtils.trimToNull(project.getCommitterName());
+            String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
+            svc.commit(message, authorName, authorEmail, committerName, committerEmail);
+
+        }
+
     }
 
     private void openFinding(int row) {
