@@ -74,7 +74,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class GitRepoService {
+public class GitRepoService implements AutoCloseable {
 
     public static final String SMUDGE_NAME = org.eclipse.jgit.lib.Constants.BUILTIN_FILTER_PREFIX
             + org.eclipse.jgit.lfs.lib.Constants.ATTR_FILTER_DRIVER_PREFIX
@@ -105,6 +105,65 @@ public class GitRepoService {
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
     }
 
+
+
+
+
+
+
+
+    /**
+     * Creates a service for the given project, opening the {@code .git} directory under the
+     * project's home folder.
+     *
+     * @param project project whose repository should be opened
+     * @return a service bound to the project's repository
+     * @throws IOException in case of error, or if the project has no home folder
+     */
+    public static GitRepoService of(final Project project) throws IOException {
+        return GitRepoService.of(project.getProjectHomeFolder());
+    }
+
+    public static GitRepoService of(final String projectHome) throws IOException {
+        String gitFolder = projectHome + File.separator + Const.GIT_FOLDER;
+        return  new GitRepoService(gitFolder);
+    }
+
+
+    /**
+     * Construct service, which work with git. Each service designated to work with the one repo.
+     *
+     * @param gitFolder folder with git repository, for example "~/project/.git"
+     * @throws IOException in case of error
+     */
+    public GitRepoService(final String gitFolder) throws IOException {
+        File gitDirFile = new File(gitFolder);
+        if (gitDirFile.isFile()) {
+            // Linked worktree: .git is a FILE containing "gitdir: <path>" pointer.
+            // JGit 6.x does NOT support the git "commondir" mechanism, so we must
+            // manually resolve the common (main) .git directory and open that as the
+            // JGit gitDir.  This gives full access to all refs (branches, tags, remotes,
+            // stash) and the shared object database.  We then point JGit at the
+            // worktree-specific index so that status/diff work correctly against the
+            // files actually checked out in this worktree.
+            File resolvedWorktreeGitDir = resolveGitDirFromFile(gitDirFile);
+            File mainGitDir = resolveCommonDir(resolvedWorktreeGitDir);
+            this.worktreeGitDir = resolvedWorktreeGitDir;
+            this.repository = new FileRepositoryBuilder()
+                    .readEnvironment()
+                    .setGitDir(mainGitDir)
+                    .setWorkTree(gitDirFile.getParentFile())
+                    .setIndexFile(new File(resolvedWorktreeGitDir, "index"))
+                    .build();
+        } else {
+            this.worktreeGitDir = null;
+            this.repository = new FileRepositoryBuilder()
+                    .readEnvironment()
+                    .setGitDir(gitDirFile)
+                    .findGitDir()
+                    .build();
+        }
+    }
 
     /**
      * Create new git repository.
@@ -149,11 +208,7 @@ public class GitRepoService {
 
     }
 
-    public static void addLFSSupport(Repository repository) throws IOException, GitAPIException {
-        try (Git git = new Git(repository)) {
-            addLFSSupport(git);
-        }
-    }
+
 
     public static void addLFSSupport(Git git) throws IOException, GitAPIException {
         StoredConfig config = git.getRepository().getConfig();
@@ -170,71 +225,6 @@ public class GitRepoService {
                 gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
         git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
         new File(lfsTmpPath).mkdirs();
-    }
-
-    public void unlink(final String fileName) {
-        try (Git git = new Git(repository)) {
-            final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
-            final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
-            final Path attrPath = Paths.get(absPath, fileName);
-            Files.delete(attrPath);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "Cannot unlink ", e);
-        }
-
-    }
-
-
-    public static void createRepository(final String absPath) throws Exception {
-        createRepository(absPath, false, false);
-    }
-
-    /**
-     * Create new git repository.
-     *
-     * @param absPath path to repository.
-     */
-    public static void createRepository(final String absPath,
-                                        final boolean withReadme,
-                                        final boolean withGitIgnore) throws Exception {
-        createRepository(absPath, withReadme, withGitIgnore, false);
-
-    }
-
-
-    /**
-     * Construct service, which work with git. Each service designated to work with the one repo.
-     *
-     * @param gitFolder folder with git repository, for example "~/project/.git"
-     * @throws IOException in case of error
-     */
-    public GitRepoService(final String gitFolder) throws IOException {
-        File gitDirFile = new File(gitFolder);
-        if (gitDirFile.isFile()) {
-            // Linked worktree: .git is a FILE containing "gitdir: <path>" pointer.
-            // JGit 6.x does NOT support the git "commondir" mechanism, so we must
-            // manually resolve the common (main) .git directory and open that as the
-            // JGit gitDir.  This gives full access to all refs (branches, tags, remotes,
-            // stash) and the shared object database.  We then point JGit at the
-            // worktree-specific index so that status/diff work correctly against the
-            // files actually checked out in this worktree.
-            File resolvedWorktreeGitDir = resolveGitDirFromFile(gitDirFile);
-            File mainGitDir = resolveCommonDir(resolvedWorktreeGitDir);
-            this.worktreeGitDir = resolvedWorktreeGitDir;
-            this.repository = new FileRepositoryBuilder()
-                    .readEnvironment()
-                    .setGitDir(mainGitDir)
-                    .setWorkTree(gitDirFile.getParentFile())
-                    .setIndexFile(new File(resolvedWorktreeGitDir, "index"))
-                    .build();
-        } else {
-            this.worktreeGitDir = null;
-            this.repository = new FileRepositoryBuilder()
-                    .readEnvironment()
-                    .setGitDir(gitDirFile)
-                    .findGitDir()
-                    .build();
-        }
     }
 
     /**
@@ -289,6 +279,12 @@ public class GitRepoService {
             repository.close();
         }
         cleanUpTempFiles();
+    }
+
+    /** Allows use in try-with-resources; delegates to {@link #shutdown()}. */
+    @Override
+    public void close() {
+        shutdown();
     }
 
     public String  createDiff() {

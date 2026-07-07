@@ -382,23 +382,13 @@ public class WorkspaceDashboardPanel extends JPanel {
      * {@link GitRepoService}) and fills the project node with a folders/files hierarchy.
      */
     private void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
-        String home = project.getProjectHomeFolder();
-        if (home == null || home.isBlank()) {
-            setChildren(projectNode, List.of(new DefaultMutableTreeNode("(unknown location)")));
-            return;
-        }
-        String gitFolder = home + File.separator + Const.GIT_FOLDER;
-
         new SwingWorker<DefaultMutableTreeNode, Void>() {
             @Override
             protected DefaultMutableTreeNode doInBackground() throws Exception {
-                GitRepoService svc = new GitRepoService(gitFolder);
-                try {
+                try (GitRepoService svc = GitRepoService.of(project)) {
                     DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
                     populateFileTree(project, holder, svc.getStatuses(null));
                     return holder;
-                } finally {
-                    svc.shutdown();
                 }
             }
 
@@ -408,7 +398,7 @@ public class WorkspaceDashboardPanel extends JPanel {
                 try {
                     holder = get();
                 } catch (Exception ex) {
-                    log.log(Level.FINE, "Cannot load working copy for " + home, ex);
+                    log.log(Level.FINE, "Cannot load working copy for " + project, ex);
                     holder = new DefaultMutableTreeNode();
                     holder.add(new DefaultMutableTreeNode("(cannot read working copy)"));
                 }
@@ -486,25 +476,17 @@ public class WorkspaceDashboardPanel extends JPanel {
         Project project = fileNode.project();
         ScmItem item = fileNode.item();
         boolean staged = isStaged(fileNode.status());
-
-        String home = project.getProjectHomeFolder();
-        if (home == null || home.isBlank()) return;
-        String gitFolder = home + File.separator + Const.GIT_FOLDER;
-
         DefaultMutableTreeNode projectNode = projectNodeOf(node);
 
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                GitRepoService svc = new GitRepoService(gitFolder);
-                try {
+                try (GitRepoService svc = GitRepoService.of(project)) {
                     if (staged) {
                         svc.removeFileFromCommitStage(item.getShortName());
                     } else {
                         stageItem(svc, item);
                     }
-                } finally {
-                    svc.shutdown();
                 }
                 return null;
             }

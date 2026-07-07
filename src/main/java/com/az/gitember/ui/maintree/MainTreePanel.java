@@ -338,24 +338,16 @@ public class MainTreePanel extends JPanel {
      * {@link GitRepoService} for that repo) and fills the project's subtree on completion.
      */
     private void loadProjectData(Project project, RepoCategoryNodes nodes) {
-        String home = project.getProjectHomeFolder();
-        if (home == null || home.isBlank()) {
-            return;
-        }
-        String gitFolder = home + java.io.File.separator + Const.GIT_FOLDER;
 
         new SwingWorker<RepoData, Void>() {
             @Override
             protected RepoData doInBackground() throws Exception {
-                GitRepoService svc = new GitRepoService(gitFolder);
-                try {
+                try (GitRepoService svc =  GitRepoService.of(project)){
                     return new RepoData(
                             svc.getBranches(),
                             svc.getRemoteBranches(),
                             svc.getTags(),
                             svc.getStashList());
-                } finally {
-                    svc.shutdown();
                 }
             }
 
@@ -368,7 +360,7 @@ public class MainTreePanel extends JPanel {
                     populateBranches(nodes.tags(), data.tags(), NodeType.TAG);
                     populateStashes(nodes.stashes(), data.stashes());
                 } catch (Exception ex) {
-                    log.log(Level.FINE, "Cannot load workspace project data: " + home, ex);
+                    log.log(Level.FINE, "Cannot load workspace project data: " + project, ex);
                 }
             }
         }.execute();

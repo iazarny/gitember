@@ -169,4 +169,9 @@ public class Project implements Serializable, Comparable<Project>  {
         }
         return ((Project)obj).getProjectHomeFolder().equals(getProjectHomeFolder());
     }
+
+    @Override
+    public String toString() {
+        return "Git " + projectHomeFolder;
+    }
 }

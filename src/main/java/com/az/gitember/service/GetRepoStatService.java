@@ -16,10 +16,7 @@ public class GetRepoStatService {
      * @return RepoStats
      * */
     public RepoStats computeStats(String projectHome) throws Exception {
-        String gitFolder = projectHome + File.separator + Const.GIT_FOLDER;
-
-        GitRepoService svc = new GitRepoService(gitFolder);
-        try {
+        try (GitRepoService svc = GitRepoService.of(projectHome)){
             String branch = "";
             int ahead = 0;
             int behind = 0;
@@ -45,10 +42,7 @@ public class GetRepoStatService {
                     }
                 }
             }
-
             return new RepoStats(branch, modified, conflicts, ahead, behind, fetchTime(projectHome), false);
-        } finally {
-            svc.shutdown();
         }
     }
 

@@ -687,8 +687,7 @@ public class MainFrame extends JFrame {
         if (Context.isWorkspaceMode()) {
             if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                    try {
-                        GitRepoService svc = new GitRepoService(project.getProjectHomeFolder()  + File.separator + Const.GIT_FOLDER); //TODO eliminate such constructions project.getProjectHomeFolder()  + File.separator + Const.GIT_FOLDER
+                    try (GitRepoService svc = GitRepoService.of(project)) {
                         List<ScmItem> items = svc.getStatuses(null);
                         //boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
                         boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());

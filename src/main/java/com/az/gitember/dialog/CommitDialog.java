@@ -2,7 +2,9 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.LlmCommitMessageService;
 import com.az.gitember.service.OllamaManager;
 import com.az.gitember.service.detector.DetectorService;
@@ -197,14 +199,47 @@ public class CommitDialog extends JDialog {
 
     private void populateFiles() {
         tableModel.setRowCount(0);
-        
-        List<ScmItem> items = Context.getStatusList();
-        if (items != null) {
-            for (ScmItem item : items) {
-                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
-                if (STAGED_STATUSES.contains(status)) {
-                    tableModel.addRow(new Object[]{ status, item.getShortName() });
+
+        if (Context.isWorkspaceMode()) {
+            populateWorkspaceFiles();
+        } else {
+            populateSingleRepoFiles(Context.getStatusList());
+        }
+    }
+
+    /** Staged files of the currently open repository (non-workspace mode). */
+    private void populateSingleRepoFiles(List<ScmItem> items) {
+        for (ScmItem item : items) {
+            String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+            if (STAGED_STATUSES.contains(status)) {
+                tableModel.addRow(new Object[]{ status, item.getShortName() });
+            }
+        }
+    }
+
+    /**
+     * Staged files across every project in the current workspace. Each project's repository is
+     * read via a throwaway {@link GitRepoService}; rows are {@code [repo, status, file]} matching
+     * the workspace-mode column layout.
+     */
+    private void populateWorkspaceFiles() {
+        Workspace workspace = Context.getWorkspace();
+        if (workspace == null) return;
+
+        for (Project project : workspace.getProjects()) {
+            String home = project.getProjectHomeFolder();
+            String repoName = new java.io.File(home).getName();
+
+            try (GitRepoService svc = GitRepoService.of(project)) {
+                List<ScmItem> items = svc.getStatuses(null);
+                for (ScmItem item : items) {
+                    String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                    if (STAGED_STATUSES.contains(status)) {
+                        tableModel.addRow(new Object[]{ repoName, status, item.getShortName() });
+                    }
                 }
+            } catch (Exception ex) {
+                log.warning("Cannot read staged files for " + home + ": " + ex.getMessage());
             }
         }
     }
