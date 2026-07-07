@@ -1716,28 +1716,6 @@ public class GitRepoService {
         return scmItems;
     }
 
-    List<ScmItem> enrichWithLastChangesDetail(final Git git, final List<ScmItem> toEnrich) throws Exception {
-        for (ScmItem item : toEnrich) {
-            final LogCommand cmd = git.log()
-                    .setRevFilter(RevFilter.ALL)
-                    .setMaxCount(1)
-                    .addPath(item.getShortName());
-            final Iterable<RevCommit> lastCommitIter = cmd.call();
-            while (lastCommitIter.iterator().hasNext()) {
-                final RevCommit revCommit = lastCommitIter.iterator().next();
-                if (revCommit != null) {
-                    item.setChangeDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-                    item.setChangeAuthor(revCommit.getAuthorIdent().getName() + " <" + revCommit.getAuthorIdent().getEmailAddress() + ">");
-                    item.setChangeName  (revCommit.getShortMessage());
-                    break;
-                }
-            }
-
-        }
-        return toEnrich;
-
-    }
-
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
         for (ScmItem scmItem : status) {

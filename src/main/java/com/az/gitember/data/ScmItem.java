@@ -219,6 +219,13 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
         return 1;
     }
 
+    private static boolean isStaged(String status) {
+        return ScmItem.Status.ADDED.equals(status)
+                || ScmItem.Status.CHANGED.equals(status)
+                || ScmItem.Status.RENAMED.equals(status)
+                || ScmItem.Status.REMOVED.equals(status);
+    }
+
     @Override
     public String toString() {
         return getShortName() + " staged " + staged() + "  status " + getAttribute();

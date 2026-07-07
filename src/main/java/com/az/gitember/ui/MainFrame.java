@@ -19,6 +19,7 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -682,11 +683,17 @@ public class MainFrame extends JFrame {
     }
 
     private boolean isCommitEnabled() {
-        boolean commitEnabled;
+        boolean commitEnabled = false;
         if (Context.isWorkspaceMode()) {
             commitEnabled = true;
             for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-               //!!!!!! GitRepoService svc = new GitRepoService(project.getProjectHomeFolder())
+                try {
+                    GitRepoService svc = new GitRepoService(project.getProjectHomeFolder());
+                    List<ScmItem> items = svc.getStatuses(null);
+                    
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         } else {
             commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
