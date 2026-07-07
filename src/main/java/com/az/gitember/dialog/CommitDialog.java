@@ -66,12 +66,26 @@ public class CommitDialog extends JDialog {
         setLocationRelativeTo(parent);
 
         // Files table
-        tableModel = new DefaultTableModel(new String[]{"Status", "File"}, 0) {
+        final String[] cols;
+        if (Context.isWorkspaceMode()) {
+            cols = new String[]{"Repo", "Status", "File"};
+        } else {
+            cols = new String[]{"Status", "File"};
+        }
+        tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         filesTable = new JTable(tableModel);
-        filesTable.getColumnModel().getColumn(0).setPreferredWidth(100);
-        filesTable.getColumnModel().getColumn(0).setMaxWidth(150);
+        if (Context.isWorkspaceMode()) {
+            filesTable.getColumnModel().getColumn(0).setPreferredWidth(150);
+            filesTable.getColumnModel().getColumn(0).setMaxWidth(300);
+            filesTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+            filesTable.getColumnModel().getColumn(1).setMaxWidth(150);
+        } else {
+            filesTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+            filesTable.getColumnModel().getColumn(0).setMaxWidth(150);
+        }
+
 
         populateFiles();
 
@@ -183,6 +197,7 @@ public class CommitDialog extends JDialog {
 
     private void populateFiles() {
         tableModel.setRowCount(0);
+        
         List<ScmItem> items = Context.getStatusList();
         if (items != null) {
             for (ScmItem item : items) {

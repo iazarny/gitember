@@ -5,6 +5,7 @@ import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -60,7 +61,7 @@ public class WorkspaceDashboardPanel extends JPanel {
     private final Map<Project, RepoStats> statsByProject = new HashMap<>();
 
     private final List<Column> columns = List.of(
-            new Column("Repository", p -> new File(nz(p.getProjectHomeFolder())).getName()),
+            new Column("Repository", p -> new File(ObjectUtils.getIfNull(p.getProjectHomeFolder(), "")).getName()),
             new Column("Branch",     p -> cell(p, RepoStats::branch)),
             new Column("Status",     this::statusCell),
             new Column("Modified",   p -> cellInt(p, RepoStats::modified)),
@@ -364,7 +365,7 @@ public class WorkspaceDashboardPanel extends JPanel {
         }
 
         for (Project project : projects) {
-            String name = new File(nz(project.getProjectHomeFolder())).getName();
+            String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
             DefaultMutableTreeNode projectNode =
                     new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
             projectNode.add(new DefaultMutableTreeNode("Loading…"));
@@ -426,7 +427,7 @@ public class WorkspaceDashboardPanel extends JPanel {
         }
 
         List<ScmItem> sorted = new ArrayList<>(items);
-        sorted.sort(Comparator.comparing(i -> nz(i.getShortName())));
+        sorted.sort(Comparator.comparing(i -> ObjectUtils.getIfNull(i.getShortName(), "")));
 
         for (ScmItem item : sorted) {
             String path = item.getShortName();
@@ -625,11 +626,7 @@ public class WorkspaceDashboardPanel extends JPanel {
         return new JPanel();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────────
 
-    private static String nz(String s) {
-        return s != null ? s : "";
-    }
 
     // ── Table model ──────────────────────────────────────────────────────────────
 
