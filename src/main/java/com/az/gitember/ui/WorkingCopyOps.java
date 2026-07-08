@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class WorkingCopyOps  extends JPanel {
+public abstract class WorkingCopyOps  extends JPanel {
 
 
     protected final JButton stageAllBtn;
@@ -49,6 +49,19 @@ public class WorkingCopyOps  extends JPanel {
         searchField.setPreferredSize(new Dimension(150, 25));
         searchField.setMinimumSize(new Dimension(100, 25));
         searchField.setMaximumSize(new Dimension(150, 25));
+
+
+        searchField.addActionListener(e -> applyFilter());
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+        });
+
+        stageAllBtn.addActionListener(e -> stageAll());
+        unstageAllBtn.addActionListener(e -> unstageAll());
+        refreshBtn.addActionListener(e -> refresh());
+
     }
 
     public JButton getStageAllBtn() {
@@ -63,6 +76,12 @@ public class WorkingCopyOps  extends JPanel {
     public JTextField getSearchField() {
         return searchField;
     }
+
+    abstract protected void applyFilter();
+    abstract protected void stageAll();
+    abstract protected void unstageAll();
+    abstract protected void refresh();
+    abstract protected void updateButtonStates();
 
 
 }

@@ -157,8 +157,8 @@ public class MainToolBar extends JToolBar {
             mergedWorkspaceComponents.add(searchLabel);
             add(searchLabel);
 
-            //mergedWorkspaceComponents.add(hp.getSearchField());
-            //add(hp.getSearchField());
+            mergedWorkspaceComponents.add(wdp.getSearchField());
+            add(wdp.getSearchField());
 
             revalidate();
             repaint();

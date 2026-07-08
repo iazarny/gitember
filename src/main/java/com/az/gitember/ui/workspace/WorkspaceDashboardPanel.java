@@ -1,6 +1,7 @@
 package com.az.gitember.ui.workspace;
 
 import com.az.gitember.data.*;
+import com.az.gitember.service.Context;
 import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
@@ -50,35 +51,40 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     static final String PLACEHOLDER = " ";
 
-    /** Shown in a cell while its repository's stats are still being read off the EDT. */
+    /**
+     * Shown in a cell while its repository's stats are still being read off the EDT.
+     */
     static final String LOADING = "…";
 
-    private record Column(String title, Function<Project, Object> value) {}
+    private record Column(String title, Function<Project, Object> value) {
+    }
 
-    private record Summary(String label, Function<Workspace, Object> value) {}
+    private record Summary(String label, Function<Workspace, Object> value) {
+    }
 
 
-
-    /** Computed stats keyed by project; absent while a project is still loading. */
+    /**
+     * Computed stats keyed by project; absent while a project is still loading.
+     */
     private final Map<Project, RepoStats> statsByProject = new HashMap<>();
 
     private final List<Column> columns = List.of(
             new Column("Repository", p -> new File(ObjectUtils.getIfNull(p.getProjectHomeFolder(), "")).getName()),
-            new Column("Branch",     p -> cell(p, RepoStats::branch)),
-            new Column("Status",     this::statusCell),
-            new Column("Modified",   p -> cellInt(p, RepoStats::modified)),
-            new Column("Ahead",      p -> cellInt(p, RepoStats::ahead)),
-            new Column("Behind",     p -> cellInt(p, RepoStats::behind)),
+            new Column("Branch", p -> cell(p, RepoStats::branch)),
+            new Column("Status", this::statusCell),
+            new Column("Modified", p -> cellInt(p, RepoStats::modified)),
+            new Column("Ahead", p -> cellInt(p, RepoStats::ahead)),
+            new Column("Behind", p -> cellInt(p, RepoStats::behind)),
             new Column("Last Fetch", this::fetchCell)
     );
 
     private final List<Summary> summaries = List.of(
             new Summary("Repositories", ws -> ws.getProjects().size()),
-            new Summary("Modified",     ws -> sumInt(RepoStats::modified)),
-            new Summary("Ahead",        ws -> sumInt(RepoStats::ahead)),
-            new Summary("Behind",       ws -> sumInt(RepoStats::behind)),
-            new Summary("Conflicts",    ws -> sumInt(RepoStats::conflicts)),
-            new Summary("Last Fetch",   ws -> latestFetch())
+            new Summary("Modified", ws -> sumInt(RepoStats::modified)),
+            new Summary("Ahead", ws -> sumInt(RepoStats::ahead)),
+            new Summary("Behind", ws -> sumInt(RepoStats::behind)),
+            new Summary("Conflicts", ws -> sumInt(RepoStats::conflicts)),
+            new Summary("Last Fetch", ws -> latestFetch())
     );
 
     private final JLabel titleLabel = new JLabel("Workspace");
@@ -94,13 +100,15 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
 
-    private static final String TAB_MAIN         = "Main";
+    private static final String TAB_MAIN = "Main";
     private static final String TAB_WORKING_COPY = "Working Copy";
-    private static final String TAB_SEARCH       = "Search";
+    private static final String TAB_SEARCH = "Search";
 
     private final JTabbedPane tabs = new JTabbedPane();
 
-    /** Pixel width of the leading checkbox, used to hit-test stage/unstage clicks. */
+    /**
+     * Pixel width of the leading checkbox, used to hit-test stage/unstage clicks.
+     */
     private final int checkboxWidth = new JCheckBox().getPreferredSize().width;
 
 
@@ -118,6 +126,10 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         tabs.addTab(TAB_SEARCH, buildSearchTab());
         // Reload the tab's content each time the user switches to it.
         tabs.addChangeListener(e -> reloadSelectedTab());
+
+        // Toolbar
+        searchField.putClientProperty("JTextField.placeholderText", "Search...");
+
         add(tabs, BorderLayout.CENTER);
     }
 
@@ -127,6 +139,51 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         // Reload whatever tab is currently visible when the dashboard is (re)opened.
         reloadSelectedTab();
     }
+
+    @Override
+    protected void applyFilter() {
+
+    }
+
+    @Override
+    protected void stageAll() {
+
+    }
+
+    @Override
+    protected void unstageAll() {
+
+    }
+
+    @Override
+    protected void refresh() {
+        updateButtonStates();
+        reloadSelectedTab();
+    }
+
+    @Override
+    protected void updateButtonStates() {
+        if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+            stageAllBtn.setEnabled(false);
+            unstageAllBtn.setEnabled(false);
+            for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
+                try (GitRepoService svc = GitRepoService.of(project)) {
+                    boolean hasStaged = svc.hasStaged();
+                    boolean hasUnstaged = svc.hasUntaged();
+                    if (hasStaged) {
+                        stageAllBtn.setEnabled(hasUnstaged);
+
+                    }
+                    if (hasUnstaged) {
+                        unstageAllBtn.setEnabled(hasStaged);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
 
     /**
      * Reloads the currently visible tab — invoked when the main window regains focus while the
@@ -138,7 +195,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Reloads the content of the currently selected tab. */
+    /**
+     * Reloads the content of the currently selected tab.
+     */
     private void reloadSelectedTab() {
         int index = tabs.getSelectedIndex();
         String title = index >= 0 ? tabs.getTitleAt(index) : null;
@@ -149,7 +208,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Recomputes the per-repository table and the header summaries. */
+    /**
+     * Recomputes the per-repository table and the header summaries.
+     */
     private void reloadMainTab() {
         statsByProject.clear();
         if (workspace == null) {
@@ -165,14 +226,18 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         metricsPanel.repaint();
     }
 
-    /** Rebuilds the combined working-copy tree. */
+    /**
+     * Rebuilds the combined working-copy tree.
+     */
     private void reloadWorkingCopyTab() {
         rebuildWorkingCopy();
     }
 
     // ── Per-repository stats (async) ──────────────────────────────────────────────
 
-    /** Kicks off one background read per project; the table and header update as each returns. */
+    /**
+     * Kicks off one background read per project; the table and header update as each returns.
+     */
     private void loadAllStats(List<Project> projects) {
         for (Project project : projects) {
             String home = project.getProjectHomeFolder();
@@ -212,7 +277,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
 
-
     // ── Cell / summary formatting ─────────────────────────────────────────────────
 
     private Object cell(Project project, Function<RepoStats, Object> mapper) {
@@ -245,7 +309,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return GitemberUtil.formatDate(stats.lastFetch());
     }
 
-    /** Sums a per-repository integer over all successfully loaded repositories. */
+    /**
+     * Sums a per-repository integer over all successfully loaded repositories.
+     */
     private int sumInt(ToIntFunction<RepoStats> mapper) {
         int sum = 0;
         for (RepoStats stats : statsByProject.values()) {
@@ -254,7 +320,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return sum;
     }
 
-    /** Most recent last-fetch time across the workspace, or the placeholder if none is known. */
+    /**
+     * Most recent last-fetch time across the workspace, or the placeholder if none is known.
+     */
     private Object latestFetch() {
         Date latest = null;
         for (RepoStats stats : statsByProject.values()) {
@@ -413,7 +481,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }.execute();
     }
 
-    /** Populates {@code parent} with a folders/files hierarchy from a flat list of items. */
+    /**
+     * Populates {@code parent} with a folders/files hierarchy from a flat list of items.
+     */
     private void populateFileTree(Project project, DefaultMutableTreeNode parent, List<ScmItem> items) {
         if (items == null || items.isEmpty()) {
             parent.add(new DefaultMutableTreeNode("(no changes)"));
@@ -437,14 +507,18 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Replaces {@code node}'s children with the supplied nodes. */
+    /**
+     * Replaces {@code node}'s children with the supplied nodes.
+     */
     private void setChildren(DefaultMutableTreeNode node, List<DefaultMutableTreeNode> children) {
         node.removeAllChildren();
         children.forEach(node::add);
         workingCopyModel.reload(node);
     }
 
-    /** Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children. */
+    /**
+     * Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children.
+     */
     private static void moveChildren(DefaultMutableTreeNode from, DefaultMutableTreeNode to) {
         to.removeAllChildren();
         while (from.getChildCount() > 0) {
@@ -509,7 +583,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }.execute();
     }
 
-    /** Stages {@code item} on the supplied service, mirroring WorkingCopyPanel's stage semantics. */
+    /**
+     * Stages {@code item} on the supplied service, mirroring WorkingCopyPanel's stage semantics.
+     */
     private void stageItem(GitRepoService svc, ScmItem item) throws Exception {
         String status = item.getAttribute() != null ? item.getAttribute().getStatus() : null;
         String fileName = item.getShortName();
@@ -526,7 +602,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Walks up from a file node to its owning project node (direct child of the hidden root). */
+    /**
+     * Walks up from a file node to its owning project node (direct child of the hidden root).
+     */
     private DefaultMutableTreeNode projectNodeOf(DefaultMutableTreeNode node) {
         DefaultMutableTreeNode current = node;
         while (current.getParent() != null && current.getParent() != workingCopyRoot) {
@@ -558,7 +636,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return SyntaxStyleUtil.UNSTAGED_COLOR;
     }
 
-    /** Leaf tree data: a working-copy change tied to the project it belongs to. */
+    /**
+     * Leaf tree data: a working-copy change tied to the project it belongs to.
+     */
     private record FileNode(Project project, ScmItem item, String leafName) {
         String status() {
             return item.getAttribute() != null ? item.getAttribute().getStatus() : "";
@@ -613,7 +693,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
 
-
     // ── Table model ──────────────────────────────────────────────────────────────
 
     private class RepoTableModel extends AbstractTableModel {
@@ -628,10 +707,25 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             return rows.indexOf(project);
         }
 
-        @Override public int getRowCount() { return rows.size(); }
-        @Override public int getColumnCount() { return columns.size(); }
-        @Override public String getColumnName(int column) { return columns.get(column).title(); }
-        @Override public boolean isCellEditable(int row, int column) { return false; }
+        @Override
+        public int getRowCount() {
+            return rows.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columns.size();
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columns.get(column).title();
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
 
         @Override
         public Object getValueAt(int row, int column) {

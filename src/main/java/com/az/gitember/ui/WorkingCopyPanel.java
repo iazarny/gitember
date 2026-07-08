@@ -99,21 +99,14 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             }
         });
 
-        // Toolbar button action
-        stageAllBtn.addActionListener(e -> stageAll());
-        unstageAllBtn.addActionListener(e -> unstageAll());
-        refreshBtn.addActionListener(e -> refresh());
+        // Toolbar
         searchField.putClientProperty("JTextField.placeholderText", "Filter files...");
-        searchField.addActionListener(e -> applyFilter());
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-        });
+
 
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
+    @Override
     public void refresh() {
         statusBar.setStatus("Refreshing working copy...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -142,7 +135,8 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                 .anyMatch(i -> i.isStaged());
     }
 
-    private void updateButtonStates() {
+    @Override
+    protected void updateButtonStates() {
         List<ScmItem> items = tableModel.getAllItems();
         boolean hasUnstaged = items.stream().anyMatch(i -> !i.isStaged());
         boolean hasStaged = items.stream().anyMatch(i -> i.isStaged());
@@ -150,7 +144,8 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         unstageAllBtn.setEnabled(hasStaged);
     }
 
-    private void applyFilter() {
+    @Override
+    protected void applyFilter() {
         String filter = searchField.getText().trim().toLowerCase();
         tableModel.applyFilter(filter);
     }
@@ -208,7 +203,8 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         Context.getGitRepoService().removeFileFromCommitStage(fileName);
     }
 
-    private void stageAll() {
+    @Override
+    protected void stageAll() {
         List<ScmItem> items = tableModel.getAllItems();
         List<ScmItem> toStage = items.stream()
                 .filter(i -> !i.isStaged())
@@ -242,7 +238,8 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         worker.execute();
     }
 
-    private void unstageAll() {
+    @Override
+    protected void unstageAll() {
         List<ScmItem> items = tableModel.getAllItems();
         List<ScmItem> toUnstage = items.stream()
                 .filter(i -> i.isStaged())
