@@ -3500,6 +3500,28 @@ public class GitRepoService implements AutoCloseable {
         return items.stream().anyMatch(i -> !i.isStaged());
     }
 
+    public void stageItem(ScmItem item) throws Exception {
+        String status = item.getAttribute().getStatus();
+        String fileName = item.getShortName();
+
+        if (ScmItem.Status.RENAMED.equals(status)) {
+            String oldName = item.getAttribute().getOldName();
+            if (oldName != null) {
+                renameFile(oldName, fileName);
+            }
+        } else if (ScmItem.Status.MISSED.equals(status)) {
+            removeFile(fileName);
+        } else {
+            // MODIFIED, UNTRACKED, UNTRACKED_FOLDER, CONFLICT
+            addFileToCommitStage(fileName);
+        }
+    }
+
+    public void unstageItem(ScmItem item) throws Exception {
+        String fileName = item.getShortName();
+        removeFileFromCommitStage(fileName);
+    }
+
 
     // ── Git Worktree support ──────────────────────────────────────────────────
 

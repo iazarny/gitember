@@ -160,9 +160,9 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             @Override
             protected Void doInBackground() throws Exception {
                 if (ScmItem.isStaged(status)) {
-                    unstageItem(item);
+                    Context.getGitRepoService().unstageItem(item);
                 } else {
-                    stageItem(item);
+                    Context.getGitRepoService().stageItem(item);
                 }
                 return null;
             }
@@ -181,27 +181,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         worker.execute();
     }
 
-    private void stageItem(ScmItem item) throws Exception {
-        String status = item.getAttribute().getStatus();
-        String fileName = item.getShortName();
 
-        if (ScmItem.Status.RENAMED.equals(status)) {
-            String oldName = item.getAttribute().getOldName();
-            if (oldName != null) {
-                Context.getGitRepoService().renameFile(oldName, fileName);
-            }
-        } else if (ScmItem.Status.MISSED.equals(status)) {
-            Context.getGitRepoService().removeFile(fileName);
-        } else {
-            // MODIFIED, UNTRACKED, UNTRACKED_FOLDER, CONFLICT
-            Context.getGitRepoService().addFileToCommitStage(fileName);
-        }
-    }
-
-    private void unstageItem(ScmItem item) throws Exception {
-        String fileName = item.getShortName();
-        Context.getGitRepoService().removeFileFromCommitStage(fileName);
-    }
 
     @Override
     protected void stageAll() {
@@ -217,7 +197,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             @Override
             protected Void doInBackground() throws Exception {
                 for (ScmItem item : toStage) {
-                    stageItem(item);
+                    Context.getGitRepoService().stageItem(item);
                 }
                 return null;
             }
@@ -252,7 +232,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             @Override
             protected Void doInBackground() throws Exception {
                 for (ScmItem item : toUnstage) {
-                    unstageItem(item);
+                    Context.getGitRepoService().unstageItem(item);
                 }
                 return null;
             }
@@ -486,7 +466,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                stageItem(item);
+                Context.getGitRepoService().stageItem(item);
                 return null;
             }
 
@@ -502,7 +482,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                unstageItem(item);
+                Context.getGitRepoService().unstageItem(item);
                 return null;
             }
 
@@ -520,7 +500,9 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                for (ScmItem item : items) stageItem(item);
+                for (ScmItem item : items) {
+                    Context.getGitRepoService().stageItem(item);
+                }
                 return null;
             }
 
@@ -539,7 +521,9 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                for (ScmItem item : items) unstageItem(item);
+                for (ScmItem item : items) {
+                    Context.getGitRepoService().unstageItem(item);
+                }
                 return null;
             }
 
