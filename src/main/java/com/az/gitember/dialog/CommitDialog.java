@@ -493,14 +493,22 @@ public class CommitDialog extends JDialog {
 
     }
 
+    /**
+     * Commit staged items for single given project with respect to the configured author and commiter names.
+     * @param project
+     * @param message
+     * @throws IOException
+     * @throws GitAPIException
+     */
     private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
         try (GitRepoService svc = GitRepoService.of(project)) {
-            String authorName     = StringUtils.trimToNull(project.getUserCommitName());
-            String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
-            String committerName  = StringUtils.trimToNull(project.getCommitterName());
-            String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-            svc.commit(message, authorName, authorEmail, committerName, committerEmail);
-
+            if (svc.hasStaged()) {
+                String authorName     = StringUtils.trimToNull(project.getUserCommitName());
+                String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
+                String committerName  = StringUtils.trimToNull(project.getCommitterName());
+                String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
+                svc.commit(message, authorName, authorEmail, committerName, committerEmail);
+            }
         }
 
     }

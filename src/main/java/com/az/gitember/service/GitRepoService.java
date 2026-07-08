@@ -74,6 +74,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+
+//TODO move LFS part into separate service
 public class GitRepoService implements AutoCloseable {
 
     public static final String SMUDGE_NAME = org.eclipse.jgit.lib.Constants.BUILTIN_FILTER_PREFIX
@@ -104,12 +106,6 @@ public class GitRepoService implements AutoCloseable {
         FilterCommandRegistry.register(GitRepoService.SMUDGE_NAME, SmudgeFilter.FACTORY);
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
     }
-
-
-
-
-
-
 
 
     /**
@@ -1963,15 +1959,6 @@ public class GitRepoService implements AutoCloseable {
     }
 
 
-    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty, final ProgressMonitor progressMonitor) {
-        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty, progressMonitor);
-        List<ScmRevisionInformation> rez = commit.stream().map(this::adapt).collect(Collectors.toList());
-        rez.forEach(sri -> {
-            sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
-        });
-        return rez;
-    }
-
     /**
      * Get revisions to visualize. Fr more detail look at
      * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
@@ -2029,35 +2016,6 @@ public class GitRepoService implements AutoCloseable {
         return plotCommitList;
     }
 
-
-    public List<AverageLiveTime> getMergedBranches(final StatWPParameters params) {
-
-        final String treeNameTarget = params.getBranchName();
-        final List<BranchLiveTime> brandLiveTimes = new ArrayList<>();
-        final Set<RevCommit> tails = new HashSet<>();
-        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, -1, null);
-        final Set<RevCommit> treeOnlyCommits = getRevCommits(treeNameHistory);
-
-        RevCommit plotLane = treeNameHistory.get(0);
-
-        while (plotLane.getParentCount() > 0) {
-            if (plotLane.getParentCount() > 1) {
-                // merge point
-                for (int i = 0; i < plotLane.getParentCount(); i++) {
-                    if (!treeOnlyCommits.contains(plotLane.getParent(i))) {
-                        // parent not from main tree but from branch
-                        RevCommit forkPoint = findParrent(plotLane.getParent(i), treeOnlyCommits);
-                        if (forkPoint != null && !tails.contains(forkPoint)) {
-                            tails.add(forkPoint);
-                            brandLiveTimes.add(new BranchLiveTime(plotLane, forkPoint));
-                        }
-                    }
-                }
-            }
-            plotLane = plotLane.getParent(0);
-        }
-        return calculateAverageperMonth(brandLiveTimes, params);
-    }
 
     public List<AverageLiveTime> calculateAverageperMonth(final List<BranchLiveTime> brandLiveTimes, final StatWPParameters params) {
         if (params.isWorkingHours()) {
@@ -3530,6 +3488,18 @@ public class GitRepoService implements AutoCloseable {
             return !walk.isMergedInto(commit, remote);
         }
     }
+
+    // ── Utility part  ──────────────────────────────────────────────────
+    public boolean hasStaged() {
+        List<ScmItem> items = getStatuses(null);
+        return items.stream().anyMatch(ScmItem::isStaged);
+    }
+
+    public boolean hasUntaged() {
+        List<ScmItem> items = getStatuses(null);
+        return items.stream().anyMatch(i -> !i.isStaged());
+    }
+
 
     // ── Git Worktree support ──────────────────────────────────────────────────
 
