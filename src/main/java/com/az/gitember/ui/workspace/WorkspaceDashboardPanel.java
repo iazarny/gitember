@@ -4,7 +4,9 @@ import com.az.gitember.data.*;
 import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.WorkingCopyOps;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
@@ -42,7 +44,7 @@ import java.util.logging.Logger;
  * a {@link Column} to surface new per-repository information, or a {@link Summary} for a new
  * aggregate figure. Values that are not computed yet render the {@value #PLACEHOLDER} placeholder.
  */
-public class WorkspaceDashboardPanel extends JPanel {
+public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     private static final Logger log = Logger.getLogger(WorkspaceDashboardPanel.class.getName());
 
@@ -104,7 +106,9 @@ public class WorkspaceDashboardPanel extends JPanel {
 
     private Workspace workspace;
 
-    public WorkspaceDashboardPanel() {
+    public WorkspaceDashboardPanel(StatusBar statusBar) {
+        super(statusBar);
+
         setLayout(new BorderLayout());
 
         add(buildHeader(), BorderLayout.NORTH);

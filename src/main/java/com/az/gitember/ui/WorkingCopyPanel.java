@@ -25,25 +25,17 @@ import java.util.logging.Logger;
  * Working copy panel with stage/unstage checkboxes, colored status,
  * context menu, and toolbar actions similar to the original gitember.
  */
-public class WorkingCopyPanel extends JPanel {
+public class WorkingCopyPanel extends WorkingCopyOps {
 
     private static final Logger log = Logger.getLogger(WorkingCopyPanel.class.getName());
 
     private final JTable table;
     private final WorkingCopyTableModel tableModel;
-    private final JButton stageAllBtn;
-    private final JButton unstageAllBtn;
-    private final JButton refreshBtn;
-    private final JTextField searchField;
-    private final StatusBar statusBar;
-
-
 
     public WorkingCopyPanel(StatusBar statusBar) {
-        this.statusBar = statusBar;
+        super(statusBar);
+
         setLayout(new BorderLayout());
-
-
 
         tableModel = new WorkingCopyTableModel();
         table = new JTable(tableModel);
@@ -107,23 +99,10 @@ public class WorkingCopyPanel extends JPanel {
             }
         });
 
-        // Toolbar
-        stageAllBtn = Util.createButton("Stage All", null, FontAwesomeSolid.PLUS);
-        stageAllBtn.setEnabled(false);
+        // Toolbar button action
         stageAllBtn.addActionListener(e -> stageAll());
-
-        unstageAllBtn = Util.createButton("Unstage All", null, FontAwesomeSolid.MINUS);
-        unstageAllBtn.setEnabled(false);
         unstageAllBtn.addActionListener(e -> unstageAll());
-
-        refreshBtn = Util.createButton("Refresh", null, FontAwesomeSolid.SYNC);
         refreshBtn.addActionListener(e -> refresh());
-
-        searchField = new JTextField(15);
-        searchField.setPreferredSize(new Dimension(150, 25));
-        searchField.setMinimumSize(new Dimension(100, 25));
-        searchField.setMaximumSize(new Dimension(150, 25));
-
         searchField.putClientProperty("JTextField.placeholderText", "Filter files...");
         searchField.addActionListener(e -> applyFilter());
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
@@ -134,11 +113,6 @@ public class WorkingCopyPanel extends JPanel {
 
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
-
-    public JButton getStageAllBtn() { return stageAllBtn; }
-    public JButton getUnstageAllBtn() { return unstageAllBtn; }
-    public JButton getRefreshBtn() { return refreshBtn; }
-    public JTextField getSearchField() { return searchField; }
 
     public void refresh() {
         statusBar.setStatus("Refreshing working copy...");

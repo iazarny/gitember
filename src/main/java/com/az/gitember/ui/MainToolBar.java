@@ -128,11 +128,29 @@ public class MainToolBar extends JToolBar {
     }
 
 
-    public void mergeWorkSpaceToolbar(WorkspaceDashboardPanel workspaceDashboardPanel) {
+    public void mergeWorkSpaceToolbar(WorkspaceDashboardPanel wdp) {
         if (mergedWorkspaceComponents.isEmpty()) { //do not merge twice
+            JSeparator sep = new JToolBar.Separator();
+            mergedWorkspaceComponents.add(sep);
+            add(sep);
+
+            mergedWorkspaceComponents.add(wdp.getStageAllBtn());
+            add(wdp.getStageAllBtn());
+
+            mergedWorkspaceComponents.add(wdp.getUnstageAllBtn());
+            add(wdp.getUnstageAllBtn());
+
+            JSeparator sep2 = new JToolBar.Separator();
+            mergedWorkspaceComponents.add(sep2);
+            add(sep2);
+
+            mergedWorkspaceComponents.add(wdp.getRefreshBtn());
+            add(wdp.getRefreshBtn());
+
             Component glue = Box.createHorizontalGlue();
             mergedWorkspaceComponents.add(glue);
             add(glue);
+
 
             JLabel searchLabel = new JLabel("Search:");
             searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
@@ -147,39 +165,7 @@ public class MainToolBar extends JToolBar {
         }
     }
 
-    public void unmergeWorkSpaceToolbar() {
-        System.out.println("un   mergeWorkSpaceToolbar");
-        if (!mergedWorkspaceComponents.isEmpty())  {
-            for (Component c : mergedWorkspaceComponents) {
-                remove(c);
-            }
-            mergedWorkspaceComponents.clear();
-            revalidate();
-            repaint();
-        }
-    }
 
-    public void unmergeWorkingCopyToolbar() {
-        if (!mergedComponents.isEmpty())  {
-            for (Component c : mergedComponents) {
-                remove(c);
-            }
-            mergedComponents.clear();
-            revalidate();
-            repaint();
-        }
-    }
-
-    public void unmergeHistoryToolbar() {
-        if (!mergedHistoryComponents.isEmpty()) {
-            for (Component c : mergedHistoryComponents) {
-                remove(c);
-            }
-            mergedHistoryComponents.clear();
-            revalidate();
-            repaint();
-        }
-    }
 
     public void mergeWorkingCopyToolbar(WorkingCopyPanel wcp) {
         if (mergedComponents.isEmpty()) { // do not merge twice
@@ -234,6 +220,40 @@ public class MainToolBar extends JToolBar {
             mergedHistoryComponents.add(hp.getSearchField());
             add(hp.getSearchField());
 
+            revalidate();
+            repaint();
+        }
+    }
+
+    public void unmergeWorkSpaceToolbar() {
+        System.out.println("un   mergeWorkSpaceToolbar");
+        if (!mergedWorkspaceComponents.isEmpty())  {
+            for (Component c : mergedWorkspaceComponents) {
+                remove(c);
+            }
+            mergedWorkspaceComponents.clear();
+            revalidate();
+            repaint();
+        }
+    }
+
+    public void unmergeWorkingCopyToolbar() {
+        if (!mergedComponents.isEmpty())  {
+            for (Component c : mergedComponents) {
+                remove(c);
+            }
+            mergedComponents.clear();
+            revalidate();
+            repaint();
+        }
+    }
+
+    public void unmergeHistoryToolbar() {
+        if (!mergedHistoryComponents.isEmpty()) {
+            for (Component c : mergedHistoryComponents) {
+                remove(c);
+            }
+            mergedHistoryComponents.clear();
             revalidate();
             repaint();
         }

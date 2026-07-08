@@ -46,15 +46,13 @@ public class MainFrame extends JFrame {
     private static final String CARD_WELCOME = "welcome";
     private static final String CARD_REPO = "repo";
 
-    // Working copy
-    private WorkingCopyPanel workingCopyPanel;
-    private HistoryPanel historyPanel;
-    private CommitDetailPanel stashDetailPanel;
-    private PullRequestPanel pullRequestPanel;
-    private SubmodulePanel submodulePanel;
 
-    // Workspace dashboard (shown when the workspace root node is selected)
-    private final WorkspaceDashboardPanel workspaceDashboardPanel = new WorkspaceDashboardPanel();
+    private final WorkingCopyPanel workingCopyPanel; // Working copy
+    private final HistoryPanel historyPanel;
+    private final CommitDetailPanel stashDetailPanel;
+    private final PullRequestPanel pullRequestPanel;
+    private final SubmodulePanel submodulePanel;
+    private final WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
     private boolean confirmed = false;
 
@@ -206,6 +204,7 @@ public class MainFrame extends JFrame {
         stashDetailPanel = new CommitDetailPanel(statusBar);
         pullRequestPanel = new PullRequestPanel();
         submodulePanel = new SubmodulePanel(statusBar);
+        workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
 
         Context.addPropertyChangeListener(Context.PROP_SUBMODULES,
                 e -> submodulePanel.setSubmodules(Context.getSubmodules()));
