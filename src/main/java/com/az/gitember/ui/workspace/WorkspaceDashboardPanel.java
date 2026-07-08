@@ -147,12 +147,63 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     @Override
     protected void stageAll() {
-
+        stageAllAcrossWorkspace(true);
     }
 
     @Override
     protected void unstageAll() {
+        stageAllAcrossWorkspace(false);
+    }
 
+    /**
+     * Walks every project in the workspace and, using each project's <em>own</em>
+     * {@link GitRepoService}, stages (when {@code stage} is true) all unstaged items or unstages
+     * all staged items. Runs off the EDT, then refreshes the button states and the working-copy tree.
+     */
+    private void stageAllAcrossWorkspace(boolean stage) {
+        List<Project> projects = new ArrayList<>(
+                workspace == null ? List.of() : workspace.getProjects());
+        if (projects.isEmpty()) return;
+
+        statusBar.setStatus(stage ? "Staging all..." : "Unstaging all...");
+        statusBar.showProgress(true);
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                for (Project project : projects) {
+                    try (GitRepoService svc = GitRepoService.of(project)) {
+                        for (ScmItem item : svc.getStatuses(null)) {
+
+                            statusBar.setStatus(stage ?
+                                    "Staging "  + item.getShortName():
+                                    "Unstaging " +  item.getShortName());
+
+                            boolean staged = isStaged(
+                                    item.getAttribute() != null ? item.getAttribute().getStatus() : null);
+                            if (stage && !staged) {
+                                stageItem(svc, item);
+                            } else if (!stage && staged) {
+                                svc.removeFileFromCommitStage(item.getShortName());
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                statusBar.clearProgress();
+                try {
+                    get();
+                    statusBar.setStatus(stage ? "All files staged" : "All files unstaged");
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, (stage ? "Stage all" : "Unstage all") + " failed", ex);
+                    statusBar.setStatus("Error: " + ex.getMessage());
+                }
+                refresh();
+            }
+        }.execute();
     }
 
     @Override
@@ -161,27 +212,51 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         reloadSelectedTab();
     }
 
+    /**
+     * Recomputes the enabled state of the Stage All / Unstage All buttons from the working-copy
+     * status of <em>every</em> project in the workspace: Stage All is enabled when any project has
+     * an unstaged item, Unstage All when any project has a staged item. The per-project git reads
+     * run off the EDT; the buttons are updated on the EDT once the scan completes.
+     */
     @Override
     protected void updateButtonStates() {
-        if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
-            stageAllBtn.setEnabled(false);
-            unstageAllBtn.setEnabled(false);
-            for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                try (GitRepoService svc = GitRepoService.of(project)) {
-                    boolean hasStaged = svc.hasStaged();
-                    boolean hasUnstaged = svc.hasUntaged();
-                    if (hasStaged) {
-                        stageAllBtn.setEnabled(hasUnstaged);
+        if (!Context.isWorkspaceMode() || Context.getActiveView() != Context.ActiveView.WORKSPACE) {
+            return;
+        }
+        List<Project> projects = new ArrayList<>(
+                workspace == null ? List.of() : workspace.getProjects());
+        stageAllBtn.setEnabled(false);
+        unstageAllBtn.setEnabled(false);
+        if (projects.isEmpty()) return;
 
+        new SwingWorker<boolean[], Void>() {
+            @Override
+            protected boolean[] doInBackground() {
+                boolean hasUnstaged = false;
+                boolean hasStaged = false;
+                for (Project project : projects) {
+                    try (GitRepoService svc = GitRepoService.of(project)) {
+                        hasUnstaged |= svc.hasUntaged();
+                        hasStaged |= svc.hasStaged();
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Cannot read status for " + project, ex);
                     }
-                    if (hasUnstaged) {
-                        unstageAllBtn.setEnabled(hasStaged);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    if (hasUnstaged && hasStaged) break; // nothing left to learn
+                }
+                return new boolean[]{hasUnstaged, hasStaged};
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    boolean[] state = get();
+                    stageAllBtn.setEnabled(state[0]);
+                    unstageAllBtn.setEnabled(state[1]);
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Cannot update workspace button states", ex);
                 }
             }
-        }
+        }.execute();
     }
 
 
@@ -231,6 +306,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     private void reloadWorkingCopyTab() {
         rebuildWorkingCopy();
+        updateButtonStates();
     }
 
     // ── Per-repository stats (async) ──────────────────────────────────────────────
@@ -579,6 +655,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 if (projectNode != null) {
                     loadProjectWorkingCopy(project, projectNode);
                 }
+                updateButtonStates();
             }
         }.execute();
     }
