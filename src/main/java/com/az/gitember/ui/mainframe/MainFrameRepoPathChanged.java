@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
 
 import javax.swing.*;
@@ -21,13 +22,12 @@ public class MainFrameRepoPathChanged implements PropertyChangeListener {
             boolean hasRepo = evt.getNewValue() != null;
             mainFrame.setRepoActionsEnabled(hasRepo);
             mainFrame.getMainMenuBar().setVisible(hasRepo);
-            if (hasRepo) {
+            if (hasRepo || Context.isWorkspaceMode()) {
                 mainFrame.addCurrentProjectToSettings();
                 mainFrame.refreshProjectLists();
                 // Switch from welcome to repo view
                 mainFrame.getMainCardLayout().show(mainFrame.getMainCardPanel(), MainFrame.CARD_REPO);
             } else {
-                // No repo - show welcome
                 mainFrame.getMainCardLayout().show(mainFrame.getMainCardPanel(), MainFrame.CARD_WELCOME);
             }
             mainFrame.updateTitle();

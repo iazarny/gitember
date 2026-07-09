@@ -6,7 +6,10 @@ import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.ui.mainframe.MainFrameNavigateToHistory;
+import com.az.gitember.ui.mainframe.MainFrameNavigateToWorkingCopy;
 import com.az.gitember.ui.mainframe.MainFrameRepoPathChanged;
+import com.az.gitember.ui.mainframe.MainFrameSubmodulesChanged;
 import com.az.gitember.ui.mainframe.MainFrameWorkingBranchChanged;
 import com.az.gitember.ui.mainframe.MainFrameWorkingItemsChanged;
 import com.az.gitember.ui.mainframe.MainFrameWorkingItemsRefresh;
@@ -154,14 +157,9 @@ public class MainFrame extends JFrame {
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainFrameRepoPathChanged(this));
         Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new MainFrameWorkingItemsChanged(this));
         Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, new MainFrameWorkingItemsRefresh(this));
-
-        // After a successful pull: switch to history and highlight the pulled commit
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY,
-                e -> showCommitInHistory((String) e.getNewValue()));
-
-        // After a conflicting pull: switch to working copy so conflicts are visible
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY,
-                e -> showWorkingCopy());
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY, new MainFrameNavigateToHistory(this));
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY, new MainFrameNavigateToWorkingCopy(this));
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new MainFrameSubmodulesChanged(this));
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
@@ -202,8 +200,7 @@ public class MainFrame extends JFrame {
         submodulePanel = new SubmodulePanel(statusBar);
         workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
 
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,
-                e -> submodulePanel.setSubmodules(Context.getSubmodules()));
+
 
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
@@ -325,6 +322,10 @@ public class MainFrame extends JFrame {
 
     public WorkingCopyPanel getWorkingCopyPanel() {
         return workingCopyPanel;
+    }
+
+    public SubmodulePanel getSubmodulePanel() {
+        return submodulePanel;
     }
 
     private void openProject(Project project) {
@@ -850,8 +851,8 @@ public class MainFrame extends JFrame {
 
             switch (data.type()) {
                 case WORKSPACE -> {
-                    Context.setActiveView(Context.ActiveView.WORKSPACE);
                     Context.setRepositoryPath(null);
+                    Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
                     toolBar.setCommitEnabled(isCommitEnabled());
                     updateWorkspaceRemoteActions();
