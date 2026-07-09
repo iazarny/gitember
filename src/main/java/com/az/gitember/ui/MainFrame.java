@@ -54,8 +54,6 @@ public class MainFrame extends JFrame {
     private final SubmodulePanel submodulePanel;
     private final WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
-    private boolean confirmed = false;
-
     public MainFrame() {
         Context.setMainFrame(this);
         setTitle("Gitember");
@@ -372,10 +370,12 @@ public class MainFrame extends JFrame {
                 .filter(p -> p.getProjectHomeFolder().equalsIgnoreCase(folder))
                 .findFirst()
                 .orElse(null);
-        if (existing != null) {
-            existing.setOpenTime(new Date());
-        } else {
+        if (existing == null) {
             settings.getProjects().add(new Project(folder, new Date()));
+        } else {
+            if (Context.isWorkspaceMode()) {
+                existing.setOpenTime(new Date());
+            }
         }
         Context.saveSettings();
     }
@@ -870,6 +870,7 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKSPACE -> {
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
+                    Context.setRepositoryPath(null); //!!!!!!!
                     contentPanel.setContent(workspaceDashboardPanel);
                     toolBar.setCommitEnabled(isCommitEnabled());
                     updateWorkspaceRemoteActions();

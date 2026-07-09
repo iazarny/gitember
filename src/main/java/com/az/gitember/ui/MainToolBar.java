@@ -238,7 +238,6 @@ public class MainToolBar extends JToolBar {
     }
 
     public void unmergeWorkSpaceToolbar() {
-        System.out.println("un   mergeWorkSpaceToolbar");
         if (!mergedWorkspaceComponents.isEmpty())  {
             for (Component c : mergedWorkspaceComponents) {
                 remove(c);

@@ -354,11 +354,6 @@ public class MainMenuBar extends JMenuBar {
     // ── Enable / disable all repo-dependent menus at once ─────────────────────
 
     public void setRepoActionsEnabled(boolean enabled) {
-        // Entire menus go grey when no repo is open
-        /*repoMenu.setEnabled(enabled);
-        branchMenu.setEnabled(enabled);
-        workingCopyMenu.setEnabled(enabled);*/
-
         repoMenu.setVisible(enabled);
         branchMenu.setVisible(enabled);
         workingCopyMenu.setVisible(enabled);
