@@ -21,8 +21,8 @@ public class MainFrameRepoPathChanged implements PropertyChangeListener {
         SwingUtilities.invokeLater(() -> {
             boolean hasRepo = evt.getNewValue() != null;
             mainFrame.setRepoActionsEnabled(hasRepo);
-            mainFrame.getMainMenuBar().setVisible(hasRepo);
             if (hasRepo || Context.isWorkspaceMode()) {
+                mainFrame.getMainMenuBar().setVisible(true);
                 mainFrame.addCurrentProjectToSettings();
                 mainFrame.refreshProjectLists();
                 // Switch from welcome to repo view
