@@ -6,6 +6,10 @@ import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.ui.mainframe.MainFrameRepoPathChanged;
+import com.az.gitember.ui.mainframe.MainFrameWorkingBranchChanged;
+import com.az.gitember.ui.mainframe.MainFrameWorkingItemsChanged;
+import com.az.gitember.ui.mainframe.MainFrameWorkingItemsRefresh;
 import com.az.gitember.ui.maintree.MainTreeCellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
@@ -43,8 +47,8 @@ public class MainFrame extends JFrame {
     private final JPanel mainCardPanel;
     private final JSplitPane splitPane;
 
-    private static final String CARD_WELCOME = "welcome";
-    private static final String CARD_REPO = "repo";
+    public static final String CARD_WELCOME = "welcome";
+    public static final String CARD_REPO = "repo";
 
 
     private final WorkingCopyPanel workingCopyPanel; // Working copy
@@ -146,16 +150,10 @@ public class MainFrame extends JFrame {
         wireActions();
 
         // Listen to context changes
-        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, this::onWorkingBranchChanged);
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoPathChanged);
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, this::onStatusListChanged);
-        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, e ->
-                new SwingWorker<Void, Void>() {
-                    @Override protected Void doInBackground() {
-                        Context.updateStatus(null, true);
-                        return null;
-                    }
-                }.execute());
+        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, new MainFrameWorkingBranchChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainFrameRepoPathChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new MainFrameWorkingItemsChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, new MainFrameWorkingItemsRefresh(this));
 
         // After a successful pull: switch to history and highlight the pulled commit
         Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY,
@@ -309,6 +307,26 @@ public class MainFrame extends JFrame {
         toolBar.setProjectSelectionHandler(this::openProject);
     }
 
+    public MainMenuBar getMainMenuBar() {
+        return menuBar;
+    }
+
+    public CardLayout getMainCardLayout() {
+        return mainCardLayout;
+    }
+
+    public JPanel getMainCardPanel() {
+        return mainCardPanel;
+    }
+
+    public MainToolBar getToolBar() {
+        return toolBar;
+    }
+
+    public WorkingCopyPanel getWorkingCopyPanel() {
+        return workingCopyPanel;
+    }
+
     private void openProject(Project project) {
         String folder = project.getProjectHomeFolder();
         statusBar.setStatus("Opening " + folder + "...");
@@ -356,7 +374,7 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
-    private void addCurrentProjectToSettings() {
+    public void addCurrentProjectToSettings() {
         Settings settings = Context.getSettings();
         if (settings == null) return;
 
@@ -380,7 +398,7 @@ public class MainFrame extends JFrame {
         Context.saveSettings();
     }
 
-    private void refreshProjectLists() {
+    public void refreshProjectLists() {
         Settings settings = Context.getSettings();
         if (settings == null) return;
 
@@ -638,50 +656,13 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
-    private void setRepoActionsEnabled(boolean enabled) {
+    public void setRepoActionsEnabled(boolean enabled) {
         menuBar.setRepoActionsEnabled(enabled);
         toolBar.setRepoActionsEnabled(enabled);
     }
 
-    // Event handlers
-    private void onWorkingBranchChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            ScmBranch branch = (ScmBranch) evt.getNewValue();
-            String name = branch != null ? branch.getShortName() : "";
-            toolBar.setBranchName(name);
-            toolBar.updateSyncCounts(branch);
-            updateTitle();
-        });
-    }
 
-    private void onRepoPathChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            boolean hasRepo = evt.getNewValue() != null;
-            setRepoActionsEnabled(hasRepo);
-            toolBar.setVisible(hasRepo);
-            if (hasRepo) {
-                addCurrentProjectToSettings();
-                refreshProjectLists();
-                // Switch from welcome to repo view
-                mainCardLayout.show(mainCardPanel, CARD_REPO);
-            } else {
-                // No repo - show welcome
-                mainCardLayout.show(mainCardPanel, CARD_WELCOME);
-            }
-            updateTitle();
-        });
-    }
-
-    private void onStatusListChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            List<ScmItem> statusList = Context.getStatusList();
-            workingCopyPanel.setItems(statusList);
-            toolBar.setCommitEnabled( isCommitEnabled());
-            menuBar.setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
-        });
-    }
-
-    private boolean isCommitEnabled() {
+    public boolean isCommitEnabled() {
         boolean commitEnabled = false;
         if (Context.isWorkspaceMode()) {
             if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
@@ -775,7 +756,7 @@ public class MainFrame extends JFrame {
 
 
 
-    private void updateTitle() {
+    public void updateTitle() {
         String path = Context.getRepositoryPath();
         ScmBranch branch = Context.getWorkingBranch();
         if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
@@ -870,7 +851,7 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKSPACE -> {
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
-                    Context.setRepositoryPath(null); //!!!!!!!
+                    Context.setRepositoryPath(null);
                     contentPanel.setContent(workspaceDashboardPanel);
                     toolBar.setCommitEnabled(isCommitEnabled());
                     updateWorkspaceRemoteActions();
