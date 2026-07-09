@@ -706,6 +706,73 @@ public class MainFrame extends JFrame {
         return commitEnabled;
     }
 
+    /**
+     * Recomputes the enabled state of the Pull / Push / Fetch buttons for workspace mode.
+     * Pull and Fetch are enabled when at least one project has a remote URL; Push additionally
+     * requires at least one project with a remote to have an unpushed HEAD commit. The per-project
+     * git reads run off the EDT; the buttons are updated on the EDT once the scan completes.
+     */
+    private void updateWorkspaceRemoteActions() {
+        if (!Context.isWorkspaceActive()) {
+            return;
+        }
+        java.util.List<Project> projects = new java.util.ArrayList<>(
+                Context.getWorkspace() == null ? List.of() : Context.getWorkspace().getProjects());
+        toolBar.setPullEnabled(false);
+        toolBar.setPushEnabled(false);
+        toolBar.setFetchEnabled(false);
+        if (projects.isEmpty()) {
+            return;
+        }
+        new SwingWorker<boolean[], Void>() {
+            @Override
+            protected boolean[] doInBackground() {
+                boolean hasRemote = false;
+                boolean hasUnpushed = false;
+                for (Project project : projects) {
+                    try (GitRepoService svc = GitRepoService.of(project)) {
+                        if (!svc.isRepositoryHasRemoteUrl()) {
+                            continue;
+                        }
+                        hasRemote = true;
+                        CommitInfo head = svc.getHead();
+                        if (head.getSha() != null && svc.isCommitUnpushed(head.getSha())) {
+                            hasUnpushed = true;
+                        }
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Cannot read remote state for " + project, ex);
+                    }
+                    if (hasRemote && hasUnpushed) break; // nothing left to learn
+                }
+                return new boolean[]{hasRemote, hasUnpushed};
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    boolean[] state = get();
+                    toolBar.setPullEnabled(state[0]);
+                    toolBar.setFetchEnabled(state[0]);
+                    toolBar.setPushEnabled(state[1]);
+                } catch (Exception ex) {
+                    log.log(Level.FINE, "Cannot update workspace remote actions", ex);
+                }
+            }
+        }.execute();
+    }
+
+    /**
+     * Refreshes the workspace dashboard and the remote-action buttons after a workspace-wide
+     * push / pull / fetch. Called by the corresponding handlers once their operation completes.
+     */
+    public void refreshWorkspaceView() {
+        if (!Context.isWorkspaceActive()) {
+            return;
+        }
+        workspaceDashboardPanel.reloadActiveTab();
+        updateWorkspaceRemoteActions();
+    }
+
 
 
     private void updateTitle() {
@@ -805,27 +872,15 @@ public class MainFrame extends JFrame {
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
                     toolBar.setCommitEnabled(isCommitEnabled());
+                    updateWorkspaceRemoteActions();
                     updateTitle();
                 }
                 case REPOSITORY -> {
-                    // Clicking a workspace repository opens that project's history.
-                    Context.setActiveView(Context.ActiveView.HISTORY);
-                    contentPanel.setContent(historyPanel);
-                    historyPanel.loadHistory(null, true);
+                    // Clicking a workspace repository opens that project's working copy.
+                    activateProjectWorkingCopy();
                 }
                 case WORKING_COPY -> {
-                    Context.setActiveView(Context.ActiveView.WORKING_COPY);
-                    contentPanel.setContent(workingCopyPanel);
-                    List<ScmItem> cachedStatus = Context.getStatusList();
-                    workingCopyPanel.setItems(cachedStatus); // show cached immediately
-                    toolBar.setCommitEnabled(isCommitEnabled());
-                    menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
-                    new SwingWorker<Void, Void>() {
-                        @Override protected Void doInBackground() {
-                            Context.updateStatus(null, true);
-                            return null;
-                        }
-                    }.execute();
+                    activateProjectWorkingCopy();
                 }
                 case HISTORY -> {
                     Context.setActiveView(Context.ActiveView.HISTORY);
@@ -866,6 +921,21 @@ public class MainFrame extends JFrame {
                 default -> contentPanel.setContent(null);
             }
         }
+    }
+
+    private void activateProjectWorkingCopy() {
+        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+        contentPanel.setContent(workingCopyPanel);
+        List<ScmItem> cachedStatus = Context.getStatusList();
+        workingCopyPanel.setItems(cachedStatus); // show cached immediately
+        toolBar.setCommitEnabled(isCommitEnabled());
+        menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                Context.updateStatus(null, true);
+                return null;
+            }
+        }.execute();
     }
 
     /** Loads icon images from classpath resources, silently skipping any that are missing. */

@@ -123,6 +123,18 @@ public class MainToolBar extends JToolBar {
         commitBtn.setEnabled(enabled);
     }
 
+    public void setPushEnabled(boolean enabled) {
+        pushBtn.setEnabled(enabled);
+    }
+
+    public void setPullEnabled(boolean enabled) {
+        pullBtn.setEnabled(enabled);
+    }
+
+    public void setFetchEnabled(boolean enabled) {
+        fetchBtn.setEnabled(enabled);
+    }
+
     public void setBranchName(String name) {
         branchLabel.setText(name != null ? name : "");
     }

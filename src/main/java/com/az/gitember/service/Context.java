@@ -212,6 +212,15 @@ public class Context {
         return Context.getWorkspace() != null;
     }
 
+    /**
+     * True when a workspace is open <em>and</em> the aggregated workspace view is the active one
+     * (as opposed to having drilled into a single repository of the workspace). Remote operations
+     * (push / pull / fetch) act on the whole workspace only in this state.
+     */
+    public static boolean isWorkspaceActive() {
+        return isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
+    }
+
     public static ScmRevisionInformation getScmRevCommitDetails() {
         return scmRevCommitDetails;
     }
