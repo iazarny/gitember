@@ -27,6 +27,13 @@ public class PanelOnRepoChangedChangeListener implements PropertyChangeListener 
             SwingUtilities.invokeLater(panel::updateStateLabel);
             return;
         }
+        // If the tree was previously built for a workspace, its structure is stale: the
+        // shared category-node fields don't point into the visible tree, so refreshTree()
+        // alone would keep showing the old workspace layout. Rebuild the single-repo tree
+        // first (buildInitialTree resets workspaceNode and re-creates the shared nodes).
+        if (panel.workspaceNode != null) {
+            panel.rebuild();
+        }
         SwingUtilities.invokeLater(() -> {
             panel.refreshTree();
             panel.updateStateLabel();

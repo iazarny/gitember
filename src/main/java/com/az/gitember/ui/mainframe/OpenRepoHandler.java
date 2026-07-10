@@ -40,6 +40,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() throws Exception {
+                    Context.setWorkspace(null);
                     Context.init(path);
                     return null;
                 }
