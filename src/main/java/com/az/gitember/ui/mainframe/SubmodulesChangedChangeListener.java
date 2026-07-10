@@ -7,19 +7,18 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
- * After a conflicting pull, switches to the working-copy view so the conflicts are visible,
- * in response to {@link Context#PROP_NAVIGATE_TO_WORKING_COPY}.
+ * Refreshes the submodule panel in response to {@link Context#PROP_SUBMODULES}.
  */
-public class MainFrameNavigateToWorkingCopy implements PropertyChangeListener {
+public class SubmodulesChangedChangeListener implements PropertyChangeListener {
 
     private final MainFrame mainFrame;
 
-    public MainFrameNavigateToWorkingCopy(MainFrame mainFrame) {
+    public SubmodulesChangedChangeListener(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        mainFrame.showWorkingCopy();
+        mainFrame.getSubmodulePanel().setSubmodules(Context.getSubmodules());
     }
 }

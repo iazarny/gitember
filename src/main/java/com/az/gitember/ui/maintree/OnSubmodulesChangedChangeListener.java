@@ -7,21 +7,20 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
- * Listens for stash changes on {@link Context} and refreshes the corresponding
+ * Listens for submodule changes on {@link Context} and refreshes the corresponding
  * {@link MainTreePanel} node. Extracted from {@code MainTreePanel}.
  */
-public class MainTreePanelOnStashChanged implements PropertyChangeListener {
+public class OnSubmodulesChangedChangeListener implements PropertyChangeListener {
 
     private final MainTreePanel panel;
 
-    public MainTreePanelOnStashChanged(MainTreePanel panel) {
+    public OnSubmodulesChangedChangeListener(MainTreePanel panel) {
         this.panel = panel;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() ->
-                panel.populateStashes(panel.stashesNode, Context.getStash()));
+        SwingUtilities.invokeLater(() -> panel.updateSubmodulesNode(Context.getSubmodules()));
     }
 }

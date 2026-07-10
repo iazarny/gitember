@@ -11,13 +11,13 @@ import java.beans.PropertyChangeListener;
  * Reloads the working-copy status list off the EDT in response to
  * {@link Context#PROP_WORKING_COPY_REFRESH}. The refreshed statuses are published back through
  * {@link Context#PROP_STATUS_LIST}, so the UI update itself is handled by
- * {@link MainFrameWorkingItemsChanged}.
+ * {@link WorkingItemsChangedChangeListener}.
  */
-public class MainFrameWorkingItemsRefresh implements PropertyChangeListener {
+public class WorkingItemsRefreshChangeListener implements PropertyChangeListener {
 
     private final MainFrame mainFrame;
 
-    public MainFrameWorkingItemsRefresh(MainFrame mainFrame) {
+    public WorkingItemsRefreshChangeListener(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
 

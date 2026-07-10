@@ -7,11 +7,11 @@ import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-public class MainFrameWorkingBranchChanged implements PropertyChangeListener {
+public class WorkingBranchChangedChangeListener implements PropertyChangeListener {
 
     private final MainFrame mainFrame;
 
-    public MainFrameWorkingBranchChanged(MainFrame mainFrame) {
+    public WorkingBranchChangedChangeListener(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
 

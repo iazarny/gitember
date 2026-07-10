@@ -5,7 +5,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.BranchContextMenuFactory;
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.maintree.MainTreeCellRenderer.NodeType;
+import com.az.gitember.ui.maintree.CellRenderer.NodeType;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import javax.swing.*;
@@ -57,7 +57,7 @@ public class MainTreePanel extends JPanel {
         rootNode = new DefaultMutableTreeNode(new TreeNodeData("Repository", NodeType.ROOT, null));
         treeModel = new DefaultTreeModel(rootNode);
         tree = new JTree(treeModel);
-        tree.setCellRenderer(new MainTreeCellRenderer());
+        tree.setCellRenderer(new CellRenderer());
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         //tree.setBackground();
@@ -113,15 +113,15 @@ public class MainTreePanel extends JPanel {
         add(statusLabel, BorderLayout.SOUTH);
 
         // Listen for Context changes
-        MainTreePanelOnBranchChanged onBranchesChanged = new MainTreePanelOnBranchChanged(this);
+        PanelOnBranchChangedChangeListener onBranchesChanged = new PanelOnBranchChangedChangeListener(this);
         Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, onBranchesChanged);
         Context.addPropertyChangeListener(Context.PROP_REMOTE_BRANCHES, onBranchesChanged);
-        Context.addPropertyChangeListener(Context.PROP_TAGS, new MainTreePanelOnTagsChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_STASH, new MainTreePanelOnStashChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainTreePanelOnRepoChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, new MainTreePanelOnPullRequestsChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new MainTreePanelOnSubmodulesChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new MainTreePanelOnStatusListChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_TAGS, new PanelOnTagsChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_STASH, new PanelOnStashChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new PanelOnRepoChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_PULL_REQUESTS, new PanelOnPullRequestsChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new OnSubmodulesChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new OnStatusListChangedChangeListener(this));
     }
 
 

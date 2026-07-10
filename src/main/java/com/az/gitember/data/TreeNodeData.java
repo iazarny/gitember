@@ -1,8 +1,8 @@
 package com.az.gitember.data;
 
-import com.az.gitember.ui.maintree.MainTreeCellRenderer;
+import com.az.gitember.ui.maintree.CellRenderer;
 
-public record TreeNodeData(String displayName, MainTreeCellRenderer.NodeType type, Object data) {
+public record TreeNodeData(String displayName, CellRenderer.NodeType type, Object data) {
 
     //public TreeNodeData(String displayName, MainTreeCellRenderer.NodeType type) {
     //    this(displayName, type, null);

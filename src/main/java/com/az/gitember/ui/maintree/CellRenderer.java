@@ -10,7 +10,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 
-public class MainTreeCellRenderer extends DefaultTreeCellRenderer {
+public class CellRenderer extends DefaultTreeCellRenderer {
 
     public enum NodeType {
         WORKSPACE,

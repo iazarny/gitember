@@ -9,11 +9,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-public class MainFrameWorkingItemsChanged implements PropertyChangeListener {
+public class WorkingItemsChangedChangeListener implements PropertyChangeListener {
 
     private final MainFrame mainFrame;
 
-    public MainFrameWorkingItemsChanged(MainFrame mainFrame) {
+    public WorkingItemsChangedChangeListener(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
 

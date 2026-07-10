@@ -11,11 +11,11 @@ import java.beans.PropertyChangeListener;
  * Listens for repository-path changes on {@link Context} and refreshes the
  * {@link MainTreePanel} tree, state label and worktrees. Extracted from {@code MainTreePanel}.
  */
-public class MainTreePanelOnRepoChanged implements PropertyChangeListener {
+public class PanelOnRepoChangedChangeListener implements PropertyChangeListener {
 
     private final MainTreePanel panel;
 
-    public MainTreePanelOnRepoChanged(MainTreePanel panel) {
+    public PanelOnRepoChangedChangeListener(MainTreePanel panel) {
         this.panel = panel;
     }
 

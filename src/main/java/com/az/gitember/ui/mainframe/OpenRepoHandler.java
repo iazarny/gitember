@@ -1,5 +1,6 @@
-package com.az.gitember.handler;
+package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import org.apache.commons.lang3.StringUtils;

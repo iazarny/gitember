@@ -11,11 +11,11 @@ import java.beans.PropertyChangeListener;
  * Working Copy label and state label of {@link MainTreePanel}. Extracted from
  * {@code MainTreePanel}.
  */
-public class MainTreePanelOnStatusListChanged implements PropertyChangeListener {
+public class OnStatusListChangedChangeListener implements PropertyChangeListener {
 
     private final MainTreePanel panel;
 
-    public MainTreePanelOnStatusListChanged(MainTreePanel panel) {
+    public OnStatusListChangedChangeListener(MainTreePanel panel) {
         this.panel = panel;
     }
 

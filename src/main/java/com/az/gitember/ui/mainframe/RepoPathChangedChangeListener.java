@@ -7,12 +7,12 @@ import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-public class MainFrameRepoPathChanged implements PropertyChangeListener {
+public class RepoPathChangedChangeListener implements PropertyChangeListener {
 
     private final MainFrame mainFrame;
 
 
-    public MainFrameRepoPathChanged(MainFrame mainFrame) {
+    public RepoPathChangedChangeListener(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
 

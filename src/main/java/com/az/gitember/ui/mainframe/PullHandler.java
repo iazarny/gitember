@@ -1,10 +1,11 @@
-package com.az.gitember.handler;
+package com.az.gitember.ui.mainframe;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.dialog.PullResultDialog;
+import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.MainFrame;

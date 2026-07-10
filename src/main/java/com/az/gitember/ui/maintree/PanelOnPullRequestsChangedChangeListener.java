@@ -7,20 +7,20 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
- * Listens for submodule changes on {@link Context} and refreshes the corresponding
+ * Listens for pull-request changes on {@link Context} and refreshes the corresponding
  * {@link MainTreePanel} node. Extracted from {@code MainTreePanel}.
  */
-public class MainTreePanelOnSubmodulesChanged implements PropertyChangeListener {
+public class PanelOnPullRequestsChangedChangeListener implements PropertyChangeListener {
 
     private final MainTreePanel panel;
 
-    public MainTreePanelOnSubmodulesChanged(MainTreePanel panel) {
+    public PanelOnPullRequestsChangedChangeListener(MainTreePanel panel) {
         this.panel = panel;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> panel.updateSubmodulesNode(Context.getSubmodules()));
+        SwingUtilities.invokeLater(() -> panel.updatePullRequestsNode(Context.getPullRequests()));
     }
 }

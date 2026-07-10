@@ -1,6 +1,7 @@
-package com.az.gitember.handler;
+package com.az.gitember.ui.mainframe;
 
 import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import java.awt.*;

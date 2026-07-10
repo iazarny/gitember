@@ -6,14 +6,8 @@ import com.az.gitember.handler.*;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
-import com.az.gitember.ui.mainframe.MainFrameNavigateToHistory;
-import com.az.gitember.ui.mainframe.MainFrameNavigateToWorkingCopy;
-import com.az.gitember.ui.mainframe.MainFrameRepoPathChanged;
-import com.az.gitember.ui.mainframe.MainFrameSubmodulesChanged;
-import com.az.gitember.ui.mainframe.MainFrameWorkingBranchChanged;
-import com.az.gitember.ui.mainframe.MainFrameWorkingItemsChanged;
-import com.az.gitember.ui.mainframe.MainFrameWorkingItemsRefresh;
-import com.az.gitember.ui.maintree.MainTreeCellRenderer;
+import com.az.gitember.ui.mainframe.*;
+import com.az.gitember.ui.maintree.CellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
 import org.eclipse.jgit.lib.RepositoryState;
@@ -23,7 +17,6 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -110,7 +103,7 @@ public class MainFrame extends JFrame {
 
         // Welcome panel
         welcomePanel = new WelcomePanel();
-        welcomePanel.setOnProjectSelected(this::openProject);
+        welcomePanel.setOnProjectSelected(new OpenRecentProjectHandler(this));
         welcomePanel.setOnProjectRemoved(project -> {
             Settings settings = Context.getSettings();
             if (settings != null) {
@@ -119,7 +112,7 @@ public class MainFrame extends JFrame {
                 refreshProjectLists();
             }
         });
-        welcomePanel.setOnWorkspaceSelected(this::workSpaceOpened);
+        welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
         welcomePanel.setOnWorkspaceRemoved(workspace -> {
             Settings settings = Context.getSettings();
             if (settings != null) {
@@ -153,13 +146,13 @@ public class MainFrame extends JFrame {
         wireActions();
 
         // Listen to context changes
-        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, new MainFrameWorkingBranchChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new MainFrameRepoPathChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new MainFrameWorkingItemsChanged(this));
-        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, new MainFrameWorkingItemsRefresh(this));
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY, new MainFrameNavigateToHistory(this));
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY, new MainFrameNavigateToWorkingCopy(this));
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new MainFrameSubmodulesChanged(this));
+        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, new WorkingBranchChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new RepoPathChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new WorkingItemsChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, new WorkingItemsRefreshChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY, new NavigateToHistoryChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY, new NavigateToWorkingCopyChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new SubmodulesChangedChangeListener(this));
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
@@ -299,9 +292,9 @@ public class MainFrame extends JFrame {
         menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
 
         // Recent project handlers
-        menuBar.setRecentProjectHandler(this::openProject);
-        menuBar.setRecentWorkspaceHandler(this::workSpaceOpened);
-        toolBar.setProjectSelectionHandler(this::openProject);
+        menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));
+        menuBar.setRecentWorkspaceHandler(new OpenRecentWorkspaceHanlder(this));
+        toolBar.setProjectSelectionHandler(new OpenRecentProjectHandler(this));
     }
 
     public MainMenuBar getMainMenuBar() {
@@ -328,51 +321,16 @@ public class MainFrame extends JFrame {
         return submodulePanel;
     }
 
-    private void openProject(Project project) {
-        String folder = project.getProjectHomeFolder();
-        statusBar.setStatus("Opening " + folder + "...");
-        statusBar.showProgress(true);
+    public HistoryPanel getHistoryPanel() {
+        return historyPanel;
+    }
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                Context.init(folder);
-                return null;
-            }
+    public WorkspaceDashboardPanel getWorkspaceDashboardPanel() {
+        return workspaceDashboardPanel;
+    }
 
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    addCurrentProjectToSettings();
-                    refreshProjectLists();
-                    statusBar.clearProgress();
-                    statusBar.setStatus("Repository opened");
-                    InteractiveContinueAbortDialog.showIfRebaseInProgress(
-                            MainFrame.this, statusBar,
-                            () -> historyPanel.loadHistory(null, true));
-                } catch (Exception e) {
-                    Throwable cause = e.getCause() != null ? e.getCause() : e;
-                    log.log(Level.WARNING, "Failed to open project", cause);
-                    statusBar.clearProgress();
-                    statusBar.setStatus("Failed to open: " + cause.getMessage());
-
-                    // Remove invalid project from list
-                    Settings settings = Context.getSettings();
-                    if (settings != null) {
-                        settings.getProjects().remove(project);
-                        Context.saveSettings();
-                        refreshProjectLists();
-                    }
-
-                    JOptionPane.showMessageDialog(MainFrame.this,
-                            "Cannot open repository: " + folder
-                                    + "\nIt will be removed from the list of recent projects.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
+    public ContentPanel getContentPanel() {
+        return contentPanel;
     }
 
     public void addCurrentProjectToSettings() {
@@ -423,7 +381,7 @@ public class MainFrame extends JFrame {
     private void showWorkspaceDialog() {
         WorkspaceDialog workspaceDialog =  new
                 WorkspaceDialog(this,
-                this::workSpaceOpened);
+                new OpenRecentWorkspaceHanlder(this));
 
         workspaceDialog.nameField.setText(
                 Context.getSettings().createNewWorkspaceName());
@@ -434,24 +392,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void workSpaceOpened(Workspace workspace) {
-        if (workspace != null)  {
-            workspace.setOpenTime(new Date());
-            Context.saveSettings();
 
-            Context.setWorkspace(workspace);
-            treePanel.rebuild();                       // build workspace tree (selects workspace node)
-            workspaceDashboardPanel.setWorkspace(workspace);
-            contentPanel.setContent(workspaceDashboardPanel);
-
-            // No single repository is open yet — keep repo-only toolbar/menu actions disabled.
-            //setRepoActionsEnabled(false);
-            //toolBar.setVisible(false);
-            mainCardLayout.show(mainCardPanel, CARD_REPO);
-            setTitle("Gitember - " + workspace.getName());
-            statusBar.setStatus("Workspace opened: " + workspace.getName());
-        }
-    }
 
     private void showInitDialog() {
         InitDialog dialog = new InitDialog(this);
@@ -816,10 +757,10 @@ public class MainFrame extends JFrame {
         if (userObject instanceof TreeNodeData data) {
 
 
-            boolean isWorkSpace = data.type() == MainTreeCellRenderer.NodeType.WORKSPACE;
-            boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
-            boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
-            boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;
+            boolean isWorkSpace = data.type() == CellRenderer.NodeType.WORKSPACE;
+            boolean isWorkingCopy = data.type() == CellRenderer.NodeType.WORKING_COPY;
+            boolean isAllHistory  = data.type() == CellRenderer.NodeType.HISTORY;
+            boolean isPullRequest = data.type() == CellRenderer.NodeType.PULL_REQUEST;
 
             // Merge/unmerge working copy toolbar
 

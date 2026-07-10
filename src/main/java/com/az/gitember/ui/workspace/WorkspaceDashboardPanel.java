@@ -74,17 +74,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             new Column("Status", this::statusCell),
             new Column("Modified", p -> cellInt(p, RepoStats::modified)),
             new Column("Ahead", p -> cellInt(p, RepoStats::ahead)),
-            new Column("Behind", p -> cellInt(p, RepoStats::behind)),
-            new Column("Last Fetch", this::fetchCell)
-    );
-
-    private final List<Summary> summaries = List.of(
-            new Summary("Repositories", ws -> ws.getProjects().size()),
-            new Summary("Modified", ws -> sumInt(RepoStats::modified)),
-            new Summary("Ahead", ws -> sumInt(RepoStats::ahead)),
-            new Summary("Behind", ws -> sumInt(RepoStats::behind)),
-            new Summary("Conflicts", ws -> sumInt(RepoStats::conflicts)),
-            new Summary("Last Fetch", ws -> latestFetch())
+            new Column("Behind", p -> cellInt(p, RepoStats::behind))
     );
 
     private final JLabel titleLabel = new JLabel("Workspace");
@@ -294,7 +284,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         } else {
             List<Project> projects = new ArrayList<>(workspace.getProjects());
             tableModel.setRows(projects);
-            rebuildMetrics();
             loadAllStats(projects);
         }
         metricsPanel.revalidate();
@@ -344,7 +333,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     statsByProject.put(project, stats);
                     int row = tableModel.indexOf(project);
                     if (row >= 0) tableModel.fireTableRowsUpdated(row, row);
-                    rebuildMetrics();
                     metricsPanel.revalidate();
                     metricsPanel.repaint();
                 }
@@ -378,36 +366,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return "Clean";
     }
 
-    private Object fetchCell(Project project) {
-        RepoStats stats = statsByProject.get(project);
-        if (stats == null) return LOADING;
-        if (stats.error() || stats.lastFetch() == null) return PLACEHOLDER;
-        return GitemberUtil.formatDate(stats.lastFetch());
-    }
-
-    /**
-     * Sums a per-repository integer over all successfully loaded repositories.
-     */
-    private int sumInt(ToIntFunction<RepoStats> mapper) {
-        int sum = 0;
-        for (RepoStats stats : statsByProject.values()) {
-            if (!stats.error()) sum += mapper.applyAsInt(stats);
-        }
-        return sum;
-    }
-
-    /**
-     * Most recent last-fetch time across the workspace, or the placeholder if none is known.
-     */
-    private Object latestFetch() {
-        Date latest = null;
-        for (RepoStats stats : statsByProject.values()) {
-            if (stats.error() || stats.lastFetch() == null) continue;
-            if (latest == null || stats.lastFetch().after(latest)) latest = stats.lastFetch();
-        }
-        return latest == null ? PLACEHOLDER : GitemberUtil.formatDate(latest);
-    }
-
     // ── Main tab (dashboard) ─────────────────────────────────────────────────────
 
     private JComponent buildMainTab() {
@@ -436,32 +394,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         header.add(top, BorderLayout.CENTER);
         header.add(new JSeparator(), BorderLayout.SOUTH);
         return header;
-    }
-
-    private void rebuildMetrics() {
-        metricsPanel.removeAll();
-        for (Summary summary : summaries) {
-            metricsPanel.add(buildMetric(summary.label(), String.valueOf(summary.value().apply(workspace))));
-        }
-    }
-
-    private JComponent buildMetric(String label, String value) {
-        JPanel cell = new JPanel();
-        cell.setOpaque(false);
-        cell.setLayout(new BoxLayout(cell, BoxLayout.Y_AXIS));
-
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.BOLD, 16f));
-        valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel nameLabel = new JLabel(label);
-        nameLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
-        nameLabel.setFont(nameLabel.getFont().deriveFont(11f));
-        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        cell.add(valueLabel);
-        cell.add(nameLabel);
-        return cell;
     }
 
     // ── Working Copy tab ─────────────────────────────────────────────────────────
@@ -583,14 +515,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /**
-     * Replaces {@code node}'s children with the supplied nodes.
-     */
-    private void setChildren(DefaultMutableTreeNode node, List<DefaultMutableTreeNode> children) {
-        node.removeAllChildren();
-        children.forEach(node::add);
-        workingCopyModel.reload(node);
-    }
+
 
     /**
      * Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children.
