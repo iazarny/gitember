@@ -56,6 +56,12 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem commitItem;
     private final JMenuItem interactiveRebaseItem;
 
+    private final JMenu     workspaceMenu;
+    private final JMenuItem workspacePullItem;
+    private final JMenuItem workspacePushItem;
+    private final JMenuItem workspaceFetchItem;
+    private final JMenuItem workspaceCommitItem;
+
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
     private final JMenuItem refreshItem;
@@ -77,7 +83,7 @@ public class MainMenuBar extends JMenuBar {
 
     public MainMenuBar() {
 
-        // ── File ─────────────────────────────────────────────────────────────
+        // -- File -------------------------------------------------------------
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
 
@@ -109,7 +115,7 @@ public class MainMenuBar extends JMenuBar {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
-        // ── Repository (repo-only) ────────────────────────────────────────────
+        // -- Repository (repo-only) --------------------------------------------
         repoMenu = new JMenu("Repository");
         repoMenu.setMnemonic(KeyEvent.VK_R);
 
@@ -194,7 +200,7 @@ public class MainMenuBar extends JMenuBar {
         }
 
 
-        // ── Branch (repo-only) ────────────────────────────────────────────────
+        // -- Branch (repo-only) ------------------------------------------------
         branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
@@ -213,8 +219,20 @@ public class MainMenuBar extends JMenuBar {
         branchMenu.add(commitItem);
         branchMenu.addSeparator();
         branchMenu.add(interactiveRebaseItem);
+        
+        // -- Workspace ---------------------------------------------------------
+        workspaceMenu = new JMenu("Workspace");
+        workspacePullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
+        workspacePushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
+        workspaceFetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
+        workspaceCommitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        workspaceMenu.add(workspacePullItem);
+        workspaceMenu.add(workspacePushItem);
+        workspaceMenu.add(workspaceFetchItem);
+        workspaceMenu.add(workspaceCommitItem);
 
-        // ── Working copy (repo-only) ──────────────────────────────────────────
+
+        // -- Working copy (repo-only) ------------------------------------------
         workingCopyMenu = new JMenu("Working copy");
         workingCopyMenu.setMnemonic(KeyEvent.VK_W);
 
@@ -234,7 +252,7 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
 
-        // ── Tools (always available) ──────────────────────────────────────────
+        // -- Tools (always available) ------------------------------------------
         JMenu toolsMenu = new JMenu("Tools");
         toolsMenu.setMnemonic(KeyEvent.VK_T);
 
@@ -248,7 +266,7 @@ public class MainMenuBar extends JMenuBar {
         toolsMenu.add(compareFilesItem);
         toolsMenu.add(compareFoldersItem);
 
-        // ── Help ─────────────────────────────────────────────────────────────
+        // -- Help -------------------------------------------------------------
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
@@ -285,18 +303,20 @@ public class MainMenuBar extends JMenuBar {
         });
         helpMenu.add(aboutItem);
 
-        // ── Menu bar order ────────────────────────────────────────────────────
+        // -- Menu bar order ----------------------------------------------------
         add(fileMenu);
         add(repoMenu);
         add(branchMenu);
+        add(workspaceMenu);
         add(workingCopyMenu);
         add(toolsMenu);
         add(helpMenu);
 
         setRepoActionsEnabled(false);
+        setWorkspaceActionEnabled(false);
     }
 
-    // ── Recent projects & workspaces ──────────────────────────────────────────
+    // -- Recent projects & workspaces ------------------------------------------
 
     public void refreshRecentProjects(Set<Project> projects) {
         refreshRecent(projects, null);
@@ -351,7 +371,7 @@ public class MainMenuBar extends JMenuBar {
         this.recentWorkspaceHandler = handler;
     }
 
-    // ── Enable / disable all repo-dependent menus at once ─────────────────────
+    // -- Enable / disable all repo-dependent menus at once ---------------------
 
     public void setRepoActionsEnabled(boolean enabled) {
         repoMenu.setVisible(enabled);
@@ -359,7 +379,15 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.setVisible(enabled);
     }
 
-    // ── Listener registration ─────────────────────────────────────────────────
+    public void setWorkspaceActionEnabled(boolean enabled) {
+        workspaceMenu.setVisible(enabled);
+    }
+
+    public void setCommitEnabled(boolean commitEnabled) {
+        workspaceCommitItem.setEnabled(commitEnabled);
+    }
+
+    // -- Listener registration -------------------------------------------------
 
     public void addOpenListener(ActionListener l)          { openItem.addActionListener(l); }
     public void addCloneListener(ActionListener l)         { cloneItem.addActionListener(l); }
@@ -393,4 +421,11 @@ public class MainMenuBar extends JMenuBar {
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
     public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
     public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
+
+    public void addWorskpacePullListener(ActionListener l)       { workspacePullItem.addActionListener(l); }
+    public void addWorskpacePushListener(ActionListener l)       { workspacePushItem.addActionListener(l); }
+    public void addWorskpaceFetchListener(ActionListener l)       { workspaceFetchItem.addActionListener(l); }
+    public void addWorskpaceCommitListener(ActionListener l)       { workspaceCommitItem.addActionListener(l); }
+
+
 }

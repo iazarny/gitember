@@ -22,7 +22,9 @@ public class WorkingItemsChangedChangeListener implements PropertyChangeListener
         SwingUtilities.invokeLater(() -> {
             List<ScmItem> statusList = Context.getStatusList();
             mainFrame.getWorkingCopyPanel().setItems(statusList);
-            mainFrame.getToolBar().setCommitEnabled( mainFrame.isCommitEnabled());
+            boolean commitEnabled = mainFrame.isCommitEnabled();
+            mainFrame.getToolBar().setCommitEnabled( commitEnabled);
+            mainFrame.getMainMenuBar().setCommitEnabled( commitEnabled);
             mainFrame.getMainMenuBar().setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
         });
     }

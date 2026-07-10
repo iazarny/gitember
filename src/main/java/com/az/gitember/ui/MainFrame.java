@@ -257,6 +257,13 @@ public class MainFrame extends JFrame {
             }
         });
 
+        //Workspace menu
+
+        menuBar.addWorskpacePullListener(e -> new PullHandler(this, statusBar).execute());
+        menuBar.addWorskpacePushListener(e -> new PushHandler(this, statusBar).execute());
+        menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this, statusBar).execute());
+        menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
+
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
         menuBar.addStashListener(e -> showStashDialog());
@@ -603,6 +610,11 @@ public class MainFrame extends JFrame {
         toolBar.setRepoActionsEnabled(enabled);
     }
 
+    public void setWorkspaceActionsEnabled(boolean enabled) {
+        menuBar.setWorkspaceActionEnabled(enabled);
+        //toolBar.setRepoActionsEnabled(enabled);
+    }
+
 
     public boolean isCommitEnabled() {
         boolean commitEnabled = false;
@@ -611,6 +623,8 @@ public class MainFrame extends JFrame {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
                     try (GitRepoService svc = GitRepoService.of(project)) {
                         boolean hasStaged = svc.hasStaged();
+
+                        System.out.println(">>>>>>>>>>>>>>>> " +hasStaged);
                         if (hasStaged) {
                             commitEnabled = hasStaged;
                             break;
@@ -626,6 +640,7 @@ public class MainFrame extends JFrame {
         } else {
             commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
         }
+        System.out.println("##############" +commitEnabled);
         return commitEnabled;
     }
 
@@ -795,7 +810,9 @@ public class MainFrame extends JFrame {
                     Context.setRepositoryPath(null);
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
-                    toolBar.setCommitEnabled(isCommitEnabled());
+                    boolean commitEnabled = isCommitEnabled();
+                    toolBar.setCommitEnabled(commitEnabled);
+                    menuBar.setCommitEnabled(commitEnabled);
                     updateWorkspaceRemoteActions();
                     updateTitle();
                 }
