@@ -812,9 +812,10 @@ public class MainFrame extends JFrame {
                     Context.setRepositoryPath(null);
                     Context.setActiveView(Context.ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
-                    boolean commitEnabled = isCommitEnabled();
-                    toolBar.setCommitEnabled(commitEnabled);
-                    menuBar.setCommitEnabled(commitEnabled);
+                    // Single source of truth for the workspace toolbar/menu: recomputes Stage All /
+                    // Unstage All and, via the commit callback, Commit (toolbar + menu) from the
+                    // aggregate staged/unstaged state of all projects.
+                    workspaceDashboardPanel.refreshButtonStates();
                     updateWorkspaceRemoteActions();
                     updateTitle();
                 }

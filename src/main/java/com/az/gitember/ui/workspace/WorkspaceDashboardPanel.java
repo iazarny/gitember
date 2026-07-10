@@ -209,8 +209,16 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     @Override
     protected void refresh() {
+        reloadSelectedTab(); // recomputes button states as part of the reload
+    }
+
+    /**
+     * Recomputes the Stage All / Unstage All buttons and (via the commit callback) the Commit
+     * button from the aggregate staged/unstaged state of every project. Exposed so the main frame
+     * can refresh the workspace toolbar/menu the moment the workspace view becomes active.
+     */
+    public void refreshButtonStates() {
         updateButtonStates();
-        reloadSelectedTab();
     }
 
     /**
@@ -286,6 +294,10 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         } else if (TAB_MAIN.equals(title)) {
             reloadMainTab();
         }
+        // Stage All / Unstage All / Commit apply to the whole workspace regardless of which tab
+        // is visible, so their enabled state must be recomputed on every (re)load — including the
+        // Main tab shown when a workspace is first opened.
+        updateButtonStates();
     }
 
     /**
@@ -310,7 +322,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     private void reloadWorkingCopyTab() {
         rebuildWorkingCopy();
-        updateButtonStates();
     }
 
     // ── Per-repository stats (async) ──────────────────────────────────────────────
