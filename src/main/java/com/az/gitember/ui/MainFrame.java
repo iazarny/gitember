@@ -192,6 +192,12 @@ public class MainFrame extends JFrame {
         pullRequestPanel = new PullRequestPanel();
         submodulePanel = new SubmodulePanel(statusBar);
         workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
+        // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
+        // committing is possible whenever any project in the workspace has a staged item.
+        workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
+            toolBar.setCommitEnabled(hasStaged);
+            menuBar.setCommitEnabled(hasStaged);
+        });
 
 
 
@@ -622,11 +628,8 @@ public class MainFrame extends JFrame {
             if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
                     try (GitRepoService svc = GitRepoService.of(project)) {
-                        boolean hasStaged = svc.hasStaged();
-
-                        System.out.println(">>>>>>>>>>>>>>>> " +hasStaged);
-                        if (hasStaged) {
-                            commitEnabled = hasStaged;
+                        if (svc.hasStaged()) {
+                            commitEnabled = true;
                             break;
                         }
                     } catch (IOException e) {
@@ -640,7 +643,6 @@ public class MainFrame extends JFrame {
         } else {
             commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
         }
-        System.out.println("##############" +commitEnabled);
         return commitEnabled;
     }
 

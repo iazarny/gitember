@@ -104,6 +104,13 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     private Workspace workspace;
 
+    /**
+     * Notified with whether <em>any</em> project in the workspace currently has staged changes,
+     * so the owner (main frame) can keep the Commit button in sync with dashboard stage/unstage
+     * actions. Recomputed by {@link #updateButtonStates()} whenever the staging state may change.
+     */
+    private java.util.function.Consumer<Boolean> onCommitStateChanged;
+
     public WorkspaceDashboardPanel(StatusBar statusBar) {
         super(statusBar);
 
@@ -121,6 +128,10 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         searchField.putClientProperty("JTextField.placeholderText", "Search...");
 
         add(tabs, BorderLayout.CENTER);
+    }
+
+    public void setOnCommitStateChanged(java.util.function.Consumer<Boolean> onCommitStateChanged) {
+        this.onCommitStateChanged = onCommitStateChanged;
     }
 
     public void setWorkspace(Workspace workspace) {
@@ -242,6 +253,10 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     boolean[] state = get();
                     stageAllBtn.setEnabled(state[0]);
                     unstageAllBtn.setEnabled(state[1]);
+                    // Commit is possible when at least one project has a staged item.
+                    if (onCommitStateChanged != null) {
+                        onCommitStateChanged.accept(state[1]);
+                    }
                 } catch (Exception ex) {
                     log.log(Level.FINE, "Cannot update workspace button states", ex);
                 }
