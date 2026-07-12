@@ -7,6 +7,7 @@ import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.WorkingCopyContextMenu;
 import com.az.gitember.ui.WorkingCopyOps;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -182,9 +183,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                             boolean staged = isStaged(
                                     item.getAttribute() != null ? item.getAttribute().getStatus() : null);
                             if (stage && !staged) {
-                                stageItem(svc, item);
+                                svc.stageItem(item);
                             } else if (!stage && staged) {
-                                svc.removeFileFromCommitStage(item.getShortName());
+                                svc.unstageItem(item);
                             }
                         }
                     }
@@ -430,16 +431,47 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         workingCopyTree.setRowHeight(22);
         workingCopyTree.setCellRenderer(new FileNodeRenderer());
 
-        // A single click on a file node's leading checkbox toggles stage/unstage,
-        // mirroring the checkbox in WorkingCopyPanel.
+        // Left-click on the leading checkbox toggles stage/unstage.
+        // Right-click shows a context menu identical to the working-copy panel's.
         workingCopyTree.addMouseListener(new MouseAdapter() {
+
+            private void handlePopup(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
+                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
+                if (!(node.getUserObject() instanceof FileNode fileNode)) return;
+
+                com.az.gitember.data.Project project = fileNode.project();
+                DefaultMutableTreeNode projectNode = projectNodeOf(node);
+
+                WorkingCopyContextMenu ctxMenu = new WorkingCopyContextMenu(
+                        WorkspaceDashboardPanel.this,
+                        statusBar,
+                        action -> {
+                            try (com.az.gitember.service.GitRepoService svc =
+                                         com.az.gitember.service.GitRepoService.of(project)) {
+                                action.execute(svc);
+                            }
+                        },
+                        project::getProjectHomeFolder,
+                        () -> {
+                            if (projectNode != null) loadProjectWorkingCopy(project, projectNode);
+                            updateButtonStates();
+                        });
+                ctxMenu.show(java.util.List.of(fileNode.item()), workingCopyTree, e.getX(), e.getY());
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) { handlePopup(e); }
+
+            @Override
+            public void mouseReleased(MouseEvent e) { handlePopup(e); }
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                if (e.isPopupTrigger() || !SwingUtilities.isLeftMouseButton(e)) return;
                 TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
-                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) {
-                    return;
-                }
+                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
                 if (!(node.getUserObject() instanceof FileNode fileNode)) return;
 
                 Rectangle bounds = workingCopyTree.getPathBounds(path);
@@ -588,9 +620,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             protected Void doInBackground() throws Exception {
                 try (GitRepoService svc = GitRepoService.of(project)) {
                     if (staged) {
-                        svc.removeFileFromCommitStage(item.getShortName());
+                        svc.unstageItem(item);
                     } else {
-                        stageItem(svc, item);
+                        svc.stageItem(item);
                     }
                 }
                 return null;
@@ -612,25 +644,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
     /**
-     * Stages {@code item} on the supplied service, mirroring WorkingCopyPanel's stage semantics.
-     */
-    private void stageItem(GitRepoService svc, ScmItem item) throws Exception {
-        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : null;
-        String fileName = item.getShortName();
-
-        if (ScmItem.Status.RENAMED.equals(status)) {
-            String oldName = item.getAttribute().getOldName();
-            if (oldName != null) {
-                svc.renameFile(oldName, fileName);
-            }
-        } else if (ScmItem.Status.MISSED.equals(status)) {
-            svc.removeFile(fileName);
-        } else {
-            svc.addFileToCommitStage(fileName);
-        }
-    }
-
-    /**
      * Walks up from a file node to its owning project node (direct child of the hidden root).
      */
     private DefaultMutableTreeNode projectNodeOf(DefaultMutableTreeNode node) {
@@ -649,18 +662,12 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
     private static Color statusColor(String status) {
-        if (status == null) {
-            return SyntaxStyleUtil.UNSTAGED_COLOR;
-        }
-        if (isStaged(status)) {
-            return SyntaxStyleUtil.STAGED_COLOR.darker();
-        } else if (status.startsWith("Conflict")) {
-            return SyntaxStyleUtil.CONFLICT_COLOR;
-        } else if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
+        if (status == null) return SyntaxStyleUtil.UNSTAGED_COLOR;
+        if (isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR.darker();
+        if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
+        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
             return SyntaxStyleUtil.UNTRACKED_COLOR;
-        } else if (ScmItem.Status.LFS.equals(status)) {
-            return SyntaxStyleUtil.LFS_COLOR;
-        }
+        if (ScmItem.Status.LFS.equals(status)) return SyntaxStyleUtil.LFS_COLOR;
         return SyntaxStyleUtil.UNSTAGED_COLOR;
     }
 

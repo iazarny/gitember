@@ -92,7 +92,7 @@ public class MainMenuBar extends JMenuBar {
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
         initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
-        initWorkspaceItem  = new JMenuItem("Init Workspace...",  KeyEvent.VK_W);
+        initWorkspaceItem  = new JMenuItem("Init Workspace...");
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
@@ -384,8 +384,13 @@ public class MainMenuBar extends JMenuBar {
     }
 
     public void setCommitEnabled(boolean commitEnabled) {
+        commitItem.setEnabled(commitEnabled);
         workspaceCommitItem.setEnabled(commitEnabled);
     }
+
+    public void setWorkspacePullEnabled(boolean enabled)  { workspacePullItem.setEnabled(enabled); }
+    public void setWorkspacePushEnabled(boolean enabled)  { workspacePushItem.setEnabled(enabled); }
+    public void setWorkspaceFetchEnabled(boolean enabled) { workspaceFetchItem.setEnabled(enabled); }
 
     // -- Listener registration -------------------------------------------------
 

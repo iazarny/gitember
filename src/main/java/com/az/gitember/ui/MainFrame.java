@@ -661,6 +661,9 @@ public class MainFrame extends JFrame {
         toolBar.setPullEnabled(false);
         toolBar.setPushEnabled(false);
         toolBar.setFetchEnabled(false);
+        menuBar.setWorkspacePullEnabled(false);
+        menuBar.setWorkspacePushEnabled(false);
+        menuBar.setWorkspaceFetchEnabled(false);
         if (projects.isEmpty()) {
             return;
         }
@@ -694,6 +697,9 @@ public class MainFrame extends JFrame {
                     toolBar.setPullEnabled(state[0]);
                     toolBar.setFetchEnabled(state[0]);
                     toolBar.setPushEnabled(state[1]);
+                    menuBar.setWorkspacePullEnabled(state[0]);
+                    menuBar.setWorkspaceFetchEnabled(state[0]);
+                    menuBar.setWorkspacePushEnabled(state[1]);
                 } catch (Exception ex) {
                     log.log(Level.FINE, "Cannot update workspace remote actions", ex);
                 }
@@ -872,7 +878,9 @@ public class MainFrame extends JFrame {
         contentPanel.setContent(workingCopyPanel);
         List<ScmItem> cachedStatus = Context.getStatusList();
         workingCopyPanel.setItems(cachedStatus); // show cached immediately
-        toolBar.setCommitEnabled(isCommitEnabled());
+        boolean commitEnabled = isCommitEnabled();
+        toolBar.setCommitEnabled(commitEnabled);
+        menuBar.setCommitEnabled(commitEnabled);
         menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() {
