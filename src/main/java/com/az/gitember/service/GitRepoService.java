@@ -1710,6 +1710,24 @@ public class GitRepoService implements AutoCloseable {
         return scmItems;
     }
 
+    /**
+     * Returns every file the working copy is aware of — the tracked files (from the git index)
+     * plus untracked, non-ignored files (from status) — as repo-relative, forward-slash paths.
+     * Ignored files (build output, {@code .git}, …) are excluded. Used to feed the workspace
+     * working-copy content index.
+     */
+    public java.util.Set<String> getWorkingTreeFiles() throws Exception {
+        java.util.Set<String> files = new java.util.TreeSet<>();
+        org.eclipse.jgit.dircache.DirCache dirCache = repository.readDirCache();
+        for (int i = 0; i < dirCache.getEntryCount(); i++) {
+            files.add(dirCache.getEntry(i).getPathString());
+        }
+        try (Git git = new Git(repository)) {
+            files.addAll(git.status().call().getUntracked());
+        }
+        return files;
+    }
+
 
     List<ScmItem> mergeLfs(final List<ScmItem> status, final List<ScmItem> lfs) {
         for (ScmItem scmItem : status) {

@@ -49,6 +49,7 @@ public abstract class WorkingCopyOps  extends JPanel {
         searchField.setPreferredSize(new Dimension(150, 25));
         searchField.setMinimumSize(new Dimension(100, 25));
         searchField.setMaximumSize(new Dimension(150, 25));
+        searchField.setEnabled(false);
 
 
         searchField.addActionListener(e -> applyFilter());

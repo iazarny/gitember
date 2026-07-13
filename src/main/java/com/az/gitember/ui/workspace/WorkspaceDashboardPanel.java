@@ -5,6 +5,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.service.WorkspaceSearchService;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.WorkingCopyContextMenu;
@@ -28,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
@@ -91,6 +93,19 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
 
+    /**
+     * Workspace-wide content search over each project's working copy, plus the tree that presents
+     * the results grouped by project (mirroring the Working Copy tab's project-rooted layout).
+     */
+    private final WorkspaceSearchService searchService = new WorkspaceSearchService();
+    private final DefaultMutableTreeNode searchRoot = new DefaultMutableTreeNode("Search");
+    private final DefaultTreeModel searchModel = new DefaultTreeModel(searchRoot);
+    private final JTree searchTree = new JTree(searchModel);
+    /** Coalesces rapid keystrokes into a single search. */
+    private final Timer searchDebounce;
+    /** Guards against overlapping (re)index runs. */
+    private boolean indexing = false;
+
     private static final String TAB_MAIN = "Main";
     private static final String TAB_WORKING_COPY = "Working Copy";
     private static final String TAB_SEARCH = "Search";
@@ -128,6 +143,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         // Toolbar
         searchField.putClientProperty("JTextField.placeholderText", "Search...");
 
+        searchDebounce = new Timer(300, e -> performSearch());
+        searchDebounce.setRepeats(false);
+
         add(tabs, BorderLayout.CENTER);
     }
 
@@ -138,13 +156,21 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     public void setWorkspace(Workspace workspace) {
         this.workspace = workspace;
         titleLabel.setText(workspace == null ? "" : workspace.getName());
+        searchRoot.removeAllChildren();
+        searchModel.reload();
         // Reload whatever tab is currently visible when the dashboard is (re)opened.
         reloadSelectedTab();
+        // Kick off (or refresh) the working-copy search index for this workspace.
+        ensureIndex();
     }
 
     @Override
     protected void applyFilter() {
-
+        // Search runs against the Lucene index, which only exists once indexing has enabled the
+        // field; debounce so we don't fire a query on every keystroke.
+        if (searchField.isEnabled()) {
+            searchDebounce.restart();
+        }
     }
 
     @Override
@@ -211,6 +237,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     @Override
     protected void refresh() {
         reloadSelectedTab(); // recomputes button states as part of the reload
+        reindexIfIndexed();  // keep the search index current with the working copy
     }
 
     /**
@@ -292,6 +319,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         String title = index >= 0 ? tabs.getTitleAt(index) : null;
         if (TAB_WORKING_COPY.equals(title)) {
             reloadWorkingCopyTab();
+            // Switching to the working copy is a natural point to pick up on-disk edits.
+            reindexIfIndexed();
         } else if (TAB_MAIN.equals(title)) {
             reloadMainTab();
         }
@@ -723,8 +752,176 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     // ── Search tab ───────────────────────────────────────────────────────────────
 
     private JComponent buildSearchTab() {
-        // Reserved for workspace-wide search — intentionally empty for now.
-        return new JPanel();
+        searchTree.setRootVisible(false);
+        searchTree.setShowsRootHandles(true);
+        searchTree.setRowHeight(22);
+
+        JScrollPane scroll = new JScrollPane(searchTree);
+        scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        return scroll;
+    }
+
+    /** Runs the current query across all projects' working-copy indexes and shows the results. */
+    private void performSearch() {
+        if (workspace == null) {
+            return;
+        }
+        String term = searchField.getText().trim();
+        if (term.length() < 3) {
+            searchRoot.removeAllChildren();
+            searchModel.reload();
+            return;
+        }
+
+        selectSearchTab();
+        List<Project> projects = new ArrayList<>(workspace.getProjects());
+        statusBar.setStatus("Searching…");
+
+        new SwingWorker<Map<Project, Set<String>>, Void>() {
+            @Override
+            protected Map<Project, Set<String>> doInBackground() {
+                return searchService.search(projects, term);
+            }
+
+            @Override
+            protected void done() {
+                Map<Project, Set<String>> results;
+                try {
+                    results = get();
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Workspace search failed", ex);
+                    statusBar.setStatus("Search error: " + ex.getMessage());
+                    return;
+                }
+                populateSearchResults(results);
+                int count = results.values().stream().mapToInt(Set::size).sum();
+                statusBar.setStatus(count + " file" + (count != 1 ? "s" : "") + " found");
+            }
+        }.execute();
+    }
+
+    /**
+     * Rebuilds the search tree: one top-level node per project that had matches, each holding a
+     * folders/files hierarchy of the matching paths.
+     */
+    private void populateSearchResults(Map<Project, Set<String>> results) {
+        searchRoot.removeAllChildren();
+        if (results.isEmpty()) {
+            searchRoot.add(new DefaultMutableTreeNode("No matches."));
+        } else {
+            for (Map.Entry<Project, Set<String>> entry : results.entrySet()) {
+                Project project = entry.getKey();
+                String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
+                DefaultMutableTreeNode projectNode =
+                        new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
+
+                List<String> paths = new ArrayList<>(entry.getValue());
+                paths.sort(Comparator.naturalOrder());
+                for (String path : paths) {
+                    String[] parts = path.replace('\\', '/').split("/");
+                    DefaultMutableTreeNode current = projectNode;
+                    for (int i = 0; i < parts.length - 1; i++) {
+                        current = findOrCreateFolder(current, parts[i]);
+                    }
+                    current.add(new DefaultMutableTreeNode(
+                            new SearchHit(project, path, parts[parts.length - 1])));
+                }
+                searchRoot.add(projectNode);
+            }
+        }
+        searchModel.reload();
+        expandAll(searchTree);
+    }
+
+    private void selectSearchTab() {
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            if (TAB_SEARCH.equals(tabs.getTitleAt(i))) {
+                tabs.setSelectedIndex(i);
+                return;
+            }
+        }
+    }
+
+    /** Leaf data for a search hit; rendered by its (file) leaf name. */
+    private record SearchHit(Project project, String path, String leafName) {
+        @Override
+        public String toString() {
+            return leafName;
+        }
+    }
+
+    // ── Indexing lifecycle ─────────────────────────────────────────────────────────
+
+    /**
+     * Ensures the workspace working-copy index is ready. When every project is already indexed the
+     * search field is enabled immediately and a lightweight incremental refresh runs; otherwise the
+     * search field stays disabled until the initial background index completes.
+     */
+    private void ensureIndex() {
+        if (workspace == null) {
+            searchField.setEnabled(false);
+            return;
+        }
+        List<Project> projects = new ArrayList<>(workspace.getProjects());
+        if (projects.isEmpty()) {
+            searchField.setEnabled(false);
+            return;
+        }
+        if (searchService.allIndexed(projects)) {
+            searchField.setEnabled(true);
+            runIndexing(projects, false);
+        } else {
+            searchField.setEnabled(false);
+            runIndexing(projects, true);
+        }
+    }
+
+    /** Reindexes changed files only when the workspace is already fully indexed (a no-op otherwise). */
+    private void reindexIfIndexed() {
+        if (workspace == null || indexing) {
+            return;
+        }
+        List<Project> projects = new ArrayList<>(workspace.getProjects());
+        if (searchService.allIndexed(projects)) {
+            runIndexing(projects, false);
+        }
+    }
+
+    /**
+     * Runs the (incremental) working-copy indexing off the EDT. On the initial run the search field
+     * is enabled once indexing completes.
+     */
+    private void runIndexing(List<Project> projects, boolean initial) {
+        if (indexing || projects.isEmpty()) {
+            return;
+        }
+        indexing = true;
+        statusBar.setStatus(initial ? "Indexing workspace…" : "Updating search index…");
+        statusBar.showProgress(true);
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                searchService.indexAll(projects, (project, processed) ->
+                        statusBar.setStatus("Indexing "
+                                + new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName()
+                                + " (" + processed + "/" + projects.size() + ")…"));
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                indexing = false;
+                statusBar.clearProgress();
+                if (initial) {
+                    searchField.setEnabled(true);
+                    statusBar.setStatus("Workspace indexed — search enabled.");
+                } else {
+                    statusBar.setStatus("Search index updated.");
+                }
+            }
+        }.execute();
     }
 
 
