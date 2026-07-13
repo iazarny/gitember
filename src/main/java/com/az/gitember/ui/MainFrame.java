@@ -225,6 +225,7 @@ public class MainFrame extends JFrame {
 
         // Init
         menuBar.addInitListener(e -> showInitDialog());
+        menuBar.addInitWorkspaceListener(e -> showWorkspaceDialog());
 
         // Welcome panel buttons
         welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this, statusBar).execute());
@@ -400,9 +401,7 @@ public class MainFrame extends JFrame {
                 Context.getSettings().createNewWorkspaceName());
 
         workspaceDialog.setVisible(true);
-        if (workspaceDialog.isConfirmed()) {
 
-        }
     }
 
 

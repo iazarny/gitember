@@ -397,6 +397,7 @@ public class MainMenuBar extends JMenuBar {
     public void addOpenListener(ActionListener l)          { openItem.addActionListener(l); }
     public void addCloneListener(ActionListener l)         { cloneItem.addActionListener(l); }
     public void addInitListener(ActionListener l)          { initRepository.addActionListener(l); }
+    public void addInitWorkspaceListener(ActionListener l)  { initWorkspaceItem.addActionListener(l); }
     public void addPullListener(ActionListener l)          { pullItem.addActionListener(l); }
     public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
     public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }

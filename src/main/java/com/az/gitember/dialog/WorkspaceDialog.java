@@ -23,22 +23,18 @@ import java.util.function.Consumer;
  * already-known projects from {@link Settings#getProjects()}, or by selecting a git
  * repository folder on disk.
  *
- * <p>Edits are made against an in-memory copy of the settings' workspaces and are only
+ * <p>Edits are made against an in-memory copy of the workspace and are only
  * persisted when the user presses <em>Open</em> — pressing <em>Cancel</em> discards them.
  */
 public class WorkspaceDialog extends JDialog {
 
-    private final List<Workspace> workingWorkspaces = new ArrayList<>();
-    private final JComboBox<Workspace> workspaceCombo;
+    private final Workspace workspace;
     public final JTextField nameField;
     private final DefaultListModel<Project> projectModel = new DefaultListModel<>();
     private final JList<Project> projectList = new JList<>(projectModel);
 
     /** Invoked with the opened workspace after a successful save (may be {@code null}). */
     private final Consumer<Workspace> onWorkspaceOpened;
-
-    /** Guards combo-selection handling while we mutate the combo programmatically. */
-    private boolean updating = false;
 
     private boolean confirmed = false;
 
@@ -47,9 +43,8 @@ public class WorkspaceDialog extends JDialog {
         super(owner, "Workspaces", Dialog.ModalityType.DOCUMENT_MODAL);
         this.onWorkspaceOpened = onWorkspaceOpened;
 
-        loadWorkingCopy();
+        this.workspace = loadWorkingCopy();
 
-        workspaceCombo = new JComboBox<>(workingWorkspaces.toArray(new Workspace[0]));
         nameField = new JTextField(24);
         projectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         projectList.setCellRenderer(new ProjectCellRenderer());
@@ -59,16 +54,10 @@ public class WorkspaceDialog extends JDialog {
         add(buildCenterPanel(), BorderLayout.CENTER);
         add(buildButtonPanel(), BorderLayout.SOUTH);
 
-        if (!workingWorkspaces.isEmpty()) {
-            workspaceCombo.setSelectedIndex(0);
-        }
-        loadSelectedIntoForm();
+        loadIntoForm();
 
-        workspaceCombo.addActionListener(e -> {
-            if (!updating) {
-                loadSelectedIntoForm();
-            }
-        });
+        // Keep the workspace name in sync as it is typed.
+        nameField.getDocument().addDocumentListener(new SimpleDocumentListener(this::applyNameEdit));
 
         setSize(560, 520);
         setLocationRelativeTo(owner);
@@ -84,28 +73,10 @@ public class WorkspaceDialog extends JDialog {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JButton newBtn = new JButton("New");
-        newBtn.addActionListener(e -> createNewWorkspace());
-        JButton deleteBtn = new JButton("Delete");
-        deleteBtn.addActionListener(e -> deleteSelectedWorkspace());
-
         gbc.gridx = 0; gbc.gridy = 0; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("Workspace:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(workspaceCombo, gbc);
-        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(newBtn, gbc);
-        gbc.gridx = 3;
-        form.add(deleteBtn, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         form.add(new JLabel("Name:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 3; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(nameField, gbc);
-        gbc.gridwidth = 1;
-
-        // Keep the combo label in sync as the name is typed.
-        nameField.getDocument().addDocumentListener(new SimpleDocumentListener(this::applyNameEdit));
 
         return form;
     }
@@ -126,6 +97,9 @@ public class WorkspaceDialog extends JDialog {
         addFromDiskBtn.addActionListener(e -> addRepositoryFromDisk());
         JButton removeBtn = new JButton("Remove");
         removeBtn.addActionListener(e -> removeSelectedProject());
+        removeBtn.setEnabled(false);
+        projectList.addListSelectionListener(e ->
+                removeBtn.setEnabled(projectList.getSelectedValue() != null));
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         btnBar.add(addExistingBtn);
@@ -153,107 +127,32 @@ public class WorkspaceDialog extends JDialog {
 
     // ── Model handling ───────────────────────────────────────────────────────────
 
-    private void loadWorkingCopy() {
+    private Workspace loadWorkingCopy() {
         Settings settings = Context.getSettings();
-        if (settings == null) {
-            return;
-        }
-        // Copy each workspace so edits are isolated until the user presses Open.
-        for (Workspace ws : settings.getWorkspaces()) {
-            workingWorkspaces.add(new Workspace(ws.getName(), new TreeSet<>(ws.getProjects())));
-        }
+        String name = settings != null ? settings.createNewWorkspaceName() : "New workspace";
+        return new Workspace(name, new TreeSet<>());
     }
 
-    private Workspace selectedWorkspace() {
-        return (Workspace) workspaceCombo.getSelectedItem();
-    }
-
-    private void loadSelectedIntoForm() {
-        Workspace ws = selectedWorkspace();
-        updating = true;
-        try {
-            nameField.setText(ws != null ? ws.getName() : "");
-        } finally {
-            updating = false;
-        }
+    private void loadIntoForm() {
+        nameField.setText(workspace.getName() != null ? workspace.getName() : "");
         projectModel.clear();
-        if (ws != null) {
-            ws.getProjects().forEach(projectModel::addElement);
-        }
+        workspace.getProjects().forEach(projectModel::addElement);
     }
 
     private void applyNameEdit() {
-        if (updating) {
-            return;
-        }
-        Workspace ws = selectedWorkspace();
-        if (ws != null) {
-            ws.setName(nameField.getText().trim());
-            // Refresh the combo's rendered label without firing a reselection.
-            updating = true;
-            try {
-                workspaceCombo.repaint();
-            } finally {
-                updating = false;
-            }
-        }
+        workspace.setName(nameField.getText().trim());
     }
-
-    private void createNewWorkspace() {
-        String name = Context.getSettings().createNewWorkspaceName();
-        Workspace ws = new Workspace(name, new TreeSet<>());
-        workingWorkspaces.add(ws);
-        updating = true;
-        try {
-            workspaceCombo.addItem(ws);
-            workspaceCombo.setSelectedItem(ws);
-        } finally {
-            updating = false;
-        }
-        loadSelectedIntoForm();
-        nameField.requestFocusInWindow();
-        nameField.selectAll();
-    }
-
-    private void deleteSelectedWorkspace() {
-        Workspace ws = selectedWorkspace();
-        if (ws == null) {
-            return;
-        }
-        int choice = JOptionPane.showConfirmDialog(this,
-                "Remove workspace \"" + ws.getName() + "\"?\nThe repositories themselves are not deleted from disk.",
-                "Delete Workspace", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (choice != JOptionPane.OK_OPTION) {
-            return;
-        }
-        workingWorkspaces.remove(ws);
-        updating = true;
-        try {
-            workspaceCombo.removeItem(ws);
-        } finally {
-            updating = false;
-        }
-        loadSelectedIntoForm();
-    }
-
-
 
     // ── Project actions ────────────────────────────────────────────────────────
 
     private void addExistingProject() {
-        Workspace ws = selectedWorkspace();
-        if (ws == null) {
-            JOptionPane.showMessageDialog(this, "Create or select a workspace first.",
-                    "No Workspace", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
         // Candidates: the known recent projects, excluding those already in this workspace.
         Settings settings = Context.getSettings();
         Set<Project> candidates = new TreeSet<>();
         if (settings != null) {
             candidates.addAll(settings.getProjects());
         }
-        candidates.removeAll(ws.getProjects());
+        candidates.removeAll(workspace.getProjects());
         if (candidates.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No other known projects to add.",
                     "Add Existing Project", JOptionPane.INFORMATION_MESSAGE);
@@ -267,18 +166,12 @@ public class WorkspaceDialog extends JDialog {
         int result = JOptionPane.showConfirmDialog(this, new JScrollPane(chooser),
                 "Select project(s) to add", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            ws.getProjects().addAll(chooser.getSelectedValuesList());
-            loadSelectedIntoForm();
+            workspace.getProjects().addAll(chooser.getSelectedValuesList());
+            loadIntoForm();
         }
     }
 
     private void addRepositoryFromDisk() {
-        Workspace ws = selectedWorkspace();
-        if (ws == null) {
-            JOptionPane.showMessageDialog(this, "Create or select a workspace first.",
-                    "No Workspace", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setDialogTitle("Select Git Repository");
@@ -293,23 +186,22 @@ public class WorkspaceDialog extends JDialog {
             return;
         }
         Project project = new Project(folder.getAbsolutePath(), new Date());
-        if (!ws.getProjects().add(project)) {
+        if (!workspace.getProjects().add(project)) {
             JOptionPane.showMessageDialog(this, "This repository is already in the workspace.",
                     "Already Added", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        loadSelectedIntoForm();
+        loadIntoForm();
         projectList.setSelectedValue(project, true);
     }
 
     private void removeSelectedProject() {
-        Workspace ws = selectedWorkspace();
         Project selected = projectList.getSelectedValue();
-        if (ws == null || selected == null) {
+        if (selected == null) {
             return;
         }
-        ws.getProjects().remove(selected);
-        loadSelectedIntoForm();
+        workspace.getProjects().remove(selected);
+        loadIntoForm();
     }
 
     // ── Persist ──────────────────────────────────────────────────────────────────
@@ -319,13 +211,8 @@ public class WorkspaceDialog extends JDialog {
     }
 
     private void openWorkspace() {
-        Workspace ws = selectedWorkspace();
-        if (ws == null) {
-            dispose();
-            return;
-        }
         applyNameEdit();
-        if (ws.getName() == null || ws.getName().isBlank()) {
+        if (workspace.getName() == null || workspace.getName().isBlank()) {
             JOptionPane.showMessageDialog(this, "Workspace name cannot be empty.",
                     "Invalid Name", JOptionPane.WARNING_MESSAGE);
             nameField.requestFocusInWindow();
@@ -333,10 +220,10 @@ public class WorkspaceDialog extends JDialog {
         }
         Settings settings = Context.getSettings();
         if (settings != null) {
-            settings.setWorkspaces(new ArrayList<>(workingWorkspaces));
+            settings.getWorkspaces().add(workspace);
             Context.saveSettings();
             if (onWorkspaceOpened != null) {
-                onWorkspaceOpened.accept(ws);
+                onWorkspaceOpened.accept(workspace);
             }
         }
         confirmed = true;
