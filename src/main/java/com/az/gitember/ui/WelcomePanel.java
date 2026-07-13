@@ -64,7 +64,7 @@ public class WelcomePanel extends JPanel {
         JButton openRepoBtn  = createWellcomeButton("Open Repository", FontAwesomeSolid.FOLDER_OPEN);
         JButton cloneRepoBtn = createWellcomeButton("Clone repository", FontAwesomeSolid.FOLDER);
         JButton initRepoBtn  = createWellcomeButton("Init repository", FontAwesomeSolid.FOLDER_PLUS);
-        JButton initWorkpaceBtn  = createWellcomeButton("Init workspace", FontAwesomeSolid.FOLDER_PLUS);
+        JButton initWorkpaceBtn  = createWellcomeButton("Init workspace", FontAwesomeSolid.LAYER_GROUP);
 
 
         openRepoBtn.addActionListener(e -> { if (onOpenRepo != null) onOpenRepo.run(); });
