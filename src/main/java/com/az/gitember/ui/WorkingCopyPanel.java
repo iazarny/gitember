@@ -122,7 +122,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
     }
 
     @Override
-    protected void updateButtonStates() {
+    public void updateButtonStates() {
         List<ScmItem> items = tableModel.getAllItems();
         stageAllBtn.setEnabled(items.stream().anyMatch(i -> !i.isStaged()));
         unstageAllBtn.setEnabled(items.stream().anyMatch(ScmItem::isStaged));
@@ -317,7 +317,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             JLabel label = (JLabel) super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, col);
             String status = value != null ? value.toString() : "";
             label.setOpaque(true);
-            if (!isSelected) label.setBackground(scmItemColor(status));
+            if (!isSelected) label.setBackground(SyntaxStyleUtil.scmItemColor(status));
             return label;
         }
     }
@@ -328,17 +328,10 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                                                         boolean isSelected, boolean hasFocus, int row, int col) {
             JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
             String status = value != null ? value.toString() : "";
-            if (!isSelected) label.setForeground(scmItemColor(status).darker());
+            if (!isSelected) label.setForeground(SyntaxStyleUtil.scmItemColor(status).darker());
             return label;
         }
     }
 
-    private static Color scmItemColor(String status) {
-        if (ScmItem.isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR;
-        if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
-        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
-            return SyntaxStyleUtil.UNTRACKED_COLOR;
-        if (ScmItem.Status.LFS.equals(status)) return SyntaxStyleUtil.LFS_COLOR;
-        return SyntaxStyleUtil.UNSTAGED_COLOR;
-    }
+
 }

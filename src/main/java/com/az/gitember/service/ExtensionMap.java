@@ -104,6 +104,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/x-c++src", "cpp", true));
         add(new ExtensionInfo("text/x-chdr", "h", true));
         add(new ExtensionInfo("text/x-c++hdr", "hh", true));
+        add(new ExtensionInfo("text/x-c++hdr", "hpp", true));
         add(new ExtensionInfo("text/x-fortran", "f", true));
         add(new ExtensionInfo("text/x-fortran", "for", true));
         add(new ExtensionInfo("text/x-fortran", "f77", true));

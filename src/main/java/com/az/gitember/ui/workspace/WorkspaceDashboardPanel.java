@@ -4,7 +4,6 @@ import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
-import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.WorkspaceSearchService;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
@@ -25,7 +24,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,10 +110,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     private final JTabbedPane tabs = new JTabbedPane();
 
-    /**
-     * Pixel width of the leading checkbox, used to hit-test stage/unstage clicks.
-     */
-    private final int checkboxWidth = new JCheckBox().getPreferredSize().width;
+
 
 
     private Workspace workspace;
@@ -147,6 +142,20 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         searchDebounce.setRepeats(false);
 
         add(tabs, BorderLayout.CENTER);
+
+        searchField.setEnabled(false);
+    }
+
+    public DefaultTreeModel getWorkingCopyModel() {
+        return workingCopyModel;
+    }
+
+    public DefaultMutableTreeNode getWorkingCopyRoot() {
+        return workingCopyRoot;
+    }
+
+    public JTree getWorkingCopyTree() {
+        return workingCopyTree;
     }
 
     public void setOnCommitStateChanged(java.util.function.Consumer<Boolean> onCommitStateChanged) {
@@ -206,7 +215,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                                     "Staging "  + item.getShortName():
                                     "Unstaging " +  item.getShortName());
 
-                            boolean staged = isStaged(
+                            boolean staged = ScmItem.isStaged(
                                     item.getAttribute() != null ? item.getAttribute().getStatus() : null);
                             if (stage && !staged) {
                                 svc.stageItem(item);
@@ -256,7 +265,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      * run off the EDT; the buttons are updated on the EDT once the scan completes.
      */
     @Override
-    protected void updateButtonStates() {
+    public void updateButtonStates() {
         if (!Context.isWorkspaceMode() || Context.getActiveView() != Context.ActiveView.WORKSPACE) {
             return;
         }
@@ -462,53 +471,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
         // Left-click on the leading checkbox toggles stage/unstage.
         // Right-click shows a context menu identical to the working-copy panel's.
-        workingCopyTree.addMouseListener(new MouseAdapter() {
-
-            private void handlePopup(MouseEvent e) {
-                if (!e.isPopupTrigger()) return;
-                TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
-                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
-                if (!(node.getUserObject() instanceof FileNode fileNode)) return;
-
-                com.az.gitember.data.Project project = fileNode.project();
-                DefaultMutableTreeNode projectNode = projectNodeOf(node);
-
-                WorkingCopyContextMenu ctxMenu = new WorkingCopyContextMenu(
-                        WorkspaceDashboardPanel.this,
-                        statusBar,
-                        action -> {
-                            try (com.az.gitember.service.GitRepoService svc =
-                                         com.az.gitember.service.GitRepoService.of(project)) {
-                                action.execute(svc);
-                            }
-                        },
-                        project::getProjectHomeFolder,
-                        () -> {
-                            if (projectNode != null) loadProjectWorkingCopy(project, projectNode);
-                            updateButtonStates();
-                        });
-                ctxMenu.show(java.util.List.of(fileNode.item()), workingCopyTree, e.getX(), e.getY());
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) { handlePopup(e); }
-
-            @Override
-            public void mouseReleased(MouseEvent e) { handlePopup(e); }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.isPopupTrigger() || !SwingUtilities.isLeftMouseButton(e)) return;
-                TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
-                if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
-                if (!(node.getUserObject() instanceof FileNode fileNode)) return;
-
-                Rectangle bounds = workingCopyTree.getPathBounds(path);
-                if (bounds != null && e.getX() <= bounds.x + checkboxWidth) {
-                    toggleStage(node, fileNode);
-                }
-            }
-        });
+        workingCopyTree.addMouseListener(new WorkingCopyMouseAdapter(this, statusBar) );
 
         JScrollPane scroll = new JScrollPane(workingCopyTree);
         scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -523,32 +486,29 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private void rebuildWorkingCopy() {
         workingCopyRoot.removeAllChildren();
 
-        java.util.Collection<Project> projects =
-                workspace == null ? List.of() : workspace.getProjects();
-        if (projects.isEmpty()) {
-            workingCopyRoot.add(new DefaultMutableTreeNode("No repositories in this workspace."));
+
+        if (!workspace.getProjects().isEmpty()) {
+            for (Project project : workspace.getProjects()) {
+                String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
+                DefaultMutableTreeNode projectNode =
+                        new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
+                projectNode.add(new DefaultMutableTreeNode("Loading…"));
+                workingCopyRoot.add(projectNode);
+                loadProjectWorkingCopy(project, projectNode);
+            }
+
             workingCopyModel.reload();
-            return;
+            expandIfSense(workingCopyTree);
         }
 
-        for (Project project : projects) {
-            String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
-            DefaultMutableTreeNode projectNode =
-                    new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
-            projectNode.add(new DefaultMutableTreeNode("Loading…"));
-            workingCopyRoot.add(projectNode);
-            loadProjectWorkingCopy(project, projectNode);
-        }
 
-        workingCopyModel.reload();
-        expandAll(workingCopyTree);
     }
 
     /**
      * Reads a project's working-copy status off the EDT (using a throwaway
      * {@link GitRepoService}) and fills the project node with a folders/files hierarchy.
      */
-    private void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
+    public void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
         new SwingWorker<DefaultMutableTreeNode, Void>() {
             @Override
             protected DefaultMutableTreeNode doInBackground() throws Exception {
@@ -571,15 +531,26 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 }
                 moveChildren(holder, projectNode);
                 workingCopyModel.reload(projectNode);
-                expandAll(workingCopyTree);
+                //expand ???
             }
         }.execute();
+    }
+
+
+    /**
+     * Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children.
+     */
+    private static void moveChildren(DefaultMutableTreeNode from, DefaultMutableTreeNode to) {
+        to.removeAllChildren();
+        while (from.getChildCount() > 0) {
+            to.add((DefaultMutableTreeNode) from.getChildAt(0));
+        }
     }
 
     /**
      * Populates {@code parent} with a folders/files hierarchy from a flat list of items.
      */
-    private void populateFileTree(Project project, DefaultMutableTreeNode parent, List<ScmItem> items) {
+    private void populateFileTree(Project project, DefaultMutableTreeNode parent, java.util.List<ScmItem> items) {
         if (items == null || items.isEmpty()) {
             parent.add(new DefaultMutableTreeNode("(no changes)"));
             return;
@@ -604,17 +575,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
 
 
-    /**
-     * Moves all children from {@code from} to {@code to}, replacing {@code to}'s existing children.
-     */
-    private static void moveChildren(DefaultMutableTreeNode from, DefaultMutableTreeNode to) {
-        to.removeAllChildren();
-        while (from.getChildCount() > 0) {
-            to.add((DefaultMutableTreeNode) from.getChildAt(0));
-        }
-    }
-
-    private DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
+    public DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
         for (int i = 0; i < parent.getChildCount(); i++) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) parent.getChildAt(i);
             if (folderName.equals(child.getUserObject()) && !child.isLeaf()) {
@@ -626,88 +587,15 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return folder;
     }
 
-    private static void expandAll(JTree tree) {
-        for (int i = 0; i < tree.getRowCount(); i++) {
+    private static void expandIfSense(JTree tree) {
+       /* for (int i = 0; i < tree.getRowCount(); i++) {
             tree.expandRow(i);
-        }
+        }*/
     }
 
-    // ── Stage / unstage ──────────────────────────────────────────────────────────
 
-    /**
-     * Toggles the staged state of a single file using its <em>own</em> project's repository
-     * (a throwaway {@link GitRepoService}), then reloads that project's subtree.
-     */
-    private void toggleStage(DefaultMutableTreeNode node, FileNode fileNode) {
-        Project project = fileNode.project();
-        ScmItem item = fileNode.item();
-        boolean staged = isStaged(fileNode.status());
-        DefaultMutableTreeNode projectNode = projectNodeOf(node);
 
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                try (GitRepoService svc = GitRepoService.of(project)) {
-                    if (staged) {
-                        svc.unstageItem(item);
-                    } else {
-                        svc.stageItem(item);
-                    }
-                }
-                return null;
-            }
 
-            @Override
-            protected void done() {
-                try {
-                    get();
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Stage/unstage failed for " + item.getShortName(), ex);
-                }
-                if (projectNode != null) {
-                    loadProjectWorkingCopy(project, projectNode);
-                }
-                updateButtonStates();
-            }
-        }.execute();
-    }
-
-    /**
-     * Walks up from a file node to its owning project node (direct child of the hidden root).
-     */
-    private DefaultMutableTreeNode projectNodeOf(DefaultMutableTreeNode node) {
-        DefaultMutableTreeNode current = node;
-        while (current.getParent() != null && current.getParent() != workingCopyRoot) {
-            current = (DefaultMutableTreeNode) current.getParent();
-        }
-        return current.getParent() == workingCopyRoot ? current : null;
-    }
-
-    private static boolean isStaged(String status) {
-        return ScmItem.Status.ADDED.equals(status)
-                || ScmItem.Status.CHANGED.equals(status)
-                || ScmItem.Status.RENAMED.equals(status)
-                || ScmItem.Status.REMOVED.equals(status);
-    }
-
-    private static Color statusColor(String status) {
-        if (status == null) return SyntaxStyleUtil.UNSTAGED_COLOR;
-        if (isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR.darker();
-        if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
-        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
-            return SyntaxStyleUtil.UNTRACKED_COLOR;
-        if (ScmItem.Status.LFS.equals(status)) return SyntaxStyleUtil.LFS_COLOR;
-        return SyntaxStyleUtil.UNSTAGED_COLOR;
-    }
-
-    /**
-     * Leaf tree data: a working-copy change tied to the project it belongs to.
-     */
-    private record FileNode(Project project, ScmItem item, String leafName) {
-        String status() {
-            return item.getAttribute() != null ? item.getAttribute().getStatus() : "";
-        }
-    }
 
     /**
      * Renders file nodes as {@code [checkbox] name  [status]} with a status-colored label;
@@ -737,14 +625,14 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             }
 
             String status = fileNode.status();
-            checkBox.setSelected(isStaged(status));
+            checkBox.setSelected(ScmItem.isStaged(status));
 
-            String text = fileNode.leafName();
+            String text = fileNode.getLeafName();
             if (status != null && !status.isEmpty()) {
                 text = text + "  [" + status + "]";
             }
             label.setText(text);
-            label.setForeground(statusColor(status));
+            label.setForeground(SyntaxStyleUtil.scmItemColor(status));
             return panel;
         }
     }
@@ -755,6 +643,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         searchTree.setRootVisible(false);
         searchTree.setShowsRootHandles(true);
         searchTree.setRowHeight(22);
+        searchTree.addMouseListener(
+                new SearchTreeMouseAdapter(searchTree, new SearchItemContextMenu())
+        );
 
         JScrollPane scroll = new JScrollPane(searchTree);
         scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -817,6 +708,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                         new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
 
                 List<String> paths = new ArrayList<>(entry.getValue());
+
+
                 paths.sort(Comparator.naturalOrder());
                 for (String path : paths) {
                     String[] parts = path.replace('\\', '/').split("/");
@@ -824,6 +717,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     for (int i = 0; i < parts.length - 1; i++) {
                         current = findOrCreateFolder(current, parts[i]);
                     }
+
+
                     current.add(new DefaultMutableTreeNode(
                             new SearchHit(project, path, parts[parts.length - 1])));
                 }
@@ -831,7 +726,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             }
         }
         searchModel.reload();
-        expandAll(searchTree);
+        expandIfSense(searchTree);
     }
 
     private void selectSearchTab() {
@@ -843,13 +738,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Leaf data for a search hit; rendered by its (file) leaf name. */
-    private record SearchHit(Project project, String path, String leafName) {
-        @Override
-        public String toString() {
-            return leafName;
-        }
-    }
+
 
     // ── Indexing lifecycle ─────────────────────────────────────────────────────────
 
