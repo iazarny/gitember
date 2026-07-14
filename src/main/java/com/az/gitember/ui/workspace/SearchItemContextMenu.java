@@ -28,11 +28,9 @@ public class SearchItemContextMenu  extends JPopupMenu {
         this.add(historyItem);
         this.add(deleteItem);
 
-
         openItem.addActionListener(evt -> {
             if (selectedNode.getUserObject() instanceof SearchHit hit) {
                 String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
-                System.out.println(fileName);
                 if (ExtensionMap.isTextExtension(fileName)) {
                     try {
                         String content = Files.readString(Paths.get(fileName));
@@ -51,9 +49,6 @@ public class SearchItemContextMenu  extends JPopupMenu {
                     }
                 }
             }
-
-
-
         });
     }
 
