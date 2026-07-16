@@ -7,7 +7,6 @@ import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.WorkspaceSearchService;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
-import com.az.gitember.ui.WorkingCopyContextMenu;
 import com.az.gitember.ui.WorkingCopyOps;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -17,10 +16,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
-import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -379,7 +375,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 @Override
                 protected RepoStats doInBackground() {
                     try {
-
                         return new GetRepoStatService().computeStats(project.getProjectHomeFolder());
                     } catch (Exception ex) {
                         log.log(Level.FINE, "Cannot read stats for " + home, ex);
@@ -397,7 +392,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     }
                     statsByProject.put(project, stats);
                     int row = tableModel.indexOf(project);
-                    if (row >= 0) tableModel.fireTableRowsUpdated(row, row);
+                    if (row >= 0) {
+                        tableModel.fireTableRowsUpdated(row, row);
+                    }
                     metricsPanel.revalidate();
                     metricsPanel.repaint();
                 }
@@ -644,7 +641,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         searchTree.setShowsRootHandles(true);
         searchTree.setRowHeight(22);
         searchTree.addMouseListener(
-                new SearchTreeMouseAdapter(searchTree, new SearchItemContextMenu(searchTree))
+                new SearchTreeMouseAdapter(searchTree, new SearchItemContextMenu(this, searchTree))
         );
 
         JScrollPane scroll = new JScrollPane(searchTree);

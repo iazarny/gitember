@@ -19,6 +19,7 @@ public class SearchItemContextMenu  extends JPopupMenu {
     private static final Logger log = Logger.getLogger(SearchItemContextMenu.class.getName());
 
     private final  JTree searchTree;
+    private final  Component parent;
 
     private final JMenuItem openItem = new JMenuItem("Open");
     private final JMenuItem deleteItem = new JMenuItem("Delete ...");
@@ -26,8 +27,9 @@ public class SearchItemContextMenu  extends JPopupMenu {
 
     private DefaultMutableTreeNode selectedNode;
 
-    public SearchItemContextMenu(JTree searchTree) {
+    public SearchItemContextMenu(Component parent, JTree searchTree) {
         this.searchTree = searchTree;
+        this.parent = parent;
         this.add(openItem);
         this.addSeparator();
         this.add(historyItem);
@@ -38,26 +40,20 @@ public class SearchItemContextMenu  extends JPopupMenu {
                     if (selectedNode.getUserObject() instanceof SearchHit hit) {
                         String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
 
-                        int c = JOptionPane.showConfirmDialog(null,
+                        int c = JOptionPane.showConfirmDialog(parent,
                                 "Physically delete '" + hit.getLeafName() + "'?\nThis cannot be undone.",
                                 "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                         if (c == JOptionPane.YES_OPTION)  {
-                            try {
-                                Files.deleteIfExists(Paths.get(fileName)); //TODO remove from search index
-
-                                DefaultTreeModel model = (DefaultTreeModel) searchTree.getModel();
-                                model.removeNodeFromParent(selectedNode);
-
-                                SearchService searchService = SearchService.forProject(hit.getProject());
-                                searchService.deleteFileDoc(fileName);
-
-                            } catch (Exception ex) {
-                                log.log(Level.WARNING, "Cannot delete file: " + fileName, ex);
-                            }
+                                try (SearchService searchService = SearchService.forProject(hit.getProject())) {
+                                    searchService.deleteFileDoc(hit.getPath());
+                                    Files.deleteIfExists(Paths.get(fileName));
+                                    DefaultTreeModel model = (DefaultTreeModel) searchTree.getModel();
+                                    model.removeNodeFromParent(selectedNode);
+                                } catch (Exception ex) {
+                                    log.log(Level.WARNING, "Cannot delete file: " + fileName, ex);
+                                }
                         }
-
                     }
-
                 }
         );
 
