@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * Full-text search over the <em>current working copy</em> of every project in a workspace.
  *
  * <p>Each project gets its own Lucene index, stored separately from the per-project history index
- * (see {@link SearchService#HISTORY_INDEX_PREFIX} vs. {@link #WORKSPACE_INDEX_PREFIX}). Indexing is
+ * (see {@link SearchService#HISTORY_INDEX_PREFIX} vs. {@link SearchService#WORKSPACE_INDEX_PREFIX}). Indexing is
  * incremental: on each run the working-tree file list is compared against what is already indexed,
  * so only new or changed files are re-read and deleted files are pruned. The first run over an empty
  * index therefore performs the initial full index; subsequent runs are cheap refreshes.
@@ -28,19 +28,12 @@ public class WorkspaceSearchService {
 
     private static final Logger log = Logger.getLogger(WorkspaceSearchService.class.getName());
 
-    /** Keeps workspace working-copy indexes apart from the history indexes under the shared root. */
-    public static final String WORKSPACE_INDEX_PREFIX = "luceneidx-ws-";
-
     /** Files larger than this (bytes) are skipped to keep indexing fast and the index small. */
     private static final long MAX_FILE_SIZE = 4L * 1024 * 1024;
 
-    private SearchService serviceFor(Project project) {
-        return new SearchService(project.getProjectHomeFolder(), WORKSPACE_INDEX_PREFIX);
-    }
-
     /** True when a project already has a working-copy index on disk. */
     public boolean isIndexed(Project project) {
-        try (SearchService svc = serviceFor(project)) {
+        try (SearchService svc = SearchService.forProject(project)) {
             return svc.hasIndex();
         }
     }
@@ -62,7 +55,7 @@ public class WorkspaceSearchService {
         if (home == null || home.isBlank()) {
             return;
         }
-        try (SearchService svc = serviceFor(project);
+        try (SearchService svc = SearchService.forProject(project);
              GitRepoService git = GitRepoService.of(project)) {
 
             Map<String, Long> indexed = svc.indexedFileMtimes();
@@ -125,7 +118,7 @@ public class WorkspaceSearchService {
     public Map<Project, Set<String>> search(Collection<Project> projects, String term) {
         Map<Project, Set<String>> rez = new LinkedHashMap<>();
         for (Project project : projects) {
-            try (SearchService svc = serviceFor(project)) {
+            try (SearchService svc = SearchService.forProject(project)) {
                 if (!svc.hasIndex()) {
                     continue;
                 }

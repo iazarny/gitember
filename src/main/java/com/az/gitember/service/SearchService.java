@@ -1,5 +1,6 @@
 package com.az.gitember.service;
 
+import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItemDocument;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -36,6 +37,8 @@ public class SearchService implements AutoCloseable {
 
     /** Default index-folder prefix for the per-project history index. */
     public static final String HISTORY_INDEX_PREFIX = "luceneidx-";
+    /** Keeps workspace working-copy indexes apart from the history indexes under the shared root. */
+    public static final String WORKSPACE_INDEX_PREFIX = "luceneidx-ws-";
 
     /** Field names used by the working-copy file documents (see {@link #updateFileDoc}). */
     private static final String FIELD_PATH = "path";
@@ -73,6 +76,11 @@ public class SearchService implements AutoCloseable {
         }
 
     }
+
+    public  static SearchService forProject(Project project) {
+        return new SearchService(project.getProjectHomeFolder(), WORKSPACE_INDEX_PREFIX);
+    }
+
 
     public void dropIndex() {
         try {

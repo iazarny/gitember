@@ -1,10 +1,12 @@
 package com.az.gitember.ui.workspace;
 
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.service.SearchService;
 import com.az.gitember.ui.FileViewerWindow;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.io.File;
 import java.nio.file.Files;
@@ -16,17 +18,48 @@ public class SearchItemContextMenu  extends JPopupMenu {
 
     private static final Logger log = Logger.getLogger(SearchItemContextMenu.class.getName());
 
+    private final  JTree searchTree;
+
     private final JMenuItem openItem = new JMenuItem("Open");
     private final JMenuItem deleteItem = new JMenuItem("Delete ...");
     private final JMenuItem historyItem = new JMenuItem("Show history");
 
     private DefaultMutableTreeNode selectedNode;
 
-    public SearchItemContextMenu() {
+    public SearchItemContextMenu(JTree searchTree) {
+        this.searchTree = searchTree;
         this.add(openItem);
         this.addSeparator();
         this.add(historyItem);
         this.add(deleteItem);
+
+        deleteItem.addActionListener(
+                evt -> {
+                    if (selectedNode.getUserObject() instanceof SearchHit hit) {
+                        String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
+
+                        int c = JOptionPane.showConfirmDialog(null,
+                                "Physically delete '" + hit.getLeafName() + "'?\nThis cannot be undone.",
+                                "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        if (c == JOptionPane.YES_OPTION)  {
+                            try {
+                                Files.deleteIfExists(Paths.get(fileName)); //TODO remove from search index
+
+                                DefaultTreeModel model = (DefaultTreeModel) searchTree.getModel();
+                                model.removeNodeFromParent(selectedNode);
+
+                                SearchService searchService = SearchService.forProject(hit.getProject());
+                                searchService.deleteFileDoc(fileName);
+
+                            } catch (Exception ex) {
+                                log.log(Level.WARNING, "Cannot delete file: " + fileName, ex);
+                            }
+                        }
+
+                    }
+
+                }
+        );
 
         openItem.addActionListener(evt -> {
             if (selectedNode.getUserObject() instanceof SearchHit hit) {

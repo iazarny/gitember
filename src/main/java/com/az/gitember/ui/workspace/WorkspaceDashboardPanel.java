@@ -644,7 +644,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         searchTree.setShowsRootHandles(true);
         searchTree.setRowHeight(22);
         searchTree.addMouseListener(
-                new SearchTreeMouseAdapter(searchTree, new SearchItemContextMenu())
+                new SearchTreeMouseAdapter(searchTree, new SearchItemContextMenu(searchTree))
         );
 
         JScrollPane scroll = new JScrollPane(searchTree);

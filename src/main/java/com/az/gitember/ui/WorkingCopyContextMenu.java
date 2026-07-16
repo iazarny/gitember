@@ -414,7 +414,7 @@ public class WorkingCopyContextMenu {
         }
     }
 
-    private void physicalDelete(ScmItem item) {
+    public void physicalDelete(ScmItem item) {
         int c = JOptionPane.showConfirmDialog(parent,
                 "Physically delete '" + item.getShortName() + "'?\nThis cannot be undone.",
                 "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -423,7 +423,7 @@ public class WorkingCopyContextMenu {
         onComplete.run();
     }
 
-    private void deleteFileFromDisk(String fileName) {
+    public void deleteFileFromDisk(String fileName) {
         try {
             Files.deleteIfExists(Paths.get(normalizedFolder() + fileName));
         } catch (Exception ex) {
