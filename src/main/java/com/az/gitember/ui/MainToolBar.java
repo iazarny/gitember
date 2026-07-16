@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
+import org.kordamp.ikonli.devicons.Devicons;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ public class MainToolBar extends JToolBar {
 
     private final JButton openBtn;
     private final JButton cloneBtn;
+    private final JButton createBranchBtn;
     private final JButton pullBtn;
     private final JButton pushBtn;
     private final JButton fetchBtn;
@@ -34,6 +36,8 @@ public class MainToolBar extends JToolBar {
 
     public MainToolBar() {
         setFloatable(false);
+
+        createBranchBtn = Util.createButton("Branch", null, Devicons.GIT_BRANCH);
 
         openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
@@ -75,6 +79,7 @@ public class MainToolBar extends JToolBar {
         //add(projectCombo);
         //addSeparator();
 
+        add(createBranchBtn);
         add(pullBtn);
         add(pushBtn);
         add(fetchBtn);
@@ -117,6 +122,10 @@ public class MainToolBar extends JToolBar {
         if (!enabled) {
             commitBtn.setEnabled(false);
         }
+    }
+
+    public void setBranchEnabled(boolean enabled) {
+        createBranchBtn.setEnabled(enabled);
     }
 
     public void setCommitEnabled(boolean enabled) {

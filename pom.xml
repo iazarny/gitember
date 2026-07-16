@@ -92,6 +92,11 @@
             <artifactId>ikonli-fontawesome5-pack</artifactId>
             <version>${ikonli.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-devicons-pack</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
 
         <!-- Jackson -->
         <dependency>
