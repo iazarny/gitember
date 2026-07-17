@@ -3,6 +3,7 @@ package com.az.gitember.ui.mainframe;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import java.awt.*;
 
@@ -40,5 +41,6 @@ public class CloneHandler extends AbstractAsyncHandler<Void> {
                 Context.saveSettings();
             });
         }
+        MainFrame.getInstance().getToolBar().setVisible(true);
     }
 }

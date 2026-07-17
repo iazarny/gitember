@@ -32,7 +32,7 @@ public class OpenRecentWorkspaceHanlder implements Consumer<Workspace> {
             mainFrame.getMainCardLayout().show(mainFrame.getMainCardPanel(), MainFrame.CARD_REPO);
             mainFrame.setTitle("Gitember - " + workspace.getName());
             mainFrame.getStatusBar().setStatus("Workspace opened: " + workspace.getName());
-            MainFrame.getInstance().getMainMenuBar().setVisible(true);
+            MainFrame.getInstance().getToolBar().setVisible(true);
 
         }
     }

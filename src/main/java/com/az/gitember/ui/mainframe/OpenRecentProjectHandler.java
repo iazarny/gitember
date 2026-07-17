@@ -50,7 +50,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
                     InteractiveContinueAbortDialog.showIfRebaseInProgress(
                             mainFrame, mainFrame.getStatusBar(),
                             () -> mainFrame.getHistoryPanel().loadHistory(null, true));
-                    //MainFrame.getMainMenuBar().setVisible(true);
+                    MainFrame.getInstance().getToolBar().setVisible(true);
                 } catch (Exception e) {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
                     log.log(Level.WARNING, "Failed to open project", cause);
