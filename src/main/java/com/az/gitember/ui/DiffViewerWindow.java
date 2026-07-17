@@ -221,8 +221,10 @@ public class DiffViewerWindow extends JFrame {
 
     /** Initializes all shared components. Must be called first in every constructor. */
     private void initCommon(String syntaxStyle) {
-        setSize(1200, 700);
-        setLocationRelativeTo(Context.getMainFrame());
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
+        setLocationRelativeTo(MainFrame.getInstance());
         setIconImages(Util.appIcons());
 
         oldPane = createEditor(syntaxStyle);

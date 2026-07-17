@@ -119,14 +119,8 @@ public class Context {
     private static ProjectWatcher projectWatcher;
     private static Thread projectWatcherThread;
 
-    private static JFrame mainFrame;
-
     private static final Object branchLock = new Object();
     private static final Object tagLock = new Object();
-
-    public static JFrame getMainFrame() { return mainFrame; }
-    public static void setMainFrame(JFrame frame) { mainFrame = frame; }
-
 
     public static void setActiveView(ActiveView view) {
         activeView = view;

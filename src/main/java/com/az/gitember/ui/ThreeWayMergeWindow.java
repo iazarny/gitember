@@ -124,7 +124,9 @@ public class ThreeWayMergeWindow extends JFrame {
         updateConflictLabel();
         updateButtonStates();
 
-        setSize(1400, 800);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
         setLocationRelativeTo(null);
         Util.bindEscapeToDispose(this);
         setVisible(true);

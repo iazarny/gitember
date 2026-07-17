@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 public class MainFrame extends JFrame {
 
     private static final Logger log = Logger.getLogger(MainFrame.class.getName());
+    private static MainFrame instance;
 
     private final MainMenuBar menuBar;
     private final MainToolBar toolBar;
@@ -54,11 +55,20 @@ public class MainFrame extends JFrame {
     private final SubmodulePanel submodulePanel;
     private final WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
-    public MainFrame() {
-        Context.setMainFrame(this);
+    public static synchronized MainFrame getInstance() {
+        if (instance == null) {
+            instance = new MainFrame();
+        }
+        return instance;
+    }
+
+    private MainFrame() {
         setTitle("Gitember");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 800);
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 40, screenSize.height - 60);
         setLocationRelativeTo(null);
 
         // Set window icons — provide multiple sizes so each OS picks the best fit.
@@ -97,6 +107,7 @@ public class MainFrame extends JFrame {
         // Create components
         menuBar = new MainMenuBar();
         toolBar = new MainToolBar();
+        toolBar.setVisible(false);
         treePanel = new MainTreePanel();
         contentPanel = new ContentPanel();
         statusBar = new StatusBar();
@@ -214,6 +225,8 @@ public class MainFrame extends JFrame {
         mainCardLayout.show(mainCardPanel, CARD_WELCOME);
     }
 
+
+
     private void wireActions() {
         // Open
         menuBar.addOpenListener(e -> new OpenRepoHandler(this, statusBar).execute());
@@ -309,6 +322,14 @@ public class MainFrame extends JFrame {
         menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));
         menuBar.setRecentWorkspaceHandler(new OpenRecentWorkspaceHanlder(this));
         toolBar.setProjectSelectionHandler(new OpenRecentProjectHandler(this));
+    }
+
+    public StatusBar getStatusBar() {
+        return statusBar;
+    }
+
+    public MainTreePanel getTreePanel() {
+        return treePanel;
     }
 
     public MainMenuBar getMainMenuBar() {
@@ -934,13 +955,6 @@ public class MainFrame extends JFrame {
         Context.updateStatus(null, true);
     }
 
-    public StatusBar getStatusBar() {
-        return statusBar;
-    }
-
-    public MainTreePanel getTreePanel() {
-        return treePanel;
-    }
 
     // ── Terminal launcher ─────────────────────────────────────────────────────
 
