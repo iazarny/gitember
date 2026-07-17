@@ -11,8 +11,8 @@ import java.awt.*;
  */
 public class CompressDatabaseHandler extends AbstractAsyncHandler<Void> {
 
-    public CompressDatabaseHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public CompressDatabaseHandler(Component parent) {
+        super(parent);
     }
 
     @Override

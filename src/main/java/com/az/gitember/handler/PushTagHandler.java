@@ -14,8 +14,8 @@ public class PushTagHandler extends AbstractAsyncHandler<String> {
     private String remoteUrl;
     private boolean credentialsPrompted = false;
 
-    public PushTagHandler(Component parent, StatusBar statusBar, ScmBranch tag) {
-        super(parent, statusBar);
+    public PushTagHandler(Component parent,  ScmBranch tag) {
+        super(parent);
         this.tag = tag;
     }
 

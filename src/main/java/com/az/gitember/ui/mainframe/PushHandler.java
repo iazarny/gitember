@@ -23,8 +23,8 @@ public class PushHandler extends AbstractAsyncHandler<String> {
     /** Non-null only when the push ran across a workspace (aggregated per-project results). */
     private List<ProjectOperationResult<String>> workspaceResults;
 
-    public PushHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public PushHandler(Component parent) {
+        super(parent);
     }
 
     @Override

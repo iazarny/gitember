@@ -11,8 +11,8 @@ import java.io.File;
 
 public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
 
-    public OpenRepoHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public OpenRepoHandler(Component parent) {
+        super(parent);
     }
 
     @Override

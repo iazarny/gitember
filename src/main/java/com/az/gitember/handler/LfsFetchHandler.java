@@ -21,8 +21,9 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     /** Prevents an infinite prompt loop if the user supplies wrong credentials. */
     private boolean credentialsPrompted = false;
 
-    public LfsFetchHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public LfsFetchHandler(Component parent) {
+
+        super(parent);
     }
 
     @Override

@@ -49,7 +49,7 @@ class WorkspaceSearchServiceTest {
     void tearDown() throws Exception {
         // Drop the (temp-dir keyed) index so runs stay isolated.
         try (SearchService s = new SearchService(project.getProjectHomeFolder(),
-                WorkspaceSearchService.WORKSPACE_INDEX_PREFIX)) {
+                SearchService.WORKSPACE_INDEX_PREFIX)) {
             s.dropIndex();
         }
         repository.close();

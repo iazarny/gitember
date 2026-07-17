@@ -69,6 +69,7 @@ public class App {
                 }
 
                 MainFrame frame = MainFrame.getInstance();
+                frame.init();
                 frame.setVisible(true);
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Failed to start application", e);

@@ -32,28 +32,28 @@ public class MainFrame extends JFrame {
     private static final Logger log = Logger.getLogger(MainFrame.class.getName());
     private static MainFrame instance;
 
-    private final MainMenuBar menuBar;
-    private final MainToolBar toolBar;
-    private final MainTreePanel treePanel;
-    private final ContentPanel contentPanel;
-    private final StatusBar statusBar;
-    private final WelcomePanel welcomePanel;
+    private  MainMenuBar menuBar;
+    private  MainToolBar toolBar;
+    private  MainTreePanel treePanel;
+    private  ContentPanel contentPanel;
+    private  StatusBar statusBar;
+    private  WelcomePanel welcomePanel;
 
     // Main content area - switches between welcome and repo views
-    private final CardLayout mainCardLayout;
-    private final JPanel mainCardPanel;
-    private final JSplitPane splitPane;
+    private  CardLayout mainCardLayout;
+    private  JPanel mainCardPanel;
+    private  JSplitPane splitPane;
 
     public static final String CARD_WELCOME = "welcome";
     public static final String CARD_REPO = "repo";
 
 
-    private final WorkingCopyPanel workingCopyPanel; // Working copy
-    private final HistoryPanel historyPanel;
-    private final CommitDetailPanel stashDetailPanel;
-    private final PullRequestPanel pullRequestPanel;
-    private final SubmodulePanel submodulePanel;
-    private final WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
+    private  WorkingCopyPanel workingCopyPanel; // Working copy
+    private  HistoryPanel historyPanel;
+    private  CommitDetailPanel stashDetailPanel;
+    private  PullRequestPanel pullRequestPanel;
+    private  SubmodulePanel submodulePanel;
+    private  WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
     public static synchronized MainFrame getInstance() {
         if (instance == null) {
@@ -104,6 +104,10 @@ public class MainFrame extends JFrame {
             }
         }
 
+
+    }
+
+    public void init() {
         // Create components
         menuBar = new MainMenuBar();
         toolBar = new MainToolBar();
@@ -177,20 +181,20 @@ public class MainFrame extends JFrame {
                     if (workspaceDashboardPanel.isShowing()) { //Context.getActiveView() == Context.ActiveView.WORKSPACE
                         workspaceDashboardPanel.reloadActiveTab();
                     } else {
-                            new SwingWorker<Void, Void>() {
-                                @Override protected Void doInBackground() {
-                                    Context.updateStatus(null, true);
-                                    return null;
-                                }
-                            }.execute();
-                    }
-                } else {
                         new SwingWorker<Void, Void>() {
                             @Override protected Void doInBackground() {
                                 Context.updateStatus(null, true);
                                 return null;
                             }
                         }.execute();
+                    }
+                } else {
+                    new SwingWorker<Void, Void>() {
+                        @Override protected Void doInBackground() {
+                            Context.updateStatus(null, true);
+                            return null;
+                        }
+                    }.execute();
                 }
 
             }
@@ -213,7 +217,7 @@ public class MainFrame extends JFrame {
 
 
         // Set up branch context menus
-        BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
+        BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this);
         contextMenuFactory.setWorktreeOpenAction(this::openWorktree);
         contextMenuFactory.setWorktreeRefreshAction(treePanel::refreshWorktrees);
         treePanel.setContextMenuFactory(contextMenuFactory);
@@ -229,8 +233,8 @@ public class MainFrame extends JFrame {
 
     private void wireActions() {
         // Open
-        menuBar.addOpenListener(e -> new OpenRepoHandler(this, statusBar).execute());
-        toolBar.addOpenListener(e -> new OpenRepoHandler(this, statusBar).execute());
+        menuBar.addOpenListener(e -> new OpenRepoHandler(this).execute());
+        toolBar.addOpenListener(e -> new OpenRepoHandler(this).execute());
 
         // Clone
         menuBar.addCloneListener(e -> showCloneDialog());
@@ -241,22 +245,22 @@ public class MainFrame extends JFrame {
         menuBar.addInitWorkspaceListener(e -> showWorkspaceDialog());
 
         // Welcome panel buttons
-        welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this, statusBar).execute());
+        welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this).execute());
         welcomePanel.setOnCloneRepo(this::showCloneDialog);
         welcomePanel.setOnInitRepo(this::showInitDialog);
         welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
 
         // Pull
-        menuBar.addPullListener(e -> new PullHandler(this, statusBar).execute());
-        toolBar.addPullListener(e -> new PullHandler(this, statusBar).execute());
+        menuBar.addPullListener(e -> new PullHandler(this).execute());
+        toolBar.addPullListener(e -> new PullHandler(this).execute());
 
         // Push
-        menuBar.addPushListener(e -> new PushHandler(this, statusBar).execute());
-        toolBar.addPushListener(e -> new PushHandler(this, statusBar).execute());
+        menuBar.addPushListener(e -> new PushHandler(this).execute());
+        toolBar.addPushListener(e -> new PushHandler(this).execute());
 
         // Fetch
-        menuBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
-        toolBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
+        menuBar.addFetchListener(e -> new FetchHandler(this).execute());
+        toolBar.addFetchListener(e -> new FetchHandler(this).execute());
 
         // Commit
         menuBar.addCommitListener(e -> showCommitDialog());
@@ -271,7 +275,7 @@ public class MainFrame extends JFrame {
             if (sha != null && !sha.isBlank()) {
                 String trimmed = sha.trim();
                 com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
-                        this, statusBar, trimmed,
+                        this, trimmed,
                         trimmed.substring(0, Math.min(7, trimmed.length())),
                         () -> historyPanel.loadHistory(null, true));
             }
@@ -279,9 +283,9 @@ public class MainFrame extends JFrame {
 
         //Workspace menu
 
-        menuBar.addWorskpacePullListener(e -> new PullHandler(this, statusBar).execute());
-        menuBar.addWorskpacePushListener(e -> new PushHandler(this, statusBar).execute());
-        menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this, statusBar).execute());
+        menuBar.addWorskpacePullListener(e -> new PullHandler(this).execute());
+        menuBar.addWorskpacePushListener(e -> new PushHandler(this).execute());
+        menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
         menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
 
         // Working copy menu
@@ -302,13 +306,13 @@ public class MainFrame extends JFrame {
             dlg.setOnComplete(historyPanel::refreshLuceneState);
             dlg.setVisible(true);
         });
-        menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
+        menuBar.addStatisticsListener(e -> new StatDialog(this).setVisible(true));
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
         menuBar.addOpenExplorerListener(e -> openExplorerInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
-        menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
-        menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this, statusBar).execute());
-        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
+        menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this).execute());
+        menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this).execute());
+        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this).execute());
         menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
         // Project settings (author / committer identity + credentials)
@@ -409,7 +413,7 @@ public class MainFrame extends JFrame {
         CloneDialog dialog = new CloneDialog(this);
         dialog.setVisible(true);
         if (dialog.isConfirmed()) {
-            new CloneHandler(this, statusBar, dialog.getParameters()).execute();
+            new CloneHandler(this, dialog.getParameters()).execute();
         }
     }
 
@@ -431,7 +435,7 @@ public class MainFrame extends JFrame {
         InitDialog dialog = new InitDialog(this);
         dialog.setVisible(true);
         if (dialog.isConfirmed()) {
-            new InitHandler(this, statusBar, dialog.getParameters()).execute();
+            new InitHandler(this,  dialog.getParameters()).execute();
         }
     }
 

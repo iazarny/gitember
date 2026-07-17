@@ -18,9 +18,9 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     private final String branchFullName;
     private final MergeDialogResult dialogResult;
 
-    public MergeBranchHandler(Component parent, StatusBar statusBar,
+    public MergeBranchHandler(Component parent,
                               String branchFullName, MergeDialogResult dialogResult) {
-        super(parent, statusBar);
+        super(parent);
         this.branchFullName = branchFullName;
         this.dialogResult   = dialogResult;
     }
@@ -73,7 +73,7 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
         MergeDialogResult result = dialog.getResult();
         if (result != null) {
-            new MergeBranchHandler(parent, statusBar, branchFullName, result).execute();
+            new MergeBranchHandler(parent,  branchFullName, result).execute();
         }
     }
 }

@@ -2,6 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.ScmStat;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.stat.MonthlyBarChartPanel;
 import com.az.gitember.ui.stat.PieChartPanel;
@@ -47,9 +48,9 @@ public class StatDialog extends JFrame {
     private final StatusBar statusBar;
     private SwingWorker<List<ScmStat>, String> worker;
 
-    public StatDialog(Frame owner, StatusBar statusBar) {
+    public StatDialog(Frame owner) {
         super("Statistics");
-        this.statusBar = statusBar;
+        this.statusBar = MainFrame.getInstance().getStatusBar();
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {

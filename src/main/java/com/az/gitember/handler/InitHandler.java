@@ -12,8 +12,8 @@ public class InitHandler extends AbstractAsyncHandler<Void> {
 
     private final InitRepoParameters params;
 
-    public InitHandler(Component parent, StatusBar statusBar, InitRepoParameters params) {
-        super(parent, statusBar);
+    public InitHandler(Component parent,  InitRepoParameters params) {
+        super(parent);
         this.params = params;
     }
 

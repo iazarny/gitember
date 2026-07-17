@@ -13,8 +13,8 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
     private final ScmBranch branch;
 
-    public CheckoutBranchHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public CheckoutBranchHandler(Component parent,  ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 

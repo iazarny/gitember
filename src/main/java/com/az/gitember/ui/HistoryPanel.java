@@ -251,7 +251,7 @@ public class HistoryPanel extends JPanel {
             String displaySha = fullSha.substring(0, 7);
             // Pass a callback so history reloads only after the rebase completes
             InteractiveRebaseHandler.showAndExecute(
-                    SwingUtilities.getWindowAncestor(this), statusBar,
+                    SwingUtilities.getWindowAncestor(this),
                     fullSha, displaySha,
                     () -> loadHistory(lastTreeName, lastAllHistory));
         });

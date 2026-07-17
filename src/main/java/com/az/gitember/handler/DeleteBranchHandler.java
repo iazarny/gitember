@@ -17,8 +17,8 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
     private final ScmBranch branch;
 
-    public DeleteBranchHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public DeleteBranchHandler(Component parent, ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 
@@ -95,7 +95,7 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
         int result = JOptionPane.showConfirmDialog(parent, message,
                 "Delete Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            new DeleteBranchHandler(parent, statusBar, branch).execute();
+            new DeleteBranchHandler(parent, branch).execute();
         }
     }
 }

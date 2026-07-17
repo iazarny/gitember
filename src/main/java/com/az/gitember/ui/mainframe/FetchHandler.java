@@ -18,8 +18,8 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
     /** Non-null only when the fetch ran across a workspace (aggregated per-project results). */
     private List<ProjectOperationResult<Void>> workspaceResults;
 
-    public FetchHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public FetchHandler(Component parent) {
+        super(parent);
     }
 
     @Override

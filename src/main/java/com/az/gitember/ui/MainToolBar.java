@@ -353,6 +353,7 @@ public class MainToolBar extends JToolBar {
         pushBtn.setToolTipText("Push");
     }
 
+    public void addBranchListener(ActionListener l) { createBranchBtn.addActionListener(l); }
     public void addOpenListener(ActionListener l) { openBtn.addActionListener(l); }
     public void addCloneListener(ActionListener l) { cloneBtn.addActionListener(l); }
     public void addPullListener(ActionListener l) { pullBtn.addActionListener(l); }

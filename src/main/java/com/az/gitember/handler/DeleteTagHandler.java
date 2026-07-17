@@ -12,8 +12,8 @@ public class DeleteTagHandler extends AbstractAsyncHandler<String> {
     private final ScmBranch tag;
     private final boolean deleteRemote;
 
-    public DeleteTagHandler(Component parent, StatusBar statusBar, ScmBranch tag, boolean deleteRemote) {
-        super(parent, statusBar);
+    public DeleteTagHandler(Component parent,  ScmBranch tag, boolean deleteRemote) {
+        super(parent);
         this.tag = tag;
         this.deleteRemote = deleteRemote;
     }
@@ -59,9 +59,9 @@ public class DeleteTagHandler extends AbstractAsyncHandler<String> {
                 null, options, options[0]);
 
         if (choice == 0) {
-            new DeleteTagHandler(parent, statusBar, tag, false).execute();
+            new DeleteTagHandler(parent,  tag, false).execute();
         } else if (choice == 1) {
-            new DeleteTagHandler(parent, statusBar, tag, true).execute();
+            new DeleteTagHandler(parent,  tag, true).execute();
         }
     }
 }

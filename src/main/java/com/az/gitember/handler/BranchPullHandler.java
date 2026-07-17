@@ -15,8 +15,8 @@ public class BranchPullHandler extends AbstractAsyncHandler<PullOperationResult>
 
     private final ScmBranch branch;
 
-    public BranchPullHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public BranchPullHandler(Component parent,  ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 

@@ -15,8 +15,8 @@ public class BranchPushHandler extends AbstractAsyncHandler<String> {
     private String remoteUrl;
     private boolean credentialsPrompted = false;
 
-    public BranchPushHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public BranchPushHandler(Component parent, ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 

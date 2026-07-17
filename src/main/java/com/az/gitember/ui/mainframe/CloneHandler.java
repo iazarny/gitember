@@ -11,8 +11,8 @@ public class CloneHandler extends AbstractAsyncHandler<Void> {
 
     private final RemoteRepoParameters params;
 
-    public CloneHandler(Component parent, StatusBar statusBar, RemoteRepoParameters params) {
-        super(parent, statusBar);
+    public CloneHandler(Component parent, RemoteRepoParameters params) {
+        super(parent);
         this.params = params;
     }
 

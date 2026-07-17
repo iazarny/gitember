@@ -12,9 +12,9 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     private final String baseBranchFullName;
     private final String newBranchName;
 
-    public CreateBranchHandler(Component parent, StatusBar statusBar,
+    public CreateBranchHandler(Component parent,
                                String baseBranchFullName, String newBranchName) {
-        super(parent, statusBar);
+        super(parent);
         this.baseBranchFullName = baseBranchFullName;
         this.newBranchName = newBranchName;
     }
@@ -66,7 +66,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
         );
 
         if (name != null && !name.isBlank()) {
-            new CreateBranchHandler(parent, statusBar, baseBranchFullName, name.trim()).execute();
+            new CreateBranchHandler(parent,  baseBranchFullName, name.trim()).execute();
         }
     }
 }

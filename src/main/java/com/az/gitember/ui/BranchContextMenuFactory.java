@@ -30,9 +30,9 @@ public class BranchContextMenuFactory {
     /** Called after a worktree add/remove to refresh the tree. */
     private Runnable worktreeRefreshAction;
 
-    public BranchContextMenuFactory(Frame parent, StatusBar statusBar) {
+    public BranchContextMenuFactory(Frame parent) {
         this.parent = parent;
-        this.statusBar = statusBar;
+        this.statusBar = MainFrame.getInstance().getStatusBar();
     }
 
     public void setWorktreeOpenAction(Consumer<String> action)  { this.worktreeOpenAction   = action; }
@@ -52,7 +52,7 @@ public class BranchContextMenuFactory {
         // Checkout
         JMenuItem checkoutItem = new JMenuItem("Checkout");
         checkoutItem.addActionListener(e ->
-                new CheckoutBranchHandler(parent, statusBar, branch).execute());
+                new CheckoutBranchHandler(parent,  branch).execute());
         menu.add(checkoutItem);
 
         // Create branch
@@ -89,13 +89,13 @@ public class BranchContextMenuFactory {
             JMenuItem pullItem = new JMenuItem("Pull " + (disablePull ? "" : fullName));
             pullItem.setEnabled(!disablePull);
             pullItem.addActionListener(e ->
-                    new BranchPullHandler(parent, statusBar, branch).execute());
+                    new BranchPullHandler(parent,  branch).execute());
             menu.add(pullItem);
 
             String pushLabel = name.equals(fullName) ? "Push " + name + "..." : "Push " + fullName;
             JMenuItem pushItem = new JMenuItem(pushLabel);
             pushItem.addActionListener(e ->
-                    new BranchPushHandler(parent, statusBar, branch).execute());
+                    new BranchPushHandler(parent,  branch).execute());
             menu.add(pushItem);
         }
 
@@ -105,7 +105,7 @@ public class BranchContextMenuFactory {
 
             JMenuItem pushTagItem = new JMenuItem("Push tag to remote...");
             pushTagItem.addActionListener(e ->
-                    new PushTagHandler(parent, statusBar, branch).execute());
+                    new PushTagHandler(parent,  branch).execute());
             menu.add(pushTagItem);
         }
 

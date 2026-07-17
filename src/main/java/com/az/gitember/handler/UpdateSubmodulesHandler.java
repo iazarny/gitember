@@ -11,8 +11,8 @@ import java.awt.Component;
  */
 public class UpdateSubmodulesHandler extends AbstractAsyncHandler<Void> {
 
-    public UpdateSubmodulesHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public UpdateSubmodulesHandler(Component parent) {
+        super(parent);
     }
 
     @Override

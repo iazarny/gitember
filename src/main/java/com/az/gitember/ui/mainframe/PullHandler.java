@@ -20,8 +20,8 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     /** Non-null only when the pull ran across a workspace (aggregated per-project results). */
     private List<ProjectOperationResult<PullOperationResult>> workspaceResults;
 
-    public PullHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    public PullHandler(Component parent) {
+        super(parent);
     }
 
     @Override
