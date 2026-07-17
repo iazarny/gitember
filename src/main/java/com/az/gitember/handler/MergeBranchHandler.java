@@ -53,7 +53,7 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     /**
      * Shows the merge options dialog and executes if confirmed.
      */
-    public static void showAndExecute(Frame parent, StatusBar statusBar,
+    public static void showAndExecute(Frame parent,
                                       String branchFullName, String branchShortName) {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";

@@ -40,7 +40,7 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
     /**
      * Shows confirmation and executes.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar,
+    public static void showAndExecute(Component parent,
                                       String branchFullName, String branchShortName) {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";

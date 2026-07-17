@@ -3,6 +3,7 @@ package com.az.gitember.handler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.StatusBar;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +42,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     /**
      * Prompts user for branch name and executes if confirmed.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar, String baseBranchFullName, boolean isRemote) {
+    public static void showAndExecute(Component parent, String baseBranchFullName, boolean isRemote) {
         String newBranchName = "New branch name:";
         String branchTitle = "Create Branch";
         if (isRemote) {
@@ -65,7 +66,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
                 namePreset
         );
 
-        if (name != null && !name.isBlank()) {
+        if (StringUtils.isNotBlank(name)) {
             new CreateBranchHandler(parent,  baseBranchFullName, name.trim()).execute();
         }
     }

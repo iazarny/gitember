@@ -5,7 +5,6 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
-import org.kordamp.ikonli.devicons.Devicons;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -37,7 +36,7 @@ public class MainToolBar extends JToolBar {
     public MainToolBar() {
         setFloatable(false);
 
-        createBranchBtn = Util.createButton("Branch", null, Devicons.GIT_BRANCH);
+        createBranchBtn = Util.createButton("Branch", null, FontAwesomeSolid.CODE_BRANCH);
 
         openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);

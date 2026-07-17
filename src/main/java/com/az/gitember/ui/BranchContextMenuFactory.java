@@ -59,7 +59,7 @@ public class BranchContextMenuFactory {
         boolean isRemote = ScmBranch.BranchType.REMOTE.equals(branch.getBranchType());
         JMenuItem createBranchItem = new JMenuItem(isRemote ? "Create local branch ..." : "Create branch ...");
         createBranchItem.addActionListener(e ->
-                CreateBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), isRemote));
+                CreateBranchHandler.showAndExecute(parent,  branch.getFullName(), isRemote));
         menu.add(createBranchItem);
 
         // Merge and Rebase - only if not current branch and not a tag
@@ -73,12 +73,12 @@ public class BranchContextMenuFactory {
 
             JMenuItem mergeItem = new JMenuItem("Merge " + name + " -> " + workingName + "...");
             mergeItem.addActionListener(e ->
-                    MergeBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), name));
+                    MergeBranchHandler.showAndExecute(parent,  branch.getFullName(), name));
             menu.add(mergeItem);
 
             JMenuItem rebaseItem = new JMenuItem("Rebase " + name + " -> " + workingName + "...");
             rebaseItem.addActionListener(e ->
-                    RebaseBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), name));
+                    RebaseBranchHandler.showAndExecute(parent,  branch.getFullName(), name));
             menu.add(rebaseItem);
         }
 
