@@ -786,15 +786,26 @@ public class MainFrame extends JFrame {
         return Optional.empty();
     }
 
+    private boolean isCurrentProject(Project p) {
+        String current = Context.getProjectFolder().replaceAll("[/\\\\]+$", "");
+        String candidate = p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "");
+        return current.equalsIgnoreCase(candidate);
+    }
+
     private void onTreeSelection(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePanel.getTree().getLastSelectedPathComponent();
         if (node == null)  return;
         getProject(node).ifPresent(
                 p-> {
-                    try {
-                        Context.init(p.getProjectHomeFolder());
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
+                    // Re-initializing an already-open project reloads branches/tags and rebuilds
+                    // the tree nodes, which clears the selection just made. Only switch context
+                    // when the click actually targets a different project (workspace mode).
+                    if (!isCurrentProject(p)) {
+                        try {
+                            Context.init(p.getProjectHomeFolder());
+                        } catch (Exception ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 }
 

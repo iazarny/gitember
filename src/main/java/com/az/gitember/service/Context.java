@@ -1,6 +1,7 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.*;
+import com.az.gitember.service.avatar.AvatarService;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
@@ -10,6 +11,7 @@ import javax.swing.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -368,6 +370,7 @@ public class Context {
     }
 
     public static void init(String gitFolder) throws Exception {
+        long start = new Date().getTime();
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
             gitFolder += File.separator + Const.GIT_FOLDER;
         }
@@ -379,7 +382,7 @@ public class Context {
         gitRepoService = new GitRepoService(gitFolder);
         setRepositoryPath(gitFolder);
         scmRevisionInformationCache.clear();
-        com.az.gitember.service.avatar.AvatarService.clearCache();
+        AvatarService.clearCache();
         setStash(gitRepoService.getStashList());
         setLfsRepo(getGitRepoService().isLfsRepo());
         setShowLfsFiles(false);
@@ -387,7 +390,7 @@ public class Context {
         updateBranches();
         updateTags();
         updateWorkingBranch();
-        updateStatus(null);
+        //updateStatus(null);
 
         // Fill cache in background
         new Thread(() -> {
