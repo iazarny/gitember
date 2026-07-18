@@ -25,6 +25,7 @@ public class WelcomePanel extends JPanel {
 
     private final DefaultListModel<Object> listModel;
     private final JList<Object> projectList;
+    private final ProjectCellRenderer projectCellRenderer;
     private Consumer<Project> onProjectSelected;
     private Consumer<Project> onProjectRemoved;
     private Consumer<Workspace> onWorkspaceSelected;
@@ -89,7 +90,8 @@ public class WelcomePanel extends JPanel {
         listModel = new DefaultListModel<>();
         projectList = new JList<>(listModel);
         projectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        projectList.setCellRenderer(new ProjectCellRenderer());
+        projectCellRenderer = new ProjectCellRenderer();
+        projectList.setCellRenderer(projectCellRenderer);
         projectList.setFixedCellHeight(60);
 
         projectList.addMouseListener(new MouseAdapter() {
@@ -276,6 +278,7 @@ public class WelcomePanel extends JPanel {
                 .toList();
 
         items.removeAll(allWsProjects);
+        projectCellRenderer.setNestedProjects(allWsProjects);
 
         List<Object> items2 = new ArrayList<>();
 

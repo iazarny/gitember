@@ -9,23 +9,39 @@ import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Object> {
+
+    /** Extra left indent for a project rendered as a workspace's child. */
+    private static final int NESTED_INDENT = 40;
 
     private final JLabel     nameLabel;
     private final JLabel     pathLabel;
     private final JLabel     dateLabel;
     private final ChartPanel chartPanel;
+    private final Border     topLevelBorder;
+    private final Border     nestedBorder;
+
+    private Set<Project> nestedProjects = Set.of();
 
     public ProjectCellRenderer() {
         setLayout(new BorderLayout(8, 2));
-        setBorder(BorderFactory.createCompoundBorder(
+        topLevelBorder = BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
                 BorderFactory.createEmptyBorder(8, 16, 8, 16)
-        ));
+        );
+        nestedBorder = BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
+                BorderFactory.createEmptyBorder(8, 16 + NESTED_INDENT, 8, 16)
+        );
+        setBorder(topLevelBorder);
 
         nameLabel = new JLabel();
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
@@ -55,9 +71,16 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
         add(eastPanel, BorderLayout.EAST);
     }
 
+    /** Marks which projects belong under a workspace, so they render indented. */
+    public void setNestedProjects(Collection<Project> nested) {
+        this.nestedProjects = new HashSet<>(nested);
+    }
+
     @Override
     public Component getListCellRendererComponent(JList<?> list, Object value,
                                                   int index, boolean isSelected, boolean cellHasFocus) {
+        setBorder(value instanceof Project project && nestedProjects.contains(project) ? nestedBorder : topLevelBorder);
+
         if (value instanceof Workspace workspace) {
             // Workspaces have no path — show the name only.
             nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 16));
