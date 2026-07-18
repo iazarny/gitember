@@ -258,9 +258,13 @@ public class WelcomePanel extends JPanel {
      */
     public void setItems(Collection<Project> projects, List<Workspace> workspaces) {
         listModel.clear();
-        List<Object> items = new ArrayList<>();
-        if (projects != null) items.addAll(projects);
-        if (workspaces != null) items.addAll(workspaces);
+        ArrayList<Object> items = new ArrayList<>();
+        if (projects != null) {
+            items.addAll(projects);
+        }
+        if (workspaces != null) {
+            items.addAll(workspaces);
+        }
 
         items.sort((a, b) -> {
             Date ta = openTimeOf(a);
@@ -271,7 +275,22 @@ public class WelcomePanel extends JPanel {
             return tb.compareTo(ta);
         });
 
-        items.forEach(listModel::addElement);
+        List<Project> allWsProjects = workspaces.stream()
+                .flatMap(workspace -> workspace.getProjects().stream())
+                .toList();
+
+        items.removeAll(allWsProjects);
+
+        List<Object> items2 = new ArrayList<>();
+
+        for (int i = 0; i < items.size(); i++) {
+            Object source = items.get(i);
+            items2.add(source);
+            if (source instanceof Workspace ws) {
+                items2.addAll(ws.getProjects());
+            }
+        }
+        items2.forEach(listModel::addElement);
     }
 
     private static Date openTimeOf(Object item) {
