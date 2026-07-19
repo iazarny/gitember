@@ -13,7 +13,9 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -26,6 +28,10 @@ public class WelcomePanel extends JPanel {
     private final DefaultListModel<Object> listModel;
     private final JList<Object> projectList;
     private final ProjectCellRenderer projectCellRenderer;
+    /** Workspaces the user has expanded; absent means collapsed (the default). */
+    private final Set<Workspace> expandedWorkspaces = new HashSet<>();
+    private Collection<Project> lastProjects;
+    private List<Workspace> lastWorkspaces;
     private Consumer<Project> onProjectSelected;
     private Consumer<Project> onProjectRemoved;
     private Consumer<Workspace> onWorkspaceSelected;
@@ -99,9 +105,16 @@ public class WelcomePanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1 && !SwingUtilities.isRightMouseButton(e)) {
                     int index = projectList.locationToIndex(e.getPoint());
-                    if (index >= 0 && projectList.getCellBounds(index, index).contains(e.getPoint())) {
-                        selectItem(listModel.getElementAt(index));
+                    Rectangle bounds = index >= 0 ? projectList.getCellBounds(index, index) : null;
+                    if (bounds == null || !bounds.contains(e.getPoint())) return;
+
+                    Object item = listModel.getElementAt(index);
+                    if (item instanceof Workspace workspace
+                            && e.getX() - bounds.x < ProjectCellRenderer.CHEVRON_AREA_WIDTH + 16) {
+                        toggleWorkspace(workspace);
+                        return;
                     }
+                    selectItem(item);
                 }
             }
 
@@ -252,16 +265,31 @@ public class WelcomePanel extends JPanel {
 
     /**
      * Populates the list with git projects and workspaces intermixed, most recently opened
-     * first. Workspaces have no path, so they render without one.
+     * first. Workspaces have no path, so they render without one. Collapsed by default; a
+     * workspace's projects only appear once the user expands it via its chevron.
      */
     public void setItems(Collection<Project> projects, List<Workspace> workspaces) {
+        this.lastProjects = projects;
+        this.lastWorkspaces = workspaces;
+        rebuildListModel();
+    }
+
+    /** Toggles a workspace between expanded/collapsed and re-renders the list. */
+    private void toggleWorkspace(Workspace workspace) {
+        if (!expandedWorkspaces.remove(workspace)) {
+            expandedWorkspaces.add(workspace);
+        }
+        rebuildListModel();
+    }
+
+    private void rebuildListModel() {
         listModel.clear();
         ArrayList<Object> items = new ArrayList<>();
-        if (projects != null) {
-            items.addAll(projects);
+        if (lastProjects != null) {
+            items.addAll(lastProjects);
         }
-        if (workspaces != null) {
-            items.addAll(workspaces);
+        if (lastWorkspaces != null) {
+            items.addAll(lastWorkspaces);
         }
 
         items.sort((a, b) -> {
@@ -273,23 +301,23 @@ public class WelcomePanel extends JPanel {
             return tb.compareTo(ta);
         });
 
-        List<Project> allWsProjects = workspaces.stream()
+        List<Project> allWsProjects = lastWorkspaces == null ? List.of() : lastWorkspaces.stream()
                 .flatMap(workspace -> workspace.getProjects().stream())
                 .toList();
 
         items.removeAll(allWsProjects);
         projectCellRenderer.setNestedProjects(allWsProjects);
+        projectCellRenderer.setExpandedWorkspaces(expandedWorkspaces);
 
         List<Object> items2 = new ArrayList<>();
 
-        for (int i = 0; i < items.size(); i++) {
-            Object source = items.get(i);
+        for (Object source : items) {
             items2.add(source);
-            if (source instanceof Workspace ws) {
+            if (source instanceof Workspace ws && expandedWorkspaces.contains(ws)) {
                 items2.addAll(ws.getProjects());
             }
         }
-            items2.forEach(listModel::addElement);
+        items2.forEach(listModel::addElement);
     }
 
     private static Date openTimeOf(Object item) {

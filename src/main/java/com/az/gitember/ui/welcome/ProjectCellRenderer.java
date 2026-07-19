@@ -22,6 +22,12 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
     /** Extra left indent for a project rendered as a workspace's child. */
     private static final int NESTED_INDENT = 40;
 
+    /** Width of the clickable chevron area that toggles a workspace's expanded state. */
+    public static final int CHEVRON_AREA_WIDTH = 16;
+
+    private final JLabel     chevronLabel;
+    private final Icon       chevronRightIcon;
+    private final Icon       chevronDownIcon;
     private final JLabel     nameLabel;
     private final JLabel     pathLabel;
     private final JLabel     dateLabel;
@@ -30,6 +36,7 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
     private final Border     nestedBorder;
 
     private Set<Project> nestedProjects = Set.of();
+    private Set<Workspace> expandedWorkspaces = Set.of();
 
     public ProjectCellRenderer() {
         setLayout(new BorderLayout(8, 2));
@@ -42,6 +49,13 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
                 BorderFactory.createEmptyBorder(8, 16 + NESTED_INDENT, 8, 16)
         );
         setBorder(topLevelBorder);
+
+        chevronRightIcon = Util.themeAwareIcon(FontAwesomeSolid.CHEVRON_RIGHT, 12);
+        chevronDownIcon = Util.themeAwareIcon(FontAwesomeSolid.CHEVRON_DOWN, 12);
+        chevronLabel = new JLabel();
+        chevronLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        chevronLabel.setPreferredSize(new Dimension(CHEVRON_AREA_WIDTH, CHEVRON_AREA_WIDTH));
+        chevronLabel.setMinimumSize(chevronLabel.getPreferredSize());
 
         nameLabel = new JLabel();
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
@@ -57,9 +71,14 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
 
         chartPanel = new ChartPanel();
 
+        JPanel nameRow = new JPanel(new BorderLayout(4, 0));
+        nameRow.setOpaque(false);
+        nameRow.add(chevronLabel, BorderLayout.WEST);
+        nameRow.add(nameLabel, BorderLayout.CENTER);
+
         JPanel textPanel = new JPanel(new BorderLayout(0, 2));
         textPanel.setOpaque(false);
-        textPanel.add(nameLabel, BorderLayout.NORTH);
+        textPanel.add(nameRow, BorderLayout.NORTH);
         textPanel.add(pathLabel, BorderLayout.SOUTH);
 
         JPanel eastPanel = new JPanel(new BorderLayout(0, 2));
@@ -76,6 +95,11 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
         this.nestedProjects = new HashSet<>(nested);
     }
 
+    /** Marks which workspaces are expanded, so their chevron points down and children are visible. */
+    public void setExpandedWorkspaces(Collection<Workspace> expanded) {
+        this.expandedWorkspaces = new HashSet<>(expanded);
+    }
+
     @Override
     public Component getListCellRendererComponent(JList<?> list, Object value,
                                                   int index, boolean isSelected, boolean cellHasFocus) {
@@ -83,6 +107,7 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
 
         if (value instanceof Workspace workspace) {
             // Workspaces have no path — show the name only.
+            chevronLabel.setIcon(expandedWorkspaces.contains(workspace) ? chevronDownIcon : chevronRightIcon);
             nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.LAYER_GROUP, 16));
             nameLabel.setText(workspace.getName());
             StringBuilder pathLabelBuilder = new StringBuilder();
@@ -104,6 +129,7 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
         } else if (value instanceof Project project) {
             String folder = project.getProjectHomeFolder();
             String name = new File(folder).getName();
+            chevronLabel.setIcon(null);
             nameLabel.setIcon(Util.themeAwareIcon(FontAwesomeSolid.DATABASE, 16));
             nameLabel.setText(name);
             pathLabel.setText(folder);
@@ -123,11 +149,13 @@ public class ProjectCellRenderer extends JPanel implements ListCellRenderer<Obje
             nameLabel.setForeground(list.getSelectionForeground());
             pathLabel.setForeground(list.getSelectionForeground());
             dateLabel.setForeground(list.getSelectionForeground());
+            chevronLabel.setForeground(list.getSelectionForeground());
         } else {
             setBackground(list.getBackground());
             nameLabel.setForeground(list.getForeground());
             pathLabel.setForeground(Color.GRAY);
             dateLabel.setForeground(Color.GRAY);
+            chevronLabel.setForeground(list.getForeground());
         }
 
         return this;
