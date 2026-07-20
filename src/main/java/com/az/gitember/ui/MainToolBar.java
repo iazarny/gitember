@@ -36,7 +36,7 @@ public class MainToolBar extends JToolBar {
     public MainToolBar() {
         setFloatable(false);
 
-        createBranchBtn = Util.createButton("Branch", null, FontAwesomeSolid.CODE_BRANCH);
+        createBranchBtn = Util.createButton("Branch", "Create branch", FontAwesomeSolid.CODE_BRANCH);
 
         openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);

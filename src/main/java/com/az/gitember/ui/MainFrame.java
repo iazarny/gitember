@@ -3,6 +3,7 @@ package com.az.gitember.ui;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
+import com.az.gitember.handler.CreateBranchHandler;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
@@ -266,6 +267,11 @@ public class MainFrame extends JFrame {
         menuBar.addCommitListener(e -> showCommitDialog());
         toolBar.addCommitListener(e -> showCommitDialog());
 
+
+        // Create branch
+        menuBar.addCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+        toolBar.addBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+
         // Interactive Rebase (from menu: prompts for a base commit SHA)
         menuBar.addInteractiveRebaseListener(e -> {
             String sha = JOptionPane.showInputDialog(this,
@@ -287,6 +293,7 @@ public class MainFrame extends JFrame {
         menuBar.addWorskpacePushListener(e -> new PushHandler(this).execute());
         menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
         menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
+        menuBar.addWorskpaceCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
 
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
@@ -741,6 +748,19 @@ public class MainFrame extends JFrame {
         }
         workspaceDashboardPanel.reloadActiveTab();
         updateWorkspaceRemoteActions();
+    }
+
+    /**
+     * Reloads the sidebar branches/tags/stashes subtree for every project a workspace-wide
+     * operation touched successfully. Shared by handlers whose per-project operation can change
+     * refs (create branch, fetch, pull, …) so the tree doesn't go stale until the next full rebuild.
+     */
+    public void refreshWorkspaceProjectBranches(List<? extends ProjectOperationResult<?>> results) {
+        for (ProjectOperationResult<?> result : results) {
+            if (result.isSuccess()) {
+                treePanel.refreshProjectBranches(result.getProject());
+            }
+        }
     }
 
 

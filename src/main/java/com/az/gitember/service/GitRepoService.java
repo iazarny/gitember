@@ -863,6 +863,16 @@ public class GitRepoService implements AutoCloseable {
         };
     }
 
+    public ScmBranch getCurrentScmBranch() {
+        try {
+            String branch = getEffectiveBranch();
+            String sha = getHead().getSha();
+            return new ScmBranch(branch, branch, ScmBranch.BranchType.LOCAL, sha);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Get list of branches.
      *

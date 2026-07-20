@@ -70,6 +70,7 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
             statusBar.setStatus("Fetch completed for " + ok + " of " + workspaceResults.size()
                     + " repositories" + (failed > 0 ? " (" + failed + " failed)" : ""));
             if (parent instanceof MainFrame mf) {
+                mf.refreshWorkspaceProjectBranches(workspaceResults);
                 mf.refreshWorkspaceView();
             }
             return;

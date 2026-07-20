@@ -54,6 +54,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem pushItem;
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
+    private final JMenuItem branchCreateItem;
     private final JMenuItem interactiveRebaseItem;
 
     private final JMenu     workspaceMenu;
@@ -61,6 +62,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem workspacePushItem;
     private final JMenuItem workspaceFetchItem;
     private final JMenuItem workspaceCommitItem;
+    private final JMenuItem workspaceBranchCreateItem;
 
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
@@ -208,6 +210,7 @@ public class MainMenuBar extends JMenuBar {
         pushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
         fetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
         commitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        branchCreateItem      = new JMenuItem("Create...");
         interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
         interactiveRebaseItem.setToolTipText(
                 "Interactively rebase commits – right-click a commit in the history for the full workflow");
@@ -216,6 +219,7 @@ public class MainMenuBar extends JMenuBar {
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
         branchMenu.addSeparator();
+        branchMenu.add(branchCreateItem);
         branchMenu.add(commitItem);
         branchMenu.addSeparator();
         branchMenu.add(interactiveRebaseItem);
@@ -226,9 +230,12 @@ public class MainMenuBar extends JMenuBar {
         workspacePushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
         workspaceFetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
         workspaceCommitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        workspaceBranchCreateItem     = new JMenuItem("Create Branch...");
         workspaceMenu.add(workspacePullItem);
         workspaceMenu.add(workspacePushItem);
         workspaceMenu.add(workspaceFetchItem);
+        workspaceMenu.addSeparator();
+        workspaceMenu.add(workspaceBranchCreateItem);
         workspaceMenu.add(workspaceCommitItem);
 
 
@@ -402,6 +409,7 @@ public class MainMenuBar extends JMenuBar {
     public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
     public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }
     public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
+    public void addCreateBranchListener(ActionListener l)  { branchCreateItem.addActionListener(l); }
     public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
     public void setCreateDiffEnabled(boolean enabled)      { createDiffItem.setEnabled(enabled); }
@@ -432,6 +440,7 @@ public class MainMenuBar extends JMenuBar {
     public void addWorskpacePushListener(ActionListener l)       { workspacePushItem.addActionListener(l); }
     public void addWorskpaceFetchListener(ActionListener l)       { workspaceFetchItem.addActionListener(l); }
     public void addWorskpaceCommitListener(ActionListener l)       { workspaceCommitItem.addActionListener(l); }
+    public void addWorskpaceCreateBranchListener(ActionListener l) { workspaceBranchCreateItem.addActionListener(l); }
 
 
 }

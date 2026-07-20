@@ -388,6 +388,59 @@ public class MainTreePanel extends JPanel {
             List<ScmRevisionInformation> stashes) {
     }
 
+    /**
+     * Reloads one workspace project's branches/tags/stashes subtree in place — used after a
+     * workspace-wide operation (create branch, fetch, pull, …) changes that project's refs so the
+     * sidebar reflects it without rebuilding the whole tree.
+     */
+    public void refreshProjectBranches(Project project) {
+        if (workspaceNode == null) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            for (int i = 0; i < workspaceNode.getChildCount(); i++) {
+                DefaultMutableTreeNode projectNode = (DefaultMutableTreeNode) workspaceNode.getChildAt(i);
+                if (projectNode.getUserObject() instanceof TreeNodeData data
+                        && data.type() == NodeType.REPOSITORY
+                        && project.equals(data.data())) {
+                    RepoCategoryNodes nodes = categoryNodesOf(projectNode);
+                    if (nodes != null) {
+                        loadProjectData(project, nodes);
+                    }
+                    return;
+                }
+            }
+        });
+    }
+
+    /**
+     * Recovers the category child nodes created by {@link #addRepositoryCategories} for an
+     * already-built project subtree, so it can be reloaded without rebuilding it from scratch.
+     */
+    private RepoCategoryNodes categoryNodesOf(DefaultMutableTreeNode projectNode) {
+        DefaultMutableTreeNode workingCopy = null, history = null, localBranches = null,
+                remoteBranches = null, tags = null, stashes = null;
+        for (int i = 0; i < projectNode.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) projectNode.getChildAt(i);
+            if (!(child.getUserObject() instanceof TreeNodeData data)) {
+                continue;
+            }
+            switch (data.type()) {
+                case WORKING_COPY -> workingCopy = child;
+                case HISTORY -> history = child;
+                case LOCAL_BRANCHES -> localBranches = child;
+                case REMOTE_BRANCHES -> remoteBranches = child;
+                case TAGS -> tags = child;
+                case STASHES -> stashes = child;
+                default -> { }
+            }
+        }
+        if (localBranches == null || remoteBranches == null || tags == null || stashes == null) {
+            return null;
+        }
+        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes);
+    }
+
     public void refreshTree() {
         if (Context.isWorkspaceMode()) return;
         SwingUtilities.invokeLater(() -> {

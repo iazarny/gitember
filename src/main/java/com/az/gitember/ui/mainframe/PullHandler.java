@@ -81,6 +81,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
                     + workspaceResults.size() + " repositories");
             new PullResultDialog(parent, workspaceResults).setVisible(true);
             if (parent instanceof MainFrame mf) {
+                mf.refreshWorkspaceProjectBranches(workspaceResults);
                 mf.refreshWorkspaceView();
             }
             return;
