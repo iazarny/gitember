@@ -46,7 +46,9 @@ public class CommitDialog extends JDialog {
             ScmItem.Status.RENAMED
     );
 
-    private final JTextArea messageArea;
+    private final CommitMessagePanel commitMessagePanel;
+    /** Snapshot of the workspace's projects, in the same order as {@link #commitMessagePanel}'s per-project tabs. Non-null only in workspace-active (dashboard) mode. */
+    private final List<Project> workspaceProjects;
     private final JTable filesTable;
     private final DefaultTableModel tableModel;
     private final DefaultTableModel findingsModel;
@@ -94,12 +96,15 @@ public class CommitDialog extends JDialog {
         JScrollPane tableScroll = new JScrollPane(filesTable);
         tableScroll.setPreferredSize(new Dimension(0, 160));
 
-        // Message area
-        JLabel msgLabel = new JLabel("Commit message:");
-        messageArea = new JTextArea(5, 40);
-        messageArea.setLineWrap(true);
-        messageArea.setWrapStyleWord(true);
-        JScrollPane msgScroll = new JScrollPane(messageArea);
+        // Message area: common message, plus one per project in workspace-active mode
+        if (Context.isWorkspaceActive()) {
+            workspaceProjects = new ArrayList<>(Context.getWorkspace().getProjects());
+            String[] names = workspaceProjects.stream().map(CommitDialog::projectLabel).toArray(String[]::new);
+            commitMessagePanel = new CommitMessagePanel(names);
+        } else {
+            workspaceProjects = null;
+            commitMessagePanel = new CommitMessagePanel(null);
+        }
 
         // Scan status panel (shown while LLM scan is in progress)
         scanStatusLabel = new JLabel("Scanning for secrets…");
@@ -169,9 +174,8 @@ public class CommitDialog extends JDialog {
         southOfMessage.add(findingsPanel,   BorderLayout.CENTER);
 
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
-        messagePanel.add(msgLabel,        BorderLayout.NORTH);
-        messagePanel.add(msgScroll,       BorderLayout.CENTER);
-        messagePanel.add(southOfMessage,  BorderLayout.SOUTH);
+        messagePanel.add(commitMessagePanel, BorderLayout.CENTER);
+        messagePanel.add(southOfMessage,      BorderLayout.SOUTH);
 
         JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
@@ -185,14 +189,18 @@ public class CommitDialog extends JDialog {
         getRootPane().setDefaultButton(commitBtn);
         Util.bindEscapeToDispose(this);
 
-        // Run features sequentially: commit message generation first, then leak detection
-        SwingUtilities.invokeLater(() -> {
-            if (isCommitMessageGenEnabled()) {
-                startCommitMessageGeneration(isLeakDetectorEnabled());
-            } else {
-                startDetector();
-            }
-        });
+        // Run features sequentially: commit message generation first, then leak detection.
+        // Both work off Context.getGitRepoService()'s diff/status, which has no meaning when
+        // committing across the whole workspace, so they're skipped in that mode.
+        if (!Context.isWorkspaceActive()) {
+            SwingUtilities.invokeLater(() -> {
+                if (isCommitMessageGenEnabled()) {
+                    startCommitMessageGeneration(isLeakDetectorEnabled());
+                } else {
+                    startDetector();
+                }
+            });
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -334,12 +342,11 @@ public class CommitDialog extends JDialog {
     }
 
     private void applyAiSuggestion(String suggestion) {
-        messageArea.setText(suggestion);
-        messageArea.setCaretPosition(suggestion.length());
+        commitMessagePanel.setMessage(suggestion);
     }
 
     private void clearAiSuggestion() {
-        messageArea.setText("");
+        commitMessagePanel.setMessage("");
     }
 
     // -------------------------------------------------------------------------
@@ -463,43 +470,68 @@ public class CommitDialog extends JDialog {
     // -------------------------------------------------------------------------
 
     private void onCommit() {
-        String message = messageArea.getText().trim();
-        if (message.isEmpty()) {
+        if (workspaceProjects != null) {
+            List<String> missingMessage = new ArrayList<>();
+            for (int i = 0; i < workspaceProjects.size(); i++) {
+                Project project = workspaceProjects.get(i);
+                if (hasStaged(project) && commitMessagePanel.getEffectiveMessage(i).isEmpty()) {
+                    missingMessage.add(projectLabel(project));
+                }
+            }
+            if (!missingMessage.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Commit message is required for: " + String.join(", ", missingMessage)
+                                + "\n(set a per-project message, or a common message as fallback)",
+                        "Validation", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        } else if (commitMessagePanel.getMessage().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Commit message is required",
                     "Validation", JOptionPane.WARNING_MESSAGE);
-        } else {
-            try {
-                //This is initial implementation. Without any distributed transactions support.
-                if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
-                    //TODO commit rollback all if failed
-                    for(Project project : Context.getWorkspace().getProjects()) {
-                        commitSingleProject(project, message);
-                    }
-                } else {
-                    Project project = Context.getCurrentProject().orElse(null);
-                    commitSingleProject(project, message);
-                    Context.updateStatus(null);
-                    Context.updateBranches();
-                    Context.updateWorkingBranch();
-                }
-                dispose();
-            } catch (Exception e) {
-                log.warning("Commit failed: " + e.getMessage());
-                JOptionPane.showMessageDialog(this,
-                        "Commit failed: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            return;
         }
 
+        try {
+            //This is initial implementation. Without any distributed transactions support.
+            if (workspaceProjects != null) {
+                //TODO commit rollback all if failed
+                for (int i = 0; i < workspaceProjects.size(); i++) {
+                    commitSingleProject(workspaceProjects.get(i), commitMessagePanel.getEffectiveMessage(i));
+                }
+            } else {
+                Project project = Context.getCurrentProject().orElse(null);
+                commitSingleProject(project, commitMessagePanel.getMessage().trim());
+                Context.updateStatus(null);
+                Context.updateBranches();
+                Context.updateWorkingBranch();
+            }
+            dispose();
+        } catch (Exception e) {
+            log.warning("Commit failed: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Commit failed: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    /**
-     * Commit staged items for single given project with respect to the configured author and commiter names.
-     * @param project
-     * @param message
-     * @throws IOException
-     * @throws GitAPIException
-     */
+    private boolean hasStaged(Project project) {
+        try (GitRepoService svc = GitRepoService.of(project)) {
+            return svc.hasStaged();
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private static String projectLabel(Project project) {
+        String folder = project.getProjectHomeFolder();
+        if (folder == null || folder.isBlank()) {
+            return "(unknown)";
+        }
+        String name = new java.io.File(folder).getName();
+        return name.isEmpty() ? folder : name;
+    }
+
+    /** Commits staged items for one project, using the configured author/committer identity. */
     private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
         try (GitRepoService svc = GitRepoService.of(project)) {
             if (svc.hasStaged()) {
