@@ -460,7 +460,7 @@ public class GitRepoService implements AutoCloseable {
                     .call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create branch " + name, e);
-            throw new IOException("Cannot checkout", e);
+            throw new IOException("Cannot create branch " + name, e);
         }
 
     }

@@ -7,13 +7,18 @@ import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.MainFrame;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CreateBranchHandler extends AbstractAsyncHandler<String> {
+
+    private static final Logger log = Logger.getLogger(CreateBranchHandler.class.getName());
 
     /**
      * Explicit base ref (tree context menu); {@code null} means "current HEAD" (menu / toolbar).
@@ -46,7 +51,10 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
             GitRepoService svc = Context.getGitRepoService();
             String base = baseBranchFullName != null ? baseBranchFullName : svc.getCurrentScmBranch().getSha();
             svc.createBranch(base, newBranchName);
+            Context.updateBranches();
+
             svc.checkoutBranch(newBranchName, null);
+
             if (Context.isWorkspaceMode()) {
                 //it is possible to create branch for  single project in the workspac mode
                 //so need to refresh
@@ -59,12 +67,30 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
                     mf.refreshWorkspaceView();
                 }
             } else {
-                Context.updateBranches();
                 Context.updateWorkingBranch();
             }
 
         }
         return newBranchName;
+    }
+
+    protected void onError(Exception e) {
+        final String messageTitle;
+        final String message;
+        final int messageType;
+        if (e.getCause() instanceof CheckoutConflictException cce) {
+            message = "Branch is created. But not possible to checkout it. " + e.getCause().getMessage();
+            messageType = JOptionPane.PLAIN_MESSAGE;
+            messageTitle = "Warning";
+        } else {
+            message = getOperationName() + " failed:\n" + e.getMessage();
+            messageType = JOptionPane.ERROR_MESSAGE;
+            messageTitle = "Error";
+        }
+        log.log(Level.SEVERE, getOperationName() + " failed", e);
+        statusBar.setStatus(getOperationName() + " failed: " + message);
+        statusBar.clearProgress();
+        JOptionPane.showMessageDialog(parent,  message,  messageTitle, messageType);
     }
 
     /**
