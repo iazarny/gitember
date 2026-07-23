@@ -298,7 +298,9 @@ public class MainMenuBar extends JMenuBar {
             ep.setOpaque(false);
             ep.addHyperlinkListener(ev -> {
                 if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    try { Desktop.getDesktop().browse(new URI("https://gitember.org/")); }
+                    try {
+                        Desktop.getDesktop().browse(ev.getURL().toURI());
+                    }
                     catch (Exception ex) { /* ignore */ }
                 }
             });
