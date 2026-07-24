@@ -256,8 +256,8 @@ public class MainFrame extends JFrame {
         toolBar.addPullListener(e -> new PullHandler(this).execute());
 
         // Push
-        menuBar.addPushListener(e -> new PushHandler(this).execute());
-        toolBar.addPushListener(e -> new PushHandler(this).execute());
+        menuBar.addPushListener(e -> new PushHandler(this, null).execute());
+        toolBar.addPushListener(e -> new PushHandler(this, null).execute());
 
         // Fetch
         menuBar.addFetchListener(e -> new FetchHandler(this).execute());
@@ -290,7 +290,7 @@ public class MainFrame extends JFrame {
         //Workspace menu
 
         menuBar.addWorskpacePullListener(e -> new PullHandler(this).execute());
-        menuBar.addWorskpacePushListener(e -> new PushHandler(this).execute());
+        menuBar.addWorskpacePushListener(e -> new PushHandler(this, null).execute());
         menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
         menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
         menuBar.addWorskpaceCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));

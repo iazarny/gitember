@@ -2251,56 +2251,61 @@ public class GitRepoService implements AutoCloseable {
                                        final RefSpec refSpec,
                                        final ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
-
-            final PushCommand pushCommand = git.push()
-                    .setProgressMonitor(progressMonitor);
-            if (refSpec != null) {
-                pushCommand.setRefSpecs(refSpec);
-            }
-
-            configureTransportCommand(pushCommand, parameters);
-
-            final String projectRemoteUrl = git.getRepository()
-                    .getConfig()
-                    .getString("remote", "origin", "url");
-            log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
-
-            // Upload LFS objects via the batch API before the git push.
-            // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
-            // for its internal HTTP requests, so we implement the batch protocol directly.
-            if (isLfsRepo()) {
-                uploadLfsObjectsDirect(parameters, refSpec);
-            }
-
-            Iterable<PushResult> pushResults = pushCommand.call();
-
-            final FetchCommand fetchCommand = git
-                    .fetch()
-                    .setCheckFetchedObjects(true)
-                    .setRemoveDeletedRefs(true)
-                    .setProgressMonitor(progressMonitor);
-
-            configureTransportCommand(fetchCommand, parameters);
-
-            fetchCommand.call();
-
-            StringBuilder stringBuilder = new StringBuilder();
-            pushResults.forEach(pushResult -> {
-                pushResult.getRemoteUpdates().forEach(update -> {
-                    stringBuilder.append(update.getRemoteName())
-                            .append(": ")
-                            .append(update.getStatus())
-                            .append("\n");
-                });
-                String msgs = pushResult.getMessages();
-                if (msgs != null && !msgs.isBlank()) {
-                    stringBuilder.append(msgs);
+            if(isRepositoryHasRemoteUrl()) {
+                final PushCommand pushCommand = git.push()
+                        .setProgressMonitor(progressMonitor);
+                if (refSpec != null) {
+                    pushCommand.setRefSpecs(refSpec);
                 }
-                log.log(Level.INFO,
-                        "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
-                                + " updates: " + pushResult.getRemoteUpdates());
-            });
-            return stringBuilder.toString();
+
+                configureTransportCommand(pushCommand, parameters);
+
+                final String projectRemoteUrl = git.getRepository()
+                        .getConfig()
+                        .getString("remote", "origin", "url");
+                log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
+
+                // Upload LFS objects via the batch API before the git push.
+                // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
+                // for its internal HTTP requests, so we implement the batch protocol directly.
+                if (isLfsRepo()) {
+                    uploadLfsObjectsDirect(parameters, refSpec);
+                }
+
+                Iterable<PushResult> pushResults = pushCommand.call();
+
+                final FetchCommand fetchCommand = git
+                        .fetch()
+                        .setCheckFetchedObjects(true)
+                        .setRemoveDeletedRefs(true)
+                        .setProgressMonitor(progressMonitor);
+
+                configureTransportCommand(fetchCommand, parameters);
+
+                fetchCommand.call();
+
+                StringBuilder stringBuilder = new StringBuilder();
+                pushResults.forEach(pushResult -> {
+                    pushResult.getRemoteUpdates().forEach(update -> {
+                        stringBuilder.append(update.getRemoteName())
+                                .append(": ")
+                                .append(update.getStatus())
+                                .append("\n");
+                    });
+                    String msgs = pushResult.getMessages();
+                    if (msgs != null && !msgs.isBlank()) {
+                        stringBuilder.append(msgs);
+                    }
+                    log.log(Level.INFO,
+                            "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
+                                    + " updates: " + pushResult.getRemoteUpdates());
+                });
+                return stringBuilder.toString();
+            } else {
+                return "" + parameters.getDestinationFolder() + " has not remote url";
+            }
+
+
         } catch (Exception e) {
             //} catch (CheckoutConflictException conflictException) {
             //.TransportException: https://github.com/iazarny/jmicroscope.git: Authentication is required but no CredentialsProvider has been registered

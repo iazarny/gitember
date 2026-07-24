@@ -10,10 +10,14 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
 
@@ -60,12 +64,18 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
         List<ProjectOperationResult<PullOperationResult>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
             try (GitRepoService svc = GitRepoService.of(project)) {
-                if (!svc.isRepositoryHasRemoteUrl()) {
-                    continue;
+                if (svc.isRepositoryHasRemoteUrl()) {
+                    RemoteRepoParameters params = RemoteRepoParameters.forProject(project, svc);
+                    PullOperationResult res = svc.remoteRepositoryPull(params, null, progressMonitor);
+                    results.add(ProjectOperationResult.ok(project, params.getUrl(), res));
+                } else {
+                    PullOperationResult res = new PullOperationResult(
+                            "Skip operation", "",
+                            Collections.emptyList(),Collections.emptyList(),Collections.emptyList(),""
+                    );
+                    results.add(ProjectOperationResult.ok(project, "N/A", res));
                 }
-                RemoteRepoParameters params = RemoteRepoParameters.forProject(project, svc);
-                PullOperationResult res = svc.remoteRepositoryPull(params, null, progressMonitor);
-                results.add(ProjectOperationResult.ok(project, params.getUrl(), res));
+
             } catch (Exception ex) {
                 results.add(ProjectOperationResult.failed(project, ex));
             }
@@ -97,6 +107,26 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
         new PullResultDialog(parent, result).setVisible(true);
         // After the user closes the dialog, navigate to the appropriate view
         navigateAfterPull(result);
+    }
+
+    @Override
+    protected void onError(Exception e) {
+        if (e instanceof org.eclipse.jgit.api.errors.InvalidConfigurationException cgfException) {
+            String msg = e.getMessage();
+            if (StringUtils.contains(msg,"remote.origin.url")
+                && StringUtils.contains(msg,"No value for key")) {
+                statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+                statusBar.clearProgress();
+                JOptionPane.showMessageDialog(parent,
+                        "Need to configure remote url\n" + e.getMessage(),
+                        "Warning", JOptionPane.WARNING_MESSAGE);
+            } else  {
+                super.onError(e);
+            }
+        } else {
+            super.onError(e);
+        }
+
     }
 
     private void navigateAfterPull(PullOperationResult result) {

@@ -79,8 +79,8 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
         final String message;
         final int messageType;
         if (e.getCause() instanceof CheckoutConflictException cce) {
-            message = "Branch is created. But not possible to checkout it. " + e.getCause().getMessage();
-            messageType = JOptionPane.PLAIN_MESSAGE;
+            message = "Branch is created. But not possible to checkout it.\n" + e.getCause().getMessage();
+            messageType = JOptionPane.WARNING_MESSAGE;
             messageTitle = "Warning";
         } else {
             message = getOperationName() + " failed:\n" + e.getMessage();

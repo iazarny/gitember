@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.mainframe.PushHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -94,8 +95,7 @@ public class BranchContextMenuFactory {
 
             String pushLabel = name.equals(fullName) ? "Push " + name + "..." : "Push " + fullName;
             JMenuItem pushItem = new JMenuItem(pushLabel);
-            pushItem.addActionListener(e ->
-                    new BranchPushHandler(parent,  branch).execute());
+            pushItem.addActionListener(e ->new PushHandler(parent,  branch).execute() );
             menu.add(pushItem);
         }
 

@@ -120,6 +120,8 @@ public class MainToolBar extends JToolBar {
         fetchBtn.setEnabled(enabled);
         if (!enabled) {
             commitBtn.setEnabled(false);
+            pushBtn.setText("Push");
+            pushBtn.setToolTipText("Push");
         }
     }
 
@@ -133,6 +135,10 @@ public class MainToolBar extends JToolBar {
 
     public void setPushEnabled(boolean enabled) {
         pushBtn.setEnabled(enabled);
+        if(!enabled) {
+            pushBtn.setText("Push");
+            pushBtn.setToolTipText("Push");
+        }
     }
 
     public void setPullEnabled(boolean enabled) {

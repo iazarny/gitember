@@ -8,7 +8,9 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,5 +78,23 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
             return;
         }
         statusBar.setStatus("Fetch completed");
+    }
+
+    protected void onError(Exception e) {
+        if (e instanceof org.eclipse.jgit.api.errors.InvalidRemoteException cgfException) {
+            String msg = e.getMessage();
+            if (StringUtils.contains(msg,"Invalid remote: origin")) {
+                statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+                statusBar.clearProgress();
+                JOptionPane.showMessageDialog(parent,
+                        "Need to configure remote url\n" + e.getMessage(),
+                        "Warning", JOptionPane.WARNING_MESSAGE);
+            } else  {
+                super.onError(e);
+            }
+        } else {
+            super.onError(e);
+        }
+
     }
 }
