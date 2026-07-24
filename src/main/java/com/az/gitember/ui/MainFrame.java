@@ -252,8 +252,8 @@ public class MainFrame extends JFrame {
         welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
 
         // Pull
-        menuBar.addPullListener(e -> new PullHandler(this).execute());
-        toolBar.addPullListener(e -> new PullHandler(this).execute());
+        menuBar.addPullListener(e -> new PullHandler(this, null).execute());
+        toolBar.addPullListener(e -> new PullHandler(this, null).execute());
 
         // Push
         menuBar.addPushListener(e -> new PushHandler(this, null).execute());
@@ -289,7 +289,7 @@ public class MainFrame extends JFrame {
 
         //Workspace menu
 
-        menuBar.addWorskpacePullListener(e -> new PullHandler(this).execute());
+        menuBar.addWorskpacePullListener(e -> new PullHandler(this, null).execute());
         menuBar.addWorskpacePushListener(e -> new PushHandler(this, null).execute());
         menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
         menuBar.addWorskpaceCommitListener(e -> showCommitDialog());

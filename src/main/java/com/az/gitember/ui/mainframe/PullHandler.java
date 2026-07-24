@@ -1,9 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
-import com.az.gitember.data.Project;
-import com.az.gitember.data.ProjectOperationResult;
-import com.az.gitember.data.PullOperationResult;
-import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.data.*;
 import com.az.gitember.dialog.PullResultDialog;
 import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
@@ -24,8 +21,11 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     /** Non-null only when the pull ran across a workspace (aggregated per-project results). */
     private List<ProjectOperationResult<PullOperationResult>> workspaceResults;
 
-    public PullHandler(Component parent) {
+    private ScmBranch branch;
+
+    public PullHandler(Component parent, ScmBranch branch) {
         super(parent);
+        this.branch = branch;
     }
 
     @Override
@@ -45,6 +45,8 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
             String remoteBranch = null;
             if (Context.getWorkingBranch() != null) {
                 remoteBranch = Context.getWorkingBranch().getRemoteMergeName();
+            } else if (branch != null) {
+                remoteBranch =  branch.getRemoteMergeName();
             }
             PullOperationResult result = Context.getGitRepoService().remoteRepositoryPull(
                     params, remoteBranch, progressMonitor);
