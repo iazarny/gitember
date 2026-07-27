@@ -168,25 +168,27 @@ public class MainTreePanel extends JPanel {
     }
 
     void updateStateLabel() {
-        if (Context.getGitRepoService() == null) {
+        if (Context.isWorkspaceMode()) {
             statusLabel.setText("");
             statusLabel.setVisible(false);
-            return;
+        }  else {
+            RepositoryState state = Context.getGitRepoService().getRepositoryState();
+            String text = toHumanState(state);
+            if (text == null) {
+                statusLabel.setText("");
+                statusLabel.setVisible(false);
+            } else {
+                statusLabel.setText(" " + text);
+                Color fg = switch (state) {
+                    //TODO move to SyntaxUtil
+                    case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED -> new Color(0x2E7D32); // green
+                    default -> new Color(0xE65100); // orange
+                };
+                statusLabel.setForeground(fg);
+                statusLabel.setVisible(true);
+            }
         }
-        RepositoryState state = Context.getGitRepoService().getRepositoryState();
-        String text = toHumanState(state);
-        if (text == null) {
-            statusLabel.setText("");
-            statusLabel.setVisible(false);
-        } else {
-            statusLabel.setText(" " + text);
-            Color fg = switch (state) {
-                case MERGING_RESOLVED, REVERTING_RESOLVED, CHERRY_PICKING_RESOLVED -> new Color(0x2E7D32); // green
-                default -> new Color(0xE65100); // orange
-            };
-            statusLabel.setForeground(fg);
-            statusLabel.setVisible(true);
-        }
+
     }
 
     private static String toHumanState(RepositoryState state) {
@@ -280,9 +282,6 @@ public class MainTreePanel extends JPanel {
     public void rebuild() {
         SwingUtilities.invokeLater(this::buildInitialTree);
     }
-
-
-
 
 
     private static String projectLabel(Project project) {

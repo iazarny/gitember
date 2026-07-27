@@ -81,7 +81,7 @@ public abstract class WorkingCopyOps  extends JPanel {
     abstract protected void applyFilter();
     abstract protected void stageAll();
     abstract protected void unstageAll();
-    abstract protected void refresh();
+    abstract public void refresh();
     abstract public void updateButtonStates();
 
 

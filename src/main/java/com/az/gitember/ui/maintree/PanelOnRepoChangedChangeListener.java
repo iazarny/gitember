@@ -25,20 +25,21 @@ public class PanelOnRepoChangedChangeListener implements PropertyChangeListener 
             // The repository categories belong to per-project subtrees in workspace mode;
             // populating the shared node fields here is handled in a later step.
             SwingUtilities.invokeLater(panel::updateStateLabel);
-            return;
+        } else {
+            // If the tree was previously built for a workspace, its structure is stale: the
+            // shared category-node fields don't point into the visible tree, so refreshTree()
+            // alone would keep showing the old workspace layout. Rebuild the single-repo tree
+            // first (buildInitialTree resets workspaceNode and re-creates the shared nodes).
+            if (panel.workspaceNode != null) {
+                panel.rebuild();
+            }
+            SwingUtilities.invokeLater(() -> {
+                panel.refreshTree();
+                panel.updateStateLabel();
+                panel.tree.setSelectionPath(new TreePath(new Object[]{panel.rootNode, panel.workingCopyNode}));
+            });
+            panel.refreshWorktrees();
         }
-        // If the tree was previously built for a workspace, its structure is stale: the
-        // shared category-node fields don't point into the visible tree, so refreshTree()
-        // alone would keep showing the old workspace layout. Rebuild the single-repo tree
-        // first (buildInitialTree resets workspaceNode and re-creates the shared nodes).
-        if (panel.workspaceNode != null) {
-            panel.rebuild();
-        }
-        SwingUtilities.invokeLater(() -> {
-            panel.refreshTree();
-            panel.updateStateLabel();
-            panel.tree.setSelectionPath(new TreePath(new Object[]{panel.rootNode, panel.workingCopyNode}));
-        });
-        panel.refreshWorktrees();
+
     }
 }
