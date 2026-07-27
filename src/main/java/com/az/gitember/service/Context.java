@@ -369,18 +369,20 @@ public class Context {
         projectWatcherThread.start();
     }
 
-    public static void init(String gitFolder) throws Exception {
-        long start = new Date().getTime();
+    public static void initRepoOnly(String gitFolder) throws Exception {
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
             gitFolder += File.separator + Const.GIT_FOLDER;
         }
-
         if (!new File(gitFolder).exists()) {
             throw new RuntimeException("Git folder " + gitFolder + " not found");
         }
-
         gitRepoService = new GitRepoService(gitFolder);
         setRepositoryPath(gitFolder);
+    }
+
+    public static void init(String gitFolder) throws Exception {
+        long start = new Date().getTime();
+        initRepoOnly(gitFolder);
         scmRevisionInformationCache.clear();
         AvatarService.clearCache();
         setStash(gitRepoService.getStashList());

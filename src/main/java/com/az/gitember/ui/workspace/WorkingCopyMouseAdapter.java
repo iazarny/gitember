@@ -2,6 +2,7 @@ package com.az.gitember.ui.workspace;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.WorkingCopyContextMenu;
@@ -39,31 +40,38 @@ public class WorkingCopyMouseAdapter extends MouseAdapter {
     }
 
     private void handlePopup(MouseEvent e) {
-        if (!e.isPopupTrigger()) return;
-        TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
-        if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
-        if (!(node.getUserObject() instanceof FileNode fileNode)) return;
+        if (e.isPopupTrigger())  {
+            TreePath path = workingCopyTree.getPathForLocation(e.getX(), e.getY());
+            if (path == null || !(path.getLastPathComponent() instanceof DefaultMutableTreeNode node)) return;
+            if (!(node.getUserObject() instanceof FileNode fileNode)) return;
 
-        com.az.gitember.data.Project project = fileNode.getProject();
-        DefaultMutableTreeNode projectNode = projectNodeOf(node);
+            com.az.gitember.data.Project project = fileNode.getProject();
+            DefaultMutableTreeNode projectNode = projectNodeOf(node);
+            try {
+                Context.initRepoOnly(project.getProjectHomeFolder());
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
 
-        WorkingCopyContextMenu ctxMenu = new WorkingCopyContextMenu(
-                workspaceDashboardPanel,
-                statusBar,
-                action -> {
-                    try (com.az.gitember.service.GitRepoService svc =
-                                 com.az.gitember.service.GitRepoService.of(project)) {
-                        action.execute(svc);
-                    }
-                },
-                project::getProjectHomeFolder,
-                () -> {
-                    if (projectNode != null) {
-                        workspaceDashboardPanel.loadProjectWorkingCopy(project, projectNode);
-                    }
-                    workspaceDashboardPanel.updateButtonStates();
-                });
-        ctxMenu.show(java.util.List.of(fileNode.getItem()), workingCopyTree, e.getX(), e.getY());
+            WorkingCopyContextMenu ctxMenu = new WorkingCopyContextMenu(
+                    workspaceDashboardPanel,
+                    statusBar,
+                    action -> {
+                        try (com.az.gitember.service.GitRepoService svc =
+                                     com.az.gitember.service.GitRepoService.of(project)) {
+                            action.execute(svc);
+                        }
+                    },
+                    project::getProjectHomeFolder,
+                    () -> {
+                        if (projectNode != null) {
+                            workspaceDashboardPanel.loadProjectWorkingCopy(project, projectNode);
+                        }
+                        workspaceDashboardPanel.updateButtonStates();
+                    });
+            ctxMenu.show(java.util.List.of(fileNode.getItem()), workingCopyTree, e.getX(), e.getY());
+        }
+
     }
 
     @Override

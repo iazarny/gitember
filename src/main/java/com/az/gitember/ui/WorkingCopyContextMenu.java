@@ -3,6 +3,7 @@ package com.az.gitember.ui;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitRepoService;
+import org.apache.commons.collections4.CollectionUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,11 +69,16 @@ public class WorkingCopyContextMenu {
 
     /** Shows the context menu at (x, y) relative to {@code invoker}. */
     public void show(List<ScmItem> items, Component invoker, int x, int y) {
-        if (items == null || items.isEmpty()) return;
-        JPopupMenu menu = new JPopupMenu();
-        if (items.size() == 1) buildSingleItemMenu(menu, items.get(0));
-        else buildMultiItemMenu(menu, items);
-        menu.show(invoker, x, y);
+        if (CollectionUtils.isNotEmpty(items)) {
+            JPopupMenu menu = new JPopupMenu();
+            if (items.size() == 1) {
+                buildSingleItemMenu(menu, items.get(0));
+            }
+            else {
+                buildMultiItemMenu(menu, items);
+            }
+            menu.show(invoker, x, y);
+        }
     }
 
     // ── Menu builders ─────────────────────────────────────────────────────────

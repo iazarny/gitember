@@ -241,7 +241,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     @Override
     public void refresh() {
-        System.out.println(">>>> WS dashboard refresh");
         reloadSelectedTab(); // recomputes button states as part of the reload
         reindexIfIndexed();  // keep the search index current with the working copy
     }

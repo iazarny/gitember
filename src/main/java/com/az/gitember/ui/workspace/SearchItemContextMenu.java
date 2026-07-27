@@ -1,8 +1,11 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.SearchService;
 import com.az.gitember.ui.FileViewerWindow;
+import com.az.gitember.ui.HistoryPanel;
+import com.az.gitember.ui.MainFrame;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -34,6 +37,27 @@ public class SearchItemContextMenu  extends JPopupMenu {
         this.addSeparator();
         this.add(historyItem);
         this.add(deleteItem);
+
+        historyItem.addActionListener(
+                evt -> {
+                    if (selectedNode.getUserObject() instanceof SearchHit hit) {
+                        try {
+                            Context.initRepoOnly(hit.getProject().getProjectHomeFolder());
+                            JFrame frame = new JFrame("History: " + hit.getLeafName());
+                            frame.setSize(1000, 600);
+                            frame.setLocationRelativeTo(parent);
+                            HistoryPanel hp = new HistoryPanel(MainFrame.getInstance().getStatusBar());
+                            frame.getContentPane().add(hp);
+                            frame.setVisible(true);
+                            hp.loadFileHistory(hit.getPath());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    }
+
+                }
+        );
 
         deleteItem.addActionListener(
                 evt -> {
