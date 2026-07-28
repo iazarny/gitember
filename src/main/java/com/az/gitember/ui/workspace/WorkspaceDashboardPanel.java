@@ -106,9 +106,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     private final JTabbedPane tabs = new JTabbedPane();
 
-
-
-
     private Workspace workspace;
 
     /**
@@ -481,8 +478,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      * "Loading…" placeholder), each populated asynchronously with its working-copy changes.
      */
     private void rebuildWorkingCopy() {
-        workingCopyRoot.removeAllChildren();
 
+        workingCopyRoot.removeAllChildren();
 
         if (!workspace.getProjects().isEmpty()) {
             for (Project project : workspace.getProjects()) {
@@ -629,7 +626,12 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 text = text + "  [" + status + "]";
             }
             label.setText(text);
-            label.setForeground(SyntaxStyleUtil.scmItemColor(status));
+            label.setForeground(selected
+                    ? UIManager.getColor("Tree.selectionForeground")
+                    : SyntaxStyleUtil.scmItemColor(status));
+
+            panel.setOpaque(selected);
+            panel.setBackground(UIManager.getColor("Tree.selectionBackground"));
             return panel;
         }
     }
