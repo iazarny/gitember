@@ -86,6 +86,12 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private final DefaultMutableTreeNode workingCopyRoot = new DefaultMutableTreeNode("Workspace");
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
+    /**
+     * Projects the working-copy tree's top level currently reflects; lets {@link #rebuildWorkingCopy()}
+     * skip tearing down and rebuilding the whole tree (which would reset selection/expansion) when
+     * the project set hasn't changed.
+     */
+    private List<Project> workingCopyTreeProjects = new ArrayList<>();
 
     /**
      * Workspace-wide content search over each project's working copy, plus the tree that presents
@@ -479,23 +485,31 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     private void rebuildWorkingCopy() {
 
+        List<Project> projects = new ArrayList<>(workspace.getProjects());
+
+        if (projects.equals(workingCopyTreeProjects)) {
+            // Same set of projects as last time — refresh each project's subtree in place instead
+            // of tearing down and rebuilding the whole tree, which would reset selection/expansion.
+            for (int i = 0; i < projects.size(); i++) {
+                loadProjectWorkingCopy(projects.get(i), (DefaultMutableTreeNode) workingCopyRoot.getChildAt(i));
+            }
+            return;
+        }
+        workingCopyTreeProjects = projects;
+
         workingCopyRoot.removeAllChildren();
 
-        if (!workspace.getProjects().isEmpty()) {
-            for (Project project : workspace.getProjects()) {
-                String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
-                DefaultMutableTreeNode projectNode =
-                        new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
-                projectNode.add(new DefaultMutableTreeNode("Loading…"));
-                workingCopyRoot.add(projectNode);
-                loadProjectWorkingCopy(project, projectNode);
-            }
-
-            workingCopyModel.reload();
-            expandIfSense(workingCopyTree);
+        for (Project project : projects) {
+            String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
+            DefaultMutableTreeNode projectNode =
+                    new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
+            projectNode.add(new DefaultMutableTreeNode("Loading…"));
+            workingCopyRoot.add(projectNode);
+            loadProjectWorkingCopy(project, projectNode);
         }
 
-
+        workingCopyModel.reload();
+        expandIfSense(workingCopyTree);
     }
 
     /**
