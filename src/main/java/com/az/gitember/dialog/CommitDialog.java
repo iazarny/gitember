@@ -32,7 +32,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class CommitDialog extends JDialog {
@@ -191,17 +193,16 @@ public class CommitDialog extends JDialog {
         Util.bindEscapeToDispose(this);
 
         // Run features sequentially: commit message generation first, then leak detection.
-        // Both work off Context.getGitRepoService()'s diff/status, which has no meaning when
-        // committing across the whole workspace, so they're skipped in that mode.
-        if (!Context.isWorkspaceActive()) {
-            SwingUtilities.invokeLater(() -> {
-                if (isCommitMessageGenEnabled()) {
-                    startCommitMessageGeneration(isLeakDetectorEnabled());
-                } else {
-                    startDetector();
-                }
-            });
-        }
+        // In workspace mode both are aggregated across every project's staged changes (see
+        // buildStagedDiffText() / collectFilesToScan()); the generated message is applied as the
+        // single common message, used as the fallback for any project without its own message.
+        SwingUtilities.invokeLater(() -> {
+            if (isCommitMessageGenEnabled()) {
+                startCommitMessageGeneration(isLeakDetectorEnabled());
+            } else {
+                startDetector();
+            }
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -316,9 +317,7 @@ public class CommitDialog extends JDialog {
                         throw new IllegalStateException("Model '" + model + "' not available after pull");
                     }
                     publish("Generating commit message…");
-                    String diff = Context.getGitRepoService() != null
-                            ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
-                            : null;
+                    String diff = buildStagedDiffText();
                     log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
                     return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
                 }
@@ -363,26 +362,91 @@ public class CommitDialog extends JDialog {
         commitMessagePanel.setMessage("");
     }
 
+    /**
+     * Staged diff text to feed the LLM. In single-repository mode it's the current repo's diff;
+     * in workspace mode it's every staged project's diff concatenated under a repo header, so a
+     * single common commit message can be generated for the whole workspace.
+     */
+    private String buildStagedDiffText() throws Exception {
+        if (workspaceProjects == null) {
+            return Context.getGitRepoService() != null
+                    ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
+                    : null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Project project : workspaceProjects) {
+            try (GitRepoService svc = GitRepoService.of(project)) {
+                if (!svc.hasStaged()) continue;
+                String diff = svc.getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS);
+                if (diff == null || diff.isBlank()) continue;
+                sb.append("=== ").append(projectLabel(project)).append(" ===\n").append(diff).append("\n\n");
+            } catch (Exception ex) {
+                log.warning("Cannot read staged diff for " + project.getProjectHomeFolder() + ": " + ex.getMessage());
+            }
+        }
+        return sb.isEmpty() ? null : sb.toString();
+    }
+
     // -------------------------------------------------------------------------
     //  Async detector
     // -------------------------------------------------------------------------
 
+    /** A file to scan for secrets, plus its owning repo's label in workspace mode ({@code null} otherwise). */
+    private record ScanTarget(Path path, String repoLabel) {}
+
+    /**
+     * Staged files to scan. In single-repository mode these come from {@link Context#getStatusList()};
+     * in workspace mode every project's staged files are collected via a throwaway
+     * {@link GitRepoService}, tagged with their project's label so findings can show which repo
+     * they belong to.
+     */
+    private List<ScanTarget> collectFilesToScan() {
+        List<ScanTarget> result = new ArrayList<>();
+        if (workspaceProjects != null) {
+            for (Project project : workspaceProjects) {
+                String repoLabel = projectLabel(project);
+                try (GitRepoService svc = GitRepoService.of(project)) {
+                    for (ScmItem item : svc.getStatuses(null)) {
+                        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                        if (!STAGED_STATUSES.contains(status) || ScmItem.Status.REMOVED.equals(status)) continue;
+                        Path p = Paths.get(project.getProjectHomeFolder(), item.getShortName());
+                        if (Files.exists(p) && Files.isRegularFile(p)) {
+                            result.add(new ScanTarget(p, repoLabel));
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.warning("Cannot read staged files for " + project.getProjectHomeFolder() + ": " + ex.getMessage());
+                }
+            }
+        } else {
+            List<ScmItem> items = Context.getStatusList();
+            String repoPath = Context.getProjectFolder();
+            if (items != null) {
+                for (ScmItem item : items) {
+                    String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                    if (!STAGED_STATUSES.contains(status) || ScmItem.Status.REMOVED.equals(status)) continue;
+                    Path p = Paths.get(repoPath, item.getShortName());
+                    if (Files.exists(p) && Files.isRegularFile(p)) {
+                        result.add(new ScanTarget(p, null));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     private void startDetector() {
         if (!isLeakDetectorEnabled()) return;
 
-        List<ScmItem> items = Context.getStatusList();
-        if (items == null || items.isEmpty()) return;
+        List<ScanTarget> targets = collectFilesToScan();
+        if (targets.isEmpty()) return;
 
-        // Collect paths to scan up front on EDT
-        String repoPath = Context.getProjectFolder();
         List<Path> toScan = new ArrayList<>();
-        for (ScmItem item : items) {
-            String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
-            if (!STAGED_STATUSES.contains(status) || ScmItem.Status.REMOVED.equals(status)) continue;
-            Path p = Paths.get(repoPath, item.getShortName());
-            if (Files.exists(p) && Files.isRegularFile(p)) toScan.add(p);
+        Map<Path, String> repoLabelByPath = new HashMap<>();
+        for (ScanTarget target : targets) {
+            toScan.add(target.path());
+            if (target.repoLabel() != null) repoLabelByPath.put(target.path(), target.repoLabel());
         }
-        if (toScan.isEmpty()) return;
 
         scanStatusPanel.setVisible(true);
 
@@ -461,8 +525,10 @@ public class CommitDialog extends JDialog {
                         findingsModel.setRowCount(0);
                         for (Finding f : all) {
                             String fileName = f.getFile() != null ? f.getFile().getFileName().toString() : "";
+                            String repoLabel = f.getFile() != null ? repoLabelByPath.get(f.getFile()) : null;
+                            String fileDisplay = repoLabel != null ? repoLabel + "/" + fileName : fileName;
                             findingsModel.addRow(new Object[]{
-                                    fileName,
+                                    fileDisplay,
                                     f.getLineNo(),
                                     f.getType(),
                                     f.getConfidence() != null ? f.getConfidence().name() : "",
