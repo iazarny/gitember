@@ -926,7 +926,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void activateProjectWorkingCopy() {
+    public void activateProjectWorkingCopy() {
         Context.setActiveView(Context.ActiveView.WORKING_COPY);
         contentPanel.setContent(workingCopyPanel);
         List<ScmItem> cachedStatus = Context.getStatusList();

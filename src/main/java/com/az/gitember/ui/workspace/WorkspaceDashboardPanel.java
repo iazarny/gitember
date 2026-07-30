@@ -5,6 +5,7 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GetRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.WorkspaceSearchService;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.WorkingCopyOps;
@@ -17,6 +18,8 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -435,8 +438,25 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     private JComponent buildMainTab() {
         JPanel main = new JPanel(new BorderLayout());
-        //main.add(buildHeader(), BorderLayout.NORTH);
-
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    int viewRow = table.rowAtPoint(e.getPoint());
+                    if (viewRow != -1) {
+                        // Convert to model index if sorting/filtering is enabled
+                        int modelRow = table.convertRowIndexToModel(viewRow);
+                        Project project = tableModel.rows.get(modelRow);
+                        try {
+                            Context.init(project.getProjectHomeFolder());
+                            MainFrame.getInstance().activateProjectWorkingCopy();
+                        } catch (Exception ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+            }
+        });
         table.setFillsViewportHeight(true);
         table.setRowHeight(24);
         table.getTableHeader().setReorderingAllowed(false);
