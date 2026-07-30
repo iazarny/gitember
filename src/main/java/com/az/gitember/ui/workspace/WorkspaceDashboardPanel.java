@@ -9,24 +9,24 @@ import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.WorkingCopyOps;
+import com.az.gitember.ui.maintree.MainTreePanel;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
@@ -450,6 +450,26 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                         try {
                             Context.init(project.getProjectHomeFolder());
                             MainFrame.getInstance().activateProjectWorkingCopy();
+
+                            JTree tree = MainFrame.getInstance().getTreePanel().getTree();
+                            Object rootObj = tree.getModel().getRoot();
+                            if (rootObj instanceof DefaultMutableTreeNode root) {
+                                Enumeration<TreeNode> nodes = root.depthFirstEnumeration();
+                                while (nodes.hasMoreElements()) {
+                                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) nodes.nextElement();
+                                    if (node.getUserObject() instanceof TreeNodeData data
+                                            && data.data() instanceof Project nodeProject
+                                            && nodeProject.equals(project)) {
+                                        TreePath path = new TreePath(node.getPath());
+                                        tree.expandPath(path);
+                                        tree.setSelectionPath(path);
+                                        tree.scrollPathToVisible(path);
+                                        break;
+                                    }
+                                }
+                            }
+
+
                         } catch (Exception ex) {
                             throw new RuntimeException(ex);
                         }
