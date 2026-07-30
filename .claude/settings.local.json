@@ -46,7 +46,8 @@
       "Bash(mvn -q -o compile -DskipTests)",
       "Bash(unzip -o -q /c/Users/Igor.Azarnyi/.m2/repository/org/kordamp/ikonli/ikonli-fontawesome5-pack/12.4.0/ikonli-fontawesome5-pack-12.4.0.jar -d fa5pack)",
       "Bash(javap -p fa5pack/org/kordamp/ikonli/fontawesome5/FontAwesomeSolid.class)",
-      "Bash(mvn -q -o compile)"
+      "Bash(mvn -q -o compile)",
+      "Bash(mvn -q -o package -DskipTests)"
     ]
   }
 }

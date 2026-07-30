@@ -1,0 +1,8 @@
+{
+  "label": "Workspace",
+  "position": 120,
+  "link": {
+    "type": "generated-index",
+    "description": "Group several Git repositories into one workspace and manage them together: run pull, push, fetch and commit across every repository at once, and use the workspace dashboard for a per-repo summary, a combined working-copy view, and cross-repository content search."
+  }
+}
