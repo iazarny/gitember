@@ -61,9 +61,10 @@ public class CommitDialog extends JDialog {
     private final JPanel       scanStatusPanel;
 
 
+
+
     public CommitDialog(Frame parent) {
-        super(parent, "Commit" + (Context.getWorkingBranch() != null
-                ? " [" + Context.getWorkingBranch().getShortName() + "]" : ""),
+        super(parent,  getDialogTitle(),
                 java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
         setMinimumSize(new Dimension(800, 400));
         setSize(800, 580);
@@ -205,6 +206,16 @@ public class CommitDialog extends JDialog {
 
     // -------------------------------------------------------------------------
 
+    private static String getDialogTitle() {
+        final String titleTail;
+        if (Context.isWorkspaceActive()) {
+            titleTail = Context.getWorkspace().getName();
+        } else {
+            titleTail = Context.getWorkingBranch().getShortName();
+        }
+        return "Commit ["+titleTail+"]";
+    }
+
     private void populateFiles() {
         tableModel.setRowCount(0);
 
@@ -273,72 +284,75 @@ public class CommitDialog extends JDialog {
     // -------------------------------------------------------------------------
 
     private void startCommitMessageGeneration(boolean chainToDetector) {
-        if (!isCommitMessageGenEnabled()) return;
 
-        String model = llmModel();
+        if (isCommitMessageGenEnabled())  {
+            String model = llmModel();
 
-        applyAiSuggestion("…");
-        scanStatusLabel.setText("Generating commit message…");
-        scanStatusPanel.setVisible(true);
+            applyAiSuggestion("…");
+            scanStatusLabel.setText("Generating commit message…");
+            scanStatusPanel.setVisible(true);
 
-        new SwingWorker<String, String>() {
-            @Override
-            protected String doInBackground() throws Exception {
-                OllamaManager.Status status = OllamaManager.getStatus();
-                log.info("AI commit msg: Ollama status = " + status);
+            new SwingWorker<String, String>() {
+                @Override
+                protected String doInBackground() throws Exception {
+                    OllamaManager.Status status = OllamaManager.getStatus();
+                    log.info("AI commit msg: Ollama status = " + status);
 
-                if (status == OllamaManager.Status.STOPPED) {
-                    publish("Starting Ollama…");
-                    OllamaManager.startServerAndWait(20_000);
-                    status = OllamaManager.Status.RUNNING;
+                    if (status == OllamaManager.Status.STOPPED) {
+                        publish("Starting Ollama…");
+                        OllamaManager.startServerAndWait(20_000);
+                        status = OllamaManager.Status.RUNNING;
+                    }
+                    if (status != OllamaManager.Status.RUNNING) {
+                        throw new IllegalStateException("Ollama not available (status: " + status + ")");
+                    }
+                    if (!OllamaManager.isModelAvailable(model)) {
+                        log.info("AI commit msg: pulling model " + model);
+                        publish("Pulling model \"" + model + "\" (first run, please wait)…");
+                        Process pull = OllamaManager.startModelPull(model);
+                        pull.waitFor();
+                    }
+                    if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
+                        throw new IllegalStateException("Model '" + model + "' not available after pull");
+                    }
+                    publish("Generating commit message…");
+                    String diff = Context.getGitRepoService() != null
+                            ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
+                            : null;
+                    log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
+                    return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
                 }
-                if (status != OllamaManager.Status.RUNNING) {
-                    throw new IllegalStateException("Ollama not available (status: " + status + ")");
-                }
-                if (!OllamaManager.isModelAvailable(model)) {
-                    log.info("AI commit msg: pulling model " + model);
-                    publish("Pulling model \"" + model + "\" (first run, please wait)…");
-                    Process pull = OllamaManager.startModelPull(model);
-                    pull.waitFor();
-                }
-                if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
-                    throw new IllegalStateException("Model '" + model + "' not available after pull");
-                }
-                publish("Generating commit message…");
-                String diff = Context.getGitRepoService() != null
-                        ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
-                        : null;
-                log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
-                return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
-            }
 
-            @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty()) {
-                    scanStatusLabel.setText(chunks.get(chunks.size() - 1));
+                @Override
+                protected void process(List<String> chunks) {
+                    if (!chunks.isEmpty()) {
+                        scanStatusLabel.setText(chunks.get(chunks.size() - 1));
+                    }
                 }
-            }
 
-            @Override
-            protected void done() {
-                try {
-                    String suggestion = get();
-                    if (suggestion != null && !suggestion.isBlank()) {
-                        applyAiSuggestion(suggestion.trim());
-                    } else {
+                @Override
+                protected void done() {
+                    try {
+                        String suggestion = get();
+                        if (suggestion != null && !suggestion.isBlank()) {
+                            applyAiSuggestion(suggestion.trim());
+                        } else {
+                            clearAiSuggestion();
+                        }
+                    } catch (Exception ex) {
+                        log.warning("AI commit message generation failed: " + ex.getMessage());
                         clearAiSuggestion();
                     }
-                } catch (Exception ex) {
-                    log.warning("AI commit message generation failed: " + ex.getMessage());
-                    clearAiSuggestion();
+                    if (chainToDetector) {
+                        startDetector();
+                    } else {
+                        scanStatusPanel.setVisible(false);
+                    }
                 }
-                if (chainToDetector) {
-                    startDetector();
-                } else {
-                    scanStatusPanel.setVisible(false);
-                }
-            }
-        }.execute();
+            }.execute();
+        }
+
+
     }
 
     private void applyAiSuggestion(String suggestion) {
