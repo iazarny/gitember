@@ -3524,6 +3524,7 @@ public class GitRepoService implements AutoCloseable {
     }
 
     // ── Utility part  ──────────────────────────────────────────────────
+
     public boolean hasStaged() {
         List<ScmItem> items = getStatuses(null);
         return items.stream().anyMatch(ScmItem::isStaged);

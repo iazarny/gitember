@@ -14,8 +14,10 @@ import com.az.gitember.service.detector.ScanContext;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.merge.ResolveMerger;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -30,12 +32,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CommitDialog extends JDialog {
 
@@ -574,10 +574,20 @@ public class CommitDialog extends JDialog {
         try {
             //This is initial implementation. Without any distributed transactions support.
             if (workspaceProjects != null) {
-                //TODO commit rollback all if failed
+                //Check is any of the repo has unresolved conflicts
+                Map<Project, List<ScmItem>> conflictedFiles = getConflictedFiles(Context.getWorkspace());
+                if (!conflictedFiles.isEmpty()) {
+                    new ConflictedFilesDialog(this, conflictedFiles).setVisible(true);
+                    return;
+                }
+
                 for (int i = 0; i < workspaceProjects.size(); i++) {
                     commitSingleProject(workspaceProjects.get(i), commitMessagePanel.getEffectiveMessage(i));
                 }
+
+                //TODO check is it possible to merge each project branch to parent using
+                // if not need to syay , that commit is ok for all projects in the workspace but
+                // merge of project ( show the name) may be failed.
             } else {
                 Project project = Context.getCurrentProject().orElse(null);
                 commitSingleProject(project, commitMessagePanel.getMessage().trim());
@@ -621,6 +631,29 @@ public class CommitDialog extends JDialog {
                 String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
                 svc.commit(message, authorName, authorEmail, committerName, committerEmail);
             }
+        }
+    }
+
+    private Map<Project, List<ScmItem>> getConflictedFiles(Workspace workspace) throws IOException {
+        Map<Project, List<ScmItem>> rez = new HashMap<>() ;
+        for (Project proj : workspace.getProjects()) {
+            List<ScmItem> files = getConflictedFiles(proj);
+            if (CollectionUtils.isEmpty(files)) {
+                rez.put(
+                        proj,
+                        files
+                );
+            }
+        }
+        return rez;
+    }
+
+    private List<ScmItem> getConflictedFiles(Project project) throws IOException {
+        try (GitRepoService svc = GitRepoService.of(project)) {
+            return svc.getStatuses(null).stream()
+                    .filter(i -> ScmItem.Status.CONFLICT.equals(i.getAttribute().getStatus()))
+                    .collect(Collectors.toUnmodifiableList());
+
         }
 
     }
