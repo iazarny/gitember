@@ -585,9 +585,26 @@ public class CommitDialog extends JDialog {
                     commitSingleProject(workspaceProjects.get(i), commitMessagePanel.getEffectiveMessage(i));
                 }
 
-                //TODO check is it possible to merge each project branch to parent using
-                // if not need to syay , that commit is ok for all projects in the workspace but
-                // merge of project ( show the name) may be failed.
+                // Commit succeeded for every project; now check (without merging) whether each
+                // branch would merge cleanly into its upstream, and warn about the ones that won't.
+                List<String> unmergeable = new ArrayList<>();
+                for (Project project : workspaceProjects) {
+                    try (GitRepoService svc = GitRepoService.of(project)) {
+                        if (!svc.canMergeWithUpstream()) {
+                            unmergeable.add(projectLabel(project));
+                        }
+                    } catch (Exception ex) {
+                        log.warning("Cannot check mergeability for " + project.getProjectHomeFolder()
+                                + ": " + ex.getMessage());
+                    }
+                }
+                if (!unmergeable.isEmpty()) {
+                    JOptionPane.showMessageDialog(this,
+                            "Commit succeeded for all projects in the workspace.\n"
+                                    + "However, merging with the upstream branch may fail for: "
+                                    + String.join(", ", unmergeable),
+                            "Merge Warning", JOptionPane.WARNING_MESSAGE);
+                }
             } else {
                 Project project = Context.getCurrentProject().orElse(null);
                 commitSingleProject(project, commitMessagePanel.getMessage().trim());
@@ -638,7 +655,7 @@ public class CommitDialog extends JDialog {
         Map<Project, List<ScmItem>> rez = new HashMap<>() ;
         for (Project proj : workspace.getProjects()) {
             List<ScmItem> files = getConflictedFiles(proj);
-            if (CollectionUtils.isEmpty(files)) {
+            if (!CollectionUtils.isEmpty(files)) {
                 rez.put(
                         proj,
                         files

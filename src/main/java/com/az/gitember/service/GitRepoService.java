@@ -26,6 +26,7 @@ import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.merge.MergeStrategy;
+import org.eclipse.jgit.merge.ResolveMerger;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -3520,6 +3521,33 @@ public class GitRepoService implements AutoCloseable {
             RevCommit remote = walk.parseCommit(remoteId);
             // unpushed = commit is NOT yet reachable from the remote tracking tip
             return !walk.isMergedInto(commit, remote);
+        }
+    }
+
+    /**
+     * Dry-run check: does the current branch merge cleanly into its upstream/remote-tracking
+     * branch? Runs an in-core {@link ResolveMerger} (inCore=true) so the working tree, index,
+     * and repository state are left untouched — nothing is written or checked out.
+     * <p>
+     * Returns {@code true} if the branch has no upstream configured, is already up to date
+     * with it, or would merge without conflicts; {@code false} if the merge would conflict.
+     */
+    public boolean canMergeWithUpstream() throws IOException {
+        String branchName = getEffectiveBranch();
+        BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, branchName);
+        if (trackingStatus == null) {
+            return true; // no upstream configured, nothing to check
+        }
+        ObjectId headId = repository.resolve(Constants.HEAD);
+        ObjectId upstreamId = repository.resolve(trackingStatus.getRemoteTrackingBranch());
+        if (headId == null || upstreamId == null || headId.equals(upstreamId)) {
+            return true;
+        }
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            RevCommit headCommit = revWalk.parseCommit(headId);
+            RevCommit upstreamCommit = revWalk.parseCommit(upstreamId);
+            ResolveMerger merger = (ResolveMerger) MergeStrategy.RECURSIVE.newMerger(repository, true);
+            return merger.merge(headCommit, upstreamCommit);
         }
     }
 
