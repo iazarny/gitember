@@ -392,6 +392,7 @@ public class Context {
         updateBranches();
         updateTags();
         updateWorkingBranch();
+        refreshWorkingCopy();
         //updateStatus(null);
 
         // Fill cache in background
