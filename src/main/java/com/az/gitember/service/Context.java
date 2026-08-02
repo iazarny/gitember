@@ -107,9 +107,6 @@ public class Context {
     private static String fileHistoryName;
     private static String mainPaneName;
     private static ScmStat scmStat = new ScmStat();
-    private static List<ScmStat> scmStatList = Collections.emptyList();
-    private static List<AverageLiveTime> scmStatBranchLiveTime = Collections.emptyList();
-    private static StatWPParameters scmStatListParam;
     private static String searchValue;
     private static Map<String, Set<String>> searchResult = Collections.emptyMap();
     private static List<PullRequest> pullRequests = Collections.emptyList();
@@ -136,22 +133,11 @@ public class Context {
         pcs.firePropertyChange(PROP_WORKING_COPY_REFRESH, false, true);
     }
 
-    // Property change listener support
-    public static void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
-    }
 
     public static void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(propertyName, listener);
     }
 
-    public static void removePropertyChangeListener(PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(listener);
-    }
-
-    public static void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(propertyName, listener);
-    }
 
     // Getters and setters with property change firing
     public static String getRepositoryPath() {
@@ -303,57 +289,6 @@ public class Context {
         pcs.firePropertyChange(PROP_FILE_HISTORY_TREE, old, value);
     }
 
-    public static String getFileHistoryName() {
-        return fileHistoryName;
-    }
-
-    public static void setFileHistoryName(String value) {
-        String old = fileHistoryName;
-        fileHistoryName = value;
-        pcs.firePropertyChange(PROP_FILE_HISTORY_NAME, old, value);
-    }
-
-    public static String getMainPaneName() {
-        return mainPaneName;
-    }
-
-    public static void setMainPaneName(String value) {
-        String old = mainPaneName;
-        mainPaneName = value;
-        pcs.firePropertyChange(PROP_MAIN_PANE_NAME, old, value);
-    }
-
-    public static ScmStat getScmStat() {
-        return scmStat;
-    }
-
-    public static void setScmStat(ScmStat value) {
-        ScmStat old = scmStat;
-        scmStat = value;
-        pcs.firePropertyChange(PROP_SCM_STAT, old, value);
-    }
-
-    public static String getSearchValue() {
-        return searchValue;
-    }
-
-    public static void setSearchValue(String value) {
-        String old = searchValue;
-        searchValue = value;
-        pcs.firePropertyChange(PROP_SEARCH_VALUE, old, value);
-    }
-
-    public static Map<String, Set<String>> getSearchResult() {
-        return searchResult;
-    }
-
-    public static void setSearchResult(Map<String, Set<String>> value) {
-        Map<String, Set<String>> old = searchResult;
-        searchResult = value;
-        pcs.firePropertyChange(PROP_SEARCH_RESULT, old, value);
-    }
-
-    // Init
     private static void initProjectWatcher(String gitFolder) throws Exception {
         String projFolder = gitFolder
                 .replace("/.git", "")
@@ -412,14 +347,6 @@ public class Context {
             projectWatcherThread.interrupt();
         }
         settingService.write(settings);
-    }
-
-
-
-
-
-    public static void updatePlotCommitList(final ProgressMonitor progressMonitor) {
-        updatePlotCommitList(lastTreeName, lastAllHistory, progressMonitor);
     }
 
     public static void updatePlotCommitList(final String treeName,
@@ -642,12 +569,6 @@ public class Context {
     public static GitRepoService getGitRepoService() {
         return gitRepoService;
     }
-
-    public static SettingService getSettingService() {
-        return settingService;
-    }
-
-
 
     public static boolean isWindows() {
         return (OS.contains("win"));
