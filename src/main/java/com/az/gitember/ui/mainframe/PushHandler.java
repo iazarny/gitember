@@ -46,7 +46,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
                     //has not remote url
                     this.branch = svc.getCurrentScmBranch();
                 }
-                trackRemoteIfPosible(branch);
+                trackRemoteIfPosible(branch, svc);
                 RefSpec refSpec =  getRefSpec(branch);
                 RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
                 remoteUrl = params.getUrl();
@@ -78,7 +78,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
                     continue;
                 }
                 ScmBranch currentBranch = svc.getCurrentScmBranch();
-                trackRemoteIfPosible(currentBranch);
+                trackRemoteIfPosible(currentBranch, svc);
                 RemoteRepoParameters params = RemoteRepoParameters.forProject(project, svc);
                 String msg = svc.remoteRepositoryPush(params, getRefSpec(currentBranch), progressMonitor);
                 results.add(ProjectOperationResult.ok(project, params.getUrl(), msg));
@@ -96,12 +96,12 @@ public class PushHandler extends AbstractAsyncHandler<String> {
         return null;
     }
 
-    private void trackRemoteIfPosible(ScmBranch branch) throws IOException {
+    private void trackRemoteIfPosible(ScmBranch branch, GitRepoService svc) throws IOException {
         if (branch.getRemoteMergeName() == null
                 && branch.getBranchType() == ScmBranch.BranchType.LOCAL
-                && Context.getGitRepoService().isRepositoryHasRemoteUrl()
+                && svc.isRepositoryHasRemoteUrl()
         ) {
-            Context.getGitRepoService().trackRemote(branch.getShortName(), branch.getShortName());
+            svc.trackRemote(branch.getShortName(), branch.getShortName());
         }
     }
 
