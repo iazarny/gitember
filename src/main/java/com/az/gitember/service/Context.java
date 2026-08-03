@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Context {
 
@@ -148,11 +149,33 @@ public class Context {
         return (repositoryPath != null ? repositoryPath : "").replace(Const.GIT_FOLDER, "");
     }
 
+    public static List<Project> getSimilarToCurrentProjects() {
+        String currentFolder = normalizeFolder(getProjectFolder());
+
+        return Stream.concat(
+                        settings.getProjects().stream(),
+                        settings.getWorkspaces().stream()
+                                .flatMap(ws -> ws.getProjects().stream())
+                )
+                .filter(project ->
+                        normalizeFolder(project.getProjectHomeFolder())
+                                .equalsIgnoreCase(currentFolder))
+                .toList();
+    }
+
+
     public static Optional<Project> getCurrentProject() {
-        String folder = getProjectFolder().replaceAll("[/\\\\]+$", "");
+        String currentFolder = normalizeFolder(getProjectFolder());
+
         return settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "").equalsIgnoreCase(folder))
+                .filter(project ->
+                        normalizeFolder(project.getProjectHomeFolder())
+                                .equalsIgnoreCase(currentFolder))
                 .findFirst();
+    }
+
+    private static String normalizeFolder(String folder) {
+        return folder.replaceAll("[/\\\\]+$", "");
     }
 
     public static void setRepositoryPath(String value) {

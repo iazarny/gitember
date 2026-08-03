@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,10 +34,10 @@ public class ProjectSettingsDialog extends JDialog {
 
         Project project = Context.getCurrentProject().orElse(null);
 
-        authorNameField    = new JTextField(project != null ? nvl(project.getUserCommitName())  : "", 28);
-        authorEmailField   = new JTextField(project != null ? nvl(project.getUserCommitEmail()) : "", 28);
-        committerNameField = new JTextField(project != null ? nvl(project.getCommitterName())   : "", 28);
-        committerEmailField= new JTextField(project != null ? nvl(project.getCommitterEmail())  : "", 28);
+        authorNameField    = new JTextField(project != null ? ObjectUtils.getIfNull(project.getUserCommitName(),"")  : "", 28);
+        authorEmailField   = new JTextField(project != null ? ObjectUtils.getIfNull(project.getUserCommitEmail(),"") : "", 28);
+        committerNameField = new JTextField(project != null ? ObjectUtils.getIfNull(project.getCommitterName(),"")   : "", 28);
+        committerEmailField= new JTextField(project != null ? ObjectUtils.getIfNull(project.getCommitterEmail(),"")  : "", 28);
 
         tokenField = new JPasswordField(25);
         userField  = new JTextField(25);
@@ -87,7 +88,7 @@ public class ProjectSettingsDialog extends JDialog {
         if (Context.getGitRepoService() != null) {
             originUrl = Context.getGitRepoService().getOriginUrl();
         }
-        JTextField remoteUrlField = new JTextField(nvl(originUrl), 28);
+        JTextField remoteUrlField = new JTextField(ObjectUtils.getIfNull(originUrl, ""), 28);
         remoteUrlField.setEditable(false);
         remoteUrlField.setBackground(UIManager.getColor("TextField.inactiveBackground"));
         addRow(form, gbc, 12, "Origin:", remoteUrlField);
@@ -115,30 +116,23 @@ public class ProjectSettingsDialog extends JDialog {
     }
 
     private void applyAndClose() {
-        Project project = Context.getCurrentProject().orElse(null);
-        if (project == null) {
-            dispose();
-            return;
+        //Project may be duplicated as single and as project under workspace
+        //So need apply changes to all copy in the setting
+        for(Project project : Context.getSimilarToCurrentProjects()) {
+            project.setUserCommitName (authorNameField.getText().trim());
+            project.setUserCommitEmail(authorEmailField.getText().trim());
+            project.setCommitterName  (committerNameField.getText().trim());
+            project.setCommitterEmail (committerEmailField.getText().trim());
+            project.setAccessToken(new String(tokenField.getPassword()).trim());
+            project.setUserName   (userField.getText().trim());
+            project.setUserPwd    (new String(pwdField.getPassword()));
         }
-        project.setUserCommitName (authorNameField.getText().trim());
-        project.setUserCommitEmail(authorEmailField.getText().trim());
-        project.setCommitterName  (committerNameField.getText().trim());
-        project.setCommitterEmail (committerEmailField.getText().trim());
-        project.setAccessToken(new String(tokenField.getPassword()).trim());
-        project.setUserName   (userField.getText().trim());
-        project.setUserPwd    (new String(pwdField.getPassword()));
-        boolean prVisibilityChanged = project.isShowAllPullRequests() != showAllPullRequestsCheck.isSelected();
-        project.setShowAllPullRequests(showAllPullRequestsCheck.isSelected());
         Context.saveSettings();
-        if (prVisibilityChanged) {
-            Context.updatePullRequests();
-        }
         dispose();
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private static String nvl(String s) { return s != null ? s : ""; }
 
     private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JComponent field) {
         gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
