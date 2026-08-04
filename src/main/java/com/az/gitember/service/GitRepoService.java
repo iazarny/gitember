@@ -19,6 +19,8 @@ import org.eclipse.jgit.dircache.DirCacheEditor;
 import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.dircache.DirCacheIterator;
 import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
@@ -1989,9 +1991,35 @@ public class GitRepoService implements AutoCloseable {
     }
 
 
+    public int getCommitsCountByTree(final String treeName, final ProgressMonitor progressMonitor) {
+        try (Git git = new Git(repository)) {
+            int count = 0;
+            Iterable<RevCommit> commits = Collections.emptyList();
+            try {
+                if (progressMonitor != null) {
+                    progressMonitor.beginTask("Counting revision of " + treeName, 0);
+                }
+                ObjectId head = repository.resolve(Constants.HEAD);
+                commits = git.log()
+                        .add(head)
+                        .call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            for (RevCommit ignored : commits) {
+                count++;
+            }
+            if (progressMonitor != null) {
+                progressMonitor.endTask();
+            }
+            return count;
+        }
+
+    }
+
+
     /**
-     * Get revisions to visualize. Fr more detail look at
-     * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
+     * Get revisions to visualize.
      *
      * @param treeName tree name
      * @param all      to visualize with merges
@@ -2001,6 +2029,7 @@ public class GitRepoService implements AutoCloseable {
 
 
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
+
         try (PlotWalk revWalk = new PlotWalk(repository)) {
 
             if (treeName != null) {

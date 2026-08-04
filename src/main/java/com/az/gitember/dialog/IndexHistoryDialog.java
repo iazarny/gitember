@@ -1,6 +1,8 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 
@@ -44,15 +46,23 @@ public class IndexHistoryDialog extends JDialog {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override public void windowClosing(java.awt.event.WindowEvent e) {
-                if (worker != null && !worker.isDone()) worker.cancel(true);
+                if (worker != null && !worker.isDone()) {
+                    worker.cancel(true);
+                }
                 dispose();
             }
         });
         setResizable(false);
 
         // ── Input row ────────────────────────────────────────────────────────
-        int totalCommits = Context.getPlotCommitList() != null
-                ? Context.getPlotCommitList().size() : 0;
+
+
+        int totalCommits = 0;
+        try(GitRepoService svc = Context.getGitRepoService()) {
+            ScmBranch branch = Context.getWorkingBranch();
+            totalCommits = svc.getCommitsCountByTree(
+                    branch.getFullName(), null);
+        }
 
         maxCommitsSpinner = new JSpinner(new SpinnerNumberModel(
                 Math.min(1000, Math.max(totalCommits, 1)),
@@ -117,21 +127,24 @@ public class IndexHistoryDialog extends JDialog {
 
     @SuppressWarnings("unchecked")
     private void startIndexing() {
-        List<PlotCommit<PlotLane>> commits = new ArrayList<>();
-        if (Context.getPlotCommitList() != null) {
-            for (var pc : Context.getPlotCommitList()) {
-                commits.add((PlotCommit<PlotLane>) pc);
-            }
-        }
-
-        if (commits.isEmpty()) {
-            statusLabel.setText("No commits to index.");
-            return;
-        }
 
         int maxCommits = indexAllCheck.isSelected()
                 ? 0
                 : (int) maxCommitsSpinner.getValue();
+
+        List<PlotCommit<PlotLane>> commits = new ArrayList<>();
+
+        try(GitRepoService svc = Context.getGitRepoService()) {
+            ScmBranch branch = Context.getWorkingBranch();
+            commits.addAll(
+                    svc.getCommitsByTree(branch.getFullName(), true, maxCommits, null)
+            ) ;
+
+            if (commits.isEmpty()) {
+                statusLabel.setText("No commits to index.");
+                return;
+            }
+        }
 
         startBtn.setEnabled(false);
         progressBar.setValue(0);
@@ -140,6 +153,7 @@ public class IndexHistoryDialog extends JDialog {
         worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
+
                 Context.getGitRepoService().indexHistory(
                         (List) commits,
                         maxCommits,

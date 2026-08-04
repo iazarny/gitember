@@ -105,11 +105,6 @@ public class Context {
     private static List<PlotCommit> plotCommitList = new ArrayList<>();
 
     private static String fileHistoryTree;
-    private static String fileHistoryName;
-    private static String mainPaneName;
-    private static ScmStat scmStat = new ScmStat();
-    private static String searchValue;
-    private static Map<String, Set<String>> searchResult = Collections.emptyMap();
     private static List<PullRequest> pullRequests = Collections.emptyList();
     private static List<Submodule>   submodules   = Collections.emptyList();
 
@@ -340,9 +335,10 @@ public class Context {
 
     public static void init(String gitFolder) throws Exception {
         long start = new Date().getTime();
-        initRepoOnly(gitFolder);
-        scmRevisionInformationCache.clear();
         AvatarService.clearCache();
+        scmRevisionInformationCache.clear();
+
+        initRepoOnly(gitFolder);
         setStash(gitRepoService.getStashList());
         setLfsRepo(getGitRepoService().isLfsRepo());
         setShowLfsFiles(false);
@@ -375,7 +371,9 @@ public class Context {
     public static void updatePlotCommitList(final String treeName,
                                             final boolean allHistory,
                                             final ProgressMonitor progressMonitor) {
-        final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
+
+        final PlotCommitList<PlotLane> plotCommits =
+                gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
 
         List<PlotCommit> old = new ArrayList<>(plotCommitList);
         plotCommitList = new ArrayList<>(plotCommits);

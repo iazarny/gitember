@@ -2,10 +2,12 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.ScmStat;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoStatService;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.stat.MonthlyBarChartPanel;
 import com.az.gitember.ui.stat.PieChartPanel;
+import org.apache.commons.collections4.CollectionUtils;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -36,13 +38,13 @@ public class StatDialog extends JFrame {
 
     private static final Logger log = Logger.getLogger(StatDialog.class.getName());
 
-    private final JSpinner     depthSpinner;
-    private final JButton      computeBtn;
+    private final JSpinner depthSpinner;
+    private final JButton computeBtn;
     private final JProgressBar progressBar;   // month-level progress inside the dialog
 
-    private final PieChartPanel        pieChart;
-    private final StatTableModel       tableModel;
-    private final JTable               table;
+    private final PieChartPanel pieChart;
+    private final StatTableModel tableModel;
+    private final JTable table;
     private final MonthlyBarChartPanel barChart;
 
     private final StatusBar statusBar;
@@ -54,7 +56,8 @@ public class StatDialog extends JFrame {
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override public void windowClosing(java.awt.event.WindowEvent e) {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
                 cancelWorker();
                 dispose();
             }
@@ -69,7 +72,13 @@ public class StatDialog extends JFrame {
         depthSpinner.setPreferredSize(new Dimension(70, depthSpinner.getPreferredSize().height));
 
         computeBtn = new JButton("Compute");
-        computeBtn.addActionListener(e -> startCompute());
+        computeBtn.addActionListener(e -> {
+            try {
+                startCompute();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
@@ -106,26 +115,26 @@ public class StatDialog extends JFrame {
 
         // ── South: bar chart above full-width progress bar ────────────────────
         JPanel southPanel = new JPanel(new BorderLayout(0, 2));
-        southPanel.add(barChart,    BorderLayout.CENTER);
+        southPanel.add(barChart, BorderLayout.CENTER);
         southPanel.add(progressBar, BorderLayout.SOUTH);
 
         // ── Layout ────────────────────────────────────────────────────────────
         JPanel content = new JPanel(new BorderLayout(0, 4));
         content.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         content.add(controlBar, BorderLayout.NORTH);
-        content.add(splitPane,  BorderLayout.CENTER);
+        content.add(splitPane, BorderLayout.CENTER);
         content.add(southPanel, BorderLayout.SOUTH);
         getContentPane().add(content);
 
-        if (Context.getPlotCommitList() == null || Context.getPlotCommitList().isEmpty()) {
-            computeBtn.setEnabled(false);
-            statusBar.setStatus("Statistics: load commit history first (open History or Working Copy).");
-        }
 
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "ESCAPE");
         getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) { cancelWorker(); dispose(); }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cancelWorker();
+                dispose();
+            }
         });
     }
 
@@ -136,89 +145,128 @@ public class StatDialog extends JFrame {
     // ─────────────────────────────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
-    private void startCompute() {
-        List<PlotCommit> all = Context.getPlotCommitList();
-        if (all == null || all.isEmpty()) {
-            statusBar.setStatus("Statistics: no commit history loaded.");
-            return;
+    private void startCompute() throws Exception {
+        statusBar.setStatus("Statistics: loading history ...");
+        Context.updatePlotCommitList(null, true, null);
+        //GetRepoStatService().computeStats(project.getProjectHomeFolder());
+        if (CollectionUtils.isEmpty(Context.getPlotCommitList())) {
+            JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
+                    "Not enough information to collect statistics .",
+                    "No statistics", JOptionPane.WARNING_MESSAGE);
+        } else if (new GitRepoStatService().computeStats(Context.getProjectFolder()).hasChanges()) {
+            JEditorPane ep = new JEditorPane("text/html",
+                    "<html><body>"
+                            +  "Repository "
+                            + Context.getProjectFolder()
+                            + " has modified or conflicted files. <br/>Commit / resolve / stash files first before getting statistics"
+                            + "</body></html>");
+            ep.setEditable(false);
+            ep.setOpaque(false);
+            JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
+                    ep,
+                    "Uncommited changes", JOptionPane.WARNING_MESSAGE);
+        } else {
+
+
+            int depth = (int) depthSpinner.getValue();
+            computeBtn.setEnabled(false);
+            progressBar.setValue(0);
+            progressBar.setString("0 / " + depth);
+            statusBar.setStatus("Computing statistics…");
+            statusBar.showProgress(true);
+
+            worker = new SwingWorker<>() {
+
+                @Override
+                protected List<ScmStat> doInBackground() throws Exception {
+                    @SuppressWarnings("unchecked")
+                    List<PlotCommit<PlotLane>> monthly =
+                            Context.getGitRepoService().getLastCommitPerMonth(depth, Context.getPlotCommitList());
+
+                    if (monthly.isEmpty()) {
+                        publish("No commits found.");
+                        return Collections.emptyList();
+                    }
+
+                    int total = monthly.size();
+
+                    ProgressMonitor monitor = new ProgressMonitor() {
+                        @Override
+                        public void start(int n) {
+                        }
+
+                        @Override
+                        public void beginTask(String t, int n) {
+                        }
+
+                        @Override
+                        public void update(int n) {
+                        }
+
+                        @Override
+                        public void endTask() {
+                        }
+
+                        @Override
+                        public boolean isCancelled() {
+                            return Thread.currentThread().isInterrupted();
+                        }
+
+                        @Override
+                        public void showDuration(boolean e) {
+                        }
+                    };
+
+                    List<ScmStat> stats = new ArrayList<>();
+                    for (int i = 0; i < monthly.size(); i++) {
+                        if (isCancelled()) break;
+                        List<PlotCommit<PlotLane>> single = Collections.singletonList(monthly.get(i));
+                        stats.addAll(Context.getGitRepoService().blameList(single, monitor));
+
+                        final int idx = i + 1;
+                        SwingUtilities.invokeLater(() -> {
+                            progressBar.setMaximum(total);
+                            progressBar.setValue(idx);
+                            progressBar.setString(idx + " / " + total);
+                        });
+                        publish(idx + " / " + total + " months…");
+                    }
+                    return stats;
+                }
+
+                @Override
+                protected void process(List<String> chunks) {
+                    if (!chunks.isEmpty())
+                        statusBar.setStatus("Statistics: " + chunks.get(chunks.size() - 1));
+                }
+
+                @Override
+                protected void done() {
+                    computeBtn.setEnabled(true);
+                    try {
+                        List<ScmStat> stats = get();
+                        applyResults(stats);
+                        progressBar.setString("Done");
+                        statusBar.setStatus("Statistics: complete.");
+                    } catch (java.util.concurrent.CancellationException ex) {
+                        progressBar.setString("Cancelled");
+                        statusBar.setStatus("Statistics: cancelled.");
+                    } catch (Exception ex) {
+                        log.log(Level.WARNING, "Statistics computation failed", ex);
+                        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                        progressBar.setString("Error");
+                        statusBar.setStatus("Statistics error: " + cause.getMessage());
+                    } finally {
+                        statusBar.clearProgress();
+                    }
+                }
+            };
+            worker.execute();
+
+
+
+
         }
-
-        int depth = (int) depthSpinner.getValue();
-        computeBtn.setEnabled(false);
-        progressBar.setValue(0);
-        progressBar.setString("0 / " + depth);
-        statusBar.setStatus("Computing statistics…");
-        statusBar.showProgress(true);
-
-        worker = new SwingWorker<>() {
-
-            @Override
-            protected List<ScmStat> doInBackground() throws Exception {
-                @SuppressWarnings("unchecked")
-                List<PlotCommit<PlotLane>> monthly =
-                        Context.getGitRepoService().getLastCommitPerMonth(depth, all);
-
-                if (monthly.isEmpty()) {
-                    publish("No commits found.");
-                    return Collections.emptyList();
-                }
-
-                int total = monthly.size();
-
-                ProgressMonitor monitor = new ProgressMonitor() {
-                    @Override public void start(int n) {}
-                    @Override public void beginTask(String t, int n) {}
-                    @Override public void update(int n) {}
-                    @Override public void endTask() {}
-                    @Override public boolean isCancelled() { return Thread.currentThread().isInterrupted(); }
-                    @Override public void showDuration(boolean e) {}
-                };
-
-                List<ScmStat> stats = new ArrayList<>();
-                for (int i = 0; i < monthly.size(); i++) {
-                    if (isCancelled()) break;
-                    List<PlotCommit<PlotLane>> single = Collections.singletonList(monthly.get(i));
-                    stats.addAll(Context.getGitRepoService().blameList(single, monitor));
-
-                    final int idx = i + 1;
-                    SwingUtilities.invokeLater(() -> {
-                        progressBar.setMaximum(total);
-                        progressBar.setValue(idx);
-                        progressBar.setString(idx + " / " + total);
-                    });
-                    publish(idx + " / " + total + " months…");
-                }
-                return stats;
-            }
-
-            @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty())
-                    statusBar.setStatus("Statistics: " + chunks.get(chunks.size() - 1));
-            }
-
-            @Override
-            protected void done() {
-                computeBtn.setEnabled(true);
-                try {
-                    List<ScmStat> stats = get();
-                    applyResults(stats);
-                    progressBar.setString("Done");
-                    statusBar.setStatus("Statistics: complete.");
-                } catch (java.util.concurrent.CancellationException ex) {
-                    progressBar.setString("Cancelled");
-                    statusBar.setStatus("Statistics: cancelled.");
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Statistics computation failed", ex);
-                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    progressBar.setString("Error");
-                    statusBar.setStatus("Statistics error: " + cause.getMessage());
-                } finally {
-                    statusBar.clearProgress();
-                }
-            }
-        };
-        worker.execute();
     }
 
     private void applyResults(List<ScmStat> stats) {
@@ -250,20 +298,37 @@ public class StatDialog extends JFrame {
         void setData(ScmStat stat, List<String> authors) {
             rows = new ArrayList<>();
             for (String author : authors) {
-                int lines   = stat.getTotalLines().getOrDefault(author, 0);
+                int lines = stat.getTotalLines().getOrDefault(author, 0);
                 int commits = stat.getLogMap().getOrDefault(author, 0);
-                int avg     = commits > 0 ? lines / commits : 0;
+                int avg = commits > 0 ? lines / commits : 0;
                 rows.add(new Object[]{author, commits, lines, avg});
             }
             fireTableDataChanged();
         }
 
-        @Override public int getRowCount()    { return rows.size(); }
-        @Override public int getColumnCount() { return COLS.length; }
-        @Override public String getColumnName(int col) { return COLS[col]; }
-        @Override public Class<?> getColumnClass(int col) {
+        @Override
+        public int getRowCount() {
+            return rows.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return COLS.length;
+        }
+
+        @Override
+        public String getColumnName(int col) {
+            return COLS[col];
+        }
+
+        @Override
+        public Class<?> getColumnClass(int col) {
             return col == 0 ? String.class : Integer.class;
         }
-        @Override public Object getValueAt(int row, int col) { return rows.get(row)[col]; }
+
+        @Override
+        public Object getValueAt(int row, int col) {
+            return rows.get(row)[col];
+        }
     }
 }

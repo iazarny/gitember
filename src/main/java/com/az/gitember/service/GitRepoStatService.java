@@ -1,7 +1,7 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.Const;
-import com.az.gitember.data.RepoStats;
+import com.az.gitember.data.WorkingCopyStat;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmItem;
 
@@ -9,13 +9,13 @@ import java.io.File;
 import java.util.Date;
 import java.util.List;
 
-public class GetRepoStatService {
+public class GitRepoStatService {
 
     /**
      * Reads branch, ahead/behind, working-copy changes and last-fetch time for one repository.
      * @return RepoStats
      * */
-    public RepoStats computeStats(String projectHome) throws Exception {
+    public WorkingCopyStat computeStats(String projectHome) throws Exception {
         try (GitRepoService svc = GitRepoService.of(projectHome)){
             String branch = "";
             int ahead = 0;
@@ -42,7 +42,7 @@ public class GetRepoStatService {
                     }
                 }
             }
-            return new RepoStats(branch, modified, conflicts, ahead, behind, fetchTime(projectHome), false);
+            return new WorkingCopyStat(branch, modified, conflicts, ahead, behind, fetchTime(projectHome), false);
         }
     }
 

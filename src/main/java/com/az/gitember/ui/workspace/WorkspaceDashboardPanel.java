@@ -2,14 +2,13 @@ package com.az.gitember.ui.workspace;
 
 import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.GetRepoStatService;
+import com.az.gitember.service.GitRepoStatService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.WorkspaceSearchService;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.WorkingCopyOps;
-import com.az.gitember.ui.maintree.MainTreePanel;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
@@ -66,15 +65,15 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     /**
      * Computed stats keyed by project; absent while a project is still loading.
      */
-    private final Map<Project, RepoStats> statsByProject = new HashMap<>();
+    private final Map<Project, WorkingCopyStat> statsByProject = new HashMap<>();
 
     private final List<Column> columns = List.of(
             new Column("Repository", p -> new File(ObjectUtils.getIfNull(p.getProjectHomeFolder(), "")).getName()),
-            new Column("Branch", p -> cell(p, RepoStats::branch)),
+            new Column("Branch", p -> cell(p, WorkingCopyStat::branch)),
             new Column("Status", this::statusCell),
-            new Column("Modified", p -> cellInt(p, RepoStats::modified)),
-            new Column("Ahead", p -> cellInt(p, RepoStats::ahead)),
-            new Column("Behind", p -> cellInt(p, RepoStats::behind))
+            new Column("Modified", p -> cellInt(p, WorkingCopyStat::modified)),
+            new Column("Ahead", p -> cellInt(p, WorkingCopyStat::ahead)),
+            new Column("Behind", p -> cellInt(p, WorkingCopyStat::behind))
     );
 
     private final JLabel titleLabel = new JLabel("Workspace");
@@ -374,27 +373,27 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         for (Project project : projects) {
             String home = project.getProjectHomeFolder();
             if (home == null || home.isBlank()) {
-                statsByProject.put(project, RepoStats.failed());
+                statsByProject.put(project, WorkingCopyStat.failed());
                 continue;
             }
-            new SwingWorker<RepoStats, Void>() {
+            new SwingWorker<WorkingCopyStat, Void>() {
                 @Override
-                protected RepoStats doInBackground() {
+                protected WorkingCopyStat doInBackground() {
                     try {
-                        return new GetRepoStatService().computeStats(project.getProjectHomeFolder());
+                        return new GitRepoStatService().computeStats(project.getProjectHomeFolder());
                     } catch (Exception ex) {
                         log.log(Level.FINE, "Cannot read stats for " + home, ex);
-                        return RepoStats.failed();
+                        return WorkingCopyStat.failed();
                     }
                 }
 
                 @Override
                 protected void done() {
-                    RepoStats stats;
+                    WorkingCopyStat stats;
                     try {
                         stats = get();
                     } catch (Exception ex) {
-                        stats = RepoStats.failed();
+                        stats = WorkingCopyStat.failed();
                     }
                     statsByProject.put(project, stats);
                     int row = tableModel.indexOf(project);
@@ -411,22 +410,22 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
     // ── Cell / summary formatting ─────────────────────────────────────────────────
 
-    private Object cell(Project project, Function<RepoStats, Object> mapper) {
-        RepoStats stats = statsByProject.get(project);
+    private Object cell(Project project, Function<WorkingCopyStat, Object> mapper) {
+        WorkingCopyStat stats = statsByProject.get(project);
         if (stats == null) return LOADING;
         if (stats.error()) return PLACEHOLDER;
         return mapper.apply(stats);
     }
 
-    private Object cellInt(Project project, ToIntFunction<RepoStats> mapper) {
-        RepoStats stats = statsByProject.get(project);
+    private Object cellInt(Project project, ToIntFunction<WorkingCopyStat> mapper) {
+        WorkingCopyStat stats = statsByProject.get(project);
         if (stats == null) return LOADING;
         if (stats.error()) return PLACEHOLDER;
         return mapper.applyAsInt(stats);
     }
 
     private Object statusCell(Project project) {
-        RepoStats stats = statsByProject.get(project);
+        WorkingCopyStat stats = statsByProject.get(project);
         if (stats == null) return LOADING;
         if (stats.error()) return PLACEHOLDER;
         if (stats.conflicts() > 0) return stats.conflicts() + (stats.conflicts() > 1 ? " conflicts" : " conflict");
