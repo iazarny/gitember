@@ -25,6 +25,8 @@ public class PanelOnRepoChangedChangeListener implements PropertyChangeListener 
             // The repository categories belong to per-project subtrees in workspace mode;
             // populating the shared node fields here is handled in a later step.
             SwingUtilities.invokeLater(panel::updateStateLabel);
+            //Context.getWorkspace().getProjects()
+            //panel.refreshWorktrees();
         } else {
             // If the tree was previously built for a workspace, its structure is stale: the
             // shared category-node fields don't point into the visible tree, so refreshTree()

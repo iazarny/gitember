@@ -134,13 +134,13 @@ public class MainMenuBar extends JMenuBar {
 
         String expMessage = null;
         String expToolTip = null;
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             expMessage = "Explorer";
             expToolTip = "Open a explorer in the repository folder";
-        } else if (Context.isMac()) {
+        } else if (GitemberUtil.isMac()) {
             expMessage = "Finder";
             expToolTip = "Open a finder in the repository folder";
-        } else if (Context.isLinux()) {
+        } else if (GitemberUtil.isLinux()) {
             expMessage = "File manager";
             expToolTip = "Open a file manage in the repository folder";
         }

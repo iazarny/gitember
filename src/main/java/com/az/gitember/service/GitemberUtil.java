@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 public class GitemberUtil {
 
+    private final static String OS = System.getProperty("os.name").toLowerCase();
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -68,102 +69,6 @@ public class GitemberUtil {
         }
     }
 
-
-
-    public static Pair<ArrayList<String>, ArrayList<Edit.Type>> getLines(final String content, final EditList diffList, final Side side) {
-        ArrayList<String> original = getLines(content);
-        ArrayList<String> lines = new ArrayList<>(original.size());
-        ArrayList<Edit.Type> types = new ArrayList<>(original.size());
-        boolean needToAlign = false;
-        Edit editToAling = null;
-        for (int i = 0; i < original.size(); i++) {
-            Edit edit = getDiffAtLine(diffList, side, i);
-            Edit.Type replaceType = null;
-
-            if (edit != null) {
-                Edit.Type type = edit.getType();
-                Pair<Integer, Integer> posSide = getPosition(side, edit );
-                Pair<Integer, Integer> posSodeOposite = getPosition(side.opposite(), edit );
-                int emtyLineToAdd = posSodeOposite.getSecond() - posSodeOposite.getFirst();
-                if (type == Edit.Type.DELETE) {
-                    addEmptyLines(lines, types, type, emtyLineToAdd);
-                    if  (posSide.getSecond() - posSide.getFirst() > 0 && i < posSide.getSecond()) {
-                        replaceType = type;
-                    }
-                } else if (type == Edit.Type.INSERT) {
-                    addEmptyLines(lines, types, type, emtyLineToAdd);
-                    if  (posSide.getSecond() - posSide.getFirst() > 0 && i < posSide.getSecond()) {
-                        replaceType = type;
-                    }
-
-                 } else if (type == Edit.Type.REPLACE) {
-                    replaceType = type;
-                    needToAlign = true;
-                    editToAling = edit;
-                }
-            } else {
-                if (needToAlign) {
-                    Pair<Integer, Integer> posA = getPosition(Side.A, editToAling );
-                    Pair<Integer, Integer> posB = getPosition(Side.B, editToAling );
-                    int lenA = posA.getSecond() - posA.getFirst();
-                    int lenB = posB.getSecond() - posB.getFirst();
-
-                    if (side == Side.A && lenA < lenB) {
-                        addEmptyLines(lines, types, Edit.Type.EMPTY, lenB - lenA);
-                    } else if (side == Side.B && lenB < lenA) {
-                        addEmptyLines(lines, types, Edit.Type.EMPTY, lenA - lenB);
-                    }
-                    needToAlign = false;
-                    editToAling = null;
-                }
-
-            }
-
-            final String linetoAdd = original.get(i);
-            lines.add(linetoAdd);
-            types.add(replaceType);
-        }
-        return new Pair<>(lines, types);
-    }
-
-    private static void addEmptyLines(ArrayList<String> lines, ArrayList<Edit.Type> types, Edit.Type type, int emtyLineToAdd) {
-        for (int j = 0; j < emtyLineToAdd; j++) {
-            lines.add(null);
-            types.add(type);
-        }
-    }
-
-    private static Edit getDiffAtLine(final EditList diffList, final Side side, final int lineIdx) {
-        for (int i = 0; i < diffList.size(); i++) {
-            Edit edit = diffList.get(i);
-
-            if (side == Side.A) {
-                if (lineIdx >= edit.getBeginA() && lineIdx < edit.getEndA()) {
-                    return edit;
-                }
-                if (lineIdx < edit.getBeginA()) {
-                    return null;
-                }
-            } else if (side == Side.B) {
-                if (lineIdx >= edit.getBeginB() && lineIdx < edit.getEndB()) {
-                    return edit;
-                }
-                if (lineIdx < edit.getBeginB()) {
-                    return null;
-                }
-            }
-        }
-        return null;
-    }
-
-    private static Pair<Integer, Integer> getPosition(Side side, Edit edit) {
-        if (side == Side.A) {
-            return new Pair<>(edit.getBeginA(), edit.getEndA());
-        } else {
-            return new Pair<>(edit.getBeginB(), edit.getEndB());
-        }
-    }
-
     public static ArrayList<String> getLines(final String content) {
         return (ArrayList<String>) new BufferedReader(new StringReader(content))
                 .lines()
@@ -178,18 +83,6 @@ public class GitemberUtil {
         return privateStringField.get(obj);
     }
 
-    public static int countWhiteCharFromStart(String str) {
-        int rez  = 0;
-        if (StringUtils.isNotEmpty(str)) {
-            for(int i = 0 ; i < str.length(); i++) {
-                if (!(str.charAt(i) == ' ' || str.charAt(i) == '\t')) {
-                    break;
-                }
-                rez++;
-            }
-        }
-        return rez;
-    }
 
     public static String getFolderName(String fullPath) {
         if (fullPath != null) {
@@ -231,6 +124,27 @@ public class GitemberUtil {
             // MD5 is guaranteed to be in the standard Java library, so this should not happen
             throw new RuntimeException(e);
         }
+    }
+
+    public static boolean isWindows() {
+        return (OS.contains("win"));
+    }
+
+    public static boolean isMac() {
+        return (OS.contains("mac"));
+    }
+
+    public static boolean isLinux() {
+        return (OS.contains("linux"));
+    }
+
+    public static String getHomeFolder() {
+        // get users home folder , with last path delimiter
+        String home = System.getProperty("user.home");
+        if (home != null && !home.endsWith(java.io.File.separator)) {
+            home = home + java.io.File.separator;
+        }
+        return home;
     }
 
 }

@@ -2,6 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import com.az.gitember.ui.misc.Util;
@@ -54,7 +55,7 @@ public class CloneDialog extends JDialog {
         formPanel.add(new JLabel("Destination:"), gbc);
         JPanel destPanel = new JPanel(new BorderLayout(5, 0));
         destField = new JTextField(25);
-        destField.setText(Context.getHomeFolder());
+        destField.setText(GitemberUtil.getHomeFolder());
         JButton browseBtn = new JButton("...");
         browseBtn.addActionListener(e -> browseDestination());
         destPanel.add(destField, BorderLayout.CENTER);
@@ -160,10 +161,10 @@ public class CloneDialog extends JDialog {
 
         String repoName = repoNameFromUrl(url);
         if (repoName != null) {
-            String home = Context.getHomeFolder();
+            String home = GitemberUtil.getHomeFolder();
             destField.setText(home != null ? home + repoName : repoName);
         } else {
-            destField.setText(Context.getHomeFolder());
+            destField.setText(GitemberUtil.getHomeFolder());
         }
 
         boolean isHttp = url.startsWith("https:") || url.startsWith("http:");

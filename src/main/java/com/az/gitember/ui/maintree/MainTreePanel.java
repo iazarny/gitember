@@ -538,7 +538,7 @@ public class MainTreePanel extends JPanel {
      * Called on repo change and after the Worktrees dialog closes.
      */
     public void refreshWorktrees() {
-        if (Context.isWorkspaceMode()) return;
+        //if (Context.isWorkspaceMode()) return;
         if (Context.getGitRepoService() == null) return;
         new SwingWorker<List<WorktreeInfo>, Void>() {
             @Override

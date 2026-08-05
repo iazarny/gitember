@@ -23,8 +23,6 @@ public class Context {
 
     private final static Logger log = Logger.getLogger(Context.class.getName());
 
-    private final static String OS = System.getProperty("os.name").toLowerCase();
-
     private static Workspace workspace = null;
     private static GitRepoService gitRepoService = new GitRepoService();
     private final static SettingService settingService = new SettingService();
@@ -322,6 +320,10 @@ public class Context {
         projectWatcherThread.start();
     }
 
+    public static void initRepoOnly(Project project) throws Exception {
+        Context.initRepoOnly(project.getProjectHomeFolder());
+    }
+
     public static void initRepoOnly(String gitFolder) throws Exception {
         if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
             gitFolder += File.separator + Const.GIT_FOLDER;
@@ -591,24 +593,5 @@ public class Context {
         return gitRepoService;
     }
 
-    public static boolean isWindows() {
-        return (OS.contains("win"));
-    }
 
-    public static boolean isMac() {
-        return (OS.contains("mac"));
-    }
-
-    public static boolean isLinux() {
-        return (OS.contains("linux"));
-    }
-
-    public static String getHomeFolder() {
-        // get users home folder , with last path delimiter
-        String home = System.getProperty("user.home");
-        if (home != null && !home.endsWith(java.io.File.separator)) {
-            home = home + java.io.File.separator;
-        }
-        return home;
-    }
 }

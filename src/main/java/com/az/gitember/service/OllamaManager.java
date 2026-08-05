@@ -124,14 +124,14 @@ public final class OllamaManager {
         candidates.add(System.getProperty("user.home") + "/.local/bin/ollama");
 
         // macOS Ollama.app locations
-        if (Context.isMac()) {
+        if (GitemberUtil.isMac()) {
             candidates.add("/Applications/Ollama.app/Contents/Resources/ollama");
             candidates.add(System.getProperty("user.home")
                     + "/Applications/Ollama.app/Contents/Resources/ollama");
         }
 
         // Windows
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             candidates.add(System.getenv("LOCALAPPDATA") + "\\Programs\\Ollama\\ollama.exe");
             candidates.add(System.getProperty("user.home") + "\\AppData\\Local\\Programs\\Ollama\\ollama.exe");
         }
@@ -146,7 +146,7 @@ public final class OllamaManager {
         // 3. PATH
         String pathEnv = System.getenv("PATH");
         if (pathEnv != null) {
-            String binaryName = Context.isWindows() ? "ollama.exe" : "ollama";
+            String binaryName = GitemberUtil.isWindows() ? "ollama.exe" : "ollama";
             for (String dir : pathEnv.split(File.pathSeparator)) {
                 Path p = Paths.get(dir, binaryName);
                 if (Files.isExecutable(p)) return Optional.of(p);
@@ -373,8 +373,8 @@ public final class OllamaManager {
 
     /** Returns the local path where the ready-to-run binary should live. */
     public static Path localBinaryPath() {
-        String name = Context.isWindows() ? "ollama.exe" : "ollama";
-        if (Context.isMac()) {
+        String name = GitemberUtil.isWindows() ? "ollama.exe" : "ollama";
+        if (GitemberUtil.isMac()) {
             // After extracting Ollama.app zip, the CLI binary is here:
             return OLLAMA_HOME.resolve("Ollama.app")
                     .resolve("Contents").resolve("Resources").resolve("ollama");
@@ -383,10 +383,10 @@ public final class OllamaManager {
     }
 
     private static String resolveDownloadUrl() {
-        if (Context.isMac()) {
+        if (GitemberUtil.isMac()) {
             return GH_RELEASE + "Ollama-darwin.zip";
         }
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             return GH_RELEASE + "ollama-windows-amd64.zip";
         }
         String arch = System.getProperty("os.arch", "").toLowerCase();
@@ -397,8 +397,8 @@ public final class OllamaManager {
     }
 
     private static String archiveFileName() {
-        if (Context.isMac())     return "Ollama-darwin.zip";
-        if (Context.isWindows()) return "ollama-windows-amd64.zip";
+        if (GitemberUtil.isMac())     return "Ollama-darwin.zip";
+        if (GitemberUtil.isWindows()) return "ollama-windows-amd64.zip";
         String arch = System.getProperty("os.arch", "").toLowerCase();
         return (arch.contains("aarch64") || arch.contains("arm64"))
                 ? "ollama-linux-arm64" : "ollama-linux-amd64";

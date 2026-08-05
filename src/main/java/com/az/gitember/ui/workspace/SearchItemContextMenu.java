@@ -42,7 +42,7 @@ public class SearchItemContextMenu  extends JPopupMenu {
                 evt -> {
                     if (selectedNode.getUserObject() instanceof SearchHit hit) {
                         try {
-                            Context.initRepoOnly(hit.getProject().getProjectHomeFolder());
+                            Context.initRepoOnly(hit.getProject());
                             JFrame frame = new JFrame("History: " + hit.getLeafName());
                             frame.setSize(1000, 600);
                             frame.setLocationRelativeTo(parent);

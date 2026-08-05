@@ -7,6 +7,7 @@ import com.az.gitember.handler.CreateBranchHandler;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.mainframe.*;
 import com.az.gitember.ui.maintree.CellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
@@ -999,9 +1000,9 @@ public class MainFrame extends JFrame {
         }
         File dir = new File(path);
         try {
-            if (Context.isWindows()) {
+            if (GitemberUtil.isWindows()) {
                 new ProcessBuilder("explorer.exe", dir.getAbsolutePath()).start();
-            } else if (Context.isMac()) {
+            } else if (GitemberUtil.isMac()) {
                 new ProcessBuilder("open",  dir.getAbsolutePath()).start();
             } else {
                 new ProcessBuilder("xdg-open", dir.getAbsolutePath()).start();
@@ -1024,9 +1025,9 @@ public class MainFrame extends JFrame {
         }
         File dir = new File(path);
         try {
-            if (Context.isWindows()) {
+            if (GitemberUtil.isWindows()) {
                 openTerminalWindows(dir);
-            } else if (Context.isMac()) {
+            } else if (GitemberUtil.isMac()) {
                 // open -a Terminal <path>  works for Terminal.app
                 new ProcessBuilder("open", "-a", "Terminal", dir.getAbsolutePath()).start();
             } else {
