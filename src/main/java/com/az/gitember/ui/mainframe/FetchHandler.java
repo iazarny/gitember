@@ -31,7 +31,7 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        if (Context.isWorkspaceActive()) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             workspaceResults = fetchWorkspace();
         } else {
             RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();

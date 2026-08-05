@@ -45,7 +45,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        if (Context.isWorkspaceActive()) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             workspaceResults = createBranchWorkspace();
         } else {
             GitRepoService svc = Context.getGitRepoService();

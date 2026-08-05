@@ -12,6 +12,7 @@ import com.az.gitember.service.detector.FileType;
 import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
 import com.az.gitember.ui.FileViewerWindow;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.collections4.CollectionUtils;
@@ -100,7 +101,8 @@ public class CommitDialog extends JDialog {
         tableScroll.setPreferredSize(new Dimension(0, 160));
 
         // Message area: common message, plus one per project in workspace-active mode
-        if (Context.isWorkspaceActive()) {
+        boolean workSpaceActive = MainFrame.getInstance().isWorkspaceActive();
+        if (workSpaceActive) {
             workspaceProjects = new ArrayList<>(Context.getWorkspace().getProjects());
             String[] names = workspaceProjects.stream().map(CommitDialog::projectLabel).toArray(String[]::new);
             commitMessagePanel = new CommitMessagePanel(names);
@@ -209,7 +211,7 @@ public class CommitDialog extends JDialog {
 
     private static String getDialogTitle() {
         final String titleTail;
-        if (Context.isWorkspaceActive()) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             titleTail = Context.getWorkspace().getName();
         } else {
             titleTail = Context.getWorkingBranch().getShortName();
@@ -220,7 +222,7 @@ public class CommitDialog extends JDialog {
     private void populateFiles() {
         tableModel.setRowCount(0);
 
-        if (Context.isWorkspaceMode() && Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             populateWorkspaceFiles();
         } else {
             populateSingleRepoFiles(Context.getStatusList());

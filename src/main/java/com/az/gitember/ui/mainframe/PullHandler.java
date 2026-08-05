@@ -36,7 +36,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     @Override
     protected PullOperationResult doInBackground() throws Exception {
 
-        if (Context.isWorkspaceActive()) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             workspaceResults = pullWorkspace();
             return null;
         } else {
@@ -100,7 +100,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
         }
 
         statusBar.setStatus("Pull completed: " + result.toStatusString());
-        if (Context.getActiveView() == Context.ActiveView.WORKING_COPY) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             Context.refreshWorkingCopy();
         } else {
             Context.refreshHistory();

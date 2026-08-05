@@ -71,8 +71,7 @@ public class Context {
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
 
-    public enum ActiveView { WORKING_COPY, HISTORY, WORKSPACE }
-    private static ActiveView activeView = ActiveView.HISTORY;
+
 
 
 
@@ -115,12 +114,7 @@ public class Context {
     private static final Object branchLock = new Object();
     private static final Object tagLock = new Object();
 
-    public static void setActiveView(ActiveView view) {
-        activeView = view;
-    }
-    public static ActiveView getActiveView()          {
-        return activeView;
-    }
+
 
     /** Signals listeners to reload the working-copy status list. */
     public static void refreshWorkingCopy() {
@@ -210,25 +204,6 @@ public class Context {
         return Context.getWorkspace() != null;
     }
 
-    /**
-     * True when a workspace is open <em>and</em> the aggregated workspace view is the active one
-     * (as opposed to having drilled into a single repository of the workspace). Remote operations
-     * (push / pull / fetch) act on the whole workspace only in this state.
-     */
-    public static boolean isWorkspaceActive() {
-        return isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
-    }
-
-    public static ScmRevisionInformation getScmRevCommitDetails() {
-        return scmRevCommitDetails;
-    }
-
-    public static void setScmRevCommitDetails(ScmRevisionInformation value) {
-        ScmRevisionInformation old = scmRevCommitDetails;
-        scmRevCommitDetails = value;
-        pcs.firePropertyChange(PROP_SCM_REV_COMMIT_DETAILS, old, value);
-    }
-
     public static boolean isLfsRepo() {
         return lfsRepo;
     }
@@ -239,9 +214,6 @@ public class Context {
         pcs.firePropertyChange(PROP_LFS_REPO, old, value);
     }
 
-    public static boolean isShowLfsFiles() {
-        return showLfsFiles;
-    }
 
     public static void setShowLfsFiles(boolean value) {
         boolean old = showLfsFiles;
@@ -249,26 +221,11 @@ public class Context {
         pcs.firePropertyChange(PROP_SHOW_LFS_FILES, old, value);
     }
 
-    public static String getSelectedTreeName() {
-        return selectedTreeName;
-    }
 
     public static void setSelectedTreeName(String value) {
         String old = selectedTreeName;
         selectedTreeName = value;
         pcs.firePropertyChange(PROP_SELECTED_TREE_NAME, old, value);
-    }
-
-    public static String getBranchFilter() {
-        return branchFilter;
-    }
-
-    public static void setBranchFilter(String value) {
-        String old = branchFilter;
-        branchFilter = value != null ? value : "";
-        pcs.firePropertyChange(PROP_BRANCH_FILTER, old, branchFilter);
-        filterBranches();
-        filterTags();
     }
 
     public static List<ScmBranch> getRemoteBranches() {

@@ -57,6 +57,8 @@ public class MainFrame extends JFrame {
     private  SubmodulePanel submodulePanel;
     private  WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
+    private  ActiveView activeView = ActiveView.HISTORY;
+
     public static synchronized MainFrame getInstance() {
         if (instance == null) {
             instance = new MainFrame();
@@ -334,6 +336,22 @@ public class MainFrame extends JFrame {
         menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));
         menuBar.setRecentWorkspaceHandler(new OpenRecentWorkspaceHanlder(this));
         toolBar.setProjectSelectionHandler(new OpenRecentProjectHandler(this));
+    }
+
+    public void setActiveView(ActiveView view) {
+        activeView = view;
+    }
+    public ActiveView getActiveView()          {
+        return activeView;
+    }
+
+    /**
+     * True when a workspace is open <em>and</em> the aggregated workspace view is the active one
+     * (as opposed to having drilled into a single repository of the workspace). Remote operations
+     * (push / pull / fetch) act on the whole workspace only in this state.
+     */
+    public  boolean isWorkspaceActive() {
+        return Context.isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
     }
 
     public StatusBar getStatusBar() {
@@ -657,7 +675,7 @@ public class MainFrame extends JFrame {
     public boolean isCommitEnabled() {
         boolean commitEnabled = false;
         if (Context.isWorkspaceMode()) {
-            if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+            if (getActiveView() == ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
                     try (GitRepoService svc = GitRepoService.of(project)) {
                         if (svc.hasStaged()) {
@@ -685,58 +703,58 @@ public class MainFrame extends JFrame {
      * git reads run off the EDT; the buttons are updated on the EDT once the scan completes.
      */
     private void updateWorkspaceRemoteActions() {
-        if (!Context.isWorkspaceActive()) {
-            return;
-        }
-        java.util.List<Project> projects = new java.util.ArrayList<>(
-                Context.getWorkspace() == null ? List.of() : Context.getWorkspace().getProjects());
-        toolBar.setPullEnabled(false);
-        toolBar.setPushEnabled(false);
-        toolBar.setFetchEnabled(false);
-        menuBar.setWorkspacePullEnabled(false);
-        menuBar.setWorkspacePushEnabled(false);
-        menuBar.setWorkspaceFetchEnabled(false);
-        if (projects.isEmpty()) {
-            return;
-        }
-        new SwingWorker<boolean[], Void>() {
-            @Override
-            protected boolean[] doInBackground() {
-                boolean hasRemote = false;
-                boolean hasUnpushed = false;
-                for (Project project : projects) {
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        if (!svc.isRepositoryHasRemoteUrl()) {
-                            continue;
+        if (isWorkspaceActive()) {
+            java.util.List<Project> projects = new java.util.ArrayList<>(
+                    Context.getWorkspace() == null ? List.of() : Context.getWorkspace().getProjects());
+            toolBar.setPullEnabled(false);
+            toolBar.setPushEnabled(false);
+            toolBar.setFetchEnabled(false);
+            menuBar.setWorkspacePullEnabled(false);
+            menuBar.setWorkspacePushEnabled(false);
+            menuBar.setWorkspaceFetchEnabled(false);
+            if (projects.isEmpty()) {
+                return;
+            }
+            new SwingWorker<boolean[], Void>() {
+                @Override
+                protected boolean[] doInBackground() {
+                    boolean hasRemote = false;
+                    boolean hasUnpushed = false;
+                    for (Project project : projects) {
+                        try (GitRepoService svc = GitRepoService.of(project)) {
+                            if (!svc.isRepositoryHasRemoteUrl()) {
+                                continue;
+                            }
+                            hasRemote = true;
+                            CommitInfo head = svc.getHead();
+                            if (head.getSha() != null && svc.isCommitUnpushed(head.getSha())) {
+                                hasUnpushed = true;
+                            }
+                        } catch (Exception ex) {
+                            log.log(Level.FINE, "Cannot read remote state for " + project, ex);
                         }
-                        hasRemote = true;
-                        CommitInfo head = svc.getHead();
-                        if (head.getSha() != null && svc.isCommitUnpushed(head.getSha())) {
-                            hasUnpushed = true;
-                        }
-                    } catch (Exception ex) {
-                        log.log(Level.FINE, "Cannot read remote state for " + project, ex);
+                        if (hasRemote && hasUnpushed) break; // nothing left to learn
                     }
-                    if (hasRemote && hasUnpushed) break; // nothing left to learn
+                    return new boolean[]{hasRemote, hasUnpushed};
                 }
-                return new boolean[]{hasRemote, hasUnpushed};
-            }
 
-            @Override
-            protected void done() {
-                try {
-                    boolean[] state = get();
-                    toolBar.setPullEnabled(state[0]);
-                    toolBar.setFetchEnabled(state[0]);
-                    toolBar.setPushEnabled(state[1]);
-                    menuBar.setWorkspacePullEnabled(state[0]);
-                    menuBar.setWorkspaceFetchEnabled(state[0]);
-                    menuBar.setWorkspacePushEnabled(state[1]);
-                } catch (Exception ex) {
-                    log.log(Level.FINE, "Cannot update workspace remote actions", ex);
+                @Override
+                protected void done() {
+                    try {
+                        boolean[] state = get();
+                        toolBar.setPullEnabled(state[0]);
+                        toolBar.setFetchEnabled(state[0]);
+                        toolBar.setPushEnabled(state[1]);
+                        menuBar.setWorkspacePullEnabled(state[0]);
+                        menuBar.setWorkspaceFetchEnabled(state[0]);
+                        menuBar.setWorkspacePushEnabled(state[1]);
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Cannot update workspace remote actions", ex);
+                    }
                 }
-            }
-        }.execute();
+            }.execute();
+        }
+
     }
 
     /**
@@ -744,11 +762,11 @@ public class MainFrame extends JFrame {
      * push / pull / fetch. Called by the corresponding handlers once their operation completes.
      */
     public void refreshWorkspaceView() {
-        if (!Context.isWorkspaceActive()) {
-            return;
+        if (isWorkspaceActive()) {
+            workspaceDashboardPanel.reloadActiveTab();
+            updateWorkspaceRemoteActions();
         }
-        workspaceDashboardPanel.reloadActiveTab();
-        updateWorkspaceRemoteActions();
+
     }
 
     /**
@@ -769,7 +787,7 @@ public class MainFrame extends JFrame {
     public void updateTitle() {
         String path = Context.getRepositoryPath();
         ScmBranch branch = Context.getWorkingBranch();
-        if (Context.getActiveView() == Context.ActiveView.WORKSPACE) {
+        if (getActiveView() == ActiveView.WORKSPACE) {
             setTitle("Gitember - " + Context.getWorkspace().getName());
         } else if (path != null) {
             String folder = Context.getProjectFolder();
@@ -872,7 +890,7 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKSPACE -> {
                     Context.setRepositoryPath(null);
-                    Context.setActiveView(Context.ActiveView.WORKSPACE);
+                    setActiveView(ActiveView.WORKSPACE);
                     contentPanel.setContent(workspaceDashboardPanel);
                     workspaceDashboardPanel.refreshButtonStates();
                     workspaceDashboardPanel.refresh();
@@ -887,19 +905,19 @@ public class MainFrame extends JFrame {
                     activateProjectWorkingCopy();
                 }
                 case HISTORY -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                    setActiveView(ActiveView.HISTORY);
                     contentPanel.setContent(historyPanel);
                     historyPanel.loadHistory(null, true);
                 }
                 case BRANCH -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                    setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch branch) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(branch.getFullName(), false);
                     }
                 }
                 case TAG -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                     setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch tag) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(tag.getFullName(), false);
@@ -928,7 +946,7 @@ public class MainFrame extends JFrame {
     }
 
     public void activateProjectWorkingCopy() {
-        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+         setActiveView( ActiveView.WORKING_COPY);
         contentPanel.setContent(workingCopyPanel);
         List<ScmItem> cachedStatus = Context.getStatusList();
         workingCopyPanel.setItems(cachedStatus); // show cached immediately
@@ -971,7 +989,7 @@ public class MainFrame extends JFrame {
      * History is (re-)loaded from scratch so that the commit is always found.
      */
     public void showCommitInHistory(String sha) {
-        Context.setActiveView(Context.ActiveView.HISTORY);
+        setActiveView(ActiveView.HISTORY);
         contentPanel.setContent(historyPanel);
         toolBar.mergeHistoryToolbar(historyPanel);
         historyPanel.loadHistoryAndSelect(sha);
@@ -983,7 +1001,7 @@ public class MainFrame extends JFrame {
      * which files need resolution.
      */
     public void showWorkingCopy() {
-        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+        setActiveView(ActiveView.WORKING_COPY);
         contentPanel.setContent(workingCopyPanel);
         toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
         Context.updateStatus(null, true);

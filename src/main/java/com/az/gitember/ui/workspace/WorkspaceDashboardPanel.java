@@ -103,9 +103,13 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private final DefaultMutableTreeNode searchRoot = new DefaultMutableTreeNode("Search");
     private final DefaultTreeModel searchModel = new DefaultTreeModel(searchRoot);
     private final JTree searchTree = new JTree(searchModel);
-    /** Coalesces rapid keystrokes into a single search. */
+    /**
+     * Coalesces rapid keystrokes into a single search.
+     */
     private final Timer searchDebounce;
-    /** Guards against overlapping (re)index runs. */
+    /**
+     * Guards against overlapping (re)index runs.
+     */
     private boolean indexing = false;
 
     private static final String TAB_MAIN = "Main";
@@ -213,8 +217,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                         for (ScmItem item : svc.getStatuses(null)) {
 
                             statusBar.setStatus(stage ?
-                                    "Staging "  + item.getShortName():
-                                    "Unstaging " +  item.getShortName());
+                                    "Staging " + item.getShortName() :
+                                    "Unstaging " + item.getShortName());
 
                             boolean staged = ScmItem.isStaged(
                                     item.getAttribute() != null ? item.getAttribute().getStatus() : null);
@@ -267,47 +271,46 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     @Override
     public void updateButtonStates() {
-        if (!Context.isWorkspaceMode() || Context.getActiveView() != Context.ActiveView.WORKSPACE) {
-            return;
-        }
-        List<Project> projects = new ArrayList<>(
-                workspace == null ? List.of() : workspace.getProjects());
-        stageAllBtn.setEnabled(false);
-        unstageAllBtn.setEnabled(false);
-        if (projects.isEmpty()) return;
+        if (MainFrame.getInstance().isWorkspaceActive()) {
+            List<Project> projects = new ArrayList<>(
+                    workspace == null ? List.of() : workspace.getProjects());
+            stageAllBtn.setEnabled(false);
+            unstageAllBtn.setEnabled(false);
+            if (projects.isEmpty()) return;
 
-        new SwingWorker<boolean[], Void>() {
-            @Override
-            protected boolean[] doInBackground() {
-                boolean hasUnstaged = false;
-                boolean hasStaged = false;
-                for (Project project : projects) {
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        hasUnstaged |= svc.hasUntaged();
-                        hasStaged |= svc.hasStaged();
+            new SwingWorker<boolean[], Void>() {
+                @Override
+                protected boolean[] doInBackground() {
+                    boolean hasUnstaged = false;
+                    boolean hasStaged = false;
+                    for (Project project : projects) {
+                        try (GitRepoService svc = GitRepoService.of(project)) {
+                            hasUnstaged |= svc.hasUntaged();
+                            hasStaged |= svc.hasStaged();
+                        } catch (Exception ex) {
+                            log.log(Level.FINE, "Cannot read status for " + project, ex);
+                        }
+                        if (hasUnstaged && hasStaged) break; // nothing left to learn
+                    }
+                    return new boolean[]{hasUnstaged, hasStaged};
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        boolean[] state = get();
+                        stageAllBtn.setEnabled(state[0]);
+                        unstageAllBtn.setEnabled(state[1]);
+                        // Commit is possible when at least one project has a staged item.
+                        if (onCommitStateChanged != null) {
+                            onCommitStateChanged.accept(state[1]);
+                        }
                     } catch (Exception ex) {
-                        log.log(Level.FINE, "Cannot read status for " + project, ex);
+                        log.log(Level.FINE, "Cannot update workspace button states", ex);
                     }
-                    if (hasUnstaged && hasStaged) break; // nothing left to learn
                 }
-                return new boolean[]{hasUnstaged, hasStaged};
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    boolean[] state = get();
-                    stageAllBtn.setEnabled(state[0]);
-                    unstageAllBtn.setEnabled(state[1]);
-                    // Commit is possible when at least one project has a staged item.
-                    if (onCommitStateChanged != null) {
-                        onCommitStateChanged.accept(state[1]);
-                    }
-                } catch (Exception ex) {
-                    log.log(Level.FINE, "Cannot update workspace button states", ex);
-                }
-            }
-        }.execute();
+            }.execute();
+        }
     }
 
 
@@ -510,7 +513,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
         // Left-click on the leading checkbox toggles stage/unstage.
         // Right-click shows a context menu identical to the working-copy panel's.
-        workingCopyTree.addMouseListener(new WorkingCopyMouseAdapter(this, statusBar) );
+        workingCopyTree.addMouseListener(new WorkingCopyMouseAdapter(this, statusBar));
 
         JScrollPane scroll = new JScrollPane(workingCopyTree);
         scroll.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -621,7 +624,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
 
-
     public DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
         for (int i = 0; i < parent.getChildCount(); i++) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) parent.getChildAt(i);
@@ -639,9 +641,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             tree.expandRow(i);
         }*/
     }
-
-
-
 
 
     /**
@@ -705,7 +704,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         return scroll;
     }
 
-    /** Runs the current query across all projects' working-copy indexes and shows the results. */
+    /**
+     * Runs the current query across all projects' working-copy indexes and shows the results.
+     */
     private void performSearch() {
         if (workspace == null) {
             return;
@@ -791,7 +792,6 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
 
-
     // ── Indexing lifecycle ─────────────────────────────────────────────────────────
 
     /**
@@ -818,7 +818,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         }
     }
 
-    /** Reindexes changed files only when the workspace is already fully indexed (a no-op otherwise). */
+    /**
+     * Reindexes changed files only when the workspace is already fully indexed (a no-op otherwise).
+     */
     private void reindexIfIndexed() {
         if (workspace == null || indexing) {
             return;

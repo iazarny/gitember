@@ -36,7 +36,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
-        if (Context.isWorkspaceActive()) {
+        if (MainFrame.getInstance().isWorkspaceActive()) {
             workspaceResults = pushWorkspace();
             return null;
         } else {

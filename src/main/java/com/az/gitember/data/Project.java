@@ -1,10 +1,14 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.GitRepoService;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -15,6 +19,9 @@ import java.util.Date;
         creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
 public class Project implements Serializable, Comparable<Project>  {
+
+    @JsonIgnore
+    private GitRepoService gitRepoService = null;
 
     private String projectHomeFolder;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -169,6 +176,22 @@ public class Project implements Serializable, Comparable<Project>  {
         }
         return ((Project)obj).getProjectHomeFolder().equals(getProjectHomeFolder());
     }
+
+    public synchronized GitRepoService getGitRepoService() throws IOException {
+        if (gitRepoService == null) {
+            String gitFolder = getProjectHomeFolder();
+            if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
+                gitFolder += File.separator + Const.GIT_FOLDER;
+            }
+            if (!new File(gitFolder).exists()) {
+                throw new RuntimeException("Git folder " + gitFolder + " not found");
+            }
+            gitRepoService = new GitRepoService(gitFolder);
+            //setRepositoryPath(gitFolder);
+        }
+        return gitRepoService;
+    }
+
 
     @Override
     public String toString() {

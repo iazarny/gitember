@@ -21,7 +21,7 @@ public class RepoPathChangedChangeListener implements PropertyChangeListener {
         SwingUtilities.invokeLater(() -> {
             boolean hasRepo = evt.getNewValue() != null;
             mainFrame.setRepoActionsEnabled(hasRepo);
-            mainFrame.setWorkspaceActionsEnabled(Context.isWorkspaceActive());
+            mainFrame.setWorkspaceActionsEnabled(MainFrame.getInstance().isWorkspaceActive()); // TODO
             if (hasRepo || Context.isWorkspaceMode()) {
                 mainFrame.getMainMenuBar().setVisible(true);
                 mainFrame.addCurrentProjectToSettings();
