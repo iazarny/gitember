@@ -65,7 +65,8 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     private List<ProjectOperationResult<PullOperationResult>> pullWorkspace() {
         List<ProjectOperationResult<PullOperationResult>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 if (svc.isRepositoryHasRemoteUrl()) {
                     RemoteRepoParameters params = RemoteRepoParameters.forProject(project, svc);
                     PullOperationResult res = svc.remoteRepositoryPull(params, null, progressMonitor);

@@ -55,8 +55,8 @@ public class WorkspaceSearchService {
         if (home == null || home.isBlank()) {
             return;
         }
-        try (SearchService svc = SearchService.forProject(project);
-             GitRepoService git = GitRepoService.of(project)) {
+        GitRepoService git = project.getGitRepoService();
+        try (SearchService svc = SearchService.forProject(project)) {
 
             Map<String, Long> indexed = svc.indexedFileMtimes();
             // Guarantee an index exists on disk even when no file turns out to be indexable,

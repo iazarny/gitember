@@ -68,7 +68,8 @@ public class PushHandler extends AbstractAsyncHandler<String> {
     private List<ProjectOperationResult<String>> pushWorkspace() {
         List<ProjectOperationResult<String>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 if (!svc.isRepositoryHasRemoteUrl()) {
                     continue;
                 }

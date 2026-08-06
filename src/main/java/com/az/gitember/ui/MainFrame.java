@@ -677,13 +677,9 @@ public class MainFrame extends JFrame {
         if (Context.isWorkspaceMode()) {
             if (getActiveView() == ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        if (svc.hasStaged()) {
-                            commitEnabled = true;
-                            break;
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if (project.getGitRepoService().hasStaged()) {
+                        commitEnabled = true;
+                        break;
                     }
                 }
             } else { // workspace , but selected particular project
@@ -721,7 +717,8 @@ public class MainFrame extends JFrame {
                     boolean hasRemote = false;
                     boolean hasUnpushed = false;
                     for (Project project : projects) {
-                        try (GitRepoService svc = GitRepoService.of(project)) {
+                        try {
+                            GitRepoService svc = project.getGitRepoService();
                             if (!svc.isRepositoryHasRemoteUrl()) {
                                 continue;
                             }

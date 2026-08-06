@@ -252,7 +252,8 @@ public class CommitDialog extends JDialog {
             String home = project.getProjectHomeFolder();
             String repoName = new java.io.File(home).getName();
 
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 List<ScmItem> items = svc.getStatuses(null);
                 for (ScmItem item : items) {
                     String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
@@ -377,7 +378,8 @@ public class CommitDialog extends JDialog {
         }
         StringBuilder sb = new StringBuilder();
         for (Project project : workspaceProjects) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 if (!svc.hasStaged()) continue;
                 String diff = svc.getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS);
                 if (diff == null || diff.isBlank()) continue;
@@ -407,7 +409,8 @@ public class CommitDialog extends JDialog {
         if (workspaceProjects != null) {
             for (Project project : workspaceProjects) {
                 String repoLabel = projectLabel(project);
-                try (GitRepoService svc = GitRepoService.of(project)) {
+                try {
+                    GitRepoService svc = project.getGitRepoService();
                     for (ScmItem item : svc.getStatuses(null)) {
                         String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
                         if (!STAGED_STATUSES.contains(status) || ScmItem.Status.REMOVED.equals(status)) continue;
@@ -591,7 +594,8 @@ public class CommitDialog extends JDialog {
                 // branch would merge cleanly into its upstream, and warn about the ones that won't.
                 List<String> unmergeable = new ArrayList<>();
                 for (Project project : workspaceProjects) {
-                    try (GitRepoService svc = GitRepoService.of(project)) {
+                    try {
+                        GitRepoService svc = project.getGitRepoService();
                         if (!svc.canMergeWithUpstream()) {
                             unmergeable.add(projectLabel(project));
                         }
@@ -624,9 +628,9 @@ public class CommitDialog extends JDialog {
     }
 
     private boolean hasStaged(Project project) {
-        try (GitRepoService svc = GitRepoService.of(project)) {
-            return svc.hasStaged();
-        } catch (IOException e) {
+        try {
+            return project.getGitRepoService().hasStaged();
+        } catch (Exception e) {
             return false;
         }
     }
@@ -642,14 +646,13 @@ public class CommitDialog extends JDialog {
 
     /** Commits staged items for one project, using the configured author/committer identity. */
     private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
-        try (GitRepoService svc = GitRepoService.of(project)) {
-            if (svc.hasStaged()) {
-                String authorName     = StringUtils.trimToNull(project.getUserCommitName());
-                String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
-                String committerName  = StringUtils.trimToNull(project.getCommitterName());
-                String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-                svc.commit(message, authorName, authorEmail, committerName, committerEmail);
-            }
+        GitRepoService svc = project.getGitRepoService();
+        if (svc.hasStaged()) {
+            String authorName     = StringUtils.trimToNull(project.getUserCommitName());
+            String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
+            String committerName  = StringUtils.trimToNull(project.getCommitterName());
+            String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
+            svc.commit(message, authorName, authorEmail, committerName, committerEmail);
         }
     }
 
@@ -668,13 +671,10 @@ public class CommitDialog extends JDialog {
     }
 
     private List<ScmItem> getConflictedFiles(Project project) throws IOException {
-        try (GitRepoService svc = GitRepoService.of(project)) {
-            return svc.getStatuses(null).stream()
-                    .filter(i -> ScmItem.Status.CONFLICT.equals(i.getAttribute().getStatus()))
-                    .collect(Collectors.toUnmodifiableList());
-
-        }
-
+        GitRepoService svc = project.getGitRepoService();
+        return svc.getStatuses(null).stream()
+                .filter(i -> ScmItem.Status.CONFLICT.equals(i.getAttribute().getStatus()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private void openFinding(int row) {

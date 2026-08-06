@@ -56,12 +56,7 @@ public class WorkingCopyMouseAdapter extends MouseAdapter {
             WorkingCopyContextMenu ctxMenu = new WorkingCopyContextMenu(
                     workspaceDashboardPanel,
                     statusBar,
-                    action -> {
-                        try (com.az.gitember.service.GitRepoService svc =
-                                     com.az.gitember.service.GitRepoService.of(project)) {
-                            action.execute(svc);
-                        }
-                    },
+                    action -> action.execute(project.getGitRepoService()),
                     project::getProjectHomeFolder,
                     () -> {
                         if (projectNode != null) {
@@ -94,8 +89,8 @@ public class WorkingCopyMouseAdapter extends MouseAdapter {
     }
 
     /**
-     * Toggles the staged state of a single file using its <em>own</em> project's repository
-     * (a throwaway {@link GitRepoService}), then reloads that project's subtree.
+     * Toggles the staged state of a single file using its <em>own</em> project's cached
+     * {@link GitRepoService}, then reloads that project's subtree.
      */
     private void toggleStage(DefaultMutableTreeNode node, FileNode fileNode) {
         Project project = fileNode.getProject();
@@ -106,12 +101,11 @@ public class WorkingCopyMouseAdapter extends MouseAdapter {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                try (GitRepoService svc = GitRepoService.of(project)) {
-                    if (staged) {
-                        svc.unstageItem(item);
-                    } else {
-                        svc.stageItem(item);
-                    }
+                GitRepoService svc = project.getGitRepoService();
+                if (staged) {
+                    svc.unstageItem(item);
+                } else {
+                    svc.stageItem(item);
                 }
                 return null;
             }

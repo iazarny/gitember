@@ -106,6 +106,19 @@ public class GitRepoService implements AutoCloseable {
 
     private final BranchLiveTimeAdapter branchLiveTimeAdapter = new BranchLiveTimeAdapter();
 
+    /**
+     * The {@link Project} this service was opened for, or {@code null} for a transient/anonymous
+     * service (e.g. {@link #of(String)}, the test-only {@link #GitRepoService(Repository)}, or
+     * the no-repository {@link #GitRepoService()}). Backs {@link #revCache()} and
+     * {@link #projectFolder()} so a service opened for a non-active project reads and caches
+     * against its OWN repo rather than silently falling back to whichever repo happens to be
+     * active in {@link Context}.
+     */
+    private final Project owner;
+
+    /** Per-instance commit-detail cache, used only when {@link #owner} is {@code null}. */
+    private final Map<String, ScmRevisionInformation> localRevCache = new ConcurrentHashMap<>();
+
     static {
         FilterCommandRegistry.register(GitRepoService.SMUDGE_NAME, SmudgeFilter.FACTORY);
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
@@ -113,19 +126,12 @@ public class GitRepoService implements AutoCloseable {
 
 
     /**
-     * Creates a service for the given project, opening the {@code .git} directory under the
-     * project's home folder.
-     *
-     * @param project project whose repository should be opened
-     * @return a service bound to the project's repository
-     * @throws IOException in case of error, or if the project has no home folder
+     * Opens a transient (uncached, unowned) service for {@code projectHome}. Prefer
+     * {@code project.getGitRepoService()} when a {@link Project} is available -- that returns
+     * the project's own cached, owned instance instead of opening a new one on every call.
      */
-    public static GitRepoService of(final Project project) throws IOException {
-        return GitRepoService.of(project.getProjectHomeFolder());
-    }
-
     public static GitRepoService of(final String projectHome) throws IOException {
-        String gitFolder = projectHome + File.separator + Const.GIT_FOLDER;
+        String gitFolder = Project.normalizeHome(projectHome) + File.separator + Const.GIT_FOLDER;
         return  new GitRepoService(gitFolder);
     }
 
@@ -137,6 +143,20 @@ public class GitRepoService implements AutoCloseable {
      * @throws IOException in case of error
      */
     public GitRepoService(final String gitFolder) throws IOException {
+        this(gitFolder, null);
+    }
+
+    /**
+     * Construct a service bound to {@code owner}, so per-repo state ({@link #getSearchService()},
+     * the commit-detail cache, LFS path resolution) is read from and written to {@code owner}
+     * rather than the ambient {@link Context}.
+     *
+     * @param gitFolder folder with git repository, for example "~/project/.git"
+     * @param owner     the {@link Project} this service belongs to, or {@code null}
+     * @throws IOException in case of error
+     */
+    public GitRepoService(final String gitFolder, final Project owner) throws IOException {
+        this.owner = owner;
         File gitDirFile = new File(gitFolder);
         if (gitDirFile.isFile()) {
             // Linked worktree: .git is a FILE containing "gitdir: <path>" pointer.
@@ -266,15 +286,26 @@ public class GitRepoService implements AutoCloseable {
     public GitRepoService(final Repository repo) {
         this.repository = repo;
         this.worktreeGitDir = null;
+        this.owner = null;
     }
 
     public GitRepoService() {
         super();
         repository = null;
         this.worktreeGitDir = null;
+        this.owner = null;
+    }
+
+    /** The {@link Project} this service belongs to, or {@code null} for a transient/anonymous service. */
+    public Project getOwner() {
+        return owner;
     }
 
     public void shutdown() {
+        if (service != null) {
+            service.close();
+            service = null;
+        }
         if (repository != null) {
             repository.close();
         }
@@ -1064,8 +1095,8 @@ public class GitRepoService implements AutoCloseable {
                     log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
 
                     getSearchService().dropIndex();
-                    if (Context.getCurrentProject().isPresent()) {
-                        Context.getCurrentProject().get().setIndexed(false);
+                    if (owner != null) {
+                        owner.setIndexed(false);
                         Context.saveSettings();
                     }
                 }
@@ -1090,9 +1121,34 @@ public class GitRepoService implements AutoCloseable {
 
     public synchronized SearchService getSearchService() {
         if (service == null) {
-            service = new SearchService(Context.getProjectFolder());
+            service = new SearchService(projectFolder());
         }
         return service;
+    }
+
+    /**
+     * Work-tree path WITH a trailing separator — byte-compatible with the legacy
+     * {@code Context.getProjectFolder()} expression that {@code SearchService} has always
+     * md5-hashed to locate its Lucene index directory; changing it would silently orphan
+     * every existing history index.
+     */
+    private String projectFolder() {
+        if (owner != null) {
+            return owner.getProjectFolder();
+        }
+        try {
+            File wt = repository != null ? repository.getWorkTree() : null;
+            return wt != null ? wt.getAbsolutePath() + File.separator : "";
+        } catch (RuntimeException e) {
+            // NoWorkTreeException on a bare repository
+            return "";
+        }
+    }
+
+    /** Per-project when {@link #owner} is set, per-instance otherwise -- never a single
+     *  process-wide map shared by every repo. */
+    private Map<String, ScmRevisionInformation> revCache() {
+        return owner != null ? owner.getScmRevisionInformationCache() : localRevCache;
     }
 
     /**
@@ -1111,7 +1167,7 @@ public class GitRepoService implements AutoCloseable {
         SearchService svc = getSearchService();
         svc.dropIndex();       // wipe any previous index
         // Re-create after drop
-        service = new SearchService(Context.getProjectFolder());
+        service = new SearchService(projectFolder());
         svc = service;
 
         int total = (maxCommits > 0) ? Math.min(maxCommits, commits.size()) : commits.size();
@@ -1140,8 +1196,10 @@ public class GitRepoService implements AutoCloseable {
         svc.commitIndex();
 
         // Persist the indexed flag
-        Context.getCurrentProject().ifPresent(p -> p.setIndexed(true));
-        Context.saveSettings();
+        if (owner != null) {
+            owner.setIndexed(true);
+            Context.saveSettings();
+        }
         log.info("Lucene indexing complete: " + total + " commits, " + filesIndexed + " file versions");
     }
 
@@ -1775,7 +1833,7 @@ public class GitRepoService implements AutoCloseable {
                         treeWalk.enterSubtree();
                     } else {
                         final String path = treeWalk.getPathString();
-                        final Path filePath = Paths.get(Context.getProjectFolder(), path);
+                        final Path filePath = Paths.get(projectFolder(), path);
                         final long sizeOnDisk = Files.size(filePath);
                         final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
                         final ScmItem scmItem = new ScmItem(
@@ -3098,7 +3156,7 @@ public class GitRepoService implements AutoCloseable {
             return null;
         }
 
-        return Context.scmRevisionInformationCache.computeIfAbsent(revCommit.getId().toString(), s -> {
+        return revCache().computeIfAbsent(revCommit.getId().toString(), s -> {
             final ScmRevisionInformation info = new ScmRevisionInformation();
             info.setShortMessage(revCommit.getShortMessage());
             info.setFullMessage(revCommit.getFullMessage());

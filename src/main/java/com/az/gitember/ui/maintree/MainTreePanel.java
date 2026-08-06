@@ -333,21 +333,20 @@ public class MainTreePanel extends JPanel {
     }
 
     /**
-     * Loads a workspace project's branches/tags/stashes off the EDT (using a throwaway
-     * {@link GitRepoService} for that repo) and fills the project's subtree on completion.
+     * Loads a workspace project's branches/tags/stashes off the EDT (using the project's cached
+     * {@link GitRepoService}) and fills the project's subtree on completion.
      */
     private void loadProjectData(Project project, RepoCategoryNodes nodes) {
 
         new SwingWorker<RepoData, Void>() {
             @Override
             protected RepoData doInBackground() throws Exception {
-                try (GitRepoService svc =  GitRepoService.of(project)){
-                    return new RepoData(
-                            svc.getBranches(),
-                            svc.getRemoteBranches(),
-                            svc.getTags(),
-                            svc.getStashList());
-                }
+                GitRepoService svc = project.getGitRepoService();
+                return new RepoData(
+                        svc.getBranches(),
+                        svc.getRemoteBranches(),
+                        svc.getTags(),
+                        svc.getStashList());
             }
 
             @Override

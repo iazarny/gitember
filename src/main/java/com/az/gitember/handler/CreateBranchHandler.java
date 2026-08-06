@@ -101,7 +101,8 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     private List<ProjectOperationResult<Void>> createBranchWorkspace() {
         List<ProjectOperationResult<Void>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 String base = svc.getCurrentScmBranch().getSha();
                 svc.createBranch(base, newBranchName);
                 svc.checkoutBranch(newBranchName, null);

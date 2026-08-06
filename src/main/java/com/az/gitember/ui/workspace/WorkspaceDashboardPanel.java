@@ -213,20 +213,19 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             @Override
             protected Void doInBackground() throws Exception {
                 for (Project project : projects) {
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        for (ScmItem item : svc.getStatuses(null)) {
+                    GitRepoService svc = project.getGitRepoService();
+                    for (ScmItem item : svc.getStatuses(null)) {
 
-                            statusBar.setStatus(stage ?
-                                    "Staging " + item.getShortName() :
-                                    "Unstaging " + item.getShortName());
+                        statusBar.setStatus(stage ?
+                                "Staging " + item.getShortName() :
+                                "Unstaging " + item.getShortName());
 
-                            boolean staged = ScmItem.isStaged(
-                                    item.getAttribute() != null ? item.getAttribute().getStatus() : null);
-                            if (stage && !staged) {
-                                svc.stageItem(item);
-                            } else if (!stage && staged) {
-                                svc.unstageItem(item);
-                            }
+                        boolean staged = ScmItem.isStaged(
+                                item.getAttribute() != null ? item.getAttribute().getStatus() : null);
+                        if (stage && !staged) {
+                            svc.stageItem(item);
+                        } else if (!stage && staged) {
+                            svc.unstageItem(item);
                         }
                     }
                 }
@@ -284,7 +283,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     boolean hasUnstaged = false;
                     boolean hasStaged = false;
                     for (Project project : projects) {
-                        try (GitRepoService svc = GitRepoService.of(project)) {
+                        try {
+                            GitRepoService svc = project.getGitRepoService();
                             hasUnstaged |= svc.hasUntaged();
                             hasStaged |= svc.hasStaged();
                         } catch (Exception ex) {
@@ -383,7 +383,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 @Override
                 protected WorkingCopyStat doInBackground() {
                     try {
-                        return new GitRepoStatService().computeStats(project.getProjectHomeFolder());
+                        return new GitRepoStatService().computeStats(project);
                     } catch (Exception ex) {
                         log.log(Level.FINE, "Cannot read stats for " + home, ex);
                         return WorkingCopyStat.failed();
@@ -555,18 +555,17 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
     /**
-     * Reads a project's working-copy status off the EDT (using a throwaway
+     * Reads a project's working-copy status off the EDT (using the project's cached
      * {@link GitRepoService}) and fills the project node with a folders/files hierarchy.
      */
     public void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
         new SwingWorker<DefaultMutableTreeNode, Void>() {
             @Override
             protected DefaultMutableTreeNode doInBackground() throws Exception {
-                try (GitRepoService svc = GitRepoService.of(project)) {
-                    DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
-                    populateFileTree(project, holder, svc.getStatuses(null));
-                    return holder;
-                }
+                GitRepoService svc = project.getGitRepoService();
+                DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
+                populateFileTree(project, holder, svc.getStatuses(null));
+                return holder;
             }
 
             @Override
