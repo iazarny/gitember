@@ -252,15 +252,6 @@ public class Context {
         return plotCommitList;
     }
 
-    public static String getFileHistoryTree() {
-        return fileHistoryTree;
-    }
-
-    public static void setFileHistoryTree(String value) {
-        String old = fileHistoryTree;
-        fileHistoryTree = value;
-        pcs.firePropertyChange(PROP_FILE_HISTORY_TREE, old, value);
-    }
 
     private static void initProjectWatcher(String gitFolder) throws Exception {
         String projFolder = gitFolder
