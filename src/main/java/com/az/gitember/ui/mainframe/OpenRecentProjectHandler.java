@@ -63,7 +63,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
                     // Remove invalid project from list
                     Settings settings = Context.getSettings();
                     if (settings != null) {
-                        settings.getProjects().remove(project);
+                        settings.removeProject(project);
                         Context.saveSettings();
                         mainFrame.refreshProjectLists();
                     }

@@ -65,6 +65,13 @@ public class Context {
     // Fields
     private static Settings settings;
 
+    /** Test-only: resets session state so test cases don't leak an active project/workspace. */
+    static void reset() {
+        activeProject = null;
+        workspace = null;
+        settings = null;
+    }
+
     /** Signals listeners to reload the working-copy status list. */
     public static void refreshWorkingCopy() {
         fire(activeProject, PROP_WORKING_COPY_REFRESH, false, true);
@@ -106,17 +113,6 @@ public class Context {
 
     public static String getProjectFolder() {
         return activeProject == null ? "" : activeProject.getProjectFolder();
-    }
-
-    /**
-     * @deprecated superseded by interning (see {@link Settings#internAll()}): every repo now has
-     * exactly one {@link Project} instance shared by the flat recent list and every workspace, so
-     * there is nothing left to reconcile across "similar" copies. Kept only for its one remaining
-     * caller until that is updated.
-     */
-    @Deprecated
-    public static List<Project> getSimilarToCurrentProjects() {
-        return activeProject == null ? List.of() : List.of(activeProject);
     }
 
     /**
