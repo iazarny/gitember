@@ -6,14 +6,14 @@ import com.az.gitember.ui.support.GitFixtures;
 import com.az.gitember.ui.support.SwingUiTestBase;
 import org.assertj.swing.core.MouseButton;
 import org.assertj.swing.data.TableCell;
-import org.assertj.swing.fixture.DialogFixture;
+import org.assertj.swing.fixture.JPopupMenuFixture;
 import org.assertj.swing.timing.Condition;
 import org.assertj.swing.timing.Pause;
 import org.assertj.swing.timing.Timeout;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.JPopupMenu;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -21,16 +21,14 @@ import static com.az.gitember.service.GitemberUtil.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Regression test for a bug where {@code CommitDialog.getDialogTitle()} NPEs on the very first
- * commit in a brand-new repo: {@code Context.getWorkingBranch()} used to return null on an
- * unborn HEAD (no {@code refs/heads/*} yet), which the title logic dereferenced unconditionally.
- * Fixed in {@code Project.updateWorkingBranch()} by falling back to
- * {@code GitRepoService.getCurrentScmBranch()}, which reads the symbolic HEAD target directly.
+ * TC-008-range — merge two branches with conflicting changes to the same file, then resolve
+ * the conflict from the working-copy context menu ("Resolve conflict" > "Using theirs
+ * (THEIRS)") and verify the file is staged and no longer conflicted.
  */
 class CommitAndConflictUITest extends SwingUiTestBase {
 
     @Test
-    void commitDialog_opensAndCommits_onUnbornHead() throws Exception {
+    void resolveConflict_usingTheirs_stagesFileAndClearsConflict() throws Exception {
 
         GitFixtures.commitFile(repoDir, "readme.txt", "Lorem ipsum\n", "Initial commit");
 
@@ -71,14 +69,21 @@ class CommitAndConflictUITest extends SwingUiTestBase {
 
         int row = window.table("workingCopyTable").cell("readme.txt").row();
         window.table("workingCopyTable").click(TableCell.row(row).column(1), MouseButton.RIGHT_BUTTON);
-//At thi point context menu is appear
-        // Need to click second row of context menu (resolve)
-        // and then click "Using theirs (THEIRS)
-        //Check that conflict is resolved
-        //See CorkingCopyContextMenu.java for additional info
 
+        JPopupMenu popup = robot.findActivePopupMenu();
+        JPopupMenuFixture popupFixture = new JPopupMenuFixture(robot, popup);
+        popupFixture.menuItemWithPath("Resolve conflict", "Using theirs (THEIRS)").click();
 
-
-
+        Pause.pause(new Condition("conflict on readme.txt to be resolved") {
+            @Override
+            public boolean test() {
+                List<ScmItem> items = Context.getStatusList();
+                return items != null && items.stream().anyMatch(i ->
+                        "readme.txt".equals(i.getShortName()) && i.isStaged())
+                        && items.stream().noneMatch(i ->
+                        "readme.txt".equals(i.getShortName())
+                                && ScmItem.Status.CONFLICT.equals(i.getAttribute().getStatus()));
+            }
+        }, Timeout.timeout(10_000));
     }
 }
