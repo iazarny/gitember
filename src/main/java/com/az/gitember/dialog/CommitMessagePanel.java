@@ -18,6 +18,7 @@ public class CommitMessagePanel extends JPanel {
         setLayout(new BorderLayout());
 
         commonMessageArea = new CommitMessageArea("Common", 5);
+        commonMessageArea.getMessageArea().setName("commitMessageArea");
 
         if (projectNames == null) {
             projectMessageAreas = null;

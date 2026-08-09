@@ -155,6 +155,7 @@ public class CommitDialog extends JDialog {
         findingsScroll.setPreferredSize(new Dimension(0, 120));
 
         JLabel findingsLabel = new JLabel("⚠ Potential secrets / sensitive data detected:");
+        findingsLabel.setName("findingsLabel");
         findingsLabel.setForeground(SyntaxStyleUtil.statusColor("DELETE"));
         findingsLabel.setFont(findingsLabel.getFont().deriveFont(Font.BOLD));
 
@@ -167,8 +168,10 @@ public class CommitDialog extends JDialog {
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton commitBtn = new JButton("Commit");
+        commitBtn.setName("commitButton");
         commitBtn.addActionListener(e -> onCommit());
         JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setName("cancelButton");
         cancelBtn.addActionListener(e -> dispose());
         buttonPanel.add(commitBtn);
         buttonPanel.add(cancelBtn);

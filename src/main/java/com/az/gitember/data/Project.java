@@ -520,9 +520,13 @@ public class Project implements Serializable, Comparable<Project>  {
     }
 
     public void updateWorkingBranch() {
-        setWorkingBranch(
-                localBranches.stream().filter(ScmBranch::isHead).findFirst().orElse(null)
-        );
+        ScmBranch head = localBranches.stream().filter(ScmBranch::isHead).findFirst().orElse(null);
+        if (head == null && getGitDir() != null) {
+            // Unborn HEAD (brand-new repo, no commits yet): no refs/heads/* exist, so
+            // localBranches is empty, but the symbolic HEAD still names the future branch.
+            head = getGitRepoService().getCurrentScmBranch();
+        }
+        setWorkingBranch(head);
     }
 
     public void updateBranches() {
