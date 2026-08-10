@@ -1572,20 +1572,6 @@ public class GitRepoService implements AutoCloseable {
     }
 
 
-    public String createEmptyFile(String fileName) {
-        final String fileNameExtension = FilenameUtils.getExtension(fileName);
-        final File temp;
-        try {
-            temp = File.createTempFile(
-                    Const.TEMP_FILE_PREFIX,
-                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return temp.getAbsolutePath();
-    }
-
-
     public boolean isLfsRepo() { //TODO make lazy
         return isLfsRepo(repository);
     }
@@ -1604,10 +1590,6 @@ public class GitRepoService implements AutoCloseable {
             }
         }
         return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
-    }
-
-    public boolean isFileExists(String fileName) {
-        return Files.exists(Paths.get(repository.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, ""), fileName));
     }
 
 
