@@ -116,6 +116,11 @@ public class MainTreePanel extends JPanel {
         PanelOnBranchChangedChangeListener onBranchesChanged = new PanelOnBranchChangedChangeListener(this);
         Context.addPropertyChangeListener(Context.PROP_LOCAL_BRANCHES, onBranchesChanged);
         Context.addPropertyChangeListener(Context.PROP_REMOTE_BRANCHES, onBranchesChanged);
+        // Checking out an already-existing local branch can leave the local-branch list
+        // unchanged by ScmBranch#equals (it ignores the head flag), so PROP_LOCAL_BRANCHES
+        // may not fire; PROP_WORKING_BRANCH always does, so also refresh on that to keep the
+        // current-branch highlight in CellRenderer accurate.
+        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, onBranchesChanged);
         Context.addPropertyChangeListener(Context.PROP_TAGS, new PanelOnTagsChangedChangeListener(this));
         Context.addPropertyChangeListener(Context.PROP_STASH, new PanelOnStashChangedChangeListener(this));
         Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new PanelOnRepoChangedChangeListener(this));
