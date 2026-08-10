@@ -213,20 +213,19 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             @Override
             protected Void doInBackground() throws Exception {
                 for (Project project : projects) {
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        for (ScmItem item : svc.getStatuses(null)) {
+                    GitRepoService svc = project.getGitRepoService();
+                    for (ScmItem item : svc.getStatuses(null)) {
 
-                            statusBar.setStatus(stage ?
-                                    "Staging " + item.getShortName() :
-                                    "Unstaging " + item.getShortName());
+                        statusBar.setStatus(stage ?
+                                "Staging " + item.getShortName() :
+                                "Unstaging " + item.getShortName());
 
-                            boolean staged = ScmItem.isStaged(
-                                    item.getAttribute() != null ? item.getAttribute().getStatus() : null);
-                            if (stage && !staged) {
-                                svc.stageItem(item);
-                            } else if (!stage && staged) {
-                                svc.unstageItem(item);
-                            }
+                        boolean staged = ScmItem.isStaged(
+                                item.getAttribute() != null ? item.getAttribute().getStatus() : null);
+                        if (stage && !staged) {
+                            svc.stageItem(item);
+                        } else if (!stage && staged) {
+                            svc.unstageItem(item);
                         }
                     }
                 }
@@ -284,7 +283,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     boolean hasUnstaged = false;
                     boolean hasStaged = false;
                     for (Project project : projects) {
-                        try (GitRepoService svc = GitRepoService.of(project)) {
+                        try {
+                            GitRepoService svc = project.getGitRepoService();
                             hasUnstaged |= svc.hasUntaged();
                             hasStaged |= svc.hasStaged();
                         } catch (Exception ex) {
@@ -383,7 +383,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 @Override
                 protected WorkingCopyStat doInBackground() {
                     try {
-                        return new GitRepoStatService().computeStats(project.getProjectHomeFolder());
+                        return new GitRepoStatService().computeStats(project);
                     } catch (Exception ex) {
                         log.log(Level.FINE, "Cannot read stats for " + home, ex);
                         return WorkingCopyStat.failed();
@@ -555,18 +555,25 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     }
 
     /**
-     * Reads a project's working-copy status off the EDT (using a throwaway
+     * Reads a project's working-copy status off the EDT (using the project's cached
      * {@link GitRepoService}) and fills the project node with a folders/files hierarchy.
+     *
+     * <p>{@code reload(projectNode)} rebuilds the node's children from scratch (new folder/file
+     * node instances), so Swing forgets which of them were expanded/selected. Capture that state by
+     * name beforehand and restore it against the freshly-built nodes afterward, so toggling a single
+     * file's staged state (the common case) doesn't collapse the tree the user was looking at.
      */
     public void loadProjectWorkingCopy(Project project, DefaultMutableTreeNode projectNode) {
+        List<List<String>> expandedKeys = captureExpandedKeys(projectNode);
+        List<String> selectedKeys = captureSelectedKeys(projectNode);
+
         new SwingWorker<DefaultMutableTreeNode, Void>() {
             @Override
             protected DefaultMutableTreeNode doInBackground() throws Exception {
-                try (GitRepoService svc = GitRepoService.of(project)) {
-                    DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
-                    populateFileTree(project, holder, svc.getStatuses(null));
-                    return holder;
-                }
+                GitRepoService svc = project.getGitRepoService();
+                DefaultMutableTreeNode holder = new DefaultMutableTreeNode();
+                populateFileTree(project, holder, svc.getStatuses(null));
+                return holder;
             }
 
             @Override
@@ -581,9 +588,100 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 }
                 moveChildren(holder, projectNode);
                 workingCopyModel.reload(projectNode);
-                //expand ???
+                restoreExpandedKeys(projectNode, expandedKeys);
+                restoreSelectedKeys(projectNode, selectedKeys);
             }
         }.execute();
+    }
+
+    /**
+     * A tree-node identity that survives node re-creation: folders/files are matched by name rather
+     * than by object identity, since {@link #populateFileTree} builds brand-new node instances on
+     * every reload.
+     */
+    private static String nodeKey(DefaultMutableTreeNode node) {
+        Object userObject = node.getUserObject();
+        return userObject instanceof FileNode fileNode ? "F:" + fileNode.getLeafName() : "D:" + userObject;
+    }
+
+    private List<List<String>> captureExpandedKeys(DefaultMutableTreeNode projectNode) {
+        List<List<String>> result = new ArrayList<>();
+        Enumeration<TreePath> expanded =
+                workingCopyTree.getExpandedDescendants(new TreePath(projectNode.getPath()));
+        if (expanded != null) {
+            while (expanded.hasMoreElements()) {
+                TreePath path = expanded.nextElement();
+                List<String> keys = new ArrayList<>();
+                for (Object component : path.getPath()) {
+                    keys.add(nodeKey((DefaultMutableTreeNode) component));
+                }
+                result.add(keys);
+            }
+        }
+        return result;
+    }
+
+    private List<String> captureSelectedKeys(DefaultMutableTreeNode projectNode) {
+        TreePath selection = workingCopyTree.getSelectionPath();
+        if (selection == null || !isDescendant(projectNode, selection)) {
+            return null;
+        }
+        List<String> keys = new ArrayList<>();
+        for (Object component : selection.getPath()) {
+            keys.add(nodeKey((DefaultMutableTreeNode) component));
+        }
+        return keys;
+    }
+
+    private static boolean isDescendant(DefaultMutableTreeNode projectNode, TreePath path) {
+        for (Object component : path.getPath()) {
+            if (component == projectNode) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Re-expands the paths captured by {@link #captureExpandedKeys}, matching each key against the
+     * freshly-built children by name; keys that no longer resolve (e.g. a folder that emptied out)
+     * are silently skipped.
+     */
+    private void restoreExpandedKeys(DefaultMutableTreeNode projectNode, List<List<String>> expandedKeys) {
+        for (List<String> keys : expandedKeys) {
+            DefaultMutableTreeNode node = resolveKeys(projectNode, keys);
+            if (node != null) {
+                workingCopyTree.expandPath(new TreePath(node.getPath()));
+            }
+        }
+    }
+
+    private void restoreSelectedKeys(DefaultMutableTreeNode projectNode, List<String> selectedKeys) {
+        if (selectedKeys == null) return;
+        DefaultMutableTreeNode node = resolveKeys(projectNode, selectedKeys);
+        if (node != null) {
+            workingCopyTree.setSelectionPath(new TreePath(node.getPath()));
+        }
+    }
+
+    /**
+     * Walks down from {@code projectNode}'s parent using a key path captured before the reload
+     * (keys[0]/keys[1] are the hidden root and {@code projectNode} itself), matching each subsequent
+     * key to a current child by name.
+     */
+    private DefaultMutableTreeNode resolveKeys(DefaultMutableTreeNode projectNode, List<String> keys) {
+        DefaultMutableTreeNode current = projectNode;
+        for (int i = 2; i < keys.size(); i++) {
+            DefaultMutableTreeNode next = null;
+            for (int c = 0; c < current.getChildCount(); c++) {
+                DefaultMutableTreeNode child = (DefaultMutableTreeNode) current.getChildAt(c);
+                if (keys.get(i).equals(nodeKey(child))) {
+                    next = child;
+                    break;
+                }
+            }
+            if (next == null) return null;
+            current = next;
+        }
+        return current;
     }
 
 

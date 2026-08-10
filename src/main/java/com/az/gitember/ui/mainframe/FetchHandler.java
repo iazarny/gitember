@@ -50,7 +50,8 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
     private List<ProjectOperationResult<Void>> fetchWorkspace() {
         List<ProjectOperationResult<Void>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 if (!svc.isRepositoryHasRemoteUrl()) {
                     continue;
                 }

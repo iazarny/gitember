@@ -51,9 +51,9 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
             GitRepoService svc = Context.getGitRepoService();
             String base = baseBranchFullName != null ? baseBranchFullName : svc.getCurrentScmBranch().getSha();
             svc.createBranch(base, newBranchName);
-            Context.updateBranches();
 
             svc.checkoutBranch(newBranchName, null);
+            Context.updateBranches();
 
             if (Context.isWorkspaceMode()) {
                 //it is possible to create branch for  single project in the workspac mode
@@ -101,7 +101,8 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     private List<ProjectOperationResult<Void>> createBranchWorkspace() {
         List<ProjectOperationResult<Void>> results = new ArrayList<>();
         for (Project project : Context.getWorkspace().getProjects()) {
-            try (GitRepoService svc = GitRepoService.of(project)) {
+            try {
+                GitRepoService svc = project.getGitRepoService();
                 String base = svc.getCurrentScmBranch().getSha();
                 svc.createBranch(base, newBranchName);
                 svc.checkoutBranch(newBranchName, null);

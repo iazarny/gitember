@@ -1,10 +1,15 @@
 package com.az.gitember.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -56,6 +61,100 @@ public class Settings {
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
     private Boolean enableCommitMessageGeneration = false; //EXPERIMENTAL FEATURE
     private String  llmDetectorModel   = "qwen2.5-coder";
+
+    /** canonicalKey -> the single canonical Project instance. Rebuilt by {@link #internAll()}. */
+    @JsonIgnore
+    private final transient Map<String, Project> byKey = new HashMap<>();
+
+    /**
+     * Canonicalizes so exactly ONE {@link Project} instance exists per normalized home folder,
+     * shared by {@link #projects} and every {@link Workspace#getProjects()}. Idempotent.
+     * The flat list is processed FIRST so its instance wins as canonical (it is historically
+     * the one edited by the project-settings dialog); workspace copies only fill in blanks.
+     */
+    public void internAll() {
+        byKey.clear();
+        projects = rebuild(projects);
+        for (Workspace ws : getWorkspaces()) {
+            ws.setProjects(rebuild(ws.getProjects()));
+        }
+    }
+
+    private TreeSet<Project> rebuild(TreeSet<Project> src) {
+        TreeSet<Project> out = new TreeSet<>();
+        if (src != null) {
+            for (Project p : src) {
+                Project c = intern(p);
+                if (c != null) {
+                    out.add(c);
+                }
+            }
+        }
+        return out;
+    }
+
+    /** Interns {@code candidate}: returns the existing canonical instance (merging blanks from
+     *  {@code candidate}), or registers {@code candidate} itself as canonical if none exists yet. */
+    public Project intern(Project candidate) {
+        if (candidate == null || candidate.getProjectHomeFolder() == null) {
+            return null;
+        }
+        // Jackson bypasses the setter (setterVisibility = NONE), so normalize the field here too.
+        candidate.setProjectHomeFolder(Project.normalizeHome(candidate.getProjectHomeFolder()));
+        String key = Project.canonicalKey(candidate.getProjectHomeFolder());
+        Project existing = byKey.get(key);
+        if (existing == null) {
+            byKey.put(key, candidate);
+            return candidate;
+        }
+        existing.mergeMissingFrom(candidate);
+        return existing;
+    }
+
+    /** Lookup without mutation or creation. */
+    public Optional<Project> lookupProject(String homeFolder) {
+        return Optional.ofNullable(byKey.get(Project.canonicalKey(homeFolder)));
+    }
+
+    /**
+     * The single factory for obtaining the canonical {@link Project} for a home folder,
+     * creating and interning one if it doesn't exist yet. Deliberately does NOT touch the
+     * flat recent-projects list — use {@link #addRecentProject(Project)} for that.
+     */
+    public Project getOrCreateProject(String homeFolder) {
+        String key = Project.canonicalKey(homeFolder);
+        Project p = byKey.get(key);
+        if (p == null) {
+            p = new Project(Project.normalizeHome(homeFolder), new Date());
+            byKey.put(key, p);
+        }
+        return p;
+    }
+
+    /** Adds (or, if already present, bumps the open time of) a project in the flat recent list. */
+    public void addRecentProject(Project p) {
+        if (p == null) {
+            return;
+        }
+        Project c = intern(p);
+        if (!projects.contains(c)) {
+            projects.add(c);
+        } else {
+            c.setOpenTime(new Date());
+        }
+    }
+
+    /** Removes a project from the flat recent list; un-interns it only if no workspace still references it. */
+    public void removeProject(Project p) {
+        if (p == null) {
+            return;
+        }
+        projects.remove(p);
+        boolean stillUsed = getWorkspaces().stream().anyMatch(ws -> ws.getProjects().contains(p));
+        if (!stillUsed) {
+            byKey.remove(Project.canonicalKey(p.getProjectHomeFolder()));
+        }
+    }
 
     public Boolean getEnableBranchCompareDescription() {
         return enableBranchCompareDescription;

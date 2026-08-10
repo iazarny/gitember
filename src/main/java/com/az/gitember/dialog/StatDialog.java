@@ -153,7 +153,7 @@ public class StatDialog extends JFrame {
             JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
                     "Not enough information to collect statistics .",
                     "No statistics", JOptionPane.WARNING_MESSAGE);
-        } else if (new GitRepoStatService().computeStats(Context.getProjectFolder()).hasChanges()) {
+        } else if (new GitRepoStatService().computeStats(Context.getActiveProject()).hasChanges()) {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body>"
                             +  "Repository "

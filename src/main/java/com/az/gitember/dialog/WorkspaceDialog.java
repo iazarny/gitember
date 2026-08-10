@@ -185,7 +185,7 @@ public class WorkspaceDialog extends JDialog {
                     "Not a Repository", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        Project project = new Project(folder.getAbsolutePath(), new Date());
+        Project project = Context.getSettings().getOrCreateProject(folder.getAbsolutePath());
         if (!workspace.getProjects().add(project)) {
             JOptionPane.showMessageDialog(this, "This repository is already in the workspace.",
                     "Already Added", JOptionPane.INFORMATION_MESSAGE);

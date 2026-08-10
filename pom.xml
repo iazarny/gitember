@@ -180,6 +180,22 @@
             <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!--
+          AssertJ Swing — Robot-driven Swing UI testing (see test/Automation.md).
+          Automation.md's own recommendation, org.assertj:assertj-swing-junit 3.17.1, is
+          unusable on Java 17+: its core Robot implementation still references
+          java.applet.Applet, which was removed from the JDK, causing a NoClassDefFoundError
+          at test setup. tokyo.northside:assertj-swing is an actively maintained fork (used by
+          the OmegaT project) that drops the Applet dependency and ships a JUnit 5 Jupiter
+          integration; same org.assertj.swing.* API, different Maven coordinates.
+        -->
+        <dependency>
+            <groupId>tokyo.northside</groupId>
+            <artifactId>assertj-swing-junit-jupiter</artifactId>
+            <version>4.0.0-beta-2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -192,6 +208,50 @@
                     <source>21</source>
                     <target>21</target>
                 </configuration>
+            </plugin>
+            <!-- mvn test: fast unit + service-layer tests only, UI suite excluded -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <excludedGroups>ui</excludedGroups>
+                </configuration>
+            </plugin>
+            <!-- mvn verify: additionally runs the AssertJ-Swing UI suite (@Tag("ui")) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <groups>ui</groups>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <!-- AssertJ Swing drives Swing/AWT internals via reflection; JPMS strong
+                         encapsulation blocks that by default from JDK 9+. -->
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        --add-opens java.desktop/java.awt=ALL-UNNAMED
+                        --add-opens java.desktop/java.awt.event=ALL-UNNAMED
+                        --add-opens java.desktop/javax.swing=ALL-UNNAMED
+                        --add-opens java.desktop/javax.swing.plaf.basic=ALL-UNNAMED
+                        --add-opens java.desktop/sun.awt=ALL-UNNAMED
+                        --add-opens java.desktop/sun.swing=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

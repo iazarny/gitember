@@ -1,5 +1,6 @@
 package com.az.gitember.ui.maintree;
 
+import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.TreeNodeData;
 import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
@@ -47,10 +48,27 @@ public class CellRenderer extends DefaultTreeCellRenderer {
             if (userObject instanceof TreeNodeData data) {
                 setText(data.displayName());
                 setIcon(getIconForType(data.type()));
+
+                boolean isCurrentLocalBranch = data.type() == NodeType.BRANCH
+                        && data.data() instanceof ScmBranch branch
+                        && branch.getBranchType() == ScmBranch.BranchType.LOCAL
+                        && branch.isHead();
+
+                Font baseFont = tree.getFont();
+                setFont(isCurrentLocalBranch ? baseFont.deriveFont(Font.BOLD) : baseFont.deriveFont(Font.PLAIN));
+                if (isCurrentLocalBranch && !sel) {
+                    setForeground(currentBranchColor());
+                }
             }
         }
 
         return this;
+    }
+
+    /** Highlight color for the current local branch node; falls back if the L&F doesn't define an accent color. */
+    private static Color currentBranchColor() {
+        Color accent = UIManager.getColor("Component.accentColor");
+        return accent != null ? accent : new Color(0x2E7D32);
     }
 
     private Icon getIconForType(NodeType type) {

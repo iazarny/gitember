@@ -327,6 +327,17 @@ public class HistoryPanel extends JPanel {
                     }
                 })
         );
+
+        // This panel is reused across repository switches; a tree/branch name remembered from
+        // the previous repo may not exist in the new one, so drop it rather than risk reloading
+        // history for a stale ref.
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, evt -> resetViewState());
+    }
+
+    /** Clears history-view state specific to the previously active repository. */
+    public void resetViewState() {
+        lastTreeName = null;
+        lastAllHistory = true;
     }
 
     // ── Search logic ──────────────────────────────────────────────────────────

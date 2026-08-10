@@ -116,9 +116,10 @@ public class ProjectSettingsDialog extends JDialog {
     }
 
     private void applyAndClose() {
-        //Project may be duplicated as single and as project under workspace
-        //So need apply changes to all copy in the setting
-        for(Project project : Context.getSimilarToCurrentProjects()) {
+        // Projects are interned (Settings#internAll): the active project is the single shared
+        // instance also referenced by any workspace it belongs to, so there is no separate
+        // "similar" copy left to keep in sync.
+        Context.getCurrentProject().ifPresent(project -> {
             project.setUserCommitName (authorNameField.getText().trim());
             project.setUserCommitEmail(authorEmailField.getText().trim());
             project.setCommitterName  (committerNameField.getText().trim());
@@ -126,7 +127,7 @@ public class ProjectSettingsDialog extends JDialog {
             project.setAccessToken(new String(tokenField.getPassword()).trim());
             project.setUserName   (userField.getText().trim());
             project.setUserPwd    (new String(pwdField.getPassword()));
-        }
+        });
         Context.saveSettings();
         dispose();
     }

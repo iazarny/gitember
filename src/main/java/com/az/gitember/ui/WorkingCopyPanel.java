@@ -42,6 +42,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
 
         tableModel = new WorkingCopyTableModel();
         table = new JTable(tableModel);
+        table.setName("workingCopyTable");
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setRowHeight(24);
         table.setShowGrid(false);

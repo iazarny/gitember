@@ -126,7 +126,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setOnProjectRemoved(project -> {
             Settings settings = Context.getSettings();
             if (settings != null) {
-                settings.getProjects().remove(project);
+                settings.removeProject(project);
                 Context.saveSettings();
                 refreshProjectLists();
             }
@@ -188,6 +188,7 @@ public class MainFrame extends JFrame {
                         new SwingWorker<Void, Void>() {
                             @Override protected Void doInBackground() {
                                 Context.updateStatus(null, true);
+                                Context.updateBranches();
                                 return null;
                             }
                         }.execute();
@@ -196,6 +197,7 @@ public class MainFrame extends JFrame {
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
+                            Context.updateBranches();
                             return null;
                         }
                     }.execute();
@@ -400,25 +402,12 @@ public class MainFrame extends JFrame {
 
     public void addCurrentProjectToSettings() {
         Settings settings = Context.getSettings();
-        if (settings == null) return;
+        Project project = Context.getActiveProject();
+        if (settings == null || project == null) return;
 
-        String repoPath = Context.getRepositoryPath();
-        if (repoPath == null) return;
-
-        String folder = repoPath.replace(File.separator + ".git", "");
-
-        // Preserve the existing project entry (and its credentials) — only update the timestamp.
-        Project existing = settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().equalsIgnoreCase(folder))
-                .findFirst()
-                .orElse(null);
-        if (existing == null) {
-            settings.getProjects().add(new Project(folder, new Date()));
-        } else {
-            if (Context.isWorkspaceMode()) {
-                existing.setOpenTime(new Date());
-            }
-        }
+        // Projects are interned (Settings#internAll), so this is the same instance already
+        // referenced by any workspace it belongs to -- no more separate "similar" copies to sync.
+        settings.addRecentProject(project);
         Context.saveSettings();
     }
 
@@ -677,13 +666,9 @@ public class MainFrame extends JFrame {
         if (Context.isWorkspaceMode()) {
             if (getActiveView() == ActiveView.WORKSPACE) {
                 for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                    try (GitRepoService svc = GitRepoService.of(project)) {
-                        if (svc.hasStaged()) {
-                            commitEnabled = true;
-                            break;
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if (project.getGitRepoService().hasStaged()) {
+                        commitEnabled = true;
+                        break;
                     }
                 }
             } else { // workspace , but selected particular project
@@ -721,7 +706,8 @@ public class MainFrame extends JFrame {
                     boolean hasRemote = false;
                     boolean hasUnpushed = false;
                     for (Project project : projects) {
-                        try (GitRepoService svc = GitRepoService.of(project)) {
+                        try {
+                            GitRepoService svc = project.getGitRepoService();
                             if (!svc.isRepositoryHasRemoteUrl()) {
                                 continue;
                             }
@@ -825,10 +811,9 @@ public class MainFrame extends JFrame {
         return Optional.empty();
     }
 
+    /** Projects are interned (Settings#internAll), so identity is a valid, O(1) test. */
     private boolean isCurrentProject(Project p) {
-        String current = Context.getProjectFolder().replaceAll("[/\\\\]+$", "");
-        String candidate = p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "");
-        return current.equalsIgnoreCase(candidate);
+        return p == Context.getActiveProject();
     }
 
     private void onTreeSelection(TreeSelectionEvent e) {
@@ -841,7 +826,7 @@ public class MainFrame extends JFrame {
                     // when the click actually targets a different project (workspace mode).
                     if (!isCurrentProject(p)) {
                         try {
-                            Context.init(p.getProjectHomeFolder());
+                            Context.init(p);
                         } catch (Exception ex) {
                             throw new RuntimeException(ex);
                         }
@@ -940,7 +925,9 @@ public class MainFrame extends JFrame {
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 case WORKTREE -> { /* handled via context menu */ }
-                default -> contentPanel.setContent(null);
+                default -> {
+                    contentPanel.setContent(null);
+                }
             }
         }
     }

@@ -58,7 +58,8 @@ public class IndexHistoryDialog extends JDialog {
 
 
         int totalCommits = 0;
-        try(GitRepoService svc = Context.getGitRepoService()) {
+        {
+            GitRepoService svc = Context.getGitRepoService();
             ScmBranch branch = Context.getWorkingBranch();
             totalCommits = svc.getCommitsCountByTree(
                     branch.getFullName(), null);
@@ -134,7 +135,8 @@ public class IndexHistoryDialog extends JDialog {
 
         List<PlotCommit<PlotLane>> commits = new ArrayList<>();
 
-        try(GitRepoService svc = Context.getGitRepoService()) {
+        {
+            GitRepoService svc = Context.getGitRepoService();
             ScmBranch branch = Context.getWorkingBranch();
             commits.addAll(
                     svc.getCommitsByTree(branch.getFullName(), true, maxCommits, null)
