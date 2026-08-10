@@ -19,6 +19,7 @@ public class MainToolBar extends JToolBar {
     private final JButton openBtn;
     private final JButton cloneBtn;
     private final JButton createBranchBtn;
+    private final JButton mergeBtn;
     private final JButton pullBtn;
     private final JButton pushBtn;
     private final JButton fetchBtn;
@@ -37,6 +38,7 @@ public class MainToolBar extends JToolBar {
         setFloatable(false);
 
         createBranchBtn = Util.createButton("Branch", "Create branch", FontAwesomeSolid.CODE_BRANCH);
+        mergeBtn = Util.createButton("Merge", "Merge", FontAwesomeSolid.CODE_BRANCH);
 
         openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
         cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
