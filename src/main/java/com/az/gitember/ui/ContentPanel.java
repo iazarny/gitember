@@ -12,7 +12,7 @@ public class ContentPanel extends JPanel {
         setLayout(new BorderLayout());
 
         mainContent = new JPanel(new BorderLayout());
-        placeholderLabel = new JLabel("Open a repository to get started", SwingConstants.CENTER);
+        placeholderLabel = new JLabel("", SwingConstants.CENTER); //Open a repository to get started
         placeholderLabel.setFont(placeholderLabel.getFont().deriveFont(16f));
         placeholderLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
 

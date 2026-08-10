@@ -141,6 +141,29 @@ public class GitemberUtil {
         return home;
     }
 
+    public static boolean areBranchesEqualIgnoreOrder(List<ScmBranch> left, List<ScmBranch> right) {
+        if (left == right) {
+            return true;
+        }
+
+        if (left == null || right == null) {
+            return false;
+        }
+
+        if (left.size() != right.size()) {
+            return false;
+        }
+
+        List<ScmBranch> l1 = new ArrayList<>(left);
+        List<ScmBranch> l2 = new ArrayList<>(right);
+
+        Collections.sort(l1);
+        Collections.sort(l2);
+
+        return l1.equals(l2);
+    }
+
+
     public static boolean areEqualIgnoreOrder(List<ScmItem> left, List<ScmItem> right) {
         if (left == right) {
             return true;

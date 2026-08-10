@@ -188,6 +188,7 @@ public class MainFrame extends JFrame {
                         new SwingWorker<Void, Void>() {
                             @Override protected Void doInBackground() {
                                 Context.updateStatus(null, true);
+                                Context.updateBranches();
                                 return null;
                             }
                         }.execute();
@@ -197,6 +198,7 @@ public class MainFrame extends JFrame {
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
+                            Context.updateBranches();
                             return null;
                         }
                     }.execute();
@@ -924,7 +926,9 @@ public class MainFrame extends JFrame {
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 case WORKTREE -> { /* handled via context menu */ }
-                default -> contentPanel.setContent(null);
+                default -> {
+                    contentPanel.setContent(null);
+                }
             }
         }
     }

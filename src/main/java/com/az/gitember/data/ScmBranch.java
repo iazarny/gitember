@@ -1,11 +1,15 @@
 package com.az.gitember.data;
 
+import org.jspecify.annotations.NonNull;
+
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Created by Igor Azarny on 03 - Dec - 2016
  */
-public class ScmBranch {
+public class ScmBranch implements Comparable<ScmBranch> {
+
 
 
     public enum BranchType {
@@ -161,6 +165,26 @@ public class ScmBranch {
     }
 
 
+    @Override
+    public int compareTo(@NonNull ScmBranch o) {
+        int ret = sha.compareTo(o.sha);
+        if (ret == 0) {
+            ret = fullName.compareTo(o.fullName);
+        }
+        return ret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ScmBranch scmBranch = (ScmBranch) o;
+        return Objects.equals(sha, scmBranch.sha) && Objects.equals(fullName, scmBranch.fullName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sha, fullName);
+    }
 
     @Override
     public String toString() {

@@ -541,11 +541,16 @@ public class Project implements Serializable, Comparable<Project>  {
 
                 List<ScmBranch> oldLocal = localBranches;
                 localBranches = new ArrayList<>(localBranchesRaw);
-                Context.fire(this, Context.PROP_LOCAL_BRANCHES, oldLocal, localBranches);
+                if (!GitemberUtil.areBranchesEqualIgnoreOrder(oldLocal, localBranches)) {
+                    Context.fire(this, Context.PROP_LOCAL_BRANCHES, oldLocal, localBranches);
+                }
 
                 List<ScmBranch> oldRemote = remoteBranches;
                 remoteBranches = new ArrayList<>(remoteBranchesRaw);
-                Context.fire(this, Context.PROP_REMOTE_BRANCHES, oldRemote, remoteBranches);
+                if (!GitemberUtil.areBranchesEqualIgnoreOrder(oldLocal, localBranches)) {
+                    Context.fire(this, Context.PROP_REMOTE_BRANCHES, oldLocal, localBranches);
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
                 log.log(Level.SEVERE, "Cannot update branch information");
