@@ -1,9 +1,6 @@
 package com.az.gitember.data;
 
-import com.az.gitember.service.Context;
-import com.az.gitember.service.GitRepoService;
-import com.az.gitember.service.ProjectWatcher;
-import com.az.gitember.service.PullRequestService;
+import com.az.gitember.service.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -508,13 +505,18 @@ public class Project implements Serializable, Comparable<Project>  {
             if (getGitDir() != null) {
                 List<ScmItem> statuses = getGitRepoService().getStatuses(progressMonitor);
                 List<ScmItem> old = statusList;
+                if (!GitemberUtil.areEqualIgnoreOrder(statuses,old)) {
+                    statusList = new ArrayList<>(statuses);
+                    Context.fire(this, Context.PROP_STATUS_LIST, old, statusList);
+                }
+
+
                 if (!workingCopyOnly) {
                     List<PlotCommit> oldPlot = plotCommitList;
                     plotCommitList = new ArrayList<>();
                     Context.fire(this, Context.PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
                 }
-                statusList = new ArrayList<>(statuses);
-                Context.fire(this, Context.PROP_STATUS_LIST, old, statusList);
+
             }
         }
     }

@@ -1,9 +1,6 @@
 package com.az.gitember.service;
 
-import com.az.gitember.data.LangDefinition;
-import com.az.gitember.data.Pair;
-import com.az.gitember.data.ScmRevisionInformation;
-import com.az.gitember.data.Side;
+import com.az.gitember.data.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,10 +22,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GitemberUtil {
@@ -146,5 +140,29 @@ public class GitemberUtil {
         }
         return home;
     }
+
+    public static boolean areEqualIgnoreOrder(List<ScmItem> left, List<ScmItem> right) {
+        if (left == right) {
+            return true;
+        }
+
+        if (left == null || right == null) {
+            return false;
+        }
+
+        if (left.size() != right.size()) {
+            return false;
+        }
+
+        List<ScmItem> l1 = new ArrayList<>(left);
+        List<ScmItem> l2 = new ArrayList<>(right);
+
+        Collections.sort(l1);
+        Collections.sort(l2);
+
+        return l1.equals(l2);
+    }
+
+
 
 }

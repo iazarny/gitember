@@ -193,6 +193,7 @@ public class MainFrame extends JFrame {
                         }.execute();
                     }
                 } else {
+                    System.out.println(">>>>>>>> 1");
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
