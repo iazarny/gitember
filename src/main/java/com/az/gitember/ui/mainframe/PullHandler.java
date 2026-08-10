@@ -53,6 +53,12 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
 
             Context.updateAll();
             Context.updateWorkingBranch();
+            if (Context.getWorkingBranch() != null) {
+                Context.setWorkingBranch(Context.getWorkingBranch());
+            } else if (branch != null) {
+                Context.setWorkingBranch(branch);
+            }
+
             return result;
         }
     }
