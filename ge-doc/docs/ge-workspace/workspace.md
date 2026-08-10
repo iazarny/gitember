@@ -6,13 +6,18 @@ sidebar_position: 1
 # Workspace
 
 A **Workspace** groups several Git repositories together so you can manage them as a single
-unit — handy when a project is split across multiple repos (a backend, a frontend, a set of
-microservices, …) and you want to pull, push, commit, or just see the status of all of them
+unit — handy when a project is split across multiple repos , for example:
+ - a backend and frontend 
+ - a set of microservices 
+ - a SPI and set of implementation
+and you want to pull, push, commit, or just see the status of all of them
 without opening each repository separately.
 
 Once a workspace is open, Gitember switches its main view to the **Workspace Dashboard**,
 and the **Workspace** menu exposes operations that act on every repository in the workspace
 at once.
+
+Somehow workspace feature similar to submodules, but not the same. 
 
 ---
 
@@ -20,7 +25,8 @@ at once.
 
 Open **File → Init Workspace…**, or click **Init workspace** on the Welcome screen.
 
-TODO workspace-init-dialog.png
+
+![workspace-init-0.png](workspace-init-0.png)
 
 The dialog suggests a name ("New workspace", "New workspace 1", …), which you can rename to
 anything you like. You then add repositories to it in one of two ways:
@@ -32,6 +38,8 @@ anything you like. You then add repositories to it in one of two ways:
   warning instead.
 
 Use **Remove** to drop a selected repository from the workspace before saving.
+
+![workspace-init-1.png](workspace-init-1.png)
 
 :::note
 The *Add Repository from Disk…* option only accepts a folder that is **already** a Git
@@ -55,7 +63,9 @@ projects wherever recent items are listed:
 * **File → Open Recent** — recent workspaces are listed below a separator, under the recent
   projects.
 
-TODO workspace-welcome-recent.png
+
+![workspace-open.png](workspace-open.png)
+
 
 Opening a workspace refreshes its "last opened" time, rebuilds the sidebar tree with one
 node per repository, and switches the main content area to the Workspace Dashboard.
@@ -68,20 +78,29 @@ With a workspace open, the **Workspace** menu offers **Pull**, **Push**, **Fetch
 **Create Branch…**, and **Commit…** — each acting on *every* repository in the workspace in
 one step, instead of one repository at a time.
 
-TODO workspace-menu.png
+![workspace-ops.png](workspace-ops.png)
 
-For Pull / Push / Fetch, Gitember walks the workspace's repositories one after another:
+
+For Branch / Pull / Push / Fetch, Gitember walks the workspace's repositories one after another:
 
 * A repository with no configured remote is skipped (and reported as skipped, not failed).
 * **Push** also skips a repository that has nothing to push, and automatically sets up
   remote tracking for the current branch when needed.
 * If one repository fails (e.g. a conflict on pull, or an auth error), Gitember carries on
-  with the rest — a single failing repo doesn't abort the whole run.
+  with the rest — a single failing *repo doesn't abort the whole run*.
+* Usually **Commit** operation end with success. But gitember may warn you about  possible issues with 
+  merging
+* 
+![workspace-commit-0.png](workspace-commit-0.png)
+
+Commit message may be specified for all repos or per repository
+
+![workspace-commit-1.png](workspace-commit-1.png)
 
 When the run finishes, the status bar shows a summary such as *"Pull completed for 4 of 5
 repositories"*, and a results dialog lists the outcome for every repository individually.
+![workspace-result.png](workspace-result.png)
 
-TODO workspace-sync-results.png
 
 ---
 
@@ -102,7 +121,7 @@ for that repository instead. At least one of the two must resolve to a non-empty
 every repository that has staged changes, or the commit is blocked with a validation warning
 listing which repositories still need one.
 
-TODO workspace-commit-dialog.png
+
 
 Gitember can also draft the common message for you and flag risky content before you commit
 — see [AI Features](../ge-ai/ai-features.md) for the AI commit-message generator (which
@@ -128,8 +147,8 @@ tabs.
 A summary table with one row per repository: **Repository, Branch, Status, Modified,
 Ahead, Behind**. **Status** shows `Clean`, `Modified`, or the number of conflicts.
 
-TODO workspace-dashboard-main.png
 
+![workspace-dashboard-main.png](workspace-dashboard-main.png)
 Double-click a row to jump straight into that repository's own Working Copy view (the
 sidebar selection follows along too).
 
@@ -139,7 +158,7 @@ A single combined tree with one top-level node per repository, and each reposito
 changed files underneath in their normal folder structure — so you can review what changed
 in *every* repository at a glance, without switching between them.
 
-TODO workspace-dashboard-workingcopy.png
+![workspace-dashboard-workingcopy.png](workspace-dashboard-workingcopy.png)
 
 Each file has the usual staging checkbox and a right-click context menu (stage/unstage,
 discard, view diff, and so on), just like the single-repository Working Copy view — see
@@ -151,7 +170,8 @@ Searches the **contents** of files across every repository's current working cop
 just file names — using a per-repository index that Gitember builds and keeps incrementally
 up to date as files change.
 
-TODO workspace-dashboard-search.png
+![workspace-search.png](workspace-search.png)
+
 
 Type at least 3 characters to search; results are grouped by repository the same way as the
 Working Copy tab. The search field stays disabled until the initial indexing of every
@@ -172,5 +192,5 @@ looks only at the current **working copy** contents, across all repositories at 
   cannot create a brand-new repository for you.
 * Pull / Push / Fetch / Commit run **sequentially**, one repository at a time, not in
   parallel.
-* Workspace commits are not transactional: if committing one repository fails partway
+* Workspace commits are not transactional (yet) : if committing one repository fails partway
   through, repositories already committed are not rolled back.
