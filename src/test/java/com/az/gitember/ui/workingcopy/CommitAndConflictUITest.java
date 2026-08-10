@@ -33,7 +33,6 @@ class CommitAndConflictUITest extends SwingUiTestBase {
         GitFixtures.commitFile(repoDir, "readme.txt", "Lorem ipsum\n", "Initial commit");
 
         String masterBranchName = GitFixtures.getBranchName(repoDir);
-        System.out.println(">>>> " + repoDir);
 
         GitFixtures.createBranch(repoDir, "branch1");
         GitFixtures.checkoutBranch(repoDir, "branch1");

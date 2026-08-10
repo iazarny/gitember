@@ -47,6 +47,9 @@ public class Util {
         if (ikon != null) {
             Icon icon = themeAwareIcon(ikon, 16);
             btn.setIcon(rotation == 0 ? icon : new RotatedIcon(icon, rotation));
+
+            Icon disabledIcon = themeAwareIcon(ikon, 16, true);
+            btn.setDisabledIcon(rotation == 0 ? disabledIcon : new RotatedIcon(disabledIcon, rotation));
         }
 
         btn.setText("<html>" + text + "</html>");
@@ -103,12 +106,15 @@ public class Util {
      * foreground at paint time, so it automatically adapts to light/dark themes.
      */
     public static Icon themeAwareIcon(Ikon ikon, int size) {
+        return themeAwareIcon(ikon, size, false);
+    }
+
+    private static Icon themeAwareIcon(Ikon ikon, int size, boolean disabled) {
         FontIcon fi = FontIcon.of(ikon, size);
         return new Icon() {
             @Override
             public void paintIcon(Component c, Graphics g, int x, int y) {
-                Color fg = c != null ? c.getForeground()
-                        : UIManager.getColor("Button.foreground");
+                Color fg = UIManager.getColor(disabled  ? "Button.disabledText" : "Button.foreground");
                 fi.setIconColor(fg != null ? fg : Color.BLACK);
                 fi.paintIcon(c, g, x, y);
             }
