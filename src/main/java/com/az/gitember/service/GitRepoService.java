@@ -2565,6 +2565,62 @@ public class GitRepoService implements AutoCloseable {
         }
     }
 
+
+
+    /**
+     * Finds the fork point of the given branch relative to HEAD, mirroring
+     * {@code git merge-base --fork-point}. Unlike a plain merge-base, this uses
+     * HEAD's reflog to still locate the original divergence point even if HEAD
+     * has since been rebased or fast-forwarded past it.
+     * <p>
+     * Returns a synthetic {@link ScmBranch} wrapping the fork-point commit
+     * (its {@code sha} is the commit id), or {@code null} if no unambiguous
+     * fork point could be determined (no merge base, more than one candidate,
+     * or the merge base is not present in HEAD's reflog).
+     */
+    public ScmBranch findForkPoint(ScmBranch branch) {
+        try {
+            ObjectId commitId = repository.resolve(branch.getFullName());
+            ObjectId headId = repository.resolve("HEAD");
+            if (commitId == null || headId == null) {
+                return null;
+            }
+
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(commitId);
+                RevCommit head = walk.parseCommit(headId);
+
+                walk.setRevFilter(RevFilter.MERGE_BASE);
+                walk.markStart(commit);
+                walk.markStart(head);
+                RevCommit mergeBase = walk.next();
+                if (mergeBase == null || walk.next() != null) {
+                    // no common ancestor, or more than one (ambiguous octopus case)
+                    return null;
+                }
+
+                Set<ObjectId> reflogCommits = new HashSet<>();
+                ReflogReader reflogReader = repository.getReflogReader("HEAD");
+                if (reflogReader != null) {
+                    for (ReflogEntry entry : reflogReader.getReverseEntries()) {
+                        reflogCommits.add(entry.getNewId());
+                        reflogCommits.add(entry.getOldId());
+                    }
+                }
+
+                if (!reflogCommits.contains(mergeBase.getId())) {
+                    return null;
+                }
+
+                String sha = mergeBase.getName();
+                return new ScmBranch(sha.substring(0, 7), sha, ScmBranch.BranchType.LOCAL, sha);
+            }
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Could not find fork point for branch " + branch.getFullName(), e);
+            return null;
+        }
+    }
+
     private String resolveAnyRef(String branchName) throws Exception {
         String[] candidates = {
             "refs/remotes/origin/" + branchName,
