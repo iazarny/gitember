@@ -76,4 +76,19 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
             new MergeBranchHandler(parent,  branchFullName, result).execute();
         }
     }
+
+    public static void showAndExecuteFromCurrent(Component parent) {
+        String currentBranch = Context.getWorkingBranch().getFullName();
+        String mergeBranch = Context.getGitRepoService().findForkPoint(Context.getWorkingBranch()).getFullName();
+        JOptionPane.showInputDialog(
+                parent,
+                "Merge " + currentBranch + " branch into :",
+                "Merge Branch",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                mergeBranch
+        );
+    }
+
 }

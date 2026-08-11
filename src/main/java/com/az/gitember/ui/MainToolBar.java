@@ -81,6 +81,8 @@ public class MainToolBar extends JToolBar {
         //addSeparator();
 
         add(createBranchBtn);
+        add(mergeBtn);
+
         add(pullBtn);
         add(pushBtn);
         add(fetchBtn);
@@ -360,6 +362,7 @@ public class MainToolBar extends JToolBar {
         pushBtn.setToolTipText("Push");
     }
 
+    public void addMergeListener(ActionListener l) { mergeBtn.addActionListener(l); }
     public void addBranchListener(ActionListener l) { createBranchBtn.addActionListener(l); }
     public void addOpenListener(ActionListener l) { openBtn.addActionListener(l); }
     public void addCloneListener(ActionListener l) { cloneBtn.addActionListener(l); }

@@ -7,6 +7,8 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.avatar.AvatarService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -580,8 +582,12 @@ public class CommitDetailPanel extends JPanel {
         }
 
         // Populate header fields
-        msgField.setText(rev.getFullMessage() != null
-                ? rev.getFullMessage().replace("\n", " ") : rev.getShortMessage());
+        msgField.setText(rev.getShortMessage());
+        if(!Strings.CS.equals(rev.getShortMessage(), rev.getFullMessage()) && StringUtils.isNoneEmpty(rev.getFullMessage())) {
+            msgField.setToolTipText(rev.getFullMessage());
+        } else {
+            msgField.setToolTipText(null);
+        }
         authorField.setText(rev.getAuthorName());
         emailField.setText(rev.getAuthorEmail() != null ? rev.getAuthorEmail() : "");
         dateField.setText(rev.getDate() != null ? GitemberUtil.formatDate(rev.getDate()) : "");
