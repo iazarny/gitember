@@ -11,7 +11,7 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 ## Why Gitember?
 
-* **No command-line memorisation** — commit, branch, merge, stash, rebase through a clean visual interface
+* **No command-line memorization** — commit, branch, merge, stash, rebase through a clean visual interface
 * **Powerful diff viewer** — unified, context, and side-by-side modes with syntax highlighting for 40+ languages
 * **Folder comparison tool** — compare entire directory trees and spot added / removed / changed files at a glance
 * **Arbitrary file comparison tool** 
@@ -23,7 +23,7 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.3 Jun 2026
+## Downloads — Version 3.4 Aug 2026
 
 | Platform         | Link                                                                                                                                                                                                       |
 |------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -62,6 +62,19 @@ java -jar target/gitember-3.3-SNAPSHOT-boot.jar
 ```
 
 ## Changes
+
+### 3.4 · Jun 2026
+
+A **Workspace** groups several Git repositories together so you can manage them as a single
+unit — handy when a project is split across multiple repos , for example:
+- a backend and frontend
+- a set of microservices
+- a SPI and set of implementation
+
+
+  and you want to pull, push, commit, or just see the status of all of them
+  without opening each repository separately.
+
 
 ### 3.3 · Jun 2026
 
