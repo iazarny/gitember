@@ -1,6 +1,8 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.MergeDialogResult;
+import com.az.gitember.data.ScmBranch;
+import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.MergeCommand;
 
@@ -19,17 +21,38 @@ public class MergeDialog extends JDialog {
     private static MergeCommand.FastForwardMode lastFFmode = MergeCommand.FastForwardMode.FF;
 
     private MergeDialogResult result;
+    private JTextArea messageArea;
 
-    public MergeDialog(Frame owner, String branchShortName, String workingBranchName,
-                       List<String> commitMessages) {
+    public MergeDialog(Frame owner, ScmBranch sourceBranch/*, List<String> commitMessages*/) {
+
+        /*
+                List<String> commitMessages = Collections.emptyList();
+        if (sourceScmBranch != null) {
+            try {
+                List<RevCommit> commits = Context.getGitRepoService().getCommitsToMerge(sourceScmBranch.getFullName());
+                commitMessages = commits.stream()
+                        .map(RevCommit::getShortMessage)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                //commitMessages = Collections.emptyList();
+            }
+        }
+
+         */
+
         super(owner, "Merge Branch", ModalityType.APPLICATION_MODAL);
+
+        String workingBranchName = Context.getWorkingBranch() != null
+                ? Context.getWorkingBranch().getShortName() : "current";
+
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        String defaultMessage = buildDefaultMessage(branchShortName, workingBranchName, commitMessages);
+        //String defaultMessage = buildDefaultMessage(sourceShortName, workingBranchName, commitMessages);
 
         // ── Controls ────────────────────────────────────────────────────────
-        JTextArea messageArea = new JTextArea(defaultMessage, 6, 40);
+        messageArea = new JTextArea("", 6, 40);
+
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         JScrollPane messageScroll = new JScrollPane(messageArea);
@@ -57,7 +80,7 @@ public class MergeDialog extends JDialog {
         content.setBorder(BorderFactory.createEmptyBorder(12, 14, 8, 14));
 
         int row = 0;
-        content.add(new JLabel("Merging:  " + branchShortName + "  →  " + workingBranchName),
+        content.add(new JLabel("Merging:  " + "TODO sourceShortName" + "  →  " + workingBranchName),
                 gbc(0, row++, 2, 0));
 
         content.add(new JLabel("Commit message:"), gbc(0, row, 1, 0));
@@ -83,8 +106,10 @@ public class MergeDialog extends JDialog {
             lastSquash = squashCheck.isSelected();
             lastFFmode = (MergeCommand.FastForwardMode) ffCombo.getSelectedItem();
             String msg = messageArea.getText().trim();
-            if (msg.isBlank()) msg = defaultMessage;
-            result = new MergeDialogResult(branchShortName, msg, lastSquash, lastFFmode);
+            if (msg.isBlank()) {
+                msg = "TODO defaultMessage";
+            }
+            result = new MergeDialogResult("TODO sourceShortName", msg, lastSquash, lastFFmode);
             dispose();
         });
         cancelBtn.addActionListener(e -> dispose());
@@ -110,9 +135,9 @@ public class MergeDialog extends JDialog {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private static String buildDefaultMessage(String branchShortName, String workingBranchName,
+    private static String buildDefaultMessage(String sourceShortName, String workingBranchName,
                                               List<String> commitMessages) {
-        String header = "Merge " + branchShortName + " into " + workingBranchName;
+        String header = "Merge " + sourceShortName + " into " + workingBranchName;
         if (commitMessages == null || commitMessages.isEmpty()) return header;
         StringBuilder sb = new StringBuilder(header);
         sb.append("\n\n");

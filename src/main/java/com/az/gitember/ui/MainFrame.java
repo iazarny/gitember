@@ -277,6 +277,10 @@ public class MainFrame extends JFrame {
         menuBar.addCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
         toolBar.addBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
 
+        //Merge branch
+        toolBar.addMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
+
+
         // Interactive Rebase (from menu: prompts for a base commit SHA)
         menuBar.addInteractiveRebaseListener(e -> {
             String sha = JOptionPane.showInputDialog(this,

@@ -1,6 +1,7 @@
 package com.az.gitember.handler;
 
 import com.az.gitember.data.MergeDialogResult;
+import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MergeDialog;
 import com.az.gitember.ui.StatusBar;
@@ -53,27 +54,16 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
     /**
      * Shows the merge options dialog and executes if confirmed.
      */
-    public static void showAndExecute(Frame parent,
-                                      String branchFullName, String branchShortName) {
-        String workingBranchName = Context.getWorkingBranch() != null
-                ? Context.getWorkingBranch().getShortName() : "current";
+    public static void showAndExecute(Frame parent, ScmBranch sourceScmBranch ) {
 
-        List<String> commitMessages;
-        try {
-            List<RevCommit> commits = Context.getGitRepoService().getCommitsToMerge(branchFullName);
-            commitMessages = commits.stream()
-                    .map(RevCommit::getShortMessage)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            commitMessages = Collections.emptyList();
-        }
 
-        MergeDialog dialog = new MergeDialog(parent, branchShortName, workingBranchName, commitMessages);
+
+        MergeDialog dialog = new MergeDialog(parent, sourceScmBranch);
         dialog.setVisible(true);
 
         MergeDialogResult result = dialog.getResult();
         if (result != null) {
-            new MergeBranchHandler(parent,  branchFullName, result).execute();
+            new MergeBranchHandler(parent,  sourceScmBranch.getFullName(), result).execute();
         }
     }
 }
