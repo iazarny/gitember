@@ -4,6 +4,7 @@ import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.collections4.CollectionUtils;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.revwalk.RevCommit;
 
@@ -105,7 +106,24 @@ public class MergeDialog extends JDialog {
                     messageArea.setText(defaultMessage);
                 }
         );
-        selectedSourceBranch.addItem(sourceBranch);
+
+        if(sourceBranch == null ) {
+            try {
+                Context.getGitRepoService().getBranches().stream()
+                        .filter( i -> !i.equals(Context.getWorkingBranch()))
+                        .forEach(
+                        i -> {
+                            selectedSourceBranch.addItem(i);
+                        }
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            selectedSourceBranch.addItem(sourceBranch);
+        }
+
+
         JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         rowPanel.add(new JLabel("Merging:  " ));
         rowPanel.add(selectedSourceBranch);

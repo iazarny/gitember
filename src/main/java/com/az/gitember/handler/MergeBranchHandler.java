@@ -55,9 +55,6 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
      * Shows the merge options dialog and executes if confirmed.
      */
     public static void showAndExecute(Frame parent, ScmBranch sourceScmBranch ) {
-
-
-
         MergeDialog dialog = new MergeDialog(parent, sourceScmBranch);
         dialog.setVisible(true);
 
