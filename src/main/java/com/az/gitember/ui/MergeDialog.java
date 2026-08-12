@@ -5,10 +5,13 @@ import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Modal dialog for merge options — Swing equivalent of the JavaFX MergeDialog.
@@ -22,23 +25,10 @@ public class MergeDialog extends JDialog {
 
     private MergeDialogResult result;
     private JTextArea messageArea;
+    private JComboBox<ScmBranch> selectedSourceBranch;
 
-    public MergeDialog(Frame owner, ScmBranch sourceBranch/*, List<String> commitMessages*/) {
+    public MergeDialog(Frame owner, ScmBranch sourceBranch) {
 
-        /*
-                List<String> commitMessages = Collections.emptyList();
-        if (sourceScmBranch != null) {
-            try {
-                List<RevCommit> commits = Context.getGitRepoService().getCommitsToMerge(sourceScmBranch.getFullName());
-                commitMessages = commits.stream()
-                        .map(RevCommit::getShortMessage)
-                        .collect(Collectors.toList());
-            } catch (Exception e) {
-                //commitMessages = Collections.emptyList();
-            }
-        }
-
-         */
 
         super(owner, "Merge Branch", ModalityType.APPLICATION_MODAL);
 
@@ -48,7 +38,7 @@ public class MergeDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        //String defaultMessage = buildDefaultMessage(sourceShortName, workingBranchName, commitMessages);
+
 
         // ── Controls ────────────────────────────────────────────────────────
         messageArea = new JTextArea("", 6, 40);
@@ -80,8 +70,49 @@ public class MergeDialog extends JDialog {
         content.setBorder(BorderFactory.createEmptyBorder(12, 14, 8, 14));
 
         int row = 0;
-        content.add(new JLabel("Merging:  " + "TODO sourceShortName" + "  →  " + workingBranchName),
-                gbc(0, row++, 2, 0));
+        selectedSourceBranch = new JComboBox<>();
+        selectedSourceBranch.setRenderer(
+                new DefaultListCellRenderer() {
+                    @Override
+                    public Component getListCellRendererComponent(
+                                JList<?> list,
+                                Object value,
+                                int index,
+                                boolean isSelected,
+                                boolean cellHasFocus) {
+                        JLabel label = (JLabel) super.getListCellRendererComponent(
+                                list, value, index, isSelected, cellHasFocus);
+                        if (value instanceof ScmBranch i) {
+                            label.setText(i.getFullName());
+                        }
+                        return label;
+                    }
+                }
+        );
+        selectedSourceBranch.addActionListener(
+                evt -> {
+                    ScmBranch branch = (ScmBranch) selectedSourceBranch.getSelectedItem();
+                    List<String> commitMessages = Collections.emptyList();
+                    try {
+                        List<RevCommit> commits = Context.getGitRepoService().getCommitsToMerge(branch.getFullName());
+                        commitMessages = commits.stream()
+                                .map(RevCommit::getShortMessage)
+                                .collect(Collectors.toList());
+                    } catch (Exception e) {
+                        //throw new RuntimeException(e);
+                    }
+                    String defaultMessage = buildDefaultMessage(branch.getShortName(), workingBranchName, commitMessages);
+                    messageArea.setText(defaultMessage);
+                }
+        );
+        selectedSourceBranch.addItem(sourceBranch);
+        JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        rowPanel.add(new JLabel("Merging:  " ));
+        rowPanel.add(selectedSourceBranch);
+        rowPanel.add(new JLabel("  →  " + workingBranchName));
+
+
+        content.add(rowPanel,   gbc(0, row++, 2, 0));
 
         content.add(new JLabel("Commit message:"), gbc(0, row, 1, 0));
         row++;
