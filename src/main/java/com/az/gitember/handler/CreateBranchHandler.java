@@ -6,6 +6,8 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.MainFrame;
+import com.az.gitember.ui.mainframe.ActiveView;
+import com.sun.tools.javac.Main;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
@@ -137,10 +139,19 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
     public static void showAndExecute(Component parent, String baseBranchFullName, boolean isRemote) {
         String newBranchName = "New branch name:";
         String branchTitle = "Create Branch";
+
         if (isRemote) {
             newBranchName = "New local branch name:";
             branchTitle = "Create local branch";
         }
+
+        if (MainFrame.getInstance().getActiveView() == ActiveView.WORKSPACE) {
+            branchTitle = "Create Branch in each repository";
+            if (isRemote) {
+                newBranchName = "New local branch name in each repo:";
+            }
+        }
+
         String namePreset = "";
         if (isRemote) {
             namePreset = GitemberUtil.getLastPart(baseBranchFullName);

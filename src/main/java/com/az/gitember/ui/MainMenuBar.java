@@ -242,7 +242,7 @@ public class MainMenuBar extends JMenuBar {
         workspaceMergeItem            = Util.createMenuItem("Merge ...", "Merge branches ", FontAwesomeSolid.CODE_BRANCH, 180);
 
         workspaceMenu.add(workspaceBranchCreateItem);
-        workspaceMenu.add(mergeItem);
+        workspaceMenu.add(workspaceMergeItem);
 
         workspaceMenu.addSeparator();
 
