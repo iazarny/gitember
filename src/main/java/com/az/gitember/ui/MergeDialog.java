@@ -152,13 +152,16 @@ public class MergeDialog extends JDialog {
         getRootPane().setDefaultButton(okBtn);
 
         okBtn.addActionListener(e -> {
+            ScmBranch branch = (ScmBranch) selectedSourceBranch.getSelectedItem();
             lastSquash = squashCheck.isSelected();
             lastFFmode = (MergeCommand.FastForwardMode) ffCombo.getSelectedItem();
             String msg = messageArea.getText().trim();
+
             if (msg.isBlank()) {
-                msg = "TODO defaultMessage";
+                msg = buildDefaultMessage(branch.getShortName(), workingBranchName, Collections.EMPTY_LIST);
             }
-            result = new MergeDialogResult("TODO sourceShortName", msg, lastSquash, lastFFmode);
+
+            result = new MergeDialogResult(branch.getFullName(), msg, lastSquash, lastFFmode);
             dispose();
         });
         cancelBtn.addActionListener(e -> dispose());

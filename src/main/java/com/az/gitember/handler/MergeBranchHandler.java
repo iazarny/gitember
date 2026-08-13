@@ -71,8 +71,9 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
         dialog.setVisible(true);
 
         MergeDialogResult result = dialog.getResult();
+
         if (result != null) {
-            new MergeBranchHandler(parent,  sourceScmBranch.getFullName(), result).execute();
+            new MergeBranchHandler(parent,  result.getBranchName(), result).execute();
         }
     }
 }
