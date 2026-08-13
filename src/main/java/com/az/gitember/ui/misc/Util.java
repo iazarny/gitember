@@ -26,6 +26,22 @@ public class Util {
         return createButton(text, tooltip, ikon, 0);
     }
 
+    public static JMenuItem createMenuItem(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
+        JMenuItem btn = new JMenuItem();
+        if (ikon != null) {
+            Icon icon = themeAwareIcon(ikon, 16);
+            btn.setIcon(rotation == 0 ? icon : new RotatedIcon(icon, rotation));
+            Icon disabledIcon = themeAwareIcon(ikon, 16, true);
+            btn.setDisabledIcon(rotation == 0 ? disabledIcon : new RotatedIcon(disabledIcon, rotation));
+        }
+        btn.setText( text  );
+        if (tooltip != null) {
+            btn.setToolTipText(tooltip);
+        }
+        btn.setFocusable(false);
+        return btn;
+    }
+
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         Dimension size = new Dimension(110, 36);
         return createButton(text, tooltip, ikon, rotation, size);

@@ -4,7 +4,9 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -55,6 +57,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
     private final JMenuItem branchCreateItem;
+    private final JMenuItem mergeItem;
     private final JMenuItem interactiveRebaseItem;
 
     private final JMenu     workspaceMenu;
@@ -63,6 +66,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem workspaceFetchItem;
     private final JMenuItem workspaceCommitItem;
     private final JMenuItem workspaceBranchCreateItem;
+    private final JMenuItem workspaceMergeItem;
 
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
@@ -206,45 +210,57 @@ public class MainMenuBar extends JMenuBar {
         branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
-        pushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
-        fetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
-        commitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
-        branchCreateItem      = new JMenuItem("Create...");
+        pullItem             = Util.createMenuItem("Pull", null,  FontAwesomeSolid.REPLY, -45);
+        pushItem             = Util.createMenuItem("Push", null,  FontAwesomeSolid.REPLY, 135);
+        fetchItem            = Util.createMenuItem("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
+        commitItem           = Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
+        branchCreateItem     = Util.createMenuItem("Branch ...", "Create branch", FontAwesomeSolid.CODE_BRANCH, 0);
+        mergeItem            = Util.createMenuItem("Merge ...", "Merge branch into working branch", FontAwesomeSolid.CODE_BRANCH, 180);
+
         interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
         interactiveRebaseItem.setToolTipText(
                 "Interactively rebase commits – right-click a commit in the history for the full workflow");
 
+        branchMenu.add(branchCreateItem);
+        branchMenu.add(mergeItem);
+        branchMenu.addSeparator();
         branchMenu.add(pullItem);
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
         branchMenu.addSeparator();
-        branchMenu.add(branchCreateItem);
         branchMenu.add(commitItem);
         branchMenu.addSeparator();
         branchMenu.add(interactiveRebaseItem);
         
         // -- Workspace ---------------------------------------------------------
         workspaceMenu = new JMenu("Workspace");
-        workspacePullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
-        workspacePushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
-        workspaceFetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
-        workspaceCommitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
-        workspaceBranchCreateItem     = new JMenuItem("Create Branch...");
+        workspacePullItem             = Util.createMenuItem("Pull", "Pull all repositories under workspace",  FontAwesomeSolid.REPLY, -45);
+        workspacePushItem             = Util.createMenuItem("Push", "Push  all repositories under workspace",  FontAwesomeSolid.REPLY, 135);
+        workspaceFetchItem            = Util.createMenuItem("Fetch", "Fetch changes all repository", FontAwesomeSolid.REPLY_ALL, -45);
+        workspaceCommitItem           =  Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
+        workspaceBranchCreateItem     = Util.createMenuItem("Branch ...", "Create branches in each repository", FontAwesomeSolid.CODE_BRANCH, 0);
+        workspaceMergeItem            = Util.createMenuItem("Merge ...", "Merge branches ", FontAwesomeSolid.CODE_BRANCH, 180);
+
+        workspaceMenu.add(workspaceBranchCreateItem);
+        workspaceMenu.add(mergeItem);
+
+        workspaceMenu.addSeparator();
+
         workspaceMenu.add(workspacePullItem);
         workspaceMenu.add(workspacePushItem);
         workspaceMenu.add(workspaceFetchItem);
         workspaceMenu.addSeparator();
-        workspaceMenu.add(workspaceBranchCreateItem);
         workspaceMenu.add(workspaceCommitItem);
+
 
 
         // -- Working copy (repo-only) ------------------------------------------
         workingCopyMenu = new JMenu("Working copy");
         workingCopyMenu.setMnemonic(KeyEvent.VK_W);
 
-        refreshItem    = new JMenuItem("Refresh",        KeyEvent.VK_R);
+        refreshItem    =  Util.createMenuItem("Refresh", null, FontAwesomeSolid.SYNC, 0);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
+
         stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
         worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
         worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
@@ -411,6 +427,7 @@ public class MainMenuBar extends JMenuBar {
     public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
     public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }
     public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
+    public void addMergeListener(ActionListener l)         { mergeItem.addActionListener(l); }
     public void addCreateBranchListener(ActionListener l)  { branchCreateItem.addActionListener(l); }
     public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }

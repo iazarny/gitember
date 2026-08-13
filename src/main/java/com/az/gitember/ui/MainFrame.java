@@ -279,6 +279,7 @@ public class MainFrame extends JFrame {
 
         //Merge branch
         toolBar.addMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
+        menuBar.addMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
 
 
         // Interactive Rebase (from menu: prompts for a base commit SHA)
