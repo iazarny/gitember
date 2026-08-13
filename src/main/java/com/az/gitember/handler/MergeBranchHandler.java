@@ -3,6 +3,7 @@ package com.az.gitember.handler;
 import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.MergeDialog;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.MergeResult;
@@ -55,6 +56,17 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
      * Shows the merge options dialog and executes if confirmed.
      */
     public static void showAndExecute(Frame parent, ScmBranch sourceScmBranch ) {
+        if (Context.isWorkspaceMode()) {
+            if (MainFrame.getInstance().isWorkspaceActive()) {
+                //showAndExecuteWorkspace(parent, sourceScmBranch);
+            }
+        } else {
+            showAndExecuteSingleRepo(parent, sourceScmBranch);
+        }
+
+    }
+
+    public static void showAndExecuteSingleRepo(Frame parent, ScmBranch sourceScmBranch ) {
         MergeDialog dialog = new MergeDialog(parent, sourceScmBranch);
         dialog.setVisible(true);
 
