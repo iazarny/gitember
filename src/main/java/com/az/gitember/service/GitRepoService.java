@@ -660,6 +660,23 @@ public class GitRepoService implements AutoCloseable {
         }
     }
 
+    public Ref abortMerge(ProgressMonitor monitor) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                ResetCommand cmd = git.reset()
+                        .setMode(ResetCommand.ResetType.HARD)
+                        .setRef(Constants.ORIG_HEAD);
+                if (monitor != null) {
+                    cmd.setProgressMonitor(monitor);
+                }
+                return cmd.call();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot abort merge", e);
+                throw new IOException("Cannot abort merge", e);
+            }
+        }
+    }
+
     /** Returns the JGit {@link RepositoryState} (e.g. {@link RepositoryState#REBASING_INTERACTIVE}). */
     public RepositoryState getRepositoryState() {
         return repository != null ? repository.getRepositoryState() : RepositoryState.SAFE;
