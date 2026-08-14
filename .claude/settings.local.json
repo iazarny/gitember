@@ -135,7 +135,15 @@
       "Bash(tee /tmp/verify_conflict.log)",
       "Bash(tee /tmp/verify_conflict2.log)",
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=SecretDetectionUiTest)",
-      "Bash(mvn -q compile -DskipTests)"
+      "Bash(mvn -q compile -DskipTests)",
+      "Bash(perl -0pi -e 's/org\\\\.eclipse\\\\.jgit\\\\.api\\\\.MergeCommand\\\\.FastForwardMode/MergeCommand.FastForwardMode/g; s/import com\\\\.az\\\\.gitember\\\\.ui\\\\.workspace\\\\.ProjectBranchSelector;/import com.az.gitember.ui.workspace.ProjectBranchSelector;\\\\nimport org.eclipse.jgit.api.MergeCommand;/' src/main/java/com/az/gitember/dialog/WorkspaceMergeDialog.java)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(mvn -q -o test-compile)",
+      "Bash(mvn -o -q dependency:build-classpath -Dmdep.outputFile=/private/tmp/claude-501/-Users-igorazarny-Projects-gitember/617246e1-9ed1-47c1-bdc3-b4c3f8397044/scratchpad/cp.txt)",
+      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . HeadFlagCheck.java)",
+      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . WorkspaceMergeE2E.java)",
+      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . ConflictCheck.java)",
+      "Bash(git -C /Users/igorazarny/Projects/gitember diff --stat)"
     ]
   }
 }
