@@ -2,7 +2,6 @@ package com.az.gitember.handler;
 
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
 import javax.swing.*;

@@ -397,23 +397,22 @@ public class MainTreePanel extends JPanel {
      * sidebar reflects it without rebuilding the whole tree.
      */
     public void refreshProjectBranches(Project project) {
-        if (workspaceNode == null) {
-            return;
-        }
-        SwingUtilities.invokeLater(() -> {
-            for (int i = 0; i < workspaceNode.getChildCount(); i++) {
-                DefaultMutableTreeNode projectNode = (DefaultMutableTreeNode) workspaceNode.getChildAt(i);
-                if (projectNode.getUserObject() instanceof TreeNodeData data
-                        && data.type() == NodeType.REPOSITORY
-                        && project.equals(data.data())) {
-                    RepoCategoryNodes nodes = categoryNodesOf(projectNode);
-                    if (nodes != null) {
-                        loadProjectData(project, nodes);
+        if (workspaceNode != null) {
+            SwingUtilities.invokeLater(() -> {
+                for (int i = 0; i < workspaceNode.getChildCount(); i++) {
+                    DefaultMutableTreeNode projectNode = (DefaultMutableTreeNode) workspaceNode.getChildAt(i);
+                    if (projectNode.getUserObject() instanceof TreeNodeData data
+                            && data.type() == NodeType.REPOSITORY
+                            && project.equals(data.data())) {
+                        RepoCategoryNodes nodes = categoryNodesOf(projectNode);
+                        if (nodes != null) {
+                            loadProjectData(project, nodes);
+                        }
+                        return;
                     }
-                    return;
                 }
-            }
-        });
+            });
+        }
     }
 
     /**

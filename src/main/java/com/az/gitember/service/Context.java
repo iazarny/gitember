@@ -218,6 +218,7 @@ public class Context {
         project.openRepoService();             // may throw -- nothing mutated yet
         if (old != null && old != project) {
             old.stopWatcher();
+            AvatarService.clearCache();
         }
         activeProject = project;               // assign before firing
         fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
@@ -228,12 +229,13 @@ public class Context {
     }
 
     public static void init(Project project) throws Exception {
-        AvatarService.clearCache();
+
         Project old = activeProject;
         String oldPath = old == null ? null : old.getGitDir();
         project.openRepoService();             // may throw -- nothing mutated yet
         if (old != null && old != project) {
             old.stopWatcher();
+            AvatarService.clearCache();
         }
         activeProject = project;               // assign before firing
         fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
