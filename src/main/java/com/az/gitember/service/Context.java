@@ -66,7 +66,11 @@ public class Context {
     private static Settings settings;
 
     /** Test-only: resets session state so test cases don't leak an active project/workspace. */
-    static void reset() {
+    public static void resetActiveProject() {
+        activeProject = null;
+    }
+
+    public static void reset() {
         activeProject = null;
         workspace = null;
         settings = null;

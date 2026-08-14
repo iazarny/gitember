@@ -26,7 +26,7 @@ public class SettingsDialog extends JDialog {
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(460, 440);
+        setSize(520, 440);
         setLocationRelativeTo(owner);
         setResizable(false);
 

@@ -36,6 +36,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
+                Context.resetActiveProject();
                 Context.setWorkspace(null);
                 Context.init(folder);
 
@@ -49,7 +50,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
                     mainFrame.addCurrentProjectToSettings();
                     mainFrame.refreshProjectLists();
                     mainFrame.getStatusBar().clearProgress();
-                    mainFrame.getStatusBar().setStatus("Repository opened");
+                    mainFrame.getStatusBar().setStatus("Repository opened " + project.getGitDir());
                     InteractiveContinueAbortDialog.showIfRebaseInProgress(
                             mainFrame, mainFrame.getStatusBar(),
                             () -> mainFrame.getHistoryPanel().loadHistory(null, true));
