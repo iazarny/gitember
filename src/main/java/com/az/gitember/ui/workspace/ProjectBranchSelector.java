@@ -55,6 +55,7 @@ public class ProjectBranchSelector extends JPanel {
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
 
         branchCombo = new JComboBox<>();
+        branchCombo.setName("branchCombo-" + projectName(project));
         branchCombo.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,

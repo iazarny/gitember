@@ -304,6 +304,7 @@ public class MainFrame extends JFrame {
         menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
         menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
         menuBar.addWorskpaceCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+        menuBar.addWorskpaceMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
 
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());

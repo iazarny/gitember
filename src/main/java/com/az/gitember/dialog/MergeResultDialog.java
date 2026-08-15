@@ -87,6 +87,7 @@ public class MergeResultDialog extends JDialog {
         splitPane.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
 
         JButton closeBtn = new JButton("Close");
+        closeBtn.setName("closeButton");
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);

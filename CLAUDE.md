@@ -95,3 +95,7 @@ Ollama lifecycle (download, start, model pull) is managed by `OllamaManager`. Th
 - **LangChain4j 0.36.2 (Ollama)** — local LLM integration for AI features
 - **Jackson 2.16** — settings serialization
 - **JUnit 5** — tests use real on-disk git repos in temp directories (no mocking of the git layer)
+
+## Code generation rules.
+Do not you early return pattern - and the beginnig on function  check condition and return if condition is true, otherwise continue function
+Try to not use internal static classes and records 

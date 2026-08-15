@@ -46,6 +46,8 @@ public class WorkspaceDialog extends JDialog {
         this.workspace = loadWorkingCopy();
 
         nameField = new JTextField(24);
+        nameField.setName("workspaceNameField");
+        projectList.setName("workspaceProjectList");
         projectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         projectList.setCellRenderer(new ProjectCellRenderer());
 
@@ -92,10 +94,13 @@ public class WorkspaceDialog extends JDialog {
         JScrollPane scroll = new JScrollPane(projectList);
 
         JButton addExistingBtn = new JButton("Add Existing Project…");
+        addExistingBtn.setName("addExistingProjectButton");
         addExistingBtn.addActionListener(e -> addExistingProject());
         JButton addFromDiskBtn = new JButton("Add Repository from Disk…");
+        addFromDiskBtn.setName("addRepositoryFromDiskButton");
         addFromDiskBtn.addActionListener(e -> addRepositoryFromDisk());
         JButton removeBtn = new JButton("Remove");
+        removeBtn.setName("removeProjectButton");
         removeBtn.addActionListener(e -> removeSelectedProject());
         removeBtn.setEnabled(false);
         projectList.addListSelectionListener(e ->
@@ -114,7 +119,9 @@ public class WorkspaceDialog extends JDialog {
 
     private JPanel buildButtonPanel() {
         JButton openBtn = new JButton("Open");
+        openBtn.setName("openWorkspaceButton");
         JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setName("cancelWorkspaceButton");
         openBtn.addActionListener(e -> openWorkspace());
         cancelBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(openBtn);

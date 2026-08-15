@@ -81,12 +81,14 @@ public class WorkspaceMergeDialog extends JDialog {
 
         // ── shared merge options ────────────────────────────────────────────
         messageArea = new JTextArea(preselect != null ? "Merge " + preselect : "", 5, 40);
+        messageArea.setName("mergeMessageArea");
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         JScrollPane messageScroll = new JScrollPane(messageArea);
         messageScroll.setBorder(BorderFactory.createTitledBorder("Commit message"));
 
         JCheckBox squashCheck = new JCheckBox("Squash commits", lastSquash);
+        squashCheck.setName("mergeSquashCheck");
 
         JComboBox<MergeCommand.FastForwardMode> ffCombo =
                 new JComboBox<>(new MergeCommand.FastForwardMode[]{
@@ -94,6 +96,7 @@ public class WorkspaceMergeDialog extends JDialog {
                         MergeCommand.FastForwardMode.NO_FF,
                         MergeCommand.FastForwardMode.FF_ONLY
                 });
+        ffCombo.setName("mergeFastForwardCombo");
         ffCombo.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -118,7 +121,9 @@ public class WorkspaceMergeDialog extends JDialog {
 
         // ── buttons ─────────────────────────────────────────────────────────
         JButton okBtn = new JButton("Merge");
+        okBtn.setName("mergeButton");
         JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setName("cancelMergeButton");
         getRootPane().setDefaultButton(okBtn);
 
         okBtn.addActionListener(e -> {

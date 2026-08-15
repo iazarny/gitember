@@ -143,7 +143,17 @@
       "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . HeadFlagCheck.java)",
       "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . WorkspaceMergeE2E.java)",
       "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . ConflictCheck.java)",
-      "Bash(git -C /Users/igorazarny/Projects/gitember diff --stat)"
+      "Bash(git -C /Users/igorazarny/Projects/gitember diff --stat)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -q -o test-compile -DskipTests)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o -Dit.test=BranchLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o surefire:test -Dtest=GitRepoServiceRebaseTest -DfailIfNoSpecifiedTests=false)",
+      "Bash(git stash *)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o test)",
+      "Bash(grep -E \"GitRepoServiceRebaseTest|Tests run:.*Failures: 0, Errors: [0-9], Skipped: 1$|BUILD\")",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o -q test-compile -DskipTests)",
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)"
     ]
   }
 }

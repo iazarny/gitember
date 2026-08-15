@@ -134,6 +134,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
         add(buildHeader(), BorderLayout.NORTH);
 
+        tabs.setName("workspaceTabs");
+        table.setName("workspaceRepoTable");
+        workingCopyTree.setName("workspaceWorkingCopyTree");
         tabs.addTab(TAB_MAIN, buildMainTab());
         tabs.addTab(TAB_WORKING_COPY, buildWorkingCopyTab());
         tabs.addTab(TAB_SEARCH, buildSearchTab());

@@ -99,6 +99,7 @@ public class MainMenuBar extends JMenuBar {
         cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
         initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
         initWorkspaceItem  = new JMenuItem("Init Workspace...");
+        initWorkspaceItem.setName("initWorkspaceItem");
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
@@ -240,6 +241,14 @@ public class MainMenuBar extends JMenuBar {
         workspaceCommitItem           =  Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
         workspaceBranchCreateItem     = Util.createMenuItem("Branch ...", "Create branches in each repository", FontAwesomeSolid.CODE_BRANCH, 0);
         workspaceMergeItem            = Util.createMenuItem("Merge ...", "Merge branches ", FontAwesomeSolid.CODE_BRANCH, 180);
+
+        workspaceMenu.setName("workspaceMenu");
+        workspacePullItem.setName("workspacePullItem");
+        workspacePushItem.setName("workspacePushItem");
+        workspaceFetchItem.setName("workspaceFetchItem");
+        workspaceCommitItem.setName("workspaceCommitItem");
+        workspaceBranchCreateItem.setName("workspaceBranchCreateItem");
+        workspaceMergeItem.setName("workspaceMergeItem");
 
         workspaceMenu.add(workspaceBranchCreateItem);
         workspaceMenu.add(workspaceMergeItem);
@@ -460,6 +469,7 @@ public class MainMenuBar extends JMenuBar {
     public void addWorskpaceFetchListener(ActionListener l)       { workspaceFetchItem.addActionListener(l); }
     public void addWorskpaceCommitListener(ActionListener l)       { workspaceCommitItem.addActionListener(l); }
     public void addWorskpaceCreateBranchListener(ActionListener l) { workspaceBranchCreateItem.addActionListener(l); }
+    public void addWorskpaceMergeListener(ActionListener l)        { workspaceMergeItem.addActionListener(l); }
 
 
 }
