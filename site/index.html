@@ -276,24 +276,35 @@
               </div>
               <div class="row align-items-center g-5">
                   <div class="col-lg-6">
-                      <img src="assets/img/3/ws0.png" style="width:100%; max-width:600px; height:auto;" alt="Pull request view">
+                      <!-- Cycles ws0..ws4 every 3s; the first image stays in flow and sets the height,
+                           the rest are stacked on top of it and cross-faded. -->
+                      <div class="ws-slideshow" id="wsSlideshow">
+                          <img class="ws-slide is-active" src="assets/img/3/ws0.png"
+                               alt="Gitember welcome screen listing workspaces with their member repositories">
+                          <img class="ws-slide" src="assets/img/3/ws1.png" loading="lazy"
+                               alt="Workspace dashboard: branch, status, modified, ahead and behind for every repository">
+                          <img class="ws-slide" src="assets/img/3/ws2.png" loading="lazy"
+                               alt="Combined working copy: changed files of every repository in one tree">
+                          <img class="ws-slide" src="assets/img/3/ws3.png" loading="lazy"
+                               alt="Commit dialog showing staged files from several repositories with a common commit message">
+                          <img class="ws-slide" src="assets/img/3/ws4.png" loading="lazy"
+                               alt="Cross-repository search results grouped by repository">
+                      </div>
                   </div>
                   <div class="col-lg-6 order-lg-2">
                       <div class="d-flex align-items-center gap-3 mb-2">
                           <div class="feature-icon-lg"><i class="bi bi-layers"></i></div>
                           <h2 class="mb-0">Many Repos, One Working Set</h2>
                       </div>
-                      <p>A <strong>Workspace</strong> groups several independent repositories
-                         <ul>
-                      <li> a backend and a frontend
-                          </li>
-                      <li>a set of microservices
-                             </li>
-                      <li>an SPI and its implementations</li>
-                  </ul>
-                          so you can pull, push, commit, branch and merge across all of them in one action,
+                      <p>A <strong>Workspace</strong> groups several independent repositories:</p>
+                      <ul>
+                          <li>a backend and a frontend</li>
+                          <li>a set of microservices</li>
+                          <li>an SPI and its implementations</li>
+                      </ul>
+                      <p>so you can pull, push, commit, branch and merge across all of them in one action,
                           instead of opening each repository in turn.
-                          This is not submodules and not a monorepo: every repository keeps its own history, remote and branches </p>
+                          This is not submodules and not a monorepo: every repository keeps its own history, remote and branches.</p>
                       <ul>
                           <li><strong>Workspace Dashboard</strong> - the whole set in front of you: a summary table, a combined working copy, and a cross-repository search</li>
                           <li><strong>Combined working copy</strong> - one tree with every repository's changed files, with the same staging checkboxes and context menu as a single repo</li>
@@ -767,6 +778,26 @@
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- Workspace section: cross-fade ws0..ws4 every 3 seconds -->
+  <script>
+    (function () {
+      const slides = document.querySelectorAll('#wsSlideshow .ws-slide');
+      if (slides.length < 2) {
+        return;
+      }
+      let current = 0;
+      setInterval(function () {
+        // Nothing to show while the tab is in the background - don't burn through the slides.
+        if (document.hidden) {
+          return;
+        }
+        slides[current].classList.remove('is-active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('is-active');
+      }, 3000);
+    })();
+  </script>
 
 </body>
 </html>

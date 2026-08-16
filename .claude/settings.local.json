@@ -155,7 +155,11 @@
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o -q test-compile -DskipTests)",
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
       "Bash(python3 -)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash([ -x \"$CHROME\" ])",
+      "Bash(mkdir -p /tmp/wsshot)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=2000 --screenshot=/tmp/wsshot/frame0.png file://__TRACKED_VAR__/index.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=8000 --screenshot=/tmp/wsshot/frame2.png file://__TRACKED_VAR__/index.html)"
     ]
   }
 }
