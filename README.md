@@ -2,15 +2,13 @@
 ---
 A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightweight, and packed with features that make everyday Git work a pleasure.
 
-> **What's new in v3:** The GUI has been completely rewritten, replacing the heavy JavaFX runtime. 
-> The result is a significantly smaller download, faster startup, and lower memory 
-> usage — while adding first-class integrations with **GitHub, GitLab, Bitbucket, and Gitea**.
-> JavaFX version still available in the branch or by tag
 
 ![Gitember](site/assets/img/3/repo-view.png)
 
 ## Why Gitember?
 
+* **Workspace** — groups several independent repositories to pull, push, commit, branch and merge across all of them in one action. And more
+* **AI features** — secret leak detection, commit message generation, branch description
 * **No command-line memorization** — commit, branch, merge, stash, rebase through a clean visual interface
 * **Powerful diff viewer** — unified, context, and side-by-side modes with syntax highlighting for 40+ languages
 * **Folder comparison tool** — compare entire directory trees and spot added / removed / changed files at a glance
@@ -27,10 +25,10 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 
 | Platform         | Link                                                                                                                                                                                                       |
 |------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Windows (x64)    | MSI [Gitember-3.3.msi](https://gitember.org/Gitember-3.3.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.3.zip](https://gitember.org/Gitember-3.3.zip) |
-| macOS (M1)       | [Gitember-3.3.dmg](https://gitember.org/Gitember-3.3.dmg)                                                                                                                                                  | 
-| Linux  (x64)     | [Gitember-3.3.deb](https://gitember.org/Gitember-3.3.deb)                                                                                                                                                  | 
-| Fat jar. java 21 | [Gitember-3.3.jar](https://gitember.org/Gitember-3.3.jar)                                                                                                                                                  | 
+| Windows (x64)    | MSI [Gitember-3.4.msi](https://gitember.org/Gitember-3.4.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.4.zip](https://gitember.org/Gitember-3.4.zip) |
+| macOS (M1)       | [Gitember-3.4.dmg](https://gitember.org/Gitember-3.4.dmg)                                                                                                                                                  | 
+| Linux  (x64)     | [Gitember-3.4.deb](https://gitember.org/Gitember-3.4.deb)                                                                                                                                                  | 
+| Fat jar. java 21 | [Gitember-3.4.jar](https://gitember.org/Gitember-3.4.jar)                                                                                                                                                  | 
 
 
 More info and documentation: https://gitember.org
@@ -58,12 +56,12 @@ mvn test -Dtest=GitRepoServiceTest
 
 # Produce the runnable fat jar
 mvn package -DskipTests
-java -jar target/gitember-3.3-SNAPSHOT-boot.jar
+java -jar target/gitember-3.4-SNAPSHOT-boot.jar
 ```
 
 ## Changes
 
-### 3.4 · Jun 2026
+### 3.4 · Sep 2026
 
 A **Workspace** groups several Git repositories together so you can manage them as a single
 unit — handy when a project is split across multiple repos , for example:
