@@ -74,11 +74,12 @@ public class MainToolBar extends JToolBar {
             }
         });
 
-        add(openBtn);
-        add(cloneBtn);
-        addSeparator();
-        //add(projectCombo);
-        //addSeparator();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        if (screenSize.width > 1496) {
+            add(openBtn);
+            add(cloneBtn);
+            addSeparator();
+        }
 
         add(createBranchBtn);
         add(mergeBtn);
@@ -86,7 +87,6 @@ public class MainToolBar extends JToolBar {
         add(pullBtn);
         add(pushBtn);
         add(fetchBtn);
-        addSeparator();
         add(commitBtn);
 
         //addSeparator();

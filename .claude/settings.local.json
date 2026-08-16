@@ -153,7 +153,9 @@
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o test)",
       "Bash(grep -E \"GitRepoServiceRebaseTest|Tests run:.*Failures: 0, Errors: [0-9], Skipped: 1$|BUILD\")",
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o -q test-compile -DskipTests)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)"
+      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
+      "Bash(python3 -)",
+      "Bash(python3 *)"
     ]
   }
 }
