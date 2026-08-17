@@ -2,7 +2,6 @@ package com.az.gitember.handler;
 
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
 import javax.swing.*;
@@ -13,8 +12,8 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
     private final ScmBranch branch;
 
-    public CheckoutBranchHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public CheckoutBranchHandler(Component parent,  ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 

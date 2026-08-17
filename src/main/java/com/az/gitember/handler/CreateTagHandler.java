@@ -11,12 +11,12 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
     private final String tagName;
     private final String commitSha;
 
-    public CreateTagHandler(Component parent, StatusBar statusBar, String tagName) {
-        this(parent, statusBar, tagName, null);
+    public CreateTagHandler(Component parent,  String tagName) {
+        this(parent, tagName, null);
     }
 
-    public CreateTagHandler(Component parent, StatusBar statusBar, String tagName, String commitSha) {
-        super(parent, statusBar);
+    public CreateTagHandler(Component parent,  String tagName, String commitSha) {
+        super(parent);
         this.tagName = tagName;
         this.commitSha = commitSha;
     }
@@ -56,7 +56,7 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
         String name = JOptionPane.showInputDialog(parent,
                 "Tag name:", "Create Tag", JOptionPane.PLAIN_MESSAGE);
         if (name != null && !name.isBlank()) {
-            new CreateTagHandler(parent, statusBar, name.trim(), commitSha).execute();
+            new CreateTagHandler(parent,  name.trim(), commitSha).execute();
         }
     }
 }

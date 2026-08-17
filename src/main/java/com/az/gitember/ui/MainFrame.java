@@ -1,63 +1,78 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.*;
-import com.az.gitember.dialog.CloneDialog;
-import com.az.gitember.dialog.CommitDialog;
-import com.az.gitember.dialog.InitDialog;
-import com.az.gitember.dialog.InteractiveContinueAbortDialog;
-import com.az.gitember.dialog.LfsManageDialog;
-import com.az.gitember.dialog.SettingsDialog;
-import com.az.gitember.dialog.StatDialog;
+import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
+import com.az.gitember.handler.CreateBranchHandler;
 import com.az.gitember.handler.LfsFetchHandler;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.MainTreeCellRenderer.TreeNodeData;
+import com.az.gitember.service.GitRepoService;
+import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.mainframe.*;
+import com.az.gitember.ui.maintree.CellRenderer;
+import com.az.gitember.ui.maintree.MainTreePanel;
+import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
 import org.eclipse.jgit.lib.RepositoryState;
-import com.az.gitember.ui.misc.MainToolBar;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MainFrame extends JFrame {
 
     private static final Logger log = Logger.getLogger(MainFrame.class.getName());
+    private static MainFrame instance;
 
-    private final MainMenuBar menuBar;
-    private final MainToolBar toolBar;
-    private final MainTreePanel treePanel;
-    private final ContentPanel contentPanel;
-    private final StatusBar statusBar;
-    private final WelcomePanel welcomePanel;
+    private  MainMenuBar menuBar;
+    private  MainToolBar toolBar;
+    private  MainTreePanel treePanel;
+    private  ContentPanel contentPanel;
+    private  StatusBar statusBar;
+    private  WelcomePanel welcomePanel;
 
     // Main content area - switches between welcome and repo views
-    private final CardLayout mainCardLayout;
-    private final JPanel mainCardPanel;
-    private final JSplitPane splitPane;
+    private  CardLayout mainCardLayout;
+    private  JPanel mainCardPanel;
+    private  JSplitPane splitPane;
 
-    private static final String CARD_WELCOME = "welcome";
-    private static final String CARD_REPO = "repo";
+    public static final String CARD_WELCOME = "welcome";
+    public static final String CARD_REPO = "repo";
 
-    // Working copy
-    private WorkingCopyPanel workingCopyPanel;
-    private HistoryPanel historyPanel;
-    private CommitDetailPanel stashDetailPanel;
-    private PullRequestPanel pullRequestPanel;
-    private SubmodulePanel submodulePanel;
 
-    public MainFrame() {
-        Context.setMainFrame(this);
+    private  WorkingCopyPanel workingCopyPanel; // Working copy
+    private  HistoryPanel historyPanel;
+    private  CommitDetailPanel stashDetailPanel;
+    private  PullRequestPanel pullRequestPanel;
+    private  SubmodulePanel submodulePanel;
+    private  WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
+
+    private  ActiveView activeView = ActiveView.HISTORY;
+
+    public static synchronized MainFrame getInstance() {
+        if (instance == null) {
+            instance = new MainFrame();
+        }
+        return instance;
+    }
+
+    private MainFrame() {
         setTitle("Gitember");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 800);
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 40, screenSize.height - 60);
         setLocationRelativeTo(null);
 
         // Set window icons — provide multiple sizes so each OS picks the best fit.
@@ -93,20 +108,34 @@ public class MainFrame extends JFrame {
             }
         }
 
+
+    }
+
+    public void init() {
         // Create components
         menuBar = new MainMenuBar();
         toolBar = new MainToolBar();
+        toolBar.setVisible(false);
         treePanel = new MainTreePanel();
         contentPanel = new ContentPanel();
         statusBar = new StatusBar();
 
         // Welcome panel
         welcomePanel = new WelcomePanel();
-        welcomePanel.setOnProjectSelected(this::openProject);
+        welcomePanel.setOnProjectSelected(new OpenRecentProjectHandler(this));
         welcomePanel.setOnProjectRemoved(project -> {
             Settings settings = Context.getSettings();
             if (settings != null) {
-                settings.getProjects().remove(project);
+                settings.removeProject(project);
+                Context.saveSettings();
+                refreshProjectLists();
+            }
+        });
+        welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
+        welcomePanel.setOnWorkspaceRemoved(workspace -> {
+            Settings settings = Context.getSettings();
+            if (settings != null) {
+                settings.getWorkspaces().remove(workspace);
                 Context.saveSettings();
                 refreshProjectLists();
             }
@@ -136,24 +165,13 @@ public class MainFrame extends JFrame {
         wireActions();
 
         // Listen to context changes
-        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, this::onWorkingBranchChanged);
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, this::onRepoPathChanged);
-        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, this::onStatusListChanged);
-        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, e ->
-                new SwingWorker<Void, Void>() {
-                    @Override protected Void doInBackground() {
-                        Context.updateStatus(null, true);
-                        return null;
-                    }
-                }.execute());
-
-        // After a successful pull: switch to history and highlight the pulled commit
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY,
-                e -> showCommitInHistory((String) e.getNewValue()));
-
-        // After a conflicting pull: switch to working copy so conflicts are visible
-        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY,
-                e -> showWorkingCopy());
+        Context.addPropertyChangeListener(Context.PROP_WORKING_BRANCH, new WorkingBranchChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, new RepoPathChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_STATUS_LIST, new WorkingItemsChangedChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_WORKING_COPY_REFRESH, new WorkingItemsRefreshChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_HISTORY, new NavigateToHistoryChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_NAVIGATE_TO_WORKING_COPY, new NavigateToWorkingCopyChangeListener(this));
+        Context.addPropertyChangeListener(Context.PROP_SUBMODULES, new SubmodulesChangedChangeListener(this));
 
         // Tree selection listener
         treePanel.getTree().addTreeSelectionListener(this::onTreeSelection);
@@ -162,14 +180,29 @@ public class MainFrame extends JFrame {
         addWindowFocusListener(new java.awt.event.WindowFocusListener() {
             @Override
             public void windowGainedFocus(java.awt.event.WindowEvent e) {
-                if (Context.getRepositoryPath() != null) {
+                if (Context.isWorkspaceMode()) {
+
+                    if (workspaceDashboardPanel.isShowing()) { //Context.getActiveView() == Context.ActiveView.WORKSPACE
+                        workspaceDashboardPanel.reloadActiveTab();
+                    } else {
+                        new SwingWorker<Void, Void>() {
+                            @Override protected Void doInBackground() {
+                                Context.updateStatus(null, true);
+                                Context.updateBranches();
+                                return null;
+                            }
+                        }.execute();
+                    }
+                } else {
                     new SwingWorker<Void, Void>() {
                         @Override protected Void doInBackground() {
                             Context.updateStatus(null, true);
+                            Context.updateBranches();
                             return null;
                         }
                     }.execute();
                 }
+
             }
             @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
         });
@@ -179,27 +212,35 @@ public class MainFrame extends JFrame {
         stashDetailPanel = new CommitDetailPanel(statusBar);
         pullRequestPanel = new PullRequestPanel();
         submodulePanel = new SubmodulePanel(statusBar);
+        workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
+        // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
+        // committing is possible whenever any project in the workspace has a staged item.
+        workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
+            toolBar.setCommitEnabled(hasStaged);
+            menuBar.setCommitEnabled(hasStaged);
+        });
 
-        Context.addPropertyChangeListener(Context.PROP_SUBMODULES,
-                e -> submodulePanel.setSubmodules(Context.getSubmodules()));
+
 
         // Set up branch context menus
-        BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this, statusBar);
+        BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this);
         contextMenuFactory.setWorktreeOpenAction(this::openWorktree);
         contextMenuFactory.setWorktreeRefreshAction(treePanel::refreshWorktrees);
         treePanel.setContextMenuFactory(contextMenuFactory);
 
         // Start with welcome screen
         refreshProjectLists();
-        setRepoActionsEnabled(false);
-        toolBar.setVisible(false);
+        //setRepoActionsEnabled(false);
+        //toolBar.setVisible(false);
         mainCardLayout.show(mainCardPanel, CARD_WELCOME);
     }
 
+
+
     private void wireActions() {
         // Open
-        menuBar.addOpenListener(e -> new OpenRepoHandler(this, statusBar).execute());
-        toolBar.addOpenListener(e -> new OpenRepoHandler(this, statusBar).execute());
+        menuBar.addOpenListener(e -> new OpenRepoHandler(this).execute());
+        toolBar.addOpenListener(e -> new OpenRepoHandler(this).execute());
 
         // Clone
         menuBar.addCloneListener(e -> showCloneDialog());
@@ -207,27 +248,39 @@ public class MainFrame extends JFrame {
 
         // Init
         menuBar.addInitListener(e -> showInitDialog());
+        menuBar.addInitWorkspaceListener(e -> showWorkspaceDialog());
 
         // Welcome panel buttons
-        welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this, statusBar).execute());
+        welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this).execute());
         welcomePanel.setOnCloneRepo(this::showCloneDialog);
         welcomePanel.setOnInitRepo(this::showInitDialog);
+        welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
 
         // Pull
-        menuBar.addPullListener(e -> new PullHandler(this, statusBar).execute());
-        toolBar.addPullListener(e -> new PullHandler(this, statusBar).execute());
+        menuBar.addPullListener(e -> new PullHandler(this, null).execute());
+        toolBar.addPullListener(e -> new PullHandler(this, null).execute());
 
         // Push
-        menuBar.addPushListener(e -> new PushHandler(this, statusBar).execute());
-        toolBar.addPushListener(e -> new PushHandler(this, statusBar).execute());
+        menuBar.addPushListener(e -> new PushHandler(this, null).execute());
+        toolBar.addPushListener(e -> new PushHandler(this, null).execute());
 
         // Fetch
-        menuBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
-        toolBar.addFetchListener(e -> new FetchHandler(this, statusBar).execute());
+        menuBar.addFetchListener(e -> new FetchHandler(this).execute());
+        toolBar.addFetchListener(e -> new FetchHandler(this).execute());
 
         // Commit
         menuBar.addCommitListener(e -> showCommitDialog());
         toolBar.addCommitListener(e -> showCommitDialog());
+
+
+        // Create branch
+        menuBar.addCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+        toolBar.addBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+
+        //Merge branch
+        toolBar.addMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
+        menuBar.addMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
+
 
         // Interactive Rebase (from menu: prompts for a base commit SHA)
         menuBar.addInteractiveRebaseListener(e -> {
@@ -238,11 +291,20 @@ public class MainFrame extends JFrame {
             if (sha != null && !sha.isBlank()) {
                 String trimmed = sha.trim();
                 com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
-                        this, statusBar, trimmed,
+                        this, trimmed,
                         trimmed.substring(0, Math.min(7, trimmed.length())),
                         () -> historyPanel.loadHistory(null, true));
             }
         });
+
+        //Workspace menu
+
+        menuBar.addWorskpacePullListener(e -> new PullHandler(this, null).execute());
+        menuBar.addWorskpacePushListener(e -> new PushHandler(this, null).execute());
+        menuBar.addWorskpaceFetchListener(e -> new FetchHandler(this).execute());
+        menuBar.addWorskpaceCommitListener(e -> showCommitDialog());
+        menuBar.addWorskpaceCreateBranchListener(e -> CreateBranchHandler.showAndExecuteFromCurrent(this));
+        menuBar.addWorskpaceMergeListener(e -> MergeBranchHandler.showAndExecute(this, null));
 
         // Working copy menu
         menuBar.addRefreshListener(e -> refreshWorkingCopy());
@@ -262,13 +324,13 @@ public class MainFrame extends JFrame {
             dlg.setOnComplete(historyPanel::refreshLuceneState);
             dlg.setVisible(true);
         });
-        menuBar.addStatisticsListener(e -> new StatDialog(this, statusBar).setVisible(true));
+        menuBar.addStatisticsListener(e -> new StatDialog(this).setVisible(true));
         menuBar.addOpenTerminalListener(e -> openTerminalInRepo());
         menuBar.addOpenExplorerListener(e -> openExplorerInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
-        menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this, statusBar).execute());
-        menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this, statusBar).execute());
-        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this, statusBar).execute());
+        menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this).execute());
+        menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this).execute());
+        menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this).execute());
         menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
 
         // Project settings (author / committer identity + credentials)
@@ -279,105 +341,122 @@ public class MainFrame extends JFrame {
         menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
 
         // Recent project handlers
-        menuBar.setRecentProjectHandler(this::openProject);
-        toolBar.setProjectSelectionHandler(this::openProject);
+        menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));
+        menuBar.setRecentWorkspaceHandler(new OpenRecentWorkspaceHanlder(this));
+        toolBar.setProjectSelectionHandler(new OpenRecentProjectHandler(this));
     }
 
-    private void openProject(Project project) {
-        String folder = project.getProjectHomeFolder();
-        statusBar.setStatus("Opening " + folder + "...");
-        statusBar.showProgress(true);
-
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                Context.init(folder);
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    get();
-                    addCurrentProjectToSettings();
-                    refreshProjectLists();
-                    statusBar.clearProgress();
-                    statusBar.setStatus("Repository opened");
-                    InteractiveContinueAbortDialog.showIfRebaseInProgress(
-                            MainFrame.this, statusBar,
-                            () -> historyPanel.loadHistory(null, true));
-                } catch (Exception e) {
-                    Throwable cause = e.getCause() != null ? e.getCause() : e;
-                    log.log(Level.WARNING, "Failed to open project", cause);
-                    statusBar.clearProgress();
-                    statusBar.setStatus("Failed to open: " + cause.getMessage());
-
-                    // Remove invalid project from list
-                    Settings settings = Context.getSettings();
-                    if (settings != null) {
-                        settings.getProjects().remove(project);
-                        Context.saveSettings();
-                        refreshProjectLists();
-                    }
-
-                    JOptionPane.showMessageDialog(MainFrame.this,
-                            "Cannot open repository: " + folder
-                                    + "\nIt will be removed from the list of recent projects.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
+    public void setActiveView(ActiveView view) {
+        activeView = view;
+    }
+    public ActiveView getActiveView()          {
+        return activeView;
     }
 
-    private void addCurrentProjectToSettings() {
+    /**
+     * True when a workspace is open <em>and</em> the aggregated workspace view is the active one
+     * (as opposed to having drilled into a single repository of the workspace). Remote operations
+     * (push / pull / fetch) act on the whole workspace only in this state.
+     */
+    public  boolean isWorkspaceActive() {
+        return Context.isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
+    }
+
+    public StatusBar getStatusBar() {
+        return statusBar;
+    }
+
+    public MainTreePanel getTreePanel() {
+        return treePanel;
+    }
+
+    public MainMenuBar getMainMenuBar() {
+        return menuBar;
+    }
+
+    public CardLayout getMainCardLayout() {
+        return mainCardLayout;
+    }
+
+    public JPanel getMainCardPanel() {
+        return mainCardPanel;
+    }
+
+    public MainToolBar getToolBar() {
+        return toolBar;
+    }
+
+    public WorkingCopyPanel getWorkingCopyPanel() {
+        return workingCopyPanel;
+    }
+
+    public SubmodulePanel getSubmodulePanel() {
+        return submodulePanel;
+    }
+
+    public HistoryPanel getHistoryPanel() {
+        return historyPanel;
+    }
+
+    public WorkspaceDashboardPanel getWorkspaceDashboardPanel() {
+        return workspaceDashboardPanel;
+    }
+
+    public ContentPanel getContentPanel() {
+        return contentPanel;
+    }
+
+    public void addCurrentProjectToSettings() {
         Settings settings = Context.getSettings();
-        if (settings == null) return;
+        Project project = Context.getActiveProject();
+        if (settings == null || project == null) return;
 
-        String repoPath = Context.getRepositoryPath();
-        if (repoPath == null) return;
-
-        String folder = repoPath.replace(File.separator + ".git", "");
-
-        // Preserve the existing project entry (and its credentials) — only update the timestamp.
-        Project existing = settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().equalsIgnoreCase(folder))
-                .findFirst()
-                .orElse(null);
-        if (existing != null) {
-            existing.setOpenTime(new Date());
-        } else {
-            settings.getProjects().add(new Project(folder, new Date()));
-        }
+        // Projects are interned (Settings#internAll), so this is the same instance already
+        // referenced by any workspace it belongs to -- no more separate "similar" copies to sync.
+        settings.addRecentProject(project);
         Context.saveSettings();
     }
 
-    private void refreshProjectLists() {
+    public void refreshProjectLists() {
         Settings settings = Context.getSettings();
         if (settings == null) return;
 
-        menuBar.refreshRecentProjects(settings.getProjects());
+        menuBar.refreshRecent(settings.getProjects(), settings.getWorkspaces());
 
         Project current = Context.getCurrentProject().orElse(null);
         toolBar.refreshProjects(settings.getProjects(), current);
 
-        // Update welcome panel
-        welcomePanel.setProjects(settings.getProjects());
+        // Update welcome panel (git projects + workspaces)
+        welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
     }
 
     private void showCloneDialog() {
         CloneDialog dialog = new CloneDialog(this);
         dialog.setVisible(true);
         if (dialog.isConfirmed()) {
-            new CloneHandler(this, statusBar, dialog.getParameters()).execute();
+            new CloneHandler(this, dialog.getParameters()).execute();
         }
     }
+
+    private void showWorkspaceDialog() {
+        WorkspaceDialog workspaceDialog =  new
+                WorkspaceDialog(this,
+                new OpenRecentWorkspaceHanlder(this));
+
+        workspaceDialog.nameField.setText(
+                Context.getSettings().createNewWorkspaceName());
+
+        workspaceDialog.setVisible(true);
+
+    }
+
+
 
     private void showInitDialog() {
         InitDialog dialog = new InitDialog(this);
         dialog.setVisible(true);
         if (dialog.isConfirmed()) {
-            new InitHandler(this, statusBar, dialog.getParameters()).execute();
+            new InitHandler(this,  dialog.getParameters()).execute();
         }
     }
 
@@ -577,53 +656,132 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
-    private void setRepoActionsEnabled(boolean enabled) {
+    public void setRepoActionsEnabled(boolean enabled) {
         menuBar.setRepoActionsEnabled(enabled);
         toolBar.setRepoActionsEnabled(enabled);
     }
 
-    // Event handlers
-    private void onWorkingBranchChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            ScmBranch branch = (ScmBranch) evt.getNewValue();
-            String name = branch != null ? branch.getShortName() : "";
-            toolBar.setBranchName(name);
-            toolBar.updateSyncCounts(branch);
-            updateTitle();
-        });
+    public void setWorkspaceActionsEnabled(boolean enabled) {
+        menuBar.setWorkspaceActionEnabled(enabled);
+        //toolBar.setRepoActionsEnabled(enabled);
     }
 
-    private void onRepoPathChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            boolean hasRepo = evt.getNewValue() != null;
-            setRepoActionsEnabled(hasRepo);
-            toolBar.setVisible(hasRepo);
-            if (hasRepo) {
-                addCurrentProjectToSettings();
-                refreshProjectLists();
-                // Switch from welcome to repo view
-                mainCardLayout.show(mainCardPanel, CARD_REPO);
-            } else {
-                // No repo - show welcome
-                mainCardLayout.show(mainCardPanel, CARD_WELCOME);
+
+    public boolean isCommitEnabled() {
+        boolean commitEnabled = false;
+        if (Context.isWorkspaceMode()) {
+            if (getActiveView() == ActiveView.WORKSPACE) {
+                for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
+                    if (project.getGitRepoService().hasStaged()) {
+                        commitEnabled = true;
+                        break;
+                    }
+                }
+            } else { // workspace , but selected particular project
+                commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
             }
-            updateTitle();
-        });
+
+        } else {
+            commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
+        }
+        return commitEnabled;
     }
 
-    private void onStatusListChanged(PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(() -> {
-            List<ScmItem> statusList = Context.getStatusList();
-            workingCopyPanel.setItems(statusList);
-            toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
-            menuBar.setCreateDiffEnabled(statusList != null && !statusList.isEmpty());
-        });
+    /**
+     * Recomputes the enabled state of the Pull / Push / Fetch buttons for workspace mode.
+     * Pull and Fetch are enabled when at least one project has a remote URL; Push additionally
+     * requires at least one project with a remote to have an unpushed HEAD commit. The per-project
+     * git reads run off the EDT; the buttons are updated on the EDT once the scan completes.
+     */
+    private void updateWorkspaceRemoteActions() {
+        if (isWorkspaceActive()) {
+            java.util.List<Project> projects = new java.util.ArrayList<>(
+                    Context.getWorkspace() == null ? List.of() : Context.getWorkspace().getProjects());
+            toolBar.setPullEnabled(false);
+            toolBar.setPushEnabled(false);
+            toolBar.setFetchEnabled(false);
+            menuBar.setWorkspacePullEnabled(false);
+            menuBar.setWorkspacePushEnabled(false);
+            menuBar.setWorkspaceFetchEnabled(false);
+            if (projects.isEmpty()) {
+                return;
+            }
+            new SwingWorker<boolean[], Void>() {
+                @Override
+                protected boolean[] doInBackground() {
+                    boolean hasRemote = false;
+                    boolean hasUnpushed = false;
+                    for (Project project : projects) {
+                        try {
+                            GitRepoService svc = project.getGitRepoService();
+                            if (!svc.isRepositoryHasRemoteUrl()) {
+                                continue;
+                            }
+                            hasRemote = true;
+                            CommitInfo head = svc.getHead();
+                            if (head.getSha() != null && svc.isCommitUnpushed(head.getSha())) {
+                                hasUnpushed = true;
+                            }
+                        } catch (Exception ex) {
+                            log.log(Level.FINE, "Cannot read remote state for " + project, ex);
+                        }
+                        if (hasRemote && hasUnpushed) break; // nothing left to learn
+                    }
+                    return new boolean[]{hasRemote, hasUnpushed};
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        boolean[] state = get();
+                        toolBar.setPullEnabled(state[0]);
+                        toolBar.setFetchEnabled(state[0]);
+                        toolBar.setPushEnabled(state[1]);
+                        menuBar.setWorkspacePullEnabled(state[0]);
+                        menuBar.setWorkspaceFetchEnabled(state[0]);
+                        menuBar.setWorkspacePushEnabled(state[1]);
+                    } catch (Exception ex) {
+                        log.log(Level.FINE, "Cannot update workspace remote actions", ex);
+                    }
+                }
+            }.execute();
+        }
+
     }
 
-    private void updateTitle() {
+    /**
+     * Refreshes the workspace dashboard and the remote-action buttons after a workspace-wide
+     * push / pull / fetch. Called by the corresponding handlers once their operation completes.
+     */
+    public void refreshWorkspaceView() {
+        if (isWorkspaceActive()) {
+            workspaceDashboardPanel.reloadActiveTab();
+            updateWorkspaceRemoteActions();
+        }
+
+    }
+
+    /**
+     * Reloads the sidebar branches/tags/stashes subtree for every project a workspace-wide
+     * operation touched successfully. Shared by handlers whose per-project operation can change
+     * refs (create branch, fetch, pull, …) so the tree doesn't go stale until the next full rebuild.
+     */
+    public void refreshWorkspaceProjectBranches(List<? extends ProjectOperationResult<?>> results) {
+        for (ProjectOperationResult<?> result : results) {
+            if (result.isSuccess()) {
+                treePanel.refreshProjectBranches(result.getProject());
+            }
+        }
+    }
+
+
+
+    public void updateTitle() {
         String path = Context.getRepositoryPath();
         ScmBranch branch = Context.getWorkingBranch();
-        if (path != null) {
+        if (getActiveView() == ActiveView.WORKSPACE) {
+            setTitle("Gitember - " + Context.getWorkspace().getName());
+        } else if (path != null) {
             String folder = Context.getProjectFolder();
             String branchName = branch != null ? " [" + branch.getShortName() + "]" : "";
             setTitle("Gitember - " + folder + branchName);
@@ -632,17 +790,74 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private Optional<Project> getProject(DefaultMutableTreeNode node) {
+        for (TreeNode current = node; current != null; current = current.getParent()) {
+            if (current instanceof DefaultMutableTreeNode treeNode) {
+                Object userObject = treeNode.getUserObject();
+
+                if (userObject instanceof TreeNodeData treeNodeData) {
+                    Object data = treeNodeData.data();
+
+                    // A repository node carries its Project directly.
+                    if (data instanceof Project project) {
+                        return Optional.of(project);
+                    }
+
+                    // Category nodes carry a Supplier<Optional<Project>>.
+                    if (data instanceof Supplier<?> supplier
+                            && supplier.get() instanceof Optional<?> optional) {
+                        return optional
+                                .filter(Project.class::isInstance)
+                                .map(Project.class::cast);
+                    }
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /** Projects are interned (Settings#internAll), so identity is a valid, O(1) test. */
+    private boolean isCurrentProject(Project p) {
+        return p == Context.getActiveProject();
+    }
+
     private void onTreeSelection(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePanel.getTree().getLastSelectedPathComponent();
-        if (node == null) return;
+        if (node == null)  return;
+        getProject(node).ifPresent(
+                p-> {
+                    // Re-initializing an already-open project reloads branches/tags and rebuilds
+                    // the tree nodes, which clears the selection just made. Only switch context
+                    // when the click actually targets a different project (workspace mode).
+                    if (!isCurrentProject(p)) {
+                        try {
+                            Context.init(p);
+                        } catch (Exception ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+
+        );
 
         Object userObject = node.getUserObject();
         if (userObject instanceof TreeNodeData data) {
-            boolean isWorkingCopy = data.type() == MainTreeCellRenderer.NodeType.WORKING_COPY;
-            boolean isAllHistory  = data.type() == MainTreeCellRenderer.NodeType.HISTORY;
-            boolean isPullRequest = data.type() == MainTreeCellRenderer.NodeType.PULL_REQUEST;
+
+
+            boolean isWorkSpace = data.type() == CellRenderer.NodeType.WORKSPACE;
+            boolean isWorkingCopy = data.type() == CellRenderer.NodeType.WORKING_COPY;
+            boolean isAllHistory  = data.type() == CellRenderer.NodeType.HISTORY;
+            boolean isPullRequest = data.type() == CellRenderer.NodeType.PULL_REQUEST;
 
             // Merge/unmerge working copy toolbar
+
+            if (isWorkSpace) {
+                toolBar.mergeWorkSpaceToolbar(workspaceDashboardPanel);
+            } else {
+                toolBar.unmergeWorkSpaceToolbar();
+            }
+
             if (isWorkingCopy) {
                 toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
             } else {
@@ -664,34 +879,36 @@ public class MainFrame extends JFrame {
             }
 
             switch (data.type()) {
+                case WORKSPACE -> {
+                    Context.setRepositoryPath(null);
+                    setActiveView(ActiveView.WORKSPACE);
+                    contentPanel.setContent(workspaceDashboardPanel);
+                    workspaceDashboardPanel.refreshButtonStates();
+                    workspaceDashboardPanel.refresh();
+                    updateWorkspaceRemoteActions();
+                    updateTitle();
+                }
+                case REPOSITORY -> {
+                    // Clicking a workspace repository opens that project's working copy.
+                    activateProjectWorkingCopy();
+                }
                 case WORKING_COPY -> {
-                    Context.setActiveView(Context.ActiveView.WORKING_COPY);
-                    contentPanel.setContent(workingCopyPanel);
-                    List<ScmItem> cachedStatus = Context.getStatusList();
-                    workingCopyPanel.setItems(cachedStatus); // show cached immediately
-                    toolBar.setCommitEnabled(workingCopyPanel.hasStagedItems() || isResolvableRepoState());
-                    menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
-                    new SwingWorker<Void, Void>() {
-                        @Override protected Void doInBackground() {
-                            Context.updateStatus(null, true);
-                            return null;
-                        }
-                    }.execute();
+                    activateProjectWorkingCopy();
                 }
                 case HISTORY -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                    setActiveView(ActiveView.HISTORY);
                     contentPanel.setContent(historyPanel);
                     historyPanel.loadHistory(null, true);
                 }
                 case BRANCH -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                    setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch branch) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(branch.getFullName(), false);
                     }
                 }
                 case TAG -> {
-                    Context.setActiveView(Context.ActiveView.HISTORY);
+                     setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch tag) {
                         contentPanel.setContent(historyPanel);
                         historyPanel.loadHistory(tag.getFullName(), false);
@@ -714,9 +931,28 @@ public class MainFrame extends JFrame {
                     submodulePanel.setSubmodules(Context.getSubmodules());
                 }
                 case WORKTREE -> { /* handled via context menu */ }
-                default -> contentPanel.setContent(null);
+                default -> {
+                    contentPanel.setContent(null);
+                }
             }
         }
+    }
+
+    public void activateProjectWorkingCopy() {
+         setActiveView( ActiveView.WORKING_COPY);
+        contentPanel.setContent(workingCopyPanel);
+        List<ScmItem> cachedStatus = Context.getStatusList();
+        workingCopyPanel.setItems(cachedStatus); // show cached immediately
+        boolean commitEnabled = isCommitEnabled();
+        toolBar.setCommitEnabled(commitEnabled);
+        menuBar.setCommitEnabled(commitEnabled);
+        menuBar.setCreateDiffEnabled(cachedStatus != null && !cachedStatus.isEmpty());
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                Context.updateStatus(null, true);
+                return null;
+            }
+        }.execute();
     }
 
     /** Loads icon images from classpath resources, silently skipping any that are missing. */
@@ -746,7 +982,7 @@ public class MainFrame extends JFrame {
      * History is (re-)loaded from scratch so that the commit is always found.
      */
     public void showCommitInHistory(String sha) {
-        Context.setActiveView(Context.ActiveView.HISTORY);
+        setActiveView(ActiveView.HISTORY);
         contentPanel.setContent(historyPanel);
         toolBar.mergeHistoryToolbar(historyPanel);
         historyPanel.loadHistoryAndSelect(sha);
@@ -758,19 +994,12 @@ public class MainFrame extends JFrame {
      * which files need resolution.
      */
     public void showWorkingCopy() {
-        Context.setActiveView(Context.ActiveView.WORKING_COPY);
+        setActiveView(ActiveView.WORKING_COPY);
         contentPanel.setContent(workingCopyPanel);
         toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
         Context.updateStatus(null, true);
     }
 
-    public StatusBar getStatusBar() {
-        return statusBar;
-    }
-
-    public MainTreePanel getTreePanel() {
-        return treePanel;
-    }
 
     // ── Terminal launcher ─────────────────────────────────────────────────────
 
@@ -782,9 +1011,9 @@ public class MainFrame extends JFrame {
         }
         File dir = new File(path);
         try {
-            if (Context.isWindows()) {
+            if (GitemberUtil.isWindows()) {
                 new ProcessBuilder("explorer.exe", dir.getAbsolutePath()).start();
-            } else if (Context.isMac()) {
+            } else if (GitemberUtil.isMac()) {
                 new ProcessBuilder("open",  dir.getAbsolutePath()).start();
             } else {
                 new ProcessBuilder("xdg-open", dir.getAbsolutePath()).start();
@@ -807,9 +1036,9 @@ public class MainFrame extends JFrame {
         }
         File dir = new File(path);
         try {
-            if (Context.isWindows()) {
+            if (GitemberUtil.isWindows()) {
                 openTerminalWindows(dir);
-            } else if (Context.isMac()) {
+            } else if (GitemberUtil.isMac()) {
                 // open -a Terminal <path>  works for Terminal.app
                 new ProcessBuilder("open", "-a", "Terminal", dir.getAbsolutePath()).start();
             } else {

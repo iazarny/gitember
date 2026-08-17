@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- back folder (topmost / rightmost tab) -->
+  <rect x="168" y="72" width="312" height="200" rx="22" fill="#000000"/>
+  <!-- middle folder -->
+  <rect x="104" y="120" width="360" height="220" rx="22" fill="#000000"
+        stroke="#ffffff" stroke-width="14"/>
+  <!-- front (open) folder -->
+  <path d="M68 172
+           h104
+           a16 16 0 0 1 11.3 4.7
+           l30.6 30.6
+           a16 16 0 0 1 11.3 4.7
+           H444
+           a28 28 0 0 1 28 28
+           V412
+           a28 28 0 0 1 -28 28
+           H68
+           a28 28 0 0 1 -28 -28
+           V200
+           a28 28 0 0 1 28 -28
+           Z"
+        fill="#000000" stroke="#ffffff" stroke-width="14"
+        stroke-linejoin="round"/>
+  <!-- white plus inside the front folder -->
+  <rect x="238" y="266" width="36" height="120" rx="18" fill="#ffffff"/>
+  <rect x="196" y="308" width="120" height="36" rx="18" fill="#ffffff"/>
+</svg>

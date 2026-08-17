@@ -36,7 +36,7 @@ public class SubmodulePanel extends JPanel {
         updateBtn.setToolTipText("Run git submodule init + update for all submodules");
         updateBtn.addActionListener(e -> {
             Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
-            new UpdateSubmodulesHandler(owner, statusBar).execute();
+            new UpdateSubmodulesHandler(owner).execute();
         });
 
         JButton syncBtn = new JButton("Sync URLs");

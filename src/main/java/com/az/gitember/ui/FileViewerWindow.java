@@ -50,7 +50,7 @@ public class FileViewerWindow extends JFrame {
     public FileViewerWindow(String title, String content, String fileName) {
         setTitle(title);
         setSize(900, 600);
-        setLocationRelativeTo(Context.getMainFrame());
+        setLocationRelativeTo(MainFrame.getInstance());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setIconImages(Util.appIcons());
 
@@ -291,7 +291,7 @@ public class FileViewerWindow extends JFrame {
 
     /** Brings the main window to front and navigates the history view to the given short SHA. */
     private void navigateToHistoryCommit(String sha) {
-        javax.swing.JFrame mf = Context.getMainFrame();
+        javax.swing.JFrame mf = MainFrame.getInstance();
         if (mf instanceof MainFrame mainFrame) {
             mainFrame.toFront();
             mainFrame.showCommitInHistory(sha);

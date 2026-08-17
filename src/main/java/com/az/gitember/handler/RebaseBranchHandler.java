@@ -11,8 +11,8 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
 
     private final String branchFullName;
 
-    public RebaseBranchHandler(Component parent, StatusBar statusBar, String branchFullName) {
-        super(parent, statusBar);
+    public RebaseBranchHandler(Component parent, String branchFullName) {
+        super(parent);
         this.branchFullName = branchFullName;
     }
 
@@ -40,7 +40,7 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
     /**
      * Shows confirmation and executes.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar,
+    public static void showAndExecute(Component parent,
                                       String branchFullName, String branchShortName) {
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
@@ -49,7 +49,7 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
                 "Rebase " + branchShortName + " onto " + workingBranchName + "?",
                 "Rebase Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            new RebaseBranchHandler(parent, statusBar, branchFullName).execute();
+            new RebaseBranchHandler(parent,  branchFullName).execute();
         }
     }
 }

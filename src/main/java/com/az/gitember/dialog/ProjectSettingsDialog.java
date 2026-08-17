@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,26 +24,32 @@ public class ProjectSettingsDialog extends JDialog {
     private final JTextField     userField;
     private final JPasswordField pwdField;
 
+    private final JCheckBox showAllPullRequestsCheck;
+
     public ProjectSettingsDialog(Frame owner) {
         super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
-        setSize(480, 580);
+        setSize(480, 640);
         setLocationRelativeTo(owner);
         setResizable(false);
 
         Project project = Context.getCurrentProject().orElse(null);
 
-        authorNameField    = new JTextField(project != null ? nvl(project.getUserCommitName())  : "", 28);
-        authorEmailField   = new JTextField(project != null ? nvl(project.getUserCommitEmail()) : "", 28);
-        committerNameField = new JTextField(project != null ? nvl(project.getCommitterName())   : "", 28);
-        committerEmailField= new JTextField(project != null ? nvl(project.getCommitterEmail())  : "", 28);
+        authorNameField    = new JTextField(project != null ? ObjectUtils.getIfNull(project.getUserCommitName(),"")  : "", 28);
+        authorEmailField   = new JTextField(project != null ? ObjectUtils.getIfNull(project.getUserCommitEmail(),"") : "", 28);
+        committerNameField = new JTextField(project != null ? ObjectUtils.getIfNull(project.getCommitterName(),"")   : "", 28);
+        committerEmailField= new JTextField(project != null ? ObjectUtils.getIfNull(project.getCommitterEmail(),"")  : "", 28);
 
         tokenField = new JPasswordField(25);
         userField  = new JTextField(25);
         pwdField   = new JPasswordField(25);
+        showAllPullRequestsCheck = new JCheckBox("Show all pull requests (including merged / closed)");
+        showAllPullRequestsCheck.setToolTipText(
+                "When off, only open pull/merge requests are listed; when on, merged and closed ones are shown too");
         if (project != null) {
             if (project.getAccessToken() != null) tokenField.setText(project.getAccessToken());
             if (project.getUserName()    != null) userField.setText(project.getUserName());
             if (project.getUserPwd()     != null) pwdField.setText(project.getUserPwd());
+            showAllPullRequestsCheck.setSelected(project.isShowAllPullRequests());
         }
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -81,10 +88,16 @@ public class ProjectSettingsDialog extends JDialog {
         if (Context.getGitRepoService() != null) {
             originUrl = Context.getGitRepoService().getOriginUrl();
         }
-        JTextField remoteUrlField = new JTextField(nvl(originUrl), 28);
+        JTextField remoteUrlField = new JTextField(ObjectUtils.getIfNull(originUrl, ""), 28);
         remoteUrlField.setEditable(false);
         remoteUrlField.setBackground(UIManager.getColor("TextField.inactiveBackground"));
         addRow(form, gbc, 12, "Origin:", remoteUrlField);
+
+        addSeparatorLabel(form, gbc, 13, "Pull Requests");
+        gbc.gridx = 0; gbc.gridy = 14; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        form.add(showAllPullRequestsCheck, gbc);
+        gbc.gridwidth = 1;
 
         JButton okBtn     = new JButton("OK");
         JButton cancelBtn = new JButton("Cancel");
@@ -103,25 +116,24 @@ public class ProjectSettingsDialog extends JDialog {
     }
 
     private void applyAndClose() {
-        Project project = Context.getCurrentProject().orElse(null);
-        if (project == null) {
-            dispose();
-            return;
-        }
-        project.setUserCommitName (authorNameField.getText().trim());
-        project.setUserCommitEmail(authorEmailField.getText().trim());
-        project.setCommitterName  (committerNameField.getText().trim());
-        project.setCommitterEmail (committerEmailField.getText().trim());
-        project.setAccessToken(new String(tokenField.getPassword()).trim());
-        project.setUserName   (userField.getText().trim());
-        project.setUserPwd    (new String(pwdField.getPassword()));
+        // Projects are interned (Settings#internAll): the active project is the single shared
+        // instance also referenced by any workspace it belongs to, so there is no separate
+        // "similar" copy left to keep in sync.
+        Context.getCurrentProject().ifPresent(project -> {
+            project.setUserCommitName (authorNameField.getText().trim());
+            project.setUserCommitEmail(authorEmailField.getText().trim());
+            project.setCommitterName  (committerNameField.getText().trim());
+            project.setCommitterEmail (committerEmailField.getText().trim());
+            project.setAccessToken(new String(tokenField.getPassword()).trim());
+            project.setUserName   (userField.getText().trim());
+            project.setUserPwd    (new String(pwdField.getPassword()));
+        });
         Context.saveSettings();
         dispose();
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private static String nvl(String s) { return s != null ? s : ""; }
 
     private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JComponent field) {
         gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;

@@ -4,6 +4,7 @@ import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -33,9 +34,9 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
     private final Runnable onComplete;
     private List<InteractiveRebaseDialog.RebaseStep> steps;
 
-    private InteractiveRebaseHandler(Component parent, StatusBar statusBar,
+    private InteractiveRebaseHandler(Component parent,
                                      String baseCommitSha, Runnable onComplete) {
-        super(parent, statusBar);
+        super(parent);
         this.baseCommitSha = baseCommitSha;
         this.onComplete    = onComplete;
     }
@@ -94,9 +95,9 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
     /**
      * Convenience overload — no post-completion callback.
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar,
+    public static void showAndExecute(Component parent,
                                       String baseCommitSha, String baseDisplaySha) {
-        showAndExecute(parent, statusBar, baseCommitSha, baseDisplaySha, null);
+        showAndExecute(parent,  baseCommitSha, baseDisplaySha, null);
     }
 
     /**
@@ -105,18 +106,17 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
      * {@code onComplete} is called after the rebase finishes.
      *
      * @param parent         component used for dialog parenting
-     * @param statusBar      status bar for progress feedback
      * @param baseCommitSha  full SHA of the upstream commit (excluded from rebase)
      * @param baseDisplaySha abbreviated SHA shown in the dialog header
      * @param onComplete     called on the EDT after success <em>or</em> error;
      *                       may be {@code null}
      */
-    public static void showAndExecute(Component parent, StatusBar statusBar,
+    public static void showAndExecute(Component parent,
                                       String baseCommitSha, String baseDisplaySha,
                                       Runnable onComplete) {
         Frame owner = parent instanceof Frame f
                 ? f : (Frame) SwingUtilities.getWindowAncestor(parent);
-
+        StatusBar statusBar = MainFrame.getInstance().getStatusBar();
         statusBar.setStatus("Loading commits for interactive rebase\u2026");
         statusBar.showProgress(true);
 
@@ -162,8 +162,7 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
                     }
 
                     InteractiveRebaseHandler handler =
-                            new InteractiveRebaseHandler(parent, statusBar,
-                                                         baseCommitSha, onComplete);
+                            new InteractiveRebaseHandler(parent,    baseCommitSha, onComplete);
                     handler.steps = dialog.getSteps();
                     handler.execute();
 

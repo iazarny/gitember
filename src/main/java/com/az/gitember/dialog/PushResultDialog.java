@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 
@@ -7,6 +8,7 @@ import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.net.URI;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -89,5 +91,83 @@ public class PushResultDialog extends JDialog {
         Util.bindEscapeToDispose(this);
     }
 
+    /**
+     * Workspace variant: shows one section per pushed repository with its remote URL and
+     * the server messages (or the error, for repositories that failed).
+     */
+    public PushResultDialog(Component parent, List<ProjectOperationResult<String>> results) {
+        super(SwingUtilities.getWindowAncestor(parent), "Push Result",
+                ModalityType.APPLICATION_MODAL);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(640, 460);
+        setLocationRelativeTo(parent);
 
+        long ok = results.stream().filter(ProjectOperationResult::isSuccess).count();
+
+        JLabel titleLabel = new JLabel("Push completed for " + ok + " of "
+                + results.size() + " repositories");
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+
+        String displayText = results.isEmpty()
+                ? "No repositories with unpushed changes."
+                : buildWorkspaceReport(results);
+
+        Font monoFont = SyntaxStyleUtil.monoFont();
+        JEditorPane msgArea = new JEditorPane("text/html",
+                PullResultDialog.toHtml(displayText, monoFont.getSize()));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(monoFont);
+        msgArea.setCaretPosition(0);
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(msgArea);
+        scroll.setBorder(BorderFactory.createTitledBorder("Details"));
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dispose());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
+        btnPanel.add(closeBtn);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(scroll,      BorderLayout.CENTER);
+        mainPanel.add(btnPanel,    BorderLayout.SOUTH);
+        setContentPane(mainPanel);
+
+        getRootPane().setDefaultButton(closeBtn);
+        Util.bindEscapeToDispose(this);
+    }
+
+    private static String buildWorkspaceReport(List<ProjectOperationResult<String>> results) {
+        StringBuilder sb = new StringBuilder();
+        for (ProjectOperationResult<String> r : results) {
+            sb.append("=== ").append(r.getProjectName()).append(" ===\n");
+            if (r.getRemoteUrl() != null && !r.getRemoteUrl().isEmpty()) {
+                sb.append(r.getRemoteUrl()).append('\n');
+            }
+            if (r.isSuccess()) {
+                String msg = r.getResult() != null ? r.getResult().trim() : "";
+                sb.append(msg.isEmpty() ? "(no server messages)" : msg);
+            } else {
+                Exception e = r.getError();
+                sb.append("FAILED: ").append(e != null ? e.getMessage() : "unknown error");
+            }
+            sb.append("\n\n");
+        }
+        return sb.toString().trim();
+    }
 }

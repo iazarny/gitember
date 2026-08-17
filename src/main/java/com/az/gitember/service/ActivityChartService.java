@@ -26,7 +26,7 @@ import java.util.concurrent.*;
  */
 public class ActivityChartService {
 
-    private static final int DAYS     = 30;
+    static final int DAYS    = 30;
     static final int CHART_W = 300;
     static final int CHART_H = 60;
 
@@ -75,7 +75,7 @@ public class ActivityChartService {
 
     // ── git reading ──────────────────────────────────────────────────────────
 
-    private static int[] loadDailyCounts(String projectFolder) throws Exception {
+    static int[] loadDailyCounts(String projectFolder) throws Exception {
         File dotGit = new File(projectFolder, ".git");
         if (!dotGit.exists()) return new int[DAYS];
 
@@ -103,7 +103,7 @@ public class ActivityChartService {
     }
 
     /** Handles linked-worktree .git files by resolving to the common git dir. */
-    private static File resolveGitFile(File gitFile) throws Exception {
+    static File resolveGitFile(File gitFile) throws Exception {
         String content = new String(Files.readAllBytes(gitFile.toPath())).trim();
         if (!content.startsWith("gitdir:")) return gitFile;
 
@@ -134,22 +134,31 @@ public class ActivityChartService {
         g.fillRect(0, 0, CHART_W, CHART_H);
         g.setComposite(AlphaComposite.SrcOver);
 
-        int max = Arrays.stream(counts).max().orElse(0);
-        if (max > 0) {
-            float barW = (float) CHART_W / DAYS;
-            int   padV = 4;
-            for (int i = 0; i < DAYS; i++) {
-                if (counts[i] == 0) continue;
-                int barH = Math.round((float) counts[i] / max * (CHART_H - padV * 2));
-                int x    = Math.round(i * barW) + 1;
-                int y    = CHART_H - padV - barH;
-                int bw   = Math.max(1, Math.round(barW) - 2);
-                g.setColor(new Color(0.2f, 0.5f, 1.0f, 0.350f));
-                g.fillRoundRect(x, y, bw, barH, 3, 3);
-            }
-        }
+        drawBars(g, counts);
 
         g.dispose();
         return img;
+    }
+
+    /**
+     * Draws one activity series as semi-transparent blue bars (each normalized by its own max)
+     * onto {@code g}. Drawing several series onto the same graphics with {@code SrcOver} makes
+     * overlapping days render darker as their alpha accumulates.
+     */
+    static void drawBars(Graphics2D g, int[] counts) {
+        int max = Arrays.stream(counts).max().orElse(0);
+        if (max == 0) return;
+
+        float barW = (float) CHART_W / DAYS;
+        int   padV = 4;
+        for (int i = 0; i < DAYS; i++) {
+            if (counts[i] == 0) continue;
+            int barH = Math.round((float) counts[i] / max * (CHART_H - padV * 2));
+            int x    = Math.round(i * barW) + 1;
+            int y    = CHART_H - padV - barH;
+            int bw   = Math.max(1, Math.round(barW) - 2);
+            g.setColor(new Color(0.2f, 0.5f, 1.0f, 0.350f));
+            g.fillRoundRect(x, y, bw, barH, 3, 3);
+        }
     }
 }

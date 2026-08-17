@@ -3,6 +3,7 @@ package com.az.gitember.handler;
 import com.az.gitember.data.Project;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.lib.ProgressMonitor;
 
@@ -19,9 +20,9 @@ public abstract class AbstractAsyncHandler<T> {
     protected final StatusBar statusBar;
     protected final ProgressMonitor progressMonitor;
 
-    protected AbstractAsyncHandler(Component parent, StatusBar statusBar) {
+    protected AbstractAsyncHandler(Component parent) {
         this.parent = parent;
-        this.statusBar = statusBar;
+        this.statusBar = MainFrame.getInstance().getStatusBar();
         this.progressMonitor = new StatusBarProgressMonitor(statusBar);
     }
 

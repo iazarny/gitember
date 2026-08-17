@@ -1,9 +1,12 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -11,6 +14,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -19,7 +23,8 @@ public class MainMenuBar extends JMenuBar {
     // File menu items
     private final JMenuItem openItem;
     private final JMenuItem cloneItem;
-    private final JMenuItem initItem;
+    private final JMenuItem initRepository;
+    private final JMenuItem initWorkspaceItem;
     private final JMenu     openRecentMenu;
     private final JMenuItem settingsItem;
     private final JMenuItem exitItem;
@@ -51,7 +56,17 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem pushItem;
     private final JMenuItem fetchItem;
     private final JMenuItem commitItem;
+    private final JMenuItem branchCreateItem;
+    private final JMenuItem mergeItem;
     private final JMenuItem interactiveRebaseItem;
+
+    private final JMenu     workspaceMenu;
+    private final JMenuItem workspacePullItem;
+    private final JMenuItem workspacePushItem;
+    private final JMenuItem workspaceFetchItem;
+    private final JMenuItem workspaceCommitItem;
+    private final JMenuItem workspaceBranchCreateItem;
+    private final JMenuItem workspaceMergeItem;
 
     // Working copy menu (enabled only when a repo is open)
     private final JMenu     workingCopyMenu;
@@ -70,10 +85,11 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem aboutItem;
 
     private Consumer<Project> recentProjectHandler;
+    private Consumer<Workspace> recentWorkspaceHandler;
 
     public MainMenuBar() {
 
-        // ── File ─────────────────────────────────────────────────────────────
+        // -- File -------------------------------------------------------------
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
 
@@ -81,7 +97,9 @@ public class MainMenuBar extends JMenuBar {
         openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
-        initItem  = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initWorkspaceItem  = new JMenuItem("Init Workspace...");
+        initWorkspaceItem.setName("initWorkspaceItem");
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
@@ -94,7 +112,9 @@ public class MainMenuBar extends JMenuBar {
 
         fileMenu.add(openItem);
         fileMenu.add(cloneItem);
-        fileMenu.add(initItem);
+        fileMenu.add(initRepository);
+        fileMenu.addSeparator();
+        fileMenu.add(initWorkspaceItem);
         fileMenu.addSeparator();
         fileMenu.add(openRecentMenu);
         fileMenu.addSeparator();
@@ -102,7 +122,7 @@ public class MainMenuBar extends JMenuBar {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
-        // ── Repository (repo-only) ────────────────────────────────────────────
+        // -- Repository (repo-only) --------------------------------------------
         repoMenu = new JMenu("Repository");
         repoMenu.setMnemonic(KeyEvent.VK_R);
 
@@ -119,13 +139,13 @@ public class MainMenuBar extends JMenuBar {
 
         String expMessage = null;
         String expToolTip = null;
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             expMessage = "Explorer";
             expToolTip = "Open a explorer in the repository folder";
-        } else if (Context.isMac()) {
+        } else if (GitemberUtil.isMac()) {
             expMessage = "Finder";
             expToolTip = "Open a finder in the repository folder";
-        } else if (Context.isLinux()) {
+        } else if (GitemberUtil.isLinux()) {
             expMessage = "File manager";
             expToolTip = "Open a file manage in the repository folder";
         }
@@ -187,18 +207,24 @@ public class MainMenuBar extends JMenuBar {
         }
 
 
-        // ── Branch (repo-only) ────────────────────────────────────────────────
+        // -- Branch (repo-only) ------------------------------------------------
         branchMenu = new JMenu("Branch");
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem             = new JMenuItem("Pull",                    KeyEvent.VK_L);
-        pushItem             = new JMenuItem("Push",                    KeyEvent.VK_P);
-        fetchItem            = new JMenuItem("Fetch",                   KeyEvent.VK_F);
-        commitItem           = new JMenuItem("Commit...",               KeyEvent.VK_M);
+        pullItem             = Util.createMenuItem("Pull", null,  FontAwesomeSolid.REPLY, -45);
+        pushItem             = Util.createMenuItem("Push", null,  FontAwesomeSolid.REPLY, 135);
+        fetchItem            = Util.createMenuItem("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
+        commitItem           = Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
+        branchCreateItem     = Util.createMenuItem("Branch ...", "Create branch", FontAwesomeSolid.CODE_BRANCH, 0);
+        mergeItem            = Util.createMenuItem("Merge ...", "Merge branch into working branch", FontAwesomeSolid.CODE_BRANCH, 180);
+
         interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
         interactiveRebaseItem.setToolTipText(
                 "Interactively rebase commits – right-click a commit in the history for the full workflow");
 
+        branchMenu.add(branchCreateItem);
+        branchMenu.add(mergeItem);
+        branchMenu.addSeparator();
         branchMenu.add(pullItem);
         branchMenu.add(pushItem);
         branchMenu.add(fetchItem);
@@ -206,13 +232,44 @@ public class MainMenuBar extends JMenuBar {
         branchMenu.add(commitItem);
         branchMenu.addSeparator();
         branchMenu.add(interactiveRebaseItem);
+        
+        // -- Workspace ---------------------------------------------------------
+        workspaceMenu = new JMenu("Workspace");
+        workspacePullItem             = Util.createMenuItem("Pull", "Pull all repositories under workspace",  FontAwesomeSolid.REPLY, -45);
+        workspacePushItem             = Util.createMenuItem("Push", "Push  all repositories under workspace",  FontAwesomeSolid.REPLY, 135);
+        workspaceFetchItem            = Util.createMenuItem("Fetch", "Fetch changes all repository", FontAwesomeSolid.REPLY_ALL, -45);
+        workspaceCommitItem           =  Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
+        workspaceBranchCreateItem     = Util.createMenuItem("Branch ...", "Create branches in each repository", FontAwesomeSolid.CODE_BRANCH, 0);
+        workspaceMergeItem            = Util.createMenuItem("Merge ...", "Merge branches ", FontAwesomeSolid.CODE_BRANCH, 180);
 
-        // ── Working copy (repo-only) ──────────────────────────────────────────
+        workspaceMenu.setName("workspaceMenu");
+        workspacePullItem.setName("workspacePullItem");
+        workspacePushItem.setName("workspacePushItem");
+        workspaceFetchItem.setName("workspaceFetchItem");
+        workspaceCommitItem.setName("workspaceCommitItem");
+        workspaceBranchCreateItem.setName("workspaceBranchCreateItem");
+        workspaceMergeItem.setName("workspaceMergeItem");
+
+        workspaceMenu.add(workspaceBranchCreateItem);
+        workspaceMenu.add(workspaceMergeItem);
+
+        workspaceMenu.addSeparator();
+
+        workspaceMenu.add(workspacePullItem);
+        workspaceMenu.add(workspacePushItem);
+        workspaceMenu.add(workspaceFetchItem);
+        workspaceMenu.addSeparator();
+        workspaceMenu.add(workspaceCommitItem);
+
+
+
+        // -- Working copy (repo-only) ------------------------------------------
         workingCopyMenu = new JMenu("Working copy");
         workingCopyMenu.setMnemonic(KeyEvent.VK_W);
 
-        refreshItem    = new JMenuItem("Refresh",        KeyEvent.VK_R);
+        refreshItem    =  Util.createMenuItem("Refresh", null, FontAwesomeSolid.SYNC, 0);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
+
         stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
         worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
         worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
@@ -227,7 +284,7 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.add(createDiffItem);
         workingCopyMenu.add(applyDiffItem);
 
-        // ── Tools (always available) ──────────────────────────────────────────
+        // -- Tools (always available) ------------------------------------------
         JMenu toolsMenu = new JMenu("Tools");
         toolsMenu.setMnemonic(KeyEvent.VK_T);
 
@@ -241,7 +298,7 @@ public class MainMenuBar extends JMenuBar {
         toolsMenu.add(compareFilesItem);
         toolsMenu.add(compareFoldersItem);
 
-        // ── Help ─────────────────────────────────────────────────────────────
+        // -- Help -------------------------------------------------------------
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
@@ -258,7 +315,7 @@ public class MainMenuBar extends JMenuBar {
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3.3.1</b> — Git GUI Client<br><br>" +
+                    "<b>Gitember 3.4.0 EA</b> — Git GUI Client<br><br>" +
                     "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
                     "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
                     "</body></html>");
@@ -266,7 +323,9 @@ public class MainMenuBar extends JMenuBar {
             ep.setOpaque(false);
             ep.addHyperlinkListener(ev -> {
                 if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    try { Desktop.getDesktop().browse(new URI("https://gitember.org/")); }
+                    try {
+                        Desktop.getDesktop().browse(ev.getURL().toURI());
+                    }
                     catch (Exception ex) { /* ignore */ }
                 }
             });
@@ -278,34 +337,63 @@ public class MainMenuBar extends JMenuBar {
         });
         helpMenu.add(aboutItem);
 
-        // ── Menu bar order ────────────────────────────────────────────────────
+        // -- Menu bar order ----------------------------------------------------
         add(fileMenu);
         add(repoMenu);
         add(branchMenu);
+        add(workspaceMenu);
         add(workingCopyMenu);
         add(toolsMenu);
         add(helpMenu);
 
         setRepoActionsEnabled(false);
+        setWorkspaceActionEnabled(false);
     }
 
-    // ── Recent projects ───────────────────────────────────────────────────────
+    // -- Recent projects & workspaces ------------------------------------------
 
     public void refreshRecentProjects(Set<Project> projects) {
+        refreshRecent(projects, null);
+    }
+
+    /**
+     * Rebuilds the "Open Recent" menu with recent git projects and, below a separator,
+     * recent workspaces. The menu is disabled when both are empty.
+     */
+    public void refreshRecent(Set<Project> projects, List<Workspace> workspaces) {
         openRecentMenu.removeAll();
-        if (projects == null || projects.isEmpty()) {
+
+        boolean hasProjects   = projects != null && !projects.isEmpty();
+        boolean hasWorkspaces = workspaces != null && !workspaces.isEmpty();
+
+        if (!hasProjects && !hasWorkspaces) {
             openRecentMenu.setEnabled(false);
             return;
         }
-        for (Project project : projects) {
-            String label = GitemberUtil.getFolderName(project.getProjectHomeFolder());
-            JMenuItem item = new JMenuItem(label);
-            item.setToolTipText(project.getProjectHomeFolder());
-            item.addActionListener(e -> {
-                if (recentProjectHandler != null) recentProjectHandler.accept(project);
-            });
-            openRecentMenu.add(item);
+
+        if (hasProjects) {
+            for (Project project : projects) {
+                String label = GitemberUtil.getFolderName(project.getProjectHomeFolder());
+                JMenuItem item = new JMenuItem(label);
+                item.setToolTipText(project.getProjectHomeFolder());
+                item.addActionListener(e -> {
+                    if (recentProjectHandler != null) recentProjectHandler.accept(project);
+                });
+                openRecentMenu.add(item);
+            }
         }
+
+        if (hasWorkspaces) {
+            if (hasProjects) openRecentMenu.addSeparator();
+            for (Workspace workspace : workspaces) {
+                JMenuItem item = new JMenuItem(workspace.getName());
+                item.addActionListener(e -> {
+                    if (recentWorkspaceHandler != null) recentWorkspaceHandler.accept(workspace);
+                });
+                openRecentMenu.add(item);
+            }
+        }
+
         openRecentMenu.setEnabled(true);
     }
 
@@ -313,28 +401,43 @@ public class MainMenuBar extends JMenuBar {
         this.recentProjectHandler = handler;
     }
 
-    // ── Enable / disable all repo-dependent menus at once ─────────────────────
+    public void setRecentWorkspaceHandler(Consumer<Workspace> handler) {
+        this.recentWorkspaceHandler = handler;
+    }
+
+    // -- Enable / disable all repo-dependent menus at once ---------------------
 
     public void setRepoActionsEnabled(boolean enabled) {
-        // Entire menus go grey when no repo is open
-        /*repoMenu.setEnabled(enabled);
-        branchMenu.setEnabled(enabled);
-        workingCopyMenu.setEnabled(enabled);*/
-
         repoMenu.setVisible(enabled);
         branchMenu.setVisible(enabled);
         workingCopyMenu.setVisible(enabled);
     }
 
-    // ── Listener registration ─────────────────────────────────────────────────
+    public void setWorkspaceActionEnabled(boolean enabled) {
+        workspaceMenu.setVisible(enabled);
+    }
+
+    public void setCommitEnabled(boolean commitEnabled) {
+        commitItem.setEnabled(commitEnabled);
+        workspaceCommitItem.setEnabled(commitEnabled);
+    }
+
+    public void setWorkspacePullEnabled(boolean enabled)  { workspacePullItem.setEnabled(enabled); }
+    public void setWorkspacePushEnabled(boolean enabled)  { workspacePushItem.setEnabled(enabled); }
+    public void setWorkspaceFetchEnabled(boolean enabled) { workspaceFetchItem.setEnabled(enabled); }
+
+    // -- Listener registration -------------------------------------------------
 
     public void addOpenListener(ActionListener l)          { openItem.addActionListener(l); }
     public void addCloneListener(ActionListener l)         { cloneItem.addActionListener(l); }
-    public void addInitListener(ActionListener l)          { initItem.addActionListener(l); }
+    public void addInitListener(ActionListener l)          { initRepository.addActionListener(l); }
+    public void addInitWorkspaceListener(ActionListener l)  { initWorkspaceItem.addActionListener(l); }
     public void addPullListener(ActionListener l)          { pullItem.addActionListener(l); }
     public void addPushListener(ActionListener l)          { pushItem.addActionListener(l); }
     public void addFetchListener(ActionListener l)         { fetchItem.addActionListener(l); }
     public void addCommitListener(ActionListener l)        { commitItem.addActionListener(l); }
+    public void addMergeListener(ActionListener l)         { mergeItem.addActionListener(l); }
+    public void addCreateBranchListener(ActionListener l)  { branchCreateItem.addActionListener(l); }
     public void addRefreshListener(ActionListener l)       { refreshItem.addActionListener(l); }
     public void addStashListener(ActionListener l)         { stashItem.addActionListener(l); }
     public void setCreateDiffEnabled(boolean enabled)      { createDiffItem.setEnabled(enabled); }
@@ -360,4 +463,13 @@ public class MainMenuBar extends JMenuBar {
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
     public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
     public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }
+
+    public void addWorskpacePullListener(ActionListener l)       { workspacePullItem.addActionListener(l); }
+    public void addWorskpacePushListener(ActionListener l)       { workspacePushItem.addActionListener(l); }
+    public void addWorskpaceFetchListener(ActionListener l)       { workspaceFetchItem.addActionListener(l); }
+    public void addWorskpaceCommitListener(ActionListener l)       { workspaceCommitItem.addActionListener(l); }
+    public void addWorskpaceCreateBranchListener(ActionListener l) { workspaceBranchCreateItem.addActionListener(l); }
+    public void addWorskpaceMergeListener(ActionListener l)        { workspaceMergeItem.addActionListener(l); }
+
+
 }

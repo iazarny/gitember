@@ -138,7 +138,9 @@ public class InteractiveRebaseDialog extends JDialog {
                                    List<RebaseStep> initialSteps) {
         super(owner, "Interactive Rebase", Dialog.ModalityType.DOCUMENT_MODAL);
         this.steps = new ArrayList<>(initialSteps);
-        setSize(1400, 820);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
         setLocationRelativeTo(owner);
         setResizable(true);
         setMinimumSize(new Dimension(900, 600));

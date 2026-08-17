@@ -88,8 +88,10 @@ public class FolderCompareWindow extends JFrame {
     public FolderCompareWindow() {
         super("Compare Folders");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(1100, 700);
-        setLocationRelativeTo(Context.getMainFrame());
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
+        setLocationRelativeTo(MainFrame.getInstance());
 
         treeModel = new DefaultTreeModel(new DefaultMutableTreeNode("root"));
         leftTree  = makeTree(new LeftRenderer());

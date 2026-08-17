@@ -1579,3 +1579,20 @@ section {
 }
 .audience-card h4 { font-weight: 700; margin-bottom: 0; }
 .audience-card p  { color: #666; line-height: 1.75; font-size: 0.95rem; }
+/*--------------------------------------------------------------
+# Workspace slideshow (#workspace)
+--------------------------------------------------------------*/
+.ws-slideshow { position: relative; max-width: 600px; margin: 0 auto; }
+.ws-slideshow .ws-slide {
+    display: block;
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    transition: opacity 1.7s ease-in-out;
+}
+/* Every slide after the first is stacked over it; the first one stays in flow and sets the height. */
+.ws-slideshow .ws-slide + .ws-slide { position: absolute; top: 0; left: 0; }
+.ws-slideshow .ws-slide.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    .ws-slideshow .ws-slide { transition: none; }
+}

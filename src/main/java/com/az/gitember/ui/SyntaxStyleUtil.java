@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -140,6 +141,8 @@ public final class SyntaxStyleUtil {
         return editorFont;
     }
 
+
+
     // Highlight colors — two palettes selected at paint time based on active theme
 
     public static Color addedBg() {
@@ -215,6 +218,22 @@ public final class SyntaxStyleUtil {
             case "RENAMED",  "RENAME", "COPY"  -> dark ? new Color(220, 170,  60) : new Color(140,  80,  0);
             default                            -> null;
         };
+    }
+
+    // Colors matching original gitember
+    public static final Color STAGED_COLOR = new Color(16, 234, 16);     // green - staged
+    public static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
+    public static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
+    public static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
+    public static final Color LFS_COLOR = new Color(0, 153, 204);        // blue - LFS files
+
+    public static Color scmItemColor(String status) {
+        if (ScmItem.isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR;
+        if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
+        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
+            return SyntaxStyleUtil.UNTRACKED_COLOR;
+        if (ScmItem.Status.LFS.equals(status)) return SyntaxStyleUtil.LFS_COLOR;
+        return SyntaxStyleUtil.UNSTAGED_COLOR;
     }
 
     /**

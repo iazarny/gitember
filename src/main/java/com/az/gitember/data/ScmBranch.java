@@ -1,11 +1,15 @@
 package com.az.gitember.data;
 
+import org.jspecify.annotations.NonNull;
+
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Created by Igor Azarny on 03 - Dec - 2016
  */
-public class ScmBranch {
+public class ScmBranch implements Comparable<ScmBranch> {
+
 
 
     public enum BranchType {
@@ -35,34 +39,6 @@ public class ScmBranch {
     private final String shortName;
     private final String fullName;
 
-    public static String getNameSafe(ScmBranch scmBranch) {
-        if (scmBranch != null) {
-           return scmBranch.getFullName();
-        }
-        return "";
-    }
-
-    public static String getNameExtSafe(ScmBranch scmBranch) {
-        if (scmBranch != null) {
-            return  scmBranch.getNameExt();
-        }
-        return "";
-
-    }
-
-    public String getNameExt() {
-        if (getRemoteMergeName() == null ) {
-            return  getShortName();
-        } else {
-            return String.format("%s -> %s",
-                    getShortName(),
-                    getRemoteMergeName()
-            );
-        }
-    }
-
-
-
     public Optional<String> getScmBranchPushTooltip() {
         String tooltip = null;
         if (getAheadCount() > 0) {
@@ -77,23 +53,6 @@ public class ScmBranch {
         }
         return Optional.ofNullable(tooltip);
     }
-
-    public Optional<String> getScmBranchTooltip() {
-        String tooltip = null;
-        if (getAheadCount() > 0) {
-            tooltip = String.format("%s ahead of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getAheadCount() );
-        }
-        if (getBehindCount() > 0) {
-            if (getAheadCount() > 0) {
-                tooltip += String.format(" and behind on %d", getBehindCount());
-            } else {
-                tooltip = String.format("%s behind of %s on %d commit(s)", getShortName(), getRemoteMergeName(), getBehindCount());
-            }
-        }
-        return Optional.ofNullable(tooltip);
-    }
-
-
 
     public ScmBranch(String shortName, String fullName, BranchType branchType, String sha) {
         this.shortName = shortName;
@@ -161,6 +120,26 @@ public class ScmBranch {
     }
 
 
+    @Override
+    public int compareTo(@NonNull ScmBranch o) {
+        int ret = sha.compareTo(o.sha);
+        if (ret == 0) {
+            ret = fullName.compareTo(o.fullName);
+        }
+        return ret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ScmBranch scmBranch = (ScmBranch) o;
+        return Objects.equals(sha, scmBranch.sha) && Objects.equals(fullName, scmBranch.fullName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sha, fullName);
+    }
 
     @Override
     public String toString() {

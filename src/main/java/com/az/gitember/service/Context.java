@@ -1,56 +1,49 @@
 package com.az.gitember.service;
 
 import com.az.gitember.data.*;
+import com.az.gitember.service.avatar.AvatarService;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
-import org.eclipse.jgit.revplot.PlotCommitList;
-import org.eclipse.jgit.revplot.PlotLane;
 
-import javax.swing.*;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
 
+/**
+ * Application/session state: the loaded {@link Settings}, the currently open {@link Workspace}
+ * (if any), the currently active {@link Project}, and the single JVM-wide property-change bus.
+ *
+ * <p>Everything specific to <em>one</em> repository (branches, tags, stashes, status list, plot
+ * commits, PRs, submodules, the LFS flag, the file watcher, the commit-detail cache, and the
+ * {@link GitRepoService} itself) lives on {@link Project} now. The static methods below that look
+ * repo-scoped (e.g. {@link #getGitRepoService()}, {@link #updateBranches()}) are thin, null-safe
+ * delegates to {@link #getActiveProject()} kept so the many existing call sites keep compiling.
+ */
 public class Context {
 
-    private final static Logger log = Logger.getLogger(Context.class.getName());
-
-    private final static String OS = System.getProperty("os.name").toLowerCase();
-
-    private static GitRepoService gitRepoService = new GitRepoService();
+    private static Workspace workspace = null;
+    private static Project   activeProject;
     private final static SettingService settingService = new SettingService();
 
+    /** Returned by {@link #getGitRepoService()} when no project is active. */
+    private static final GitRepoService NO_REPO = new GitRepoService();
+
     private static final PropertyChangeSupport pcs = new PropertyChangeSupport(new Object());
+    private static final Object BUS_OWNER = new Object();
 
     // Property names
     public static final String PROP_REPOSITORY_PATH = "repositoryPath";
     public static final String PROP_WORKING_BRANCH = "workingBranch";
     public static final String PROP_SETTINGS = "settings";
-    public static final String PROP_SCM_REV_COMMIT_DETAILS = "scmRevCommitDetails";
-    public static final String PROP_LAST_CHANGES = "lastChanges";
     public static final String PROP_LFS_REPO = "lfsRepo";
-    public static final String PROP_SHOW_LFS_FILES = "showLfsFiles";
-    public static final String PROP_SELECTED_TREE_NAME = "selectedTreeName";
-    public static final String PROP_BRANCH_FILTER = "branchFilter";
     public static final String PROP_REMOTE_BRANCHES = "remoteBranches";
     public static final String PROP_LOCAL_BRANCHES = "localBranches";
     public static final String PROP_TAGS = "tags";
     public static final String PROP_STASH = "stash";
     public static final String PROP_STATUS_LIST = "statusList";
     public static final String PROP_PLOT_COMMIT_LIST = "plotCommitList";
-    public static final String PROP_FILE_HISTORY_TREE = "fileHistoryTree";
-    public static final String PROP_FILE_HISTORY_NAME = "fileHistoryName";
-    public static final String PROP_MAIN_PANE_NAME = "mainPaneName";
-    public static final String PROP_SCM_STAT = "scmStat";
-    public static final String PROP_SCM_STAT_LIST = "scmStatList";
-    public static final String PROP_SCM_STAT_BRANCH_LIVE_TIME = "scmStatBranchLiveTime";
-    public static final String PROP_SCM_STAT_LIST_PARAM = "scmStatListParam";
-    public static final String PROP_SEARCH_VALUE = "searchValue";
     public static final String PROP_HISTORY_REFRESH      = "historyRefresh";
     public static final String PROP_WORKING_COPY_REFRESH = "workingCopyRefresh";
 
@@ -66,106 +59,83 @@ public class Context {
      * working copy view so the user sees the conflicted files immediately.
      */
     public static final String PROP_NAVIGATE_TO_WORKING_COPY = "navigateToWorkingCopy";
-    public static final String PROP_SEARCH_RESULT = "searchResult";
     public static final String PROP_PULL_REQUESTS = "pullRequests";
     public static final String PROP_SUBMODULES    = "submodules";
 
-    public enum ActiveView { WORKING_COPY, HISTORY }
-    private static ActiveView activeView = ActiveView.HISTORY;
+    // Fields
+    private static Settings settings;
 
-    public static void setActiveView(ActiveView view) { activeView = view; }
-    public static ActiveView getActiveView()          { return activeView; }
+    /** Test-only: resets session state so test cases don't leak an active project/workspace. */
+    public static void resetActiveProject() {
+        activeProject = null;
+    }
+
+    public static void reset() {
+        activeProject = null;
+        workspace = null;
+        settings = null;
+    }
 
     /** Signals listeners to reload the working-copy status list. */
     public static void refreshWorkingCopy() {
-        pcs.firePropertyChange(PROP_WORKING_COPY_REFRESH, false, true);
-    }
-
-    // Fields
-    private static String repositoryPath;
-    private static ScmBranch workingBranch;
-    private static Settings settings;
-    private static ScmRevisionInformation scmRevCommitDetails;
-    private static boolean lastChanges;
-    private static boolean lfsRepo;
-    private static boolean showLfsFiles;
-    private static String selectedTreeName;
-    private static String branchFilter = "";
-
-    private static final List<ScmBranch> remoteBranchesRaw = new ArrayList<>();
-    private static final List<ScmBranch> localBranchesRaw = new ArrayList<>();
-    private static final List<ScmBranch> tagsRaw = new ArrayList<>();
-
-    private static List<ScmBranch> remoteBranches = Collections.emptyList();
-    private static List<ScmBranch> localBranches = Collections.emptyList();
-    private static List<ScmBranch> tags = Collections.emptyList();
-    private static List<ScmRevisionInformation> stash = Collections.emptyList();
-
-    private static List<ScmItem> statusList = new ArrayList<>();
-    private static List<PlotCommit> plotCommitList = new ArrayList<>();
-
-    private static String fileHistoryTree;
-    private static String fileHistoryName;
-    private static String mainPaneName;
-    private static ScmStat scmStat = new ScmStat();
-    private static List<ScmStat> scmStatList = Collections.emptyList();
-    private static List<AverageLiveTime> scmStatBranchLiveTime = Collections.emptyList();
-    private static StatWPParameters scmStatListParam;
-    private static String searchValue;
-    private static Map<String, Set<String>> searchResult = Collections.emptyMap();
-    private static List<PullRequest> pullRequests = Collections.emptyList();
-    private static List<Submodule>   submodules   = Collections.emptyList();
-
-    public static final Map<String, ScmRevisionInformation> scmRevisionInformationCache =
-            new ConcurrentHashMap<>();
-
-    private static ProjectWatcher projectWatcher;
-    private static Thread projectWatcherThread;
-
-    private static JFrame mainFrame;
-
-    private static final Object branchLock = new Object();
-    private static final Object tagLock = new Object();
-
-    public static JFrame getMainFrame() { return mainFrame; }
-    public static void setMainFrame(JFrame frame) { mainFrame = frame; }
-
-    // Property change listener support
-    public static void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
+        fire(activeProject, PROP_WORKING_COPY_REFRESH, false, true);
     }
 
     public static void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(propertyName, listener);
     }
 
-    public static void removePropertyChangeListener(PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(listener);
+    /** Lets {@link Project} publish on the single global bus with itself as the event source. */
+    public static void fire(Object source, String prop, Object oldValue, Object newValue) {
+        pcs.firePropertyChange(new PropertyChangeEvent(source != null ? source : BUS_OWNER, prop, oldValue, newValue));
     }
 
-    public static void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(propertyName, listener);
+    public static Project getActiveProject() {
+        return activeProject;
+    }
+
+    /**
+     * @deprecated legacy path-based setter, retained for its one remaining caller, which uses
+     * it to clear the active project when the aggregated workspace view (rather than a single
+     * repository) becomes active. A non-null value is a no-op -- open a repository via
+     * {@link #init} or {@link #initRepoOnly} instead.
+     */
+    @Deprecated
+    public static void setRepositoryPath(String value) {
+        if (value != null) {
+            return;
+        }
+        Project old = activeProject;
+        activeProject = null;
+        fire(old, PROP_REPOSITORY_PATH, old == null ? null : old.getGitDir(), null);
     }
 
     // Getters and setters with property change firing
     public static String getRepositoryPath() {
-        return repositoryPath;
+        return activeProject == null ? null : activeProject.getGitDir();
     }
 
-    public static void setRepositoryPath(String value) {
-        String old = repositoryPath;
-        repositoryPath = value;
-        pcs.firePropertyChange(PROP_REPOSITORY_PATH, old, value);
+    public static String getProjectFolder() {
+        return activeProject == null ? "" : activeProject.getProjectFolder();
+    }
+
+    /**
+     * O(1): the currently active {@link Project}, if any. Unlike the historic implementation
+     * (a path-based scan of {@code settings.getProjects()}), this also finds a project reached
+     * only through a workspace.
+     */
+    public static Optional<Project> getCurrentProject() {
+        return Optional.ofNullable(activeProject);
     }
 
     public static ScmBranch getWorkingBranch() {
-        return workingBranch;
+        return activeProject == null ? null : activeProject.getWorkingBranch();
     }
 
     public static void setWorkingBranch(ScmBranch value) {
-        ScmBranch old = workingBranch;
-        workingBranch = value;
-        pcs.firePropertyChange(PROP_WORKING_BRANCH, old, value);
+        if (activeProject != null) {
+            activeProject.setWorkingBranch(value);
+        }
     }
 
     public static Settings getSettings() {
@@ -175,252 +145,126 @@ public class Context {
     public static void setSettings(Settings value) {
         Settings old = settings;
         settings = value;
-        pcs.firePropertyChange(PROP_SETTINGS, old, value);
+        fire(BUS_OWNER, PROP_SETTINGS, old, value);
     }
 
-    public static ScmRevisionInformation getScmRevCommitDetails() {
-        return scmRevCommitDetails;
+    public static Workspace getWorkspace() {
+        return workspace;
     }
 
-    public static void setScmRevCommitDetails(ScmRevisionInformation value) {
-        ScmRevisionInformation old = scmRevCommitDetails;
-        scmRevCommitDetails = value;
-        pcs.firePropertyChange(PROP_SCM_REV_COMMIT_DETAILS, old, value);
+    /**
+     * Opens {@code w} (or closes the current workspace when {@code w} is {@code null}).
+     * Any project of the outgoing workspace that is not the active project has its
+     * {@link GitRepoService} released — projects can otherwise stay open indefinitely
+     * while a workspace is browsed.
+     */
+    public static void setWorkspace(Workspace w) {
+        Workspace old = workspace;
+        workspace = w;
+        if (old != null && old != w) {
+            for (Project p : old.getProjects()) {
+                if (p != activeProject) {
+                    p.closeRepoService();
+                }
+            }
+        }
     }
 
-    public static boolean isLastChanges() {
-        return lastChanges;
-    }
-
-    public static void setLastChanges(boolean value) {
-        boolean old = lastChanges;
-        lastChanges = value;
-        pcs.firePropertyChange(PROP_LAST_CHANGES, old, value);
+    /** True when the tree should represent a workspace (a set of repositories). */
+    public static boolean isWorkspaceMode() {
+        return Context.getWorkspace() != null;
     }
 
     public static boolean isLfsRepo() {
-        return lfsRepo;
+        return activeProject != null && activeProject.isLfsRepo();
     }
 
     public static void setLfsRepo(boolean value) {
-        boolean old = lfsRepo;
-        lfsRepo = value;
-        pcs.firePropertyChange(PROP_LFS_REPO, old, value);
-    }
-
-    public static boolean isShowLfsFiles() {
-        return showLfsFiles;
-    }
-
-    public static void setShowLfsFiles(boolean value) {
-        boolean old = showLfsFiles;
-        showLfsFiles = value;
-        pcs.firePropertyChange(PROP_SHOW_LFS_FILES, old, value);
-    }
-
-    public static String getSelectedTreeName() {
-        return selectedTreeName;
-    }
-
-    public static void setSelectedTreeName(String value) {
-        String old = selectedTreeName;
-        selectedTreeName = value;
-        pcs.firePropertyChange(PROP_SELECTED_TREE_NAME, old, value);
-    }
-
-    public static String getBranchFilter() {
-        return branchFilter;
-    }
-
-    public static void setBranchFilter(String value) {
-        String old = branchFilter;
-        branchFilter = value != null ? value : "";
-        pcs.firePropertyChange(PROP_BRANCH_FILTER, old, branchFilter);
-        filterBranches();
-        filterTags();
+        if (activeProject != null) {
+            activeProject.setLfsRepo(value);
+        }
     }
 
     public static List<ScmBranch> getRemoteBranches() {
-        return remoteBranches;
+        return activeProject == null ? List.of() : activeProject.getRemoteBranches();
     }
 
     public static List<ScmBranch> getLocalBranches() {
-        return localBranches;
+        return activeProject == null ? List.of() : activeProject.getLocalBranches();
     }
 
     public static List<ScmBranch> getTags() {
-        return tags;
+        return activeProject == null ? List.of() : activeProject.getTags();
     }
 
     public static List<ScmRevisionInformation> getStash() {
-        return stash;
+        return activeProject == null ? List.of() : activeProject.getStash();
     }
 
     public static List<ScmItem> getStatusList() {
-        return statusList;
+        return activeProject == null ? List.of() : activeProject.getStatusList();
     }
 
     public static List<PlotCommit> getPlotCommitList() {
-        return plotCommitList;
+        return activeProject == null ? List.of() : activeProject.getPlotCommitList();
     }
 
-    public static String getFileHistoryTree() {
-        return fileHistoryTree;
-    }
-
-    public static void setFileHistoryTree(String value) {
-        String old = fileHistoryTree;
-        fileHistoryTree = value;
-        pcs.firePropertyChange(PROP_FILE_HISTORY_TREE, old, value);
-    }
-
-    public static String getFileHistoryName() {
-        return fileHistoryName;
-    }
-
-    public static void setFileHistoryName(String value) {
-        String old = fileHistoryName;
-        fileHistoryName = value;
-        pcs.firePropertyChange(PROP_FILE_HISTORY_NAME, old, value);
-    }
-
-    public static String getMainPaneName() {
-        return mainPaneName;
-    }
-
-    public static void setMainPaneName(String value) {
-        String old = mainPaneName;
-        mainPaneName = value;
-        pcs.firePropertyChange(PROP_MAIN_PANE_NAME, old, value);
-    }
-
-    public static ScmStat getScmStat() {
-        return scmStat;
-    }
-
-    public static void setScmStat(ScmStat value) {
-        ScmStat old = scmStat;
-        scmStat = value;
-        pcs.firePropertyChange(PROP_SCM_STAT, old, value);
-    }
-
-    public static String getSearchValue() {
-        return searchValue;
-    }
-
-    public static void setSearchValue(String value) {
-        String old = searchValue;
-        searchValue = value;
-        pcs.firePropertyChange(PROP_SEARCH_VALUE, old, value);
-    }
-
-    public static Map<String, Set<String>> getSearchResult() {
-        return searchResult;
-    }
-
-    public static void setSearchResult(Map<String, Set<String>> value) {
-        Map<String, Set<String>> old = searchResult;
-        searchResult = value;
-        pcs.firePropertyChange(PROP_SEARCH_RESULT, old, value);
-    }
-
-    // Init
-    private static void initProjectWatcher(String gitFolder) throws Exception {
-        String projFolder = gitFolder
-                .replace("/.git", "")
-                .replace("\\.git", "");
-        if (projectWatcherThread != null) {
-            projectWatcherThread.interrupt();
+    private static Project resolveProject(String pathOrGitDir) {
+        if (settings == null) {
+            settings = new Settings();
         }
-        projectWatcher = new ProjectWatcher(projFolder, (kind, fileName) -> {
-            SwingUtilities.invokeLater(() -> Context.updateStatus(null, true));
-        });
-        projectWatcherThread = new Thread(projectWatcher);
-        projectWatcherThread.setDaemon(true);
-        projectWatcherThread.start();
+        return settings.getOrCreateProject(pathOrGitDir);
     }
 
-    public static void init(RemoteRepoParameters remoteRepoParameters) throws Exception {
-        String gitFolder = remoteRepoParameters.getDestinationFolder();
-
-        if (!gitFolder.endsWith(Const.GIT_FOLDER)) {
-            gitFolder += File.separator + Const.GIT_FOLDER;
+    public static void initRepoOnly(Project project) throws Exception {
+        Project old = activeProject;
+        String oldPath = old == null ? null : old.getGitDir();
+        project.openRepoService();             // may throw -- nothing mutated yet
+        if (old != null && old != project) {
+            old.stopWatcher();
+            AvatarService.clearCache();
         }
+        activeProject = project;               // assign before firing
+        fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
+    }
 
-        if (!new File(gitFolder).exists()) {
-            throw new RuntimeException("Git folder " + gitFolder + " not found");
+    public static void initRepoOnly(String gitFolder) throws Exception {
+        initRepoOnly(resolveProject(gitFolder));
+    }
+
+    public static void init(Project project) throws Exception {
+
+        Project old = activeProject;
+        String oldPath = old == null ? null : old.getGitDir();
+        project.openRepoService();             // may throw -- nothing mutated yet
+        if (old != null && old != project) {
+            old.stopWatcher();
+            AvatarService.clearCache();
         }
-
-        gitRepoService = new GitRepoService(gitFolder);
-        setRepositoryPath(gitFolder);
-        scmRevisionInformationCache.clear();
-        com.az.gitember.service.avatar.AvatarService.clearCache();
-        setStash(gitRepoService.getStashList());
-        setLfsRepo(getGitRepoService().isLfsRepo());
-        setShowLfsFiles(false);
-
-        updateBranches();
-        updateTags();
-        updateWorkingBranch();
-        updateStatus(null);
-
-        // Fill cache in background
-        new Thread(() -> {
-            gitRepoService.getCommitsByTree(null, true, 100, null).stream().forEach(
-                    s -> gitRepoService.adapt(s, null)
-            );
-        }).start();
-
-        initProjectWatcher(gitFolder);
-        updatePullRequests();
-        updateSubmodules();
+        activeProject = project;               // assign before firing
+        fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
+        project.initAfterOpen();
     }
 
     public static void init(String gitFolder) throws Exception {
-        RemoteRepoParameters params = new RemoteRepoParameters();
-        params.setDestinationFolder(gitFolder);
-        init(params);
+        init(resolveProject(gitFolder));
     }
 
     public static void saveSettings() {
-        if (projectWatcherThread != null) {
-            projectWatcherThread.interrupt();
-        }
         settingService.write(settings);
-    }
-
-    public static Optional<Project> getCurrentProject() {
-        String folder = getProjectFolder().replaceAll("[/\\\\]+$", "");
-        return settings.getProjects().stream()
-                .filter(p -> p.getProjectHomeFolder().replaceAll("[/\\\\]+$", "").equalsIgnoreCase(folder))
-                .findFirst();
-    }
-
-    private static String lastTreeName;
-    private static boolean lastAllHistory;
-
-    public static void updatePlotCommitList(final ProgressMonitor progressMonitor) {
-        updatePlotCommitList(lastTreeName, lastAllHistory, progressMonitor);
     }
 
     public static void updatePlotCommitList(final String treeName,
                                             final boolean allHistory,
                                             final ProgressMonitor progressMonitor) {
-        final PlotCommitList<PlotLane> plotCommits = gitRepoService.getCommitsByTree(treeName, allHistory, -1, progressMonitor);
-
-        List<PlotCommit> old = new ArrayList<>(plotCommitList);
-        plotCommitList = new ArrayList<>(plotCommits);
-        pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, old, plotCommitList);
-
-        setSelectedTreeName(treeName);
-
-        lastTreeName = treeName;
-        lastAllHistory = allHistory;
+        if (activeProject != null) {
+            activeProject.updatePlotCommitList(treeName, allHistory, progressMonitor);
+        }
     }
 
     /** Signals listeners (e.g. HistoryPanel) to reload the commit history. */
     public static void refreshHistory() {
-        pcs.firePropertyChange(PROP_HISTORY_REFRESH, false, true);
+        fire(activeProject, PROP_HISTORY_REFRESH, false, true);
     }
 
     /**
@@ -429,7 +273,7 @@ public class Context {
      * Call this on the EDT after a successful pull.
      */
     public static void navigateToHistory(String sha) {
-        pcs.firePropertyChange(PROP_NAVIGATE_TO_HISTORY, null, sha);
+        fire(activeProject, PROP_NAVIGATE_TO_HISTORY, null, sha);
     }
 
     /**
@@ -437,112 +281,41 @@ public class Context {
      * Call this on the EDT after a pull that produced conflicts.
      */
     public static void navigateToWorkingCopy() {
-        pcs.firePropertyChange(PROP_NAVIGATE_TO_WORKING_COPY, false, true);
+        fire(activeProject, PROP_NAVIGATE_TO_WORKING_COPY, false, true);
     }
 
     public static void updateAll() {
-        updateStatus(null);
-        try {
-            updateBranches();
-            updateTags();
-            updateStash();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot make updates  ", e);
+        if (activeProject != null) {
+            activeProject.updateAll();
         }
-
     }
 
-    public static synchronized void updateStatus(ProgressMonitor progressMonitor) {
+    public static void updateStatus(ProgressMonitor progressMonitor) {
         updateStatus(progressMonitor, false);
     }
 
-    public static synchronized void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
-        List<ScmItem> statuses = gitRepoService.getStatuses(progressMonitor, lastChanges);
-        List<ScmItem> old = statusList;
-        if (!workingCopyOnly) {
-            List<PlotCommit> oldPlot = plotCommitList;
-            plotCommitList = new ArrayList<>();
-            pcs.firePropertyChange(PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
+    public static void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
+        if (activeProject != null) {
+            activeProject.updateStatus(progressMonitor, workingCopyOnly);
         }
-        statusList = new ArrayList<>(statuses);
-        pcs.firePropertyChange(PROP_STATUS_LIST, old, statusList);
     }
 
     public static void updateWorkingBranch() {
-        setWorkingBranch(
-                localBranches.stream().filter(ScmBranch::isHead).findFirst().orElse(null)
-        );
+        if (activeProject != null) {
+            activeProject.updateWorkingBranch();
+        }
     }
-
-
 
     public static void updateBranches() {
-
-        synchronized (branchLock) {
-            localBranchesRaw.clear();
-            remoteBranchesRaw.clear();
-            try {
-                localBranchesRaw.addAll(gitRepoService.getBranches());
-                remoteBranchesRaw.addAll(gitRepoService.getRemoteBranches());
-
-                List<ScmBranch> oldLocal = localBranches;
-                localBranches = new ArrayList<>(localBranchesRaw);
-                pcs.firePropertyChange(PROP_LOCAL_BRANCHES, oldLocal, localBranches);
-
-                List<ScmBranch> oldRemote = remoteBranches;
-                remoteBranches = new ArrayList<>(remoteBranchesRaw);
-                pcs.firePropertyChange(PROP_REMOTE_BRANCHES, oldRemote, remoteBranches);
-
-                filterBranchesInternal();
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.log(Level.SEVERE, "Cannot update branch information");
-            }
+        if (activeProject != null) {
+            activeProject.updateBranches();
         }
-    }
-
-    public static void filterBranches() {
-        synchronized (branchLock) {
-            filterBranchesInternal();
-        }
-    }
-
-    private static void filterBranchesInternal() {
-        String filter = (branchFilter != null ? branchFilter : "").toLowerCase(Locale.ROOT);
-        List<ScmBranch> oldLocal = localBranches;
-        localBranches = localBranchesRaw.stream()
-                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
-                .collect(Collectors.toList());
-        pcs.firePropertyChange(PROP_LOCAL_BRANCHES, oldLocal, localBranches);
-
-        List<ScmBranch> oldRemote = remoteBranches;
-        remoteBranches = remoteBranchesRaw.stream()
-                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
-                .collect(Collectors.toList());
-        pcs.firePropertyChange(PROP_REMOTE_BRANCHES, oldRemote, remoteBranches);
     }
 
     public static void updateTags() {
-        synchronized (tagLock) {
-            tagsRaw.clear();
-            tagsRaw.addAll(gitRepoService.getTags());
-            filterTagsInternal();
+        if (activeProject != null) {
+            activeProject.updateTags();
         }
-    }
-
-    public static void filterTags() {
-        synchronized (tagLock) {
-            filterTagsInternal();
-        }
-    }
-
-    private static void filterTagsInternal() {
-        String filter = (branchFilter != null ? branchFilter : "").toLowerCase();
-        List<ScmBranch> old = tags;
-        tags = tagsRaw.stream()
-                .filter(b -> b.getNameExt().toLowerCase().contains(filter))
-                .collect(Collectors.toList());
-        pcs.firePropertyChange(PROP_TAGS, old, tags);
     }
 
     public static void readSettings() {
@@ -553,100 +326,40 @@ public class Context {
             s.setIgnoreCompareFiles(new java.util.TreeSet<>(com.az.gitember.data.Settings.DEFAULT_IGNORE_COMPARE_FILES));
             settingService.write(s);
         }
+        s.internAll();
         setSettings(s);
     }
 
     public static void updateStash() {
-        setStash(gitRepoService.getStashList());
+        if (activeProject != null) {
+            activeProject.updateStash();
+        }
     }
 
     public static List<PullRequest> getPullRequests() {
-        return pullRequests;
-    }
-
-    private static void setPullRequests(List<PullRequest> value) {
-        List<PullRequest> old = pullRequests;
-        pullRequests = value;
-        pcs.firePropertyChange(PROP_PULL_REQUESTS, old, value);
+        return activeProject == null ? List.of() : activeProject.getPullRequests();
     }
 
     public static List<Submodule> getSubmodules() {
-        return submodules;
-    }
-
-    private static void setSubmodules(List<Submodule> value) {
-        List<Submodule> old = submodules;
-        submodules = value;
-        pcs.firePropertyChange(PROP_SUBMODULES, old, value);
+        return activeProject == null ? List.of() : activeProject.getSubmodules();
     }
 
     /** Refreshes the submodule list in a daemon thread; fires PROP_SUBMODULES on the EDT when done. */
     public static void updateSubmodules() {
-        Thread t = new Thread(() -> {
-            try {
-                List<Submodule> list = gitRepoService.getSubmodules();
-                SwingUtilities.invokeLater(() -> setSubmodules(list));
-            } catch (Exception e) {
-                log.log(Level.WARNING, "Failed to load submodules", e);
-                SwingUtilities.invokeLater(() -> setSubmodules(Collections.emptyList()));
-            }
-        });
-        t.setDaemon(true);
-        t.start();
+        if (activeProject != null) {
+            activeProject.updateSubmodules();
+        }
     }
 
     /** Fetches open PRs in a daemon thread; fires PROP_PULL_REQUESTS on the EDT when done. */
     public static void updatePullRequests() {
-        Thread t = new Thread(() -> {
-            try {
-                String remoteUrl = gitRepoService.getRepositoryRemoteUrl();
-                String token = getCurrentProject().map(Project::getAccessToken).orElse(null);
-                List<PullRequest> prs = PullRequestService.fetch(remoteUrl, token);
-                SwingUtilities.invokeLater(() -> setPullRequests(prs));
-            } catch (Exception e) {
-                log.log(Level.WARNING, "Failed to update pull requests", e);
-            }
-        });
-        t.setDaemon(true);
-        t.start();
-    }
-
-    private static void setStash(List<ScmRevisionInformation> value) {
-        List<ScmRevisionInformation> old = stash;
-        stash = value;
-        pcs.firePropertyChange(PROP_STASH, old, value);
+        if (activeProject != null) {
+            activeProject.updatePullRequests();
+        }
     }
 
     public static GitRepoService getGitRepoService() {
-        return gitRepoService;
+        return activeProject == null ? NO_REPO : activeProject.getGitRepoService();
     }
 
-    public static SettingService getSettingService() {
-        return settingService;
-    }
-
-    public static String getProjectFolder() {
-        return (repositoryPath != null ? repositoryPath : "").replace(Const.GIT_FOLDER, "");
-    }
-
-    public static boolean isWindows() {
-        return (OS.contains("win"));
-    }
-
-    public static boolean isMac() {
-        return (OS.contains("mac"));
-    }
-
-    public static boolean isLinux() {
-        return (OS.contains("linux"));
-    }
-
-    public static String getHomeFolder() {
-        // get users home folder , with last path delimiter
-        String home = System.getProperty("user.home");
-        if (home != null && !home.endsWith(java.io.File.separator)) {
-            home = home + java.io.File.separator;
-        }
-        return home;
-    }
 }

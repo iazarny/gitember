@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
@@ -154,6 +155,122 @@ public class PullResultDialog extends JDialog {
 
         getRootPane().setDefaultButton(closeBtn);
         Util.bindEscapeToDispose(this);
+    }
+
+    /**
+     * Workspace variant: one row per repository summarising its pull outcome
+     * (status and added / deleted / changed counts), with a server-messages / errors
+     * area below listing per-repository details.
+     */
+    public PullResultDialog(Component parent, List<ProjectOperationResult<PullOperationResult>> results) {
+        super(SwingUtilities.getWindowAncestor(parent), "Pull Result",
+                ModalityType.APPLICATION_MODAL);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(640, 500);
+        setLocationRelativeTo(parent);
+
+        long ok = results.stream().filter(ProjectOperationResult::isSuccess).count();
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));
+        JLabel titleLabel = new JLabel("Pull completed for " + ok + " of "
+                + results.size() + " repositories");
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+
+        // ---- per-repository summary table ----
+        DefaultTableModel model = new DefaultTableModel(
+                new String[]{"Repository", "Status", "Added", "Deleted", "Changed"}, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+        };
+        for (ProjectOperationResult<PullOperationResult> r : results) {
+            if (r.isSuccess()) {
+                PullOperationResult res = r.getResult();
+                model.addRow(new Object[]{
+                        r.getProjectName(),
+                        res != null ? res.getStatus() : "",
+                        res != null ? res.getAddedFiles().size()   : 0,
+                        res != null ? res.getDeletedFiles().size() : 0,
+                        res != null ? res.getChangedFiles().size() : 0
+                });
+            } else {
+                model.addRow(new Object[]{r.getProjectName(), "Failed", "—", "—", "—"});
+            }
+        }
+        JTable table = new JTable(model);
+        table.setFillsViewportHeight(true);
+        table.setShowGrid(false);
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        for (int c = 1; c < table.getColumnCount(); c++) {
+            table.getColumnModel().getColumn(c).setCellRenderer(center);
+        }
+        JScrollPane tableScroll = new JScrollPane(table);
+
+        // ---- per-repository server messages / errors ----
+        String displayMsgs = results.isEmpty()
+                ? "No repositories with a remote."
+                : buildWorkspaceReport(results);
+        Font monoFont = SyntaxStyleUtil.monoFont();
+        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayMsgs, monoFont.getSize()));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(monoFont);
+        msgArea.setCaretPosition(0);
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
+        JScrollPane msgScroll = new JScrollPane(msgArea);
+        msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
+        msgScroll.setPreferredSize(new Dimension(0, 120));
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScroll, msgScroll);
+        splitPane.setResizeWeight(0.6);
+        splitPane.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dispose());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
+        btnPanel.add(closeBtn);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(splitPane,   BorderLayout.CENTER);
+        mainPanel.add(btnPanel,    BorderLayout.SOUTH);
+        setContentPane(mainPanel);
+
+        getRootPane().setDefaultButton(closeBtn);
+        Util.bindEscapeToDispose(this);
+    }
+
+    private static String buildWorkspaceReport(List<ProjectOperationResult<PullOperationResult>> results) {
+        StringBuilder sb = new StringBuilder();
+        for (ProjectOperationResult<PullOperationResult> r : results) {
+            sb.append("=== ").append(r.getProjectName()).append(" ===\n");
+            if (r.getRemoteUrl() != null && !r.getRemoteUrl().isEmpty()) {
+                sb.append(r.getRemoteUrl()).append('\n');
+            }
+            if (r.isSuccess()) {
+                PullOperationResult res = r.getResult();
+                String msgs = res != null ? res.getServerMessages() : "";
+                sb.append(res != null ? res.getStatus() : "").append('\n');
+                if (msgs != null && !msgs.isEmpty()) {
+                    sb.append(msgs);
+                }
+            } else {
+                Exception e = r.getError();
+                sb.append("FAILED: ").append(e != null ? e.getMessage() : "unknown error");
+            }
+            sb.append("\n\n");
+        }
+        return sb.toString().trim();
     }
 
     private static void addRows(DefaultTableModel model, List<String> files, String status) {

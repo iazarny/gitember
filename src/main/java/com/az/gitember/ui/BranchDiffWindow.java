@@ -93,7 +93,9 @@ public class BranchDiffWindow extends JFrame {
         this.branchBLabel = shortName(branchBRef);
 
         setTitle("Branch Diff: " + branchALabel + " ↔ " + branchBLabel);
-        setSize(1100, 650);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 

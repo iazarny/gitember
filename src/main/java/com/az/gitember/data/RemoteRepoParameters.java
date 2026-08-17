@@ -1,6 +1,7 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
@@ -90,6 +91,35 @@ public class RemoteRepoParameters {
             params.accessToken  = StringUtils.defaultString(p.getAccessToken());
             params.keyPassPhrase = StringUtils.defaultString(p.getKeyPass());
         });
+
+        // If the project had no credentials, try to extract them from the URL
+        if (StringUtils.isBlank(params.accessToken) && StringUtils.isBlank(params.userName)) {
+            params.extractCredentialsFromUrl(params.url);
+        }
+
+        return params;
+    }
+
+    /**
+     * Creates parameters for an arbitrary project, reading the remote URL from the
+     * project's <em>own</em> repository (via {@code svc}) rather than from the currently
+     * open repository. Used by workspace-wide push / pull / fetch, where each project in
+     * the workspace has its own remote and credentials.
+     *
+     * @param project project whose stored credentials should be used
+     * @param svc     a service bound to that project's repository
+     * @return populated parameters (URL may be blank if the project has no remote)
+     */
+    public static RemoteRepoParameters forProject(Project project, GitRepoService svc) {
+        RemoteRepoParameters params = new RemoteRepoParameters();
+        params.url = StringUtils.defaultString(svc.getRepositoryRemoteUrl());
+
+        if (project != null) {
+            params.userName      = StringUtils.defaultString(project.getUserName());
+            params.userPwd       = StringUtils.defaultString(project.getUserPwd());
+            params.accessToken   = StringUtils.defaultString(project.getAccessToken());
+            params.keyPassPhrase = StringUtils.defaultString(project.getKeyPass());
+        }
 
         // If the project had no credentials, try to extract them from the URL
         if (StringUtils.isBlank(params.accessToken) && StringUtils.isBlank(params.userName)) {

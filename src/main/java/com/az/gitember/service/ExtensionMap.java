@@ -44,6 +44,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/plain", "prop", true));
         add(new ExtensionInfo("text/plain", "text", true));
         add(new ExtensionInfo("text/plain", "conf", true));
+        add(new ExtensionInfo("text/plain", "config", true));
         add(new ExtensionInfo("text/plain", "def", true));
         add(new ExtensionInfo("text/plain", "scala", true));
         add(new ExtensionInfo("text/plain", "sc", true));
@@ -60,6 +61,7 @@ public class ExtensionMap {
 
 
         add(new ExtensionInfo("text/plain", "md", true));
+        add(new ExtensionInfo("text/plain", "gitattributes", true));
         add(new ExtensionInfo("text/plain", "go", true));
         add(new ExtensionInfo("text/plain", "golang", true));
         add(new ExtensionInfo("text/plain", "rb", true));
@@ -104,6 +106,7 @@ public class ExtensionMap {
         add(new ExtensionInfo("text/x-c++src", "cpp", true));
         add(new ExtensionInfo("text/x-chdr", "h", true));
         add(new ExtensionInfo("text/x-c++hdr", "hh", true));
+        add(new ExtensionInfo("text/x-c++hdr", "hpp", true));
         add(new ExtensionInfo("text/x-fortran", "f", true));
         add(new ExtensionInfo("text/x-fortran", "for", true));
         add(new ExtensionInfo("text/x-fortran", "f77", true));

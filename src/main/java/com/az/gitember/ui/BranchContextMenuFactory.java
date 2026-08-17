@@ -5,6 +5,8 @@ import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.mainframe.PullHandler;
+import com.az.gitember.ui.mainframe.PushHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,72 +32,71 @@ public class BranchContextMenuFactory {
     /** Called after a worktree add/remove to refresh the tree. */
     private Runnable worktreeRefreshAction;
 
-    public BranchContextMenuFactory(Frame parent, StatusBar statusBar) {
+    public BranchContextMenuFactory(Frame parent) {
         this.parent = parent;
-        this.statusBar = statusBar;
+        this.statusBar = MainFrame.getInstance().getStatusBar();
     }
 
     public void setWorktreeOpenAction(Consumer<String> action)  { this.worktreeOpenAction   = action; }
     public void setWorktreeRefreshAction(Runnable action)       { this.worktreeRefreshAction = action; }
 
-    public JPopupMenu createBranchContextMenu(ScmBranch branch) {
+    public JPopupMenu createBranchContextMenu(ScmBranch sourceScmBranch) {
         JPopupMenu menu = new JPopupMenu();
 
-        String name = branch.getShortName();
+        String name = sourceScmBranch.getShortName();
         String fullName = name;
-        boolean disablePull = branch.getRemoteMergeName() == null
-                && ScmBranch.BranchType.LOCAL.equals(branch.getBranchType());
-        if (branch.getRemoteMergeName() != null) {
-            fullName = name + " (" + branch.getRemoteMergeName() + ")";
+        boolean disablePull = sourceScmBranch.getRemoteMergeName() == null
+                && ScmBranch.BranchType.LOCAL.equals(sourceScmBranch.getBranchType());
+        if (sourceScmBranch.getRemoteMergeName() != null) {
+            fullName = name + " (" + sourceScmBranch.getRemoteMergeName() + ")";
         }
 
         // Checkout
         JMenuItem checkoutItem = new JMenuItem("Checkout");
         checkoutItem.addActionListener(e ->
-                new CheckoutBranchHandler(parent, statusBar, branch).execute());
+                new CheckoutBranchHandler(parent,  sourceScmBranch).execute());
         menu.add(checkoutItem);
 
         // Create branch
-        boolean isRemote = ScmBranch.BranchType.REMOTE.equals(branch.getBranchType());
+        boolean isRemote = ScmBranch.BranchType.REMOTE.equals(sourceScmBranch.getBranchType());
         JMenuItem createBranchItem = new JMenuItem(isRemote ? "Create local branch ..." : "Create branch ...");
         createBranchItem.addActionListener(e ->
-                CreateBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), isRemote));
+                CreateBranchHandler.showAndExecute(parent,  sourceScmBranch.getFullName(), isRemote));
         menu.add(createBranchItem);
 
         // Merge and Rebase - only if not current branch and not a tag
         ScmBranch workingBranch = Context.getWorkingBranch();
         boolean isCurrentBranch = workingBranch != null
-                && branch.getShortName().equals(workingBranch.getShortName());
-        boolean isTag = ScmBranch.BranchType.TAG == branch.getBranchType();
+                && sourceScmBranch.getShortName().equals(workingBranch.getShortName());
+        boolean isTag = ScmBranch.BranchType.TAG == sourceScmBranch.getBranchType();
 
         if (!isCurrentBranch && !isTag) {
             String workingName = workingBranch != null ? workingBranch.getShortName() : "current";
 
             JMenuItem mergeItem = new JMenuItem("Merge " + name + " -> " + workingName + "...");
             mergeItem.addActionListener(e ->
-                    MergeBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), name));
+                    MergeBranchHandler.showAndExecute(parent,  sourceScmBranch));
             menu.add(mergeItem);
 
             JMenuItem rebaseItem = new JMenuItem("Rebase " + name + " -> " + workingName + "...");
             rebaseItem.addActionListener(e ->
-                    RebaseBranchHandler.showAndExecute(parent, statusBar, branch.getFullName(), name));
+                    RebaseBranchHandler.showAndExecute(parent,  sourceScmBranch.getFullName(), name));
             menu.add(rebaseItem);
         }
 
         // Pull / Push - only for local branches
-        if (branch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+        if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
             menu.addSeparator();
 
             JMenuItem pullItem = new JMenuItem("Pull " + (disablePull ? "" : fullName));
             pullItem.setEnabled(!disablePull);
             pullItem.addActionListener(e ->
-                    new BranchPullHandler(parent, statusBar, branch).execute());
+                    new PullHandler(parent,  sourceScmBranch).execute());
             menu.add(pullItem);
 
             String pushLabel = name.equals(fullName) ? "Push " + name + "..." : "Push " + fullName;
             JMenuItem pushItem = new JMenuItem(pushLabel);
-            pushItem.addActionListener(e ->
-                    new BranchPushHandler(parent, statusBar, branch).execute());
+            pushItem.addActionListener(e ->new PushHandler(parent,  sourceScmBranch).execute() );
             menu.add(pushItem);
         }
 
@@ -105,7 +106,7 @@ public class BranchContextMenuFactory {
 
             JMenuItem pushTagItem = new JMenuItem("Push tag to remote...");
             pushTagItem.addActionListener(e ->
-                    new PushTagHandler(parent, statusBar, branch).execute());
+                    new PushTagHandler(parent,  sourceScmBranch).execute());
             menu.add(pushTagItem);
         }
 
@@ -114,13 +115,13 @@ public class BranchContextMenuFactory {
         if (isTag) {
             JMenuItem deleteTagItem = new JMenuItem("Delete tag \"" + name + "\"...");
             deleteTagItem.addActionListener(e ->
-                    DeleteTagHandler.showAndExecute(parent, statusBar, branch));
+                    DeleteTagHandler.showAndExecute(parent, statusBar, sourceScmBranch));
             menu.add(deleteTagItem);
         } else {
             JMenuItem deleteItem = new JMenuItem("Delete " + name + "...");
             deleteItem.addActionListener(e ->
-                    DeleteBranchHandler.showAndExecute(parent, statusBar, branch));
-            deleteItem.setEnabled(!branch.isHead());
+                    DeleteBranchHandler.showAndExecute(parent, statusBar, sourceScmBranch));
+            deleteItem.setEnabled(!sourceScmBranch.isHead());
             menu.add(deleteItem);
         }
 
@@ -133,8 +134,8 @@ public class BranchContextMenuFactory {
         if (totalBranches > 1) {
             menu.addSeparator();
             JMenu diffMenu = new JMenu("Diff with");
-            fillDiffSubmenu(diffMenu, localBranches, branch.getFullName());
-            fillDiffSubmenu(diffMenu, remoteBranches, branch.getFullName());
+            fillDiffSubmenu(diffMenu, localBranches, sourceScmBranch.getFullName());
+            fillDiffSubmenu(diffMenu, remoteBranches, sourceScmBranch.getFullName());
             menu.add(diffMenu);
         }
 
