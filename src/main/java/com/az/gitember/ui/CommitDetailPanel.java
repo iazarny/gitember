@@ -281,7 +281,9 @@ public class CommitDetailPanel extends JPanel {
                     String content = get();
                     FileViewerWindow viewer = new FileViewerWindow(
                             item.getShortName() + " @ " + commitSha.substring(0, Math.min(8, commitSha.length())),
-                            content, item.getShortName());
+                            content, item.getShortName(),
+                            searchBar.getSearchField().getText()
+                    );
                     viewer.enableBlame(commitSha, item.getShortName());
                     viewer.setVisible(true);
                 } catch (Exception e) {

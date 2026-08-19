@@ -103,6 +103,26 @@ class SearchBar extends JPanel {
         if (activeArea != null) activeArea.requestFocusInWindow();
     }
 
+    public JTextField getSearchField() {
+        return searchField;
+    }
+
+    public void findNext(boolean forward) {
+        String text = searchField.getText();
+        if (text.isEmpty()) return;
+        RSyntaxTextArea target = activeArea != null ? activeArea
+                : (textAreas.length > 0 ? textAreas[0] : null);
+        if (target == null) return;
+
+        SearchContext ctx = buildContext(forward);
+        SearchResult result = SearchEngine.find(target, ctx);
+        if (!result.wasFound()) {
+            // Wrap around
+            target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
+            SearchEngine.find(target, ctx);
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private SearchContext buildContext(boolean forward) {
@@ -132,21 +152,7 @@ class SearchBar extends JPanel {
         }
     }
 
-    private void findNext(boolean forward) {
-        String text = searchField.getText();
-        if (text.isEmpty()) return;
-        RSyntaxTextArea target = activeArea != null ? activeArea
-                : (textAreas.length > 0 ? textAreas[0] : null);
-        if (target == null) return;
 
-        SearchContext ctx = buildContext(forward);
-        SearchResult result = SearchEngine.find(target, ctx);
-        if (!result.wasFound()) {
-            // Wrap around
-            target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
-            SearchEngine.find(target, ctx);
-        }
-    }
 
     private void clearHighlights() {
         SearchContext ctx = new SearchContext("");
@@ -155,4 +161,6 @@ class SearchBar extends JPanel {
         }
         statusLabel.setText("");
     }
+
+
 }

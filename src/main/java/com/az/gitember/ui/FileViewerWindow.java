@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -48,6 +49,10 @@ public class FileViewerWindow extends JFrame {
     }
 
     public FileViewerWindow(String title, String content, String fileName) {
+        this(title, content, fileName, null);
+    }
+
+    public FileViewerWindow(String title, String content, String fileName, String searchTerm) {
         setTitle(title);
         setSize(900, 600);
         setLocationRelativeTo(MainFrame.getInstance());
@@ -133,6 +138,15 @@ public class FileViewerWindow extends JFrame {
 
         // ── Search bar ────────────────────────────────────────────────────
         searchBar = new SearchBar(textArea);
+
+        if (StringUtils.isNotBlank(searchTerm)) {
+            SwingUtilities.invokeLater(() -> {
+                searchBar.activate();
+                searchBar.getSearchField().setText(searchTerm);
+                searchBar.findNext(true);
+            });
+        }
+
 
         // ── Buttons ───────────────────────────────────────────────────────
         JButton saveBtn  = new JButton("Save...");

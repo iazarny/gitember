@@ -159,7 +159,8 @@
       "Bash([ -x \"$CHROME\" ])",
       "Bash(mkdir -p /tmp/wsshot)",
       "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=2000 --screenshot=/tmp/wsshot/frame0.png file://__TRACKED_VAR__/index.html)",
-      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=8000 --screenshot=/tmp/wsshot/frame2.png file://__TRACKED_VAR__/index.html)"
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=8000 --screenshot=/tmp/wsshot/frame2.png file://__TRACKED_VAR__/index.html)",
+      "Bash(mvn -q compile)"
     ]
   }
 }
