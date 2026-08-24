@@ -3,10 +3,13 @@ package com.az.gitember.ui;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.WorktreeInfo;
+import com.az.gitember.dialog.WorktreeCreateDialog;
+import com.az.gitember.dialog.WorktreesDialog;
 import com.az.gitember.handler.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.mainframe.PullHandler;
 import com.az.gitember.ui.mainframe.PushHandler;
+import com.az.gitember.ui.maintree.MainTreePanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -109,6 +112,53 @@ public class BranchContextMenuFactory {
                     new PushTagHandler(parent,  sourceScmBranch).execute());
             menu.add(pushTagItem);
         }
+
+        // Create work tree
+        if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+            menu.addSeparator();
+            JMenuItem createWorkTree = new JMenuItem("Create worktree ...");
+            menu.add(createWorkTree);
+
+            if (isCurrentBranch) {
+                createWorkTree.setEnabled(false);
+            }
+
+            createWorkTree.addActionListener(e -> {
+                try {
+                    List<WorktreeInfo> worktrees = Context.getGitRepoService().listWorktrees();
+                    WorktreeCreateDialog dlg = new WorktreeCreateDialog(parent, worktrees, name);
+                    dlg.setVisible(true);
+                    if (dlg.isConfirmed()) {
+                        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                            @Override
+                            protected Void doInBackground() throws Exception {
+                                Context.getGitRepoService().addWorktree(dlg.getPath(), dlg.getBranch(), dlg.isNewBranch());
+                                return null;
+                            }
+                            @Override
+                            protected void done() {
+                                try {
+                                    get();
+                                    MainFrame.getInstance().getTreePanel().refreshWorktrees();
+                                } catch (Exception ex) {
+                                    log.log(Level.WARNING, "Add worktree failed", ex);
+                                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                                    JOptionPane.showMessageDialog(parent,
+                                            "Cannot add worktree:\n" + cause.getMessage(),
+                                            "Error", JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        };
+                        worker.execute();
+                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+
+
+        }
+
 
         // Delete
         menu.addSeparator();
