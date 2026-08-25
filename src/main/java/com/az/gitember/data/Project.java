@@ -632,7 +632,7 @@ public class Project implements Serializable, Comparable<Project>  {
     public void setWorkingBranch(ScmBranch value) {
         ScmBranch old = workingBranch;
         workingBranch = value;
-        Context.fire(this, Context.PROP_WORKING_BRANCH, old, value);
+        Context.fire(this, Context.PROP_WORKING_BRANCH, null, value);
     }
 
     public boolean isLfsRepo() {
