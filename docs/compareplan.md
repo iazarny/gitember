@@ -72,9 +72,7 @@ Test:
 - HTTPS authentication
 - Credential manager/keychain
 - GPG signing
-- Git user.name
-- Git user.email
-- Global Git configuration
+- Git user.name / user.email
 - Proxy configuration
 - External editor
 - External diff tool
@@ -86,15 +84,10 @@ Test:
 - Memory usage
 - Internet requirement
 - Account requirement
-
-Record:
-
 - Installer size
 - Installed size
 - Startup time
-- License
-- Open-source status
-- Account requirements
+
 
 ---
 
