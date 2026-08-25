@@ -628,6 +628,7 @@ public class Project implements Serializable, Comparable<Project>  {
         return workingBranch;
     }
 
+
     public void setWorkingBranch(ScmBranch value) {
         ScmBranch old = workingBranch;
         workingBranch = value;
