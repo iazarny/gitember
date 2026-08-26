@@ -135,31 +135,7 @@
       "Bash(tee /tmp/verify_conflict.log)",
       "Bash(tee /tmp/verify_conflict2.log)",
       "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=SecretDetectionUiTest)",
-      "Bash(mvn -q compile -DskipTests)",
-      "Bash(perl -0pi -e 's/org\\\\.eclipse\\\\.jgit\\\\.api\\\\.MergeCommand\\\\.FastForwardMode/MergeCommand.FastForwardMode/g; s/import com\\\\.az\\\\.gitember\\\\.ui\\\\.workspace\\\\.ProjectBranchSelector;/import com.az.gitember.ui.workspace.ProjectBranchSelector;\\\\nimport org.eclipse.jgit.api.MergeCommand;/' src/main/java/com/az/gitember/dialog/WorkspaceMergeDialog.java)",
-      "Bash(echo \"exit=$?\")",
-      "Bash(mvn -q -o test-compile)",
-      "Bash(mvn -o -q dependency:build-classpath -Dmdep.outputFile=/private/tmp/claude-501/-Users-igorazarny-Projects-gitember/617246e1-9ed1-47c1-bdc3-b4c3f8397044/scratchpad/cp.txt)",
-      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . HeadFlagCheck.java)",
-      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . WorkspaceMergeE2E.java)",
-      "Bash(javac -cp /Users/igorazarny/Projects/gitember/target/classes:__CMDSUB_OUTPUT__ -d . ConflictCheck.java)",
-      "Bash(git -C /Users/igorazarny/Projects/gitember diff --stat)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -q -o test-compile -DskipTests)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o -Dit.test=BranchLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn verify -o)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o surefire:test -Dtest=GitRepoServiceRebaseTest -DfailIfNoSpecifiedTests=false)",
-      "Bash(git stash *)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o test)",
-      "Bash(grep -E \"GitRepoServiceRebaseTest|Tests run:.*Failures: 0, Errors: [0-9], Skipped: 1$|BUILD\")",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o -q test-compile -DskipTests)",
-      "Bash(JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.9/libexec/openjdk.jdk/Contents/Home mvn -o verify -Dit.test=WorkspaceLifecycleUiTest -DfailIfNoSpecifiedTests=false)",
-      "Bash(python3 -)",
-      "Bash(python3 *)",
-      "Bash([ -x \"$CHROME\" ])",
-      "Bash(mkdir -p /tmp/wsshot)",
-      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=2000 --screenshot=/tmp/wsshot/frame0.png file://__TRACKED_VAR__/index.html)",
-      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1400,3000 --virtual-time-budget=8000 --screenshot=/tmp/wsshot/frame2.png file://__TRACKED_VAR__/index.html)"
+      "Bash(mvn -q compile -DskipTests)"
     ]
   }
 }

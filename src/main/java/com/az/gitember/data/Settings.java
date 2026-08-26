@@ -122,13 +122,14 @@ public class Settings {
      * flat recent-projects list — use {@link #addRecentProject(Project)} for that.
      */
     public Project getOrCreateProject(String homeFolder) {
-        String key = Project.canonicalKey(homeFolder);
+        /*String key = Project.canonicalKey(homeFolder);
         Project p = byKey.get(key);
         if (p == null) {
             p = new Project(Project.normalizeHome(homeFolder), new Date());
             byKey.put(key, p);
         }
-        return p;
+        return p;*/
+        return new Project(Project.normalizeHome(homeFolder), new Date());
     }
 
     /** Adds (or, if already present, bumps the open time of) a project in the flat recent list. */

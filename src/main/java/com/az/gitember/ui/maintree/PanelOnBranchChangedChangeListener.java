@@ -1,6 +1,5 @@
 package com.az.gitember.ui.maintree;
 
-import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.maintree.CellRenderer.NodeType;
 
@@ -22,19 +21,13 @@ public class PanelOnBranchChangedChangeListener implements PropertyChangeListene
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) {
-            if (evt.getSource() instanceof Project project
-                    && Context.PROP_WORKING_BRANCH.equals(evt.getPropertyName())
-            ) {
-                panel.refreshProjectBranches(project);
-            }
-            return;
+        if (!Context.isWorkspaceMode()) {
+            SwingUtilities.invokeLater(() -> {
+                panel.populateBranches(panel.localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
+                panel.populateBranches(panel.remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
+                panel.updateStateLabel();
+            });
         }
 
-        SwingUtilities.invokeLater(() -> {
-            panel.populateBranches(panel.localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
-            panel.populateBranches(panel.remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
-            panel.updateStateLabel();
-        });
     }
 }

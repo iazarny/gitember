@@ -51,7 +51,7 @@ class SecretDetectionUiTest extends SwingUiTestBase {
             }
         }, Timeout.timeout(10_000));
 
-        window.menuItemWithPath("Branch", "Commit ...").click();
+        window.menuItemWithPath("Branch", "Commit...").click();
         DialogFixture commitDialog = window.dialog();
 
         Pause.pause(new Condition("secret-detector findings to appear") {

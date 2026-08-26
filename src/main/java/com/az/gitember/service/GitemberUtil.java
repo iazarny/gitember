@@ -165,12 +165,21 @@ public class GitemberUtil {
 
 
     public static boolean areEqualIgnoreOrder(List<ScmItem> left, List<ScmItem> right) {
-        if (left == right) {
-            return true;
+
+        if (left == null) {
+            return false;
         }
 
-        if (left == null || right == null) {
+        if (right == null) {
             return false;
+        }
+
+        if (left.isEmpty() || right.isEmpty()) {
+            return false;
+        }
+
+        if (left == right) {
+            return true;
         }
 
         if (left.size() != right.size()) {

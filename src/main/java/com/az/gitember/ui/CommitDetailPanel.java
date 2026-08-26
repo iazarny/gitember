@@ -435,7 +435,7 @@ public class CommitDetailPanel extends JPanel {
                 String commitContent = Files.readString(Paths.get(tempPath));
 
                 // Read file from working directory
-                String workDir = Context.getRepositoryPath().replace("/.git", "").replace("\\.git", "");
+                String workDir = Context.getProjectFolder().replace("/.git", "").replace("\\.git", "");
                 String diskPath = workDir + "/" + item.getShortName();
                 String diskContent;
                 try {

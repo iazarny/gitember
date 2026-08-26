@@ -2,6 +2,7 @@ package com.az.gitember.ui.support;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
@@ -56,9 +57,7 @@ public abstract class SwingUiTestBase {
         fakeHome = java.nio.file.Files.createTempDirectory("gitember-ui-home-");
         System.setProperty("user.home", fakeHome.toString());
 
-        if (openDefaultRepo()) {
-            repoDir = GitFixtures.newInitializedRepo();
-        }
+        repoDir = GitFixtures.newInitializedRepo();
         robot = BasicRobot.robotWithNewAwtHierarchy();
 
         JFrame frame = execute(() -> {
@@ -69,22 +68,7 @@ public abstract class SwingUiTestBase {
         });
         window = new FrameFixture(robot, frame);
         window.show();
-        if (openDefaultRepo()) {
-            openRepo(repoDir);
-        }
-    }
-
-    /**
-     * Whether {@link #setUpRobotAndRepo()} should create {@link #repoDir} and open it as the
-     * active repository before the test body runs — the right starting point for the single
-     * repository tests that make up most of the suite.
-     *
-     * <p>Tests that drive several repositories at once (workspace tests) override this to
-     * {@code false} and start from the welcome screen, creating and registering their own
-     * repositories instead.
-     */
-    protected boolean openDefaultRepo() {
-        return true;
+        openRepo(repoDir);
     }
 
     @AfterEach
@@ -119,7 +103,7 @@ public abstract class SwingUiTestBase {
         Pause.pause(new Condition("repository to open") {
             @Override
             public boolean test() {
-                return Context.getRepositoryPath() != null;
+                return StringUtils.isNoneEmpty(Context.getProjectFolder());
             }
         }, Timeout.timeout(10_000));
 

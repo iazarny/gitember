@@ -1,8 +1,8 @@
 @echo off
 setlocal
 
-set VERSION=3.4
-set JAR=gitember-3.4-SNAPSHOT-boot.jar
+set VERSION=3.4.1
+set JAR=gitember-3.4.1-SNAPSHOT-boot.jar
 
 rem --- clean previous output ---
 if exist Gitember rmdir /s /q Gitember

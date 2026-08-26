@@ -50,7 +50,7 @@ class StageUnstageUiTest extends SwingUiTestBase {
             }
         }, Timeout.timeout(10_000));
 
-        window.menuItemWithPath("Branch", "Commit ...").click();
+        window.menuItemWithPath("Branch", "Commit...").click();
         DialogFixture commitDialog = window.dialog();
         commitDialog.textBox("commitMessageArea").enterText("Add readme");
         commitDialog.button("commitButton").click();
