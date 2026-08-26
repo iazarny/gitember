@@ -21,11 +21,13 @@ public class PanelOnBranchChangedChangeListener implements PropertyChangeListene
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (Context.isWorkspaceMode()) return;
-        SwingUtilities.invokeLater(() -> {
-            panel.populateBranches(panel.localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
-            panel.populateBranches(panel.remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
-            panel.updateStateLabel();
-        });
+        if (!Context.isWorkspaceMode()) {
+            SwingUtilities.invokeLater(() -> {
+                panel.populateBranches(panel.localBranchesNode, Context.getLocalBranches(), NodeType.BRANCH);
+                panel.populateBranches(panel.remoteBranchesNode, Context.getRemoteBranches(), NodeType.BRANCH);
+                panel.updateStateLabel();
+            });
+        }
+
     }
 }

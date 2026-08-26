@@ -27,7 +27,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
         chooser.setDialogTitle("Select Git Repository");
 
         // Start from last known location
-        if (StringUtils.isEmpty(Context.getRepositoryPath())) {
+        if (StringUtils.isEmpty(Context.getProjectFolder())) {
             chooser.setCurrentDirectory(new File(Context.getProjectFolder()));
         }
 

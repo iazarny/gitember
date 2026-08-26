@@ -2,6 +2,7 @@ package com.az.gitember.ui.support;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
@@ -102,7 +103,7 @@ public abstract class SwingUiTestBase {
         Pause.pause(new Condition("repository to open") {
             @Override
             public boolean test() {
-                return Context.getRepositoryPath() != null;
+                return StringUtils.isNoneEmpty(Context.getProjectFolder());
             }
         }, Timeout.timeout(10_000));
 

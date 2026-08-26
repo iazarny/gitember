@@ -67,14 +67,14 @@ public class Context {
 
     /** Test-only: resets session state so test cases don't leak an active project/workspace. */
     static void reset() {
-        activeProject = null;
+        setActiveProject(null);
         workspace = null;
         settings = null;
     }
 
     /** Signals listeners to reload the working-copy status list. */
     public static void refreshWorkingCopy() {
-        fire(activeProject, PROP_WORKING_COPY_REFRESH, false, true);
+        fire(getActiveProject(), PROP_WORKING_COPY_REFRESH, false, true);
     }
 
     public static void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
@@ -90,6 +90,10 @@ public class Context {
         return activeProject;
     }
 
+    private static  void setActiveProject(Project project) {
+        activeProject = project;
+    }
+
     /**
      * @deprecated legacy path-based setter, retained for its one remaining caller, which uses
      * it to clear the active project when the aggregated workspace view (rather than a single
@@ -98,21 +102,15 @@ public class Context {
      */
     @Deprecated
     public static void setRepositoryPath(String value) {
-        if (value != null) {
-            return;
+        if (value == null) {
+            Project old = getActiveProject();
+            setActiveProject(null);
+            fire(old, PROP_REPOSITORY_PATH, old == null ? null : old.getGitDir(), null);
         }
-        Project old = activeProject;
-        activeProject = null;
-        fire(old, PROP_REPOSITORY_PATH, old == null ? null : old.getGitDir(), null);
-    }
-
-    // Getters and setters with property change firing
-    public static String getRepositoryPath() {
-        return activeProject == null ? null : activeProject.getGitDir();
     }
 
     public static String getProjectFolder() {
-        return activeProject == null ? "" : activeProject.getProjectFolder();
+        return getActiveProject() == null ? "" : getActiveProject().getProjectFolder();
     }
 
     /**
@@ -121,18 +119,13 @@ public class Context {
      * only through a workspace.
      */
     public static Optional<Project> getCurrentProject() {
-        return Optional.ofNullable(activeProject);
+        return Optional.ofNullable(getActiveProject());
     }
 
     public static ScmBranch getWorkingBranch() {
-        return activeProject == null ? null : activeProject.getWorkingBranch();
+        return getActiveProject() == null ? null : getActiveProject().getWorkingBranch();
     }
 
-    public static void setWorkingBranch(ScmBranch value) {
-        if (activeProject != null) {
-            activeProject.setWorkingBranch(value);
-        }
-    }
 
     public static Settings getSettings() {
         return settings;
@@ -159,7 +152,7 @@ public class Context {
         workspace = w;
         if (old != null && old != w) {
             for (Project p : old.getProjects()) {
-                if (p != activeProject) {
+                if (p != getActiveProject()) {
                     p.closeRepoService();
                 }
             }
@@ -172,37 +165,37 @@ public class Context {
     }
 
     public static boolean isLfsRepo() {
-        return activeProject != null && activeProject.isLfsRepo();
+        return getActiveProject() != null && getActiveProject().isLfsRepo();
     }
 
     public static void setLfsRepo(boolean value) {
-        if (activeProject != null) {
-            activeProject.setLfsRepo(value);
+        if (getActiveProject() != null) {
+            getActiveProject().setLfsRepo(value);
         }
     }
 
     public static List<ScmBranch> getRemoteBranches() {
-        return activeProject == null ? List.of() : activeProject.getRemoteBranches();
+        return getActiveProject() == null ? List.of() : getActiveProject().getRemoteBranches();
     }
 
     public static List<ScmBranch> getLocalBranches() {
-        return activeProject == null ? List.of() : activeProject.getLocalBranches();
+        return getActiveProject() == null ? List.of() : getActiveProject().getLocalBranches();
     }
 
     public static List<ScmBranch> getTags() {
-        return activeProject == null ? List.of() : activeProject.getTags();
+        return getActiveProject() == null ? List.of() : getActiveProject().getTags();
     }
 
     public static List<ScmRevisionInformation> getStash() {
-        return activeProject == null ? List.of() : activeProject.getStash();
+        return getActiveProject() == null ? List.of() : getActiveProject().getStash();
     }
 
     public static List<ScmItem> getStatusList() {
-        return activeProject == null ? List.of() : activeProject.getStatusList();
+        return getActiveProject() == null ? List.of() : getActiveProject().getStatusList();
     }
 
     public static List<PlotCommit> getPlotCommitList() {
-        return activeProject == null ? List.of() : activeProject.getPlotCommitList();
+        return getActiveProject() == null ? List.of() : getActiveProject().getPlotCommitList();
     }
 
     private static Project resolveProject(String pathOrGitDir) {
@@ -213,13 +206,13 @@ public class Context {
     }
 
     public static void initRepoOnly(Project project) throws Exception {
-        Project old = activeProject;
+        Project old = getActiveProject();
         String oldPath = old == null ? null : old.getGitDir();
         project.openRepoService();             // may throw -- nothing mutated yet
         if (old != null && old != project) {
             old.stopWatcher();
         }
-        activeProject = project;               // assign before firing
+        setActiveProject(project);               // assign before firing
         fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
     }
 
@@ -229,13 +222,13 @@ public class Context {
 
     public static void init(Project project) throws Exception {
         AvatarService.clearCache();
-        Project old = activeProject;
+        Project old = getActiveProject();
         String oldPath = old == null ? null : old.getGitDir();
         project.openRepoService();             // may throw -- nothing mutated yet
         if (old != null && old != project) {
             old.stopWatcher();
         }
-        activeProject = project;               // assign before firing
+        setActiveProject(project);               // assign before firing
         fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
         project.initAfterOpen();
     }
@@ -251,14 +244,14 @@ public class Context {
     public static void updatePlotCommitList(final String treeName,
                                             final boolean allHistory,
                                             final ProgressMonitor progressMonitor) {
-        if (activeProject != null) {
-            activeProject.updatePlotCommitList(treeName, allHistory, progressMonitor);
+        if (getActiveProject() != null) {
+            getActiveProject().updatePlotCommitList(treeName, allHistory, progressMonitor);
         }
     }
 
     /** Signals listeners (e.g. HistoryPanel) to reload the commit history. */
     public static void refreshHistory() {
-        fire(activeProject, PROP_HISTORY_REFRESH, false, true);
+        fire(getActiveProject(), PROP_HISTORY_REFRESH, false, true);
     }
 
     /**
@@ -267,7 +260,7 @@ public class Context {
      * Call this on the EDT after a successful pull.
      */
     public static void navigateToHistory(String sha) {
-        fire(activeProject, PROP_NAVIGATE_TO_HISTORY, null, sha);
+        fire(getActiveProject(), PROP_NAVIGATE_TO_HISTORY, null, sha);
     }
 
     /**
@@ -275,12 +268,12 @@ public class Context {
      * Call this on the EDT after a pull that produced conflicts.
      */
     public static void navigateToWorkingCopy() {
-        fire(activeProject, PROP_NAVIGATE_TO_WORKING_COPY, false, true);
+        fire(getActiveProject(), PROP_NAVIGATE_TO_WORKING_COPY, false, true);
     }
 
     public static void updateAll() {
-        if (activeProject != null) {
-            activeProject.updateAll();
+        if (getActiveProject() != null) {
+            getActiveProject().updateAll();
         }
     }
 
@@ -289,26 +282,26 @@ public class Context {
     }
 
     public static void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
-        if (activeProject != null) {
-            activeProject.updateStatus(progressMonitor, workingCopyOnly);
+        if (getActiveProject() != null) {
+            getActiveProject().updateStatus(progressMonitor, workingCopyOnly);
         }
     }
 
     public static void updateWorkingBranch() {
-        if (activeProject != null) {
-            activeProject.updateWorkingBranch();
+        if (getActiveProject() != null) {
+            getActiveProject().updateWorkingBranch();
         }
     }
 
     public static void updateBranches() {
-        if (activeProject != null) {
-            activeProject.updateBranches();
+        if (getActiveProject() != null) {
+            getActiveProject().updateBranches();
         }
     }
 
     public static void updateTags() {
-        if (activeProject != null) {
-            activeProject.updateTags();
+        if (getActiveProject() != null) {
+            getActiveProject().updateTags();
         }
     }
 
@@ -325,35 +318,35 @@ public class Context {
     }
 
     public static void updateStash() {
-        if (activeProject != null) {
-            activeProject.updateStash();
+        if (getActiveProject() != null) {
+            getActiveProject().updateStash();
         }
     }
 
     public static List<PullRequest> getPullRequests() {
-        return activeProject == null ? List.of() : activeProject.getPullRequests();
+        return getActiveProject() == null ? List.of() : getActiveProject().getPullRequests();
     }
 
     public static List<Submodule> getSubmodules() {
-        return activeProject == null ? List.of() : activeProject.getSubmodules();
+        return getActiveProject() == null ? List.of() : getActiveProject().getSubmodules();
     }
 
     /** Refreshes the submodule list in a daemon thread; fires PROP_SUBMODULES on the EDT when done. */
     public static void updateSubmodules() {
-        if (activeProject != null) {
-            activeProject.updateSubmodules();
+        if (getActiveProject() != null) {
+            getActiveProject().updateSubmodules();
         }
     }
 
     /** Fetches open PRs in a daemon thread; fires PROP_PULL_REQUESTS on the EDT when done. */
     public static void updatePullRequests() {
-        if (activeProject != null) {
-            activeProject.updatePullRequests();
+        if (getActiveProject() != null) {
+            getActiveProject().updatePullRequests();
         }
     }
 
     public static GitRepoService getGitRepoService() {
-        return activeProject == null ? NO_REPO : activeProject.getGitRepoService();
+        return getActiveProject() == null ? NO_REPO : getActiveProject().getGitRepoService();
     }
 
 }

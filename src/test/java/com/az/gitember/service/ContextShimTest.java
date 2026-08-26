@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
 import com.az.gitember.data.Workspace;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +48,6 @@ class ContextShimTest {
 
     @Test
     void noActiveProject_everyShimIsNullSafe() {
-        assertNull(Context.getRepositoryPath());
         assertEquals("", Context.getProjectFolder());
         assertNotNull(Context.getGitRepoService());
         assertNull(Context.getGitRepoService().getRepository());
@@ -84,8 +84,7 @@ class ContextShimTest {
 
         assertSame(project, Context.getActiveProject());
         assertSame(project, Context.getCurrentProject().orElse(null));
-        assertNotNull(Context.getRepositoryPath());
-        assertTrue(Context.getRepositoryPath().endsWith(".git"));
+        assertNotNull(Context.getProjectFolder());
     }
 
     @Test

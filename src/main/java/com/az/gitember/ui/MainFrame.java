@@ -12,6 +12,7 @@ import com.az.gitember.ui.mainframe.*;
 import com.az.gitember.ui.maintree.CellRenderer;
 import com.az.gitember.ui.maintree.MainTreePanel;
 import com.az.gitember.ui.workspace.WorkspaceDashboardPanel;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import javax.swing.*;
@@ -771,11 +772,11 @@ public class MainFrame extends JFrame {
 
 
     public void updateTitle() {
-        String path = Context.getRepositoryPath();
+        String path = Context.getProjectFolder();
         ScmBranch branch = Context.getWorkingBranch();
         if (getActiveView() == ActiveView.WORKSPACE) {
             setTitle("Gitember - " + Context.getWorkspace().getName());
-        } else if (path != null) {
+        } else if (StringUtils.isNoneEmpty(path)) {
             String folder = Context.getProjectFolder();
             String branchName = branch != null ? " [" + branch.getShortName() + "]" : "";
             setTitle("Gitember - " + folder + branchName);

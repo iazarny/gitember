@@ -502,21 +502,20 @@ public class Project implements Serializable, Comparable<Project>  {
 
     public void updateStatus(ProgressMonitor progressMonitor, boolean workingCopyOnly) {
         synchronized (statusLock) {
-            if (getGitDir() != null) {
+            String gitDir = getGitDir();
+            if ( gitDir != null) {
                 List<ScmItem> statuses = getGitRepoService().getStatuses(progressMonitor);
                 List<ScmItem> old = statusList;
-                if (!GitemberUtil.areEqualIgnoreOrder(statuses,old)) {
+                boolean eq = GitemberUtil.areEqualIgnoreOrder(statuses,old);
+                if (!eq) {
                     statusList = new ArrayList<>(statuses);
-                    Context.fire(this, Context.PROP_STATUS_LIST, old, statusList);
+                    Context.fire(this, Context.PROP_STATUS_LIST, null, statusList);
                 }
-
-
                 if (!workingCopyOnly) {
                     List<PlotCommit> oldPlot = plotCommitList;
                     plotCommitList = new ArrayList<>();
                     Context.fire(this, Context.PROP_PLOT_COMMIT_LIST, oldPlot, plotCommitList);
                 }
-
             }
         }
     }
