@@ -53,11 +53,7 @@ class WorkspaceLifecycleUiTest extends SwingUiTestBase {
     private Path repoOne;
     private Path repoTwo;
 
-    /** This test opens a workspace of its own repositories, so it starts from the welcome screen. */
-    @Override
-    protected boolean openDefaultRepo() {
-        return false;
-    }
+
 
     @AfterEach
     void deleteWorkspaceRepos() throws Exception {

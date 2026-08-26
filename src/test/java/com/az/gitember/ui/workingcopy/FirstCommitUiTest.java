@@ -49,7 +49,7 @@ class FirstCommitUiTest extends SwingUiTestBase {
             }
         }, Timeout.timeout(10_000));
 
-        window.menuItemWithPath("Branch", "Commit...").click();
+        window.menuItemWithPath("Branch", "Commit ...").click();
         DialogFixture commitDialog = window.dialog();
         commitDialog.textBox("commitMessageArea").enterText("Initial commit");
         commitDialog.button("commitButton").click();

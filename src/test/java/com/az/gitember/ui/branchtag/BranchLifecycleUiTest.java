@@ -24,7 +24,7 @@ class BranchLifecycleUiTest extends SwingUiTestBase {
     void createBranch_fromCurrentHead_createsAndChecksOutBranch() throws Exception {
         GitFixtures.commitFile(repoDir, "a.txt", "1\n", "Initial commit");
 
-        window.menuItemWithPath("Branch", "Create...").click();
+        window.menuItemWithPath("Branch", "Branch ...").click();
 
         JOptionPaneFixture inputDialog = JOptionPaneFinder.findOptionPane().using(robot);
         inputDialog.textBox().enterText("feature/test-branch");
