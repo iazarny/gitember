@@ -36,10 +36,8 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                Context.resetActiveProject();
                 Context.setWorkspace(null);
                 Context.init(folder);
-
                 return null;
             }
 

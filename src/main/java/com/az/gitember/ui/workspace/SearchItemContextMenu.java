@@ -1,9 +1,7 @@
 package com.az.gitember.ui.workspace;
 
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.SearchService;
-import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.HistoryPanel;
 import com.az.gitember.ui.MainFrame;
 
@@ -83,24 +81,7 @@ public class SearchItemContextMenu  extends JPopupMenu {
 
         openItem.addActionListener(evt -> {
             if (selectedNode.getUserObject() instanceof SearchHit hit) {
-                String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
-                if (ExtensionMap.isTextExtension(fileName)) {
-                    try {
-                        String content = Files.readString(Paths.get(fileName));
-                        FileViewerWindow viewer = new FileViewerWindow(hit.getLeafName(), content, hit.getPath());
-                        viewer.setVisible(true);
-                    } catch (Exception ex) {
-                        log.log(Level.WARNING, "Cannot open file", ex);
-                        JOptionPane.showMessageDialog(null, "Cannot open: " + ex.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    try {
-                        Desktop.getDesktop().open(new File(fileName));
-                    } catch (Exception ex) {
-                        log.log(Level.WARNING, "Cannot open file with system", ex);
-                    }
-                }
+                SearchHitOpener.open(hit);
             }
         });
     }

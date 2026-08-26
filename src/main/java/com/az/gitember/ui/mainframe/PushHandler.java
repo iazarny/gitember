@@ -53,7 +53,6 @@ public class PushHandler extends AbstractAsyncHandler<String> {
                 String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, progressMonitor);
                 Context.updateBranches();
                 Context.updateWorkingBranch();
-                Context.setWorkingBranch(branch);
                 return result;
             } else {
                 throw new org.eclipse.jgit.api.errors.InvalidRemoteException("Invalid remote: origin");
