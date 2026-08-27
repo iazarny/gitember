@@ -2229,11 +2229,22 @@ public class GitRepoService implements AutoCloseable {
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(params.getDestinationFolder()))
                 .setCloneAllBranches(true)
-                .setCloneSubmodules(true)
+                .setCloneSubmodules(params.withSubmodules())
                 //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
+
+        if (StringUtils.isNotEmpty(params.getBranch())) {
+            List<String> branches = Arrays.asList(params.getBranch().split(","));
+            cmd
+                    .setBranchesToClone(branches)
+                    .setBranch(branches.getFirst())
+                    .setCloneAllBranches(false);
+        }
+
         if (params.getDepth() > 0) {
-            cmd.setDepth(params.getDepth());
+            cmd
+                    .setDepth(params.getDepth())
+                    .setCloneAllBranches(false);
         }
         configureTransportCommand(cmd, params);
 

@@ -22,6 +22,8 @@ public class RemoteRepoParameters {
     private String keyPassPhrase = "";
     /** Shallow clone depth: 0 means full clone; positive N = last N commits only. */
     private int depth = 0;
+    private String branch;
+    private boolean withSubmodules;
 
     public String getUrl() {
         return url;
@@ -69,6 +71,26 @@ public class RemoteRepoParameters {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public boolean withSubmodules() {
+        return withSubmodules;
+    }
+
+    public boolean isWithSubmodules() {
+        return withSubmodules;
+    }
+
+    public void setWithSubmodules(boolean withSubmodules) {
+        this.withSubmodules = withSubmodules;
     }
 
     /**

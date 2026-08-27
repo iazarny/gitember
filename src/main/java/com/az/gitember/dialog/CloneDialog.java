@@ -28,12 +28,15 @@ public class CloneDialog extends JDialog {
     private final JRadioButton tokenAuthBtn;
     private final JPanel authTypePanel;
     private final JCheckBox shallowCheck;
+    private final JCheckBox withSubmodulesCheck;
     private final JSpinner  depthSpinner;
+    private final JLabel branchLabel;
+    private final JTextField branchField;
     private boolean confirmed = false;
 
     public CloneDialog(Frame parent) {
         super(parent, "Clone Repository", true);
-        setSize(500, 400);
+        setSize(500, 440);
         setLocationRelativeTo(parent);
         setResizable(false);
 
@@ -63,51 +66,9 @@ public class CloneDialog extends JDialog {
         gbc.gridx = 1; gbc.weightx = 1;
         formPanel.add(destPanel, gbc);
 
-        // Auth type selector — shown for HTTPS, hidden for SSH/git@
-        pwdAuthBtn = new JRadioButton("Username & Password", true);
-        tokenAuthBtn = new JRadioButton("Access Token");
-        ButtonGroup authGroup = new ButtonGroup();
-        authGroup.add(pwdAuthBtn);
-        authGroup.add(tokenAuthBtn);
-        authTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        authTypePanel.setOpaque(false);
-        authTypePanel.add(pwdAuthBtn);
-        authTypePanel.add(Box.createHorizontalStrut(16));
-        authTypePanel.add(tokenAuthBtn);
-        authTypePanel.setVisible(false);
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.weightx = 1;
-        formPanel.add(sizePreservingWrapper(authTypePanel), gbc);
-        gbc.gridwidth = 1;
 
-        // Username row — shown when HTTPS + Password auth
-        userLbl = new JLabel("Username:");
-        userLbl.setVisible(false);
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
-        formPanel.add(sizePreservingWrapper(userLbl), gbc);
-        userField = new JTextField(20);
-        userField.setVisible(false);
-        gbc.gridx = 1; gbc.weightx = 1;
-        formPanel.add(sizePreservingWrapper(userField), gbc);
 
-        // Password row — shown when HTTPS + Password auth
-        pwdLbl = new JLabel("Password:");
-        pwdLbl.setVisible(false);
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
-        formPanel.add(sizePreservingWrapper(pwdLbl), gbc);
-        pwdField = new JPasswordField(20);
-        pwdField.setVisible(false);
-        gbc.gridx = 1; gbc.weightx = 1;
-        formPanel.add(sizePreservingWrapper(pwdField), gbc);
 
-        // Token row — shown when HTTPS + Access Token auth
-        tokenLbl = new JLabel("Token:");
-        tokenLbl.setVisible(false);
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
-        formPanel.add(sizePreservingWrapper(tokenLbl), gbc);
-        tokenField = new JPasswordField(20);
-        tokenField.setVisible(false);
-        gbc.gridx = 1; gbc.weightx = 1;
-        formPanel.add(sizePreservingWrapper(tokenField), gbc);
 
         // Shallow clone row
         shallowCheck = new JCheckBox("Clone last commits only (shallow clone)");
@@ -120,9 +81,76 @@ public class CloneDialog extends JDialog {
         shallowPanel.add(shallowCheck);
         shallowPanel.add(Box.createHorizontalStrut(8));
         shallowPanel.add(depthSpinner);
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.weightx = 1;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.weightx = 1;
         formPanel.add(shallowPanel, gbc);
         gbc.gridwidth = 1;
+
+        //submodules
+        withSubmodulesCheck  = new JCheckBox("With submodules");
+        gbc.gridy = 3;
+        gbc.gridx = 0;  gbc.weightx = 0;
+        formPanel.add(withSubmodulesCheck, gbc);
+
+        //specific branch
+        branchLabel = new JLabel("Branch:");
+        branchField = new JTextField(20);
+        branchField.setToolTipText("Comma separated list of branches and tags refs/heads/master,refs/tags/v1.0.0");
+        branchField.putClientProperty("JTextField.placeholderText", "Example: refs/heads/master,refs/tags/v1.0.0");
+        gbc.gridy = 4;
+        gbc.gridx = 0;  gbc.weightx = 0;
+        formPanel.add(branchLabel, gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        formPanel.add(branchField, gbc);
+
+        // Auth type selector — shown for HTTPS, hidden for SSH/git@
+        pwdAuthBtn = new JRadioButton("Username & Password", true);
+        tokenAuthBtn = new JRadioButton("Access Token");
+        ButtonGroup authGroup = new ButtonGroup();
+        authGroup.add(pwdAuthBtn);
+        authGroup.add(tokenAuthBtn);
+        authTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        authTypePanel.setOpaque(false);
+        authTypePanel.add(pwdAuthBtn);
+        authTypePanel.add(Box.createHorizontalStrut(16));
+        authTypePanel.add(tokenAuthBtn);
+        authTypePanel.setVisible(false);
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.weightx = 1;
+        formPanel.add(sizePreservingWrapper(authTypePanel), gbc);
+        gbc.gridwidth = 1;
+
+
+        // Username row — shown when HTTPS + Password auth
+        userLbl = new JLabel("Username:");
+        userLbl.setVisible(false);
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
+        formPanel.add(sizePreservingWrapper(userLbl), gbc);
+        userField = new JTextField(20);
+        userField.setVisible(false);
+        gbc.gridx = 1; gbc.weightx = 1;
+        formPanel.add(sizePreservingWrapper(userField), gbc);
+
+        // Password row — shown when HTTPS + Password auth
+        pwdLbl = new JLabel("Password:");
+        pwdLbl.setVisible(false);
+        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0;
+        formPanel.add(sizePreservingWrapper(pwdLbl), gbc);
+        pwdField = new JPasswordField(20);
+        pwdField.setVisible(false);
+        gbc.gridx = 1; gbc.weightx = 1;
+        formPanel.add(sizePreservingWrapper(pwdField), gbc);
+
+        // Token row — shown when HTTPS + Access Token auth
+        tokenLbl = new JLabel("Token:");
+        tokenLbl.setVisible(false);
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
+        formPanel.add(sizePreservingWrapper(tokenLbl), gbc);
+        tokenField = new JPasswordField(20);
+        tokenField.setVisible(false);
+        gbc.gridx = 1; gbc.weightx = 1;
+        formPanel.add(sizePreservingWrapper(tokenField), gbc);
+
+
+
 
         // Wire the auth type radio buttons to switch visible credential rows
         pwdAuthBtn.addActionListener(e -> applyAuthMode());
@@ -263,6 +291,8 @@ public class CloneDialog extends JDialog {
         RemoteRepoParameters params = new RemoteRepoParameters();
         params.setUrl(urlField.getText().trim());
         params.setDestinationFolder(destField.getText().trim());
+        params.setBranch(branchField.getText());
+        params.setWithSubmodules(withSubmodulesCheck.isSelected());
         if (tokenAuthBtn.isSelected()) {
             params.setAccessToken(new String(tokenField.getPassword()));
         } else {
