@@ -2,746 +2,736 @@
 <html lang="en">
 
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJ96E38Z9K"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-SJ96E38Z9K');
-  </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJ96E38Z9K"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        function gtag() {
+            dataLayer.push(arguments);
+        }
 
-  <title>Git GUI Client Comparison 2026 — Gitember vs GitHub Desktop, Sourcetree, GitKraken &amp; More</title>
-  <meta name="description" content="Detailed feature comparison of the most popular Git GUI clients in 2026: Gitember 3 vs GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
-  <meta name="keywords" content="git gui comparison, best git client 2026, gitember vs sourcetree, gitember vs gitkraken, git gui client review, free git client comparison">
-  <meta name="author" content="Igor Azarny">
-  <meta name="robots" content="index, follow">
+        gtag('js', new Date());
+        gtag('config', 'G-SJ96E38Z9K');
+    </script>
 
-  <!-- Open Graph / Social -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Git GUI Client Comparison 2026 — Gitember vs the Rest">
-  <meta property="og:description" content="Detailed feature-by-feature comparison of the top Git GUI clients. See how Gitember stacks up against GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
-  <meta property="og:image" content="assets/img/3/mac7.png">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <title>Git GUI Client Comparison 2026 — Gitember vs GitHub Desktop, Sourcetree, GitKraken &amp; More</title>
+    <meta name="description"
+          content="Detailed feature comparison of the most popular Git GUI clients in 2026: Gitember 3 vs GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
+    <meta name="keywords"
+          content="git gui comparison, best git client 2026, gitember vs sourcetree, gitember vs gitkraken, git gui client review, free git client comparison">
+    <meta name="author" content="Igor Azarny">
+    <meta name="robots" content="index, follow">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Git GUI Client Comparison 2026 — Gitember vs the Rest">
+    <meta property="og:description"
+          content="Detailed feature-by-feature comparison of the top Git GUI clients. See how Gitember stacks up against GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
+    <meta property="og:image" content="assets/img/3/mac7.png">
 
-  <!-- Vendor CSS Files -->
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Template Main CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i"
+          rel="stylesheet">
 
-  <style>
-    .comparison-hero {
-      background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
-      padding: 120px 0 60px;
-      color: #fff;
-      text-align: center;
-    }
-    .comparison-hero h1 {
-      font-size: 2.6rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .comparison-hero p {
-      font-size: 1.1rem;
-      opacity: 0.85;
-      max-width: 640px;
-      margin: 0 auto;
-    }
-    .comparison-section {
-      padding: 60px 0 20px;
-    }
-    .comparison-section h2 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #37517e;
-      margin-bottom: 24px;
-    }
-    .comparison-section h2 i {
-      color: #4154f1;
-      margin-right: 10px;
-    }
-    /* Scrollable wrapper for wide tables on small screens */
-    .table-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .cmp-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-      min-width: 700px;
-    }
-    .cmp-table thead th {
-      background: #377e71;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 14px;
-      text-align: center;
-      white-space: nowrap;
-    }
-    .cmp-table thead th:first-child {
-      text-align: left;
-      width: 220px;
-    }
-    .cmp-table thead th.col-gitember {
-      background: #41f1c2;
-    }
-    .cmp-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .cmp-table tbody tr:hover {
-      background: #eef0ff;
-    }
-    .cmp-table td {
-      padding: 10px 14px;
-      text-align: center;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: middle;
-    }
-    .cmp-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-      color: #444;
-    }
-    .cmp-table td.col-gitember {
-      background: rgba(65,84,241,0.06);
-      font-weight: 600;
-    }
-    .emoji-yes  { font-size: 1.1rem; }
-    .emoji-no   { font-size: 1.1rem; opacity: 0.55; }
-    .emoji-warn { font-size: 1.1rem; }
-    .footnote {
-      font-size: 0.82rem;
-      color: #777;
-      margin-top: 12px;
-    }
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
 
-    /* Wins table */
-    .wins-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-    }
-    .wins-table thead th {
-      background: #4154f1;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 16px;
-      text-align: left;
-    }
-    .wins-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .wins-table tbody tr:hover {
-      background: #eef0ff;
-    }
-    .wins-table td {
-      padding: 11px 16px;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: top;
-    }
-    .wins-table td:first-child {
-      font-weight: 600;
-      color: #37517e;
-      white-space: nowrap;
-    }
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
 
-    /* Edge table */
-    .edge-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-    }
-    .edge-table thead th {
-      background: #37517e;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 16px;
-      text-align: left;
-    }
-    .edge-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .edge-table tbody tr:hover {
-      background: #f0f2f8;
-    }
-    .edge-table td {
-      padding: 11px 16px;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: top;
-    }
-    .edge-table td:first-child {
-      font-weight: 600;
-      color: #555;
-    }
-    .edge-table td:nth-child(2) {
-      color: #4154f1;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-  </style>
+    <style>
+        .comparison-hero {
+            background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
+            padding: 120px 0 60px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .comparison-hero h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .comparison-hero p {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .comparison-section {
+            padding: 60px 0 20px;
+        }
+
+        .comparison-section h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #37517e;
+            margin-bottom: 24px;
+        }
+
+        .comparison-section h2 i {
+            color: #4154f1;
+            margin-right: 10px;
+        }
+
+        /* Scrollable wrapper for wide tables on small screens */
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cmp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            min-width: 700px;
+        }
+
+        .cmp-table thead th {
+            background: #377e71;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .cmp-table thead th:first-child {
+            text-align: left;
+            width: 220px;
+        }
+
+        .cmp-table thead th.col-gitember {
+            background: #41f1c2;
+        }
+
+        .cmp-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .cmp-table tbody tr:hover {
+            background: #eef0ff;
+        }
+
+        .cmp-table td {
+            padding: 10px 14px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .cmp-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .cmp-table td.col-gitember {
+            background: rgba(65, 84, 241, 0.06);
+            font-weight: 600;
+        }
+
+        .emoji-yes {
+            font-size: 1.1rem;
+        }
+
+        .emoji-no {
+            font-size: 1.1rem;
+            opacity: 0.55;
+        }
+
+        .emoji-warn {
+            font-size: 1.1rem;
+        }
+
+        .footnote {
+            font-size: 0.82rem;
+            color: #777;
+            margin-top: 12px;
+        }
+
+        /* Wins table */
+        .wins-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        .wins-table thead th {
+            background: #4154f1;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .wins-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .wins-table tbody tr:hover {
+            background: #eef0ff;
+        }
+
+        .wins-table td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .wins-table td:first-child {
+            font-weight: 600;
+            color: #37517e;
+            white-space: nowrap;
+        }
+
+        /* Edge table */
+        .edge-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        .edge-table thead th {
+            background: #37517e;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .edge-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .edge-table tbody tr:hover {
+            background: #f0f2f8;
+        }
+
+        .edge-table td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .edge-table td:first-child {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .edge-table td:nth-child(2) {
+            color: #4154f1;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+    </style>
 
 </head>
 
 <body>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="fixed-top d-flex align-items-center header-transparent">
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
     <div class="container d-flex justify-content-between align-items-center">
 
-      <div id="logo">
-        <h1><a href="index.html">Gitember</a></h1>
-      </div>
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
 
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a class="nav-link" href="index.html#hero">Home</a></li>
-          <li><a class="nav-link" href="index.html#features">Features</a></li>
-          <li><a class="nav-link" href="index.html#download">Download</a></li>
-          <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
-        </ul>
-        <i class="bi bi-list mobile-nav-toggle"></i>
-      </nav>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="index.html#features">Features</a></li>
+                <li><a class="nav-link" href="index.html#download">Download</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
     </div>
-  </header>
+</header>
 
-  <!-- ======= Hero ======= -->
-  <div class="comparison-hero">
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
     <div class="container">
-      <h1>Git GUI Client Comparison</h1>
-      <p>Gitember 3 vs GitHub Desktop · Sourcetree · GitKraken · Fork · Tower · SmartGit · Git Extensions — March 2026</p>
+        <h1>Git GUI Client Comparison</h1>
+        <p>Gitember · GitHub Desktop · Sourcetree · GitKraken · Fork <br>
+            Sep 2026</p>
     </div>
-  </div>
+</div>
 
-  <main id="main">
+<main id="main">
 
     <!-- ======= Quick Summary ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-table"></i>Quick Summary</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>SmartGit</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Price</td>
-                <td>Free</td>
-                <td>Free</td>
-                <td>Free</td>
-                <td>Freemium ¹</td>
-                <td>$49.99 one-time</td>
-                <td>Freemium ²</td>
-              </tr>
-              <tr>
-                <td>Open source</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Account required</td>
-                <td><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-warn">⚠️</span> GitHub acct</td>
-                <td><span class="emoji-warn">⚠️</span> Atlassian acct</td>
-                <td><span class="emoji-no">✅</span> Required</td>
-                <td><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-yes">❌</span></td>
-              </tr>
-              <tr>
-                <td>Windows</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>macOS</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Linux</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>UI framework</td>
-                <td>Swing (light)</td>
-                <td>Electron (heavy)</td>
-                <td>Native/Custom</td>
-                <td>Electron (heavy)</td>
-                <td>Native (fast)</td>
-                <td>Swing</td>
-              </tr>
-              <tr>
-                <td>Startup speed</td>
-                <td>Fast</td>
-                <td>Slow</td>
-                <td>Medium</td>
-                <td>Slow</td>
-                <td>Very fast</td>
-                <td>Medium</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2><i class="bi bi-table"></i>1 Quick Summary</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Version</td>
+                        <td>3.4.2</td>
+                        <td>3.6.4</td>
+                        <td>4.2.19</td>
+                        <td>12.4.0</td>
+                        <td>2.66.7</td>
+                    </tr>
+                    <tr>
+                        <td>Price</td>
+                        <td>Free</td>
+                        <td>Free</td>
+                        <td>Free</td>
+                        <td>Community - Free<br>Pro - $10 per month<br>Advanced - $14 per month</td>
+                        <td>$59.99 one-time</td>
+                    </tr>
+
+                    <tr>
+                        <td>Open source</td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                    </tr>
+                    <tr>
+                        <td>Account required</td>
+                        <td><span class="emoji-yes">❌</span></td>
+                        <td><span class="emoji-warn">⚠️</span> GitHub acct</td>
+                        <td><span class="emoji-warn">⚠️</span> Atlassian acct</td>
+                        <td><span class="emoji-no">✅</span> Required</td>
+                        <td><span class="emoji-yes">❌</span></td>
+                    </tr>
+                    <tr>
+                        <td>Windows</td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                    </tr>
+                    <tr>
+                        <td>macOS</td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                    </tr>
+                    <tr>
+                        <td>Linux</td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                        <td><span class="emoji-yes">✅</span></td>
+                        <td><span class="emoji-no">❌</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <p class="footnote">
-          ¹ GitKraken: free for public repos only; private repos require a paid plan ($4.95+/month).<br>
-          ² SmartGit: free for non-commercial use; commercial licence from $79/user.
-        </p>
-      </div>
     </section>
 
 
     <!--  class="col-gitember"  ======= Installation and configuration ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-floppy"></i>Installation and configuration</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-            <tr>
-              <th></th>
-              <th>Gitember 3</th>
-              <th>GitHub Desktop</th>
-              <th>Sourcetree</th>
-              <th>GitKraken</th>
-              <th>Fork</th>
-              <th>SmartGit</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Installation experience</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Portable version</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>First startup</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Git detection</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Installation experience</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Git version selection</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>SSH configuration</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>HTTPS authentication</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Credential manager/keychain</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>GPG signing</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Git user.name / user.email</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Global Git configuration</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>External editor</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>External diff tool</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>External merge tool</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Light/dark theme</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>UI customization</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Keyboard shortcuts</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Startup time</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Memory usage</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Internet requirement</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Account requirement</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2><i class="bi bi-floppy"></i>2 Installation and configuration</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Installer size ¹</td>
+                        <td>89 Mb</td>
+                        <td>304 Mb</td>
+                        <td>67 Mb</td>
+                        <td>220 Mb</td>
+                        <td>32 Mb</td>
+                    </tr>
+                    <tr>
+                        <td>Installed size</td>
+                        <td>185 Mb</td>
+                        <td>681 Mb</td>
+                        <td>168 Mb</td>
+                        <td>626 Mb</td>
+                        <td>106 Mb</td>
+                    </tr>
+                    <tr>
+                        <td>Installation experience</td>
+                        <td>✅</td>
+                        <td>❌Not a regular installer.<br>Unzip and the run application</td>
+                        <td>❌Not a regular installer.<br>Unzip and the run application<br>Move to the /Application
+                            manually
+                        </td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>First startup</td>
+                        <td>✅Scan and add repos</td>
+                        <td>✅Scan and add repos</td>
+                        <td>❌Look confusing.<br>Need to clone or Open local repo</td>
+                        <td>Open release note</td>
+                        <td>Empty workplace<br>Need to open/init/clone repo</td>
+                    </tr>
+                    <tr>
+                        <td>First startup</td>
+                        <td><img src="compare/2/gitemberfirst.png" width="160"/></td>
+                        <td><img src="compare/2/gitdestopstart.png" width="160"/></td>
+                        <td><img src="compare/2/sourcetreefirts.png" width="160"/></td>
+                        <td><img src="compare/2/gitkrakenfirts.png" width="160"/></td>
+                        <td><img src="compare/2/forkfirsttime.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Git detection<br>version selection</td>
+                        <td>✅Not needed</td>
+                        <td>✅Not needed</td>
+                        <td>✅Existing and build in</td>
+                        <td>✅Not needed</td>
+                        <td>✅Existing</td>
+                    </tr>
+                    <tr>
+                        <td>SSH configuration</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>✅Can chose key location<br>Can generate key</td>
+                        <td>.ssh only<br>Global</td>
+                    </tr>
+                    <tr>
+                        <td>HTTPS authentication</td>
+                        <td>Per repository</td>
+                        <td>Per repository</td>
+                        <td>Per account</td>
+                        <td>Per repository</td>
+                        <td>Per repository</td>
+                    </tr>
+                    <tr>
+                        <td>Credential manager/keychain</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GPG signing</td>
+                        <td>❌</td>
+                        <td>❌To get GitHub Desktop to sign your commits with PGP/GPG, you must configure your global Git settings to sign commits by default. GitHub Desktop does not have a native toggle menu for GPG signing; instead, it honors your global .gitconfig settings and relies on an external GPG agent to handle your secret key passphrase.</td>
+                        <td>✅You can set up GPG commit signing in SourceTree by configuring your local repository settings and enabling your GPG key</td>
+                        <td>✅You can enable PGP/GPG commit signing in GitKraken Desktop by configuring your local GPG tool and selecting your key under preferences.</td>
+                        <td>❌The Fork Git client does not have a native, built-in button or settings panel for PGP/GPG commit signing, but it will successfully sign commits if you configure global Git signing on your system</td>
+                    </tr>
+                    <tr>
+                        <td>Git user.name / user.email</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Global Git configuration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>External editor</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>External diff tool</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>External merge tool</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Light/dark theme</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>UI customization</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Keyboard shortcuts</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Startup time</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Memory usage</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Internet requirement</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Account requirement</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
+        <p class="footnote">
+            ¹ Mac Silicon
+        </p>
     </section>
 
 
     <!--  class="col-gitember"  ======= Repository Creation & Cloning ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-floppy"></i>Local Repository Creation & Cloning</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-            <tr>
-              <th></th>
-              <th>Gitember 3</th>
-              <th>GitHub Desktop</th>
-              <th>Sourcetree</th>
-              <th>GitKraken</th>
-              <th>Fork</th>
-              <th>SmartGit</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Create new repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Initialize existing directory</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Add README</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Add .gitignore</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Initial commit</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Change default branch</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Open existing repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2><i class="bi bi-floppy"></i>Local Repository Creation & Cloning</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                        <th>SmartGit</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Create new repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Initialize existing directory</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Add README</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Add .gitignore</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Initial commit</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Change default branch</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Open existing repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
     </section>
 
     <!--  class="col-gitember"  ======= Repository Creation & Cloning ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-floppy"></i>Remote Repository</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-            <tr>
-              <th></th>
-              <th>Gitember 3</th>
-              <th>GitHub Desktop</th>
-              <th>Sourcetree</th>
-              <th>GitKraken</th>
-              <th>Fork</th>
-              <th>SmartGit</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Clone HTTPS repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone SSH repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone private repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone large repository</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Shallow clone</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone specific branch</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone into existing directory</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone with submodules</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Clone with Git LFS</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2><i class="bi bi-floppy"></i>Remote Repository</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                        <th>SmartGit</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Clone HTTPS repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clone SSH repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clone private repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clone large repository</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Shallow clone</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Shallow clone</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clone specific branch</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
     </section>
 
     <!--  class="col-gitember"  ======= Working Tree & Staging ======= -->
@@ -891,7 +881,6 @@
             </tbody>
           </table>
         </div>
-      </div>
     </section>
 
     <!--  class="col-gitember"  ======= Diff viewer ======= -->
@@ -1032,7 +1021,6 @@
             </tbody>
           </table>
         </div>
-      </div>
     </section>
 
     <!--  class="col-gitember"  ======= Commits ======= -->
@@ -3325,43 +3313,43 @@
       </div>
     </section>
 
-  </main>
+</main>
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer">
+<!-- ======= Footer ======= -->
+<footer id="footer">
     <div class="container">
-      <div class="row">
-        <div class="col-lg-6 text-lg-start text-center">
-          <div class="copyright">
-            &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
-          </div>
-          <div class="credits">
-            Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-          </div>
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+                <div class="credits">
+                    Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a>
+                    &nbsp;·&nbsp;
+                    <a href="index.html#features">Features</a>
+                    &nbsp;·&nbsp;
+                    <a href="index.html#download">Download</a>
+                </nav>
+            </div>
         </div>
-        <div class="col-lg-6">
-          <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
-            <a href="index.html#hero">Home</a>
-            &nbsp;·&nbsp;
-            <a href="index.html#features">Features</a>
-            &nbsp;·&nbsp;
-            <a href="index.html#download">Download</a>
-          </nav>
-        </div>
-      </div>
     </div>
-  </footer>
+</footer>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-chevron-up"></i></a>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-chevron-up"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+<script src="assets/vendor/php-email-form/validate.js"></script>
 
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
+<!-- Template Main JS File -->
+<script src="assets/js/main.js"></script>
 
 </body>
 </html>
