@@ -1,6 +1,7 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
+import com.az.gitember.data.ScmPlotCommit;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.dialog.InteractiveRebaseDialog;
 import com.az.gitember.handler.CreateTagHandler;
@@ -206,7 +207,8 @@ public class HistoryPanel extends JPanel {
                         "Change Commit Message", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            String currentMessage = commit.getFullMessage();
+            // The plot walk drops commit bodies, so the message is read back on demand.
+            String currentMessage = Context.getGitRepoService().getFullMessage(commit);
             JTextArea textArea = new JTextArea(currentMessage != null ? currentMessage : "", 6, 50);
             textArea.setLineWrap(true);
             textArea.setWrapStyleWord(true);
@@ -644,7 +646,8 @@ public class HistoryPanel extends JPanel {
             graphCanvas.setCommit(commit, bg);
 
             if (commit != null) {
-                messageLabel.setText(commit.getShortMessage() != null ? commit.getShortMessage() : "");
+                String shortMessage = ScmPlotCommit.shortMessageOf(commit);
+                messageLabel.setText(shortMessage != null ? shortMessage : "");
             } else {
                 // file-history mode: value is already the short-message string
                 messageLabel.setText(value != null ? value.toString() : "");
@@ -760,7 +763,7 @@ public class HistoryPanel extends JPanel {
             return switch (columnIndex) {
                 case 0 -> pc; // rendered by GraphCellRenderer
                 case 1 -> GitemberUtil.formatDate(GitemberUtil.intToDate(pc.getCommitTime()));
-                case 2 -> pc.getAuthorIdent() != null ? pc.getAuthorIdent().getName() : "";
+                case 2 -> ScmPlotCommit.authorNameOf(pc) != null ? ScmPlotCommit.authorNameOf(pc) : "";
                 default -> "";
             };
         }

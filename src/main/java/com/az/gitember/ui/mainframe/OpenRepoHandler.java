@@ -2,7 +2,7 @@ package com.az.gitember.ui.mainframe;
 
 import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.StatusBar;
+import com.az.gitember.ui.MainFrame;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
@@ -36,6 +36,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
             String path = chooser.getSelectedFile().getAbsolutePath();
             statusBar.setStatus("Opening " + path + "...");
             statusBar.showProgress(true);
+            MainFrame.getInstance().swithToTheProjectView();
 
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override

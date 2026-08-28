@@ -22,8 +22,6 @@ import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -383,11 +381,7 @@ public class MainFrame extends JFrame {
         return Context.isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
     }
 
-    public WelcomePanel getWelcomePanel() {
-        return welcomePanel;
-    }
-
-    public void setWelcomePanel(WelcomePanel welcomePanel) {
+    public void swithToTheProjectView() {
         this.welcomePanel = welcomePanel;
     }
 

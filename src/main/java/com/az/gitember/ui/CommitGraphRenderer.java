@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+
+import com.az.gitember.service.Context;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revplot.AbstractPlotRenderer;
 import org.eclipse.jgit.revplot.PlotCommit;
@@ -129,6 +131,10 @@ public class CommitGraphRenderer extends AbstractPlotRenderer<PlotLane, Color> {
     }
 
     public int render(Graphics2D g2, PlotCommit<PlotLane> commit, int rowHeight) {
+        // AbstractPlotRenderer.paintCommit finishes by reading the commit's short message (and
+        // handing it to the drawText below, which ignores it -- the table paints the message in
+        // its own label). Commits from ScmPlotWalk carry no body, so it has to be put back first.
+        Context.getGitRepoService().ensureBodyForPainting(commit);
         this.g2 = g2;
         this.currentCommit = commit;
         this.graphWidth = 0;

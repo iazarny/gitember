@@ -7,7 +7,6 @@ import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
 
 import javax.swing.*;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -32,7 +31,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
         project.setOpenTime(new Date());
         mainFrame.getStatusBar().setStatus("Opening " + folder + "...");
         mainFrame.getStatusBar().showProgress(true);
-        mainFrame.setWelcomePanel(null);
+        mainFrame.swithToTheProjectView();
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override

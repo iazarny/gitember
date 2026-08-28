@@ -119,6 +119,15 @@ public class GitRepoService implements AutoCloseable {
     /** Per-instance commit-detail cache, used only when {@link #owner} is {@code null}. */
     private final Map<String, ScmRevisionInformation> localRevCache = new ConcurrentHashMap<>();
 
+    /** How many painted commits may hold their raw body -- see {@link #ensureBodyForPainting}. */
+    private static final int PAINTING_BODY_LIMIT = 512;
+
+    /** Commits whose body was re-attached for painting, oldest first. Guards the walk below. */
+    private final Deque<RevCommit> paintingBodies = new ArrayDeque<>();
+
+    /** Reused by {@link #ensureBodyForPainting}; guarded by {@link #paintingBodies}. */
+    private RevWalk paintingWalk;
+
     static {
         FilterCommandRegistry.register(GitRepoService.SMUDGE_NAME, SmudgeFilter.FACTORY);
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
@@ -305,6 +314,14 @@ public class GitRepoService implements AutoCloseable {
         if (service != null) {
             service.close();
             service = null;
+        }
+        synchronized (paintingBodies) {
+            paintingBodies.forEach(RevCommit::disposeBody);
+            paintingBodies.clear();
+            if (paintingWalk != null) {
+                paintingWalk.close();
+                paintingWalk = null;
+            }
         }
         if (repository != null) {
             repository.close();
@@ -1071,14 +1088,18 @@ public class GitRepoService implements AutoCloseable {
             commits.forEach(
                     plotCommit -> {
 
-                        final List<ScmItem> affectedItems = adapt(plotCommit).getAffectedItems();
+                        // adapt() re-reads the body of this one commit, so the message and the
+                        // author are taken from the information it built rather than from the
+                        // (body-less) commit itself.
+                        final ScmRevisionInformation info = adapt(plotCommit);
+                        final List<ScmItem> affectedItems = info.getAffectedItems();
 
                         if (
-                                plotCommit.getShortMessage().toLowerCase().contains(searchString)
-                                        || plotCommit.getFullMessage().toLowerCase().contains(searchString)
+                                contains(info.getShortMessage(), searchString)
+                                        || contains(info.getFullMessage(), searchString)
                                         || plotCommit.getName().toLowerCase().contains(searchString)
-                                        || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
-                                        || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                                        || contains(info.getAuthorEmail(), searchString)
+                                        || prersonIndentContains(committerOf(plotCommit), searchString)
                                         || affectedItems.stream().anyMatch(scmItem -> scmItem.getShortName().toLowerCase().contains(searchString))
                         ) {
 
@@ -1218,6 +1239,19 @@ public class GitRepoService implements AutoCloseable {
             Context.saveSettings();
         }
         log.info("Lucene indexing complete: " + total + " commits, " + filesIndexed + " file versions");
+    }
+
+    private static boolean contains(final String value, final String lowerCaseTerm) {
+        return value != null && value.toLowerCase().contains(lowerCaseTerm);
+    }
+
+    /** The committer of {@code commit}, or {@code null} when its body cannot be read. */
+    private PersonIdent committerOf(final RevCommit commit) {
+        RevCommit withBody = bodyOf(commit);
+        if (withBody == null || withBody.getRawBuffer() == null) {
+            return null;
+        }
+        return withBody.getCommitterIdent();
     }
 
     private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
@@ -2078,6 +2112,13 @@ public class GitRepoService implements AutoCloseable {
     /**
      * Get revisions to visualize.
      *
+     * <p>The returned commits carry no raw body -- {@link ScmPlotWalk} keeps only the short
+     * message and author name the history table paints, which is what makes a full history of a
+     * large repository affordable to hold open. Read the messages and idents of these commits
+     * through {@link ScmPlotCommit#shortMessageOf(RevCommit)} /
+     * {@link ScmPlotCommit#authorNameOf(RevCommit)}, or get everything from
+     * {@link #adapt(RevCommit, String)}, which re-reads the body of the one commit asked about.
+     *
      * @param treeName tree name
      * @param all      to visualize with merges
      * @return PlotCommitList<PlotLane>
@@ -2087,7 +2128,7 @@ public class GitRepoService implements AutoCloseable {
 
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
 
-        try (PlotWalk revWalk = new PlotWalk(repository)) {
+        try (PlotWalk revWalk = new ScmPlotWalk(repository)) {
 
             if (treeName != null) {
                 final ObjectId rootId = repository.resolve(treeName);
@@ -3154,6 +3195,70 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /**
+     * A view of {@code commit} with its raw body loaded: {@code commit} itself when the body is
+     * still attached, otherwise a freshly read copy of the same commit.
+     *
+     * <p>Commits produced by {@link #getCommitsByTree} have had their body released (see
+     * {@link ScmPlotWalk}), so whoever needs the full message or the author/committer idents has
+     * to read that one commit again. The copy is short-lived on purpose -- it must not be stored
+     * anywhere, or the bodies are back in the heap.
+     */
+    private RevCommit bodyOf(final RevCommit commit) {
+        if (commit == null || commit.getRawBuffer() != null) {
+            return commit;
+        }
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            return revWalk.parseCommit(commit.getId());
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Cannot read body of commit " + commit.getName(), e);
+            return commit;
+        }
+    }
+
+    /**
+     * Re-attaches the raw body of {@code commit} so it can be painted.
+     *
+     * <p>JGit's own {@code AbstractPlotRenderer.paintCommit} ends by calling
+     * {@code RevCommit.getShortMessage()}, and that method is {@code final}, so a commit from
+     * {@link ScmPlotWalk} cannot serve it from the summary it kept -- the body has to be there.
+     * Only the last {@value #PAINTING_BODY_LIMIT} commits painted keep theirs: far more than any
+     * viewport needs, and bounded, so scrolling a long history does not put the whole history's
+     * bodies back into the heap.
+     */
+    public void ensureBodyForPainting(final RevCommit commit) {
+        if (commit == null || commit.getRawBuffer() != null || repository == null) {
+            return;
+        }
+        synchronized (paintingBodies) {
+            try {
+                if (paintingWalk == null) {
+                    paintingWalk = new RevWalk(repository);
+                }
+                paintingWalk.parseBody(commit);
+            } catch (IOException | RuntimeException e) {
+                log.log(Level.FINE, "Cannot read body of commit " + commit.getName(), e);
+                return;
+            }
+            paintingBodies.addLast(commit);
+            while (paintingBodies.size() > PAINTING_BODY_LIMIT) {
+                paintingBodies.pollFirst().disposeBody();
+            }
+        }
+    }
+
+    /**
+     * The full commit message of {@code commit}, read again from the object database when the
+     * commit came from {@link #getCommitsByTree} and no longer carries its body.
+     */
+    public String getFullMessage(final RevCommit commit) {
+        RevCommit withBody = bodyOf(commit);
+        if (withBody == null || withBody.getRawBuffer() == null) {
+            return null;
+        }
+        return withBody.getFullMessage();
+    }
+
+    /**
      * Adapt given rev commit to <code>ScmRevisionInformation</code>
      *
      * @param revCommit given <code>RevCommit</code>
@@ -3167,15 +3272,22 @@ public class GitRepoService implements AutoCloseable {
         }
 
         final ScmRevisionInformation info = new ScmRevisionInformation();
-        info.setShortMessage(revCommit.getShortMessage());
-        info.setFullMessage(revCommit.getFullMessage());
         info.setRevisionFullName(revCommit.getName());
         info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
 
-        PersonIdent authorIdent = revCommit.getAuthorIdent();
-        if (authorIdent != null) {
-            info.setAuthorName(authorIdent.getName());
-            info.setAuthorEmail(authorIdent.getEmailAddress());
+        final RevCommit withBody = bodyOf(revCommit);
+        if (withBody.getRawBuffer() != null) {
+            info.setShortMessage(withBody.getShortMessage());
+            info.setFullMessage(withBody.getFullMessage());
+            PersonIdent authorIdent = withBody.getAuthorIdent();
+            if (authorIdent != null) {
+                info.setAuthorName(authorIdent.getName());
+                info.setAuthorEmail(authorIdent.getEmailAddress());
+            }
+        } else {
+            // Body unreadable (missing object) -- fall back to what the walk captured.
+            info.setShortMessage(ScmPlotCommit.shortMessageOf(revCommit));
+            info.setAuthorName(ScmPlotCommit.authorNameOf(revCommit));
         }
 
         info.setParents(
