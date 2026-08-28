@@ -391,6 +391,7 @@ public class WorkingCopyContextMenu {
         frame.setLocationRelativeTo(parent);
         HistoryPanel hp = new HistoryPanel(statusBar);
         frame.getContentPane().add(hp);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setVisible(true);
         hp.loadFileHistory(item.getShortName());
     }

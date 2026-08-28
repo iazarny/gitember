@@ -47,6 +47,7 @@ public class SearchItemContextMenu  extends JPopupMenu {
                             HistoryPanel hp = new HistoryPanel(MainFrame.getInstance().getStatusBar());
                             frame.getContentPane().add(hp);
                             frame.setVisible(true);
+                            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                             hp.loadFileHistory(hit.getPath());
                         } catch (Exception e) {
                             throw new RuntimeException(e);

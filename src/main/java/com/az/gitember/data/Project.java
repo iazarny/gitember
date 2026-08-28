@@ -405,6 +405,8 @@ public class Project implements Serializable, Comparable<Project>  {
             s.shutdown();
         }
         scmRevisionInformationCache.clear();
+        plotCommitList.clear();
+        statusList.clear();
     }
 
     @JsonIgnore
@@ -482,8 +484,10 @@ public class Project implements Serializable, Comparable<Project>  {
             projectWatcherThread.interrupt();
             projectWatcherThread = null;
         }
-        projectWatcher.shutDown();
-        projectWatcher = null;
+        if (projectWatcher != null) {
+            projectWatcher.shutDown();
+            projectWatcher = null;
+        }
     }
 
     public void updateAll() {

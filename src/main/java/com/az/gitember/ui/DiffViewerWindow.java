@@ -110,6 +110,7 @@ public class DiffViewerWindow extends JFrame {
                 headerPanel(" New revision", rightScroll));
 
         loadAndDiff();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     /**
@@ -132,6 +133,7 @@ public class DiffViewerWindow extends JFrame {
         this.oldText = leftContent;
         this.newText = rightContent;
         computeAndDisplayDiff();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     /**
@@ -153,6 +155,7 @@ public class DiffViewerWindow extends JFrame {
         this.oldText = commitContent;
         this.newText = diskContent;
         computeAndDisplayDiff();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     /**
@@ -206,6 +209,8 @@ public class DiffViewerWindow extends JFrame {
                 buildNavPanel(),
                 buildEditableHeader(leftPathField,  browseLeft,  leftScroll),
                 buildEditableHeader(rightPathField, browseRight, rightScroll));
+
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     // ---- Private init helpers ----

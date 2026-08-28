@@ -211,6 +211,7 @@ public class Context {
         project.openRepoService();             // may throw -- nothing mutated yet
         if (old != null && old != project) {
             old.stopWatcher();
+            old.closeRepoService();
         }
         setActiveProject(project);               // assign before firing
         fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());

@@ -1164,9 +1164,9 @@ public class GitRepoService implements AutoCloseable {
 
     /** Per-project when {@link #owner} is set, per-instance otherwise -- never a single
      *  process-wide map shared by every repo. */
-    private Map<String, ScmRevisionInformation> revCache() {
+    /*private Map<String, ScmRevisionInformation> revCache() {
         return owner != null ? owner.getScmRevisionInformationCache() : localRevCache;
-    }
+    }*/
 
     /**
      * Builds a Lucene index over the most recent {@code maxCommits} commits
@@ -3166,6 +3166,40 @@ public class GitRepoService implements AutoCloseable {
             return null;
         }
 
+        final ScmRevisionInformation info = new ScmRevisionInformation();
+        info.setShortMessage(revCommit.getShortMessage());
+        info.setFullMessage(revCommit.getFullMessage());
+        info.setRevisionFullName(revCommit.getName());
+        info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
+
+        PersonIdent authorIdent = revCommit.getAuthorIdent();
+        if (authorIdent != null) {
+            info.setAuthorName(authorIdent.getName());
+            info.setAuthorEmail(authorIdent.getEmailAddress());
+        }
+
+        info.setParents(
+                Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
+        );
+        if (revCommit instanceof PlotCommit) {
+            ArrayList<String> refs = new ArrayList<>();
+            for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
+                Ref ref = ((PlotCommit) revCommit).getRef(i);
+                if (ref != null && ref.getName() != null) {
+                    refs.add(ref.getName());
+                }
+            }
+            info.setRef(refs);
+
+        }
+        info.setAffectedItems(getScmItems(revCommit, fileName));
+        return info;
+
+        /*if (revCommit == null) {
+            log.log(Level.WARNING, "Null RevCommit provided to adapt method");
+            return null;
+        }
+
         return revCache().computeIfAbsent(revCommit.getId().toString(), s -> {
             final ScmRevisionInformation info = new ScmRevisionInformation();
             info.setShortMessage(revCommit.getShortMessage());
@@ -3196,6 +3230,8 @@ public class GitRepoService implements AutoCloseable {
             info.setAffectedItems(getScmItems(revCommit, fileName));
             return info;
         });
+
+         */
     }
 
     public RevCommit getRevCommitBySha(String sha) {
