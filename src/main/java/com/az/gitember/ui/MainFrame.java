@@ -206,18 +206,7 @@ public class MainFrame extends JFrame {
             @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
         });
 
-        workingCopyPanel = new WorkingCopyPanel(statusBar);
-        historyPanel = new HistoryPanel(statusBar);
-        stashDetailPanel = new CommitDetailPanel(statusBar);
-        pullRequestPanel = new PullRequestPanel();
-        submodulePanel = new SubmodulePanel(statusBar);
-        workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
-        // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
-        // committing is possible whenever any project in the workspace has a staged item.
-        workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
-            toolBar.setCommitEnabled(hasStaged);
-            menuBar.setCommitEnabled(hasStaged);
-        });
+
 
 
 
@@ -362,7 +351,21 @@ public class MainFrame extends JFrame {
     }
 
     public void swithToTheProjectView() {
-        this.welcomePanel = welcomePanel;
+        this.welcomePanel = null;
+
+        workingCopyPanel = new WorkingCopyPanel(statusBar);
+        historyPanel = new HistoryPanel(statusBar);
+        stashDetailPanel = new CommitDetailPanel(statusBar);
+        pullRequestPanel = new PullRequestPanel();
+        submodulePanel = new SubmodulePanel(statusBar);
+        workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
+        // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
+        // committing is possible whenever any project in the workspace has a staged item.
+        workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
+            toolBar.setCommitEnabled(hasStaged);
+            menuBar.setCommitEnabled(hasStaged);
+        });
+
     }
 
     public StatusBar getStatusBar() {
@@ -430,7 +433,10 @@ public class MainFrame extends JFrame {
         toolBar.refreshProjects(settings.getProjects(), current);
 
         // Update welcome panel (git projects + workspaces)
-        welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
+        if (welcomePanel != null) {
+            welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
+        }
+
     }
 
     private void showCloneDialog() {

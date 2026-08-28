@@ -101,7 +101,7 @@ public class ProjectWatcher implements Runnable {
         }
     }
 
-    private void shutDown() {
+    public void shutDown() {
         watchKeys.forEach((k,v) -> {
             k.cancel();
         });
