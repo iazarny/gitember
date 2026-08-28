@@ -383,6 +383,14 @@ public class MainFrame extends JFrame {
         return Context.isWorkspaceMode() && getActiveView() == ActiveView.WORKSPACE;
     }
 
+    public WelcomePanel getWelcomePanel() {
+        return welcomePanel;
+    }
+
+    public void setWelcomePanel(WelcomePanel welcomePanel) {
+        this.welcomePanel = welcomePanel;
+    }
+
     public StatusBar getStatusBar() {
         return statusBar;
     }
@@ -448,7 +456,10 @@ public class MainFrame extends JFrame {
         toolBar.refreshProjects(settings.getProjects(), current);
 
         // Update welcome panel (git projects + workspaces)
-        welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
+        if (welcomePanel != null) {
+            welcomePanel.setItems(settings.getProjects(), settings.getWorkspaces());
+        }
+
     }
 
     private void showCloneDialog() {

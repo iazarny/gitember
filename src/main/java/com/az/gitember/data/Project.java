@@ -482,6 +482,7 @@ public class Project implements Serializable, Comparable<Project>  {
             projectWatcherThread.interrupt();
             projectWatcherThread = null;
         }
+        projectWatcher.shutDown();
         projectWatcher = null;
     }
 

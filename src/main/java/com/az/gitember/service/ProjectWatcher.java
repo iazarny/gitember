@@ -9,13 +9,11 @@ import java.util.Map;
 
 public class ProjectWatcher implements Runnable {
 
-    private final Path rootPath;
     private final Map<WatchKey, Path> watchKeys;
     private final ProjectChangeCallback callback;
     private final WatchService watchService;
 
     public ProjectWatcher(Path rootPath, ProjectChangeCallback callback) throws IOException {
-        this.rootPath = rootPath;
         this.callback = callback;
         this.watchKeys = new HashMap<>();
         this.watchService = FileSystems.getDefault().newWatchService();
@@ -60,13 +58,10 @@ public class ProjectWatcher implements Runnable {
                     continue;
                 }
 
-
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
                     Path name = (Path) event.context();
                     Path child = dir.resolve(name);
-
-
 
                     // Register new subdirectory if created
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
@@ -81,9 +76,7 @@ public class ProjectWatcher implements Runnable {
                         // Invoke the callback
                         if (isCandidateEligibleToRegister(child.toString())) {
                             callback.onFileChange(kind, child);
-                            //System.out.println(child);
                         }
-
                     }
                 }
 
@@ -101,7 +94,7 @@ public class ProjectWatcher implements Runnable {
         }
     }
 
-    private void shutDown() {
+    public void shutDown() {
         watchKeys.forEach((k,v) -> {
             k.cancel();
         });

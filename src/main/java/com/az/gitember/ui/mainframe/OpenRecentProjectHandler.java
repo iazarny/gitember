@@ -32,6 +32,7 @@ public class OpenRecentProjectHandler implements Consumer<Project>  {
         project.setOpenTime(new Date());
         mainFrame.getStatusBar().setStatus("Opening " + folder + "...");
         mainFrame.getStatusBar().showProgress(true);
+        mainFrame.setWelcomePanel(null);
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override

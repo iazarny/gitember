@@ -26,6 +26,7 @@ public class OpenRecentWorkspaceHanlder implements Consumer<Workspace> {
             Context.saveSettings();
 
             Context.setWorkspace(workspace);
+            mainFrame.setWelcomePanel(null);
             mainFrame.getTreePanel().rebuild();                       // build workspace tree (selects workspace node)
             mainFrame.getWorkspaceDashboardPanel().setWorkspace(workspace);
             mainFrame.getContentPanel().setContent(mainFrame.getWorkspaceDashboardPanel());
