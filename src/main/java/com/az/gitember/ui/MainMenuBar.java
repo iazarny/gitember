@@ -3,7 +3,6 @@ package com.az.gitember.ui;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.dialog.SettingsDialog;
-import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;

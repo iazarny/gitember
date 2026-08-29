@@ -14,7 +14,6 @@ import org.eclipse.jgit.util.FS;
 import javax.swing.*;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

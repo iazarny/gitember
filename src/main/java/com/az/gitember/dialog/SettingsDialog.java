@@ -3,40 +3,35 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.OllamaManager;
-
-import java.util.concurrent.ExecutionException;
 import com.az.gitember.ui.SyntaxStyleUtil;
+import com.az.gitember.ui.misc.Util;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
-
-import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
 
 public class SettingsDialog extends JDialog {
 
-    private final JComboBox<String> themeCombo;
-    private final JSpinner          fontSizeSpinner;
-    private final JTextArea         ignoreExtArea;
-    private final JCheckBox         leakDetectorCheck;
-    private final JCheckBox         branchCompareDescCheck;
-    private final JCheckBox         commitMsgGenCheck;
+    private  JComboBox<String> themeCombo;
+    private  JSpinner fontSizeSpinner;
+    private  JTextArea ignoreExtArea;
+    private  JCheckBox leakDetectorCheck;
+    private  JCheckBox branchCompareDescCheck;
+    private  JCheckBox commitMsgGenCheck;
+
+    private final Settings settings;
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(520, 440);
+        setSize(640, 480);
         setLocationRelativeTo(owner);
-        setResizable(false);
+        setResizable(true);
 
-        Settings settings = Context.getSettings();
-        String currentTheme = settings != null && "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light";
-        int currentFontSize = settings != null ? settings.getFontSize() : 13;
-        if (currentFontSize <= 0) currentFontSize = 13;
-        boolean currentLeakDetector = settings == null || !Boolean.FALSE.equals(settings.getEnableLeakDetector());
-        boolean currentBranchCompareDesc = settings != null && Boolean.TRUE.equals(settings.getEnableBranchCompareDescription());
-        boolean currentCommitMsgGen = settings != null && Boolean.TRUE.equals(settings.getEnableCommitMessageGeneration());
+        settings = Context.getSettings();
+
 
         // Show the stored ignore list (defaults are seeded at startup, so this is always populated)
         String currentIgnore = settings != null
@@ -45,78 +40,155 @@ public class SettingsDialog extends JDialog {
         ignoreExtArea = new JTextArea(currentIgnore, 3, 30);
         ignoreExtArea.setLineWrap(true);
         ignoreExtArea.setWrapStyleWord(true);
-        ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, SyntaxStyleUtil.monoFont().getSize()-2));
+        //ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, SyntaxStyleUtil.monoFont().getSize() - 2));
+
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+
+
+
+
+
+        tabbedPane.addTab("UI", createUIPanel());
+        tabbedPane.addTab("AI", createAIPanel());
+        tabbedPane.addTab("Other", createComparePanel());
 
         // Form panel
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
+        //form.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
+
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton okBtn = new JButton("OK");
+        JButton cancelBtn = new JButton("Cancel");
+        buttonPanel.add(okBtn);
+        buttonPanel.add(cancelBtn);
+
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+
+        okBtn.addActionListener(e -> applyAndClose());
+        cancelBtn.addActionListener(e -> dispose());
+        getRootPane().setDefaultButton(okBtn);
+        Util.bindEscapeToDispose(this);
+    }
+
+    private JPanel createComparePanel() {
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        // Theme
-        gbc.gridx = 0; gbc.gridy = 0;
-        form.add(new JLabel("Theme:"), gbc);
-
-        themeCombo = new JComboBox<>(new String[]{"Light", "Dark"});
-        themeCombo.setSelectedItem(currentTheme);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(themeCombo, gbc);
-
-        // Font size
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("Font size:"), gbc);
-
-        fontSizeSpinner = new JSpinner(new SpinnerNumberModel(currentFontSize, 8, 36, 1));
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(fontSizeSpinner, gbc);
-
-        // Ignore extensions (folder compare)
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        form.add(new JLabel("Ignore extensions\n(folder compare):"), gbc);
+        gbc.insets = new java.awt.Insets(10, 10, 10, 10);
 
-        JScrollPane ignoreScroll = new JScrollPane(ignoreExtArea);
-        ignoreScroll.setPreferredSize(new Dimension(0, 64));
-        gbc.gridx = 1; gbc.gridy = 2; gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0; gbc.weighty = 1.0;
-        form.add(ignoreScroll, gbc);
+        JPanel comparePanel = new JPanel(new GridBagLayout());
+
+        // 1. Label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2; // Span both columns
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         gbc.weighty = 0;
+        comparePanel.add(new JLabel("Ignore extensions (folder compare):"), gbc);
 
+        // 2. Scrollable Edit Area (stretches horizontally and vertically)
+        JScrollPane ignoreScroll = new JScrollPane(ignoreExtArea);
+        ignoreScroll.setPreferredSize(new Dimension(200, 64)); // Preferred height: 64px, flexible width
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2; // Span across column 0 and column 1
+        gbc.fill = GridBagConstraints.BOTH; // Expand in both directions
+        gbc.weightx = 1.0; // Fill horizontal space
+        gbc.weighty = 0.3; // Give it a fixed proportion of vertical space
+        comparePanel.add(ignoreScroll, gbc);
+
+        // 3. Reset Button (aligned to bottom-right)
         JButton resetBtn = new JButton("Reset to defaults");
-        resetBtn.setFont(resetBtn.getFont().deriveFont(Font.PLAIN, 11f));
         resetBtn.addActionListener(e -> ignoreExtArea.setText(
                 String.join(", ", Settings.DEFAULT_IGNORE_COMPARE_FILES)));
-        gbc.gridx = 1; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.EAST;
-        form.add(resetBtn, gbc);
-        gbc.anchor = GridBagConstraints.WEST;
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        comparePanel.add(resetBtn, gbc);
+
+        // 4. Spacer (pushes everything to the top)
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        comparePanel.add(new JLabel(), gbc);
+
+        return comparePanel;
+    }
+
+    private JPanel createAIPanel() {
+
+        boolean currentLeakDetector = settings == null || !Boolean.FALSE.equals(settings.getEnableLeakDetector());
+        boolean currentBranchCompareDesc = settings != null && Boolean.TRUE.equals(settings.getEnableBranchCompareDescription());
+        boolean currentCommitMsgGen = settings != null && Boolean.TRUE.equals(settings.getEnableCommitMessageGeneration());
+
+
+        //////////////////////////////  AI
+        JPanel aiPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.insets = new java.awt.Insets(10,10,10,10); // Optional: add clean padding between controls
 
         // Leak detector
-        gbc.gridx = 0; gbc.gridy = 4; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("Enable secret detector (AI experimental):"), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        aiPanel.add(new JLabel("Enable secret detector (AI experimental):"), gbc);
 
         leakDetectorCheck = new JCheckBox("", currentLeakDetector);
         leakDetectorCheck.setToolTipText("Scan staged files for secrets words before each commit");
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(leakDetectorCheck, gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        aiPanel.add(leakDetectorCheck, gbc);
 
         // Branch compare description
-        gbc.gridx = 0; gbc.gridy = 5; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("Branch compare description (AI experimental):"), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        aiPanel.add(new JLabel("Branch compare description (AI experimental):"), gbc);
 
         branchCompareDescCheck = new JCheckBox("", currentBranchCompareDesc);
         branchCompareDescCheck.setToolTipText("Show AI descriptions when comparing branches");
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(branchCompareDescCheck, gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        aiPanel.add(branchCompareDescCheck, gbc);
 
         // Commit message generation
-        gbc.gridx = 0; gbc.gridy = 6; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("AI commit message generation (AI experimental):"), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        aiPanel.add(new JLabel("AI commit message generation (AI experimental):"), gbc);
 
         commitMsgGenCheck = new JCheckBox("", currentCommitMsgGen);
         commitMsgGenCheck.setToolTipText("Generate commit message suggestions in the commit dialog");
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        form.add(commitMsgGenCheck, gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        aiPanel.add(commitMsgGenCheck, gbc);
 
         // When any AI feature is enabled, verify Ollama is present
         leakDetectorCheck.addItemListener(e -> {
@@ -135,22 +207,64 @@ public class SettingsDialog extends JDialog {
             }
         });
 
-        // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton okBtn = new JButton("OK");
-        JButton cancelBtn = new JButton("Cancel");
-        buttonPanel.add(okBtn);
-        buttonPanel.add(cancelBtn);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        aiPanel.add(new JLabel(), gbc);
 
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(form, BorderLayout.CENTER);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-
-        okBtn.addActionListener(e -> applyAndClose());
-        cancelBtn.addActionListener(e -> dispose());
-        getRootPane().setDefaultButton(okBtn);
-        Util.bindEscapeToDispose(this);
+        return aiPanel;
     }
+
+    private JPanel createUIPanel() {
+
+        String currentTheme = settings != null && "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light";
+        int currentFontSize = settings != null ? settings.getFontSize() : 13;
+        if (currentFontSize <= 0) currentFontSize = 13;
+
+        JPanel uiPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        // Anchor all components to the top-left of their cells
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.insets = new java.awt.Insets(10,10,10,10); // Optional: add clean padding between controls
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        uiPanel.add(new JLabel("Theme:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        themeCombo = new JComboBox<>(new String[]{"Light", "Dark"});
+        themeCombo.setSelectedItem(currentTheme);
+        themeCombo.setPreferredSize(new java.awt.Dimension(120, 25));
+        uiPanel.add(themeCombo, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        uiPanel.add(new JLabel("Font size:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        fontSizeSpinner = new JSpinner(new SpinnerNumberModel(currentFontSize, 8, 36, 1));
+        fontSizeSpinner.setPreferredSize(new java.awt.Dimension(120, 25));
+        uiPanel.add(fontSizeSpinner, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        uiPanel.add(new JLabel(), gbc);
+
+        return uiPanel;
+    }
+
 
     private void applyAndClose() {
         Settings settings = Context.getSettings();
@@ -225,9 +339,9 @@ public class SettingsDialog extends JDialog {
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "This AI feature requires Ollama, which is not installed.\n\n" +
-                "Gitember will download and install Ollama automatically.\n" +
-                "This may take several minutes depending on your internet speed.\n\n" +
-                "Download and install Ollama now?",
+                        "Gitember will download and install Ollama automatically.\n" +
+                        "This may take several minutes depending on your internet speed.\n\n" +
+                        "Download and install Ollama now?",
                 "Ollama Required",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
@@ -239,15 +353,15 @@ public class SettingsDialog extends JDialog {
 
         // Show a progress dialog while downloading
         JDialog progressDialog = new JDialog(this, "Installing Ollama", true);
-        JLabel statusLabel  = new JLabel("Preparing download…");
-        JProgressBar bar    = new JProgressBar(0, 100);
+        JLabel statusLabel = new JLabel("Preparing download…");
+        JProgressBar bar = new JProgressBar(0, 100);
         bar.setStringPainted(true);
         bar.setIndeterminate(true);
 
         JPanel p = new JPanel(new BorderLayout(8, 8));
         p.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         p.add(statusLabel, BorderLayout.NORTH);
-        p.add(bar,         BorderLayout.CENTER);
+        p.add(bar, BorderLayout.CENTER);
         progressDialog.getContentPane().add(p);
         progressDialog.pack();
         progressDialog.setMinimumSize(new Dimension(340, 100));
@@ -294,8 +408,8 @@ public class SettingsDialog extends JDialog {
                     if (ex.getCause() instanceof OllamaManager.ChecksumMismatchException) {
                         JOptionPane.showMessageDialog(SettingsDialog.this,
                                 "Ollama checksum verification failed.\n" +
-                                "The downloaded file may be corrupt or tampered with.\n\n" +
-                                "All AI features have been disabled for security.",
+                                        "The downloaded file may be corrupt or tampered with.\n\n" +
+                                        "All AI features have been disabled for security.",
                                 "Checksum Verification Failed", JOptionPane.ERROR_MESSAGE);
                         disableAllAiFeatures();
                     } else {
