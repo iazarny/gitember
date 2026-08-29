@@ -340,8 +340,11 @@ public class MainFrame extends JFrame {
         menuBar.addProjectSettingsListener(e ->
                 new com.az.gitember.dialog.ProjectSettingsDialog(this).setVisible(true));
 
-        // Settings
-        menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
+        if(!GitemberUtil.isMac()) {
+            // Settings
+            menuBar.addSettingsListener(e -> new SettingsDialog(this).setVisible(true));
+        }
+
 
         // Recent project handlers
         menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));

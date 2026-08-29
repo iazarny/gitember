@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
+import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.ui.misc.Util;
@@ -26,7 +27,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem initRepository;
     private final JMenuItem initWorkspaceItem;
     private final JMenu     openRecentMenu;
-    private final JMenuItem settingsItem;
+    private  JMenuItem settingsItem;
     private final JMenuItem exitItem;
 
     // Repository menu (enabled only when a repo is open)
@@ -105,7 +106,10 @@ public class MainMenuBar extends JMenuBar {
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
         openRecentMenu.setEnabled(false);
 
-        settingsItem = new JMenuItem("Settings...", KeyEvent.VK_S);
+
+
+
+
 
         exitItem = new JMenuItem("Exit", KeyEvent.VK_X);
         exitItem.addActionListener(e -> System.exit(0));
@@ -117,8 +121,28 @@ public class MainMenuBar extends JMenuBar {
         fileMenu.add(initWorkspaceItem);
         fileMenu.addSeparator();
         fileMenu.add(openRecentMenu);
-        fileMenu.addSeparator();
-        fileMenu.add(settingsItem);
+
+        if(GitemberUtil.isMac()) {
+            // Uses 'meta' for Command key
+            //settingsItem.setAccelerator(KeyStroke.getKeyStroke("meta COMMA"));
+            if (Desktop.isDesktopSupported()) {
+                Desktop desktop = Desktop.getDesktop();
+
+                if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
+                    // 2. Attach your handler directly to the native macOS "Preferences..." item
+                    desktop.setPreferencesHandler(e -> {
+                        new SettingsDialog(MainFrame.getInstance()).setVisible(true);
+                    });
+                }
+            }
+
+        } else {
+            settingsItem = new JMenuItem("Settings...", KeyEvent.VK_S);
+            fileMenu.addSeparator();
+            fileMenu.add(settingsItem);
+        }
+
+
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
 
