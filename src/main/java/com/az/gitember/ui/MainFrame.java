@@ -207,9 +207,6 @@ public class MainFrame extends JFrame {
         });
 
 
-
-
-
         // Set up branch context menus
         BranchContextMenuFactory contextMenuFactory = new BranchContextMenuFactory(this);
         contextMenuFactory.setWorktreeOpenAction(this::openWorktree);
@@ -218,11 +215,10 @@ public class MainFrame extends JFrame {
 
         // Start with welcome screen
         refreshProjectLists();
-        //setRepoActionsEnabled(false);
-        //toolBar.setVisible(false);
         mainCardLayout.show(mainCardPanel, CARD_WELCOME);
 
         scanForRepositoriesIfNoneKnown();
+        System.gc();
     }
 
     /**
@@ -384,6 +380,7 @@ public class MainFrame extends JFrame {
             toolBar.setCommitEnabled(hasStaged);
             menuBar.setCommitEnabled(hasStaged);
         });
+        System.gc();
 
     }
 

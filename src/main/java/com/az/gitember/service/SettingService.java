@@ -16,12 +16,6 @@ import java.util.logging.Logger;
 
 public class SettingService {
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
-
-    static {
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
 
     private final static Logger log = Logger.getLogger(SettingService.class.getName());
 
@@ -29,7 +23,12 @@ public class SettingService {
     private final static int COMMIT_HISTORY_LIMIT = 50;
 
 
-
+    private ObjectMapper getObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper;
+    }
 
 
     /**
@@ -40,7 +39,7 @@ public class SettingService {
     public Settings read() {
         Settings settings = null;
         try {
-            settings =  read(getAbsolutePathToPropertyFile());
+            settings = read(getAbsolutePathToPropertyFile());
             if (settings == null) {
                 settings = new Settings();
             }
@@ -57,7 +56,7 @@ public class SettingService {
      * @return settings
      */
     Settings read(File file) throws IOException {
-        return objectMapper.readValue(file, Settings.class);
+        return getObjectMapper().readValue(file, Settings.class);
     }
 
 
@@ -67,8 +66,8 @@ public class SettingService {
     public void write(Settings settings) {
         try {
             createStorageIsAbsent();
-            objectMapper.writerFor(Settings.class).writeValue(
-                    getAbsolutePathToPropertyFile(),  settings );
+            getObjectMapper().writerFor(Settings.class).writeValue(
+                    getAbsolutePathToPropertyFile(), settings);
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot save settings", e);
         }
@@ -76,6 +75,7 @@ public class SettingService {
 
     /**
      * Create storage folder.
+     *
      * @throws IOException in case if error
      */
     private void createStorageIsAbsent() throws IOException {
@@ -92,10 +92,9 @@ public class SettingService {
      * @throws IOException in case of errors.
      */
     protected File getAbsolutePathToPropertyFile() throws IOException {
-        return  Paths.get(System.getProperty(SYSTEM_PROP_USER_HOME),
-                Const.PROP_FOLDER,  Const.PROP_FILE_NAME).toFile();
+        return Paths.get(System.getProperty(SYSTEM_PROP_USER_HOME),
+                Const.PROP_FOLDER, Const.PROP_FILE_NAME).toFile();
     }
-
 
 
 }

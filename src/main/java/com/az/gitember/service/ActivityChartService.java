@@ -91,7 +91,7 @@ public class ActivityChartService {
             long sinceEpochSec  = firstDay.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
 
             int[] counts = new int[DAYS];
-            for (RevCommit commit : git.log().setMaxCount(2000).call()) {
+            for (RevCommit commit : git.log().setMaxCount(256).call()) {
                 if (commit.getCommitTime() < sinceEpochSec) break;
                 LocalDate d = Instant.ofEpochSecond(commit.getCommitTime())
                         .atZone(ZoneId.systemDefault()).toLocalDate();
