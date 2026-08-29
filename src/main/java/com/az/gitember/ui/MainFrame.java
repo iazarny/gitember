@@ -221,8 +221,27 @@ public class MainFrame extends JFrame {
         //setRepoActionsEnabled(false);
         //toolBar.setVisible(false);
         mainCardLayout.show(mainCardPanel, CARD_WELCOME);
+
+        scanForRepositoriesIfNoneKnown();
     }
 
+    /**
+     * First-run convenience: when the settings file lists no repository at all (missing file,
+     * or a file with an empty project list and no workspaces), scan the conventional project
+     * folders under $HOME in the background and fill the welcome screen with what is found.
+     */
+    private void scanForRepositoriesIfNoneKnown() {
+        Settings settings = Context.getSettings();
+        if (settings == null) {
+            return;
+        }
+        boolean anyKnown = !settings.getProjects().isEmpty()
+                || settings.getWorkspaces().stream().anyMatch(ws -> !ws.getProjects().isEmpty());
+        if (anyKnown) {
+            return;
+        }
+        new ScanRepositoriesHandler(this).execute();
+    }
 
 
     private void wireActions() {
