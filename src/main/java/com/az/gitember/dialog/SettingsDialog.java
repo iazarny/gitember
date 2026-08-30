@@ -6,13 +6,21 @@ import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.misc.Util;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.util.SystemReader;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 
 public class SettingsDialog extends JDialog {
+
+    private  JTextField   userName ;
+    private  JTextField   userEmail ;
 
     private  JComboBox<String> signCombo;
     private  JLabel keyOrPAth;
@@ -65,12 +73,10 @@ public class SettingsDialog extends JDialog {
         ignoreExtArea.setWrapStyleWord(true);
         //ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, SyntaxStyleUtil.monoFont().getSize() - 2));
 
-
-        GridBagConstraints gbc = createGridBagConstraints();
-
         JTabbedPane tabbedPane = new JTabbedPane();
 
 
+        tabbedPane.addTab("Common", createCommonPanel());
         tabbedPane.addTab("UI", createUIPanel());
         tabbedPane.addTab("Commit Singing", createComminSignPanel());
         tabbedPane.addTab("AI", createAIPanel());
@@ -362,7 +368,6 @@ public class SettingsDialog extends JDialog {
         comminSiggPanel.add(new JLabel(), gbc);
 
 
-
         if (Settings.SignOption.NONE.getOption().equalsIgnoreCase(settings.getSignOption())) {
             setVisibility(false);
 
@@ -398,6 +403,77 @@ public class SettingsDialog extends JDialog {
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             signKey.setText(chooser.getSelectedFile().getAbsolutePath());
         }
+    }
+
+
+    /*// Access the global Git configuration (~/.gitconfig)
+            StoredConfig globalConfig = SystemReader.getInstance().openUserConfig(null, SystemReader.getInstance().getFS());
+
+            // Load existing settings
+            globalConfig.load();
+
+            // Set user.name and user.email under the "user" section
+            globalConfig.setString("user", null, "name", "Your Name");
+            globalConfig.setString("user", null, "email", "your.email@example.com");
+
+            // Save the changes back to the global file
+            globalConfig.save();
+
+            System.out.println("Global Git user.name and user.email updated successfully.");*/
+
+    private JPanel createCommonPanel() {
+        JPanel commonPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = createGridBagConstraints();
+
+        // Row 0: Label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0; // Fixed width for labels column
+        commonPanel.add(new JLabel("User name:"), gbc);
+
+        // Row 0: Text Field
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0; // Pushes content to the left by taking all horizontal extra space
+        userName = new JTextField();
+        userName.setPreferredSize(new java.awt.Dimension(250, 25));
+        commonPanel.add(userName, gbc);
+
+        // Row 1: Label
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        commonPanel.add(new JLabel("User email:"), gbc);
+
+        // Row 1: Text Field
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0; // Consistently push to left on subsequent rows
+        userEmail = new JTextField();
+        userEmail.setPreferredSize(new java.awt.Dimension(250, 25));
+        commonPanel.add(userEmail, gbc);
+
+        // Row 2: Vertical spacer pushing components to the top
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weightx = 0;
+        gbc.weighty = 1.0; // Absorbs vertical extra space
+        commonPanel.add(new JLabel(), gbc);
+
+
+        StoredConfig globalConfig = SystemReader.getInstance().openUserConfig(null, FS.detect());
+
+        try {
+            globalConfig.load();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        userName.setText(globalConfig.getString("user", null, "name"));
+        userEmail.setText(globalConfig.getString("user", null, "email"));
+
+        return commonPanel;
     }
 
 
@@ -516,6 +592,28 @@ public class SettingsDialog extends JDialog {
                 SwingUtilities.updateComponentTreeUI(w);
             }
         }
+
+
+        //-------------------------
+        StoredConfig globalConfig = SystemReader.getInstance().openUserConfig(null, FS.detect());
+
+        try {
+            globalConfig.load();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Set user.name and user.email under the "user" section
+        globalConfig.setString("user", null, "name", userName.getText());
+        globalConfig.setString("user", null, "email", userEmail.getText());
+
+        // Save the changes back to the global file
+        try {
+            globalConfig.save();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 
         dispose();
     }
