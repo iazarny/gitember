@@ -88,6 +88,8 @@ public class Settings {
     private String   signKey;
     private Boolean  signCommit;
     private Boolean  signTag;
+    private String  dateFormat;
+    private String  timeFormat;
 
 
 
@@ -220,6 +222,23 @@ public class Settings {
 
     public String getSignKey() {
         return signKey;
+    }
+
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
+    }
+
+    public String getTimeFormat() {
+        return timeFormat;
+    }
+
+    public void setTimeFormat(String timeFormat) {
+        this.timeFormat = timeFormat;
     }
 
     public void setSignKey(String signKey) {

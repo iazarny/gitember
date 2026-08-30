@@ -29,8 +29,17 @@ public class GitemberUtil {
 
     private final static String OS = System.getProperty("os.name").toLowerCase();
 
-    private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static String defaultSimpleTimeFormat = "HH:mm:ss";
+    public static String defaultSimpleDateFormat = "yyyy-MM-dd HH:mm:ss";
+    public static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(defaultSimpleDateFormat);
 
+    static {
+        String fmt = Context.readSettings().getDateFormat();
+        if (StringUtils.isNotEmpty(fmt)) {
+            simpleDateFormat = new SimpleDateFormat(fmt);
+        }
+
+    }
 
     public static String formatDate(Date date) {
         return simpleDateFormat.format(date);
@@ -68,15 +77,6 @@ public class GitemberUtil {
                 .lines()
                 .collect(Collectors.toList());
     }
-
-
-    public static Object getField(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
-        Field privateStringField = null;
-        privateStringField = obj.getClass().getDeclaredField(fieldName);
-        privateStringField.setAccessible(true);
-        return privateStringField.get(obj);
-    }
-
 
     public static String getFolderName(String fullPath) {
         if (fullPath != null) {

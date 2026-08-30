@@ -2,10 +2,12 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.misc.Util;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FS;
@@ -14,10 +16,13 @@ import org.eclipse.jgit.util.SystemReader;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 
 public class SettingsDialog extends JDialog {
+
+    private final int DEFAULT_SIZE = 250;
 
     private  JTextField   userName ;
     private  JTextField   userEmail ;
@@ -32,6 +37,8 @@ public class SettingsDialog extends JDialog {
 
     private  JCheckBox  signTag;
 
+    private  JComboBox<String> dateFormatCombo;
+    private  JComboBox<String> timeFormatCombo;
     private  JComboBox<String> themeCombo;
     private  JSpinner fontSizeSpinner;
     private  JTextArea ignoreExtArea;
@@ -436,7 +443,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 0;
         gbc.weightx = 1.0; // Pushes content to the left by taking all horizontal extra space
         userName = new JTextField();
-        userName.setPreferredSize(new java.awt.Dimension(250, 25));
+        userName.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         commonPanel.add(userName, gbc);
 
         // Row 1: Label
@@ -450,7 +457,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 1;
         gbc.weightx = 1.0; // Consistently push to left on subsequent rows
         userEmail = new JTextField();
-        userEmail.setPreferredSize(new java.awt.Dimension(250, 25));
+        userEmail.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         commonPanel.add(userEmail, gbc);
 
         // Row 2: Vertical spacer pushing components to the top
@@ -498,7 +505,7 @@ public class SettingsDialog extends JDialog {
         gbc.weightx = 1.0;
         themeCombo = new JComboBox<>(new String[]{"Light", "Dark"});
         themeCombo.setSelectedItem(currentTheme);
-        themeCombo.setPreferredSize(new java.awt.Dimension(120, 25));
+        themeCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         uiPanel.add(themeCombo, gbc);
 
         gbc.gridx = 0;
@@ -511,11 +518,58 @@ public class SettingsDialog extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
         fontSizeSpinner = new JSpinner(new SpinnerNumberModel(currentFontSize, 8, 36, 1));
-        fontSizeSpinner.setPreferredSize(new java.awt.Dimension(120, 25));
+        fontSizeSpinner.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         uiPanel.add(fontSizeSpinner, gbc);
+
 
         gbc.gridx = 0;
         gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        uiPanel.add(new JLabel("Date format:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        dateFormatCombo = new JComboBox<>(new String[]{
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd HH:mm",
+                "dd.MM.yyyy HH:mm:ss",
+                "dd.MM.yyyy HH:mm",
+                "MM/dd/yyyy HH:mm:ss",
+                "MM/dd/yyyy HH:mm",
+                "MMM dd, yyyy HH:mm:ss",
+                "MMM dd, yyyy HH:mm"
+        });
+        String fmt = StringUtils.isEmpty(settings.getDateFormat()) ?
+                GitemberUtil.defaultSimpleDateFormat : settings.getDateFormat();
+        dateFormatCombo.setSelectedItem(  fmt);
+        dateFormatCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+        uiPanel.add(dateFormatCombo, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        uiPanel.add(new JLabel("Time format:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        timeFormatCombo = new JComboBox<>(new String[]{
+                "HH:mm:ss",
+                "HH:mm",
+                "hh:mm a"
+        });
+        fmt = StringUtils.isEmpty(settings.getTimeFormat()) ?
+                GitemberUtil.defaultSimpleTimeFormat : settings.getTimeFormat();
+        timeFormatCombo.setSelectedItem(fmt);
+        timeFormatCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+        uiPanel.add(timeFormatCombo, gbc);
+
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.weighty = 1.0;
         uiPanel.add(new JLabel(), gbc);
@@ -563,6 +617,10 @@ public class SettingsDialog extends JDialog {
         settings.setSignKey(signKey.getText());
         settings.setSignCommit(signCommit.isSelected());
         settings.setSignTag(signTag.isSelected());
+        settings.setDateFormat(dateFormatCombo.getSelectedItem().toString());
+        GitemberUtil.simpleDateFormat = new SimpleDateFormat(dateFormatCombo.getSelectedItem().toString());
+        settings.setTimeFormat(timeFormatCombo.getSelectedItem().toString());
+
 
         Context.saveSettings();
 

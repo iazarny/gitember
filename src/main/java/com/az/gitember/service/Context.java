@@ -306,7 +306,7 @@ public class Context {
         }
     }
 
-    public static void readSettings() {
+    public static Settings readSettings() {
         Settings s = settingService.read();
         // Seed the ignore list with built-in defaults on first run (or after migration
         // from a version that stored an empty set as the "use defaults" sentinel).
@@ -316,6 +316,7 @@ public class Context {
         }
         s.internAll();
         setSettings(s);
+        return s;
     }
 
     public static void updateStash() {
