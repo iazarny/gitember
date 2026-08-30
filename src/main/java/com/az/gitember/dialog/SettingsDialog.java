@@ -3,7 +3,6 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.OllamaManager;
-import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -15,12 +14,36 @@ import java.util.concurrent.ExecutionException;
 
 public class SettingsDialog extends JDialog {
 
+    private  JComboBox<String> signCombo;
+    private  JLabel keyOrPAth;
+    private  JButton browseBtn;
+    private  JTextField   signKey ;
+    private  JLabel singCommitLabel;
+    private  JCheckBox  signCommit;
+    private  JLabel singTagLabel;
+
+    private  JCheckBox  signTag;
+
     private  JComboBox<String> themeCombo;
     private  JSpinner fontSizeSpinner;
     private  JTextArea ignoreExtArea;
     private  JCheckBox leakDetectorCheck;
     private  JCheckBox branchCompareDescCheck;
     private  JCheckBox commitMsgGenCheck;
+    private  JComboBox<String> llmModelCombo;
+
+    /**
+     * Offered in the model combo, which stays editable — any tag pulled in Ollama works.
+     * The first entry is {@link Settings#DEFAULT_LLM_DETECTOR_MODEL}.
+     */
+    private static final String[] SUGGESTED_LLM_MODELS = {
+            Settings.DEFAULT_LLM_DETECTOR_MODEL,
+            "qwen2.5-coder:14b",
+            "deepseek-coder-v2",
+            "codellama",
+            "llama3.2",
+            "mistral"
+    };
 
     private final Settings settings;
 
@@ -43,18 +66,13 @@ public class SettingsDialog extends JDialog {
         //ignoreExtArea.setFont(ignoreExtArea.getFont().deriveFont(Font.PLAIN, SyntaxStyleUtil.monoFont().getSize() - 2));
 
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
+        GridBagConstraints gbc = createGridBagConstraints();
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
 
-
-
-
-
         tabbedPane.addTab("UI", createUIPanel());
+        tabbedPane.addTab("Commit Singing", createComminSignPanel());
         tabbedPane.addTab("AI", createAIPanel());
         tabbedPane.addTab("Other", createComparePanel());
 
@@ -82,9 +100,7 @@ public class SettingsDialog extends JDialog {
 
     private JPanel createComparePanel() {
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.insets = new java.awt.Insets(10, 10, 10, 10);
+        GridBagConstraints gbc = createGridBagConstraints();
 
         JPanel comparePanel = new JPanel(new GridBagLayout());
 
@@ -140,13 +156,13 @@ public class SettingsDialog extends JDialog {
         boolean currentLeakDetector = settings == null || !Boolean.FALSE.equals(settings.getEnableLeakDetector());
         boolean currentBranchCompareDesc = settings != null && Boolean.TRUE.equals(settings.getEnableBranchCompareDescription());
         boolean currentCommitMsgGen = settings != null && Boolean.TRUE.equals(settings.getEnableCommitMessageGeneration());
+        String currentLlmModel = settings != null
+                ? settings.getLlmDetectorModel() : Settings.DEFAULT_LLM_DETECTOR_MODEL;
 
 
         //////////////////////////////  AI
         JPanel aiPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.insets = new java.awt.Insets(10,10,10,10); // Optional: add clean padding between controls
+        GridBagConstraints gbc = createGridBagConstraints();
 
         // Leak detector
         gbc.gridx = 0;
@@ -190,6 +206,24 @@ public class SettingsDialog extends JDialog {
         gbc.weightx = 1.0;
         aiPanel.add(commitMsgGenCheck, gbc);
 
+        // Model shared by all three features above
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        aiPanel.add(new JLabel("Ollama model:"), gbc);
+
+        llmModelCombo = new JComboBox<>(SUGGESTED_LLM_MODELS);
+        llmModelCombo.setEditable(true);
+        llmModelCombo.setSelectedItem(currentLlmModel);
+        llmModelCombo.setToolTipText("Model the features above ask Ollama for. Any pulled model "
+                + "can be typed in; leave it empty to use " + Settings.DEFAULT_LLM_DETECTOR_MODEL + ".");
+        llmModelCombo.setPreferredSize(new Dimension(220, 25));
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        aiPanel.add(llmModelCombo, gbc);
+
         // When any AI feature is enabled, verify Ollama is present
         leakDetectorCheck.addItemListener(e -> {
             if (leakDetectorCheck.isSelected() && !currentLeakDetector) {
@@ -212,9 +246,160 @@ public class SettingsDialog extends JDialog {
         gbc.gridwidth = 2;
         gbc.weighty = 1.0;
         aiPanel.add(new JLabel(), gbc);
-
         return aiPanel;
     }
+
+
+
+    private JPanel createComminSignPanel() {
+
+        JPanel comminSiggPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = createGridBagConstraints();
+
+
+
+        gbc.gridx = 0;
+
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        comminSiggPanel.add(new JLabel("Sign option:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        signCombo = new JComboBox<>(new String[]{
+                Settings.SignOption.NONE.getOption() ,
+                Settings.SignOption.PGP.getOption() ,
+                Settings.SignOption.SSH.getOption()});
+        signCombo.setSelectedItem(settings.getSignOption());
+
+        signCombo.setPreferredSize(new java.awt.Dimension(120, 25));
+        signCombo.addItemListener(
+                e -> {
+                    String item = e.getItem().toString();
+
+                    setVisibility(true);
+
+                    if (Settings.SignOption.NONE.getOption().equalsIgnoreCase(item)) {
+                        setVisibility(false);
+
+                        signCommit.setSelected(false);
+                        signTag.setSelected(false);
+
+                    } else if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(item)) {
+                        keyOrPAth.setText("Signing key:");
+                        browseBtn.setVisible(false);
+                    } else if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(item)) {
+                        keyOrPAth.setText("Path to pub key:");
+                        browseBtn.setVisible(true);
+                    }
+                }
+        );
+
+
+
+        comminSiggPanel.add(signCombo, gbc);
+
+
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        keyOrPAth = new JLabel("Sign key:");
+        comminSiggPanel.add(keyOrPAth, gbc);
+
+
+        gbc.gridy = 1;
+        gbc.gridx = 1;
+        JPanel destPanel = new JPanel(new BorderLayout(5, 0));
+        signKey = new JTextField(25);
+        signKey.setText(settings.getSignKey());
+        browseBtn = new JButton("...");
+        browseBtn.addActionListener(e -> browseKey());
+        destPanel.add(signKey, BorderLayout.CENTER);
+        destPanel.add(browseBtn, BorderLayout.EAST);
+        gbc.gridx = 1; gbc.weightx = 1;
+        comminSiggPanel.add(destPanel, gbc);
+
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        singCommitLabel = new JLabel("Sign commits:");
+        comminSiggPanel.add(singCommitLabel, gbc);
+
+
+        gbc.gridy = 2;
+        gbc.gridx = 1;
+        signCommit = new JCheckBox("", settings.getSignCommit());
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        comminSiggPanel.add(signCommit, gbc);
+
+        gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        singTagLabel = new JLabel("Sign tag:");
+        comminSiggPanel.add(singTagLabel, gbc);
+
+
+        gbc.gridy = 3;
+        gbc.gridx = 1;
+        signTag = new JCheckBox("", settings.getSignTag());
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        comminSiggPanel.add(signTag, gbc);
+
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        comminSiggPanel.add(new JLabel(), gbc);
+
+
+
+        if (Settings.SignOption.NONE.getOption().equalsIgnoreCase(settings.getSignOption())) {
+            setVisibility(false);
+
+        }
+        if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(settings.getSignOption())) {
+            keyOrPAth.setText("Signing key:");
+            browseBtn.setVisible(false);
+        } else if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(settings.getSignOption())) {
+            keyOrPAth.setText("Path to pub key:");
+            browseBtn.setVisible(true);
+        }
+
+
+        return comminSiggPanel;
+
+    }
+
+
+    private void setVisibility(boolean visible) {
+        singCommitLabel.setVisible(visible);
+        singTagLabel.setVisible(visible);
+        keyOrPAth.setVisible(visible);
+        browseBtn.setVisible(visible);
+        signCommit.setVisible(visible);
+        signTag.setVisible(visible);
+        signKey.setVisible(visible);
+    }
+    private void browseKey() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setFileHidingEnabled(false);
+        chooser.setDialogTitle("Select Key");
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            signKey.setText(chooser.getSelectedFile().getAbsolutePath());
+        }
+    }
+
 
     private JPanel createUIPanel() {
 
@@ -224,10 +409,7 @@ public class SettingsDialog extends JDialog {
 
         JPanel uiPanel = new JPanel(new GridBagLayout());
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        // Anchor all components to the top-left of their cells
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.insets = new java.awt.Insets(10,10,10,10); // Optional: add clean padding between controls
+        GridBagConstraints gbc = createGridBagConstraints();
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -295,6 +477,16 @@ public class SettingsDialog extends JDialog {
         settings.setEnableLeakDetector(leakDetectorCheck.isSelected());
         settings.setEnableBranchCompareDescription(branchCompareDescCheck.isSelected());
         settings.setEnableCommitMessageGeneration(commitMsgGenCheck.isSelected());
+
+        // An empty entry means "use the default", which is what the getter falls back to.
+        Object selectedModel = llmModelCombo.getSelectedItem();
+        String llmModel = selectedModel != null ? selectedModel.toString().trim() : "";
+        settings.setLlmDetectorModel(llmModel.isEmpty() ? null : llmModel);
+
+        settings.setSignOption(signCombo.getSelectedItem().toString());
+        settings.setSignKey(signKey.getText());
+        settings.setSignCommit(signCommit.isSelected());
+        settings.setSignTag(signTag.isSelected());
 
         Context.saveSettings();
 
@@ -455,5 +647,13 @@ public class SettingsDialog extends JDialog {
         for (Window w : Window.getWindows()) {
             SwingUtilities.updateComponentTreeUI(w);
         }
+    }
+
+    private GridBagConstraints  createGridBagConstraints() {
+        GridBagConstraints gbc = new GridBagConstraints();
+        // Anchor all components to the top-left of their cells
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.insets = new java.awt.Insets(10,10,10,10); // Optional: add clean padding between controls
+        return gbc;
     }
 }

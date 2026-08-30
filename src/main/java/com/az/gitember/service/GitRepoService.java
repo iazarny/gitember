@@ -428,15 +428,20 @@ public class GitRepoService implements AutoCloseable {
      * @return result.
      * @throws GitAPIException in case of error
      */
-    public RevCommit commit(final String message, final String name, final String email) throws GitAPIException {
-        return commit(message, name, email, null, null);
+    public RevCommit commit(final String message, final String name, final String email,
+                            String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
+        return commit(message, name, email, null, null, signOption, signCommit, pathToKey);
     }
 
     public RevCommit commit(final String message,
                             final String authorName, final String authorEmail,
-                            final String committerName, final String committerEmail) throws GitAPIException {
+                            final String committerName, final String committerEmail,
+                            String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
+        configureSigner(signOption, signCommit, pathToKey);
         try (Git git = new Git(repository)) {
-            CommitCommand cmd = git.commit();
+
+            CommitCommand cmd = git.commit().setSign(signCommit);
+
             if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
                 cmd.setAuthor(authorName, authorEmail);
             }
@@ -1285,10 +1290,12 @@ public class GitRepoService implements AutoCloseable {
      *
      * @param tagName tag name
      */
-    public Ref createTag(String tagName) throws IOException {
-
+    public Ref createTag(String tagName,
+                         String signOption,  boolean signTag, String pathToKey) throws IOException {
+        configureSigner(signOption, signTag, pathToKey);
         try (Git git = new Git(repository)) {
             return git.tag()
+                    .setSigned(signTag)
                     .setName(tagName)
                     .setForceUpdate(true)
                     .setAnnotated(true)
@@ -1299,13 +1306,19 @@ public class GitRepoService implements AutoCloseable {
         }
     }
 
+
+
+
     /**
      * Create new tag at a specific commit.
      *
      * @param tagName   tag name
      * @param commitSha full or abbreviated commit SHA
      */
-    public Ref createTag(String tagName, String commitSha) throws IOException {
+    public Ref createTag(String tagName, String commitSha,
+                            String signOption,  boolean signTag, String pathToKey
+    ) throws IOException {
+        configureSigner(signOption, signTag, pathToKey);
         try (Git git = new Git(repository)) {
             ObjectId objectId = repository.resolve(commitSha);
             if (objectId == null) {
@@ -1314,6 +1327,7 @@ public class GitRepoService implements AutoCloseable {
             try (RevWalk revWalk = new RevWalk(repository))  {
                 RevObject revObject = revWalk.parseAny(objectId);
                 return git.tag()
+                        .setSigned(signTag)
                         .setName(tagName)
                         .setObjectId(revObject)
                         .setForceUpdate(true)
@@ -1327,6 +1341,8 @@ public class GitRepoService implements AutoCloseable {
             throw new IOException(e.getMessage());
         }
     }
+
+
 
     /**
      * Delete a local tag.
@@ -3794,6 +3810,65 @@ public class GitRepoService implements AutoCloseable {
             ResolveMerger merger = (ResolveMerger) MergeStrategy.RECURSIVE.newMerger(repository, true);
             return merger.merge(headCommit, upstreamCommit);
         }
+    }
+
+    // ── Sign part  ──────────────────────────────────────────────────
+
+    private void configureSigner(String signOption,  boolean sign, String pathOrKeyId) throws IOException {
+        if (sign && !Settings.SignOption.NONE.getOption().equalsIgnoreCase(signOption)) {
+
+
+            StoredConfig config = repository.getConfig();
+
+            if (config.getString("gpg", null, "format") == null
+                    || config.getString("gpg", null, "signingkey") == null
+                    || StringUtils.compare(
+                    config.getString("gpg", null, "signingkey"),
+                    pathOrKeyId
+            ) !=0 ) {
+                final String formatValue;
+                final String signingkeyValue = pathOrKeyId;
+                if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(signOption)) {
+                    formatValue = "ssh";
+                } else { //if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(signOption)) {
+                    formatValue = "openpgp";
+                }
+                config.setString("gpg", null, "format", formatValue); // Default for Git
+                config.setString("user", null, "signingkey", signingkeyValue); // e.g. A7512BA8
+                config.save();
+            }
+
+            /*if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(signOption)) {
+                StoredConfig config = repository.getConfig();
+                if (config.getString("gpg", null, "format") == null
+                  || config.getString("gpg", null, "signingkey") == null
+                  || StringUtils.compare(
+                        config.getString("gpg", null, "signingkey"),
+                        pathOrKeyId
+                  ) !=0 ) {
+                    config.setString("gpg", null, "format", "ssh");
+                    config.setString("user", null, "signingkey", pathOrKeyId);
+                    config.save();
+                }
+            } else if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(signOption)) {
+
+                StoredConfig config = repository.getConfig();
+
+                if (config.getString("gpg", null, "format") == null
+                        || config.getString("gpg", null, "signingkey") == null
+                        || StringUtils.compare(
+                        config.getString("gpg", null, "signingkey"),
+                        pathOrKeyId
+                ) !=0 ) {
+                    config.setString("gpg", null, "format", "openpgp"); // Default for Git
+                    config.setString("user", null, "signingkey", "LONG_PGP_KEY_ID_HERE"); // e.g. A7512BA8
+                    config.save();
+                }
+
+            }*/
+
+        }
+
     }
 
     // ── Utility part  ──────────────────────────────────────────────────

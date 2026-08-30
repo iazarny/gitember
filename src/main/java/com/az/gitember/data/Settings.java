@@ -23,6 +23,26 @@ import java.util.stream.Collectors;
 
 public class Settings {
 
+    public enum SignOption {
+        // 1. Define the constants and pass custom values to the constructor
+        NONE("None"),
+        SSH("Ssh"),
+        PGP("Pgp");
+
+        // 2. Define a private field to store the value
+        private final String option;
+
+        // 3. Create an enum constructor (must be private or package-private)
+        private SignOption(String option) {
+            this.option = option;
+        }
+
+        // 4. Create a public getter method to access the value
+        public String getOption() {
+            return this.option;
+        }
+    }
+
     /** Default file extensions ignored in folder comparison (compile/build artefacts). */
     public static final Set<String> DEFAULT_IGNORE_COMPARE_FILES = new TreeSet<>(Set.of(
             // JVM
@@ -38,6 +58,9 @@ public class Settings {
             // Rust
             "rlib", "rmeta"
     ));
+
+    /** Ollama model used by every AI feature when the user has not chosen another one. */
+    public static final String DEFAULT_LLM_DETECTOR_MODEL = "qwen2.5-coder";
 
     @JsonDeserialize(as = TreeSet.class)
     private TreeSet<String> commitMsg = new TreeSet<>();
@@ -60,7 +83,13 @@ public class Settings {
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
     private Boolean enableCommitMessageGeneration = false; //EXPERIMENTAL FEATURE
-    private String  llmDetectorModel   = "qwen2.5-coder";
+    private String  llmDetectorModel   = DEFAULT_LLM_DETECTOR_MODEL;
+    private String   signOption   = SignOption.NONE.getOption();
+    private String   signKey;
+    private Boolean  signCommit;
+    private Boolean  signTag;
+
+
 
     /** canonicalKey -> the single canonical Project instance. Rebuilt by {@link #internAll()}. */
     @JsonIgnore
@@ -122,14 +151,14 @@ public class Settings {
      * flat recent-projects list — use {@link #addRecentProject(Project)} for that.
      */
     public Project getOrCreateProject(String homeFolder) {
-        /*String key = Project.canonicalKey(homeFolder);
+        String key = Project.canonicalKey(homeFolder);
         Project p = byKey.get(key);
         if (p == null) {
             p = new Project(Project.normalizeHome(homeFolder), new Date());
             byKey.put(key, p);
         }
-        return p;*/
-        return new Project(Project.normalizeHome(homeFolder), new Date());
+        return p;
+        //return new Project(Project.normalizeHome(homeFolder), new Date());
     }
 
     /** Adds (or, if already present, bumps the open time of) a project in the flat recent list. */
@@ -181,8 +210,42 @@ public class Settings {
         this.enableLeakDetector = enableLeakDetector;
     }
 
+    public String getSignOption() {
+        return signOption;
+    }
+
+    public void setSignOption(String signOption) {
+        this.signOption = signOption;
+    }
+
+    public String getSignKey() {
+        return signKey;
+    }
+
+    public void setSignKey(String signKey) {
+        this.signKey = signKey;
+    }
+
+    public Boolean getSignCommit() {
+        return signCommit;
+    }
+
+    public void setSignCommit(Boolean signCommit) {
+        this.signCommit = signCommit;
+    }
+
+    public Boolean getSignTag() {
+        return signTag;
+    }
+
+    public void setSignTag(Boolean signTag) {
+        this.signTag = signTag;
+    }
+
+    /** Never blank: an unset or cleared model falls back to {@link #DEFAULT_LLM_DETECTOR_MODEL}. */
     public String getLlmDetectorModel() {
-        return llmDetectorModel != null ? llmDetectorModel : "qwen2.5-coder";
+        return llmDetectorModel != null && !llmDetectorModel.isBlank()
+                ? llmDetectorModel : DEFAULT_LLM_DETECTOR_MODEL;
     }
 
     public void setLlmDetectorModel(String llmDetectorModel) {

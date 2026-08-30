@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.LlmDiffDescriptionService;
 import com.az.gitember.service.OllamaManager;
@@ -454,7 +455,7 @@ public class BranchDiffWindow extends JFrame {
 
         String ollamaUrl  = OllamaManager.BASE_URL;
         String modelName  = Context.getSettings() != null
-                ? Context.getSettings().getLlmDetectorModel() : "qwen2.5-coder";
+                ? Context.getSettings().getLlmDetectorModel() : Settings.DEFAULT_LLM_DETECTOR_MODEL;
 
         new SwingWorker<String, Void>() {
             @Override

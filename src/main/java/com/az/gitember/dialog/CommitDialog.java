@@ -2,6 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.Settings;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
@@ -16,6 +17,7 @@ import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.merge.ResolveMerger;
@@ -278,7 +280,7 @@ public class CommitDialog extends JDialog {
     private String llmModel() {
         return Context.getSettings() != null
                 ? Context.getSettings().getLlmDetectorModel()
-                : "qwen2.5-coder";
+                : Settings.DEFAULT_LLM_DETECTOR_MODEL;
     }
 
     private boolean isCommitMessageGenEnabled() {
@@ -651,11 +653,18 @@ public class CommitDialog extends JDialog {
     private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
         GitRepoService svc = project.getGitRepoService();
         if (svc.hasStaged()) {
+
+            Settings settings = Context.getSettings();
+            boolean signCommit = !Settings.SignOption.NONE.getOption().equalsIgnoreCase(settings.getSignOption())
+                    && BooleanUtils.toBoolean(settings.getSignCommit());
+            String pathToKey = settings.getSignKey();
+
             String authorName     = StringUtils.trimToNull(project.getUserCommitName());
             String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
             String committerName  = StringUtils.trimToNull(project.getCommitterName());
             String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-            svc.commit(message, authorName, authorEmail, committerName, committerEmail);
+            svc.commit(message, authorName, authorEmail, committerName, committerEmail,
+                    settings.getSignOption(), signCommit, pathToKey);
         }
     }
 

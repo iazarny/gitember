@@ -1,7 +1,10 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
+import org.apache.commons.lang3.BooleanUtils;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,10 +31,16 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String doInBackground() throws Exception {
+
+        Settings settings = Context.getSettings();
+        boolean signTag = !Settings.SignOption.NONE.getOption().equalsIgnoreCase(settings.getSignOption())
+                && BooleanUtils.toBoolean(settings.getSignTag());
+        String pathToKey = settings.getSignKey();
+
         if (commitSha != null) {
-            Context.getGitRepoService().createTag(tagName, commitSha);
+            Context.getGitRepoService().createTag(tagName, commitSha, settings.getSignOption(), signTag, pathToKey);
         } else {
-            Context.getGitRepoService().createTag(tagName);
+            Context.getGitRepoService().createTag(tagName, settings.getSignOption(), signTag, pathToKey);
         }
         Context.updateTags();
         return tagName;

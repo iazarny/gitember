@@ -518,7 +518,7 @@ class GitRepoServiceTest {
     void createTag_validName_tagAppearsInTagList() throws Exception {
         makeInitialCommit();
 
-        service.createTag("v1.0");
+        service.createTag("v1.0", "", false, "");
 
         List<com.az.gitember.data.ScmBranch> tags = service.getTags();
         assertTrue(tags.stream().anyMatch(t -> t.getShortName().equals("refs/tags/v1.0")
@@ -529,7 +529,7 @@ class GitRepoServiceTest {
     @Test
     void deleteLocalTag_existingTag_tagNoLongerInTagList() throws Exception {
         makeInitialCommit();
-        service.createTag("v2.0");
+        service.createTag("v2.0", "", false, "");
 
         service.deleteLocalTag("refs/tags/v2.0");
 
