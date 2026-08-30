@@ -26,7 +26,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenuItem initRepository;
     private final JMenuItem initWorkspaceItem;
     private final JMenu     openRecentMenu;
-    private  JMenuItem settingsItem;
+    private       JMenuItem settingsItem;
     private final JMenuItem exitItem;
 
     // Repository menu (enabled only when a repo is open)
@@ -96,20 +96,24 @@ public class MainMenuBar extends JMenuBar {
         openItem = new JMenuItem("Open Repository...", KeyEvent.VK_O);
         openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_C);
+
+        cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_L);
+        cloneItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
         initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initRepository.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
         initWorkspaceItem  = new JMenuItem("Init Workspace...");
+        initWorkspaceItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W,
+                java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
         initWorkspaceItem.setName("initWorkspaceItem");
 
         openRecentMenu = new JMenu("Open Recent");
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
         openRecentMenu.setEnabled(false);
-
-
-
-
-
-
         exitItem = new JMenuItem("Exit", KeyEvent.VK_X);
         exitItem.addActionListener(e -> System.exit(0));
 
@@ -238,8 +242,10 @@ public class MainMenuBar extends JMenuBar {
         pushItem             = Util.createMenuItem("Push", null,  FontAwesomeSolid.REPLY, 135);
         fetchItem            = Util.createMenuItem("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
         commitItem           = Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
-        branchCreateItem     = Util.createMenuItem("Branch ...", "Create branch", FontAwesomeSolid.CODE_BRANCH, 0);
-        mergeItem            = Util.createMenuItem("Merge ...", "Merge branch into working branch", FontAwesomeSolid.CODE_BRANCH, 180);
+        branchCreateItem     = Util.createMenuItem("Branch ...", "Create branch",
+                FontAwesomeSolid.CODE_BRANCH, 0);
+        mergeItem            = Util.createMenuItem("Merge ...", "Merge branch into working branch",
+                FontAwesomeSolid.CODE_BRANCH, 180);
 
         interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
         interactiveRebaseItem.setToolTipText(
