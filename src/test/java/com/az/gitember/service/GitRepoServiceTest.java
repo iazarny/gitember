@@ -117,7 +117,7 @@ class GitRepoServiceTest {
 
         RevCommit commit = service.commit(
                 "committer test", "Alice", "alice@example.com",
-                "Bob", "bob@example.com");
+                "Bob", "bob@example.com", "", false, "");
 
         assertEquals("Alice", commit.getAuthorIdent().getName());
         assertEquals("Bob", commit.getCommitterIdent().getName());

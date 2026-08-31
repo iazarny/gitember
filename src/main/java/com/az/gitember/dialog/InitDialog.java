@@ -13,11 +13,12 @@ public class InitDialog extends JDialog {
     private final JCheckBox readmeCheck;
     private final JCheckBox gitignoreCheck;
     private final JCheckBox lfsCheck;
+    private final JComboBox<String> defaultBranchCombo;
     private boolean confirmed = false;
 
     public InitDialog(Frame parent) {
         super(parent, "Init Repository", true);
-        setSize(450, 230);
+        setSize(480, 280);
         setLocationRelativeTo(parent);
         setResizable(false);
 
@@ -39,18 +40,34 @@ public class InitDialog extends JDialog {
         gbc.gridx = 1; gbc.weightx = 1;
         formPanel.add(folderPanel, gbc);
 
+        //Default branch
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(new JLabel("Default branch:"), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1;
+        defaultBranchCombo = new JComboBox<>(
+                new String[] {"main", "master"}
+        );
+        formPanel.add(defaultBranchCombo, gbc);
+
         // Checkboxes
         readmeCheck = new JCheckBox("Create README.md");
-        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.gridx = 1; gbc.gridy = 2;
         formPanel.add(readmeCheck, gbc);
 
         gitignoreCheck = new JCheckBox("Create .gitignore");
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         formPanel.add(gitignoreCheck, gbc);
 
         lfsCheck = new JCheckBox("Enable Git LFS");
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         formPanel.add(lfsCheck, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        formPanel.add(new JLabel(), gbc);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -98,6 +115,7 @@ public class InitDialog extends JDialog {
         params.setInitWithReame(readmeCheck.isSelected());
         params.setInitWithIgnore(gitignoreCheck.isSelected());
         params.setInitWithLfs(lfsCheck.isSelected());
+        params.setDefaultBranch(defaultBranchCombo.getSelectedItem().toString());
         return params;
     }
 }

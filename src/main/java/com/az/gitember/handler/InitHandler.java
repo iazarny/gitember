@@ -28,7 +28,8 @@ public class InitHandler extends AbstractAsyncHandler<Void> {
                 params.getDestinationFolder(),
                 params.isInitWithReame(),
                 params.isInitWithIgnore(),
-                params.isInitWithLfs()
+                params.isInitWithLfs(),
+                params.getDefaultBranch()
         );
         Context.init(params.getDestinationFolder());
         MainFrame.getInstance().swithToTheProjectView();

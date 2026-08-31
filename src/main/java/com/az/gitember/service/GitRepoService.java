@@ -202,9 +202,11 @@ public class GitRepoService implements AutoCloseable {
     public static Repository createRepository(final String absPath,
                                               final boolean withReadme,
                                               final boolean withGitIgnore,
-                                              final boolean withLfs) throws Exception {
+                                              final boolean withLfs,
+                                              final String defaultBranch) throws Exception {
         try (final Git git = Git.init()
                 .setDirectory(new File(absPath))
+                .setInitialBranch(defaultBranch)
                 .call()) {
 
             if (withReadme) {
@@ -428,6 +430,10 @@ public class GitRepoService implements AutoCloseable {
      * @return result.
      * @throws GitAPIException in case of error
      */
+    public RevCommit commit(final String message, final String name, final String email) throws GitAPIException, IOException {
+        return commit(message, name, email, "", false, "");
+    }
+
     public RevCommit commit(final String message, final String name, final String email,
                             String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
         return commit(message, name, email, null, null, signOption, signCommit, pathToKey);
