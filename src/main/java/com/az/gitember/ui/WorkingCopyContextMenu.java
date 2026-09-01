@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitRepoService;
@@ -160,12 +161,20 @@ public class WorkingCopyContextMenu {
             }
         }
 
-        // Group 4: Physical delete
-        if (!isMissed && !isRemoved) {
+        // Group 4: Ignore / Physical delete
+        boolean canIgnore = canAddToGitIgnore(item);
+        if (canIgnore || (!isMissed && !isRemoved)) {
             menu.addSeparator();
-            JMenuItem delete = new JMenuItem("Physical delete...");
-            delete.addActionListener(e -> physicalDelete(item));
-            menu.add(delete);
+            if (canIgnore) {
+                JMenuItem ignore = new JMenuItem("Add to .gitignore");
+                ignore.addActionListener(e -> addToGitIgnore(List.of(item)));
+                menu.add(ignore);
+            }
+            if (!isMissed && !isRemoved) {
+                JMenuItem delete = new JMenuItem("Physical delete...");
+                delete.addActionListener(e -> physicalDelete(item));
+                menu.add(delete);
+            }
         }
     }
 
@@ -180,6 +189,7 @@ public class WorkingCopyContextMenu {
             String s = i.getAttribute().getStatus();
             return !ScmItem.Status.MISSED.equals(s) && !ScmItem.Status.REMOVED.equals(s);
         });
+        List<ScmItem> ignorable = items.stream().filter(this::canAddToGitIgnore).toList();
 
         if (hasUnstaged) {
             long count = items.stream().filter(i -> !i.isStaged()).count();
@@ -211,24 +221,31 @@ public class WorkingCopyContextMenu {
             });
             menu.add(revert);
         }
-        if (hasDeletable) {
+        if (!ignorable.isEmpty() || hasDeletable) {
             menu.addSeparator();
-            JMenuItem delete = new JMenuItem("Physical delete selected...");
-            delete.addActionListener(e -> {
-                int c = JOptionPane.showConfirmDialog(parent,
-                        "Physically delete " + items.size() + " selected files?",
-                        "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (c == JOptionPane.YES_OPTION) {
-                    for (ScmItem item : items) {
-                        String s = item.getAttribute().getStatus();
-                        if (!ScmItem.Status.MISSED.equals(s) && !ScmItem.Status.REMOVED.equals(s)) {
-                            deleteFileFromDisk(item.getShortName());
+            if (!ignorable.isEmpty()) {
+                JMenuItem ignore = new JMenuItem("Add selected to .gitignore (" + ignorable.size() + ")");
+                ignore.addActionListener(e -> addToGitIgnore(ignorable));
+                menu.add(ignore);
+            }
+            if (hasDeletable) {
+                JMenuItem delete = new JMenuItem("Physical delete selected...");
+                delete.addActionListener(e -> {
+                    int c = JOptionPane.showConfirmDialog(parent,
+                            "Physically delete " + items.size() + " selected files?",
+                            "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (c == JOptionPane.YES_OPTION) {
+                        for (ScmItem item : items) {
+                            String s = item.getAttribute().getStatus();
+                            if (!ScmItem.Status.MISSED.equals(s) && !ScmItem.Status.REMOVED.equals(s)) {
+                                deleteFileFromDisk(item.getShortName());
+                            }
                         }
+                        onComplete.run();
                     }
-                    onComplete.run();
-                }
-            });
-            menu.add(delete);
+                });
+                menu.add(delete);
+            }
         }
     }
 
@@ -419,6 +436,34 @@ public class WorkingCopyContextMenu {
                 log.log(Level.WARNING, "Cannot open file with system", ex);
             }
         }
+    }
+
+    private boolean canAddToGitIgnore(ScmItem item) {
+        return item != null && !Const.GIT_IGNORE_NAME.equals(item.getShortName());
+    }
+
+    private void addToGitIgnore(List<ScmItem> items) {
+        statusBar.setStatus("Adding " + items.size() + " file(s) to .gitignore...");
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() throws Exception {
+                serviceRunner.run(svc -> {
+                    for (ScmItem item : items) {
+                        svc.addToGitIgnore(item.getShortName());
+                    }
+                });
+                return null;
+            }
+            @Override protected void done() {
+                try {
+                    get();
+                    statusBar.setStatus("Added to .gitignore");
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Add to .gitignore failed", ex);
+                    statusBar.setStatus("Add to .gitignore failed: " + ex.getMessage());
+                }
+                onComplete.run();
+            }
+        }.execute();
     }
 
     public void physicalDelete(ScmItem item) {

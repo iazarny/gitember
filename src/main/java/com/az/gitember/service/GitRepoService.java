@@ -1765,6 +1765,91 @@ public class GitRepoService implements AutoCloseable {
         }
     }
 
+    /**
+     * Appends {@code fileName} to the repository-root {@code .gitignore} so Git stops listing
+     * it. If the path is already in the index it is removed with {@code git rm --cached},
+     * leaving the working-tree file in place. Calling this for {@code .gitignore} itself is a
+     * no-op.
+     *
+     * @param fileName repo-relative path as reported by status (forward slashes)
+     */
+    public void addToGitIgnore(final String fileName) throws Exception {
+        if (StringUtils.isNotBlank(fileName)) {
+            String gitPath = fileName.replace('\\', '/');
+            if (!isRootGitIgnore(gitPath)) {
+                String pattern = toGitIgnorePattern(gitPath);
+                Path ignorePath = repository.getWorkTree().toPath().resolve(Const.GIT_IGNORE_NAME);
+                if (!gitIgnoreContains(ignorePath, pattern)) {
+                    appendGitIgnorePattern(ignorePath, pattern);
+                    log.log(Level.INFO, "Added {0} to {1}", new Object[]{pattern, Const.GIT_IGNORE_NAME});
+                }
+                if (isTrackedPath(gitPath)) {
+                    try (Git git = new Git(repository)) {
+                        git.rm().setCached(true).addFilepattern(gitPath).call();
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isRootGitIgnore(String gitPath) {
+        return Const.GIT_IGNORE_NAME.equals(gitPath);
+    }
+
+    private String toGitIgnorePattern(String gitPath) {
+        String pattern = gitPath;
+        Path workPath = repository.getWorkTree().toPath().resolve(gitPath);
+        if (Files.isDirectory(workPath) && !pattern.endsWith("/")) {
+            pattern = pattern + "/";
+        }
+        if (!pattern.startsWith("/")) {
+            pattern = "/" + pattern;
+        }
+        return pattern;
+    }
+
+    private boolean gitIgnoreContains(Path ignorePath, String pattern) throws IOException {
+        boolean contains = false;
+        if (Files.exists(ignorePath)) {
+            String unanchored = pattern.startsWith("/") ? pattern.substring(1) : pattern;
+            for (String line : Files.readAllLines(ignorePath)) {
+                String trimmed = line.trim();
+                if (trimmed.equals(pattern) || trimmed.equals(unanchored)) {
+                    contains = true;
+                }
+            }
+        }
+        return contains;
+    }
+
+    private void appendGitIgnorePattern(Path ignorePath, String pattern) throws IOException {
+        String prefix = "";
+        if (Files.exists(ignorePath)) {
+            String existing = Files.readString(ignorePath);
+            if (!existing.isEmpty() && !existing.endsWith("\n")) {
+                prefix = "\n";
+            }
+        }
+        Files.writeString(ignorePath, prefix + pattern + "\n",
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    private boolean isTrackedPath(String gitPath) throws IOException {
+        boolean tracked = false;
+        DirCache index = repository.readDirCache();
+        if (index.findEntry(gitPath) >= 0) {
+            tracked = true;
+        } else {
+            String prefix = gitPath.endsWith("/") ? gitPath : gitPath + "/";
+            for (int i = 0; i < index.getEntryCount() && !tracked; i++) {
+                if (index.getEntry(i).getPathString().startsWith(prefix)) {
+                    tracked = true;
+                }
+            }
+        }
+        return tracked;
+    }
+
 
     /**
      * @param defaultProgressMonitor optional

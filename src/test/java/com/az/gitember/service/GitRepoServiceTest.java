@@ -624,6 +624,72 @@ class GitRepoServiceTest {
         assertTrue(statuses.isEmpty(), "Clean working tree must yield no status entries");
     }
 
+    // ── .gitignore ────────────────────────────────────────────────────────────
+
+    @Test
+    void addToGitIgnore_untrackedFile_appendsPatternAndDropsFromStatus() throws Exception {
+        makeInitialCommit();
+        writeFile("secret.env", "TOKEN=x\n");
+
+        service.addToGitIgnore("secret.env");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/secret.env"), "Root .gitignore must list the file");
+        assertTrue(Files.exists(repoDir.resolve("secret.env")), "Working-tree file must remain");
+        assertTrue(service.getStatuses(null).stream().noneMatch(
+                s -> s.getShortName().equals("secret.env")),
+                "Ignored untracked file must disappear from status");
+    }
+
+    @Test
+    void addToGitIgnore_trackedFile_untracksWithoutDeleting() throws Exception {
+        makeInitialCommit();
+        writeFile("tracked.secret", "keep\n");
+        service.addFileToCommitStage("tracked.secret");
+        service.commit("add secret", "U", "u@u.com");
+
+        service.addToGitIgnore("tracked.secret");
+
+        assertTrue(Files.exists(repoDir.resolve("tracked.secret")),
+                "Working-tree file must remain after git rm --cached");
+        assertTrue(repository.readDirCache().findEntry("tracked.secret") < 0,
+                "File must be removed from the index");
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/tracked.secret"));
+    }
+
+    @Test
+    void addToGitIgnore_existingIgnore_doesNotDuplicatePattern() throws Exception {
+        makeInitialCommit();
+        Files.writeString(repoDir.resolve(".gitignore"), "/noise.log\n");
+        writeFile("noise.log", "log\n");
+
+        service.addToGitIgnore("noise.log");
+        service.addToGitIgnore("noise.log");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        int first = gitignore.indexOf("/noise.log");
+        int last = gitignore.lastIndexOf("/noise.log");
+        assertEquals(first, last, "Pattern must appear only once");
+    }
+
+    @Test
+    void addToGitIgnore_directory_appendsTrailingSlash() throws Exception {
+        makeInitialCommit();
+        Path dir = repoDir.resolve("build-out");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("artifact.bin"), "bin\n");
+
+        service.addToGitIgnore("build-out");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/build-out/"),
+                "Directory pattern must end with a slash, got:\n" + gitignore);
+        assertTrue(service.getStatuses(null).stream().noneMatch(
+                s -> s.getShortName().startsWith("build-out")),
+                "Ignored directory contents must disappear from status");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Creates an initial commit with a single file so HEAD is valid. */
