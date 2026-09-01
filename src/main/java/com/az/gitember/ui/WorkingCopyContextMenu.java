@@ -5,16 +5,20 @@ import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitRepoService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Builds and shows a working-copy context menu for a list of {@link ScmItem}s.
@@ -166,9 +170,29 @@ public class WorkingCopyContextMenu {
         if (canIgnore || (!isMissed && !isRemoved)) {
             menu.addSeparator();
             if (canIgnore) {
-                JMenuItem ignore = new JMenuItem("Add to .gitignore");
+
+                JMenu ignoreMenu = new JMenu("Add  to .gitignore");
+                menu.add(ignoreMenu);
+
+                JMenuItem ignore = new JMenuItem(FilenameUtils.getName(item.getShortName()) );
                 ignore.addActionListener(e -> addToGitIgnore(List.of(item)));
-                menu.add(ignore);
+                ignoreMenu.add(ignore);
+
+                String ext = FilenameUtils.getExtension(item.getShortName());;
+                if (StringUtils.isNotBlank(ext)) {
+                    final String asterixExt = "*." + ext;
+                    JMenuItem ignoreExt = new JMenuItem("Extention " + asterixExt );
+                    ignoreExt.addActionListener(e -> addToGitIgnorePaths(List.of(asterixExt)));
+                    ignoreMenu.add(ignoreExt);
+                }
+
+                Path path = Paths.get(item.getShortName());
+                String firstFolder = path.getName(0).toString() + File.separator;
+                JMenuItem ignoreFolder = new JMenuItem("Folder " + firstFolder );
+                ignoreFolder.addActionListener(e -> addToGitIgnorePaths(List.of(firstFolder)));
+                ignoreMenu.add(ignoreFolder);
+
+
             }
             if (!isMissed && !isRemoved) {
                 JMenuItem delete = new JMenuItem("Physical delete...");
@@ -443,17 +467,31 @@ public class WorkingCopyContextMenu {
     }
 
     private void addToGitIgnore(List<ScmItem> items) {
-        statusBar.setStatus("Adding " + items.size() + " file(s) to .gitignore...");
+        if (items == null) return;
+        List<String> paths = items.stream()
+                .map(ScmItem::getShortName)
+                .collect(Collectors.toList());
+        addToGitIgnorePaths(paths);
+    }
+
+    // New method accepting List<String>
+    private void addToGitIgnorePaths(List<String> paths) {
+        if (paths == null || paths.isEmpty()) return;
+
+        statusBar.setStatus("Adding " + paths.size() + " file(s) to .gitignore...");
         new SwingWorker<Void, Void>() {
-            @Override protected Void doInBackground() throws Exception {
+            @Override
+            protected Void doInBackground() throws Exception {
                 serviceRunner.run(svc -> {
-                    for (ScmItem item : items) {
-                        svc.addToGitIgnore(item.getShortName());
+                    for (String path : paths) {
+                        svc.addToGitIgnore(path);
                     }
                 });
                 return null;
             }
-            @Override protected void done() {
+
+            @Override
+            protected void done() {
                 try {
                     get();
                     statusBar.setStatus("Added to .gitignore");

@@ -7,6 +7,7 @@ import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.misc.Util;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.StoredConfig;
@@ -345,7 +346,7 @@ public class SettingsDialog extends JDialog {
 
         gbc.gridy = 2;
         gbc.gridx = 1;
-        signCommit = new JCheckBox("", settings.getSignCommit());
+        signCommit = new JCheckBox("", BooleanUtils.toBoolean(settings.getSignCommit()));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
@@ -361,7 +362,7 @@ public class SettingsDialog extends JDialog {
 
         gbc.gridy = 3;
         gbc.gridx = 1;
-        signTag = new JCheckBox("", settings.getSignTag());
+        signTag = new JCheckBox("", BooleanUtils.toBoolean(settings.getSignTag()));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;

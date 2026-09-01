@@ -104,6 +104,7 @@ public final class SyntaxStyleUtil {
         // Special file names
         if (lower.endsWith("dockerfile")) return SyntaxConstants.SYNTAX_STYLE_DOCKERFILE;
         if (lower.endsWith("makefile")) return SyntaxConstants.SYNTAX_STYLE_MAKEFILE;
+        if (lower.endsWith("gitignore")) return SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE;
         if (lower.endsWith("pom.xml") || lower.endsWith(".xml")) return SyntaxConstants.SYNTAX_STYLE_XML;
         if (lower.endsWith(".fxml")) return SyntaxConstants.SYNTAX_STYLE_XML;
 

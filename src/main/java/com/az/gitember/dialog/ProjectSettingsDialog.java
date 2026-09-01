@@ -1,19 +1,27 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.data.Const;
 import com.az.gitember.data.Project;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.FileViewerWindow;
 
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Per-project settings: author/committer identity and remote repository credentials.
  * Blank identity fields mean "use the global git config value".
  */
 public class ProjectSettingsDialog extends JDialog {
+
+    private static final Logger log = Logger.getLogger(ProjectSettingsDialog.class.getName());
 
     private final JTextField authorNameField;
     private final JTextField authorEmailField;
@@ -28,7 +36,7 @@ public class ProjectSettingsDialog extends JDialog {
 
     public ProjectSettingsDialog(Frame owner) {
         super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
-        setSize(480, 640);
+        setSize(480, 720);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -99,6 +107,17 @@ public class ProjectSettingsDialog extends JDialog {
         form.add(showAllPullRequestsCheck, gbc);
         gbc.gridwidth = 1;
 
+        addSeparatorLabel(form, gbc, 15, "Ignore rules");
+        JButton editGitIgnoreBtn = new JButton("Edit .gitignore...");
+        editGitIgnoreBtn.setName("editGitIgnoreButton");
+        editGitIgnoreBtn.setToolTipText("Open the repository .gitignore in a separate editor window");
+        editGitIgnoreBtn.setEnabled(project != null);
+        editGitIgnoreBtn.addActionListener(e -> openGitIgnoreEditor());
+        gbc.gridx = 0; gbc.gridy = 16; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        form.add(editGitIgnoreBtn, gbc);
+        gbc.gridwidth = 1;
+
         JButton okBtn     = new JButton("OK");
         JButton cancelBtn = new JButton("Cancel");
         okBtn.addActionListener(e -> applyAndClose());
@@ -113,6 +132,32 @@ public class ProjectSettingsDialog extends JDialog {
         getContentPane().add(form,     BorderLayout.CENTER);
         getContentPane().add(btnPanel, BorderLayout.SOUTH);
         Util.bindEscapeToDispose(this);
+    }
+
+    private void openGitIgnoreEditor() {
+        String folder = Context.getProjectFolder();
+        if (folder != null && !folder.isBlank()) {
+            Path gitIgnorePath = Path.of(folder, Const.GIT_IGNORE_NAME);
+            String content = "";
+            boolean readable = true;
+            if (Files.exists(gitIgnorePath)) {
+                try {
+                    content = Files.readString(gitIgnorePath);
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "Cannot read " + gitIgnorePath, ex);
+                    JOptionPane.showMessageDialog(this,
+                            "Cannot read .gitignore:\n" + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    readable = false;
+                }
+            }
+            if (readable) {
+                FileViewerWindow viewer = new FileViewerWindow("Edit .gitignore", content, Const.GIT_IGNORE_NAME);
+                viewer.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+                viewer.enableFileEdit(gitIgnorePath);
+                viewer.setVisible(true);
+            }
+        }
     }
 
     private void applyAndClose() {
