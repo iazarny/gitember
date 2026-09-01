@@ -55,7 +55,7 @@
             background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
             padding: 120px 0 60px;
             color: #fff;
-            text-align: center;
+            text-align: left;
         }
 
         .comparison-hero h1 {
@@ -105,7 +105,7 @@
             color: #fff;
             font-weight: 600;
             padding: 12px 14px;
-            text-align: center;
+            text-align: left;
             white-space: nowrap;
         }
 
@@ -128,7 +128,7 @@
 
         .cmp-table td {
             padding: 10px 14px;
-            text-align: center;
+            text-align: left;
             border-bottom: 1px solid #e9ecef;
             vertical-align: middle;
         }
@@ -283,11 +283,11 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th>Gitember</th>
-                        <th>GitHub Desktop</th>
-                        <th>Sourcetree</th>
-                        <th>GitKraken</th>
-                        <th>Fork</th>
+                        <th>Gitember<br>Self-Sufficient</th>
+                        <th>GitHub Desktop<br>Self-Sufficient</th>
+                        <th>Sourcetree<br>Git CLI Wrapper</th>
+                        <th>GitKraken<br>Self-Sufficient</th>
+                        <th>Fork<br>Git CLI Wrapper</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -301,55 +301,60 @@
                     </tr>
                     <tr>
                         <td>Price</td>
-                        <td>Free</td>
-                        <td>Free</td>
-                        <td>Free</td>
-                        <td>Community - Free<br>Pro - $10 per month<br>Advanced - $14 per month</td>
-                        <td>$59.99 one-time</td>
+                        <td>🟢 Free</td>
+                        <td>🟢 Free</td>
+                        <td>🟢 Free</td>
+                        <td>🟡 Community - Free<br>Pro - $10 per month<br>Advanced - $14 per month</td>
+                        <td>🟡 $59.99 one-time</td>
                     </tr>
 
                     <tr>
                         <td>Open source</td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-no">❌</span></td>
-                        <td><span class="emoji-no">❌</span></td>
-                        <td><span class="emoji-no">❌</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
                     </tr>
                     <tr>
                         <td>Account required</td>
-                        <td><span class="emoji-yes">❌</span></td>
-                        <td><span class="emoji-warn">⚠️</span> GitHub acct</td>
-                        <td><span class="emoji-warn">⚠️</span> Atlassian acct</td>
-                        <td><span class="emoji-no">✅</span> Required</td>
-                        <td><span class="emoji-yes">❌</span></td>
+                        <td style="vertical-align: top">🟢 No</span></td>
+                        <td style="vertical-align: top">🟡</span> GitHub acct ⁰ <br><a href="https://docs.github.com/en/get-started/learning-about-github/githubs-plans">Plans</a></td>
+                        <td style="vertical-align: top">🟡</span> Atlassian acct ⁰ <br><a href="https://www.atlassian.com/software/sourcetree/enterprise">Enterprise plan</a> </td>
+                        <td style="vertical-align: top">🟡</span> Required ⁰ <br><a href="https://gitkraken.com/pricing">Gitkraken pricing</a></td>
+                        <td style="vertical-align: top">🟢 No</span></td>
                     </tr>
                     <tr>
                         <td>Windows</td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
                     </tr>
                     <tr>
                         <td>macOS</td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
                     </tr>
                     <tr>
                         <td>Linux</td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-no">❌</span></td>
-                        <td><span class="emoji-no">❌</span></td>
-                        <td><span class="emoji-yes">✅</span></td>
-                        <td><span class="emoji-no">❌</span></td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
                     </tr>
                     </tbody>
                 </table>
+                <p class="footnote">
+                    ⁰ Some features available with account
+
+                </p>
+                <!-- ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ -->
             </div>
         </div>
     </section>
@@ -390,21 +395,21 @@
                     </tr>
                     <tr>
                         <td>Installation experience</td>
-                        <td>✅</td>
-                        <td>❌Not a regular installer.<br>Unzip and run application</td>
-                        <td>❌Not a regular installer.<br>Unzip the run application<br>Move to the /Application
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟡 Not a regular installer.<br>Unzip and run application</td>
+                        <td style="vertical-align: top">🟡 Not a regular installer.<br>Unzip the run application<br>Move to the /Application
                             manually
                         </td>
-                        <td>✅</td>
-                        <td>✅</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
                     </tr>
                     <tr>
                         <td>First startup</td>
-                        <td>✅Scan and add repos</td>
-                        <td>✅Scan and add repos</td>
-                        <td>❌Look confusing.<br>Need to clone or Open local repo</td>
-                        <td>Open release note</td>
-                        <td>Empty workplace<br>Need to open/init/clone repo</td>
+                        <td>🟢 Scan and add repos</td>
+                        <td>🟢 Scan and add repos</td>
+                        <td>🟡 Look confusing.<br>Need to clone or Open local repo</td>
+                        <td>🟡 Open release note</td>
+                        <td>🟡 Empty workplace<br>Need to open/init/clone repo</td>
                     </tr>
                     <tr>
                         <td>First startup</td>
@@ -416,18 +421,18 @@
                     </tr>
                     <tr>
                         <td>Git detection<br>version selection</td>
-                        <td>✅Not needed</td>
-                        <td>✅Not needed</td>
-                        <td>✅Existing and build in</td>
-                        <td>✅Not needed</td>
-                        <td>✅Existing</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Existing and build in</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Existing</td>
                     </tr>
                     <tr>
                         <td>SSH configuration</td>
                         <td>.ssh only<br>Global</td>
                         <td>.ssh only<br>Global</td>
                         <td>.ssh only<br>Global</td>
-                        <td>✅Can chose key location<br>Can generate key</td>
+                        <td>🟢 Can chose key location<br>Can generate key</td>
                         <td>.ssh only<br>Global</td>
                     </tr>
                     <tr>
@@ -440,23 +445,23 @@
                     </tr>
                     <tr>
                         <td>GPG signing</td>
-                        <td>✅PGP/GPG or SSH commit and tag signing </td>
-                        <td>❌To get GitHub Desktop to sign your commits with PGP/GPG, you must configure your global Git settings to sign commits by default. GitHub Desktop does not have a native toggle menu for GPG signing; instead, it honors your global .gitconfig settings and relies on an external GPG agent to handle your secret key passphrase.</td>
-                        <td>✅You can set up GPG commit signing in SourceTree by configuring your local repository settings and enabling your GPG key</td>
-                        <td>✅You can enable PGP/GPG commit signing in GitKraken Desktop.</td>
-                        <td>❌The Fork Git client does not have a native, built-in button or settings panel for PGP/GPG commit signing, but it will successfully sign commits if you configure global Git signing on your system</td>
+                        <td>🟢 PGP/GPG or SSH commit and tag signing </td>
+                        <td>🟡 To get GitHub Desktop to sign your commits with PGP/GPG, you must configure your global Git settings to sign commits by default. GitHub Desktop does not have a native toggle menu for GPG signing; instead, it honors your global .gitconfig settings and relies on an external GPG agent to handle your secret key passphrase.</td>
+                        <td>🟢 You can set up GPG commit signing in SourceTree by configuring your local repository settings and enabling your GPG key</td>
+                        <td>🟢 You can enable PGP/GPG commit signing in GitKraken Desktop.</td>
+                        <td>🟡 The Fork Git client does not have a native, built-in button or settings panel for PGP/GPG commit signing, but it will successfully sign commits if you configure global Git signing on your system</td>
                     </tr>
                     <tr>
                         <td>Git user.name / user.email</td>
-                        <td>✅ plus overwrite per project</td>
-                        <td>✅</td>
-                        <td>✅</td>
-                        <td>✅</td>
-                        <td>✅</td>
+                        <td>🟢 plus overwrite per project</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
                     </tr>
                     <tr>
                         <td>External editor</td>
-                        <td>✅Not needed<br>Build in</td>
+                        <td>🟢 Not needed<br>Build in</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -464,7 +469,7 @@
                     </tr>
                     <tr>
                         <td>External diff tool</td>
-                        <td>✅Not needed<br>Build in</td>
+                        <td>🟢 Not needed<br>Build in</td>
                         <td></td>
                         <td></td>
                         <td>Need to configure</td>
@@ -472,7 +477,7 @@
                     </tr>
                     <tr>
                         <td>External merge tool</td>
-                        <td>✅Not needed<br>Build in</td>
+                        <td>🟢 Not needed<br>Build in</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -480,11 +485,11 @@
                     </tr>
                     <tr>
                         <td>Light/dark theme</td>
-                        <td>✅</td>
-                        <td>✅</td>
-                        <td>✅</td>
-                        <td>✅set of different themes</td>
-                        <td>✅</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢 set of different themes</td>
+                        <td>🟢</td>
                     </tr>
                     <tr>
                         <td>UI customization</td>
@@ -496,22 +501,22 @@
                     </tr>
                     <tr>
                         <td>Keyboard shortcuts</td>
-                        <td>✅</td>
-                        <td></td>
-                        <td></td>
-                        <td>✅</td>
-                        <td></td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
                     </tr>
                     <tr>
-                        <td>Startup time</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>Startup time ~</td>
+                        <td>2s</td>
+                        <td>1s</td>
+                        <td>1s</td>
+                        <td>3s</td>
+                        <td>1s</td>
                     </tr>
                     <tr>
-                        <td>Memory usage</td>
+                        <td>Memory usage ²</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -526,21 +531,15 @@
                         <td></td>
                         <td></td>
                     </tr>
-                    <tr>
-                        <td>Account requirement</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
                     </tbody>
                 </table>
+                <p class="footnote">
+                    ¹ Mac Silicon<br>
+                    ² With one open repository
+                </p>
             </div>
         </div>
-        <p class="footnote">
-            ¹ Mac Silicon
-        </p>
+
     </section>
 
 
@@ -563,18 +562,18 @@
                     <tbody>
                     <tr>
                         <td>Create new repository</td>
-                        <td>🟡Minimalistic</td>
-                        <td>🟡Project name / folder selection confusing</td>
-                        <td>🟡Minimalistic</td>
+                        <td>🟡 Minimalistic</td>
+                        <td>🟡 Project name / folder selection confusing</td>
+                        <td>🟡 Minimalistic</td>
                         <td>🟢</td>
-                        <td>🐞Confusing. </td>
+                        <td>🟡 Minimalistic. Just select folder </td>
                     </tr>
                     <tr>
                         <td>Initialize existing directory</td>
                         <td>🟢</td>
                         <td>🟢</td>
                         <td>🟢</td>
-                        <td>🟡Init but not open</td>
+                        <td>🟡 Init but not open</td>
                         <td>🔴</td>
                     </tr>
                     <tr>
@@ -604,7 +603,7 @@
                     <tr>
                         <td>Change default branch</td>
                         <td>🟢</td>
-                        <td>🔴</td>
+                        <td>🟡 Via global settings</td>
                         <td>🔴</td>
                         <td>🟢</td>
                         <td>🔴</td>
@@ -623,11 +622,14 @@
                         <td>🟢</td>
                         <td>🟢</td>
                         <td>🟢</td>
-                        <td>🐞Cannot open some repos
+                        <td>🐞Cannot open some repos ²
                             <br><img src="compare/3/forkopenerror.png"  width="160"/></td>
                     </tr>
                     </tbody>
                 </table>
+                <p class="footnote">
+                    ² Really hard to close this error message, it appears constantly.
+                </p>
             </div>
         </div>
     </section>
@@ -635,7 +637,7 @@
     <!--  class="col-gitember"  ======= Repository Creation & Cloning ======= -->
     <section class="comparison-section" data-aos="fade-up">
         <div class="container">
-            <h2><i class="bi bi-floppy"></i>Remote Repository</h2>
+            <h2><i class="bi bi-floppy"></i>4 Remote Repository</h2>
             <div class="table-scroll">
                 <table class="cmp-table">
                     <thead>
@@ -652,8 +654,7 @@
                     <tr>
                         <td>Clone HTTPS repository</td>
                         <td>🟢</td>
-                        <td></td>
-                        <td></td>
+                        <td>🟢</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -661,47 +662,36 @@
                     <tr>
                         <td>Clone SSH repository</td>
                         <td>🟢</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
                     </tr>
                     <tr>
                         <td>Clone private repository</td>
                         <td>🟢</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Clone large repository</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Shallow clone</td>
                         <td>🟢</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
                     </tr>
                     <tr>
-                        <td>Clone specific branch</td>
-                        <td>🟢</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>Clone large repository
+                            <br>https://github.com/virejdasani/Commited.git over 3 millions (git cli ref 55s)
+                        </td>
+                        <td>1m 12s</td>
+                        <td>1m 9s</td>
+                        <td>1m 4s</td>
+                        <td>1m 11s</td>
+                        <td>1m 21s</td>
+                    </tr>
+                    <tr>
+                        <td>Shallow and specific branch clone</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/4/geclone.png"  width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/desctopclone.png"  width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/stclone.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/4/gkclone.png"  width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/forkclone.png"  width="160"/></td>
                     </tr>
                     </tbody>
                 </table>
@@ -723,7 +713,6 @@
               <th>Sourcetree</th>
               <th>GitKraken</th>
               <th>Fork</th>
-              <th>SmartGit</th>
             </tr>
             </thead>
             <tbody>
@@ -1213,9 +1202,9 @@
 
     <!--
 
-                    <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-no">❌</span></td>
+                    <td>✅</span></td>
+                <td>⚠️</span> basic</td>
+                <td>❌</span></td>
 
     -->
 
