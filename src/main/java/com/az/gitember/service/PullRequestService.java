@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 public class PullRequestService {
 
     private static final Logger log = Logger.getLogger(PullRequestService.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = Context.getObjectMapper();
 
     private enum Host { GITHUB, GITLAB, BITBUCKET, GITEA, AZURE_DEVOPS, UNKNOWN }
 

@@ -2,6 +2,9 @@ package com.az.gitember.service;
 
 import com.az.gitember.data.*;
 import com.az.gitember.service.avatar.AvatarService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.revplot.PlotCommit;
 
@@ -25,7 +28,16 @@ public class Context {
 
     private static Workspace workspace = null;
     private static Project   activeProject;
-    private final static SettingService settingService = new SettingService();
+    private static ObjectMapper objectMapper = null;
+    public static synchronized ObjectMapper getObjectMapper() {
+        if (objectMapper == null) {
+            objectMapper = new ObjectMapper();
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+        return objectMapper;
+    }
+    private final static SettingService settingService = new SettingService(getObjectMapper());
 
     /** Returned by {@link #getGitRepoService()} when no project is active. */
     private static final GitRepoService NO_REPO = new GitRepoService();

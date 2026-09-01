@@ -16,20 +16,15 @@ import java.util.logging.Logger;
 
 public class SettingService {
 
-
     private final static Logger log = Logger.getLogger(SettingService.class.getName());
 
     private final static String SYSTEM_PROP_USER_HOME = "user.home";
-    private final static int COMMIT_HISTORY_LIMIT = 50;
 
+    private final ObjectMapper objectMapper;
 
-    private ObjectMapper getObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper;
+    public SettingService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
-
 
     /**
      * Read properties from disk.
@@ -56,7 +51,7 @@ public class SettingService {
      * @return settings
      */
     Settings read(File file) throws IOException {
-        return getObjectMapper().readValue(file, Settings.class);
+        return objectMapper.readValue(file, Settings.class);
     }
 
 
@@ -66,7 +61,7 @@ public class SettingService {
     public void write(Settings settings) {
         try {
             createStorageIsAbsent();
-            getObjectMapper().writerFor(Settings.class).writeValue(
+            objectMapper.writerFor(Settings.class).writeValue(
                     getAbsolutePathToPropertyFile(), settings);
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot save settings", e);

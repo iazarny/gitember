@@ -1,5 +1,6 @@
 package com.az.gitember.service.avatar;
 
+import com.az.gitember.service.Context;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,7 +27,6 @@ import java.util.logging.Logger;
 public class GitHubAvatarClient implements AvatarClient {
 
     private static final Logger log = Logger.getLogger(GitHubAvatarClient.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String API_BASE = "https://api.github.com";
 
     @Override
@@ -65,7 +65,7 @@ public class GitHubAvatarClient implements AvatarClient {
             String url = API_BASE + "/search/users?q=" + query;
             String body = AvatarHttpHelper.getJson(url, authHeaders);
             if (body == null) return null;
-            JsonNode items = MAPPER.readTree(body).path("items");
+            JsonNode items = Context.getObjectMapper().readTree(body).path("items");
             if (items.isEmpty()) return null;
             String avatarUrl = items.get(0).path("avatar_url").asText(null);
             if (avatarUrl == null || avatarUrl.isBlank()) return null;

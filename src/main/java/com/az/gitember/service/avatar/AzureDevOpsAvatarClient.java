@@ -1,5 +1,6 @@
 package com.az.gitember.service.avatar;
 
+import com.az.gitember.service.Context;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,7 +37,6 @@ import java.util.logging.Logger;
 public class AzureDevOpsAvatarClient implements AvatarClient {
 
     private static final Logger log = Logger.getLogger(AzureDevOpsAvatarClient.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Override
     public boolean supports(String remoteUrl) {
@@ -88,7 +88,7 @@ public class AzureDevOpsAvatarClient implements AvatarClient {
                     + "&queryMembership=None&api-version=7.1";
             String body = AvatarHttpHelper.getJson(url, headers);
             if (body == null) return null;
-            JsonNode values = MAPPER.readTree(body).path("value");
+            JsonNode values = Context.getObjectMapper().readTree(body).path("value");
             if (values.isEmpty()) return null;
             String imageUrl = values.get(0).path("imageUrl").asText(null);
             return (imageUrl == null || imageUrl.isBlank()) ? null : imageUrl;

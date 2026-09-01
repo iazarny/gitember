@@ -1,5 +1,6 @@
 package com.az.gitember.service.avatar;
 
+import com.az.gitember.service.Context;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -25,7 +26,6 @@ import java.util.logging.Logger;
 public class BitbucketAvatarClient implements AvatarClient {
 
     private static final Logger log = Logger.getLogger(BitbucketAvatarClient.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String API_BASE = "https://api.bitbucket.org/2.0";
 
     @Override
@@ -52,7 +52,7 @@ public class BitbucketAvatarClient implements AvatarClient {
         try {
             String body = AvatarHttpHelper.getJson(url, headers);
             if (body == null) return null;
-            JsonNode values = MAPPER.readTree(body).path("values");
+            JsonNode values = Context.getObjectMapper().readTree(body).path("values");
             if (!values.isArray() || values.isEmpty()) return null;
             String avatarUrl = values.get(0)
                     .path("links").path("avatar").path("href").asText(null);
