@@ -217,7 +217,20 @@ public class ExtensionMap {
 
     public static ExtensionInfo.ExtType getExtensionType(String file) {
         String ext = FilenameUtils.getExtension(file);
+        if (ext != null) {
+            ext = ext.toLowerCase(java.util.Locale.ROOT);
+        } else {
+            ext = "";
+        }
         return map.getOrDefault(ext, new ExtensionInfo("","", ExtensionInfo.ExtType.UNKNOWN)).getExtType();
+    }
+
+    public static boolean isImage(String file) {
+        return getExtensionType(file) == ExtensionInfo.ExtType.IMAGE;
+    }
+
+    public static boolean isText(String file) {
+        return getExtensionType(file) == ExtensionInfo.ExtType.TEXT;
     }
 
 }

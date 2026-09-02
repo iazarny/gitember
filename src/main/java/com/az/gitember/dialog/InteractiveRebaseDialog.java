@@ -3,8 +3,8 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.DiffViewerWindowImg;
 import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
@@ -571,58 +571,63 @@ public class InteractiveRebaseDialog extends JDialog {
     }
 
     private void openDiffWindow(String sha, ScmItem item) {
-        if (ExtensionInfo.ExtType.TEXT != ExtensionMap.getExtensionType(item.getShortName())) return;
+        boolean canDiff = ExtensionMap.isText(item.getShortName())
+                || ExtensionMap.isImage(item.getShortName());
+        if (canDiff) {
+            String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+            boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);
 
-        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
-        boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);
-
-        if (isAdded) {
-            new SwingWorker<String, Void>() {
-                @Override
-                protected String doInBackground() throws Exception {
-                    String tempPath = Context.getGitRepoService().saveFile(sha, item.getShortName());
-                    return Files.readString(Paths.get(tempPath));
-                }
-                @Override
-                protected void done() {
-                    try {
-                        String content = get();
-                        FileViewerWindow viewer = new FileViewerWindow(
-                                item.getShortName() + " @ " + sha.substring(0, Math.min(8, sha.length())),
-                                content, item.getShortName());
-                        viewer.setVisible(true);
-                    } catch (Exception e) {
-                        log.log(Level.WARNING, "Failed to open file", e);
+            if (isAdded) {
+                new SwingWorker<String, Void>() {
+                    @Override
+                    protected String doInBackground() throws Exception {
+                        String tempPath = Context.getGitRepoService().saveFile(sha, item.getShortName());
+                        return Files.readString(Paths.get(tempPath));
                     }
-                }
-            }.execute();
-        } else {
-            new SwingWorker<List<ScmRevisionInformation>, Void>() {
-                @Override
-                protected List<ScmRevisionInformation> doInBackground() throws Exception {
-                    return Context.getGitRepoService().getFileHistory(item.getShortName(), sha);
-                }
-                @Override
-                protected void done() {
-                    try {
-                        List<ScmRevisionInformation> fileRevs = get();
-                        if (fileRevs.size() >= 2) {
-                            DiffViewerWindowTxt w = new DiffViewerWindowTxt(
-                                    item.getShortName(), fileRevs,
-                                    fileRevs.get(1).getRevisionFullName(),
-                                    fileRevs.get(0).getRevisionFullName());
-                            w.setVisible(true);
-                        } else if (fileRevs.size() == 1) {
-                            openDiffWindow(fileRevs.get(0).getRevisionFullName(), item);
+                    @Override
+                    protected void done() {
+                        try {
+                            String content = get();
+                            FileViewerWindow viewer = new FileViewerWindow(
+                                    item.getShortName() + " @ " + sha.substring(0, Math.min(8, sha.length())),
+                                    content, item.getShortName());
+                            viewer.setVisible(true);
+                        } catch (Exception e) {
+                            log.log(Level.WARNING, "Failed to open file", e);
                         }
-                    } catch (Exception e) {
-                        log.log(Level.WARNING, "Failed to open diff window", e);
-                        JOptionPane.showMessageDialog(InteractiveRebaseDialog.this,
-                                "Failed to open diff: " + e.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
                     }
-                }
-            }.execute();
+                }.execute();
+            } else {
+                new SwingWorker<List<ScmRevisionInformation>, Void>() {
+                    @Override
+                    protected List<ScmRevisionInformation> doInBackground() throws Exception {
+                        return Context.getGitRepoService().getFileHistory(item.getShortName(), sha);
+                    }
+                    @Override
+                    protected void done() {
+                        try {
+                            List<ScmRevisionInformation> fileRevs = get();
+                            if (fileRevs.size() >= 2) {
+                                String fileName = item.getShortName();
+                                String oldSha = fileRevs.get(1).getRevisionFullName();
+                                String newSha = fileRevs.get(0).getRevisionFullName();
+                                if (ExtensionMap.isImage(fileName)) {
+                                    new DiffViewerWindowImg(fileName, fileRevs, oldSha, newSha).setVisible(true);
+                                } else {
+                                    new DiffViewerWindowTxt(fileName, fileRevs, oldSha, newSha).setVisible(true);
+                                }
+                            } else if (fileRevs.size() == 1) {
+                                openDiffWindow(fileRevs.get(0).getRevisionFullName(), item);
+                            }
+                        } catch (Exception e) {
+                            log.log(Level.WARNING, "Failed to open diff window", e);
+                            JOptionPane.showMessageDialog(InteractiveRebaseDialog.this,
+                                    "Failed to open diff: " + e.getMessage(),
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
+            }
         }
     }
 

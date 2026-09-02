@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.PullRequestService;
 import com.az.gitember.service.avatar.AvatarService;
 
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -369,9 +371,10 @@ public class PullRequestPanel extends JPanel {
 
     private void openFileDiff(ScmItem item) {
         if (item == null || currentPr == null) return;
-        new SwingWorker<String[], Void>() {
+        boolean image = ExtensionMap.isImage(item.getShortName());
+        new SwingWorker<Object, Void>() {
             @Override
-            protected String[] doInBackground() throws Exception {
+            protected Object doInBackground() throws Exception {
                 String status  = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
                 String newPath = item.getShortName();
                 // For renames the old path (in base) differs from the new path (in source)
@@ -390,40 +393,65 @@ public class PullRequestPanel extends JPanel {
                 // resolveAnyRef fallback; if that also fails the pane shows empty.
                 String baseRef = mergeBaseSha != null ? mergeBaseSha : currentPr.targetBranch();
 
-                String baseContent;
-                String sourceContent;
-
-                if (ScmItem.Status.ADDED.equals(status)) {
-                    baseContent   = "";
-                    sourceContent = Context.getGitRepoService()
-                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
-                } else if (ScmItem.Status.REMOVED.equals(status)) {
-                    baseContent   = Context.getGitRepoService()
-                            .getFileContentAtRef(baseRef, oldPath);
-                    sourceContent = "";
+                Object result;
+                if (image) {
+                    File baseFile = null;
+                    File sourceFile = null;
+                    if (!ScmItem.Status.ADDED.equals(status)) {
+                        try {
+                            baseFile = new File(Context.getGitRepoService().saveFile(baseRef, oldPath));
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    if (!ScmItem.Status.REMOVED.equals(status)) {
+                        try {
+                            sourceFile = new File(Context.getGitRepoService().saveFile(
+                                    currentPr.sourceBranch(), newPath));
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    result = new File[]{baseFile, sourceFile};
                 } else {
-                    // Modified or renamed
-                    baseContent   = Context.getGitRepoService()
-                            .getFileContentAtRef(baseRef, oldPath);
-                    sourceContent = Context.getGitRepoService()
-                            .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                    String baseContent;
+                    String sourceContent;
+                    if (ScmItem.Status.ADDED.equals(status)) {
+                        baseContent   = "";
+                        sourceContent = Context.getGitRepoService()
+                                .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                    } else if (ScmItem.Status.REMOVED.equals(status)) {
+                        baseContent   = Context.getGitRepoService()
+                                .getFileContentAtRef(baseRef, oldPath);
+                        sourceContent = "";
+                    } else {
+                        baseContent   = Context.getGitRepoService()
+                                .getFileContentAtRef(baseRef, oldPath);
+                        sourceContent = Context.getGitRepoService()
+                                .getFileContentAtRef(currentPr.sourceBranch(), newPath);
+                    }
+                    result = new String[]{baseContent, sourceContent};
                 }
-
-                return new String[]{baseContent, sourceContent};
+                return result;
             }
 
             @Override
             protected void done() {
                 try {
-                    String[] texts = get();
+                    Object payload = get();
                     // Left = base (merge base), Right = source (PR head) — same as GitHub
                     String baseLabel   = currentPr.targetBranch() + " (base)";
                     String sourceLabel = currentPr.sourceBranch();
-                    DiffViewerWindowTxt w = new DiffViewerWindowTxt(
-                            item.getShortName(),
-                            baseLabel,   texts[0],
-                            sourceLabel, texts[1]);
-                    w.setVisible(true);
+                    if (payload instanceof File[] files) {
+                        new DiffViewerWindowImg(
+                                item.getShortName(),
+                                baseLabel, files[0],
+                                sourceLabel, files[1]).setVisible(true);
+                    } else if (payload instanceof String[] texts) {
+                        DiffViewerWindowTxt w = new DiffViewerWindowTxt(
+                                item.getShortName(),
+                                baseLabel,   texts[0],
+                                sourceLabel, texts[1]);
+                        w.setVisible(true);
+                    }
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show PR file diff", ex);
                     JOptionPane.showMessageDialog(PullRequestPanel.this,

@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.LlmDiffDescriptionService;
 import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.misc.Util;
@@ -16,6 +17,7 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -499,31 +501,64 @@ public class BranchDiffWindow extends JFrame {
     }
 
     private void openDiff(BranchEntry entry) {
-        if (entry == null) return;
-        DiffEntry d = entry.diffEntry();
-        String leftPath  = DiffEntry.DEV_NULL.equals(d.getOldPath()) ? d.getNewPath() : d.getOldPath();
-        String rightPath = DiffEntry.DEV_NULL.equals(d.getNewPath()) ? d.getOldPath() : d.getNewPath();
+        if (entry != null) {
+            DiffEntry d = entry.diffEntry();
+            String leftPath  = DiffEntry.DEV_NULL.equals(d.getOldPath()) ? d.getNewPath() : d.getOldPath();
+            String rightPath = DiffEntry.DEV_NULL.equals(d.getNewPath()) ? d.getOldPath() : d.getNewPath();
 
-        new SwingWorker<String[], Void>() {
-            @Override protected String[] doInBackground() throws Exception {
-                return new String[]{
-                    Context.getGitRepoService().getFileContentAtRef(branchARef, leftPath),
-                    Context.getGitRepoService().getFileContentAtRef(branchBRef, rightPath)
-                };
+            if (ExtensionMap.isImage(entry.path())) {
+                new SwingWorker<File[], Void>() {
+                    @Override
+                    protected File[] doInBackground() throws Exception {
+                        File leftFile = null;
+                        File rightFile = null;
+                        try {
+                            leftFile = new File(Context.getGitRepoService().saveFile(branchARef, leftPath));
+                        } catch (Exception ignored) {
+                        }
+                        try {
+                            rightFile = new File(Context.getGitRepoService().saveFile(branchBRef, rightPath));
+                        } catch (Exception ignored) {
+                        }
+                        return new File[]{leftFile, rightFile};
+                    }
+                    @Override
+                    protected void done() {
+                        try {
+                            File[] files = get();
+                            new DiffViewerWindowImg(entry.path(),
+                                    branchALabel, files[0],
+                                    branchBLabel, files[1]).setVisible(true);
+                        } catch (Exception ex) {
+                            log.log(Level.WARNING, "Failed to open image diff", ex);
+                            JOptionPane.showMessageDialog(BranchDiffWindow.this,
+                                    "Cannot open diff:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
+            } else {
+                new SwingWorker<String[], Void>() {
+                    @Override protected String[] doInBackground() throws Exception {
+                        return new String[]{
+                            Context.getGitRepoService().getFileContentAtRef(branchARef, leftPath),
+                            Context.getGitRepoService().getFileContentAtRef(branchBRef, rightPath)
+                        };
+                    }
+                    @Override protected void done() {
+                        try {
+                            String[] contents = get();
+                            new DiffViewerWindowTxt(entry.path(),
+                                    branchALabel, contents[0],
+                                    branchBLabel, contents[1]).setVisible(true);
+                        } catch (Exception ex) {
+                            log.log(Level.WARNING, "Failed to open diff", ex);
+                            JOptionPane.showMessageDialog(BranchDiffWindow.this,
+                                    "Cannot open diff:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
             }
-            @Override protected void done() {
-                try {
-                    String[] contents = get();
-                    new DiffViewerWindowTxt(entry.path(),
-                            branchALabel, contents[0],
-                            branchBLabel, contents[1]).setVisible(true);
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to open diff", ex);
-                    JOptionPane.showMessageDialog(BranchDiffWindow.this,
-                            "Cannot open diff:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }.execute();
+        }
     }
 
     private void openSingleFile(BranchEntry entry, boolean useLeft) {

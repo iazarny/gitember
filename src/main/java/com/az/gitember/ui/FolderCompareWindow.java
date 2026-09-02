@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.misc.Util;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
@@ -31,7 +32,7 @@ import java.util.logging.Logger;
  *       (scroll + expand/collapse).</li>
  *   <li>Folder nodes show open/closed folder icons; file nodes show leaf icons.</li>
  *   <li>Left tree greys out RIGHT_ONLY files; right tree greys out LEFT_ONLY files.</li>
- *   <li>Double-click a file node to open {@link DiffViewerWindowTxt}.</li>
+ *   <li>Double-click a file node to open {@link DiffViewerWindowTxt} or {@link DiffViewerWindowImg}.</li>
  *   <li>"Differences only" filter and Prev/Next diff navigation.</li>
  * </ul>
  */
@@ -501,31 +502,38 @@ public class FolderCompareWindow extends JFrame {
     }
 
     private void openDiff(FolderEntry entry) {
-        if (entry == null || entry.leftAbsPath() == null || entry.rightAbsPath() == null) return;
-        File lf = new File(entry.leftAbsPath());
-        File rf = new File(entry.rightAbsPath());
-        if (CompareFilesDialog.looksLikeBinary(lf) || CompareFilesDialog.looksLikeBinary(rf)) {
-            JOptionPane.showMessageDialog(this, entry.relativePath() + " appears to be binary.",
-                    "Binary file", JOptionPane.WARNING_MESSAGE);
-            return;
+        if (entry != null && entry.leftAbsPath() != null && entry.rightAbsPath() != null) {
+            File lf = new File(entry.leftAbsPath());
+            File rf = new File(entry.rightAbsPath());
+            boolean image = ExtensionMap.isImage(entry.relativePath())
+                    && ExtensionMap.isImage(rf.getName());
+            if (image) {
+                new DiffViewerWindowImg(entry.relativePath(),
+                        leftPathField.getText().trim(), lf,
+                        rightPathField.getText().trim(), rf).setVisible(true);
+            } else if (CompareFilesDialog.looksLikeBinary(lf) || CompareFilesDialog.looksLikeBinary(rf)) {
+                JOptionPane.showMessageDialog(this, entry.relativePath() + " appears to be binary.",
+                        "Binary file", JOptionPane.WARNING_MESSAGE);
+            } else {
+                new SwingWorker<String[], Void>() {
+                    @Override protected String[] doInBackground() throws Exception {
+                        return new String[]{ Files.readString(lf.toPath()), Files.readString(rf.toPath()) };
+                    }
+                    @Override protected void done() {
+                        try {
+                            String[] t = get();
+                            new DiffViewerWindowTxt(entry.relativePath(),
+                                    leftPathField.getText().trim(),  t[0],
+                                    rightPathField.getText().trim(), t[1]).setVisible(true);
+                        } catch (Exception ex) {
+                            log.log(Level.WARNING, "Failed to open diff", ex);
+                            JOptionPane.showMessageDialog(FolderCompareWindow.this,
+                                    "Cannot open diff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
+            }
         }
-        new SwingWorker<String[], Void>() {
-            @Override protected String[] doInBackground() throws Exception {
-                return new String[]{ Files.readString(lf.toPath()), Files.readString(rf.toPath()) };
-            }
-            @Override protected void done() {
-                try {
-                    String[] t = get();
-                    new DiffViewerWindowTxt(entry.relativePath(),
-                            leftPathField.getText().trim(),  t[0],
-                            rightPathField.getText().trim(), t[1]).setVisible(true);
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to open diff", ex);
-                    JOptionPane.showMessageDialog(FolderCompareWindow.this,
-                            "Cannot open diff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }.execute();
     }
 
     private void openSingle(String absPath, String relPath) {

@@ -402,23 +402,38 @@ public class WorkingCopyContextMenu {
 
     void showDiffWithRepo(ScmItem item) {
         String fileName = item.getShortName();
-        boolean text = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(fileName);
-        new SwingWorker<String[], Void>() {
+        boolean image = ExtensionMap.isImage(fileName);
+        new SwingWorker<Object, Void>() {
+            private String headText;
+            private String diskText;
+            private File headFile;
+            private File diskFile;
+
             @Override
-            protected String[] doInBackground() throws Exception {
-                String[] result = new String[2];
+            protected Object doInBackground() throws Exception {
+                String[] paths = new String[2];
                 serviceRunner.run(svc -> {
-                    String tempPath = svc.saveFile("HEAD", fileName);
-                    result[0] = Files.readString(Paths.get(tempPath));
+                    paths[0] = svc.saveFile("HEAD", fileName);
                 });
-                result[1] = Files.readString(Paths.get(normalizedFolder() + fileName));
-                return result;
+                paths[1] = normalizedFolder() + fileName;
+                if (image) {
+                    headFile = new File(paths[0]);
+                    diskFile = new File(paths[1]);
+                } else {
+                    headText = Files.readString(Paths.get(paths[0]));
+                    diskText = Files.readString(Paths.get(paths[1]));
+                }
+                return null;
             }
             @Override
             protected void done() {
                 try {
-                    String[] contents = get();
-                    new DiffViewerWindowTxt(fileName, "HEAD", contents[0], contents[1]).setVisible(true);
+                    get();
+                    if (image) {
+                        new DiffViewerWindowImg(fileName, "HEAD", headFile, diskFile).setVisible(true);
+                    } else {
+                        new DiffViewerWindowTxt(fileName, "HEAD", headText, diskText).setVisible(true);
+                    }
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show diff", ex);
                     JOptionPane.showMessageDialog(parent,

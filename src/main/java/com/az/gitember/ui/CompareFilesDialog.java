@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * Modal dialog for comparing any two files from the file system.
  * Each path field accepts drag-and-drop of a single file.
- * On OK a {@link DiffViewerWindowTxt} is opened with the two files' contents.
+ * On OK a {@link DiffViewerWindowTxt} or {@link DiffViewerWindowImg} is opened.
  */
 public class CompareFilesDialog extends JDialog {
 
@@ -117,42 +118,53 @@ public class CompareFilesDialog extends JDialog {
     private void openDiff() {
         File left  = new File(leftField.getText().trim());
         File right = new File(rightField.getText().trim());
+        boolean leftImage = ExtensionMap.isImage(left.getName());
+        boolean rightImage = ExtensionMap.isImage(right.getName());
 
-        if (looksLikeBinary(left) || looksLikeBinary(right)) {
+        if (leftImage && rightImage) {
+            new DiffViewerWindowImg(
+                    left.getName(),
+                    left.getAbsolutePath(), left,
+                    right.getAbsolutePath(), right).setVisible(true);
+            dispose();
+        } else if (leftImage || rightImage) {
+            JOptionPane.showMessageDialog(this,
+                    "Both files must be images to compare them side by side.",
+                    "Mixed file types", JOptionPane.WARNING_MESSAGE);
+        } else if (looksLikeBinary(left) || looksLikeBinary(right)) {
             JOptionPane.showMessageDialog(this,
                     "One or both files appear to be binary and cannot be compared as text.",
                     "Binary file", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
-            @Override
-            protected String[] doInBackground() throws Exception {
-                String l = Files.readString(left.toPath());
-                String r = Files.readString(right.toPath());
-                return new String[]{l, r};
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    String[] texts = get();
-                    String name = left.getName();
-                    DiffViewerWindowTxt w = new DiffViewerWindowTxt(
-                            name,
-                            left.getAbsolutePath(),  texts[0],
-                            right.getAbsolutePath(), texts[1]);
-                    w.setVisible(true);
-                    dispose();
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to read files for comparison", ex);
-                    JOptionPane.showMessageDialog(CompareFilesDialog.this,
-                            "Cannot read file: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            SwingWorker<String[], Void> worker = new SwingWorker<>() {
+                @Override
+                protected String[] doInBackground() throws Exception {
+                    String l = Files.readString(left.toPath());
+                    String r = Files.readString(right.toPath());
+                    return new String[]{l, r};
                 }
-            }
-        };
-        worker.execute();
+
+                @Override
+                protected void done() {
+                    try {
+                        String[] texts = get();
+                        String name = left.getName();
+                        DiffViewerWindowTxt w = new DiffViewerWindowTxt(
+                                name,
+                                left.getAbsolutePath(),  texts[0],
+                                right.getAbsolutePath(), texts[1]);
+                        w.setVisible(true);
+                        dispose();
+                    } catch (Exception ex) {
+                        log.log(Level.WARNING, "Failed to read files for comparison", ex);
+                        JOptionPane.showMessageDialog(CompareFilesDialog.this,
+                                "Cannot read file: " + ex.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

@@ -4,7 +4,6 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
-import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.avatar.AvatarService;
@@ -20,6 +19,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -209,16 +209,18 @@ public class CommitDetailPanel extends JPanel {
                     return;
                 }
 
-                boolean isText = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName());
+                boolean isText = ExtensionMap.isText(item.getShortName());
+                boolean isImage = ExtensionMap.isImage(item.getShortName());
+                boolean canSideBySide = isText || isImage;
                 String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
                 boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);
                 boolean isRemoved = "REMOVED".equals(status) || "DELETE".equals(status);
 
                 openItem.setEnabled(true);
                 showRawDiffItem.setEnabled(isText && !isAdded);
-                diffPrevItem.setEnabled(isText && !isAdded);
-                diffLatestItem.setEnabled(isText && !isRemoved);
-                diffDiskItem.setEnabled(isText && !isRemoved);
+                diffPrevItem.setEnabled(canSideBySide && !isAdded);
+                diffLatestItem.setEnabled(canSideBySide && !isRemoved);
+                diffDiskItem.setEnabled(canSideBySide && !isRemoved);
             }
 
             @Override
@@ -240,18 +242,20 @@ public class CommitDetailPanel extends JPanel {
      * - Modified/text: open diff with previous version
      * - Added/text: open file content
      * - Deleted/text: open last version before deletion
-     * - Non-text: do nothing
+     * - Non-text (except images): do nothing
      */
     private void handleFileDoubleClick(ScmItem item) {
-        if (item == null || currentRevision == null) return;
-        boolean isText = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName());
-        if (!isText) return;
-
-        String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
-        switch (status) {
-            case "ADDED", "ADD" -> openFileFromCommit(item, currentRevision.getRevisionFullName());
-            case "REMOVED", "DELETE" -> openFileFromParentCommit(item);
-            default -> diffWithPreviousVersion();  // MODIFIED, RENAMED, etc.
+        if (item != null && currentRevision != null) {
+            boolean canDiff = ExtensionMap.isText(item.getShortName())
+                    || ExtensionMap.isImage(item.getShortName());
+            if (canDiff) {
+                String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
+                switch (status) {
+                    case "ADDED", "ADD" -> openFileFromCommit(item, currentRevision.getRevisionFullName());
+                    case "REMOVED", "DELETE" -> openFileFromParentCommit(item);
+                    default -> diffWithPreviousVersion();  // MODIFIED, RENAMED, etc.
+                }
+            }
         }
     }
 
@@ -269,33 +273,55 @@ public class CommitDetailPanel extends JPanel {
     }
 
     private void openFileFromCommit(ScmItem item, String commitSha) {
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
-            @Override
-            protected String doInBackground() throws Exception {
-                String tempPath = Context.getGitRepoService().saveFile(commitSha, item.getShortName());
-                return Files.readString(Paths.get(tempPath));
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    String content = get();
-                    FileViewerWindow viewer = new FileViewerWindow(
-                            item.getShortName() + " @ " + commitSha.substring(0, Math.min(8, commitSha.length())),
-                            content, item.getShortName(),
-                            searchBar.getSearchField().getText()
-                    );
-                    viewer.enableBlame(commitSha, item.getShortName());
-                    viewer.setVisible(true);
-                } catch (Exception e) {
-                    log.log(Level.WARNING, "Failed to open file", e);
-                    JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                            "Failed to open file: " + e.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+        if (ExtensionMap.isImage(item.getShortName())) {
+            SwingWorker<File, Void> worker = new SwingWorker<>() {
+                @Override
+                protected File doInBackground() throws Exception {
+                    return new File(Context.getGitRepoService().saveFile(commitSha, item.getShortName()));
                 }
-            }
-        };
-        worker.execute();
+
+                @Override
+                protected void done() {
+                    try {
+                        Desktop.getDesktop().open(get());
+                    } catch (Exception e) {
+                        log.log(Level.WARNING, "Failed to open image", e);
+                        JOptionPane.showMessageDialog(CommitDetailPanel.this,
+                                "Failed to open file: " + e.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
+        } else {
+            SwingWorker<String, Void> worker = new SwingWorker<>() {
+                @Override
+                protected String doInBackground() throws Exception {
+                    String tempPath = Context.getGitRepoService().saveFile(commitSha, item.getShortName());
+                    return Files.readString(Paths.get(tempPath));
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        String content = get();
+                        FileViewerWindow viewer = new FileViewerWindow(
+                                item.getShortName() + " @ " + commitSha.substring(0, Math.min(8, commitSha.length())),
+                                content, item.getShortName(),
+                                searchBar.getSearchField().getText()
+                        );
+                        viewer.enableBlame(commitSha, item.getShortName());
+                        viewer.setVisible(true);
+                    } catch (Exception e) {
+                        log.log(Level.WARNING, "Failed to open file", e);
+                        JOptionPane.showMessageDialog(CommitDetailPanel.this,
+                                "Failed to open file: " + e.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
+        }
     }
 
     private void openFileFromParentCommit(ScmItem item) {
@@ -358,9 +384,7 @@ public class CommitDetailPanel extends JPanel {
                     if (fileRevs.size() >= 2) {
                         String newSha = fileRevs.get(0).getRevisionFullName();
                         String oldSha = fileRevs.get(1).getRevisionFullName();
-                        DiffViewerWindowTxt diffWindow = new DiffViewerWindowTxt(
-                                item.getShortName(), fileRevs, oldSha, newSha);
-                        diffWindow.setVisible(true);
+                        showRevisionDiff(item.getShortName(), fileRevs, oldSha, newSha);
                     } else if (fileRevs.size() == 1) {
                         // Only one revision - just open the file
                         openFileFromCommit(item, fileRevs.get(0).getRevisionFullName());
@@ -409,9 +433,7 @@ public class CommitDetailPanel extends JPanel {
                     if (!fileRevs.isEmpty()) {
                         String newSha = fileRevs.get(0).getRevisionFullName(); // latest
                         String oldSha = currentRevision.getRevisionFullName();
-                        DiffViewerWindowTxt diffWindow = new DiffViewerWindowTxt(
-                                item.getShortName(), fileRevs, oldSha, newSha);
-                        diffWindow.setVisible(true);
+                        showRevisionDiff(item.getShortName(), fileRevs, oldSha, newSha);
                     }
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load file history", e);
@@ -429,17 +451,18 @@ public class CommitDetailPanel extends JPanel {
         ScmItem item = row >= 0 ? filesTableModel.getItemAt(row) : null;
         if (item == null || currentRevision == null) return;
 
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
+        boolean image = ExtensionMap.isImage(item.getShortName());
+        SwingWorker<Object, Void> worker = new SwingWorker<>() {
             @Override
-            protected String[] doInBackground() throws Exception {
-                // Read file from commit
+            protected Object doInBackground() throws Exception {
                 String tempPath = Context.getGitRepoService().saveFile(
                         currentRevision.getRevisionFullName(), item.getShortName());
-                String commitContent = Files.readString(Paths.get(tempPath));
-
-                // Read file from working directory
                 String workDir = Context.getProjectFolder().replace("/.git", "").replace("\\.git", "");
                 String diskPath = workDir + "/" + item.getShortName();
+                if (image) {
+                    return new File[]{new File(tempPath), new File(diskPath)};
+                }
+                String commitContent = Files.readString(Paths.get(tempPath));
                 String diskContent;
                 try {
                     diskContent = Files.readString(Paths.get(diskPath));
@@ -452,13 +475,19 @@ public class CommitDetailPanel extends JPanel {
             @Override
             protected void done() {
                 try {
-                    String[] texts = get();
-                    // Show side-by-side diff using JGit HISTOGRAM algorithm
-                    DiffViewerWindowTxt window = new DiffViewerWindowTxt(
-                            item.getShortName(),
-                            currentRevision.getRevisionFullName(),
-                            texts[0], texts[1]);
-                    window.setVisible(true);
+                    Object result = get();
+                    if (result instanceof File[] files) {
+                        new DiffViewerWindowImg(
+                                item.getShortName(),
+                                currentRevision.getRevisionFullName(),
+                                files[0], files[1]).setVisible(true);
+                    } else if (result instanceof String[] texts) {
+                        DiffViewerWindowTxt window = new DiffViewerWindowTxt(
+                                item.getShortName(),
+                                currentRevision.getRevisionFullName(),
+                                texts[0], texts[1]);
+                        window.setVisible(true);
+                    }
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to diff with disk", e);
                     JOptionPane.showMessageDialog(CommitDetailPanel.this,
@@ -470,6 +499,14 @@ public class CommitDetailPanel extends JPanel {
         worker.execute();
     }
 
+    private void showRevisionDiff(String fileName, List<ScmRevisionInformation> fileRevs,
+                                  String oldSha, String newSha) {
+        if (ExtensionMap.isImage(fileName)) {
+            new DiffViewerWindowImg(fileName, fileRevs, oldSha, newSha).setVisible(true);
+        } else {
+            new DiffViewerWindowTxt(fileName, fileRevs, oldSha, newSha).setVisible(true);
+        }
+    }
 
     private void showFileHistory() {
         int row = filesTable.getSelectedRow();

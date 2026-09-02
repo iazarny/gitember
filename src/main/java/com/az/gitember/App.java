@@ -2,6 +2,8 @@ package com.az.gitember;
 
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.DiffViewerWindowImg;
 import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
@@ -54,6 +56,16 @@ public class App {
                             w.compare(left.getAbsolutePath(), right.getAbsolutePath());
                             return;
                         } else if (left.isFile() && right.isFile()) {
+                            if (ExtensionMap.isImage(left.getName())
+                                    && ExtensionMap.isImage(right.getName())) {
+                                DiffViewerWindowImg w = new DiffViewerWindowImg(
+                                        left.getName(),
+                                        left.getAbsolutePath(), left,
+                                        right.getAbsolutePath(), right);
+                                w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                                w.setVisible(true);
+                                return;
+                            }
                             String leftContent  = Files.readString(left.toPath());
                             String rightContent = Files.readString(right.toPath());
                             DiffViewerWindowTxt w = new DiffViewerWindowTxt(
