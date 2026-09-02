@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.avatar.AvatarService;
@@ -208,7 +209,7 @@ public class CommitDetailPanel extends JPanel {
                     return;
                 }
 
-                boolean isText = ExtensionMap.isTextExtension(item.getShortName());
+                boolean isText = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName());
                 String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
                 boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);
                 boolean isRemoved = "REMOVED".equals(status) || "DELETE".equals(status);
@@ -243,7 +244,7 @@ public class CommitDetailPanel extends JPanel {
      */
     private void handleFileDoubleClick(ScmItem item) {
         if (item == null || currentRevision == null) return;
-        boolean isText = ExtensionMap.isTextExtension(item.getShortName());
+        boolean isText = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName());
         if (!isText) return;
 
         String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";

@@ -3,6 +3,7 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.DiffViewerWindow;
 import com.az.gitember.ui.FileViewerWindow;
@@ -570,7 +571,7 @@ public class InteractiveRebaseDialog extends JDialog {
     }
 
     private void openDiffWindow(String sha, ScmItem item) {
-        if (!ExtensionMap.isTextExtension(item.getShortName())) return;
+        if (ExtensionInfo.ExtType.TEXT != ExtensionMap.getExtensionType(item.getShortName())) return;
 
         String status = item.getAttribute() != null ? item.getAttribute().getStatus() : "";
         boolean isAdded = "ADDED".equals(status) || "ADD".equals(status);

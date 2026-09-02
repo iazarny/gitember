@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitRepoService;
 import org.apache.commons.collections4.CollectionUtils;
@@ -401,6 +402,7 @@ public class WorkingCopyContextMenu {
 
     void showDiffWithRepo(ScmItem item) {
         String fileName = item.getShortName();
+        boolean text = ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(fileName);
         new SwingWorker<String[], Void>() {
             @Override
             protected String[] doInBackground() throws Exception {
@@ -439,7 +441,7 @@ public class WorkingCopyContextMenu {
 
     void openFile(ScmItem item) {
         String filePath = normalizedFolder() + item.getShortName();
-        if (ExtensionMap.isTextExtension(item.getShortName())) {
+        if (ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName())) {
             try {
                 String content = Files.readString(Paths.get(filePath));
                 FileViewerWindow viewer = new FileViewerWindow(item.getShortName(), content, item.getShortName());

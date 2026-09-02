@@ -1,5 +1,6 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.FileViewerWindow;
 
@@ -28,7 +29,7 @@ public class SearchHitOpener {
 
     public static void open(SearchHit hit, String searchTerm) {
         String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
-        if (ExtensionMap.isTextExtension(fileName)) {
+        if (ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(fileName)) {
             try {
                 String content = Files.readString(Paths.get(fileName));
                 FileViewerWindow viewer = new FileViewerWindow(

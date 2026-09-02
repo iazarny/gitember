@@ -1,222 +1,221 @@
 package com.az.gitember.service;
 
-import java.io.File;
-import java.nio.file.Path;
+import org.apache.commons.io.FilenameUtils;
+
 import java.util.HashMap;
 
 public class ExtensionMap {
 
-    private static HashMap<String, String> map = new HashMap<>(50);
+    private static HashMap<String, ExtensionInfo> map = new HashMap<>(50);
+    
+
 
     static {
-        add(new ExtensionInfo("text/plain", "sql", true));
-        add(new ExtensionInfo("text/plain", "cs", true));
-        add(new ExtensionInfo("text/plain", "csharp", true));
-        add(new ExtensionInfo("text/plain", "sh", true));
-        add(new ExtensionInfo("text/plain", "cmd", true));
-        add(new ExtensionInfo("text/plain", "bat", true));
-        add(new ExtensionInfo("text/plain", "vm", true));
-        add(new ExtensionInfo("text/plain", "tpl", true));
-        add(new ExtensionInfo("text/plain", "asp", true));
-        add(new ExtensionInfo("text/plain", "aspx", true));
-        add(new ExtensionInfo("text/yaml", "yaml", true));
-        add(new ExtensionInfo("text/yaml", "yml", true));
-        add(new ExtensionInfo("text/calendar", "ics", true));
-        add(new ExtensionInfo("text/calendar", "ifb", true));
-        add(new ExtensionInfo("text/css", "css", true));
-        add(new ExtensionInfo("text/csv", "csv", true));
-        add(new ExtensionInfo("text/html", "html", true));
-        add(new ExtensionInfo("text/html", "htm", true));
-        add(new ExtensionInfo("text/plain", "txt", true));
 
-        add(new ExtensionInfo("text/plain", "proto", true));
-        add(new ExtensionInfo("text/plain", "avro", true));
+        add(new ExtensionInfo( "image/jpeg", ".jpg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/jpeg", ".jpeg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/png", ".png" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/webp", ".webp" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/gif", ".gif" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/avif", ".avif" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/svg+xml", ".svg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/heic", ".heic" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/heif", ".heif" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/jxl", ".jxl" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/apng", ".apng" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/tiff", ".tiff" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/bmp", ".bmp" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/vnd.adobe.photoshop", ".psd" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "application/postscript", ".ai" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "application/postscript", ".eps" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/x-canon-cr2", ".cr2" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/x-nikon-nef", ".nef" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/x-icon", ".ico" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/raw", ".raw" , ExtensionInfo.ExtType.IMAGE ));
 
-        add(new ExtensionInfo("text/plain", "hrl", true));
-        add(new ExtensionInfo("text/plain", "erl", true));
-        add(new ExtensionInfo("text/plain", "ex", true));
-        add(new ExtensionInfo("text/plain", "exs", true));
-        add(new ExtensionInfo("text/plain", "kt", true));
-        add(new ExtensionInfo("text/plain", "kts", true));
-        add(new ExtensionInfo("text/plain", "ktm", true));
-        add(new ExtensionInfo("text/plain", "properties", true));
-        add(new ExtensionInfo("text/plain", "props", true));
-        add(new ExtensionInfo("text/plain", "prop", true));
-        add(new ExtensionInfo("text/plain", "text", true));
-        add(new ExtensionInfo("text/plain", "conf", true));
-        add(new ExtensionInfo("text/plain", "config", true));
-        add(new ExtensionInfo("text/plain", "def", true));
-        add(new ExtensionInfo("text/plain", "scala", true));
-        add(new ExtensionInfo("text/plain", "sc", true));
-        add(new ExtensionInfo("text/plain", "swift", true));
+        add(new ExtensionInfo("text/plain", "sql", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "cs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "csharp", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "sh", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "cmd", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "bat", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "tpl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "asp", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "aspx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/yaml", "yaml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/yaml", "yml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/calendar", "ics", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/calendar", "ifb", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/css", "css", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/csv", "csv", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/html", "html", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/html", "htm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "txt", ExtensionInfo.ExtType.TEXT));
 
-        add(new ExtensionInfo("text/plain", "bas", true));
-        add(new ExtensionInfo("text/plain", "vb", true));
-        add(new ExtensionInfo("text/plain", "vba", true));
-        add(new ExtensionInfo("text/plain", "vbs", true));
-        add(new ExtensionInfo("text/plain", "vbscript", true));
-        add(new ExtensionInfo("text/plain", "vbe", true));
-        add(new ExtensionInfo("text/plain", "wsf", true));
-        add(new ExtensionInfo("text/plain", "wsc", true));
+        add(new ExtensionInfo("text/plain", "proto", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "avro", ExtensionInfo.ExtType.TEXT));
+
+        add(new ExtensionInfo("text/plain", "hrl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "erl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "ex", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "exs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "kt", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "kts", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "ktm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "properties", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "props", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "prop", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "text", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "conf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "config", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "def", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "scala", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "sc", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "swift", ExtensionInfo.ExtType.TEXT));
+
+        add(new ExtensionInfo("text/plain", "bas", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vb", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vba", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vbs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vbscript", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "vbe", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "wsf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "wsc", ExtensionInfo.ExtType.TEXT));
 
 
-        add(new ExtensionInfo("text/plain", "md", true));
-        add(new ExtensionInfo("text/plain", "gitattributes", true));
-        add(new ExtensionInfo("text/plain", "go", true));
-        add(new ExtensionInfo("text/plain", "golang", true));
-        add(new ExtensionInfo("text/plain", "rb", true));
-        add(new ExtensionInfo("text/plain", "lua", true));
-        add(new ExtensionInfo("text/plain", "php", true));
-        add(new ExtensionInfo("text/plain", "dart", true));
-        add(new ExtensionInfo("text/plain", "list", true));
-        add(new ExtensionInfo("text/x-log", "log", true));
-        add(new ExtensionInfo("text/plain", "in", true));
-        add(new ExtensionInfo("text/prs.lines.tag", "dsc", true));
-        add(new ExtensionInfo("text/richtext", "rtx", true));
-        add(new ExtensionInfo("text/sgml", "sgml", true));
-        add(new ExtensionInfo("text/sgml", "sgm", true));
-        add(new ExtensionInfo("text/tab-separated-values", "tsv", true));
-        add(new ExtensionInfo("text/troff", "t", true));
-        add(new ExtensionInfo("text/troff", "tr", true));
-        add(new ExtensionInfo("text/troff", "roff", true));
-        add(new ExtensionInfo("text/troff", "man", true));
-        add(new ExtensionInfo("text/troff", "me", true));
-        add(new ExtensionInfo("text/troff", "ms", true));
-        add(new ExtensionInfo("text/uri-list", "uri", true));
-        add(new ExtensionInfo("text/uri-list", "uris", true));
-        add(new ExtensionInfo("text/uri-list", "urls", true));
-        add(new ExtensionInfo("text/vnd.curl", "curl", true));
-        add(new ExtensionInfo("text/vnd.curl.dcurl", "dcurl", true));
-        add(new ExtensionInfo("text/vnd.curl.scurl", "scurl", true));
-        add(new ExtensionInfo("text/vnd.curl.mcurl", "mcurl", true));
-        add(new ExtensionInfo("text/vnd.fly", "fly", true));
-        add(new ExtensionInfo("text/vnd.fmi.flexstor", "flx", true));
-        add(new ExtensionInfo("text/vnd.graphviz", "gv", true));
-        add(new ExtensionInfo("text/vnd.in3d.3dml", "3dml", true));
-        add(new ExtensionInfo("text/vnd.in3d.spot", "spot", true));
-        add(new ExtensionInfo("text/vnd.sun.j2me.app-descriptor", "jad", true));
-        add(new ExtensionInfo("text/vnd.wap.wml", "wml", true));
-        add(new ExtensionInfo("text/vnd.wap.wmlscript", "wmls", true));
-        add(new ExtensionInfo("text/x-assembly", "s", true));
-        add(new ExtensionInfo("text/x-assembly", "asm", true));
-        add(new ExtensionInfo("text/x-assembly", "masm", true));
-        add(new ExtensionInfo("text/x-csrc", "c", true));
-        add(new ExtensionInfo("text/x-c++src", "cc", true));
-        add(new ExtensionInfo("text/x-c++src", "cxx", true));
-        add(new ExtensionInfo("text/x-c++src", "cpp", true));
-        add(new ExtensionInfo("text/x-chdr", "h", true));
-        add(new ExtensionInfo("text/x-c++hdr", "hh", true));
-        add(new ExtensionInfo("text/x-c++hdr", "hpp", true));
-        add(new ExtensionInfo("text/x-fortran", "f", true));
-        add(new ExtensionInfo("text/x-fortran", "for", true));
-        add(new ExtensionInfo("text/x-fortran", "f77", true));
-        add(new ExtensionInfo("text/x-fortran", "f03", true));
-        add(new ExtensionInfo("text/x-fortran", "f90", true));
-        add(new ExtensionInfo("text/x-pascal", "p", true));
-        add(new ExtensionInfo("text/x-pascal", "pas", true));
-        add(new ExtensionInfo("text/x-pascal", "py", true));
-        add(new ExtensionInfo("text/x-java-source", "java", true));
-        add(new ExtensionInfo("text/x-java-source", "jsp", true));
-        add(new ExtensionInfo("text/x-java-source", "jspx", true));
-        add(new ExtensionInfo("text/x-setext", "etx", true));
-        add(new ExtensionInfo("text/x-uuencode", "uu", true));
-        add(new ExtensionInfo("text/x-vcalendar", "vcs", true));
-        add(new ExtensionInfo("text/x-vcard", "vcf", true));
-        add(new ExtensionInfo("application/javascript", "js", true));
-        add(new ExtensionInfo("application/typescript", "ts", true));
-        add(new ExtensionInfo("application/javascript", "jsx", true));
-        add(new ExtensionInfo("application/json", "json", true));
-        add(new ExtensionInfo("application/lost+xml", "lostxml", true));
-        add(new ExtensionInfo("application/atom+xml", "atom", true));
-        add(new ExtensionInfo("application/atomcat+xml", "atomcat", true));
-        add(new ExtensionInfo("application/atomsvc+xml", "atomsvc", true));
-        add(new ExtensionInfo("application/ccxml+xml", "ccxml", true));
-        add(new ExtensionInfo("application/emma+xml", "emma", true));
-        add(new ExtensionInfo("application/mathematica", "ma", true));
-        add(new ExtensionInfo("application/mathematica", "nb", true));
-        add(new ExtensionInfo("application/mathematica", "mb", true));
-        add(new ExtensionInfo("application/mathematica", "mat", true));
-        add(new ExtensionInfo("application/mathml+xml", "mathml", true));
-        add(new ExtensionInfo("text/fxml", "fxml", true));
-        add(new ExtensionInfo("application/xhtml+xml", "xhtml", true));
-        add(new ExtensionInfo("application/xhtml+xml", "xht", true));
-        add(new ExtensionInfo("application/xml", "xml", true));
-        add(new ExtensionInfo("application/xml", "xsl", true));
-        add(new ExtensionInfo("application/xml-dtd", "dtd", true));
-        add(new ExtensionInfo("application/xop+xml", "xop", true));
-        add(new ExtensionInfo("application/xslt+xml", "xslt", true));
-        add(new ExtensionInfo("application/xspf+xml", "xspf", true));
-        add(new ExtensionInfo("application/xv+xml", "mxml", true));
-        add(new ExtensionInfo("application/xv+xml", "xhvml", true));
-        add(new ExtensionInfo("application/xv+xml", "xvml", true));
-        add(new ExtensionInfo("application/xv+xml", "xvm", true));
-        add(new ExtensionInfo("application/ecmascript", "ecma", true));
-        add(new ExtensionInfo("application/sbml+xml", "sbml", true));
-        add(new ExtensionInfo("application/rdf+xml", "rdf", true));
-        add(new ExtensionInfo("application/reginfo+xml", "rif", true));
-        add(new ExtensionInfo("application/resource-lists+xml", "rl", true));
-        add(new ExtensionInfo("application/resource-lists-diff+xml", "rld", true));
-        add(new ExtensionInfo("application/rls-services+xml", "rs", true));
-        add(new ExtensionInfo("application/rsd+xml", "rsd", true));
-        add(new ExtensionInfo("application/rss+xml", "rss", true));
-        add(new ExtensionInfo("application/shf+xml", "shf", true));
-        add(new ExtensionInfo("application/smil+xml", "smi", true));
-        add(new ExtensionInfo("application/smil+xml", "smil", true));
-        add(new ExtensionInfo("application/sparql-query", "rq", true));
-        add(new ExtensionInfo("application/sparql-results+xml", "srx", true));
-        add(new ExtensionInfo("application/srgs+xml", "grxml", true));
-        add(new ExtensionInfo("application/ssml+xml", "ssml", true));
-        add(new ExtensionInfo("application/vnd.chemdraw+xml", "cdxml", true));
-        add(new ExtensionInfo("application/vnd.criticaltools.wbs+xml", "wbs", true));
-        add(new ExtensionInfo("text/x-scheme", "scm", true));
-        add(new ExtensionInfo("image/svg+xml", "svg", true));
-        add(new ExtensionInfo("image/vnd.dxf", "dxf", true));
-        add(new ExtensionInfo("image/x-xpixmap", "xpm", true));
-        add(new ExtensionInfo("message/rfc822", "eml", true));
-        add(new ExtensionInfo("message/rfc822", "mime", true));
-        add(new ExtensionInfo("text/x-patch", "dif", true));
-        add(new ExtensionInfo("text/x-patch", "diff", true));
-        add(new ExtensionInfo("text/x-patch", "patch", true));
-        add(new ExtensionInfo("text/plain", "tf", true));
-        add(new ExtensionInfo("text/plain", "tfvar", true));
-        add(new ExtensionInfo("text/plain", "tfvars", true));
-        add(new ExtensionInfo("application/json", "libsonnet", true));
-        add(new ExtensionInfo("application/json", "jsonnet", true));
-        add(new ExtensionInfo("application/x-typescript", "tsx", true));
-
+        add(new ExtensionInfo("text/plain", "md", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "gitattributes", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "go", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "golang", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "rb", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "lua", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "php", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "dart", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "list", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-log", "log", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "in", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/prs.lines.tag", "dsc", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/richtext", "rtx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/sgml", "sgml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/sgml", "sgm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/tab-separated-values", "tsv", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "t", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "tr", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "roff", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "man", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "me", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/troff", "ms", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/uri-list", "uri", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/uri-list", "uris", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/uri-list", "urls", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.curl", "curl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.curl.dcurl", "dcurl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.curl.scurl", "scurl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.curl.mcurl", "mcurl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.fly", "fly", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.fmi.flexstor", "flx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.graphviz", "gv", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.in3d.3dml", "3dml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.in3d.spot", "spot", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.sun.j2me.app-descriptor", "jad", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.wap.wml", "wml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/vnd.wap.wmlscript", "wmls", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-assembly", "s", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-assembly", "asm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-assembly", "masm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-csrc", "c", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-c++src", "cc", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-c++src", "cxx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-c++src", "cpp", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-chdr", "h", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-c++hdr", "hh", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-c++hdr", "hpp", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-fortran", "f", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-fortran", "for", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-fortran", "f77", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-fortran", "f03", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-fortran", "f90", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-pascal", "p", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-pascal", "pas", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-pascal", "py", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-java-source", "java", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-java-source", "jsp", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-java-source", "jspx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-setext", "etx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-uuencode", "uu", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-vcalendar", "vcs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-vcard", "vcf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/javascript", "js", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/typescript", "ts", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/javascript", "jsx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/json", "json", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/lost+xml", "lostxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/atom+xml", "atom", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/atomcat+xml", "atomcat", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/atomsvc+xml", "atomsvc", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/ccxml+xml", "ccxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/emma+xml", "emma", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/mathematica", "ma", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/mathematica", "nb", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/mathematica", "mb", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/mathematica", "mat", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/mathml+xml", "mathml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/fxml", "fxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xhtml+xml", "xhtml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xhtml+xml", "xht", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xml", "xml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xml", "xsl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xml-dtd", "dtd", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xop+xml", "xop", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xslt+xml", "xslt", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xspf+xml", "xspf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xv+xml", "mxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xv+xml", "xhvml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xv+xml", "xvml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/xv+xml", "xvm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/ecmascript", "ecma", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/sbml+xml", "sbml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/rdf+xml", "rdf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/reginfo+xml", "rif", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/resource-lists+xml", "rl", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/resource-lists-diff+xml", "rld", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/rls-services+xml", "rs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/rsd+xml", "rsd", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/rss+xml", "rss", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/shf+xml", "shf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/smil+xml", "smi", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/smil+xml", "smil", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/sparql-query", "rq", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/sparql-results+xml", "srx", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/srgs+xml", "grxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/ssml+xml", "ssml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/vnd.chemdraw+xml", "cdxml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/vnd.criticaltools.wbs+xml", "wbs", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-scheme", "scm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("image/svg+xml", "svg", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("image/vnd.dxf", "dxf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("image/x-xpixmap", "xpm", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("message/rfc822", "eml", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("message/rfc822", "mime", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-patch", "dif", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-patch", "diff", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/x-patch", "patch", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "tf", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "tfvar", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("text/plain", "tfvars", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/json", "libsonnet", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/json", "jsonnet", ExtensionInfo.ExtType.TEXT));
+        add(new ExtensionInfo("application/x-typescript", "tsx", ExtensionInfo.ExtType.TEXT));
     }
 
     public static void add(ExtensionInfo ez) {
-        
-        map.put(ez.getFileExtension(), ez.getFileExtension());
-
-    }
-    
-    public static boolean isTextExtension(Path path) {
-        String ext = getExtension(path.toString());
-        return map.containsKey(ext);
+        map.put(ez.getFileExtension(), ez);
     }
 
-    public static boolean isTextExtension(String file) {
-        String ext = getExtension(file);
-        return map.containsKey(ext);
-    }
-
-    public static String getExtension(String fileName) {
-
-        char ch;
-        int len;
-        if (fileName == null ||
-                (len = fileName.length()) == 0 ||
-                (ch = fileName.charAt(len - 1)) == '/' || ch == '\\' || //in the case of a directory
-                ch == '.') //in the case of . or ..
-            return "";
-        int dotInd = fileName.lastIndexOf('.'),
-                sepInd = Math.max(fileName.lastIndexOf(File.separatorChar), fileName.lastIndexOf('\\'));
-        if (dotInd <= sepInd)
-            return "";
-        else
-            return fileName.substring(dotInd + 1).toLowerCase();
+    public static ExtensionInfo.ExtType getExtensionType(String file) {
+        String ext = FilenameUtils.getExtension(file);
+        return map.getOrDefault(ext, new ExtensionInfo("","", ExtensionInfo.ExtType.UNKNOWN)).getExtType();
     }
 
 }

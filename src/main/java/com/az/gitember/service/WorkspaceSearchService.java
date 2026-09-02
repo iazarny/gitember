@@ -136,7 +136,7 @@ public class WorkspaceSearchService {
     private static boolean isIndexable(File file) {
         return file.isFile()
                 && file.length() <= MAX_FILE_SIZE
-                && ExtensionMap.isTextExtension(file.getName());
+                && ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(file.getName());
     }
 
     private static String readText(File file) {
