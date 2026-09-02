@@ -5,7 +5,7 @@ import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
-import com.az.gitember.ui.DiffViewerWindow;
+import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
@@ -607,7 +607,7 @@ public class InteractiveRebaseDialog extends JDialog {
                     try {
                         List<ScmRevisionInformation> fileRevs = get();
                         if (fileRevs.size() >= 2) {
-                            DiffViewerWindow w = new DiffViewerWindow(
+                            DiffViewerWindowTxt w = new DiffViewerWindowTxt(
                                     item.getShortName(), fileRevs,
                                     fileRevs.get(1).getRevisionFullName(),
                                     fileRevs.get(0).getRevisionFullName());

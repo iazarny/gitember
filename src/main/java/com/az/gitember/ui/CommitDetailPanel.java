@@ -358,7 +358,7 @@ public class CommitDetailPanel extends JPanel {
                     if (fileRevs.size() >= 2) {
                         String newSha = fileRevs.get(0).getRevisionFullName();
                         String oldSha = fileRevs.get(1).getRevisionFullName();
-                        DiffViewerWindow diffWindow = new DiffViewerWindow(
+                        DiffViewerWindowTxt diffWindow = new DiffViewerWindowTxt(
                                 item.getShortName(), fileRevs, oldSha, newSha);
                         diffWindow.setVisible(true);
                     } else if (fileRevs.size() == 1) {
@@ -409,7 +409,7 @@ public class CommitDetailPanel extends JPanel {
                     if (!fileRevs.isEmpty()) {
                         String newSha = fileRevs.get(0).getRevisionFullName(); // latest
                         String oldSha = currentRevision.getRevisionFullName();
-                        DiffViewerWindow diffWindow = new DiffViewerWindow(
+                        DiffViewerWindowTxt diffWindow = new DiffViewerWindowTxt(
                                 item.getShortName(), fileRevs, oldSha, newSha);
                         diffWindow.setVisible(true);
                     }
@@ -454,7 +454,7 @@ public class CommitDetailPanel extends JPanel {
                 try {
                     String[] texts = get();
                     // Show side-by-side diff using JGit HISTOGRAM algorithm
-                    DiffViewerWindow window = new DiffViewerWindow(
+                    DiffViewerWindowTxt window = new DiffViewerWindowTxt(
                             item.getShortName(),
                             currentRevision.getRevisionFullName(),
                             texts[0], texts[1]);

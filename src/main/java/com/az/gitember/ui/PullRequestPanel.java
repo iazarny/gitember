@@ -419,7 +419,7 @@ public class PullRequestPanel extends JPanel {
                     // Left = base (merge base), Right = source (PR head) — same as GitHub
                     String baseLabel   = currentPr.targetBranch() + " (base)";
                     String sourceLabel = currentPr.sourceBranch();
-                    DiffViewerWindow w = new DiffViewerWindow(
+                    DiffViewerWindowTxt w = new DiffViewerWindowTxt(
                             item.getShortName(),
                             baseLabel,   texts[0],
                             sourceLabel, texts[1]);

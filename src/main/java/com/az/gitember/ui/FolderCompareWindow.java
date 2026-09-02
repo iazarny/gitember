@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  *       (scroll + expand/collapse).</li>
  *   <li>Folder nodes show open/closed folder icons; file nodes show leaf icons.</li>
  *   <li>Left tree greys out RIGHT_ONLY files; right tree greys out LEFT_ONLY files.</li>
- *   <li>Double-click a file node to open {@link DiffViewerWindow}.</li>
+ *   <li>Double-click a file node to open {@link DiffViewerWindowTxt}.</li>
  *   <li>"Differences only" filter and Prev/Next diff navigation.</li>
  * </ul>
  */
@@ -516,7 +516,7 @@ public class FolderCompareWindow extends JFrame {
             @Override protected void done() {
                 try {
                     String[] t = get();
-                    new DiffViewerWindow(entry.relativePath(),
+                    new DiffViewerWindowTxt(entry.relativePath(),
                             leftPathField.getText().trim(),  t[0],
                             rightPathField.getText().trim(), t[1]).setVisible(true);
                 } catch (Exception ex) {

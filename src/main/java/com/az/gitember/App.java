@@ -2,7 +2,7 @@ package com.az.gitember;
 
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.DiffViewerWindow;
+import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -56,7 +56,7 @@ public class App {
                         } else if (left.isFile() && right.isFile()) {
                             String leftContent  = Files.readString(left.toPath());
                             String rightContent = Files.readString(right.toPath());
-                            DiffViewerWindow w = new DiffViewerWindow(
+                            DiffViewerWindowTxt w = new DiffViewerWindowTxt(
                                     left.getName(),
                                     left.getAbsolutePath(),  leftContent,
                                     right.getAbsolutePath(), rightContent);

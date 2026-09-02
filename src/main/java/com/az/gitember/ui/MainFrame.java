@@ -318,7 +318,7 @@ public class MainFrame extends JFrame {
 
         // Tools
         menuBar.addCompareFilesListener(e ->
-                new DiffViewerWindow().setVisible(true));
+                new DiffViewerWindowTxt().setVisible(true));
         menuBar.addCompareFoldersListener(e ->
                 new FolderCompareWindow().setVisible(true));
         menuBar.addIndexHistoryListener(e -> {

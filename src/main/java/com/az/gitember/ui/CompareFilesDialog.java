@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 /**
  * Modal dialog for comparing any two files from the file system.
  * Each path field accepts drag-and-drop of a single file.
- * On OK a {@link DiffViewerWindow} is opened with the two files' contents.
+ * On OK a {@link DiffViewerWindowTxt} is opened with the two files' contents.
  */
 public class CompareFilesDialog extends JDialog {
 
@@ -138,7 +138,7 @@ public class CompareFilesDialog extends JDialog {
                 try {
                     String[] texts = get();
                     String name = left.getName();
-                    DiffViewerWindow w = new DiffViewerWindow(
+                    DiffViewerWindowTxt w = new DiffViewerWindowTxt(
                             name,
                             left.getAbsolutePath(),  texts[0],
                             right.getAbsolutePath(), texts[1]);

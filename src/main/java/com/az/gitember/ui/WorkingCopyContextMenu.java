@@ -418,7 +418,7 @@ public class WorkingCopyContextMenu {
             protected void done() {
                 try {
                     String[] contents = get();
-                    new DiffViewerWindow(fileName, "HEAD", contents[0], contents[1]).setVisible(true);
+                    new DiffViewerWindowTxt(fileName, "HEAD", contents[0], contents[1]).setVisible(true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show diff", ex);
                     JOptionPane.showMessageDialog(parent,

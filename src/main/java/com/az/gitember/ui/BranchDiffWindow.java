@@ -514,7 +514,7 @@ public class BranchDiffWindow extends JFrame {
             @Override protected void done() {
                 try {
                     String[] contents = get();
-                    new DiffViewerWindow(entry.path(),
+                    new DiffViewerWindowTxt(entry.path(),
                             branchALabel, contents[0],
                             branchBLabel, contents[1]).setVisible(true);
                 } catch (Exception ex) {

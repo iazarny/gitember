@@ -28,9 +28,9 @@ import java.util.logging.Logger;
  * Side-by-side diff viewer using JGit's HISTOGRAM diff algorithm
  * with RSyntaxTextArea for syntax highlighting and no line wrapping.
  */
-public class DiffViewerWindow extends JFrame {
+public class DiffViewerWindowTxt extends JFrame {
 
-    private static final Logger log = Logger.getLogger(DiffViewerWindow.class.getName());
+    private static final Logger log = Logger.getLogger(DiffViewerWindowTxt.class.getName());
 
     private RSyntaxTextArea oldPane;
     private RSyntaxTextArea newPane;
@@ -61,8 +61,8 @@ public class DiffViewerWindow extends JFrame {
 
     // ---- Constructors ----
 
-    public DiffViewerWindow(String fileName, List<ScmRevisionInformation> fileRevisions,
-                            String oldSha, String newSha) {
+    public DiffViewerWindowTxt(String fileName, List<ScmRevisionInformation> fileRevisions,
+                               String oldSha, String newSha) {
         this.fileName = fileName;
         setTitle("Diff: " + fileName);
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
@@ -117,9 +117,9 @@ public class DiffViewerWindow extends JFrame {
      * Constructor for branch-to-branch file diff.
      * Both content strings are provided directly — no revision combos shown.
      */
-    public DiffViewerWindow(String fileName,
-                            String leftLabel,  String leftContent,
-                            String rightLabel, String rightContent) {
+    public DiffViewerWindowTxt(String fileName,
+                               String leftLabel, String leftContent,
+                               String rightLabel, String rightContent) {
         this.fileName = fileName;
         setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
@@ -139,8 +139,8 @@ public class DiffViewerWindow extends JFrame {
     /**
      * Constructor for diff with disk (no revision combos).
      */
-    public DiffViewerWindow(String fileName, String commitSha,
-                            String commitContent, String diskContent) {
+    public DiffViewerWindowTxt(String fileName, String commitSha,
+                               String commitContent, String diskContent) {
         this.fileName = fileName;
         setTitle("Diff with disk: " + fileName);
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
@@ -167,7 +167,7 @@ public class DiffViewerWindow extends JFrame {
      *   <li>Diff is recomputed automatically (400 ms debounce).</li>
      * </ul>
      */
-    public DiffViewerWindow() {
+    public DiffViewerWindowTxt() {
         this.fileName = "";
         setTitle("Compare");
         initCommon(RSyntaxTextArea.SYNTAX_STYLE_NONE);
@@ -483,7 +483,7 @@ public class DiffViewerWindow extends JFrame {
                 } catch (Exception ex) {
                     loadingFile = false;
                     log.log(Level.WARNING, "Failed to load file for comparison", ex);
-                    JOptionPane.showMessageDialog(DiffViewerWindow.this,
+                    JOptionPane.showMessageDialog(DiffViewerWindowTxt.this,
                             "Cannot read file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
