@@ -25,6 +25,7 @@
         <lucene.version>9.9.1</lucene.version>
         <tika.version>2.9.1</tika.version>
         <langchain4j.version>1.15.0</langchain4j.version>
+        <twelvemonkeys.version>3.10.1</twelvemonkeys.version>
     </properties>
     <repositories>
         <repository>
@@ -174,6 +175,29 @@
             <artifactId>java-keyring</artifactId>
             <version>1.0.4</version>
         </dependency>
+
+
+            <dependency>
+                <groupId>com.twelvemonkeys.imageio</groupId>
+                <artifactId>imageio-webp</artifactId>
+                <version>${twelvemonkeys.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.twelvemonkeys.imageio</groupId>
+                <artifactId>imageio-tiff</artifactId>
+                <version>${twelvemonkeys.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.twelvemonkeys.imageio</groupId>
+                <artifactId>imageio-bmp</artifactId>
+                <version>${twelvemonkeys.version}</version>
+            </dependency>
+
+            <!--dependency>
+                <groupId>com.github.weisj</groupId>
+                <artifactId>jsvg</artifactId>
+                <version>1.3.0</version>
+            </dependency-->
 
         <!-- Test -->
         <dependency>

@@ -12,26 +12,28 @@ public class ExtensionMap {
 
     static {
 
-        add(new ExtensionInfo( "image/jpeg", ".jpg" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/jpeg", ".jpeg" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/png", ".png" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/webp", ".webp" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/gif", ".gif" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/avif", ".avif" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/svg+xml", ".svg" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/heic", ".heic" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/heif", ".heif" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/jxl", ".jxl" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/apng", ".apng" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/tiff", ".tiff" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/bmp", ".bmp" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/vnd.adobe.photoshop", ".psd" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "application/postscript", ".ai" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "application/postscript", ".eps" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/x-canon-cr2", ".cr2" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/x-nikon-nef", ".nef" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/x-icon", ".ico" , ExtensionInfo.ExtType.IMAGE ));
-        add(new ExtensionInfo( "image/raw", ".raw" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/jpeg", "jpg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/jpeg", "jpeg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/png", "png" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/webp", "webp" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/gif", "gif" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/avif", "avif" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/svg+xml", "svg" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/tiff", "tiff" , ExtensionInfo.ExtType.IMAGE ));
+        add(new ExtensionInfo( "image/bmp", "bmp" , ExtensionInfo.ExtType.IMAGE ));
+
+        //add(new ExtensionInfo( "image/heic", "heic" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/heif", "heif" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/jxl", "jxl" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/apng", "apng" , ExtensionInfo.ExtType.IMAGE ));
+
+        //add(new ExtensionInfo( "image/vnd.adobe.photoshop", "psd" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "application/postscript", "ai" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "application/postscript", "eps" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/x-canon-cr2", "cr2" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/x-nikon-nef", "nef" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/x-icon", "ico" , ExtensionInfo.ExtType.IMAGE ));
+        //add(new ExtensionInfo( "image/raw", "raw" , ExtensionInfo.ExtType.IMAGE ));
 
         add(new ExtensionInfo("text/plain", "sql", ExtensionInfo.ExtType.TEXT));
         add(new ExtensionInfo("text/plain", "cs", ExtensionInfo.ExtType.TEXT));
