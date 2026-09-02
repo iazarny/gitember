@@ -109,7 +109,7 @@ public class HistoryPanel extends JPanel {
         JMenuItem checkoutAsItem       = new JMenuItem("Checkout as…");
         JMenuItem createTagItem        = new JMenuItem("Create tag …");
         JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
-        JMenuItem revertItem           = new JMenuItem("Revert commit");
+        JMenuItem revertItem           = new JMenuItem("Revert commit…");
         JMenuItem resetItem            = new JMenuItem("Reset to commit…");
         JMenuItem changeMessageItem      = new JMenuItem("Change commit message…");
         JMenuItem interactiveRebaseItem = new JMenuItem("Interactive Rebase onto here…");
