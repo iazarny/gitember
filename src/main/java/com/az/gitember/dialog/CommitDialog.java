@@ -5,6 +5,7 @@ import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.CommitTemplateService;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.LlmCommitMessageService;
 import com.az.gitember.service.OllamaManager;
@@ -230,6 +231,7 @@ public class CommitDialog extends JDialog {
             if (isCommitMessageGenEnabled()) {
                 startCommitMessageGeneration(isLeakDetectorEnabled());
             } else {
+                applyCommitTemplate();
                 startDetector();
             }
         });
@@ -309,6 +311,19 @@ public class CommitDialog extends JDialog {
     private boolean isCommitMessageGenEnabled() {
         return Context.getSettings() != null
                 && Boolean.TRUE.equals(Context.getSettings().getEnableCommitMessageGeneration());
+    }
+
+    private void applyCommitTemplate() {
+        if (commitMessagePanel.getMessage().isBlank()) {
+            GitRepoService repo = Context.getGitRepoService();
+            if (repo == null && workspaceProjects != null && !workspaceProjects.isEmpty()) {
+                repo = workspaceProjects.get(0).getGitRepoService();
+            }
+            String template = CommitTemplateService.resolve(Context.getSettings(), repo);
+            if (StringUtils.isNotBlank(template)) {
+                commitMessagePanel.setMessage(template);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

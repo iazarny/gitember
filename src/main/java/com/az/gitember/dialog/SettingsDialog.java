@@ -1,6 +1,7 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.Settings;
+import com.az.gitember.service.CommitTemplateService;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.OllamaManager;
@@ -47,6 +48,7 @@ public class SettingsDialog extends JDialog {
     private  JCheckBox branchCompareDescCheck;
     private  JCheckBox commitMsgGenCheck;
     private  JComboBox<String> llmModelCombo;
+    private  JTextArea commitTemplateArea;
 
     /**
      * Offered in the model combo, which stays editable — any tag pulled in Ollama works.
@@ -65,7 +67,7 @@ public class SettingsDialog extends JDialog {
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(640, 480);
+        setSize(640, 560);
         setLocationRelativeTo(owner);
         setResizable(true);
 
@@ -85,6 +87,7 @@ public class SettingsDialog extends JDialog {
 
 
         tabbedPane.addTab("Common", createCommonPanel());
+        tabbedPane.addTab("Commit", createCommitTemplatePanel());
         tabbedPane.addTab("UI", createUIPanel());
         tabbedPane.addTab("Commit Singing", createComminSignPanel());
         tabbedPane.addTab("AI", createAIPanel());
@@ -484,6 +487,49 @@ public class SettingsDialog extends JDialog {
         return commonPanel;
     }
 
+    private JPanel createCommitTemplatePanel() {
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel hint = new JLabel(
+                "<html>Pre-filled in the commit dialog when AI commit message generation is off.<br>"
+                        + "Leave empty to use git's <code>commit.template</code> if it is configured.</html>");
+        hint.setForeground(UIManager.getColor("Label.disabledForeground"));
+        panel.add(hint, BorderLayout.NORTH);
+
+        String current = settings != null && settings.getCommitTemplate() != null
+                ? settings.getCommitTemplate() : "";
+        commitTemplateArea = new JTextArea(current, 12, 40);
+        commitTemplateArea.setName("commitTemplateArea");
+        commitTemplateArea.setLineWrap(true);
+        commitTemplateArea.setWrapStyleWord(true);
+        commitTemplateArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN,
+                Math.max(12, commitTemplateArea.getFont().getSize())));
+        panel.add(new JScrollPane(commitTemplateArea), BorderLayout.CENTER);
+
+        JButton loadGitBtn = new JButton("Load from git commit.template…");
+        loadGitBtn.setName("loadGitCommitTemplateButton");
+        loadGitBtn.setToolTipText("Replace the editor with the file pointed to by git commit.template");
+        loadGitBtn.addActionListener(e -> loadGitCommitTemplate());
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        south.add(loadGitBtn);
+        panel.add(south, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void loadGitCommitTemplate() {
+        String fromGit = CommitTemplateService.readGitTemplateFile(
+                Context.getGitRepoService());
+        if (StringUtils.isNotBlank(fromGit)) {
+            commitTemplateArea.setText(fromGit);
+            commitTemplateArea.setCaretPosition(0);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "No git commit.template is configured, or the file could not be read.",
+                    "Commit template", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
 
     private JPanel createUIPanel() {
 
@@ -608,6 +654,7 @@ public class SettingsDialog extends JDialog {
         settings.setEnableLeakDetector(leakDetectorCheck.isSelected());
         settings.setEnableBranchCompareDescription(branchCompareDescCheck.isSelected());
         settings.setEnableCommitMessageGeneration(commitMsgGenCheck.isSelected());
+        settings.setCommitTemplate(commitTemplateArea.getText());
 
         // An empty entry means "use the default", which is what the getter falls back to.
         Object selectedModel = llmModelCombo.getSelectedItem();

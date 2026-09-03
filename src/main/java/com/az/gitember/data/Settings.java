@@ -83,6 +83,7 @@ public class Settings {
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
     private Boolean enableCommitMessageGeneration = false; //EXPERIMENTAL FEATURE
+    private String  commitTemplate;
     private String  llmDetectorModel   = DEFAULT_LLM_DETECTOR_MODEL;
     private String   signOption   = SignOption.NONE.getOption();
     private String   signKey;
@@ -202,6 +203,15 @@ public class Settings {
 
     public void setEnableCommitMessageGeneration(Boolean enableCommitMessageGeneration) {
         this.enableCommitMessageGeneration = enableCommitMessageGeneration;
+    }
+
+    /** Commit-message template used when AI generation is off. Blank means "use git commit.template if set". */
+    public String getCommitTemplate() {
+        return commitTemplate;
+    }
+
+    public void setCommitTemplate(String commitTemplate) {
+        this.commitTemplate = commitTemplate;
     }
 
     public Boolean getEnableLeakDetector() {
