@@ -447,6 +447,9 @@ public class GitRepoService implements AutoCloseable {
                 signOption, signCommit, pathToKey, false);
     }
 
+    /*
+    git cat-file -p  851c98c8bf29c7649030f79dd451b692d788944e show raw headers 
+     */
     public RevCommit commit(final String message,
                             final String authorName, final String authorEmail,
                             final String committerName, final String committerEmail,
