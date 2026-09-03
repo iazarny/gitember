@@ -443,10 +443,19 @@ public class GitRepoService implements AutoCloseable {
                             final String authorName, final String authorEmail,
                             final String committerName, final String committerEmail,
                             String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
+        return commit(message, authorName, authorEmail, committerName, committerEmail,
+                signOption, signCommit, pathToKey, false);
+    }
+
+    public RevCommit commit(final String message,
+                            final String authorName, final String authorEmail,
+                            final String committerName, final String committerEmail,
+                            String signOption, boolean signCommit, String pathToKey,
+                            boolean amend) throws GitAPIException, IOException {
         configureSigner(signOption, signCommit, pathToKey);
         try (Git git = new Git(repository)) {
 
-            CommitCommand cmd = git.commit().setSign(signCommit);
+            CommitCommand cmd = git.commit().setSign(signCommit).setAmend(amend);
 
             if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
                 cmd.setAuthor(authorName, authorEmail);
@@ -459,6 +468,66 @@ public class GitRepoService implements AutoCloseable {
             log.log(Level.SEVERE, "Cannot commit", e);
             throw e;
         }
+    }
+
+    /**
+     * Amend is allowed only in a normal (SAFE) repository with an existing HEAD commit.
+     */
+    public boolean canAmend() {
+        boolean allowed = false;
+        if (repository != null) {
+            try {
+                if (repository.getRepositoryState() == RepositoryState.SAFE) {
+                    allowed = repository.resolve(Constants.HEAD) != null;
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine amend eligibility", ex);
+            }
+        }
+        return allowed;
+    }
+
+    /** Full message of HEAD, or empty when HEAD is unborn / unreadable. */
+    public String getHeadCommitFullMessage() {
+        String message = "";
+        if (repository != null) {
+            try {
+                ObjectId head = repository.resolve(Constants.HEAD);
+                if (head != null) {
+                    try (RevWalk walk = new RevWalk(repository)) {
+                        String full = walk.parseCommit(head).getFullMessage();
+                        if (full != null) {
+                            message = full;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot read HEAD commit message", ex);
+            }
+        }
+        return message;
+    }
+
+    /**
+     * {@code true} when the current branch tracks a remote and HEAD is not ahead of it
+     * (the last commit is already on the remote).
+     */
+    public boolean isHeadPublished() {
+        boolean published = false;
+        if (repository != null) {
+            try {
+                String branch = repository.getBranch();
+                if (StringUtils.isNotBlank(branch)) {
+                    BranchTrackingStatus status = BranchTrackingStatus.of(repository, branch);
+                    if (status != null && status.getAheadCount() == 0) {
+                        published = true;
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine whether HEAD is published", ex);
+            }
+        }
+        return published;
     }
 
 

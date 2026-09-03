@@ -285,17 +285,21 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 protected boolean[] doInBackground() {
                     boolean hasUnstaged = false;
                     boolean hasStaged = false;
+                    boolean canAmend = false;
                     for (Project project : projects) {
                         try {
                             GitRepoService svc = project.getGitRepoService();
                             hasUnstaged |= svc.hasUntaged();
                             hasStaged |= svc.hasStaged();
+                            if (!hasStaged) {
+                                canAmend |= svc.canAmend();
+                            }
                         } catch (Exception ex) {
                             log.log(Level.FINE, "Cannot read status for " + project, ex);
                         }
                         if (hasUnstaged && hasStaged) break; // nothing left to learn
                     }
-                    return new boolean[]{hasUnstaged, hasStaged};
+                    return new boolean[]{hasUnstaged, hasStaged, canAmend};
                 }
 
                 @Override
@@ -304,9 +308,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                         boolean[] state = get();
                         stageAllBtn.setEnabled(state[0]);
                         unstageAllBtn.setEnabled(state[1]);
-                        // Commit is possible when at least one project has a staged item.
+                        // Commit is possible when at least one project has staged files or can amend.
                         if (onCommitStateChanged != null) {
-                            onCommitStateChanged.accept(state[1]);
+                            onCommitStateChanged.accept(state[1] || state[2]);
                         }
                     } catch (Exception ex) {
                         log.log(Level.FINE, "Cannot update workspace button states", ex);

@@ -378,7 +378,7 @@ public class MainFrame extends JFrame {
         submodulePanel = new SubmodulePanel(statusBar);
         workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
         // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
-        // committing is possible whenever any project in the workspace has a staged item.
+        // committing is possible whenever any project has staged files or can amend HEAD.
         workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
             toolBar.setCommitEnabled(hasStaged);
             menuBar.setCommitEnabled(hasStaged);
@@ -699,20 +699,27 @@ public class MainFrame extends JFrame {
         boolean commitEnabled = false;
         if (Context.isWorkspaceMode()) {
             if (getActiveView() == ActiveView.WORKSPACE) {
-                for (Project project : Context.getWorkspace().getProjects()) { // at least one has staged items
-                    if (project.getGitRepoService().hasStaged()) {
+                for (Project project : Context.getWorkspace().getProjects()) {
+                    GitRepoService svc = project.getGitRepoService();
+                    if (svc.hasStaged() || svc.canAmend()) {
                         commitEnabled = true;
                         break;
                     }
                 }
-            } else { // workspace , but selected particular project
-                commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
+            } else {
+                commitEnabled = hasStagedWorkingCopyItems() || isResolvableRepoState()
+                        || (Context.getGitRepoService() != null && Context.getGitRepoService().canAmend());
             }
 
         } else {
-            commitEnabled =  workingCopyPanel.hasStagedItems() || isResolvableRepoState();
+            commitEnabled = hasStagedWorkingCopyItems() || isResolvableRepoState()
+                    || (Context.getGitRepoService() != null && Context.getGitRepoService().canAmend());
         }
         return commitEnabled;
+    }
+
+    private boolean hasStagedWorkingCopyItems() {
+        return workingCopyPanel != null && workingCopyPanel.hasStagedItems();
     }
 
     /**
@@ -967,6 +974,9 @@ public class MainFrame extends JFrame {
     }
 
     public void activateProjectWorkingCopy() {
+        if (workingCopyPanel == null) {
+            swithToTheProjectView();
+        }
          setActiveView( ActiveView.WORKING_COPY);
         contentPanel.setContent(workingCopyPanel);
         List<ScmItem> cachedStatus = Context.getStatusList();

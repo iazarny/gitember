@@ -59,6 +59,12 @@ public class CommitDialog extends JDialog {
     private final DefaultTableModel findingsModel;
     private final JPanel findingsPanel;
     private final List<Finding> findings = new ArrayList<>();
+    private final JCheckBox amendCheckBox;
+    private final JLabel publishedWarning;
+    private final JButton commitBtn;
+
+    private String savedCommonMessage;
+    private String[] savedProjectMessages;
 
     // Scan progress UI
     private final JLabel       scanStatusLabel;
@@ -168,15 +174,32 @@ public class CommitDialog extends JDialog {
         findingsPanel.setVisible(false);
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton commitBtn = new JButton("Commit");
+        amendCheckBox = new JCheckBox("Amend last commit");
+        amendCheckBox.setName("amendCheckBox");
+        amendCheckBox.setEnabled(anyCanAmend());
+        amendCheckBox.addActionListener(e -> onAmendToggled());
+
+        publishedWarning = new JLabel("Last commit is already on the remote — amending rewrites history.");
+        publishedWarning.setName("amendPublishedWarning");
+        publishedWarning.setForeground(SyntaxStyleUtil.statusColor("DELETE"));
+        publishedWarning.setVisible(false);
+
+        JPanel amendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        amendPanel.add(amendCheckBox);
+        amendPanel.add(publishedWarning);
+
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        commitBtn = new JButton("Commit");
         commitBtn.setName("commitButton");
         commitBtn.addActionListener(e -> onCommit());
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setName("cancelButton");
         cancelBtn.addActionListener(e -> dispose());
-        buttonPanel.add(commitBtn);
-        buttonPanel.add(cancelBtn);
+        JPanel commitCancelPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        commitCancelPanel.add(commitBtn);
+        commitCancelPanel.add(cancelBtn);
+        buttonPanel.add(amendPanel, BorderLayout.WEST);
+        buttonPanel.add(commitCancelPanel, BorderLayout.EAST);
 
         // Layout
         JPanel southOfMessage = new JPanel(new BorderLayout());
@@ -304,30 +327,35 @@ public class CommitDialog extends JDialog {
             new SwingWorker<String, String>() {
                 @Override
                 protected String doInBackground() throws Exception {
-                    OllamaManager.Status status = OllamaManager.getStatus();
-                    log.info("AI commit msg: Ollama status = " + status);
-
-                    if (status == OllamaManager.Status.STOPPED) {
-                        publish("Starting Ollama…");
-                        OllamaManager.startServerAndWait(20_000);
-                        status = OllamaManager.Status.RUNNING;
-                    }
-                    if (status != OllamaManager.Status.RUNNING) {
-                        throw new IllegalStateException("Ollama not available (status: " + status + ")");
-                    }
-                    if (!OllamaManager.isModelAvailable(model)) {
-                        log.info("AI commit msg: pulling model " + model);
-                        publish("Pulling model \"" + model + "\" (first run, please wait)…");
-                        Process pull = OllamaManager.startModelPull(model);
-                        pull.waitFor();
-                    }
-                    if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
-                        throw new IllegalStateException("Model '" + model + "' not available after pull");
-                    }
-                    publish("Generating commit message…");
                     String diff = buildStagedDiffText();
-                    log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
-                    return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
+                    if (StringUtils.isNotEmpty(diff)) {
+                        OllamaManager.Status status = OllamaManager.getStatus();
+                        log.info("AI commit msg: Ollama status = " + status);
+
+                        if (status == OllamaManager.Status.STOPPED) {
+                            publish("Starting Ollama…");
+                            OllamaManager.startServerAndWait(20_000);
+                            status = OllamaManager.Status.RUNNING;
+                        }
+                        if (status != OllamaManager.Status.RUNNING) {
+                            throw new IllegalStateException("Ollama not available (status: " + status + ")");
+                        }
+                        if (!OllamaManager.isModelAvailable(model)) {
+                            log.info("AI commit msg: pulling model " + model);
+                            publish("Pulling model \"" + model + "\" (first run, please wait)…");
+                            Process pull = OllamaManager.startModelPull(model);
+                            pull.waitFor();
+                        }
+                        if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
+                            throw new IllegalStateException("Model '" + model + "' not available after pull");
+                        }
+                        publish("Generating commit message…");
+                        log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
+                        return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
+                    } else {
+                        return "Empty commit. Trigger pipeline";
+                    }
+
                 }
 
                 @Override
@@ -363,7 +391,9 @@ public class CommitDialog extends JDialog {
     }
 
     private void applyAiSuggestion(String suggestion) {
-        commitMessagePanel.setMessage(suggestion);
+        if (!amendCheckBox.isSelected()) {
+            commitMessagePanel.setMessage(suggestion);
+        }
     }
 
     private void clearAiSuggestion() {
@@ -377,23 +407,29 @@ public class CommitDialog extends JDialog {
      */
     private String buildStagedDiffText() throws Exception {
         if (workspaceProjects == null) {
-            return Context.getGitRepoService() != null
-                    ? Context.getGitRepoService().getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS)
-                    : null;
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Project project : workspaceProjects) {
-            try {
-                GitRepoService svc = project.getGitRepoService();
-                if (!svc.hasStaged()) continue;
-                String diff = svc.getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS);
-                if (diff == null || diff.isBlank()) continue;
-                sb.append("=== ").append(projectLabel(project)).append(" ===\n").append(diff).append("\n\n");
-            } catch (Exception ex) {
-                log.warning("Cannot read staged diff for " + project.getProjectHomeFolder() + ": " + ex.getMessage());
+            GitRepoService svc = Context.getGitRepoService();
+            if (svc.hasStaged()) {
+                return svc.getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS);
             }
+            return null;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (Project project : workspaceProjects) {
+                try {
+                    GitRepoService svc = project.getGitRepoService();
+                    if (svc.hasStaged()) {
+                        String diff = svc.getStagedDiffText(LlmCommitMessageService.MAX_DIFF_CHARS);
+                        if (diff == null || diff.isBlank()) continue;
+                        sb.append("=== ").append(projectLabel(project)).append(" ===\n").append(diff).append("\n\n");
+                    }
+
+                } catch (Exception ex) {
+                    log.warning("Cannot read staged diff for " + project.getProjectHomeFolder() + ": " + ex.getMessage());
+                }
+            }
+            return sb.isEmpty() ? null : sb.toString();
         }
-        return sb.isEmpty() ? null : sb.toString();
+
     }
 
     // -------------------------------------------------------------------------
@@ -560,11 +596,12 @@ public class CommitDialog extends JDialog {
     // -------------------------------------------------------------------------
 
     private void onCommit() {
+        boolean amend = amendCheckBox.isSelected();
         if (workspaceProjects != null) {
             List<String> missingMessage = new ArrayList<>();
             for (int i = 0; i < workspaceProjects.size(); i++) {
                 Project project = workspaceProjects.get(i);
-                if (hasStaged(project) && commitMessagePanel.getEffectiveMessage(i).isEmpty()) {
+                if (willCommit(project, amend) && commitMessagePanel.getEffectiveMessage(i).isEmpty()) {
                     missingMessage.add(projectLabel(project));
                 }
             }
@@ -581,6 +618,19 @@ public class CommitDialog extends JDialog {
             return;
         }
 
+        /*if (!hasAnythingToCommit(amend)) {
+            JOptionPane.showMessageDialog(this,
+                    amend
+                            ? "Nothing to amend (no previous commit, or the repository is in the middle of a merge/rebase)."
+                            : "Nothing to commit. Stage files first, or check Amend last commit.",
+                    "Validation", JOptionPane.WARNING_MESSAGE);
+            return;
+        }*/
+
+        /*if (amend && !confirmAmendIfPublished()) {
+            return;
+        }*/
+
         try {
             //This is initial implementation. Without any distributed transactions support.
             if (workspaceProjects != null) {
@@ -592,7 +642,8 @@ public class CommitDialog extends JDialog {
                 }
 
                 for (int i = 0; i < workspaceProjects.size(); i++) {
-                    commitSingleProject(workspaceProjects.get(i), commitMessagePanel.getEffectiveMessage(i));
+                    commitSingleProject(workspaceProjects.get(i),
+                            commitMessagePanel.getEffectiveMessage(i), amend);
                 }
 
                 // Commit succeeded for every project; now check (without merging) whether each
@@ -618,7 +669,7 @@ public class CommitDialog extends JDialog {
                 }
             } else {
                 Project project = Context.getCurrentProject().orElse(null);
-                commitSingleProject(project, commitMessagePanel.getMessage().trim());
+                commitSingleProject(project, commitMessagePanel.getMessage().trim(), amend);
                 Context.updateStatus(null);
                 Context.updateBranches();
                 Context.updateWorkingBranch();
@@ -632,14 +683,6 @@ public class CommitDialog extends JDialog {
         }
     }
 
-    private boolean hasStaged(Project project) {
-        try {
-            return project.getGitRepoService().hasStaged();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     private static String projectLabel(Project project) {
         String folder = project.getProjectHomeFolder();
         if (folder == null || folder.isBlank()) {
@@ -650,10 +693,11 @@ public class CommitDialog extends JDialog {
     }
 
     /** Commits staged items for one project, using the configured author/committer identity. */
-    private void commitSingleProject(Project project, String message) throws IOException, GitAPIException {
-        GitRepoService svc = project.getGitRepoService();
-        if (svc.hasStaged()) {
-
+    private void commitSingleProject(Project project, String message, boolean amend)
+            throws IOException, GitAPIException {
+        if (project != null) {
+            GitRepoService svc = project.getGitRepoService();
+            boolean doAmend = amend && svc.canAmend();
             Settings settings = Context.getSettings();
             boolean signCommit = !Settings.SignOption.NONE.getOption().equalsIgnoreCase(settings.getSignOption())
                     && BooleanUtils.toBoolean(settings.getSignCommit());
@@ -664,8 +708,142 @@ public class CommitDialog extends JDialog {
             String committerName  = StringUtils.trimToNull(project.getCommitterName());
             String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
             svc.commit(message, authorName, authorEmail, committerName, committerEmail,
-                    settings.getSignOption(), signCommit, pathToKey);
+                    settings.getSignOption(), signCommit, pathToKey, doAmend);
         }
+    }
+
+    private void onAmendToggled() {
+        boolean amend = amendCheckBox.isSelected();
+        if (amend) {
+            savedCommonMessage = commitMessagePanel.getMessage();
+            if (workspaceProjects != null) {
+                savedProjectMessages = new String[workspaceProjects.size()];
+                for (int i = 0; i < workspaceProjects.size(); i++) {
+                    savedProjectMessages[i] = commitMessagePanel.getOwnProjectMessage(i);
+                    commitMessagePanel.setProjectMessage(i, headMessage(workspaceProjects.get(i)));
+                }
+                commitMessagePanel.setMessage("");
+            } else {
+                Project project = Context.getCurrentProject().orElse(null);
+                commitMessagePanel.setMessage(headMessage(project));
+            }
+            commitBtn.setText("Amend");
+            updatePublishedWarning();
+        } else {
+            if (savedCommonMessage != null) {
+                commitMessagePanel.setMessage(savedCommonMessage);
+            }
+            if (workspaceProjects != null && savedProjectMessages != null) {
+                for (int i = 0; i < savedProjectMessages.length; i++) {
+                    commitMessagePanel.setProjectMessage(i, savedProjectMessages[i]);
+                }
+            }
+            commitBtn.setText("Commit");
+            publishedWarning.setVisible(false);
+        }
+    }
+
+    private boolean anyCanAmend() {
+        boolean can = false;
+        if (workspaceProjects != null) {
+            for (Project project : workspaceProjects) {
+                try {
+                    if (project.getGitRepoService().canAmend()) {
+                        can = true;
+                        break;
+                    }
+                } catch (Exception ex) {
+                    log.fine("Cannot check amend for " + project.getProjectHomeFolder() + ": " + ex.getMessage());
+                }
+            }
+        } else if (Context.getGitRepoService() != null) {
+            can = Context.getGitRepoService().canAmend();
+        }
+        return can;
+    }
+
+    private boolean willCommit(Project project, boolean amend) {
+        boolean commit = false;
+        try {
+            GitRepoService svc = project.getGitRepoService();
+            commit = svc.hasStaged() || (amend && svc.canAmend());
+        } catch (Exception e) {
+            commit = false;
+        }
+        return commit;
+    }
+
+    private boolean hasAnythingToCommit(boolean amend) {
+        boolean anything = false;
+        if (workspaceProjects != null) {
+            for (Project project : workspaceProjects) {
+                if (willCommit(project, amend)) {
+                    anything = true;
+                    break;
+                }
+            }
+        } else if (Context.getGitRepoService() != null) {
+            GitRepoService svc = Context.getGitRepoService();
+            anything = svc.hasStaged() || (amend && svc.canAmend());
+        }
+        return anything;
+    }
+
+    private boolean confirmAmendIfPublished() {
+        List<String> published = publishedAmendTargets();
+        boolean proceed = published.isEmpty();
+        if (!proceed) {
+            String where = workspaceProjects != null
+                    ? String.join(", ", published)
+                    : "this repository";
+            int choice = JOptionPane.showConfirmDialog(this,
+                    "The last commit is already on the remote for: " + where + ".\n"
+                            + "Amending rewrites history and you will need to force-push.\nContinue?",
+                    "Amend published commit",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            proceed = choice == JOptionPane.YES_OPTION;
+        }
+        return proceed;
+    }
+
+    private List<String> publishedAmendTargets() {
+        List<String> published = new ArrayList<>();
+        if (workspaceProjects != null) {
+            for (Project project : workspaceProjects) {
+                try {
+                    GitRepoService svc = project.getGitRepoService();
+                    if (svc.canAmend() && svc.isHeadPublished() && willCommit(project, true)) {
+                        published.add(projectLabel(project));
+                    }
+                } catch (Exception ex) {
+                    log.fine("Cannot check published HEAD for " + project.getProjectHomeFolder()
+                            + ": " + ex.getMessage());
+                }
+            }
+        } else if (Context.getGitRepoService() != null
+                && Context.getGitRepoService().canAmend()
+                && Context.getGitRepoService().isHeadPublished()) {
+            published.add("HEAD");
+        }
+        return published;
+    }
+
+    private void updatePublishedWarning() {
+        publishedWarning.setVisible(!publishedAmendTargets().isEmpty());
+    }
+
+    private static String headMessage(Project project) {
+        String message = "";
+        if (project != null) {
+            try {
+                message = project.getGitRepoService().getHeadCommitFullMessage().stripTrailing();
+            } catch (Exception ex) {
+                log.fine("Cannot read HEAD message for " + project.getProjectHomeFolder()
+                        + ": " + ex.getMessage());
+            }
+        }
+        return message;
     }
 
     private Map<Project, List<ScmItem>> getConflictedFiles(Workspace workspace) throws IOException {

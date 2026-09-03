@@ -96,6 +96,16 @@ public abstract class SwingUiTestBase {
      * elsewhere for prerequisite state that isn't the focus of a given test.
      */
     protected void openRepo(Path dir) throws Exception {
+        // OpenRepoHandler / OpenRecentProjectHandler create the working-copy (and related)
+        // panels before Context.init fires tree-selection and status listeners. Skipping that
+        // leaves workingCopyPanel null and NPEs on the EDT when the working-copy node is selected.
+        execute(() -> {
+            MainFrame frame = MainFrame.getInstance();
+            frame.swithToTheProjectView();
+            frame.getToolBar().setVisible(true);
+            return null;
+        });
+
         Context.init(dir.toFile().getAbsolutePath());
 
         // Context.getRepositoryPath() returns the active project's .git dir, not the working

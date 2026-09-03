@@ -159,7 +159,7 @@ public class MainToolBar extends JToolBar {
 
 
     public void mergeWorkSpaceToolbar(WorkspaceDashboardPanel wdp) {
-        if (mergedWorkspaceComponents.isEmpty()) { //do not merge twice
+        if (wdp != null && mergedWorkspaceComponents.isEmpty()) { //do not merge twice
             JSeparator sep = new JToolBar.Separator();
             mergedWorkspaceComponents.add(sep);
             add(sep);
@@ -198,7 +198,7 @@ public class MainToolBar extends JToolBar {
 
 
     public void mergeWorkingCopyToolbar(WorkingCopyPanel wcp) {
-        if (mergedComponents.isEmpty()) { // do not merge twice
+        if (wcp != null && mergedComponents.isEmpty()) { // do not merge twice
             JSeparator sep = new JToolBar.Separator();
             mergedComponents.add(sep);
             add(sep);
@@ -237,7 +237,7 @@ public class MainToolBar extends JToolBar {
 
 
     public void mergeHistoryToolbar(HistoryPanel hp) {
-        if (mergedHistoryComponents.isEmpty()) { //do not merge twice
+        if (hp != null && mergedHistoryComponents.isEmpty()) { //do not merge twice
             Component glue = Box.createHorizontalGlue();
             mergedHistoryComponents.add(glue);
             add(glue);
@@ -294,22 +294,22 @@ public class MainToolBar extends JToolBar {
     private final java.util.List<Component> mergedPrComponents = new java.util.ArrayList<>();
 
     public void mergePullRequestToolbar(PullRequestPanel prp) {
-        if (!mergedPrComponents.isEmpty()) return;
+        if (prp != null && mergedPrComponents.isEmpty()) {
+            Component glue = Box.createHorizontalGlue();
+            mergedPrComponents.add(glue);
+            add(glue);
 
-        Component glue = Box.createHorizontalGlue();
-        mergedPrComponents.add(glue);
-        add(glue);
+            JLabel filterLabel = new JLabel("Filter:");
+            filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+            mergedPrComponents.add(filterLabel);
+            add(filterLabel);
 
-        JLabel filterLabel = new JLabel("Filter:");
-        filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
-        mergedPrComponents.add(filterLabel);
-        add(filterLabel);
+            mergedPrComponents.add(prp.getSearchField());
+            add(prp.getSearchField());
 
-        mergedPrComponents.add(prp.getSearchField());
-        add(prp.getSearchField());
-
-        revalidate();
-        repaint();
+            revalidate();
+            repaint();
+        }
     }
 
     public void unmergePullRequestToolbar() {

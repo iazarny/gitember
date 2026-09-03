@@ -54,7 +54,22 @@ public class CommitMessagePanel extends JPanel {
 
     /** Workspace project {@code index}'s own message, or the common message when it's blank. */
     public String getEffectiveMessage(int index) {
-        String own = projectMessageAreas[index].getText().trim();
+        String own = getOwnProjectMessage(index);
         return own.isEmpty() ? getMessage().trim() : own;
+    }
+
+    /** Per-project text as typed, without falling back to the common message. */
+    public String getOwnProjectMessage(int index) {
+        String text = "";
+        if (projectMessageAreas != null && index >= 0 && index < projectMessageAreas.length) {
+            text = projectMessageAreas[index].getText().trim();
+        }
+        return text;
+    }
+
+    public void setProjectMessage(int index, String text) {
+        if (projectMessageAreas != null && index >= 0 && index < projectMessageAreas.length) {
+            projectMessageAreas[index].setText(text != null ? text : "");
+        }
     }
 }

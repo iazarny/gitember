@@ -123,6 +123,53 @@ class GitRepoServiceTest {
         assertEquals("Bob", commit.getCommitterIdent().getName());
     }
 
+    @Test
+    void canAmend_falseOnUnbornHead_trueAfterFirstCommit() throws Exception {
+        assertFalse(service.canAmend(), "Unborn HEAD cannot be amended");
+
+        makeInitialCommit();
+
+        assertTrue(service.canAmend(), "A SAFE repo with HEAD can be amended");
+        assertEquals("initial commit", service.getHeadCommitFullMessage().stripTrailing());
+        assertFalse(service.isHeadPublished(), "No upstream means HEAD is not published");
+    }
+
+    @Test
+    void commit_amend_replacesHeadKeepsParentAndAddsStagedFile() throws Exception {
+        RevCommit initial = makeInitialCommit();
+
+        writeFile("extra.txt", "more\n");
+        service.addFileToCommitStage("extra.txt");
+
+        RevCommit amended = service.commit(
+                "amended message", "Test User", "test@example.com",
+                null, null, "", false, "", true);
+
+        assertEquals("amended message", amended.getShortMessage());
+        assertEquals(initial.getParentCount(), amended.getParentCount());
+        if (initial.getParentCount() > 0) {
+            assertEquals(initial.getParent(0).getId(), amended.getParent(0).getId());
+        }
+        assertNotEquals(initial.getId(), repository.resolve("HEAD"),
+                "Amend must move HEAD to a new commit");
+        assertEquals("amended message", service.getHeadCommitFullMessage().stripTrailing());
+        assertTrue(service.getAllFiles().contains("extra.txt"));
+        assertTrue(service.getAllFiles().contains("init.txt"));
+    }
+
+    @Test
+    void commit_amendMessageOnly_doesNotAddUnstagedFiles() throws Exception {
+        makeInitialCommit();
+        writeFile("unstaged.txt", "leave me out\n");
+
+        RevCommit amended = service.commit(
+                "just the message", "Test User", "test@example.com",
+                null, null, "", false, "", true);
+
+        assertEquals("just the message", amended.getShortMessage());
+        assertFalse(service.getAllFiles().contains("unstaged.txt"));
+    }
+
     // ── getAllFiles ───────────────────────────────────────────────────────────
 
     @Test
