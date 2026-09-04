@@ -40,8 +40,10 @@ public class ScmPlotWalk extends PlotWalk {
         RevCommit commit = super.next();
         if (commit instanceof ScmPlotCommit scmCommit && commit.getRawBuffer() != null) {
             PersonIdent author = commit.getAuthorIdent();
+            byte[] signature = commit.getRawGpgSignature();
             scmCommit.setSummary(commit.getShortMessage(),
-                    author == null ? null : pooled(author.getName()));
+                    author == null ? null : pooled(author.getName()),
+                    signature != null);
             scmCommit.disposeBody();
         }
         return commit;

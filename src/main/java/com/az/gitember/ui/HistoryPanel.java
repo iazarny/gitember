@@ -85,8 +85,9 @@ public class HistoryPanel extends JPanel {
         commitTable.getColumnModel().getColumn(0).setCellRenderer(new GraphCellRenderer());
         commitTable.getColumnModel().getColumn(1).setPreferredWidth(140);
         commitTable.getColumnModel().getColumn(1).setMaxWidth(160);
-        commitTable.getColumnModel().getColumn(2).setPreferredWidth(150);
-        commitTable.getColumnModel().getColumn(2).setMaxWidth(200);
+        commitTable.getColumnModel().getColumn(2).setPreferredWidth(170);
+        commitTable.getColumnModel().getColumn(2).setMaxWidth(220);
+        commitTable.getColumnModel().getColumn(2).setCellRenderer(new AuthorSignatureCellRenderer());
 
         detailPanel = new CommitDetailPanel(statusBar);
         commitTable.getSelectionModel().addListSelectionListener(e -> {
@@ -98,6 +99,22 @@ public class HistoryPanel extends JPanel {
                     if (rev != null && !lastSearchResults.isEmpty()) {
                         detailPanel.setMatchedFiles(
                                 lastSearchResults.get(rev.getRevisionFullName()));
+                    }
+                }
+            }
+        });
+
+        commitTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int viewRow = commitTable.rowAtPoint(e.getPoint());
+                int viewCol = commitTable.columnAtPoint(e.getPoint());
+                if (viewRow >= 0 && viewCol == 2 && tableModel.isSignedAt(viewRow)) {
+                    Rectangle cell = commitTable.getCellRect(viewRow, viewCol, false);
+                    if (e.getX() - cell.x <= 18) {
+                        ScmRevisionInformation rev = tableModel.getRevisionAt(viewRow);
+                        CommitSignatureDialog.open(SwingUtilities.getWindowAncestor(HistoryPanel.this),
+                                rev, () -> commitTable.repaint());
                     }
                 }
             }
@@ -696,7 +713,7 @@ public class HistoryPanel extends JPanel {
     }
 
     // Table model backed by PlotCommit list
-    static class CommitTableModel extends AbstractTableModel {
+    public static class CommitTableModel extends AbstractTableModel {
         private static final String[] COLUMNS = {"Graph / Message", "Date", "Author"};
         private List<PlotCommit<PlotLane>> commits = new ArrayList<>();
 
@@ -731,6 +748,20 @@ public class HistoryPanel extends JPanel {
             PlotCommit<PlotLane> pc = getCommitAt(row);
             if (pc == null) return null;
             return Context.getGitRepoService().adapt(pc, null);
+        }
+
+        public boolean isSignedAt(int row) {
+            boolean signed = false;
+            if (!revisions.isEmpty()) {
+                if (row >= 0 && row < revisions.size()) {
+                    ScmRevisionInformation rev = revisions.get(row);
+                    signed = rev != null && rev.isSigned();
+                }
+            } else {
+                PlotCommit<PlotLane> pc = getCommitAt(row);
+                signed = ScmPlotCommit.signedOf(pc);
+            }
+            return signed;
         }
 
         @Override

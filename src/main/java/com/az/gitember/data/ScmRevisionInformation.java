@@ -17,6 +17,8 @@ public class ScmRevisionInformation implements Comparable {
     private List<String> ref;
     private List<String> parents;
     private int stashIndex = -1;
+    private SignatureStatus signatureStatus = SignatureStatus.UNSIGNED;
+    private byte[] rawGpgSignature;
 
     public int getStashIndex() {
         return stashIndex;
@@ -24,6 +26,29 @@ public class ScmRevisionInformation implements Comparable {
 
     public void setStashIndex(int stashIndex) {
         this.stashIndex = stashIndex;
+    }
+
+    public SignatureStatus getSignatureStatus() {
+        if (signatureStatus == null) {
+            return SignatureStatus.UNSIGNED;
+        }
+        return signatureStatus;
+    }
+
+    public void setSignatureStatus(SignatureStatus signatureStatus) {
+        this.signatureStatus = signatureStatus != null ? signatureStatus : SignatureStatus.UNSIGNED;
+    }
+
+    public boolean isSigned() {
+        return getSignatureStatus().isPresent();
+    }
+
+    public byte[] getRawGpgSignature() {
+        return rawGpgSignature;
+    }
+
+    public void setRawGpgSignature(byte[] rawGpgSignature) {
+        this.rawGpgSignature = rawGpgSignature;
     }
 
     public List<String> getParents() {

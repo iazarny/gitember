@@ -43,6 +43,24 @@ public class Settings {
         }
     }
 
+    /**
+     * Where SSH commit-signature verification looks up allowed signers.
+     */
+    public enum AllowedSignersFile {
+        GLOBAL_SSH("~/.ssh/allowed_signers"),
+        REPOSITORY(".git/allowed_signers");
+
+        private final String option;
+
+        private AllowedSignersFile(String option) {
+            this.option = option;
+        }
+
+        public String getOption() {
+            return this.option;
+        }
+    }
+
     /** Default file extensions ignored in folder comparison (compile/build artefacts). */
     public static final Set<String> DEFAULT_IGNORE_COMPARE_FILES = new TreeSet<>(Set.of(
             // JVM
@@ -89,6 +107,8 @@ public class Settings {
     private String   signKey;
     private Boolean  signCommit;
     private Boolean  signTag;
+    private Boolean  verifyCommitSignatures = false;
+    private String   allowedSignersFile = AllowedSignersFile.GLOBAL_SSH.getOption();
     private String  dateFormat;
     private String  timeFormat;
 
@@ -269,6 +289,38 @@ public class Settings {
 
     public void setSignTag(Boolean signTag) {
         this.signTag = signTag;
+    }
+
+    public Boolean getVerifyCommitSignatures() {
+        return verifyCommitSignatures;
+    }
+
+    public void setVerifyCommitSignatures(Boolean verifyCommitSignatures) {
+        this.verifyCommitSignatures = verifyCommitSignatures;
+    }
+
+    public boolean isVerifyCommitSignatures() {
+        return Boolean.TRUE.equals(verifyCommitSignatures);
+    }
+
+    public String getAllowedSignersFile() {
+        if (allowedSignersFile == null || allowedSignersFile.isBlank()) {
+            return AllowedSignersFile.GLOBAL_SSH.getOption();
+        }
+        return allowedSignersFile;
+    }
+
+    public void setAllowedSignersFile(String allowedSignersFile) {
+        this.allowedSignersFile = allowedSignersFile;
+    }
+
+    public boolean isRepositoryAllowedSigners() {
+        return AllowedSignersFile.REPOSITORY.getOption().equals(getAllowedSignersFile());
+    }
+
+    /** Path shown in the signature dialog: {@code ~/.ssh/allowed_signers} or {@code .git/allowed_signers}. */
+    public String getAllowedSignersDisplayPath() {
+        return getAllowedSignersFile();
     }
 
     /** Never blank: an unset or cleared model falls back to {@link #DEFAULT_LLM_DETECTOR_MODEL}. */

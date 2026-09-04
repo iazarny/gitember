@@ -448,7 +448,7 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /*
-    git cat-file -p  851c98c8bf29c7649030f79dd451b692d788944e show raw headers 
+    git cat-file -p  851c98c8bf29c7649030f79dd451b692d788944e show raw headers
      */
     public RevCommit commit(final String message,
                             final String authorName, final String authorEmail,
@@ -3463,10 +3463,15 @@ public class GitRepoService implements AutoCloseable {
                 info.setAuthorName(authorIdent.getName());
                 info.setAuthorEmail(authorIdent.getEmailAddress());
             }
+            byte[] signature = withBody.getRawGpgSignature();
+            info.setRawGpgSignature(signature == null ? null : signature.clone());
+            info.setSignatureStatus(signature == null ? SignatureStatus.UNSIGNED : SignatureStatus.SIGNED);
         } else {
             // Body unreadable (missing object) -- fall back to what the walk captured.
             info.setShortMessage(ScmPlotCommit.shortMessageOf(revCommit));
             info.setAuthorName(ScmPlotCommit.authorNameOf(revCommit));
+            info.setSignatureStatus(ScmPlotCommit.signedOf(revCommit)
+                    ? SignatureStatus.SIGNED : SignatureStatus.UNSIGNED);
         }
 
         info.setParents(
@@ -4032,6 +4037,153 @@ public class GitRepoService implements AutoCloseable {
 
         }
 
+    }
+
+    /**
+     * Absolute path of the allowed-signers file selected in Settings
+     * ({@code ~/.ssh/allowed_signers} or {@code .git/allowed_signers}).
+     */
+    public Path resolveAllowedSignersFile() {
+        Path path = globalSshPath(Const.ALLOWED_SIGNERS_NAME);
+        Settings settings = Context.getSettings();
+        if (settings != null && settings.isRepositoryAllowedSigners() && repository != null) {
+            path = repository.getDirectory().toPath().resolve(Const.ALLOWED_SIGNERS_NAME);
+        }
+        return path;
+    }
+
+    /** {@code ~/.ssh/revoked_keys}, used together with the global allowed-signers file. */
+    public Path resolveRevokedKeysFile() {
+        return globalSshPath(Const.REVOKED_KEYS_NAME);
+    }
+
+    public static Path globalSshPath(String fileName) {
+        return Path.of(System.getProperty("user.home"), ".ssh", fileName);
+    }
+
+    /**
+     * Verifies the signature on {@code info} with JGit {@link SignatureVerifiers}. Does not run
+     * during history load — call from the signature dialog when the user asks.
+     */
+    public CommitSignatureDetails verifyCommitSignature(ScmRevisionInformation info) {
+        CommitSignatureDetails details = new CommitSignatureDetails();
+        Settings settings = Context.getSettings();
+        if (settings != null) {
+            details.setAllowedSignersPath(settings.getAllowedSignersDisplayPath());
+        } else {
+            details.setAllowedSignersPath(Settings.AllowedSignersFile.GLOBAL_SSH.getOption());
+        }
+
+        if (info == null || !info.isSigned()) {
+            details.setStatus(SignatureStatus.UNSIGNED);
+        } else {
+            fillFormatFromRawSignature(info.getRawGpgSignature(), details);
+            boolean verifyEnabled = settings != null && settings.isVerifyCommitSignatures();
+            if (!verifyEnabled) {
+                details.setStatus(SignatureStatus.SIGNED);
+                details.setMessage("Signature verification is disabled in Settings.");
+            } else if (repository == null || info.getRevisionFullName() == null) {
+                details.setStatus(SignatureStatus.UNKNOWN);
+                details.setMessage("No repository is open.");
+            } else {
+                verifyLoadedCommit(info, details);
+            }
+        }
+        if (info != null) {
+            info.setSignatureStatus(details.getStatus());
+        }
+        return details;
+    }
+
+    private void fillFormatFromRawSignature(byte[] rawSignature, CommitSignatureDetails details) {
+        if (rawSignature != null) {
+            GpgConfig.GpgFormat format = SignatureVerifiers.getFormat(rawSignature);
+            details.setFormat(formatLabel(format));
+        }
+    }
+
+    private void verifyLoadedCommit(ScmRevisionInformation info, CommitSignatureDetails details) {
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(ObjectId.fromString(info.getRevisionFullName()));
+            byte[] rawSignature = commit.getRawGpgSignature();
+            if (rawSignature != null) {
+                info.setRawGpgSignature(rawSignature.clone());
+                fillFormatFromRawSignature(rawSignature, details);
+            }
+            Config overlay = new Config(repository.getConfig());
+            Path allowedSigners = resolveAllowedSignersFile();
+            overlay.setString("gpg", "ssh", "allowedSignersFile",
+                    allowedSigners.toAbsolutePath().toString());
+            Path revokedKeys = resolveRevokedKeysFile();
+            if (Files.exists(revokedKeys)) {
+                overlay.setString("gpg", "ssh", "revocationFile",
+                        revokedKeys.toAbsolutePath().toString());
+            }
+            GpgConfig gpgConfig = new GpgConfig(overlay);
+            SignatureVerifier.SignatureVerification result =
+                    SignatureVerifiers.verify(repository, gpgConfig, commit);
+            applyVerificationResult(result, details);
+        } catch (Exception ex) {
+            log.log(Level.FINE, "Commit signature verification failed for "
+                    + info.getRevisionFullName(), ex);
+            if (details.getFormat() != null && !"Unknown".equals(details.getFormat())) {
+                details.setStatus(SignatureStatus.INVALID);
+            } else {
+                details.setStatus(SignatureStatus.UNKNOWN);
+            }
+            details.setMessage(ex.getMessage());
+        }
+    }
+
+    private void applyVerificationResult(SignatureVerifier.SignatureVerification result,
+                                         CommitSignatureDetails details) {
+        if (result == null) {
+            details.setStatus(SignatureStatus.UNKNOWN);
+            details.setMessage("No verifier is available for this signature format.");
+        } else {
+            if (details.getFormat() == null || details.getFormat().isBlank()) {
+                details.setFormat(result.verifierName());
+            }
+            String signer = result.signer();
+            if (signer == null || signer.isBlank()) {
+                signer = result.keyUser();
+            }
+            details.setSigner(signer);
+            details.setKeyFingerprint(result.keyFingerprint());
+            details.setTrust(trustLabel(result.trustLevel()));
+            details.setMessage(result.message());
+            if (result.verified()) {
+                details.setStatus(SignatureStatus.VERIFIED);
+            } else {
+                details.setStatus(SignatureStatus.INVALID);
+            }
+        }
+    }
+
+    private static String formatLabel(GpgConfig.GpgFormat format) {
+        String label = "Unknown";
+        if (format == GpgConfig.GpgFormat.SSH) {
+            label = "SSH";
+        } else if (format == GpgConfig.GpgFormat.OPENPGP) {
+            label = "GPG";
+        } else if (format == GpgConfig.GpgFormat.X509) {
+            label = "X.509";
+        }
+        return label;
+    }
+
+    private static String trustLabel(SignatureVerifier.TrustLevel trustLevel) {
+        String label = "Unknown";
+        if (trustLevel == SignatureVerifier.TrustLevel.NEVER) {
+            label = "Never trust";
+        } else if (trustLevel == SignatureVerifier.TrustLevel.MARGINAL) {
+            label = "Marginally trusted";
+        } else if (trustLevel == SignatureVerifier.TrustLevel.FULL) {
+            label = "Fully trusted";
+        } else if (trustLevel == SignatureVerifier.TrustLevel.ULTIMATE) {
+            label = "Ultimately trusted";
+        }
+        return label;
     }
 
     // ── Utility part  ──────────────────────────────────────────────────

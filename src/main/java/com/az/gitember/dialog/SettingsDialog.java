@@ -3,9 +3,12 @@ package com.az.gitember.dialog;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.CommitTemplateService;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.OllamaManager;
+import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.misc.Util;
+import com.az.gitember.data.Const;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import org.apache.commons.lang3.BooleanUtils;
@@ -39,6 +42,12 @@ public class SettingsDialog extends JDialog {
 
     private  JCheckBox  signTag;
 
+    private  JCheckBox verifySignaturesCheck;
+    private  JRadioButton allowedSignersGlobalRadio;
+    private  JRadioButton allowedSignersRepoRadio;
+    private  JButton editAllowedSignersBtn;
+    private  JButton editRevokedKeysBtn;
+
     private  JComboBox<String> dateFormatCombo;
     private  JComboBox<String> timeFormatCombo;
     private  JComboBox<String> themeCombo;
@@ -67,7 +76,7 @@ public class SettingsDialog extends JDialog {
 
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
-        setSize(640, 560);
+        setSize(640, 640);
         setLocationRelativeTo(owner);
         setResizable(true);
 
@@ -89,7 +98,7 @@ public class SettingsDialog extends JDialog {
         tabbedPane.addTab("Common", createCommonPanel());
         tabbedPane.addTab("Commit", createCommitTemplatePanel());
         tabbedPane.addTab("UI", createUIPanel());
-        tabbedPane.addTab("Commit Singing", createComminSignPanel());
+        tabbedPane.addTab("Commit Signing", createComminSignPanel());
         tabbedPane.addTab("AI", createAIPanel());
         tabbedPane.addTab("Other", createComparePanel());
 
@@ -371,9 +380,74 @@ public class SettingsDialog extends JDialog {
         gbc.weightx = 1.0;
         comminSiggPanel.add(signTag, gbc);
 
-
         gbc.gridx = 0;
         gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0;
+        JLabel verifyHeader = new JLabel("Verification");
+        verifyHeader.setFont(verifyHeader.getFont().deriveFont(Font.BOLD));
+        comminSiggPanel.add(verifyHeader, gbc);
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        verifySignaturesCheck = new JCheckBox("Verify commit signatures",
+                settings.isVerifyCommitSignatures());
+        verifySignaturesCheck.setToolTipText(
+                "When on, signed commits can be checked against the allowed-signers file on demand");
+        comminSiggPanel.add(verifySignaturesCheck, gbc);
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        comminSiggPanel.add(new JLabel("Allowed signers:"), gbc);
+
+        boolean repoSigners = settings.isRepositoryAllowedSigners();
+        allowedSignersGlobalRadio = new JRadioButton(
+                Settings.AllowedSignersFile.GLOBAL_SSH.getOption(), !repoSigners);
+        allowedSignersRepoRadio = new JRadioButton(
+                Settings.AllowedSignersFile.REPOSITORY.getOption(), repoSigners);
+        ButtonGroup allowedGroup = new ButtonGroup();
+        allowedGroup.add(allowedSignersGlobalRadio);
+        allowedGroup.add(allowedSignersRepoRadio);
+
+        editAllowedSignersBtn = new JButton("Edit…");
+        editAllowedSignersBtn.setToolTipText("Edit ~/.ssh/allowed_signers");
+        editAllowedSignersBtn.addActionListener(e -> FileViewerWindow.openForEdit(
+                "Edit allowed_signers", GitRepoService.globalSshPath(Const.ALLOWED_SIGNERS_NAME)));
+        editRevokedKeysBtn = new JButton("Edit revoked keys…");
+        editRevokedKeysBtn.setToolTipText("Edit ~/.ssh/revoked_keys");
+        editRevokedKeysBtn.addActionListener(e -> FileViewerWindow.openForEdit(
+                "Edit revoked_keys", GitRepoService.globalSshPath(Const.REVOKED_KEYS_NAME)));
+
+        JPanel globalRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        globalRow.add(allowedSignersGlobalRadio);
+        globalRow.add(editAllowedSignersBtn);
+        globalRow.add(editRevokedKeysBtn);
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        comminSiggPanel.add(globalRow, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.fill = GridBagConstraints.NONE;
+        comminSiggPanel.add(allowedSignersRepoRadio, gbc);
+
+        verifySignaturesCheck.addItemListener(e -> updateSignatureVerificationControls());
+        allowedSignersGlobalRadio.addItemListener(e -> updateSignatureVerificationControls());
+        updateSignatureVerificationControls();
+
+        gbc.gridx = 0;
+        gbc.gridy = 8;
         gbc.gridwidth = 2;
         gbc.weighty = 1.0;
         comminSiggPanel.add(new JLabel(), gbc);
@@ -405,6 +479,15 @@ public class SettingsDialog extends JDialog {
         signCommit.setVisible(visible);
         signTag.setVisible(visible);
         signKey.setVisible(visible);
+    }
+
+    private void updateSignatureVerificationControls() {
+        boolean on = verifySignaturesCheck.isSelected();
+        allowedSignersGlobalRadio.setEnabled(on);
+        allowedSignersRepoRadio.setEnabled(on);
+        boolean global = allowedSignersGlobalRadio.isSelected();
+        editAllowedSignersBtn.setEnabled(on && global);
+        editRevokedKeysBtn.setEnabled(on && global);
     }
     private void browseKey() {
         JFileChooser chooser = new JFileChooser();
@@ -665,6 +748,12 @@ public class SettingsDialog extends JDialog {
         settings.setSignKey(signKey.getText());
         settings.setSignCommit(signCommit.isSelected());
         settings.setSignTag(signTag.isSelected());
+        settings.setVerifyCommitSignatures(verifySignaturesCheck.isSelected());
+        if (allowedSignersRepoRadio.isSelected()) {
+            settings.setAllowedSignersFile(Settings.AllowedSignersFile.REPOSITORY.getOption());
+        } else {
+            settings.setAllowedSignersFile(Settings.AllowedSignersFile.GLOBAL_SSH.getOption());
+        }
         settings.setDateFormat(dateFormatCombo.getSelectedItem().toString());
         GitemberUtil.simpleDateFormat = new SimpleDateFormat(dateFormatCombo.getSelectedItem().toString());
         settings.setTimeFormat(timeFormatCombo.getSelectedItem().toString());

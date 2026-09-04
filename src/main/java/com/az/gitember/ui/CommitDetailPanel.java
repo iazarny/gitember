@@ -52,6 +52,8 @@ public class CommitDetailPanel extends JPanel {
     private final JTextField shaField = createReadOnlyField();
     private final JTextField parentField = createReadOnlyField();
     private final JTextField refsField = createReadOnlyField();
+    private final JLabel signatureCaption = new JLabel("Signature:");
+    private final JButton signatureButton = new JButton();
 
     // Avatar
     private final JLabel avatarLabel = new JLabel();
@@ -599,6 +601,25 @@ public class CommitDetailPanel extends JPanel {
         fld.gridy = 2;
         fieldsPanel.add(refsField, fld);
 
+        signatureButton.setBorderPainted(false);
+        signatureButton.setContentAreaFilled(false);
+        signatureButton.setFocusPainted(false);
+        signatureButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        signatureButton.setHorizontalAlignment(SwingConstants.LEFT);
+        signatureButton.setToolTipText("Show signature details");
+        signatureButton.addActionListener(e -> openSignatureDialog());
+        signatureCaption.setVisible(false);
+        signatureButton.setVisible(false);
+
+        lbl.gridx = 0;
+        lbl.gridy = 3;
+        fieldsPanel.add(signatureCaption, lbl);
+        fld.gridx = 1;
+        fld.gridy = 3;
+        fld.gridwidth = 5;
+        fieldsPanel.add(signatureButton, fld);
+        fld.gridwidth = 1;
+
         // ── Wrapper: avatar west, fields centre ───────────────────────────
         JPanel panel = new JPanel(new BorderLayout(8, 0));
         panel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
@@ -631,6 +652,7 @@ public class CommitDetailPanel extends JPanel {
                 ? String.join(", ", rev.getParents()) : "");
         refsField.setText(rev.getRef() != null
                 ? String.join(", ", rev.getRef()) : "");
+        updateSignatureButton(rev);
 
         // Populate changed files table
         filesTableModel.setData(rev.getAffectedItems());
@@ -693,6 +715,25 @@ public class CommitDetailPanel extends JPanel {
         shaField.setText("");
         parentField.setText("");
         refsField.setText("");
+        updateSignatureButton(null);
+    }
+
+    private void updateSignatureButton(ScmRevisionInformation rev) {
+        boolean signed = rev != null && rev.isSigned();
+        signatureCaption.setVisible(signed);
+        signatureButton.setVisible(signed);
+        if (signed) {
+            signatureButton.setIcon(CommitSignatureDialog.statusIcon(rev.getSignatureStatus(), 14));
+            signatureButton.setText(CommitSignatureDialog.statusHeadline(rev.getSignatureStatus()));
+            signatureButton.setForeground(CommitSignatureDialog.statusColor(rev.getSignatureStatus()));
+        }
+    }
+
+    private void openSignatureDialog() {
+        if (currentRevision != null && currentRevision.isSigned()) {
+            CommitSignatureDialog.open(SwingUtilities.getWindowAncestor(this),
+                    currentRevision, () -> updateSignatureButton(currentRevision));
+        }
     }
 
     private void loadRawDiff() {

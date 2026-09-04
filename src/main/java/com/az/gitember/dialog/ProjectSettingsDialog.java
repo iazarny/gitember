@@ -2,6 +2,7 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Project;
+import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.FileViewerWindow;
 
@@ -10,18 +11,13 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Per-project settings: author/committer identity and remote repository credentials.
  * Blank identity fields mean "use the global git config value".
  */
 public class ProjectSettingsDialog extends JDialog {
-
-    private static final Logger log = Logger.getLogger(ProjectSettingsDialog.class.getName());
 
     private final JTextField authorNameField;
     private final JTextField authorEmailField;
@@ -118,6 +114,22 @@ public class ProjectSettingsDialog extends JDialog {
         form.add(editGitIgnoreBtn, gbc);
         gbc.gridwidth = 1;
 
+        int nextRow = 17;
+        Settings settings = Context.getSettings();
+        if (settings != null && settings.isVerifyCommitSignatures() && settings.isRepositoryAllowedSigners()) {
+            addSeparatorLabel(form, gbc, nextRow, "Commit signatures");
+            nextRow++;
+            JButton editAllowedSignersBtn = new JButton("Edit .git/allowed_signers...");
+            editAllowedSignersBtn.setToolTipText("Open this repository's allowed_signers file");
+            editAllowedSignersBtn.setEnabled(project != null);
+            editAllowedSignersBtn.addActionListener(e -> openRepoAllowedSignersEditor());
+            gbc.gridx = 0; gbc.gridy = nextRow; gbc.gridwidth = 2;
+            gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+            form.add(editAllowedSignersBtn, gbc);
+            gbc.gridwidth = 1;
+            setSize(480, 780);
+        }
+
         JButton okBtn     = new JButton("OK");
         JButton cancelBtn = new JButton("Cancel");
         okBtn.addActionListener(e -> applyAndClose());
@@ -137,26 +149,15 @@ public class ProjectSettingsDialog extends JDialog {
     private void openGitIgnoreEditor() {
         String folder = Context.getProjectFolder();
         if (folder != null && !folder.isBlank()) {
-            Path gitIgnorePath = Path.of(folder, Const.GIT_IGNORE_NAME);
-            String content = "";
-            boolean readable = true;
-            if (Files.exists(gitIgnorePath)) {
-                try {
-                    content = Files.readString(gitIgnorePath);
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Cannot read " + gitIgnorePath, ex);
-                    JOptionPane.showMessageDialog(this,
-                            "Cannot read .gitignore:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                    readable = false;
-                }
-            }
-            if (readable) {
-                FileViewerWindow viewer = new FileViewerWindow("Edit .gitignore", content, Const.GIT_IGNORE_NAME);
-                viewer.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
-                viewer.enableFileEdit(gitIgnorePath);
-                viewer.setVisible(true);
-            }
+            FileViewerWindow.openForEdit("Edit .gitignore", Path.of(folder, Const.GIT_IGNORE_NAME));
+        }
+    }
+
+    private void openRepoAllowedSignersEditor() {
+        if (Context.getGitRepoService() != null && Context.getGitRepoService().getRepository() != null) {
+            Path path = Context.getGitRepoService().getRepository().getDirectory().toPath()
+                    .resolve(Const.ALLOWED_SIGNERS_NAME);
+            FileViewerWindow.openForEdit("Edit allowed_signers", path);
         }
     }
 

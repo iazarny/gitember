@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -225,11 +226,36 @@ public class FileViewerWindow extends JFrame {
     }
 
     /**
+     * Opens a non-modal editor for {@code path}. Missing files start empty and are created on save.
+     */
+    public static void openForEdit(String title, Path path) {
+        String content = "";
+        boolean readable = true;
+        if (Files.exists(path)) {
+            try {
+                content = Files.readString(path);
+            } catch (Exception ex) {
+                log.log(Level.WARNING, "Cannot read " + path, ex);
+                JOptionPane.showMessageDialog(MainFrame.getInstance(),
+                        "Cannot read " + path.getFileName() + ":\n" + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                readable = false;
+            }
+        }
+        if (readable) {
+            FileViewerWindow viewer = new FileViewerWindow(title, content, path.getFileName().toString());
+            viewer.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+            viewer.enableFileEdit(path);
+            viewer.setVisible(true);
+        }
+    }
+
+    /**
      * Turns this viewer into an in-place editor for {@code filePath}. Save writes back to
      * that path (creating the file if needed) and refreshes the working-copy status.
      * Call before {@code setVisible(true)}.
      */
-    public void enableFileEdit(java.nio.file.Path filePath) {
+    public void enableFileEdit(Path filePath) {
         this.editPath = filePath;
         this.savedContent = textArea.getText();
         textArea.setEditable(true);
@@ -385,6 +411,9 @@ public class FileViewerWindow extends JFrame {
         boolean saved = false;
         if (editPath != null) {
             try {
+                if (editPath.getParent() != null) {
+                    Files.createDirectories(editPath.getParent());
+                }
                 Files.writeString(editPath, textArea.getText(), StandardCharsets.UTF_8);
                 savedContent = textArea.getText();
                 Context.updateStatus(null, true);

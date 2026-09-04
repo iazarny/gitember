@@ -2,6 +2,8 @@ package com.az.gitember.service;
 
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.Settings;
+import com.az.gitember.data.SignatureStatus;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -51,6 +54,7 @@ class GitRepoServiceTest {
     @AfterEach
     void tearDown() throws Exception {
         repository.close();
+        Context.setSettings(null);
         deleteDirectory(repoDir);
     }
 
@@ -737,6 +741,78 @@ class GitRepoServiceTest {
                 "Ignored directory contents must disappear from status");
     }
 
+    @Test
+    void adapt_unsignedCommit_hasUnsignedStatusAndNoSignatureBytes() throws Exception {
+        RevCommit unsigned = makeInitialCommit();
+
+        ScmRevisionInformation info = service.adapt(unsigned, null);
+
+        assertEquals(SignatureStatus.UNSIGNED, info.getSignatureStatus());
+        assertFalse(info.isSigned());
+        assertNull(info.getRawGpgSignature());
+    }
+
+    @Test
+    void adapt_commitWithGpgSigHeader_isSignedWithoutVerifying() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        RevCommit signed = insertCommitWithDummySshSignature(parent);
+
+        ScmRevisionInformation info = service.adapt(signed, null);
+
+        assertEquals(SignatureStatus.SIGNED, info.getSignatureStatus());
+        assertTrue(info.isSigned());
+        assertNotNull(info.getRawGpgSignature());
+        assertTrue(new String(info.getRawGpgSignature(), StandardCharsets.US_ASCII)
+                .contains("BEGIN SSH SIGNATURE"));
+    }
+
+    @Test
+    void resolveAllowedSignersFile_followsSettingsChoice() {
+        Settings settings = new Settings();
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.GLOBAL_SSH.getOption());
+        Context.setSettings(settings);
+
+        assertEquals(
+                Path.of(System.getProperty("user.home"), ".ssh", "allowed_signers"),
+                service.resolveAllowedSignersFile());
+
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.REPOSITORY.getOption());
+        assertEquals(
+                repository.getDirectory().toPath().resolve("allowed_signers"),
+                service.resolveAllowedSignersFile());
+    }
+
+    @Test
+    void verifyCommitSignature_disabled_staysSigned() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        ScmRevisionInformation info = service.adapt(insertCommitWithDummySshSignature(parent), null);
+        Settings settings = new Settings();
+        settings.setVerifyCommitSignatures(false);
+        Context.setSettings(settings);
+
+        var details = service.verifyCommitSignature(info);
+
+        assertEquals(SignatureStatus.SIGNED, details.getStatus());
+        assertEquals(SignatureStatus.SIGNED, info.getSignatureStatus());
+        assertTrue(details.getMessage().contains("disabled"));
+    }
+
+    @Test
+    void verifyCommitSignature_enabledDummySsh_doesNotThrow() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        ScmRevisionInformation info = service.adapt(insertCommitWithDummySshSignature(parent), null);
+        Settings settings = new Settings();
+        settings.setVerifyCommitSignatures(true);
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.REPOSITORY.getOption());
+        Context.setSettings(settings);
+
+        var details = service.verifyCommitSignature(info);
+
+        assertNotEquals(SignatureStatus.UNSIGNED, details.getStatus());
+        assertNotEquals(SignatureStatus.UNSIGNED, info.getSignatureStatus());
+        assertEquals(".git/allowed_signers", details.getAllowedSignersPath());
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Creates an initial commit with a single file so HEAD is valid. */
@@ -748,6 +824,27 @@ class GitRepoServiceTest {
 
     private void writeFile(String name, String content) throws IOException {
         Files.writeString(repoDir.resolve(name), content);
+    }
+
+    private RevCommit insertCommitWithDummySshSignature(RevCommit parent) throws Exception {
+        String raw = "tree " + parent.getTree().getName() + "\n"
+                + "parent " + parent.getName() + "\n"
+                + "author Test User <test@example.com> 1111111111 +0000\n"
+                + "committer Test User <test@example.com> 1111111111 +0000\n"
+                + "gpgsig -----BEGIN SSH SIGNATURE-----\n"
+                + " U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgAAAAAAAAAAAAAAAAAAAAAAAA\n"
+                + " AAAAAAAAAAAAAAAAAAA=\n"
+                + " -----END SSH SIGNATURE-----\n"
+                + "\n"
+                + "signed commit\n";
+        ObjectId id;
+        try (ObjectInserter inserter = repository.newObjectInserter()) {
+            id = inserter.insert(Constants.OBJ_COMMIT, raw.getBytes(StandardCharsets.UTF_8));
+            inserter.flush();
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            return walk.parseCommit(id);
+        }
     }
 
     private static void deleteDirectory(Path dir) throws IOException {

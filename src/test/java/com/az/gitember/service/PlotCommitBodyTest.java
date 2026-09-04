@@ -3,8 +3,13 @@ package com.az.gitember.service;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmPlotCommit;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.SignatureStatus;
 import com.az.gitember.ui.CommitGraphRenderer;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
+import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
@@ -15,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -78,6 +84,7 @@ class PlotCommitBodyTest {
             assertNull(commit.getRawBuffer(), "the raw body is what makes a long history expensive");
             assertNotNull(ScmPlotCommit.shortMessageOf(commit));
             assertEquals("Test User", ScmPlotCommit.authorNameOf(commit));
+            assertFalse(ScmPlotCommit.signedOf(commit));
         }
         assertEquals("Commit number 3", ScmPlotCommit.shortMessageOf(commits.get(0)));
     }
@@ -93,6 +100,8 @@ class PlotCommitBodyTest {
                 "the full message has to be read back from the object database");
         assertEquals("Test User", info.getAuthorName());
         assertEquals("test@example.com", info.getAuthorEmail());
+        assertEquals(SignatureStatus.UNSIGNED, info.getSignatureStatus());
+        assertNull(info.getRawGpgSignature());
         assertEquals(1, info.getParents().size());
         assertFalse(info.getAffectedItems().isEmpty());
     }
@@ -146,5 +155,43 @@ class PlotCommitBodyTest {
     /** Newest first, exactly as {@code HistoryPanel} loads it. */
     private List<PlotCommit<PlotLane>> loadHistory() {
         return new ArrayList<>(project.getGitRepoService().getCommitsByTree(null, true, -1, null));
+    }
+
+    @Test
+    void plotWalkCapturesSignedFlagWithoutKeepingTheBody() throws Exception {
+        GitRepoService service = project.getGitRepoService();
+        PlotCommit<PlotLane> head = loadHistory().get(0);
+        ObjectId signedId = insertDummySignedCommit(service.getRepository(), head);
+        RefUpdate update = service.getRepository().updateRef("HEAD");
+        update.setNewObjectId(signedId);
+        update.forceUpdate();
+
+        List<PlotCommit<PlotLane>> commits = loadHistory();
+        PlotCommit<PlotLane> newest = commits.get(0);
+        assertNull(newest.getRawBuffer(), "history load must not keep the body");
+        assertTrue(ScmPlotCommit.signedOf(newest));
+
+        ScmRevisionInformation info = service.adapt(newest, null);
+        assertEquals(SignatureStatus.SIGNED, info.getSignatureStatus());
+        assertNotNull(info.getRawGpgSignature());
+    }
+
+    private static ObjectId insertDummySignedCommit(Repository repo, PlotCommit<PlotLane> parent)
+            throws Exception {
+        String raw = "tree " + parent.getTree().getName() + "\n"
+                + "parent " + parent.getName() + "\n"
+                + "author Test User <test@example.com> 1111111111 +0000\n"
+                + "committer Test User <test@example.com> 1111111111 +0000\n"
+                + "gpgsig -----BEGIN SSH SIGNATURE-----\n"
+                + " U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgAAAAAAAAAAAAAAAAAAAAAAAA\n"
+                + " AAAAAAAAAAAAAAAAAAA=\n"
+                + " -----END SSH SIGNATURE-----\n"
+                + "\n"
+                + "signed commit\n";
+        try (ObjectInserter inserter = repo.newObjectInserter()) {
+            ObjectId id = inserter.insert(Constants.OBJ_COMMIT, raw.getBytes(StandardCharsets.UTF_8));
+            inserter.flush();
+            return id;
+        }
     }
 }

@@ -11,6 +11,8 @@ public interface Const {
     String GIT_ATTR_NAME = ".gitattributes";
     String GIT_IGNORE_NAME = ".gitignore";
     String GIT_README_NAME = "README.md";
+    String ALLOWED_SIGNERS_NAME = "allowed_signers";
+    String REVOKED_KEYS_NAME = "revoked_keys";
 
     int SEARCH_LIMIT_CHAR = 2;
 

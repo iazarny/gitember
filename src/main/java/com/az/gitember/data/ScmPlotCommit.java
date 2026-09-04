@@ -26,6 +26,7 @@ public class ScmPlotCommit extends PlotCommit<PlotLane> {
 
     private String shortMessage;
     private String authorName;
+    private boolean signed;
 
     public ScmPlotCommit(AnyObjectId id) {
         super(id);
@@ -35,9 +36,10 @@ public class ScmPlotCommit extends PlotCommit<PlotLane> {
      * Stores the fields to keep once the raw body is released. Called by
      * {@link com.az.gitember.service.ScmPlotWalk} while the body is still loaded.
      */
-    public void setSummary(String shortMessage, String authorName) {
+    public void setSummary(String shortMessage, String authorName, boolean signed) {
         this.shortMessage = shortMessage;
         this.authorName = authorName;
+        this.signed = signed;
     }
 
     /**
@@ -65,5 +67,21 @@ public class ScmPlotCommit extends PlotCommit<PlotLane> {
         }
         PersonIdent author = commit.getAuthorIdent();
         return author == null ? null : author.getName();
+    }
+
+    /**
+     * Whether {@code commit} carries a signature. For a body-less {@link ScmPlotCommit} this is
+     * the flag captured during the walk; otherwise it is {@code getRawGpgSignature() != null}.
+     */
+    public static boolean signedOf(RevCommit commit) {
+        boolean signed = false;
+        if (commit != null) {
+            if (commit instanceof ScmPlotCommit scmCommit && commit.getRawBuffer() == null) {
+                signed = scmCommit.signed;
+            } else if (commit.getRawBuffer() != null) {
+                signed = commit.getRawGpgSignature() != null;
+            }
+        }
+        return signed;
     }
 }
