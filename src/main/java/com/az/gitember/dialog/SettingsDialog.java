@@ -300,7 +300,7 @@ public class SettingsDialog extends JDialog {
                 Settings.SignOption.SSH.getOption()});
         signCombo.setSelectedItem(settings.getSignOption());
 
-        signCombo.setPreferredSize(new java.awt.Dimension(120, 25));
+        signCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         signCombo.addItemListener(
                 e -> {
                     String item = e.getItem().toString();
@@ -341,6 +341,8 @@ public class SettingsDialog extends JDialog {
         JPanel destPanel = new JPanel(new BorderLayout(5, 0));
         signKey = new JTextField(25);
         signKey.setText(settings.getSignKey());
+        signKey.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+
         browseBtn = new JButton("...");
         browseBtn.addActionListener(e -> browseKey());
         destPanel.add(signKey, BorderLayout.CENTER);
