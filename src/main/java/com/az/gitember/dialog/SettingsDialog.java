@@ -301,6 +301,7 @@ public class SettingsDialog extends JDialog {
         signCombo.setSelectedItem(settings.getSignOption());
 
         signCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+        signCombo.setMinimumSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         signCombo.addItemListener(
                 e -> {
                     String item = e.getItem().toString();
@@ -339,9 +340,12 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 1;
         gbc.gridx = 1;
         JPanel destPanel = new JPanel(new BorderLayout(5, 0));
-        signKey = new JTextField(25);
+        // No column count: JTextField.getPreferredSize() recomputes the width from
+        // columns * columnWidth and would discard the preferred size set below.
+        signKey = new JTextField();
         signKey.setText(settings.getSignKey());
         signKey.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+        signKey.setMinimumSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
 
         browseBtn = new JButton("...");
         browseBtn.addActionListener(e -> browseKey());
@@ -409,7 +413,10 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 6;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        comminSiggPanel.add(new JLabel("Allowed signers:"), gbc);
+        JLabel asLabel = new JLabel("Allowed signers:");
+        asLabel.setPreferredSize(new java.awt.Dimension(150, 25));
+        asLabel.setMinimumSize(new java.awt.Dimension(150, 25));
+        comminSiggPanel.add(asLabel, gbc);
 
         boolean repoSigners = settings.isRepositoryAllowedSigners();
         allowedSignersGlobalRadio = new JRadioButton(
@@ -429,7 +436,7 @@ public class SettingsDialog extends JDialog {
         editRevokedKeysBtn.addActionListener(e -> FileViewerWindow.openForEdit(
                 "Edit revoked_keys", GitRepoService.globalSshPath(Const.REVOKED_KEYS_NAME)));
 
-        JPanel globalRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel globalRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         globalRow.add(allowedSignersGlobalRadio);
         globalRow.add(editAllowedSignersBtn);
         globalRow.add(editRevokedKeysBtn);
@@ -438,6 +445,7 @@ public class SettingsDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         comminSiggPanel.add(globalRow, gbc);
+
 
         gbc.gridx = 1;
         gbc.gridy = 7;

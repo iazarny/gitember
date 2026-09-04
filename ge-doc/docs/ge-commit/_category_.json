@@ -1,0 +1,8 @@
+{
+  "label": "Commits",
+  "position": 25,
+  "link": {
+    "type": "generated-index",
+    "description": "Sign commits, verify SSH and GPG signatures, and pre-fill commit messages with a template."
+  }
+}
