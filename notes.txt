@@ -1,0 +1,16 @@
+java -XX:+UseZGC      -XX:+ZGenerational     -Xms128m -Xmx256m     -jar gitember-3.4.2-SNAPSHOT-boot.jar
+java -XX:+UseG1GC -Xms128m -Xmx256m -jar gitember-3.4.2-SNAPSHOT-boot.jar
+
+java  -Xms1024M  -Xmx1024M -jar gitember-3.4.2-SNAPSHOT-boot.jar
+
+java -XX:+UseSerialGC \
+     -Xms16m -Xmx128m \
+     -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 \
+     -XX:GCTimeRatio=4 \
+     -XX:MetaspaceSize=32m -XX:MaxMetaspaceSize=96m \
+     -XX:ReservedCodeCacheSize=32m \
+     -Xss256k \
+     -XX:+UseCompressedOops \
+     -jar gitember-3.4.2-SNAPSHOT-boot.jar
+
+
