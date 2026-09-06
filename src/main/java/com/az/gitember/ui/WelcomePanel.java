@@ -36,23 +36,31 @@ public class WelcomePanel extends JPanel {
     private Consumer<Project> onProjectRemoved;
     private Consumer<Workspace> onWorkspaceSelected;
     private Consumer<Workspace> onWorkspaceRemoved;
+    private Consumer<Workspace> onWorkspaceEdit;
     private Runnable onOpenRepo;
     private Runnable onCloneRepo;
     private Runnable onInitRepo;
     private Runnable onInitWorkspace;
-    private final JPopupMenu contextMenu;
-    private final JMenuItem openMenuItem;
-    private final JMenuItem removeMenuItem;
+    private Runnable onEditWorkspace;
+
+
+    private final JPopupMenu repoContextMenu;
+    private final JMenuItem wsEditMenuItem;
+    private final JMenuItem repoOpenMenuItem;
+    private final JMenuItem repoRemoveMenuItem;
 
     public WelcomePanel() {
         setLayout(new BorderLayout());
 
-        contextMenu = new JPopupMenu();
-        openMenuItem = new JMenuItem("Open");
-        removeMenuItem = new JMenuItem("Remove from list");
-        contextMenu.add(openMenuItem);
-        contextMenu.addSeparator();
-        contextMenu.add(removeMenuItem);
+
+        repoContextMenu = new JPopupMenu();
+        repoOpenMenuItem = new JMenuItem("Open");
+        wsEditMenuItem = new JMenuItem("Edit...");;
+        repoRemoveMenuItem = new JMenuItem("Remove from list");
+        repoContextMenu.add(repoOpenMenuItem);
+        repoContextMenu.add(wsEditMenuItem);
+        repoContextMenu.addSeparator();
+        repoContextMenu.add(repoRemoveMenuItem);
 
         // Header
         JLabel header = new JLabel("Gitember", SwingConstants.CENTER);
@@ -75,6 +83,7 @@ public class WelcomePanel extends JPanel {
         initRepoBtn.addActionListener(e -> { if (onInitRepo != null) onInitRepo.run(); });
         initWorkpaceBtn.addActionListener(e -> {
             if (onInitWorkspace != null) onInitWorkspace.run(); });
+
 
         commandPanel.add(Box.createHorizontalGlue());
         commandPanel.add(openRepoBtn);
@@ -129,19 +138,28 @@ public class WelcomePanel extends JPanel {
             }
 
             private void maybeShowContextMenu(MouseEvent e) {
-                if (!e.isPopupTrigger()) return;
-                int index = projectList.locationToIndex(e.getPoint());
-                if (index < 0 || !projectList.getCellBounds(index, index).contains(e.getPoint())) return;
-                projectList.setSelectedIndex(index);
-                Object item = listModel.getElementAt(index);
-                // Replace listeners each time to avoid accumulation
-                for (java.awt.event.ActionListener al : openMenuItem.getActionListeners())
-                    openMenuItem.removeActionListener(al);
-                for (java.awt.event.ActionListener al : removeMenuItem.getActionListeners())
-                    removeMenuItem.removeActionListener(al);
-                openMenuItem.addActionListener(ev -> selectItem(item));
-                removeMenuItem.addActionListener(ev -> removeItem(item));
-                contextMenu.show(projectList, e.getX(), e.getY());
+                if (e.isPopupTrigger()) {
+                    int index = projectList.locationToIndex(e.getPoint());
+                    if (index < 0 || !projectList.getCellBounds(index, index).contains(e.getPoint())) {
+                        return;
+                    }
+                    projectList.setSelectedIndex(index);
+                    Object item = listModel.getElementAt(index);
+                    // Replace listeners each time to avoid accumulation
+                    for (java.awt.event.ActionListener al : repoOpenMenuItem.getActionListeners())
+                        repoOpenMenuItem.removeActionListener(al);
+                    for (java.awt.event.ActionListener al : repoRemoveMenuItem.getActionListeners())
+                        repoRemoveMenuItem.removeActionListener(al);
+                    for (java.awt.event.ActionListener al : wsEditMenuItem.getActionListeners())
+                        wsEditMenuItem.removeActionListener(al);
+
+                    wsEditMenuItem.setVisible(item instanceof Workspace);
+                    wsEditMenuItem.addActionListener(ev -> editItem(item));
+                    repoOpenMenuItem.addActionListener(ev -> selectItem(item));
+                    repoRemoveMenuItem.addActionListener(ev -> removeItem(item));
+                    repoContextMenu.show(projectList, e.getX(), e.getY());
+                }
+
             }
         });
 
@@ -209,6 +227,15 @@ public class WelcomePanel extends JPanel {
     }
 
     /** Routes a single click / "Open" on a list element to the type-specific handler. */
+    private void editItem(Object item) {
+        if (item instanceof Workspace ws) {
+            if (onEditWorkspace != null) {
+                onWorkspaceEdit.accept(ws);
+            }
+        }
+    }
+
+    /** Routes a single click / "Open" on a list element to the type-specific handler. */
     private void selectItem(Object item) {
         if (item instanceof Project project) {
             if (onProjectSelected != null) onProjectSelected.accept(project);
@@ -234,6 +261,10 @@ public class WelcomePanel extends JPanel {
         this.onProjectRemoved = handler;
     }
 
+    public void setOnWorkspaceEdit(Consumer<Workspace> handler) {
+        this.onWorkspaceEdit = handler;
+    }
+
     public void setOnWorkspaceSelected(Consumer<Workspace> handler) {
         this.onWorkspaceSelected = handler;
     }
@@ -254,6 +285,9 @@ public class WelcomePanel extends JPanel {
         this.onInitRepo = handler;
     }
 
+    public void setOnEditWorkspace(Runnable handler) {
+        this.onEditWorkspace = handler;
+    }
 
     public void setOnInitWorkspace(Runnable handler) {
         this.onInitWorkspace = handler;

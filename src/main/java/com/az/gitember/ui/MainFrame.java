@@ -132,6 +132,8 @@ public class MainFrame extends JFrame {
                 refreshProjectLists();
             }
         });
+
+        welcomePanel.setOnWorkspaceEdit(new OpenRecentWorkspaceHanlder(this));
         welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
         welcomePanel.setOnWorkspaceRemoved(workspace -> {
             Settings settings = Context.getSettings();
@@ -256,6 +258,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setOnCloneRepo(this::showCloneDialog);
         welcomePanel.setOnInitRepo(this::showInitDialog);
         welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
+        welcomePanel.setOnEditWorkspace(this::showWorkspaceDialog);
 
         // Pull
         menuBar.addPullListener(e -> new PullHandler(this, null).execute());
