@@ -6,6 +6,7 @@ import com.az.gitember.data.Settings;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,27 +24,41 @@ import java.util.function.Consumer;
  * already-known projects from {@link Settings#getProjects()}, or by selecting a git
  * repository folder on disk.
  *
- * <p>Edits are made against an in-memory copy of the workspace and are only
- * persisted when the user presses <em>Open</em> — pressing <em>Cancel</em> discards them.
+ * <p>Create mode starts a new workspace and persists it when the user presses <em>Open</em>.
+ * Edit mode loads an existing workspace; changes are kept on a copy until <em>Save</em>,
+ * then written back to that same instance. <em>Cancel</em> discards the copy.
  */
 public class WorkspaceDialog extends JDialog {
 
+    /** Live settings instance being edited, or {@code null} when creating a workspace. */
+    private final Workspace existingWorkspace;
     private final Workspace workspace;
     public final JTextField nameField;
     private final DefaultListModel<Project> projectModel = new DefaultListModel<>();
     private final JList<Project> projectList = new JList<>(projectModel);
 
-    /** Invoked with the opened workspace after a successful save (may be {@code null}). */
+    /** Invoked with the persisted workspace after a successful save (may be {@code null}). */
     private final Consumer<Workspace> onWorkspaceOpened;
 
     private boolean confirmed = false;
 
 
     public WorkspaceDialog(Frame owner, Consumer<Workspace> onWorkspaceOpened) {
-        super(owner, "Workspaces", Dialog.ModalityType.DOCUMENT_MODAL);
-        this.onWorkspaceOpened = onWorkspaceOpened;
+        this(owner, null, onWorkspaceOpened);
+    }
 
-        this.workspace = loadWorkingCopy();
+    public WorkspaceDialog(Frame owner, Workspace existing, Consumer<Workspace> onWorkspaceOpened) {
+        super(owner, existing != null ? "Edit workspace" : "Workspaces",
+                Dialog.ModalityType.DOCUMENT_MODAL);
+
+
+        setSize(640, 480);
+        setLocationRelativeTo(owner);
+        Util.bindEscapeToDispose(this);
+
+        this.existingWorkspace = existing;
+        this.onWorkspaceOpened = onWorkspaceOpened;
+        this.workspace = loadWorkingCopy(existing);
 
         nameField = new JTextField(24);
         nameField.setName("workspaceNameField");
@@ -61,9 +76,6 @@ public class WorkspaceDialog extends JDialog {
         // Keep the workspace name in sync as it is typed.
         nameField.getDocument().addDocumentListener(new SimpleDocumentListener(this::applyNameEdit));
 
-        setSize(560, 520);
-        setLocationRelativeTo(owner);
-        Util.bindEscapeToDispose(this);
     }
 
     // ── UI construction ────────────────────────────────────────────────────────
@@ -93,13 +105,21 @@ public class WorkspaceDialog extends JDialog {
 
         JScrollPane scroll = new JScrollPane(projectList);
 
-        JButton addExistingBtn = new JButton("Add Existing Project…");
+        Dimension size = new Dimension(180, 36);
+
+        JButton addExistingBtn = Util.createButton("Add existing…", "Add Existing Project…", FontAwesomeSolid.PLUS,0,size);
+                //new JButton("Add Existing Project…");
         addExistingBtn.setName("addExistingProjectButton");
         addExistingBtn.addActionListener(e -> addExistingProject());
-        JButton addFromDiskBtn = new JButton("Add Repository from Disk…");
+
+        JButton addFromDiskBtn = Util.createButton("Add new…", "Add Repository from Disk…", FontAwesomeSolid.PLUS,0,size);
+        //new JButton("Add Repository from Disk…");
         addFromDiskBtn.setName("addRepositoryFromDiskButton");
         addFromDiskBtn.addActionListener(e -> addRepositoryFromDisk());
-        JButton removeBtn = new JButton("Remove");
+
+
+        JButton removeBtn = Util.createButton("Remove", null, FontAwesomeSolid.MINUS,0,size);
+        //new JButton("Remove");
         removeBtn.setName("removeProjectButton");
         removeBtn.addActionListener(e -> removeSelectedProject());
         removeBtn.setEnabled(false);
@@ -118,26 +138,38 @@ public class WorkspaceDialog extends JDialog {
     }
 
     private JPanel buildButtonPanel() {
-        JButton openBtn = new JButton("Open");
-        openBtn.setName("openWorkspaceButton");
+        JButton confirmBtn;
+        if (existingWorkspace != null) {
+            confirmBtn = new JButton("Save");
+            confirmBtn.setName("saveWorkspaceButton");
+        } else {
+            confirmBtn = new JButton("Open");
+            confirmBtn.setName("openWorkspaceButton");
+        }
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setName("cancelWorkspaceButton");
-        openBtn.addActionListener(e -> openWorkspace());
+        confirmBtn.addActionListener(e -> persistWorkspace());
         cancelBtn.addActionListener(e -> dispose());
-        getRootPane().setDefaultButton(openBtn);
+        getRootPane().setDefaultButton(confirmBtn);
 
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panel.add(openBtn);
+        panel.add(confirmBtn);
         panel.add(cancelBtn);
         return panel;
     }
 
     // ── Model handling ───────────────────────────────────────────────────────────
 
-    private Workspace loadWorkingCopy() {
-        Settings settings = Context.getSettings();
-        String name = settings != null ? settings.createNewWorkspaceName() : "New workspace";
-        return new Workspace(name, new TreeSet<>());
+    private Workspace loadWorkingCopy(Workspace existing) {
+        Workspace copy;
+        if (existing != null) {
+            copy = new Workspace(existing.getName(), new TreeSet<>(existing.getProjects()));
+        } else {
+            Settings settings = Context.getSettings();
+            String name = settings != null ? settings.createNewWorkspaceName() : "New workspace";
+            copy = new Workspace(name, new TreeSet<>());
+        }
+        return copy;
     }
 
     private void loadIntoForm() {
@@ -217,7 +249,7 @@ public class WorkspaceDialog extends JDialog {
         return confirmed;
     }
 
-    private void openWorkspace() {
+    private void persistWorkspace() {
         applyNameEdit();
         if (workspace.getName() == null || workspace.getName().isBlank()) {
             JOptionPane.showMessageDialog(this, "Workspace name cannot be empty.",
@@ -227,14 +259,45 @@ public class WorkspaceDialog extends JDialog {
         }
         Settings settings = Context.getSettings();
         if (settings != null) {
-            settings.getWorkspaces().add(workspace);
+            if (isNameTaken(settings)) {
+                JOptionPane.showMessageDialog(this,
+                        "A workspace named \"" + workspace.getName() + "\" already exists.",
+                        "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                nameField.requestFocusInWindow();
+                return;
+            }
+            Workspace persisted = applyToSettings(settings);
             Context.saveSettings();
             if (onWorkspaceOpened != null) {
-                onWorkspaceOpened.accept(workspace);
+                onWorkspaceOpened.accept(persisted);
             }
         }
         confirmed = true;
         dispose();
+    }
+
+    private boolean isNameTaken(Settings settings) {
+        boolean taken = false;
+        String name = workspace.getName();
+        for (Workspace ws : settings.getWorkspaces()) {
+            if (ws != existingWorkspace && name.equals(ws.getName())) {
+                taken = true;
+            }
+        }
+        return taken;
+    }
+
+    private Workspace applyToSettings(Settings settings) {
+        Workspace persisted;
+        if (existingWorkspace != null) {
+            existingWorkspace.setName(workspace.getName());
+            existingWorkspace.setProjects(new TreeSet<>(workspace.getProjects()));
+            persisted = existingWorkspace;
+        } else {
+            settings.getWorkspaces().add(workspace);
+            persisted = workspace;
+        }
+        return persisted;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────

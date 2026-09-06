@@ -41,7 +41,6 @@ public class WelcomePanel extends JPanel {
     private Runnable onCloneRepo;
     private Runnable onInitRepo;
     private Runnable onInitWorkspace;
-    private Runnable onEditWorkspace;
 
 
     private final JPopupMenu repoContextMenu;
@@ -55,7 +54,7 @@ public class WelcomePanel extends JPanel {
 
         repoContextMenu = new JPopupMenu();
         repoOpenMenuItem = new JMenuItem("Open");
-        wsEditMenuItem = new JMenuItem("Edit...");;
+        wsEditMenuItem = new JMenuItem("Edit...");
         repoRemoveMenuItem = new JMenuItem("Remove from list");
         repoContextMenu.add(repoOpenMenuItem);
         repoContextMenu.add(wsEditMenuItem);
@@ -226,12 +225,10 @@ public class WelcomePanel extends JPanel {
         return btn;
     }
 
-    /** Routes a single click / "Open" on a list element to the type-specific handler. */
+    /** Routes "Edit..." on a workspace to the edit handler. */
     private void editItem(Object item) {
-        if (item instanceof Workspace ws) {
-            if (onEditWorkspace != null) {
-                onWorkspaceEdit.accept(ws);
-            }
+        if (item instanceof Workspace ws && onWorkspaceEdit != null) {
+            onWorkspaceEdit.accept(ws);
         }
     }
 
@@ -283,10 +280,6 @@ public class WelcomePanel extends JPanel {
 
     public void setOnInitRepo(Runnable handler) {
         this.onInitRepo = handler;
-    }
-
-    public void setOnEditWorkspace(Runnable handler) {
-        this.onEditWorkspace = handler;
     }
 
     public void setOnInitWorkspace(Runnable handler) {
