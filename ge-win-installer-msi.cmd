@@ -5,8 +5,8 @@ jpackage ^
  --name Gitember ^
  --win-menu-group Gitember ^
  --install-dir gitember  ^
- --main-jar gitember-3.4.1-SNAPSHOT-boot.jar ^
- --app-version 3.4.1 ^
+ --main-jar gitember-3.4.2-SNAPSHOT-boot.jar ^
+ --app-version 3.4.2 ^
  --vendor "Igor Azarny" ^
  --icon src\main\resources\icon\gitember.ico ^
  --win-menu ^

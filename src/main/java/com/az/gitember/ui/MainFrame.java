@@ -130,6 +130,8 @@ public class MainFrame extends JFrame {
                 refreshProjectLists();
             }
         });
+
+        welcomePanel.setOnWorkspaceEdit(this::showEditWorkspaceDialog);
         welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
         welcomePanel.setOnWorkspaceRemoved(workspace -> {
             Settings settings = Context.getSettings();
@@ -467,15 +469,17 @@ public class MainFrame extends JFrame {
     }
 
     private void showWorkspaceDialog() {
-        WorkspaceDialog workspaceDialog =  new
-                WorkspaceDialog(this,
-                new OpenRecentWorkspaceHanlder(this));
-
-        workspaceDialog.nameField.setText(
-                Context.getSettings().createNewWorkspaceName());
-
+        WorkspaceDialog workspaceDialog = new WorkspaceDialog(
+                this, new OpenRecentWorkspaceHanlder(this));
         workspaceDialog.setVisible(true);
+    }
 
+    private void showEditWorkspaceDialog(Workspace workspace) {
+        if (workspace != null) {
+            WorkspaceDialog workspaceDialog = new WorkspaceDialog(
+                    this, workspace, saved -> refreshProjectLists());
+            workspaceDialog.setVisible(true);
+        }
     }
 
 
