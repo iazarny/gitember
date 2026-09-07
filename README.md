@@ -21,14 +21,14 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.4.1 Sep 2026
+## Downloads — Version 3.4.2 Sep 2026
 
-| Platform         | Link                                                                                                                                                                                                             |
-|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Windows (x64)    | MSI [Gitember-3.4.1.msi](https://gitember.org/Gitember-3.4.1.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.4.zip](https://gitember.org/Gitember-3.4.1.zip) |
-| macOS (M1)       | [Gitember-3.4.dmg](https://gitember.org/Gitember-3.4.1.dmg)                                                                                                                                                      | 
-| Linux  (x64)     | [Gitember-3.4.deb](https://gitember.org/Gitember-3.4.1.deb)                                                                                                                                                      | 
-| Fat jar. java 21 | [Gitember-3.4.jar](https://gitember.org/Gitember-3.4.1.jar)                                                                                                                                                      | 
+| Platform         | Link                                                                                                                                                                                                               |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Windows (x64)    | MSI [Gitember-3.4.2.msi](https://gitember.org/Gitember-3.4.2.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.4.2.zip](https://gitember.org/Gitember-3.4.2.zip) |
+| macOS (M1)       | [Gitember-3.4.2.dmg](https://gitember.org/Gitember-3.4.2.dmg)                                                                                                                                                      | 
+| Linux  (x64)     | [Gitember-3.4.2.deb](https://gitember.org/Gitember-3.4.2.deb)                                                                                                                                                      | 
+| Fat jar. java 21 | [Gitember-3.4.2.jar](https://gitember.org/Gitember-3.4.2.jar)                                                                                                                                                      | 
 
 
 More info and documentation: https://gitember.org
