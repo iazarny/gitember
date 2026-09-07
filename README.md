@@ -27,7 +27,7 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 |------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Windows (x64)    | MSI [Gitember-3.4.2.msi](https://gitember.org/Gitember-3.4.2.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.4.2.zip](https://gitember.org/Gitember-3.4.2.zip) |
 | macOS (M1)       | [Gitember-3.4.2.dmg](https://gitember.org/Gitember-3.4.2.dmg)                                                                                                                                                      | 
-| Linux  (x64)     | [Gitember-3.4.2.deb](https://gitember.org/Gitember-3.4.2.deb)                                                                                                                                                      | 
+| Linux  (x64)     | [Gitember-3.4.1.deb](https://gitember.org/Gitember-3.4.1.deb)                                                                                                                                                      | 
 | Fat jar. java 21 | [Gitember-3.4.2.jar](https://gitember.org/Gitember-3.4.2.jar)                                                                                                                                                      | 
 
 
