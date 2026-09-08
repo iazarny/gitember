@@ -81,10 +81,12 @@ public class HistoryPanel extends JPanel {
         commitTable.setIntercellSpacing(new Dimension(0, 0));
 
         // Column widths: Graph+Message | Date | Author
-        commitTable.getColumnModel().getColumn(0).setPreferredWidth(600);
+        commitTable.getColumnModel().getColumn(0).setPreferredWidth(800);
+        commitTable.getColumnModel().getColumn(0).setMinWidth(800);
         commitTable.getColumnModel().getColumn(0).setCellRenderer(new GraphCellRenderer());
-        commitTable.getColumnModel().getColumn(1).setPreferredWidth(140);
-        commitTable.getColumnModel().getColumn(1).setMaxWidth(160);
+        commitTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        commitTable.getColumnModel().getColumn(1).setMinWidth(180);
+        commitTable.getColumnModel().getColumn(1).setMaxWidth(200);
         commitTable.getColumnModel().getColumn(2).setPreferredWidth(170);
         commitTable.getColumnModel().getColumn(2).setMaxWidth(220);
         commitTable.getColumnModel().getColumn(2).setCellRenderer(new AuthorSignatureCellRenderer());
