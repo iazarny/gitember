@@ -12,17 +12,15 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class OpenRecentProjectHandler implements Consumer<Project>  {
+public class ReopenRepoHandler implements Consumer<Project>  {
 
-    private static final Logger log = Logger.getLogger(OpenRecentProjectHandler.class.getName());
+    private static final Logger log = Logger.getLogger(ReopenRepoHandler.class.getName());
 
     private final MainFrame mainFrame;
 
-    public OpenRecentProjectHandler(MainFrame mainFrame) {
+    public ReopenRepoHandler(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
     }
-
-
 
 
     @Override

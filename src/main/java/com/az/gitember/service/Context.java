@@ -242,7 +242,7 @@ public class Context {
             old.stopWatcher();
         }
         setActiveProject(project);               // assign before firing
-        fire(project, PROP_REPOSITORY_PATH, oldPath, project.getGitDir());
+        fire(project, PROP_REPOSITORY_PATH, null, project.getGitDir());
         project.initAfterOpen();
     }
 

@@ -121,7 +121,7 @@ public class MainFrame extends JFrame {
 
         // Welcome panel
         welcomePanel = new WelcomePanel();
-        welcomePanel.setOnProjectSelected(new OpenRecentProjectHandler(this));
+        welcomePanel.setOnProjectSelected(new ReopenRepoHandler(this));
         welcomePanel.setOnProjectRemoved(project -> {
             Settings settings = Context.getSettings();
             if (settings != null) {
@@ -349,9 +349,9 @@ public class MainFrame extends JFrame {
 
 
         // Recent project handlers
-        menuBar.setRecentProjectHandler(new OpenRecentProjectHandler(this));
+        menuBar.setRecentProjectHandler(new ReopenRepoHandler(this));
         menuBar.setRecentWorkspaceHandler(new OpenRecentWorkspaceHanlder(this));
-        toolBar.setProjectSelectionHandler(new OpenRecentProjectHandler(this));
+        toolBar.setProjectSelectionHandler(new ReopenRepoHandler(this));
     }
 
     public void setActiveView(ActiveView view) {

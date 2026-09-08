@@ -35,9 +35,11 @@ public class PanelOnRepoChangedChangeListener implements PropertyChangeListener 
             if (panel.workspaceNode != null) {
                 panel.rebuild();
             }
+
             SwingUtilities.invokeLater(() -> {
                 panel.refreshTree();
                 panel.updateStateLabel();
+                panel.tree.clearSelection();          // <-- add: makes the next setSelectionPath a real change
                 panel.tree.setSelectionPath(new TreePath(new Object[]{panel.rootNode, panel.workingCopyNode}));
             });
             panel.refreshWorktrees();
