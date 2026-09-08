@@ -1085,14 +1085,15 @@ section {
 #faq .faq-list .question {
   display: block;
   position: relative;
-  font-family: #1dc8cd;
+  font-family: "Montserrat", sans-serif;
   font-size: 18px;
   line-height: 24px;
-  font-weight: 400;
+  font-weight: 500;
   padding-left: 25px;
   cursor: pointer;
   color: #179ca0;
   transition: 0.3s;
+  text-decoration: none;
 }
 
 #faq .faq-list i {
