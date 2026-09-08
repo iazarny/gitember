@@ -72,10 +72,6 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
     @Override
     protected void onSuccess(String result) {
         statusBar.setStatus("Renamed  branch to " + result + " is ok ");
-        if (parent instanceof MainFrame mf) {
-            mf.refreshWorkspaceProjectBranches(workspaceResults);
-            mf.refreshWorkspaceView();
-        }
     }
 
     /**
