@@ -546,6 +546,43 @@ class GitRepoServiceTest {
                 "Hard reset must remove files not present in target commit");
     }
 
+    @Test
+    void undoUnpushedCommit_head_keepsFileInWorkingCopyAndMovesHead() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        writeFile("undone.txt", "keep me\n");
+        service.addFileToCommitStage("undone.txt");
+        RevCommit undone = service.commit("add undone", "U", "u@u.com");
+
+        service.undoUnpushedCommit(undone);
+
+        assertEquals(parent.getId(), repository.resolve("HEAD"));
+        assertTrue(Files.exists(repoDir.resolve("undone.txt")),
+                "Mixed undo must leave the commit's files in the working copy");
+        assertTrue(service.hasWorkingCopyChanges());
+    }
+
+    @Test
+    void hasWorkingCopyChanges_falseOnCleanTree_trueAfterEdit() throws Exception {
+        makeInitialCommit();
+        assertFalse(service.hasWorkingCopyChanges());
+
+        writeFile("dirty.txt", "edit\n");
+
+        assertTrue(service.hasWorkingCopyChanges());
+    }
+
+    @Test
+    void isHeadCommit_trueOnlyForCurrentHead() throws Exception {
+        RevCommit first = makeInitialCommit();
+        writeFile("second.txt", "two\n");
+        service.addFileToCommitStage("second.txt");
+        RevCommit second = service.commit("second", "U", "u@u.com");
+
+        assertTrue(service.isHeadCommit(second.getName()));
+        assertFalse(service.isHeadCommit(first.getName()));
+        assertTrue(service.isCommitOnHeadBranch(first.getName()));
+    }
+
     // ── Revert ────────────────────────────────────────────────────────────────
 
     @Test

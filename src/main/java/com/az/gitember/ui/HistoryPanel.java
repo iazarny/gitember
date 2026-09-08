@@ -126,6 +126,7 @@ public class HistoryPanel extends JPanel {
         JMenuItem checkoutAsItem       = new JMenuItem("Checkout as…");
         JMenuItem createTagItem        = new JMenuItem("Create tag …");
         JMenuItem cherryPickItem       = new JMenuItem("Cherry-pick…");
+        JMenuItem undoItem             = new JMenuItem("Undo commit…");
         JMenuItem revertItem           = new JMenuItem("Revert commit…");
         JMenuItem resetItem            = new JMenuItem("Reset to commit…");
         JMenuItem changeMessageItem      = new JMenuItem("Change commit message…");
@@ -179,18 +180,23 @@ public class HistoryPanel extends JPanel {
             });
         });
 
+        undoItem.setToolTipText("Remove this unpushed commit from the current branch (local undo)");
+        undoItem.addActionListener(e -> undoSelectedCommit());
+
         revertItem.addActionListener(e -> {
             PlotCommit<PlotLane> commit = selectedCommit();
-            if (commit == null) return;
-            int ok = JOptionPane.showConfirmDialog(
-                    SwingUtilities.getWindowAncestor(this),
-                    "Revert commit " + commit.name().substring(0, 7) + "?",
-                    "Revert commit", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
-            runCommitAction("Revert", () -> {
-                Context.getGitRepoService().revertCommit((RevCommit) commit, null);
-                return "Reverted " + commit.name().substring(0, 7);
-            }, true);
+            if (commit != null) {
+                int ok = JOptionPane.showConfirmDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        "Revert commit " + commit.name().substring(0, 7) + "?",
+                        "Revert commit", JOptionPane.OK_CANCEL_OPTION);
+                if (ok != JOptionPane.OK_OPTION) return;
+                runCommitAction("Revert", () -> {
+                    Context.getGitRepoService().revertCommit((RevCommit) commit, null);
+                    return "Reverted " + commit.name().substring(0, 7);
+                }, true);
+            }
+
         });
 
         resetItem.addActionListener(e -> {
@@ -282,6 +288,7 @@ public class HistoryPanel extends JPanel {
         commitMenu.addSeparator();
         commitMenu.add(cherryPickItem);
         commitMenu.addSeparator();
+        commitMenu.add(undoItem);
         commitMenu.add(revertItem);
         commitMenu.add(resetItem);
         commitMenu.addSeparator();
@@ -305,6 +312,15 @@ public class HistoryPanel extends JPanel {
                 } catch (Exception ignored) {}
                 changeMessageItem.setEnabled(unpushed && commit.getParentCount() > 0);
                 interactiveRebaseItem.setEnabled(unpushed);
+                boolean canUndo = unpushed && commit.getParentCount() > 0;
+                try {
+                    canUndo = canUndo && Context.getGitRepoService().isCommitOnHeadBranch(commit.getName())
+                            && (Context.getGitRepoService().isHeadCommit(commit.getName())
+                            || commit.getParentCount() == 1);
+                } catch (Exception ignored) {
+                    canUndo = false;
+                }
+                undoItem.setEnabled(canUndo);
                 commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
         });
@@ -574,6 +590,45 @@ public class HistoryPanel extends JPanel {
     private PlotCommit<PlotLane> selectedCommit() {
         int row = commitTable.getSelectedRow();
         return row >= 0 ? tableModel.getCommitAt(row) : null;
+    }
+
+    private void undoSelectedCommit() {
+        PlotCommit<PlotLane> commit = selectedCommit();
+        if (commit != null) {
+            if (commit.getParentCount() == 0) {
+                JOptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        "Cannot undo the initial (root) commit.",
+                        "Undo commit", JOptionPane.WARNING_MESSAGE);
+            } else {
+                boolean dirty = Context.getGitRepoService().hasWorkingCopyChanges();
+                boolean proceed = true;
+                if (dirty) {
+                    int ok = JOptionPane.showConfirmDialog(
+                            SwingUtilities.getWindowAncestor(this),
+                            "You have some changes in progress and undoing commit might result in some changes being lost.\nDo you want to continue?",
+                            "Undo commit",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+                    proceed = ok == JOptionPane.YES_OPTION;
+                } else {
+                    int ok = JOptionPane.showConfirmDialog(
+                            SwingUtilities.getWindowAncestor(this),
+                            "Undo unpushed commit " + commit.name().substring(0, 7) + "?\n"
+                                    + "The commit is removed from this branch; its changes stay in the working copy.",
+                            "Undo commit",
+                            JOptionPane.OK_CANCEL_OPTION);
+                    proceed = ok == JOptionPane.OK_OPTION;
+                }
+                if (proceed) {
+                    runCommitAction("Undo commit", () -> {
+                        Context.getGitRepoService().undoUnpushedCommit(commit);
+                        Context.updateAll();
+                        return "Undid commit " + commit.name().substring(0, 7);
+                    }, true);
+                }
+            }
+        }
     }
 
     /** Runs a git action on a background thread, showing status bar progress. */

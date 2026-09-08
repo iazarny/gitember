@@ -1680,6 +1680,82 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /**
+     * {@code true} when the working copy or index has any change (staged, unstaged or untracked).
+     */
+    public boolean hasWorkingCopyChanges() {
+        return !getStatuses(null).isEmpty();
+    }
+
+    /**
+     * {@code true} when {@code sha} is HEAD of the current branch.
+     */
+    public boolean isHeadCommit(String sha) {
+        boolean head = false;
+        if (repository != null && sha != null) {
+            try {
+                ObjectId headId = repository.resolve(Constants.HEAD);
+                ObjectId commitId = repository.resolve(sha);
+                head = headId != null && commitId != null && headId.equals(commitId);
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot compare commit with HEAD", ex);
+            }
+        }
+        return head;
+    }
+
+    /**
+     * {@code true} when {@code sha} is reachable from HEAD (on the current branch, including HEAD).
+     */
+    public boolean isCommitOnHeadBranch(String sha) {
+        boolean onBranch = false;
+        if (repository != null && sha != null) {
+            try {
+                ObjectId headId = repository.resolve(Constants.HEAD);
+                ObjectId commitId = repository.resolve(sha);
+                if (headId != null && commitId != null) {
+                    try (RevWalk walk = new RevWalk(repository)) {
+                        onBranch = walk.isMergedInto(walk.parseCommit(commitId), walk.parseCommit(headId));
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine whether commit is on HEAD branch", ex);
+            }
+        }
+        return onBranch;
+    }
+
+    /**
+     * Local undo of an unpushed commit on the current branch. HEAD is reset mixed to its parent
+     * (changes stay in the working copy). An older unpushed commit is dropped with a rebase.
+     */
+    public void undoUnpushedCommit(RevCommit commit) throws Exception {
+        if (commit != null && commit.getParentCount() > 0) {
+            if (isHeadCommit(commit.getName())) {
+                resetBranch(commit.getParent(0), ResetCommand.ResetType.MIXED, null);
+            } else {
+                String parentSha = commit.getParent(0).getName();
+                List<RevCommit> range = getCommitsInRange(parentSha);
+                List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> steps = new ArrayList<>();
+                for (RevCommit c : range) {
+                    boolean drop = c.getName().equals(commit.getName());
+                    steps.add(new com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep(
+                            drop ? com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.DROP
+                                    : com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.PICK,
+                            c.getName(),
+                            c.getShortMessage()));
+                }
+                RebaseResult result = interactiveRebase(parentSha, steps);
+                if (result == null || !result.getStatus().isSuccessful()) {
+                    String status = result == null ? "unknown" : String.valueOf(result.getStatus());
+                    throw new IOException("Undo failed with rebase status: " + status);
+                }
+            }
+        } else {
+            throw new IOException("Cannot undo the initial commit");
+        }
+    }
+
+    /**
      * Reset branch to given commit.
      * @param revCommit
      * @throws IOException
