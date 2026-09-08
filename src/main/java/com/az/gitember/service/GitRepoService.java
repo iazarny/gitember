@@ -579,6 +579,19 @@ public class GitRepoService implements AutoCloseable {
         return rez;
     }
 
+    public Ref renameBranch(String oldName, String newName) throws IOException {
+        try (Git git = new Git(repository)) {
+            return git.branchRename()
+                    .setOldName(oldName)
+                    .setNewName(newName)
+                    .call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot rename branch " + oldName + "->" + newName, e);
+            throw new IOException("Cannot rename branch " + oldName + "->" + newName, e);
+        }
+
+    }
+
     /**
      * Create new branch.
      *

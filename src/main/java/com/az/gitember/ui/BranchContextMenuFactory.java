@@ -159,6 +159,14 @@ public class BranchContextMenuFactory {
 
         }
 
+        //Rename
+        if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
+            JMenuItem renameBranchItem = new JMenuItem("Rename branch \"" + name + "\"...");
+            renameBranchItem.addActionListener(e ->
+                    RenameBranchHandler.showAndExecute(parent, name));
+            menu.add(renameBranchItem);
+        }
+
 
         // Delete
         menu.addSeparator();
