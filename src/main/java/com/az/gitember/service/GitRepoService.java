@@ -778,7 +778,7 @@ public class GitRepoService implements AutoCloseable {
             try {
                 ResetCommand cmd = git.reset()
                         .setMode(ResetCommand.ResetType.HARD)
-                        .setRef(Constants.ORIG_HEAD);
+                        .setRef(Constants.HEAD);
                 if (monitor != null) {
                     cmd.setProgressMonitor(monitor);
                 }
