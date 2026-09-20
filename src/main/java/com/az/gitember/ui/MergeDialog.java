@@ -149,6 +149,7 @@ public class MergeDialog extends JDialog {
         // ── Buttons ─────────────────────────────────────────────────────────
         JButton okBtn     = new JButton("Merge");
         JButton cancelBtn = new JButton("Cancel");
+        JButton previewBtn = new JButton("Preview...");
         getRootPane().setDefaultButton(okBtn);
 
         okBtn.addActionListener(e -> {
@@ -165,8 +166,16 @@ public class MergeDialog extends JDialog {
             dispose();
         });
         cancelBtn.addActionListener(e -> dispose());
+        previewBtn.addActionListener(e -> {
+            ScmBranch branch = (ScmBranch) selectedSourceBranch.getSelectedItem();
+            BranchDiffWindow window = new BranchDiffWindow(this,  branch.getShortName(), workingBranchName);
+            window.setLocationRelativeTo(this);
+            window.setAlwaysOnTop(true);
+            window.setVisible(true);
+        });
 
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 12));
+        btnRow.add(previewBtn);
         btnRow.add(cancelBtn);
         btnRow.add(okBtn);
 

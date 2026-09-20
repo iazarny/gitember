@@ -201,17 +201,19 @@ public class BranchContextMenuFactory {
     }
 
     private void fillDiffSubmenu(JMenu diffMenu, List<ScmBranch> branches, String currentBranchFullName) {
-        if (branches == null) return;
-        for (ScmBranch br : branches) {
-            if (br.getFullName().equals(currentBranchFullName)) continue;
-            JMenuItem item = new JMenuItem(br.getFullName());
-            item.addActionListener(e -> {
-                statusBar.setStatus("Computing diff: " + currentBranchFullName + " ↔ " + br.getFullName() + "…");
-                BranchDiffWindow window = new BranchDiffWindow(parent, currentBranchFullName, br.getFullName());
-                window.setVisible(true);
-            });
-            diffMenu.add(item);
+        if (branches != null) {
+            for (ScmBranch br : branches) {
+                if (br.getFullName().equals(currentBranchFullName)) continue;
+                JMenuItem item = new JMenuItem(br.getFullName());
+                item.addActionListener(e -> {
+                    statusBar.setStatus("Computing diff: " + currentBranchFullName + " ↔ " + br.getFullName() + "…");
+                    BranchDiffWindow window = new BranchDiffWindow(parent, currentBranchFullName, br.getFullName());
+                    window.setVisible(true);
+                });
+                diffMenu.add(item);
+            }
         }
+
     }
 
     /**
