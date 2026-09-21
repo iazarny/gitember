@@ -70,6 +70,9 @@ public class InteractiveContinueAbortDialog extends JDialog {
         this.onComplete = onComplete;
 
         setAlwaysOnTop(true);
+        // Do not steal keyboard focus when shown or raised — otherwise a working-copy
+        // context menu is cancelled the instant this dialog is brought to front.
+        setAutoRequestFocus(false);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // prevent accidental dismiss
         setResizable(false);
         setIconImages(Util.appIcons());
@@ -148,27 +151,86 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
         // On macOS + FlatLaf window decorations, setAlwaysOnTop() alone is not
         // enough — clicking the main window can bury this dialog behind it.
-        // Re-assert our position whenever the owner regains focus.
+        // Re-assert z-order when the owner is focused, but never while a popup
+        // menu is open (toFront would dismiss the menu immediately).
+        // Drop always-on-top *before* the popup is shown: Toolkit AWT listeners
+        // run before component mouse listeners, so JPopupMenu's mouse-grab is
+        // not immediately ungrabbed by this window (menu would flash and close).
+        MenuSelectionManager menuManager = MenuSelectionManager.defaultManager();
+        javax.swing.event.ChangeListener popupGuard = e -> syncAlwaysOnTopWithMenus();
+        menuManager.addChangeListener(popupGuard);
+
+        java.awt.event.AWTEventListener popupTriggerGuard = event -> {
+            if (event instanceof java.awt.event.MouseEvent me
+                    && me.isPopupTrigger()
+                    && isDisplayable()
+                    && isVisible()) {
+                setAlwaysOnTop(false);
+                SwingUtilities.invokeLater(() -> restoreAlwaysOnTopIfIdle());
+            }
+        };
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                popupTriggerGuard, AWTEvent.MOUSE_EVENT_MASK);
+
+        java.awt.event.WindowFocusListener bringToFront = null;
         if (owner != null) {
-            java.awt.event.WindowFocusListener bringToFront =
-                    new java.awt.event.WindowFocusListener() {
+            bringToFront = new java.awt.event.WindowFocusListener() {
                 @Override
                 public void windowGainedFocus(java.awt.event.WindowEvent e) {
-                    if (isDisplayable() && isVisible()) {
-                        toFront();
-                    }
+                    SwingUtilities.invokeLater(() -> raiseIfSafe());
                 }
                 @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
             };
             owner.addWindowFocusListener(bringToFront);
-            // Remove the listener when this dialog is gone so we don't leak it
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosed(java.awt.event.WindowEvent e) {
-                    owner.removeWindowFocusListener(bringToFront);
-                }
-            });
         }
+        final java.awt.event.WindowFocusListener ownerFocusListener = bringToFront;
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                menuManager.removeChangeListener(popupGuard);
+                Toolkit.getDefaultToolkit().removeAWTEventListener(popupTriggerGuard);
+                if (owner != null && ownerFocusListener != null) {
+                    owner.removeWindowFocusListener(ownerFocusListener);
+                }
+            }
+        });
+    }
+
+    /**
+     * Raises this palette without cancelling an open Swing popup menu.
+     * {@link #toFront()} is deferred to after the current mouse event so a
+     * right-click can finish showing the menu first.
+     */
+    private void raiseIfSafe() {
+        if (isDisplayable() && isVisible() && !isPopupMenuShowing()) {
+            toFront();
+        }
+    }
+
+    /**
+     * An always-on-top window races AWT mouse-grab used by {@link JPopupMenu}
+     * (the grab ungrabs immediately → the menu flashes and closes). Drop
+     * always-on-top for the duration of any Swing menu selection.
+     */
+    private void syncAlwaysOnTopWithMenus() {
+        if (isDisplayable() && isVisible()) {
+            setAlwaysOnTop(!isPopupMenuShowing());
+        }
+    }
+
+    private void restoreAlwaysOnTopIfIdle() {
+        if (isDisplayable() && isVisible() && !isPopupMenuShowing()) {
+            setAlwaysOnTop(true);
+        }
+    }
+
+    private static boolean isPopupMenuShowing() {
+        boolean showing = false;
+        MenuElement[] path = MenuSelectionManager.defaultManager().getSelectedPath();
+        if (path != null && path.length > 0) {
+            showing = true;
+        }
+        return showing;
     }
 
     // ── Private operations ────────────────────────────────────────────────────

@@ -83,6 +83,9 @@ public class WorkingCopyContextMenu {
             else {
                 buildMultiItemMenu(menu, items);
             }
+            // Heavyweight window so the menu is not cancelled / buried by an
+            // always-on-top non-modal dialog (e.g. InteractiveContinueAbortDialog).
+            menu.setLightWeightPopupEnabled(false);
             menu.show(invoker, x, y);
         }
     }
