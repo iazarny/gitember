@@ -1,6 +1,8 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 import org.eclipse.jgit.api.RebaseResult;
 
@@ -35,6 +37,9 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
         JOptionPane.showMessageDialog(parent,
                 "Rebase result: " + status,
                 "Rebase", JOptionPane.INFORMATION_MESSAGE);
+        InteractiveContinueAbortDialog.showIfRebaseInProgress(
+                MainFrame.getInstance(), MainFrame.getInstance().getStatusBar(),
+                () -> MainFrame.getInstance().getHistoryPanel().loadHistory(null, true));
     }
 
     /**
