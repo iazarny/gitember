@@ -36,7 +36,7 @@ public class MergeConflictOptionsDialog extends JDialog {
         super(SwingUtilities.getWindowAncestor(parent), "Merge Conflicts",
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        setSize(640, 480);
+        setSize(720, 480);
         setLocationRelativeTo(parent);
 
         JPanel headerPanel = new JPanel(new BorderLayout(0, 4));
