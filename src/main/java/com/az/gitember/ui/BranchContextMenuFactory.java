@@ -13,6 +13,7 @@ import com.az.gitember.ui.maintree.MainTreePanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -161,9 +162,16 @@ public class BranchContextMenuFactory {
 
         //Rename
         if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
-            JMenuItem renameBranchItem = new JMenuItem("Rename branch \"" + name + "\"...");
+            JMenuItem renameBranchItem = new JMenuItem(MessageFormat.format("Rename branch {0}...", name));
             renameBranchItem.addActionListener(e ->
-                    RenameBranchHandler.showAndExecute(parent, name));
+                    RenameBranchHandler.showAndExecute(parent, name, false));
+            menu.add(renameBranchItem);
+        } else {
+            JMenuItem renameBranchItem = new JMenuItem(
+                    MessageFormat.format("Rename remote branch {0}({1})...", name, sourceScmBranch.getFullName() )
+            );
+            renameBranchItem.addActionListener(e ->
+                    RenameBranchHandler.showAndExecute(parent, sourceScmBranch.getFullName(), true));
             menu.add(renameBranchItem);
         }
 

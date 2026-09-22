@@ -579,6 +579,20 @@ public class GitRepoService implements AutoCloseable {
         return rez;
     }
 
+    /**
+     * Rename remote branch
+     * @param oldName something like refs/remotes/origin/oldName
+     * @param newName something like refs/remotes/origin/newName
+     * @return
+     * @throws IOException
+     */
+    public Ref renameRemoteBranch(String oldName, String newName) throws IOException {
+        try (Git git = new Git(repository)) {
+
+        }
+        return null ;
+    }
+
     public Ref renameBranch(String oldName, String newName) throws IOException {
         try (Git git = new Git(repository)) {
             return git.branchRename()

@@ -12,6 +12,7 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -26,6 +27,7 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
      */
     private final String oldBranchName;
     private final String newBranchName;
+    private final boolean remote;
 
     /**
      * Non-null only when the branch was created across a workspace (aggregated per-project results).
@@ -33,8 +35,9 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
     private List<ProjectOperationResult<Void>> workspaceResults;
 
     public RenameBranchHandler(Component parent,
-                               String oldBranchName, String newBranchName) {
+                               String oldBranchName, String newBranchName, boolean remote) {
         super(parent);
+        this.remote = remote;
         this.oldBranchName = oldBranchName;
         this.newBranchName = newBranchName;
     }
@@ -47,9 +50,11 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
     @Override
     protected String doInBackground() throws Exception {
         GitRepoService svc = Context.getGitRepoService();
-
-        svc.renameBranch(oldBranchName, newBranchName);
-
+        if (remote) {
+            svc.renameRemoteBranch(oldBranchName, newBranchName);
+        } else {
+            svc.renameBranch(oldBranchName, newBranchName);
+        }
         Context.updateBranches();
         Context.updateWorkingBranch();
         return newBranchName;
@@ -78,17 +83,24 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
      * Prompts user for branch name and executes if confirmed. Used from the branch/tag tree
      * context menu, where {@code baseBranchFullName} is the right-clicked branch.
      */
-    public static void showAndExecute(Component parent, String oldName) {
+    public static void showAndExecute(Component parent, String oldName, boolean remote) {
 
         String name = (String) JOptionPane.showInputDialog(
                 parent,
                 "New branch name:",
-                "Rename Branch",
+                MessageFormat.format("Rename {0} ", oldName),
                 JOptionPane.PLAIN_MESSAGE
         );
 
         if (StringUtils.isNotBlank(name)) {
-            new RenameBranchHandler(parent, oldName, name.trim()).execute();
+
+            String fullName = name;
+            if (remote) {
+                String parentPath = StringUtils.substringBeforeLast(oldName, "/");
+                fullName = parentPath + "/" + name;
+            }
+
+            new RenameBranchHandler(parent, oldName, fullName.trim(), remote).execute();
         }
     }
 
