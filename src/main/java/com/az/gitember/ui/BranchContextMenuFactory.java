@@ -168,7 +168,7 @@ public class BranchContextMenuFactory {
             menu.add(renameBranchItem);
         } else {
             JMenuItem renameBranchItem = new JMenuItem(
-                    MessageFormat.format("Rename remote branch {0}({1})...", name, sourceScmBranch.getFullName() )
+                    MessageFormat.format("Rename remote branch {0}...",  sourceScmBranch.getFullName() )
             );
             renameBranchItem.addActionListener(e ->
                     RenameBranchHandler.showAndExecute(parent, sourceScmBranch.getFullName(), true));

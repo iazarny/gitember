@@ -10,6 +10,8 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -234,6 +236,56 @@ class GitRepoServiceTest {
 
         assertNull(repository.exactRef("refs/heads/to-delete"),
                 "Deleted branch ref must not exist");
+    }
+
+    @Test
+    void renameRemoteBranch_pushesNewNameAndDeletesOldRemoteBranch() throws Exception {
+        makeInitialCommit();
+        service.createBranch("master", "old-remote-branch");
+
+        Path remoteDir = Files.createTempDirectory("gitember-bare-");
+        Repository remoteRepo = Git.init()
+                .setBare(true)
+                .setDirectory(remoteDir.toFile())
+                .call()
+                .getRepository();
+        try {
+            try (Git git = new Git(repository)) {
+                git.remoteAdd()
+                        .setName(Constants.DEFAULT_REMOTE_NAME)
+                        .setUri(new URIish(remoteDir.toUri().toString()))
+                        .call();
+                git.push()
+                        .setRemote(Constants.DEFAULT_REMOTE_NAME)
+                        .setRefSpecs(new RefSpec(
+                                "refs/heads/old-remote-branch:refs/heads/old-remote-branch"))
+                        .call();
+                git.fetch()
+                        .setRemote(Constants.DEFAULT_REMOTE_NAME)
+                        .call();
+            }
+
+            String oldName = "refs/remotes/origin/old-remote-branch";
+            String newName = "refs/remotes/origin/renamed-remote-branch";
+            assertNotNull(repository.exactRef(oldName),
+                    "Remote-tracking ref for the old name must exist before rename");
+
+            Ref renamed = service.renameRemoteBranch(oldName, newName);
+
+            assertNotNull(renamed, "Rename must return the new remote-tracking ref");
+            assertEquals(newName, renamed.getName());
+            assertNotNull(repository.exactRef(newName),
+                    "Local remote-tracking ref must use the new name");
+            assertNull(repository.exactRef(oldName),
+                    "Local remote-tracking ref for the old name must be pruned");
+            assertNotNull(remoteRepo.exactRef("refs/heads/renamed-remote-branch"),
+                    "Remote must have the branch under the new name");
+            assertNull(remoteRepo.exactRef("refs/heads/old-remote-branch"),
+                    "Remote must no longer have the old branch name");
+        } finally {
+            remoteRepo.close();
+            deleteDirectory(remoteDir);
+        }
     }
 
     // ── Merge ─────────────────────────────────────────────────────────────────

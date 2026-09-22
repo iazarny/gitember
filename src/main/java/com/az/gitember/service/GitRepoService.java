@@ -580,17 +580,39 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /**
-     * Rename remote branch
-     * @param oldName something like refs/remotes/origin/oldName
-     * @param newName something like refs/remotes/origin/newName
-     * @return
-     * @throws IOException
+     * Rename a remote branch by pushing the existing remote-tracking ref under the
+     * new heads name, then deleting the old remote branch.
+     *
+     * @param oldName remote-tracking ref, e.g. {@code refs/remotes/origin/oldName}
+     * @param newName remote-tracking ref, e.g. {@code refs/remotes/origin/newName}
+     * @return the updated remote-tracking ref at {@code newName}
+     * @throws IOException in case of error
      */
     public Ref renameRemoteBranch(String oldName, String newName) throws IOException {
-        try (Git git = new Git(repository)) {
+        Ref renamed = null;
+        try {
+            RemoteRepoParameters params = RemoteRepoParameters.forProject(
+                    Context.getCurrentProject().orElse(null), this);
+            String oldHeads = remoteTrackingToHeads(oldName);
+            String newHeads = remoteTrackingToHeads(newName);
 
+            remoteRepositoryPush(params, new RefSpec(oldName + ":" + newHeads), null);
+            remoteRepositoryPush(params,
+                    new RefSpec().setSource(null).setDestination(oldHeads), null);
+
+            renamed = repository.exactRef(newName);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot rename remote branch " + oldName + "->" + newName, e);
+            throw new IOException("Cannot rename remote branch " + oldName + "->" + newName, e);
         }
-        return null ;
+        return renamed;
+    }
+
+    /**
+     * Maps {@code refs/remotes/&lt;remote&gt;/branch} to {@code refs/heads/branch}.
+     */
+    private static String remoteTrackingToHeads(String remoteTrackingRef) {
+        return remoteTrackingRef.replaceFirst("^refs/remotes/[^/]+/", Constants.R_HEADS);
     }
 
     public Ref renameBranch(String oldName, String newName) throws IOException {
