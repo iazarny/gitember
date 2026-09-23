@@ -44,7 +44,10 @@ public class MainMenuBar extends JMenuBar {
 
     // Submodules submenu (inside Repository menu)
     private final JMenu     submodulesMenu;
+    private final JMenuItem addSubmoduleItem;
+    private final JMenuItem initSubmodulesItem;
     private final JMenuItem updateSubmodulesItem;
+    private final JMenuItem recursiveUpdateSubmodulesItem;
     private final JMenuItem syncSubmodulesItem;
 
     // Repository maintenance
@@ -207,13 +210,25 @@ public class MainMenuBar extends JMenuBar {
         submodulesMenu = new JMenu("Submodules");
         submodulesMenu.setMnemonic(KeyEvent.VK_U);
 
+        addSubmoduleItem = new JMenuItem("Add Submodule…", KeyEvent.VK_A);
+        addSubmoduleItem.setToolTipText("Clone a repository and register it as a submodule");
+
+        initSubmodulesItem = new JMenuItem("Initialize Submodules", KeyEvent.VK_I);
+        initSubmodulesItem.setToolTipText("Register submodule URLs from .gitmodules (git submodule init)");
+
         updateSubmodulesItem = new JMenuItem("Update Submodules", KeyEvent.VK_U);
         updateSubmodulesItem.setToolTipText("Run git submodule init + update for all submodules");
+
+        recursiveUpdateSubmodulesItem = new JMenuItem("Recursive Update", KeyEvent.VK_R);
+        recursiveUpdateSubmodulesItem.setToolTipText("Update this repository and nested submodules");
 
         syncSubmodulesItem = new JMenuItem("Sync Submodule URLs", KeyEvent.VK_Y);
         syncSubmodulesItem.setToolTipText("Update recorded remote URLs from .gitmodules");
 
+        submodulesMenu.add(addSubmoduleItem);
+        submodulesMenu.add(initSubmodulesItem);
         submodulesMenu.add(updateSubmodulesItem);
+        submodulesMenu.add(recursiveUpdateSubmodulesItem);
         submodulesMenu.add(syncSubmodulesItem);
 
         compressDatabaseItem = new JMenuItem("Compress Database", KeyEvent.VK_Z);
@@ -488,7 +503,12 @@ public class MainMenuBar extends JMenuBar {
     public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
     public void addCompressDatabaseListener(ActionListener l)    { compressDatabaseItem.addActionListener(l); }
+    public void addAddSubmoduleListener(ActionListener l)       { addSubmoduleItem.addActionListener(l); }
+    public void addInitSubmodulesListener(ActionListener l)     { initSubmodulesItem.addActionListener(l); }
     public void addUpdateSubmodulesListener(ActionListener l)   { updateSubmodulesItem.addActionListener(l); }
+    public void addRecursiveUpdateSubmodulesListener(ActionListener l) {
+        recursiveUpdateSubmodulesItem.addActionListener(l);
+    }
     public void addSyncSubmodulesListener(ActionListener l)     { syncSubmodulesItem.addActionListener(l); }
     public void addInteractiveRebaseListener(ActionListener l)   { interactiveRebaseItem.addActionListener(l); }
     public void addHelpContentsListener(ActionListener l)       { helpContentsItem.addActionListener(l); }

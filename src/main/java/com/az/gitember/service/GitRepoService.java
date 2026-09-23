@@ -38,7 +38,9 @@ import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
@@ -4034,15 +4036,201 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /**
+     * Native {@code git submodule status} map keyed by submodule path.
+     */
+    public Map<String, SubmoduleStatus> getSubmoduleStatus() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.submoduleStatus().call();
+        }
+    }
+
+    /**
+     * Registers submodule URLs from {@code .gitmodules} into {@code .git/config}
+     * ({@code git submodule init}).
+     */
+    public Collection<String> initSubmodules() throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.submoduleInit().call();
+        }
+    }
+
+    /**
+     * Initializes a single submodule path ({@code git submodule init -- <path>}).
+     */
+    public Collection<String> initSubmodule(String path) throws Exception {
+        try (Git git = new Git(repository)) {
+            return git.submoduleInit().addPath(path).call();
+        }
+    }
+
+    /**
      * Runs {@code git submodule init} followed by {@code git submodule update} for all submodules.
      */
     public void updateSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        updateSubmodules(progressMonitor, false);
+    }
+
+    /**
+     * Initializes and updates all submodules. When {@code recursive} is true, each
+     * checked-out submodule is updated the same way (nested {@code .gitmodules}).
+     */
+    public void updateSubmodules(ProgressMonitor progressMonitor, boolean recursive) throws Exception {
         try (Git git = new Git(repository)) {
             git.submoduleInit().call();
             git.submoduleUpdate()
                     .setProgressMonitor(progressMonitor)
                     .call();
         }
+        if (recursive) {
+            updateNestedSubmodules(progressMonitor);
+        }
+    }
+
+    /**
+     * Initializes and updates one submodule path ({@code git submodule update --init -- <path>}).
+     */
+    public void updateSubmodule(String path, ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.submoduleInit().addPath(path).call();
+            git.submoduleUpdate()
+                    .addPath(path)
+                    .setProgressMonitor(progressMonitor)
+                    .call();
+        }
+    }
+
+    /**
+     * Clones {@code uri} into {@code path} and registers it in {@code .gitmodules}
+     * and the index ({@code git submodule add <uri> <path>}).
+     */
+    public void addSubmodule(String uri, String path, ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            Repository subRepo = git.submoduleAdd()
+                    .setURI(uri)
+                    .setPath(path)
+                    .setProgressMonitor(progressMonitor)
+                    .call();
+            if (subRepo != null) {
+                subRepo.close();
+            }
+        }
+    }
+
+    /**
+     * De-registers a submodule, removes it from the index and working tree, and
+     * deletes {@code .git/modules/<path>} ({@code git submodule deinit} + {@code git rm}).
+     *
+     * @param force when true, discard local modifications inside the submodule
+     */
+    public void removeSubmodule(String path, boolean force) throws Exception {
+        try (Git git = new Git(repository)) {
+            String moduleName = path;
+            try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+                while (walk.next()) {
+                    if (path.equals(walk.getPath()) && walk.getModuleName() != null) {
+                        moduleName = walk.getModuleName();
+                    }
+                }
+            }
+
+            git.submoduleDeinit()
+                    .addPath(path)
+                    .setForce(force)
+                    .call();
+            git.rm().addFilepattern(path).call();
+
+            File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
+            if (modulesFile.isFile()) {
+                FileBasedConfig modulesConfig = new FileBasedConfig(modulesFile, repository.getFS());
+                modulesConfig.load();
+                modulesConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, moduleName);
+                modulesConfig.save();
+                Set<String> remaining = modulesConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+                if (remaining == null || remaining.isEmpty()) {
+                    git.rm().addFilepattern(Constants.DOT_GIT_MODULES).call();
+                } else {
+                    git.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+                }
+            }
+
+            File moduleGitDir = new File(
+                    new File(repository.getCommonDirectory(), Constants.MODULES), path);
+            deletePathRecursively(moduleGitDir.toPath());
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot remove submodule " + path, e);
+            throw new IOException("Cannot remove submodule " + path, e);
+        }
+    }
+
+    /**
+     * Stages the gitlink (and {@code .gitmodules} if present) and commits only those
+     * paths — used after a submodule pointer change or {@code submodule add}.
+     */
+    public RevCommit commitSubmoduleChange(String path, String message,
+                                           String name, String email) throws Exception {
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(path).call();
+            File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
+            if (modulesFile.isFile()) {
+                git.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+            }
+            CommitCommand cmd = git.commit()
+                    .setMessage(message)
+                    .setOnly(path);
+            if (modulesFile.isFile()) {
+                cmd.setOnly(Constants.DOT_GIT_MODULES);
+            }
+            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(email)) {
+                cmd.setAuthor(name, email);
+                cmd.setCommitter(name, email);
+            }
+            return cmd.call();
+        }
+    }
+
+    /**
+     * Git-style gitlink diff for one submodule (index SHA vs the submodule HEAD).
+     */
+    public String getSubmoduleDiff(String path) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                if (path.equals(walk.getPath())) {
+                    ObjectId indexId = walk.getObjectId();
+                    ObjectId headId = null;
+                    Repository subRepo = walk.getRepository();
+                    if (subRepo != null) {
+                        try {
+                            headId = subRepo.resolve(Constants.HEAD);
+                        } finally {
+                            subRepo.close();
+                        }
+                    }
+                    if (headId == null) {
+                        sb.append("Submodule ").append(path).append(" is uninitialized\n");
+                    } else if (indexId != null && indexId.equals(headId)) {
+                        sb.append("Submodule ").append(path).append(" is up to date at ")
+                                .append(indexId.getName()).append('\n');
+                    } else {
+                        String oldSha = indexId != null ? indexId.getName() : "0000000";
+                        String newSha = headId.getName();
+                        sb.append("diff --git a/").append(path).append(" b/").append(path).append('\n');
+                        sb.append("index ").append(oldSha, 0, Math.min(7, oldSha.length()))
+                                .append("..").append(newSha, 0, Math.min(7, newSha.length()))
+                                .append(" 160000\n");
+                        sb.append("--- a/").append(path).append('\n');
+                        sb.append("+++ b/").append(path).append('\n');
+                        sb.append("@@ -1 +1 @@\n");
+                        sb.append("-Subproject commit ").append(oldSha).append('\n');
+                        sb.append("+Subproject commit ").append(newSha).append('\n');
+                    }
+                }
+            }
+        }
+        if (sb.length() == 0) {
+            sb.append("No submodule at ").append(path).append('\n');
+        }
+        return sb.toString();
     }
 
     /**
@@ -4051,6 +4239,35 @@ public class GitRepoService implements AutoCloseable {
     public void syncSubmodules() throws Exception {
         try (Git git = new Git(repository)) {
             git.submoduleSync().call();
+        }
+    }
+
+    private void updateNestedSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                Repository subRepo = walk.getRepository();
+                if (subRepo != null) {
+                    try {
+                        new GitRepoService(subRepo).updateSubmodules(progressMonitor, true);
+                    } finally {
+                        subRepo.close();
+                    }
+                }
+            }
+        }
+    }
+
+    private static void deletePathRecursively(Path dir) throws IOException {
+        if (dir != null && Files.exists(dir)) {
+            try (var stream = Files.walk(dir)) {
+                stream.sorted(Comparator.reverseOrder())
+                        .forEach(p -> {
+                            try {
+                                Files.deleteIfExists(p);
+                            } catch (IOException ignored) {
+                            }
+                        });
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package com.az.gitember.ui;
 
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.Submodule;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.dialog.WorktreeCreateDialog;
 import com.az.gitember.dialog.WorktreesDialog;
@@ -424,6 +425,32 @@ public class BranchContextMenuFactory {
         createTagItem.addActionListener(e ->
                 CreateTagHandler.showAndExecute(parent, statusBar));
         menu.add(createTagItem);
+
+        return menu;
+    }
+
+    public JPopupMenu createSubmoduleContextMenu(Submodule submodule) {
+        return SubmodulePanel.createSubmoduleMenu(parent, submodule);
+    }
+
+    public JPopupMenu createSubmodulesCategoryMenu() {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem addItem = new JMenuItem("Add submodule…");
+        addItem.addActionListener(e -> AddSubmoduleHandler.showAndExecute(parent));
+        menu.add(addItem);
+
+        JMenuItem initItem = new JMenuItem("Initialize submodules");
+        initItem.addActionListener(e -> new InitSubmodulesHandler(parent).execute());
+        menu.add(initItem);
+
+        JMenuItem updateItem = new JMenuItem("Update submodules");
+        updateItem.addActionListener(e -> new UpdateSubmodulesHandler(parent).execute());
+        menu.add(updateItem);
+
+        JMenuItem recursiveItem = new JMenuItem("Recursive update");
+        recursiveItem.addActionListener(e -> new UpdateSubmodulesHandler(parent, true).execute());
+        menu.add(recursiveItem);
 
         return menu;
     }

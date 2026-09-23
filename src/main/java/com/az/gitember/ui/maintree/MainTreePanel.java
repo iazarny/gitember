@@ -276,6 +276,13 @@ public class MainTreePanel extends JPanel {
                 }
                 yield null;
             }
+            case SUBMODULE -> {
+                if (data.data() instanceof Submodule sub) {
+                    yield contextMenuFactory.createSubmoduleContextMenu(sub);
+                }
+                yield null;
+            }
+            case SUBMODULES -> contextMenuFactory.createSubmodulesCategoryMenu();
             default -> null;
         };
     }
