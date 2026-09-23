@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.data.LfsException;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.dialog.CredentialsDialog;
@@ -47,14 +48,21 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected void onError(Exception e) {
-        if (!credentialsPrompted && isAuthError(e)) {
+        if (e instanceof LfsException lfs && lfs.getKind() == LfsException.Kind.NO_REMOTE) {
+            statusBar.clearProgress();
+            statusBar.setStatus(getOperationName() + " failed: no HTTP remote");
+            JOptionPane.showMessageDialog(parent, lfs.getMessage(),
+                    "Git LFS", JOptionPane.WARNING_MESSAGE);
+        } else if (!credentialsPrompted && isAuthError(e)) {
             credentialsPrompted = true;
             if (promptAndSaveCredentials()) {
                 execute(); // retry with the new credentials
-                return;
+            } else {
+                super.onError(e);
             }
+        } else {
+            super.onError(e);
         }
-        super.onError(e);
     }
 
     /** LFS-specific credential prompt explaining why HTTPS credentials are needed. */

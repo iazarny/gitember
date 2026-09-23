@@ -1849,19 +1849,27 @@ public class GitRepoService implements AutoCloseable {
     }
 
     boolean isLfsRepo(Repository repo) {
-
-        String gitAttrFile = repo.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER,Const.GIT_ATTR_NAME).replaceAll("/$", "");
-        if (Files.exists(Paths.get(gitAttrFile))) {
-            try {
-                String content = Files.readString(Paths.get(gitAttrFile));
-                if (content.indexOf("lfs") > 0)  {
-                    return true;
+        boolean lfs = false;
+        if (repo != null && repo.getDirectory() != null) {
+            Path attrPath = Paths.get(repo.getDirectory().getAbsolutePath()
+                    .replace(Const.GIT_FOLDER, Const.GIT_ATTR_NAME)
+                    .replaceAll("/$", ""));
+            if (Files.exists(attrPath)) {
+                try {
+                    String content = Files.readString(attrPath);
+                    if (content.toLowerCase(Locale.ROOT).contains("filter=lfs")
+                            || content.toLowerCase(Locale.ROOT).contains("lfs")) {
+                        lfs = true;
+                    }
+                } catch (IOException e) {
+                    log.log(Level.FINE, "Cannot read .gitattributes while detecting LFS", e);
                 }
-            } catch (IOException e) {
-                //System.out.println(e);
+            }
+            if (!lfs) {
+                lfs = Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
             }
         }
-        return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
+        return lfs;
     }
 
 
@@ -2286,6 +2294,11 @@ public class GitRepoService implements AutoCloseable {
             }
         }
 
+        if (repoCfg.getString("lfs", null, "url") == null && !tempLfsUrl) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    "Cannot download LFS files: no HTTP(S) remote is configured");
+        }
+
         // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
         CredentialsProvider prevCp = CredentialsProvider.getDefault();
         try {
@@ -2298,9 +2311,10 @@ public class GitRepoService implements AutoCloseable {
             }
             SmudgeFilter.downloadLfsResource(lfs, repository,
                     pointers.toArray(new LfsPointer[0]));
+        } catch (LfsException e) {
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IOException(e);
+            throw wrapLfsError("Download LFS files failed", e);
         } finally {
             CredentialsProvider.setDefault(prevCp);
             if (tempLfsUrl) {
@@ -2346,6 +2360,282 @@ public class GitRepoService implements AutoCloseable {
                 dc.unlock();
             }
         }
+    }
+
+    /**
+     * Uploads LFS objects for the current branch via the Git LFS Batch API.
+     */
+    public void uploadLfsObjects(RemoteRepoParameters params) throws IOException {
+        resolveLfsApiBase(params);
+        try {
+            uploadLfsObjectsDirect(params, null);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError("Upload LFS files failed", e);
+        }
+    }
+
+    /**
+     * Git-style summary of an LFS path: HEAD pointer versus the working-tree
+     * pointer (or downloaded content).
+     */
+    public String getLfsDiff(String path) throws IOException {
+        LfsPointer headPtr = readLfsPointerFromRevision(Constants.HEAD, path);
+        Path workPath = repository.getWorkTree().toPath().resolve(path);
+        LfsPointer workPtr = null;
+        boolean downloaded = false;
+        long workSize = -1;
+        if (Files.exists(workPath)) {
+            workSize = Files.size(workPath);
+            try (InputStream in = Files.newInputStream(workPath)) {
+                workPtr = LfsPointer.parseLfsPointer(in);
+            }
+            if (workPtr == null && workSize > LfsPointer.SIZE_THRESHOLD) {
+                downloaded = true;
+            }
+        }
+        return formatLfsDiff(path, headPtr, workPtr, downloaded, workSize);
+    }
+
+    /**
+     * Parses a Git LFS pointer file. Returns {@code null} when {@code text} is not a pointer.
+     */
+    public static LfsPointer parseLfsPointerText(String text) throws IOException {
+        LfsPointer pointer = null;
+        if (text != null) {
+            pointer = LfsPointer.parseLfsPointer(
+                    new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
+        }
+        return pointer;
+    }
+
+    static String formatLfsDiff(String path, LfsPointer headPtr, LfsPointer workPtr,
+                                boolean workDownloaded, long workSize) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("LFS: ").append(path).append('\n');
+        if (headPtr == null && workPtr == null && !workDownloaded) {
+            sb.append("  Not an LFS pointer on HEAD or in the working tree.\n");
+        } else {
+            sb.append("  HEAD     ").append(describeLfsSide(headPtr, false, -1)).append('\n');
+            sb.append("  Working  ").append(describeLfsSide(workPtr, workDownloaded, workSize)).append('\n');
+            if (headPtr != null && workPtr != null && headPtr.getOid().equals(workPtr.getOid())) {
+                sb.append("  Pointers match (").append(headPtr.getOid().getName()).append(")\n");
+            } else if (headPtr != null && workPtr != null) {
+                sb.append("  Size ").append(headPtr.getSize())
+                        .append(" \u2192 ").append(workPtr.getSize()).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String describeLfsSide(LfsPointer pointer, boolean downloaded, long size) {
+        String text;
+        if (pointer != null) {
+            text = "pointer  oid sha256:" + pointer.getOid().getName()
+                    + "  size " + pointer.getSize();
+        } else if (downloaded) {
+            text = "downloaded content  size " + size;
+        } else {
+            text = "missing";
+        }
+        return text;
+    }
+
+    private LfsPointer readLfsPointerFromRevision(String revision, String path) throws IOException {
+        LfsPointer pointer = null;
+        ObjectId commitId = repository.resolve(revision);
+        if (commitId != null) {
+            try (RevWalk revWalk = new RevWalk(repository);
+                 TreeWalk treeWalk = new TreeWalk(repository)) {
+                RevCommit commit = revWalk.parseCommit(commitId);
+                treeWalk.addTree(commit.getTree());
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(path));
+                if (treeWalk.next()) {
+                    ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+                    if (loader.getSize() <= 8192) {
+                        try (InputStream in = loader.openStream()) {
+                            pointer = LfsPointer.parseLfsPointer(in);
+                        }
+                    }
+                }
+            }
+        }
+        return pointer;
+    }
+
+    /**
+     * Creates a lock on {@code path} via the Git LFS locking API.
+     */
+    public LfsLock lockLfsFile(String path, RemoteRepoParameters params) throws IOException {
+        try {
+            String ref = currentLfsRefName();
+            String body = "{\"path\":\"" + jsonEscape(path) + "\",\"ref\":{\"name\":\""
+                    + jsonEscape(ref) + "\"}}";
+            JsonNode response = lfsLockRequest("POST", "/locks", body, params);
+            JsonNode lockNode = response.path("lock");
+            if (lockNode.isMissingNode() || lockNode.path("id").asText("").isEmpty()) {
+                throw new LfsException(LfsException.Kind.SERVER,
+                        "Lock response did not include a lock id for " + path);
+            }
+            return parseLfsLock(lockNode);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError("Lock LFS file failed: " + path, e);
+        }
+    }
+
+    /**
+     * Releases the lock on {@code path}. When {@code force} is true the lock is
+     * broken even if another user owns it.
+     */
+    public void unlockLfsFile(String path, boolean force, RemoteRepoParameters params) throws IOException {
+        try {
+            LfsLock existing = findLfsLock(path, params);
+            if (existing == null) {
+                throw new LfsException(LfsException.Kind.NOT_LOCKED,
+                        "No LFS lock found for " + path);
+            }
+            String ref = currentLfsRefName();
+            String body = "{\"force\":" + force + ",\"ref\":{\"name\":\""
+                    + jsonEscape(ref) + "\"}}";
+            lfsLockRequest("POST", "/locks/" + existing.getId() + "/unlock", body, params);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError("Unlock LFS file failed: " + path, e);
+        }
+    }
+
+    /**
+     * Lists locks from the remote LFS locking API.
+     */
+    public List<LfsLock> listLfsLocks(RemoteRepoParameters params) throws IOException {
+        List<LfsLock> locks = new ArrayList<>();
+        try {
+            JsonNode response = lfsLockRequest("GET", "/locks", null, params);
+            for (JsonNode node : response.path("locks")) {
+                locks.add(parseLfsLock(node));
+            }
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError("List LFS locks failed", e);
+        }
+        return locks;
+    }
+
+    private LfsLock findLfsLock(String path, RemoteRepoParameters params) throws IOException {
+        LfsLock found = null;
+        for (LfsLock lock : listLfsLocks(params)) {
+            if (path.equals(lock.getPath())) {
+                found = lock;
+            }
+        }
+        return found;
+    }
+
+    private JsonNode lfsLockRequest(String method, String relativePath, String jsonBody,
+                                    RemoteRepoParameters params) throws IOException {
+        String base = resolveLfsApiBase(params);
+        String authHeader = buildLfsAuthHeader(params);
+        HttpURLConnection conn = openLfsHttp(base + relativePath, method, authHeader);
+        conn.setRequestProperty("Accept", "application/vnd.git-lfs+json");
+        if (jsonBody != null) {
+            byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
+            conn.setRequestProperty("Content-Type", "application/vnd.git-lfs+json");
+            conn.setFixedLengthStreamingMode(bytes.length);
+            conn.setDoOutput(true);
+            try (OutputStream out = conn.getOutputStream()) {
+                out.write(bytes);
+            }
+        }
+        int status = conn.getResponseCode();
+        if (status == 401 || status == 403) {
+            throw new LfsException(LfsException.Kind.AUTH,
+                    "LFS authentication failed (" + status + "): " + readHttpError(conn));
+        }
+        if (status == 409) {
+            throw new LfsException(LfsException.Kind.LOCKED,
+                    "File is already locked: " + readHttpError(conn));
+        }
+        if (status >= 400) {
+            throw new LfsException(LfsException.Kind.SERVER,
+                    "LFS lock request failed (" + status + "): " + readHttpError(conn));
+        }
+        try (InputStream in = conn.getInputStream()) {
+            return new ObjectMapper().readTree(in);
+        }
+    }
+
+    private String resolveLfsApiBase(RemoteRepoParameters params) throws LfsException {
+        String configured = repository.getConfig().getString("lfs", null, "url");
+        String raw = configured;
+        if (StringUtils.isBlank(raw) && params != null) {
+            raw = params.getUrl();
+        }
+        if (StringUtils.isBlank(raw)) {
+            raw = getOriginUrl();
+        }
+        if (StringUtils.isBlank(raw)) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    "Cannot talk to Git LFS: no remote URL is configured");
+        }
+        String httpsUrl = sshRemoteToHttps(raw);
+        if (httpsUrl == null) {
+            httpsUrl = raw;
+        }
+        if (httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    "Git LFS requires an HTTP(S) remote; this repository uses a local path");
+        }
+        String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
+        return lfsBase;
+    }
+
+    private String currentLfsRefName() throws IOException {
+        String ref = Constants.R_HEADS + "master";
+        String branch = getEffectiveBranch();
+        if (StringUtils.isNotBlank(branch)) {
+            ref = Constants.R_HEADS + branch;
+        }
+        return ref;
+    }
+
+    private static LfsLock parseLfsLock(JsonNode node) {
+        String owner = node.path("owner").path("name").asText("");
+        if (owner.isEmpty()) {
+            owner = node.path("owner").path("id").asText("");
+        }
+        return new LfsLock(
+                node.path("id").asText(""),
+                node.path("path").asText(""),
+                owner,
+                node.path("locked_at").asText(""));
+    }
+
+    private static String jsonEscape(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static LfsException wrapLfsError(String message, Exception e) {
+        LfsException wrapped;
+        if (e instanceof LfsException lfs) {
+            wrapped = lfs;
+        } else {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase(Locale.ROOT) : "";
+            LfsException.Kind kind = LfsException.Kind.OTHER;
+            if (msg.contains("401") || msg.contains("403")
+                    || msg.contains("unauthorized") || msg.contains("authentication")) {
+                kind = LfsException.Kind.AUTH;
+            } else if (msg.contains("lock")) {
+                kind = LfsException.Kind.LOCKED;
+            }
+            wrapped = new LfsException(kind, message + ": " + e.getMessage(), e);
+        }
+        return wrapped;
     }
 
     /**
@@ -3284,8 +3574,15 @@ public class GitRepoService implements AutoCloseable {
         if (toUpload.isEmpty()) return;
 
         // LFS batch endpoint
-        String httpsUrl = sshRemoteToHttps(params.getUrl());
-        if (httpsUrl == null) httpsUrl = params.getUrl();
+        String httpsUrl = sshRemoteToHttps(params != null ? params.getUrl() : getOriginUrl());
+        if (httpsUrl == null && params != null) {
+            httpsUrl = params.getUrl();
+        }
+        if (httpsUrl == null || httpsUrl.isBlank()
+                || httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    "Cannot upload LFS files: no HTTP(S) remote is configured");
+        }
         String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
         String batchUrl = lfsBase + "/objects/batch";
 

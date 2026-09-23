@@ -41,6 +41,7 @@ public class MainMenuBar extends JMenuBar {
     private final JMenu     lfsMenu;
     private final JMenuItem manageLfsItem;
     private final JMenuItem fetchLfsItem;
+    private final JMenuItem uploadLfsItem;
 
     // Submodules submenu (inside Repository menu)
     private final JMenu     submodulesMenu;
@@ -202,9 +203,13 @@ public class MainMenuBar extends JMenuBar {
         fetchLfsItem = new JMenuItem("Fetch LFS Objects", KeyEvent.VK_F);
         fetchLfsItem.setToolTipText("Download LFS file content from the remote LFS server");
 
+        uploadLfsItem = new JMenuItem("Upload LFS Objects", KeyEvent.VK_P);
+        uploadLfsItem.setToolTipText("Upload local LFS objects to the remote LFS server");
+
         lfsMenu.add(manageLfsItem);
         lfsMenu.addSeparator();
         lfsMenu.add(fetchLfsItem);
+        lfsMenu.add(uploadLfsItem);
 
         // Submodules submenu
         submodulesMenu = new JMenu("Submodules");
@@ -502,6 +507,7 @@ public class MainMenuBar extends JMenuBar {
     }
     public void addManageLfsListener(ActionListener l)          { manageLfsItem.addActionListener(l); }
     public void addFetchLfsListener(ActionListener l)           { fetchLfsItem.addActionListener(l); }
+    public void addUploadLfsListener(ActionListener l)          { uploadLfsItem.addActionListener(l); }
     public void addCompressDatabaseListener(ActionListener l)    { compressDatabaseItem.addActionListener(l); }
     public void addAddSubmoduleListener(ActionListener l)       { addSubmoduleItem.addActionListener(l); }
     public void addInitSubmodulesListener(ActionListener l)     { initSubmodulesItem.addActionListener(l); }

@@ -334,6 +334,7 @@ public class MainFrame extends JFrame {
         menuBar.addOpenExplorerListener(e -> openExplorerInRepo());
         menuBar.addManageLfsListener(e -> new LfsManageDialog(this).setVisible(true));
         menuBar.addFetchLfsListener(e -> new LfsFetchHandler(this).execute());
+        menuBar.addUploadLfsListener(e -> new com.az.gitember.handler.LfsUploadHandler(this).execute());
         menuBar.addCompressDatabaseListener(e -> new com.az.gitember.handler.CompressDatabaseHandler(this).execute());
         menuBar.addAddSubmoduleListener(e -> com.az.gitember.handler.AddSubmoduleHandler.showAndExecute(this));
         menuBar.addInitSubmodulesListener(e -> new com.az.gitember.handler.InitSubmodulesHandler(this).execute());

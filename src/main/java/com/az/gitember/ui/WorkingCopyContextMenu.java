@@ -169,6 +169,20 @@ public class WorkingCopyContextMenu {
             }
         }
 
+        if (com.az.gitember.service.Context.isLfsRepo() && !isMissed && !isRemoved) {
+            menu.addSeparator();
+            JMenuItem lockItem = new JMenuItem("Lock LFS file");
+            lockItem.addActionListener(e ->
+                    new com.az.gitember.handler.LfsLockHandler(parent, item.getShortName(), true, false)
+                            .execute());
+            menu.add(lockItem);
+            JMenuItem unlockItem = new JMenuItem("Unlock LFS file");
+            unlockItem.addActionListener(e ->
+                    new com.az.gitember.handler.LfsLockHandler(parent, item.getShortName(), false, false)
+                            .execute());
+            menu.add(unlockItem);
+        }
+
         // Group 4: Ignore / Physical delete
         boolean canIgnore = canAddToGitIgnore(item);
         if (canIgnore || (!isMissed && !isRemoved)) {
@@ -412,19 +426,34 @@ public class WorkingCopyContextMenu {
             private File headFile;
             private File diskFile;
 
+            private String lfsDiff;
+
             @Override
             protected Object doInBackground() throws Exception {
                 String[] paths = new String[2];
                 serviceRunner.run(svc -> {
-                    paths[0] = svc.saveFile("HEAD", fileName);
+                    if (com.az.gitember.service.Context.isLfsRepo()) {
+                        String summary = svc.getLfsDiff(fileName);
+                        if (summary != null && summary.startsWith("LFS:")
+                                && !summary.contains("Not an LFS pointer")) {
+                            lfsDiff = summary;
+                        }
+                    }
+                    if (lfsDiff == null) {
+                        paths[0] = svc.saveFile("HEAD", fileName);
+                    }
                 });
-                paths[1] = normalizedFolder() + fileName;
-                if (image) {
-                    headFile = new File(paths[0]);
-                    diskFile = new File(paths[1]);
+                if (lfsDiff != null) {
+                    headText = lfsDiff;
                 } else {
-                    headText = Files.readString(Paths.get(paths[0]));
-                    diskText = Files.readString(Paths.get(paths[1]));
+                    paths[1] = normalizedFolder() + fileName;
+                    if (image) {
+                        headFile = new File(paths[0]);
+                        diskFile = new File(paths[1]);
+                    } else {
+                        headText = Files.readString(Paths.get(paths[0]));
+                        diskText = Files.readString(Paths.get(paths[1]));
+                    }
                 }
                 return null;
             }
@@ -432,7 +461,9 @@ public class WorkingCopyContextMenu {
             protected void done() {
                 try {
                     get();
-                    if (image) {
+                    if (lfsDiff != null) {
+                        new DiffViewerWindowTxt(fileName, "LFS", lfsDiff, "").setVisible(true);
+                    } else if (image) {
                         new DiffViewerWindowImg(fileName, "HEAD", headFile, diskFile).setVisible(true);
                     } else {
                         new DiffViewerWindowTxt(fileName, "HEAD", headText, diskText).setVisible(true);

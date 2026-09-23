@@ -28,7 +28,9 @@ public class LfsManageDialog extends JDialog {
     private final DefaultListModel<String> patternListModel;
     private final JList<String> patternList;
     private final LfsFilesTableModel filesTableModel;
+    private final JTable filesTable;
     private final JButton fetchBtn;
+    private final JButton uploadBtn;
 
     public LfsManageDialog(Frame owner) {
         super(owner, "Manage Git LFS", true);
@@ -77,7 +79,7 @@ public class LfsManageDialog extends JDialog {
 
         // ── LFS files table ───────────────────────────────────────────────
         filesTableModel = new LfsFilesTableModel();
-        JTable filesTable = new JTable(filesTableModel);
+        filesTable = new JTable(filesTableModel);
         filesTable.setRowHeight(22);
         filesTable.setShowGrid(false);
         filesTable.getColumnModel().getColumn(0).setPreferredWidth(400);
@@ -97,12 +99,29 @@ public class LfsManageDialog extends JDialog {
         fetchBtn.setEnabled(lfsEnabled);
         fetchBtn.addActionListener(e -> doFetchLfsObjects());
 
+        uploadBtn = new JButton("Upload LFS Objects");
+        uploadBtn.setToolTipText("Upload local LFS objects to the remote LFS server");
+        uploadBtn.setEnabled(lfsEnabled);
+        uploadBtn.addActionListener(e ->
+                new com.az.gitember.handler.LfsUploadHandler(this).execute());
+
+        JButton lockBtn = new JButton("Lock");
+        lockBtn.setToolTipText("Lock the selected LFS file on the remote");
+        lockBtn.addActionListener(e -> lockSelected(true, false));
+
+        JButton unlockBtn = new JButton("Unlock");
+        unlockBtn.setToolTipText("Unlock the selected LFS file");
+        unlockBtn.addActionListener(e -> lockSelected(false, false));
+
         JButton closeBtn = new JButton("Close");
         closeBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(closeBtn);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 4));
+        btnPanel.add(lockBtn);
+        btnPanel.add(unlockBtn);
         btnPanel.add(fetchBtn);
+        btnPanel.add(uploadBtn);
         btnPanel.add(closeBtn);
 
         // ── Main layout ───────────────────────────────────────────────────
@@ -168,6 +187,7 @@ public class LfsManageDialog extends JDialog {
             updateStatusHeader(true);
             enableBtn.setVisible(false);
             fetchBtn.setEnabled(true);
+            uploadBtn.setEnabled(true);
             JOptionPane.showMessageDialog(this,
                     "LFS enabled. Use '+' to track file patterns (e.g. *.psd, *.png).",
                     "LFS Enabled", JOptionPane.INFORMATION_MESSAGE);
@@ -219,6 +239,18 @@ public class LfsManageDialog extends JDialog {
         }
     }
 
+    private void lockSelected(boolean lock, boolean force) {
+        int row = filesTable.getSelectedRow();
+        ScmItem item = filesTableModel.getItem(row);
+        if (item == null) {
+            JOptionPane.showMessageDialog(this, "Select an LFS file first.",
+                    "Git LFS", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            new com.az.gitember.handler.LfsLockHandler(this, item.getShortName(), lock, force)
+                    .execute();
+        }
+    }
+
     private void doFetchLfsObjects() {
         fetchBtn.setEnabled(false);
         fetchBtn.setText("Fetching…");
@@ -260,6 +292,14 @@ public class LfsManageDialog extends JDialog {
         void setItems(List<ScmItem> list) {
             items = list != null ? new ArrayList<>(list) : new ArrayList<>();
             fireTableDataChanged();
+        }
+
+        ScmItem getItem(int row) {
+            ScmItem item = null;
+            if (row >= 0 && row < items.size()) {
+                item = items.get(row);
+            }
+            return item;
         }
 
         @Override public int getRowCount()     { return items.size(); }
