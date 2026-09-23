@@ -20,13 +20,19 @@ public class PushHandler extends AbstractAsyncHandler<String> {
     private String remoteUrl;
     private boolean credentialsPrompted = false;
     private ScmBranch branch;
+    private boolean force;
 
     /** Non-null only when the push ran across a workspace (aggregated per-project results). */
     private List<ProjectOperationResult<String>> workspaceResults;
 
     public PushHandler(Component parent, ScmBranch branch) {
+        this(parent, branch, false);
+    }
+
+    public PushHandler(Component parent, ScmBranch branch, boolean force) {
         super(parent);
         this.branch = branch;
+        this.force = force;
     }
 
     @Override
@@ -50,7 +56,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
                 RefSpec refSpec =  getRefSpec(branch);
                 RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
                 remoteUrl = params.getUrl();
-                String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, progressMonitor);
+                String result = Context.getGitRepoService().remoteRepositoryPush(params, refSpec, this.force, progressMonitor);
                 Context.updateBranches();
                 Context.updateWorkingBranch();
                 return result;
@@ -81,7 +87,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
                 ScmBranch currentBranch = svc.getCurrentScmBranch();
                 trackRemoteIfPosible(currentBranch, svc);
                 RemoteRepoParameters params = RemoteRepoParameters.forProject(project, svc);
-                String msg = svc.remoteRepositoryPush(params, getRefSpec(currentBranch), progressMonitor);
+                String msg = svc.remoteRepositoryPush(params, getRefSpec(currentBranch), this.force, progressMonitor);
                 results.add(ProjectOperationResult.ok(project, params.getUrl(), msg));
             } catch (Exception ex) {
                 results.add(ProjectOperationResult.failed(project, ex));

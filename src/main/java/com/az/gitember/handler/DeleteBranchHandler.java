@@ -38,7 +38,7 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
                 String remoteRef = branch.getFullName()
                         .replaceFirst("^refs/remotes/[^/]+/", "refs/heads/");
                 RefSpec refSpec = new RefSpec().setSource(null).setDestination(remoteRef);
-                Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
+                Context.getGitRepoService().remoteRepositoryPush(params, refSpec, false, null);
             }
             // Remove the local remote-tracking ref
             Context.getGitRepoService().deleteRemoteTrackingBranch(branch.getFullName());

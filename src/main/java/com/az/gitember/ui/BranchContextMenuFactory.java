@@ -98,10 +98,21 @@ public class BranchContextMenuFactory {
                     new PullHandler(parent,  sourceScmBranch).execute());
             menu.add(pullItem);
 
+            JMenu pushMenu = new JMenu("Push");
+
             String pushLabel = name.equals(fullName) ? "Push " + name + "..." : "Push " + fullName;
             JMenuItem pushItem = new JMenuItem(pushLabel);
             pushItem.addActionListener(e ->new PushHandler(parent,  sourceScmBranch).execute() );
-            menu.add(pushItem);
+
+            String pushForceLabel = name.equals(fullName) ? "Force push " + name + "..." : "Force push " + fullName;
+            JMenuItem pushForceItem = new JMenuItem(pushForceLabel);
+            pushForceItem.addActionListener(e ->new PushHandler(parent,  sourceScmBranch, true).execute() );
+
+            pushMenu.add(pushItem);
+            pushMenu.add(pushForceItem);
+
+            menu.add(pushMenu);
+
         }
 
         // Push / Delete - tag-specific actions

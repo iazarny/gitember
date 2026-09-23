@@ -596,9 +596,9 @@ public class GitRepoService implements AutoCloseable {
             String oldHeads = remoteTrackingToHeads(oldName);
             String newHeads = remoteTrackingToHeads(newName);
 
-            remoteRepositoryPush(params, new RefSpec(oldName + ":" + newHeads), null);
+            remoteRepositoryPush(params, new RefSpec(oldName + ":" + newHeads), false, null);
             remoteRepositoryPush(params,
-                    new RefSpec().setSource(null).setDestination(oldHeads), null);
+                    new RefSpec().setSource(null).setDestination(oldHeads), false, null);
 
             renamed = repository.exactRef(newName);
         } catch (Exception e) {
@@ -1500,7 +1500,7 @@ public class GitRepoService implements AutoCloseable {
         com.az.gitember.data.RemoteRepoParameters params =
                 com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
         RefSpec refSpec = new RefSpec(fullTagRef + ":" + fullTagRef);
-        return remoteRepositoryPush(params, refSpec, progressMonitor);
+        return remoteRepositoryPush(params, refSpec, false, progressMonitor);
     }
 
     /**
@@ -1514,7 +1514,7 @@ public class GitRepoService implements AutoCloseable {
         com.az.gitember.data.RemoteRepoParameters params =
                 com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
         RefSpec refSpec = new RefSpec().setSource(null).setDestination(fullTagRef);
-        return remoteRepositoryPush(params, refSpec, null);
+        return remoteRepositoryPush(params, refSpec,  false, null);
     }
 
     public CommitInfo getHead() throws Exception {
@@ -2693,10 +2693,12 @@ public class GitRepoService implements AutoCloseable {
      */
     public String remoteRepositoryPush(final RemoteRepoParameters parameters,
                                        final RefSpec refSpec,
+                                       final boolean force,
                                        final ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
             if(isRepositoryHasRemoteUrl()) {
                 final PushCommand pushCommand = git.push()
+                        .setForce(force)
                         .setProgressMonitor(progressMonitor);
                 if (refSpec != null) {
                     pushCommand.setRefSpecs(refSpec);
