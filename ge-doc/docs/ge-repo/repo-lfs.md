@@ -15,7 +15,7 @@ When you open a repository, Gitember checks `.gitattributes` for `filter=lfs` an
 
 Open **Repository → Git LFS → Manage LFS…** to see the current status.
 
-TODO lfs-manage-dialog.png
+![lfs-manage-dialog1.png](lfs-manage-dialog1.png)
 
 | Status | Meaning |
 |--------|---------|
@@ -23,6 +23,8 @@ TODO lfs-manage-dialog.png
 | **not initialized** | This repository is not using LFS yet. Click **Enable LFS** to set it up. |
 
 The Working Copy file list also marks LFS paths (pointer only vs downloaded).
+
+
 
 TODO lfs-working-copy-status.png
 
@@ -33,13 +35,14 @@ On a repository that does not have LFS yet:
 1. Open **Repository → Git LFS → Manage LFS…**.
 2. Click **Enable LFS**.
 
-TODO lfs-enable-button.png
+![lfs-manage-dialog2.png](lfs-manage-dialog2.png)
 
 Gitember writes the built-in smudge/clean filters to `.git/config` and creates `.git/lfs/tmp`. It does not change `.gitattributes` until you track a pattern.
 
 You can also enable LFS when you **init** a new repository (check **Enable Git LFS** in the Init dialog).
 
-TODO lfs-init-checkbox.png
+
+![lfs-init-checkbox.png](lfs-init-checkbox.png)
 
 ## Tracking patterns
 
@@ -49,7 +52,8 @@ LFS only applies to paths that match a pattern in `.gitattributes`.
 2. Click **+** and enter a pattern such as `*.psd`, `*.mp4`, or `assets/**`.
 3. Gitember appends `filter=lfs diff=lfs merge=lfs -text` to `.gitattributes` and stages that file.
 
-TODO lfs-track-pattern.png
+
+![lfs-track-pattern.png](lfs-track-pattern.png)
 
 To stop tracking a pattern, select it in the list and click **−**.
 
@@ -66,15 +70,17 @@ TODO lfs-files-table.png
 | Column | Description |
 |--------|-------------|
 | **File** | Repository-relative path. |
-| **State** | `downloaded` — the real object is in the working tree; `pointer only` — only the LFS pointer is present. |
+| **State** | `downloaded` — the real object is in the working tree; <br/>`pointer only` — only the LFS pointer is present. |
 
 ## Cloning an LFS repository
 
-Use **File → Clone** as usual. Gitember registers its LFS filters on the clone so later checkouts use the built-in smudge/clean drivers instead of an external `git-lfs` binary.
+Use **File → Clone** as usual. Gitember registers its LFS filters on the clone so 
+later checkouts use the built-in smudge/clean drivers instead of an external `git-lfs` binary.
 
-TODO lfs-clone-dialog.png
-
-After clone, pointer files may still be stubs until you **Fetch LFS Objects**. Git LFS always transfers content over **HTTPS**, even when the Git remote is SSH — configure an access token or username/password if the LFS host requires it.
+After clone, pointer files may still be stubs until you **Fetch LFS Objects**. 
+Git LFS always transfers content over **HTTPS**, 
+even when the Git remote is SSH — configure an access 
+token or username/password if the LFS host requires it.
 
 ## Downloading LFS files
 
@@ -94,7 +100,9 @@ Push already uploads LFS objects for the commits being pushed. You can also uplo
 1. Open **Repository → Git LFS → Upload LFS Objects**, or click **Upload LFS Objects** in the Manage LFS dialog.
 2. Local objects referenced by the current branch are sent via the Git LFS Batch API.
 
-TODO lfs-upload-menu.png
+![lfs-upload-menu.png](lfs-upload-menu.png)
+
+![lfs-upload-menu2.png](lfs-upload-menu2.png)
 
 :::note
 Upload and download require an **HTTP(S)** remote (or `lfs.url`). A `file://` remote is not a Git LFS server — Gitember reports that clearly instead of failing with a generic network error.
