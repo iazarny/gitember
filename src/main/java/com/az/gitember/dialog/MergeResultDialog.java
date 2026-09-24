@@ -69,7 +69,7 @@ public class MergeResultDialog extends JDialog {
         JScrollPane tableScroll = new JScrollPane(table);
 
         // ---- details: conflicted files / errors ----
-        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(buildReport(results));
+        JTextPane msgArea = PullResultDialog.createMessagePane(buildReport(results));
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
         msgScroll.setPreferredSize(new Dimension(0, 120));

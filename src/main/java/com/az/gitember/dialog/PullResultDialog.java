@@ -5,10 +5,16 @@ import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -114,7 +120,7 @@ public class PullResultDialog extends JDialog {
         String msgs = result.getServerMessages();
         String displayMsgs = msgs.isEmpty() ? "(no server messages)" : msgs;
 
-        JEditorPane msgArea = createHtmlMessagePane(displayMsgs);
+        JTextPane msgArea = createMessagePane(displayMsgs);
 
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Server messages"));
@@ -196,7 +202,7 @@ public class PullResultDialog extends JDialog {
         String displayMsgs = results.isEmpty()
                 ? "No repositories with a remote."
                 : buildWorkspaceReport(results);
-        JEditorPane msgArea = createHtmlMessagePane(displayMsgs);
+        JTextPane msgArea = createMessagePane(displayMsgs);
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
         msgScroll.setPreferredSize(new Dimension(0, 120));
@@ -251,35 +257,113 @@ public class PullResultDialog extends JDialog {
             Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
 
     /**
-     * HTML pane for remote server text: UTF-8, clickable URLs, and a system
-     * UI font so emoji from GitHub / GitLab actually render.
+     * Styled text pane for remote server messages. Avoids JEditorPane HTML,
+     * which can paint an empty document (charset reload) or invisible text
+     * on a dark theme. Uses the UI font so emoji render, and styles URLs
+     * as clickable links.
      */
-    static JEditorPane createHtmlMessagePane(String text) {
+    static JTextPane createMessagePane(String text) {
         Font uiFont = UIManager.getFont("Label.font");
         if (uiFont == null) {
             uiFont = new Font(Font.DIALOG, Font.PLAIN, 13);
         }
-        JEditorPane msgArea = new JEditorPane();
-        msgArea.setContentType("text/html");
-        // HTMLEditorKit re-reads the document when it sees a charset meta tag
-        // and ends up with an empty pane. Entities already keep emoji intact.
-        msgArea.getDocument().putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-        msgArea.setText(toHtml(text != null ? text : "", uiFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(uiFont);
-        msgArea.setCaretPosition(0);
-        msgArea.addHyperlinkListener(ev -> {
-            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                try {
-                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
-                } catch (Exception ex) {
-                    // ignore
+        Color fg = UIManager.getColor("TextArea.foreground");
+        Color bg = UIManager.getColor("TextArea.background");
+        Color link = UIManager.getColor("Component.linkColor");
+        if (fg == null) {
+            fg = UIManager.getColor("Label.foreground");
+        }
+        if (bg == null) {
+            bg = UIManager.getColor("Panel.background");
+        }
+        if (link == null) {
+            link = new Color(0x5B9BD5);
+        }
+
+        JTextPane pane = new JTextPane();
+        pane.setEditable(false);
+        pane.setOpaque(true);
+        pane.setFont(uiFont);
+        if (fg != null) {
+            pane.setForeground(fg);
+        }
+        if (bg != null) {
+            pane.setBackground(bg);
+        }
+        pane.setCaretColor(fg != null ? fg : pane.getForeground());
+        pane.getCaret().setVisible(false);
+
+        String display = sanitizeRemoteText(text != null ? text : "");
+        fillStyledMessage(pane.getStyledDocument(), display, fg, link);
+        pane.setCaretPosition(0);
+
+        pane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openLinkAt(pane, e.getPoint());
+            }
+        });
+        pane.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (urlAt(pane, e.getPoint()) != null) {
+                    pane.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                } else {
+                    pane.setCursor(Cursor.getDefaultCursor());
                 }
             }
         });
-        return msgArea;
+        return pane;
+    }
+
+    private static void fillStyledMessage(StyledDocument doc, String display, Color fg, Color link) {
+        SimpleAttributeSet plain = new SimpleAttributeSet();
+        if (fg != null) {
+            StyleConstants.setForeground(plain, fg);
+        }
+        SimpleAttributeSet linkAttr = new SimpleAttributeSet();
+        StyleConstants.setForeground(linkAttr, link);
+        StyleConstants.setUnderline(linkAttr, true);
+        Matcher m = URL_PATTERN.matcher(display);
+        int last = 0;
+        try {
+            while (m.find()) {
+                if (m.start() > last) {
+                    doc.insertString(doc.getLength(), display.substring(last, m.start()), plain);
+                }
+                SimpleAttributeSet href = new SimpleAttributeSet(linkAttr);
+                href.addAttribute("url", m.group());
+                doc.insertString(doc.getLength(), m.group(), href);
+                last = m.end();
+            }
+            if (last < display.length()) {
+                doc.insertString(doc.getLength(), display.substring(last), plain);
+            }
+        } catch (BadLocationException ignored) {
+        }
+    }
+
+    private static void openLinkAt(JTextPane pane, Point point) {
+        String url = urlAt(pane, point);
+        if (url != null) {
+            try {
+                Desktop.getDesktop().browse(new URI(url));
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private static String urlAt(JTextPane pane, Point point) {
+        String url = null;
+        int pos = pane.viewToModel2D(point);
+        if (pos >= 0) {
+            AttributeSet as = pane.getStyledDocument().getCharacterElement(pos).getAttributes();
+            Object value = as.getAttribute("url");
+            if (value instanceof String s) {
+                url = s;
+            }
+        }
+        return url;
     }
 
     /**

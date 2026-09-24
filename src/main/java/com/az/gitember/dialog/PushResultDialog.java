@@ -47,7 +47,7 @@ public class PushResultDialog extends JDialog {
         String text = (messages != null ? messages : "").trim();
         String displayText = text.isEmpty() ? "(no server messages)" : text;
 
-        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(displayText);
+        JTextPane msgArea = PullResultDialog.createMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));
@@ -94,7 +94,7 @@ public class PushResultDialog extends JDialog {
                 ? "No repositories with unpushed changes."
                 : buildWorkspaceReport(results);
 
-        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(displayText);
+        JTextPane msgArea = PullResultDialog.createMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));

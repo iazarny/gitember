@@ -39,12 +39,13 @@ class RemoteMessageHtmlTest {
     }
 
     @Test
-    void createHtmlMessagePane_rendersMessageText() throws Exception {
-        javax.swing.JEditorPane pane = PullResultDialog.createHtmlMessagePane(
+    void createMessagePane_rendersMessageTextAndEmoji() throws Exception {
+        javax.swing.JTextPane pane = PullResultDialog.createMessagePane(
                 "refs/heads/master: OK\n\u26A0\uFE0F GitHub found 28 vulnerabilities");
         String shown = pane.getDocument().getText(0, pane.getDocument().getLength());
         assertTrue(shown.contains("refs/heads/master: OK"), shown);
         assertTrue(shown.contains("GitHub found 28 vulnerabilities"), shown);
+        assertTrue(shown.contains("\u26A0"), shown);
         assertTrue(pane.getDocument().getLength() > 0);
     }
 }
