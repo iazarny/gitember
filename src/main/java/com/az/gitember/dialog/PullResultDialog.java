@@ -2,7 +2,6 @@ package com.az.gitember.dialog;
 
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.data.PullOperationResult;
-import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
@@ -115,21 +114,7 @@ public class PullResultDialog extends JDialog {
         String msgs = result.getServerMessages();
         String displayMsgs = msgs.isEmpty() ? "(no server messages)" : msgs;
 
-        Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayMsgs, monoFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(monoFont);
-        msgArea.addHyperlinkListener(ev -> {
-            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                try {
-                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        });
+        JEditorPane msgArea = createHtmlMessagePane(displayMsgs);
 
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Server messages"));
@@ -211,22 +196,7 @@ public class PullResultDialog extends JDialog {
         String displayMsgs = results.isEmpty()
                 ? "No repositories with a remote."
                 : buildWorkspaceReport(results);
-        Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html", toHtml(displayMsgs, monoFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(monoFont);
-        msgArea.setCaretPosition(0);
-        msgArea.addHyperlinkListener(ev -> {
-            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                try {
-                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        });
+        JEditorPane msgArea = createHtmlMessagePane(displayMsgs);
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
         msgScroll.setPreferredSize(new Dimension(0, 120));
@@ -280,22 +250,112 @@ public class PullResultDialog extends JDialog {
     private static final Pattern URL_PATTERN =
             Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
 
+    /**
+     * HTML pane for remote server text: UTF-8, clickable URLs, and a system
+     * UI font so emoji from GitHub / GitLab actually render.
+     */
+    static JEditorPane createHtmlMessagePane(String text) {
+        Font uiFont = UIManager.getFont("Label.font");
+        if (uiFont == null) {
+            uiFont = new Font(Font.DIALOG, Font.PLAIN, 13);
+        }
+        JEditorPane msgArea = new JEditorPane();
+        msgArea.setContentType("text/html;charset=UTF-8");
+        msgArea.setText(toHtml(text != null ? text : "", uiFont.getSize()));
+        msgArea.setEditable(false);
+        msgArea.setOpaque(true);
+        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        msgArea.setFont(uiFont);
+        msgArea.setCaretPosition(0);
+        msgArea.addHyperlinkListener(ev -> {
+            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        });
+        return msgArea;
+    }
+
+    /**
+     * Collapses git progress {@code \\r} overwrites and strips ANSI so leftover
+     * control characters do not show up as empty boxes.
+     */
+    static String sanitizeRemoteText(String text) {
+        String cleaned = "";
+        if (text != null) {
+            cleaned = text.replace("\r\n", "\n");
+            cleaned = cleaned.replaceAll("\\u001B\\[[0-9;?]*[ -/]*[@-~]", "");
+            cleaned = cleaned.replaceAll("\\u001B[@-Z\\\\-_]", "");
+            StringBuilder out = new StringBuilder(cleaned.length());
+            String[] lines = cleaned.split("\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                if (line.indexOf('\r') >= 0) {
+                    String[] parts = line.split("\r", -1);
+                    String last = "";
+                    for (String part : parts) {
+                        if (!part.isEmpty()) {
+                            last = part;
+                        }
+                    }
+                    line = last;
+                }
+                if (i > 0) {
+                    out.append('\n');
+                }
+                out.append(line);
+            }
+            cleaned = out.toString();
+        }
+        return cleaned;
+    }
+
     static String toHtml(String text, int fontSize) {
-        String escaped = text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
+        String escaped = encodeHtml(sanitizeRemoteText(text));
 
         Matcher m = URL_PATTERN.matcher(escaped);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             String url = m.group();
-            m.appendReplacement(sb, "<a href='" + url + "'>" + url + "</a>");
+            m.appendReplacement(sb, Matcher.quoteReplacement("<a href='" + url + "'>" + url + "</a>"));
         }
         m.appendTail(sb);
 
+        int size = fontSize > 2 ? fontSize : 12;
         String body = sb.toString().replace("\n", "<br>");
-        return "<html><body style='font-family:monospaced;font-size:" + (fontSize-2) + "px'>" + body + "</body></html>";
+        return "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head>"
+                + "<body style='font-family:Dialog,SansSerif,Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji;"
+                + "font-size:" + size + "px'>"
+                + body + "</body></html>";
+    }
+
+    /**
+     * Escapes HTML and turns characters above ASCII into numeric entities so
+     * JEditorPane's HTML parser (ISO-8859-1 by default) does not drop emoji.
+     */
+    static String encodeHtml(String text) {
+        StringBuilder out = new StringBuilder(text.length());
+        text.codePoints().forEach(cp -> {
+            if (cp == '&') {
+                out.append("&amp;");
+            } else if (cp == '<') {
+                out.append("&lt;");
+            } else if (cp == '>') {
+                out.append("&gt;");
+            } else if (cp == '\n' || cp == '\t') {
+                out.appendCodePoint(cp);
+            } else if (cp < 32) {
+                // drop other control characters (CR already handled)
+            } else if (cp > 127) {
+                out.append("&#").append(cp).append(';');
+            } else {
+                out.append((char) cp);
+            }
+        });
+        return out.toString();
     }
 
     private static JLabel makeBadge(String text, Color bg, Color fg) {

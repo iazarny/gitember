@@ -1,7 +1,6 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.ProjectOperationResult;
-import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.api.MergeResult;
 
@@ -70,14 +69,7 @@ public class MergeResultDialog extends JDialog {
         JScrollPane tableScroll = new JScrollPane(table);
 
         // ---- details: conflicted files / errors ----
-        Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html",
-                PullResultDialog.toHtml(buildReport(results), monoFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(monoFont);
-        msgArea.setCaretPosition(0);
+        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(buildReport(results));
         JScrollPane msgScroll = new JScrollPane(msgArea);
         msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
         msgScroll.setPreferredSize(new Dimension(0, 120));

@@ -1,24 +1,17 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.ProjectOperationResult;
-import com.az.gitember.ui.SyntaxStyleUtil;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
-import java.net.URI;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Dialog that shows the result of a push operation:
  * remote URL and per-ref update statuses.
  */
 public class PushResultDialog extends JDialog {
-
-    private static final Pattern URL_PATTERN =
-            Pattern.compile("https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
 
     public PushResultDialog(Component parent, String remoteUrl, String messages) {
         super(SwingUtilities.getWindowAncestor(parent), "Push Result",
@@ -54,22 +47,7 @@ public class PushResultDialog extends JDialog {
         String text = (messages != null ? messages : "").trim();
         String displayText = text.isEmpty() ? "(no server messages)" : text;
 
-        Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html",
-                PullResultDialog.toHtml(displayText, monoFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(monoFont);
-        msgArea.addHyperlinkListener(ev -> {
-            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                try {
-                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        });
+        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));
@@ -116,23 +94,7 @@ public class PushResultDialog extends JDialog {
                 ? "No repositories with unpushed changes."
                 : buildWorkspaceReport(results);
 
-        Font monoFont = SyntaxStyleUtil.monoFont();
-        JEditorPane msgArea = new JEditorPane("text/html",
-                PullResultDialog.toHtml(displayText, monoFont.getSize()));
-        msgArea.setEditable(false);
-        msgArea.setOpaque(true);
-        msgArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-        msgArea.setFont(monoFont);
-        msgArea.setCaretPosition(0);
-        msgArea.addHyperlinkListener(ev -> {
-            if (ev.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                try {
-                    Desktop.getDesktop().browse(new URI(ev.getURL().toExternalForm()));
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        });
+        JEditorPane msgArea = PullResultDialog.createHtmlMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
         scroll.setBorder(BorderFactory.createTitledBorder("Details"));

@@ -26,8 +26,6 @@ The Working Copy file list also marks LFS paths (pointer only vs downloaded).
 
 
 
-TODO lfs-working-copy-status.png
-
 ## Enabling LFS
 
 On a repository that does not have LFS yet:
