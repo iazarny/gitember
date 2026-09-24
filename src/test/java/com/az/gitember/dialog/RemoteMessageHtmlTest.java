@@ -24,11 +24,11 @@ class RemoteMessageHtmlTest {
     @Test
     void toHtml_encodesEmojiAsNumericEntities() {
         String html = PullResultDialog.toHtml("\u26A0\uFE0F GitHub found 28 vulnerabilities", 13);
-        assertTrue(html.contains("charset=UTF-8"), html);
         assertTrue(html.contains("&#9888;"), html);
         assertTrue(html.contains("&#65039;"), html);
         assertTrue(html.contains("GitHub found 28 vulnerabilities"), html);
         assertFalse(html.contains("\u26A0"), html);
+        assertFalse(html.contains("charset="), html);
     }
 
     @Test
@@ -36,5 +36,15 @@ class RemoteMessageHtmlTest {
         String html = PullResultDialog.toHtml(
                 "visit: https://github.com/iazarny/gitember/security/dependabot", 13);
         assertTrue(html.contains("<a href='https://github.com/iazarny/gitember/security/dependabot'>"), html);
+    }
+
+    @Test
+    void createHtmlMessagePane_rendersMessageText() throws Exception {
+        javax.swing.JEditorPane pane = PullResultDialog.createHtmlMessagePane(
+                "refs/heads/master: OK\n\u26A0\uFE0F GitHub found 28 vulnerabilities");
+        String shown = pane.getDocument().getText(0, pane.getDocument().getLength());
+        assertTrue(shown.contains("refs/heads/master: OK"), shown);
+        assertTrue(shown.contains("GitHub found 28 vulnerabilities"), shown);
+        assertTrue(pane.getDocument().getLength() > 0);
     }
 }

@@ -260,7 +260,10 @@ public class PullResultDialog extends JDialog {
             uiFont = new Font(Font.DIALOG, Font.PLAIN, 13);
         }
         JEditorPane msgArea = new JEditorPane();
-        msgArea.setContentType("text/html;charset=UTF-8");
+        msgArea.setContentType("text/html");
+        // HTMLEditorKit re-reads the document when it sees a charset meta tag
+        // and ends up with an empty pane. Entities already keep emoji intact.
+        msgArea.getDocument().putProperty("IgnoreCharsetDirective", Boolean.TRUE);
         msgArea.setText(toHtml(text != null ? text : "", uiFont.getSize()));
         msgArea.setEditable(false);
         msgArea.setOpaque(true);
@@ -326,9 +329,7 @@ public class PullResultDialog extends JDialog {
 
         int size = fontSize > 2 ? fontSize : 12;
         String body = sb.toString().replace("\n", "<br>");
-        return "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head>"
-                + "<body style='font-family:Dialog,SansSerif,Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji;"
-                + "font-size:" + size + "px'>"
+        return "<html><body style='font-family:Dialog,SansSerif;font-size:" + size + "px'>"
                 + body + "</body></html>";
     }
 
