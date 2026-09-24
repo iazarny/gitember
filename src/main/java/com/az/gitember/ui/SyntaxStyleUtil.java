@@ -226,14 +226,17 @@ public final class SyntaxStyleUtil {
     public static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
     public static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
     public static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
-    public static final Color LFS_COLOR = new Color(0, 153, 204);        // blue - LFS files
+    public static final Color LFS_COLOR = new Color(0, 233, 255);        // blue - LFS files
 
     public static Color scmItemColor(String status) {
         if (ScmItem.isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR;
         if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
         if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
             return SyntaxStyleUtil.UNTRACKED_COLOR;
-        if (ScmItem.Status.LFS.equals(status)) return SyntaxStyleUtil.LFS_COLOR;
+        if (ScmItem.Status.LFS.equals(status)
+                || (status != null && status.startsWith("LFS:"))) {
+            return SyntaxStyleUtil.LFS_COLOR;
+        }
         return SyntaxStyleUtil.UNSTAGED_COLOR;
     }
 

@@ -298,8 +298,10 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                 case 0 -> status;
                 case 1 -> item.isStaged();
                 case 2 -> {
-                    if (ScmItem.Status.LFS.equals(status) && item.getAttribute().getSubstatus() != null) {
-                        yield "LFS:" + item.getAttribute().getSubstatus();
+                    String sub = item.getAttribute() != null ? item.getAttribute().getSubstatus() : null;
+                    if (ScmItem.Status.LFS_POINTER.equals(sub)
+                            || (ScmItem.Status.LFS.equals(status) && sub != null)) {
+                        yield "LFS:" + sub;
                     }
                     yield status;
                 }

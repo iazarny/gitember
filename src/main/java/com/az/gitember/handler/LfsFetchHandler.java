@@ -12,6 +12,7 @@ import java.awt.*;
 
 /**
  * Fetches (downloads) LFS objects for the current HEAD from the remote LFS server.
+ * When constructed with a path, only that working-copy file is fetched.
  *
  * <p>If the first attempt fails with an authentication error the handler prompts
  * for credentials (access token or username/password), saves them to the project,
@@ -22,28 +23,44 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     /** Prevents an infinite prompt loop if the user supplies wrong credentials. */
     private boolean credentialsPrompted = false;
 
-    public LfsFetchHandler(Component parent) {
+    /** Repo-relative path to fetch, or {@code null} for every LFS pointer on HEAD. */
+    private final String path;
 
+    public LfsFetchHandler(Component parent) {
+        this(parent, null);
+    }
+
+    public LfsFetchHandler(Component parent, String path) {
         super(parent);
+        this.path = path;
     }
 
     @Override
     protected String getOperationName() {
-        return "Fetch LFS objects";
+        String name = "Fetch LFS objects";
+        if (path != null && !path.isBlank()) {
+            name = "Fetch LFS file " + path;
+        }
+        return name;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
         RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
-        Context.getGitRepoService().fetchLfsObjects(params);
-        Context.updateAll();
+        Context.getGitRepoService().fetchLfsObjects(params, path);
+        Context.updateStatus(null, true);
         Context.updateWorkingBranch();
         return null;
     }
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus("LFS objects fetched");
+        if (path != null && !path.isBlank()) {
+            statusBar.setStatus("LFS file fetched: " + path);
+        } else {
+            statusBar.setStatus("LFS objects fetched");
+        }
+        Context.refreshWorkingCopy();
     }
 
     @Override

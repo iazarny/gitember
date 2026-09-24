@@ -3,6 +3,7 @@ package com.az.gitember.service;
 import com.az.gitember.data.LfsException;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmItem;
+import com.az.gitember.data.ScmItemAttribute;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lfs.LfsPointer;
 import org.eclipse.jgit.lib.Repository;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -206,6 +208,87 @@ class GitRepoServiceLfsTest {
         assertEquals(1, files.size());
         assertEquals("asset.bin", files.get(0).getShortName());
         assertEquals(ScmItem.Status.LFS, files.get(0).getAttribute().getStatus());
+        assertEquals(ScmItem.Status.LFS_POINTER, files.get(0).getAttribute().getSubstatus());
+    }
+
+    @Test
+    void getLfsFiles_downloadedContentIsLfsFile() throws Exception {
+        service.lfsTrack("*.bin");
+        writePointer("asset.bin", "2".repeat(64), 4096);
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("lfs pointer")
+                    .setAuthor("Test User", "test@example.com")
+                    .setCommitter("Test User", "test@example.com")
+                    .call();
+        }
+        Files.write(repoDir.resolve("asset.bin"), new byte[4096]);
+
+        List<ScmItem> files = service.getLfsFiles("HEAD");
+        assertEquals(1, files.size());
+        assertEquals(ScmItem.Status.LFS_FILE, files.get(0).getAttribute().getSubstatus());
+
+        ScmItem pointer = new ScmItem("asset.bin",
+                new ScmItemAttribute()
+                        .withStatus(ScmItem.Status.LFS)
+                        .withSubStatus(ScmItem.Status.LFS_POINTER));
+        ScmItem downloaded = files.get(0);
+        assertNotEquals(pointer, downloaded);
+        assertFalse(GitemberUtil.areEqualIgnoreOrder(List.of(pointer), List.of(downloaded)));
+    }
+
+    @Test
+    void fetchLfsObject_singlePathWithoutHttpRemote_throwsLfsException() throws Exception {
+        service.enableLfsOnExistingRepo();
+        service.lfsTrack("*.bin");
+        writePointer("keep.bin", "3".repeat(64), 50);
+        writePointer("asset.bin", "4".repeat(64), 60);
+        try (Git git = new Git(repository)) {
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("two pointers")
+                    .setAuthor("Test User", "test@example.com")
+                    .setCommitter("Test User", "test@example.com")
+                    .call();
+        }
+
+        RemoteRepoParameters params = new RemoteRepoParameters();
+        LfsException missing = assertThrows(LfsException.class,
+                () -> service.fetchLfsObjects(params, "asset.bin"));
+        assertEquals(LfsException.Kind.NO_REMOTE, missing.getKind());
+
+        assertDoesNotThrow(() -> service.fetchLfsObjects(params, "not-tracked.txt"));
+    }
+
+    @Test
+    void mergeLfs_pointerOverridesModifiedStatus() {
+        ScmItem modified = new ScmItem("image.psd",
+                new ScmItemAttribute().withStatus(ScmItem.Status.MODIFIED));
+        ScmItem pointer = new ScmItem("image.psd",
+                new ScmItemAttribute()
+                        .withStatus(ScmItem.Status.LFS)
+                        .withSubStatus(ScmItem.Status.LFS_POINTER));
+        List<ScmItem> merged = service.mergeLfs(
+                new ArrayList<>(List.of(modified)),
+                new ArrayList<>(List.of(pointer)));
+        assertEquals(1, merged.size());
+        assertEquals(ScmItem.Status.LFS, merged.get(0).getAttribute().getStatus());
+        assertEquals(ScmItem.Status.LFS_POINTER, merged.get(0).getAttribute().getSubstatus());
+    }
+
+    @Test
+    void mergeLfs_downloadedKeepsModifiedStatus() {
+        ScmItem modified = new ScmItem("video.mp4",
+                new ScmItemAttribute().withStatus(ScmItem.Status.MODIFIED));
+        ScmItem downloaded = new ScmItem("video.mp4",
+                new ScmItemAttribute()
+                        .withStatus(ScmItem.Status.LFS)
+                        .withSubStatus(ScmItem.Status.LFS_FILE));
+        List<ScmItem> merged = service.mergeLfs(
+                new ArrayList<>(List.of(modified)),
+                new ArrayList<>(List.of(downloaded)));
+        assertEquals(1, merged.size());
+        assertEquals(ScmItem.Status.MODIFIED, merged.get(0).getAttribute().getStatus());
+        assertEquals(ScmItem.Status.LFS_FILE, merged.get(0).getAttribute().getSubstatus());
     }
 
     @Test

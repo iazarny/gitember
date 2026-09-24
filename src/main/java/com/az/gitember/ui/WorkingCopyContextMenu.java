@@ -171,6 +171,15 @@ public class WorkingCopyContextMenu {
 
         if (com.az.gitember.service.Context.isLfsRepo() && !isMissed && !isRemoved) {
             menu.addSeparator();
+            boolean isLfsPointer = item.getAttribute() != null
+                    && ScmItem.Status.LFS_POINTER.equals(item.getAttribute().getSubstatus());
+            if (isLfsPointer) {
+                JMenuItem fetchItem = new JMenuItem("Fetch LFS file");
+                fetchItem.addActionListener(e ->
+                        new com.az.gitember.handler.LfsFetchHandler(parent, item.getShortName())
+                                .execute());
+                menu.add(fetchItem);
+            }
             JMenuItem lockItem = new JMenuItem("Lock LFS file");
             lockItem.addActionListener(e ->
                     new com.az.gitember.handler.LfsLockHandler(parent, item.getShortName(), true, false)

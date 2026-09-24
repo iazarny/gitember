@@ -268,6 +268,7 @@ public class LfsManageDialog extends JDialog {
                 try {
                     get();
                     loadLfsFiles();
+                    Context.updateStatus(null, true);
                     JOptionPane.showMessageDialog(LfsManageDialog.this,
                             "LFS objects fetched successfully.",
                             "Fetch LFS", JOptionPane.INFORMATION_MESSAGE);

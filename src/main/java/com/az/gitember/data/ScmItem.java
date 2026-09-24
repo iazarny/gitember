@@ -133,7 +133,13 @@ public class ScmItem extends Pair<String, ScmItemAttribute> implements Comparabl
                 - sortOrder.getOrDefault(this.getAttribute().getStatus(), 0);
         if (ret == 0) {
             ret = this.getShortName().compareTo(o.getShortName());
-
+        }
+        if (ret == 0) {
+            String thisSub = this.getAttribute().getSubstatus() != null
+                    ? this.getAttribute().getSubstatus() : "";
+            String otherSub = o.getAttribute().getSubstatus() != null
+                    ? o.getAttribute().getSubstatus() : "";
+            ret = thisSub.compareTo(otherSub);
         }
         return ret;
     }

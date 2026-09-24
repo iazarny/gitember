@@ -64,8 +64,7 @@ After changing patterns, commit `.gitattributes` so other clones use the same ru
 ## Viewing LFS files
 
 The **LFS files in HEAD** table lists pointers recorded on the current commit.
-
-TODO lfs-files-table.png
+![lfs-files-table.png](lfs-files-table.png)
 
 | Column | Description |
 |--------|-------------|
@@ -86,10 +85,12 @@ token or username/password if the LFS host requires it.
 
 After a clone, a shallow fetch, or a checkout that left pointer stubs:
 
-1. Open **Repository → Git LFS → Fetch LFS Objects**, or click **Fetch LFS Objects** in the Manage LFS dialog.
-2. Gitember downloads missing objects from the LFS server and writes them into the working tree.
+1. Open **Repository → Git LFS → Fetch LFS Objects**, or click **Fetch LFS Objects** in the Manage LFS dialog, to download every missing object.
+2. Or, in the Working Copy list, right-click a file whose status is **LFS:lfs_pointer** and choose **Fetch LFS file** to download that file only.
+3. Gitember writes the real content into the working tree and updates the status to **LFS:lfs_file**.
+4. 
+![lfs-fetch-menu.png](lfs-fetch-menu.png)
 
-TODO lfs-fetch-menu.png
 
 Progress is shown in the status bar. If authentication fails, Gitember explains that LFS uses HTTPS and offers to save credentials.
 
@@ -127,9 +128,11 @@ Gitember calls the Git LFS locking API (`/locks` and `/locks/{id}/unlock`) using
 
 ## LFS diffs
 
-For an LFS-tracked file, **Diff with repository** does not dump pointer text or binary data. Gitember compares the HEAD pointer with the working-tree pointer (or downloaded content) and shows oid and size.
+For an LFS-tracked file, **Diff with repository** does not dump pointer 
+text or binary data. Gitember compares the HEAD pointer with the working-tree
+pointer (or downloaded content) and shows oid and size.
 
-TODO lfs-diff-window.png
+
 
 Example summary:
 
@@ -154,7 +157,7 @@ Gitember classifies LFS failures so the UI can show a useful message instead of 
 | Nothing locked | Unlock reports that no lock exists for that path. |
 | Server / network error | The HTTP status and server body, when available. |
 
-TODO lfs-auth-prompt.png
+
 
 ## Summary
 
@@ -165,7 +168,7 @@ TODO lfs-auth-prompt.png
 | Enable LFS on a new repo | File → Init → **Enable Git LFS** |
 | Track / untrack patterns | Manage LFS → **+** / **−** |
 | List LFS files | Manage LFS → **LFS files in HEAD** |
-| Download objects | Repository → Git LFS → **Fetch LFS Objects** |
+| Download objects | Repository → Git LFS → **Fetch LFS Objects**, Manage LFS, or Working Copy → **Fetch LFS file** |
 | Upload objects | Repository → Git LFS → **Upload LFS Objects** |
 | Lock / unlock a file | Manage LFS or Working Copy → right-click |
 | Compare LFS versions | Working Copy → **Diff with repository** |

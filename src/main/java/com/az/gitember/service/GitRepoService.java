@@ -2152,7 +2152,17 @@ public class GitRepoService implements AutoCloseable {
         for (ScmItem scmItem : status) {
             for (ScmItem scmItemLfs : lfs) {
                 if (scmItem.getShortName().equals(scmItemLfs.getShortName())) {
-                    scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
+                    String lfsSub = scmItemLfs.getAttribute().getSubstatus();
+                    scmItem.getAttribute().setSubstatus(lfsSub);
+                    // JGit IndexDiff often reports pointer stubs as Modified because
+                    // the LFS clean filter rewrites the working-tree pointer. That is
+                    // not a real content change — show LFS:lfs_pointer instead.
+                    String currentStatus = scmItem.getAttribute().getStatus();
+                    if (ScmItem.Status.LFS_POINTER.equals(lfsSub)
+                            && currentStatus != null
+                            && !currentStatus.startsWith("Conflict")) {
+                        scmItem.getAttribute().setStatus(ScmItem.Status.LFS);
+                    }
                     lfs.remove(scmItemLfs);
                     break;
                 }
@@ -2253,111 +2263,129 @@ public class GitRepoService implements AutoCloseable {
      * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
      */
     public void fetchLfsObjects(RemoteRepoParameters params) throws IOException {
+        fetchLfsObjects(params, null);
+    }
+
+    /**
+     * Downloads LFS objects referenced by HEAD. When {@code path} is not blank,
+     * only that working-tree path is fetched; otherwise every LFS pointer on HEAD
+     * is fetched.
+     *
+     * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
+     * @param path   repo-relative path to fetch, or {@code null} for every LFS file
+     */
+    public void fetchLfsObjects(RemoteRepoParameters params, String path) throws IOException {
         Ref head = repository.exactRef(Constants.HEAD);
-        if (head == null || head.getObjectId() == null) return;
-        Lfs lfs = new Lfs(repository);
+        Lfs lfs = null;
         List<LfsPointer> pointers = new ArrayList<>();
         List<String> paths = new ArrayList<>();
-        try (RevWalk walk = new RevWalk(repository)) {
-            RevCommit commit = walk.parseCommit(head.getObjectId());
-            RevTree tree = commit.getTree();
-            try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                LfsPointerFilter filter = new LfsPointerFilter();
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-                treeWalk.setFilter(filter);
-                while (treeWalk.next()) {
-                    LfsPointer pointer = filter.getPointer();
-                    if (pointer != null) {
-                        pointers.add(pointer);
-                        paths.add(treeWalk.getPathString());
+        if (head != null && head.getObjectId() != null) {
+            lfs = new Lfs(repository);
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(head.getObjectId());
+                RevTree tree = commit.getTree();
+                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                    LfsPointerFilter filter = new LfsPointerFilter();
+                    treeWalk.addTree(tree);
+                    treeWalk.setRecursive(true);
+                    treeWalk.setFilter(filter);
+                    while (treeWalk.next()) {
+                        LfsPointer pointer = filter.getPointer();
+                        if (pointer != null) {
+                            String treePath = treeWalk.getPathString();
+                            if (StringUtils.isBlank(path) || path.equals(treePath)) {
+                                pointers.add(pointer);
+                                paths.add(treePath);
+                            }
+                        }
                     }
                 }
             }
         }
-        if (pointers.isEmpty()) return;
 
-        // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
-        // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
-        // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
-        StoredConfig repoCfg = repository.getConfig();
-        boolean tempLfsUrl = false;
-        if (repoCfg.getString("lfs", null, "url") == null) {
-            String httpsUrl = sshRemoteToHttps(params.getUrl());
-            if (httpsUrl != null) {
-                // LfsConnectionFactory appends /objects/batch to lfs.url, so the
-                // base URL must end with /info/lfs (GitHub LFS endpoint convention).
-                String lfsUrl = httpsUrl.endsWith("/info/lfs")
-                        ? httpsUrl : httpsUrl + "/info/lfs";
-                repoCfg.setString("lfs", null, "url", lfsUrl);
-                tempLfsUrl = true;
-            }
-        }
-
-        if (repoCfg.getString("lfs", null, "url") == null && !tempLfsUrl) {
-            throw new LfsException(LfsException.Kind.NO_REMOTE,
-                    "Cannot download LFS files: no HTTP(S) remote is configured");
-        }
-
-        // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
-        CredentialsProvider prevCp = CredentialsProvider.getDefault();
-        try {
-            if (StringUtils.isNotBlank(params.getAccessToken())) {
-                CredentialsProvider.setDefault(
-                        new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
-            } else if (StringUtils.isNotBlank(params.getUserName())) {
-                CredentialsProvider.setDefault(
-                        new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
-            }
-            SmudgeFilter.downloadLfsResource(lfs, repository,
-                    pointers.toArray(new LfsPointer[0]));
-        } catch (LfsException e) {
-            throw e;
-        } catch (Exception e) {
-            throw wrapLfsError("Download LFS files failed", e);
-        } finally {
-            CredentialsProvider.setDefault(prevCp);
-            if (tempLfsUrl) {
-                repoCfg.unset("lfs", null, "url");
-            }
-        }
-
-        // Write the real content from the LFS store directly into the working tree,
-        // then refresh the index stat entries so that git status quick-check (mtime/size
-        // comparison) treats these files as clean — matching what "git lfs checkout" does.
-        List<String> updated = new ArrayList<>();
-        for (int i = 0; i < paths.size(); i++) {
-            Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
-            if (Files.exists(lfsObjPath)) {
-                Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
-                Files.createDirectories(workingPath.getParent());
-                Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                updated.add(paths.get(i));
-            }
-        }
-
-        if (!updated.isEmpty()) {
-            DirCache dc = repository.lockDirCache();
-            try {
-                DirCacheEditor editor = dc.editor();
-                for (String p : updated) {
-                    editor.add(new DirCacheEditor.PathEdit(p) {
-                        @Override
-                        public void apply(DirCacheEntry ent) {
-                            File f = new File(repository.getWorkTree(), p);
-                            if (f.exists()) {
-                                ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
-                                ent.setLength((int) f.length());
-                                // ObjectId (pointer hash) is intentionally left unchanged.
-                            }
-                        }
-                    });
+        if (!pointers.isEmpty()) {
+            // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
+            // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
+            // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
+            StoredConfig repoCfg = repository.getConfig();
+            boolean tempLfsUrl = false;
+            if (repoCfg.getString("lfs", null, "url") == null) {
+                String httpsUrl = sshRemoteToHttps(params.getUrl());
+                if (httpsUrl != null) {
+                    // LfsConnectionFactory appends /objects/batch to lfs.url, so the
+                    // base URL must end with /info/lfs (GitHub LFS endpoint convention).
+                    String lfsUrl = httpsUrl.endsWith("/info/lfs")
+                            ? httpsUrl : httpsUrl + "/info/lfs";
+                    repoCfg.setString("lfs", null, "url", lfsUrl);
+                    tempLfsUrl = true;
                 }
-                editor.commit();
-                dc.unlock();
+            }
+
+            if (repoCfg.getString("lfs", null, "url") == null && !tempLfsUrl) {
+                throw new LfsException(LfsException.Kind.NO_REMOTE,
+                        "Cannot download LFS files: no HTTP(S) remote is configured");
+            }
+
+            // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
+            CredentialsProvider prevCp = CredentialsProvider.getDefault();
+            try {
+                if (StringUtils.isNotBlank(params.getAccessToken())) {
+                    CredentialsProvider.setDefault(
+                            new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
+                } else if (StringUtils.isNotBlank(params.getUserName())) {
+                    CredentialsProvider.setDefault(
+                            new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
+                }
+                SmudgeFilter.downloadLfsResource(lfs, repository,
+                        pointers.toArray(new LfsPointer[0]));
+            } catch (LfsException e) {
+                throw e;
             } catch (Exception e) {
-                log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
-                dc.unlock();
+                throw wrapLfsError("Download LFS files failed", e);
+            } finally {
+                CredentialsProvider.setDefault(prevCp);
+                if (tempLfsUrl) {
+                    repoCfg.unset("lfs", null, "url");
+                }
+            }
+
+            // Write the real content from the LFS store directly into the working tree,
+            // then refresh the index stat entries so that git status quick-check (mtime/size
+            // comparison) treats these files as clean — matching what "git lfs checkout" does.
+            List<String> updated = new ArrayList<>();
+            for (int i = 0; i < paths.size(); i++) {
+                Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
+                if (Files.exists(lfsObjPath)) {
+                    Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
+                    Files.createDirectories(workingPath.getParent());
+                    Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    updated.add(paths.get(i));
+                }
+            }
+
+            if (!updated.isEmpty()) {
+                DirCache dc = repository.lockDirCache();
+                try {
+                    DirCacheEditor editor = dc.editor();
+                    for (String p : updated) {
+                        editor.add(new DirCacheEditor.PathEdit(p) {
+                            @Override
+                            public void apply(DirCacheEntry ent) {
+                                File f = new File(repository.getWorkTree(), p);
+                                if (f.exists()) {
+                                    ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
+                                    ent.setLength((int) f.length());
+                                    // ObjectId (pointer hash) is intentionally left unchanged.
+                                }
+                            }
+                        });
+                    }
+                    editor.commit();
+                    dc.unlock();
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
+                    dc.unlock();
+                }
             }
         }
     }
