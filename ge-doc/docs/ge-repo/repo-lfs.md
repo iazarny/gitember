@@ -114,7 +114,7 @@ File locking prevents two people from editing the same binary at once.
 1. In **Manage LFS…**, select a file in the table, then click **Lock** or **Unlock**.
 2. Or, in the Working Copy list, right-click an LFS file and choose **Lock LFS file** / **Unlock LFS file**.
 
-TODO lfs-lock-context-menu.png
+
 
 Gitember calls the Git LFS locking API (`/locks` and `/locks/{id}/unlock`) using the current branch as the lock ref.
 

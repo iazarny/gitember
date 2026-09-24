@@ -30,16 +30,14 @@ Give each stash a meaningful description so you can identify it in the stash lis
 
 To see all saved stashes:
 
-1. Open the **Branches** panel.
-2. Expand the **Stashes** section, or select **Stash → Show Stash List** from the menu.
+Expand the **Stashes** section
 
-TODO stash-list.png
+![stash-list.png](stash-list.png)
 
 Each stash entry shows:
 
 | Column | Description |
 |--------|-------------|
-| Index  | `stash@{0}` is the most recent entry. |
 | Description | The message provided when the stash was created, or the default auto-generated message. |
 | Date   | When the stash was saved. |
 
@@ -48,12 +46,12 @@ Each stash entry shows:
 To restore stashed changes back to the working directory:
 
 1. Right-click the desired stash entry and select **Apply Stash**.
-
-TODO stash-apply-menu.png
+2. 
+![stash-apply-menu.png](stash-apply-menu.png)
 
 Gitember applies the stash without removing it from the stash list, so it remains available if needed again.
 
-:::note
+:::tip
 If the applied stash conflicts with the current working tree, conflicts will be marked in the Working Copy file list just like merge conflicts.
 :::
 
@@ -63,8 +61,6 @@ To permanently remove a stash entry:
 
 1. Right-click the stash entry.
 2. Select **Delete Stash**.
-
-TODO stash-delete-menu.png
 
 The entry is removed from the stash list. This operation cannot be undone.
 

@@ -9,7 +9,7 @@ Interactive rebase gives you fine-grained control over the commit history of a b
 
 See also [Rewriting History](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History) in Git documentation.
 
-:::caution
+:::tip
 Interactive rebase rewrites commit history. Never rebase commits that have already been pushed to a shared remote branch, as it will cause divergence for other contributors.
 :::
 

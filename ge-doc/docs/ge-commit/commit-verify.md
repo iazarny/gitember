@@ -39,7 +39,7 @@ When the global file is selected, **Edit…** opens `~/.ssh/allowed_signers` and
 When the repository file is selected, **Project Settings** grows an
 **Edit .git/allowed_signers…** button.
 
-:::note Screenshot placeholder
+:::tip Screenshot placeholder
 Add `commit-verify-settings.png` here (the Verification block: checkbox, the two allowed-signers
 radios, and the Edit / Edit revoked keys buttons).
 :::

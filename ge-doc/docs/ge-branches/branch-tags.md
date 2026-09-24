@@ -51,7 +51,7 @@ To remove a tag from your local repository:
 
 
 
-:::caution
+:::tip
 Deleting a local tag does not remove it from the remote repository. Use **Delete Remote Tag** to remove a tag from the remote.
 :::
 

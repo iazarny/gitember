@@ -47,7 +47,7 @@ convention, e.g. `my-repo`, `my-repo-hotfix`, `my-repo-experiment`.
 Gitember runs `git worktree remove`, which deletes the linked directory and prunes the
 worktree reference from the repository.
 
-:::note
+:::tip
 A worktree can only be removed when it has no uncommitted changes. Clean the working
 directory first (commit, stash, or discard) before removing.
 :::
