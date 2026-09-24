@@ -14,13 +14,13 @@ See also [Git Stash](https://git-scm.com/docs/git-stash) in Git documentation.
 To stash your current changes:
 
 1. Open the **Working Copy** page.
-2. Right-click anywhere in the file list, or use the toolbar button, and choose **Stash Changes**.
+2. Open working copy menu and choose **Stash ...**.
 3. Optionally enter a description for the stash in the dialog that appears.
 4. Click **OK**.
 
-TODO stash-create-dialog.png
+![stash-create-dialog.png](stash-create-dialog.png)
 
-Gitember runs `git stash` in the background. Your working directory is restored to the last committed state, and all staged and unstaged tracked changes are saved.
+Your working directory is restored to the last committed state, and all staged and unstaged tracked changes are saved.
 
 :::tip
 Give each stash a meaningful description so you can identify it in the stash list later.
