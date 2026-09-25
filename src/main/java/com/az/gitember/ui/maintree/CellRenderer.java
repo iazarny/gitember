@@ -22,6 +22,7 @@ public class CellRenderer extends DefaultTreeCellRenderer {
         REMOTE_BRANCHES,
         TAGS,
         STASHES,
+        REFLOG,
         BRANCH,
         BRANCH_FOLDER,
         TAG,
@@ -81,6 +82,7 @@ public class CellRenderer extends DefaultTreeCellRenderer {
             case REMOTE_BRANCHES-> Util.themeAwareIcon(FontAwesomeSolid.CLOUD,       14);
             case TAGS           -> Util.themeAwareIcon(FontAwesomeSolid.TAGS,        14);
             case STASHES        -> Util.themeAwareIcon(FontAwesomeSolid.ARCHIVE,     14);
+            case REFLOG         -> Util.themeAwareIcon(FontAwesomeSolid.UNDO,        14);
             case BRANCH         -> Util.themeAwareIcon(FontAwesomeSolid.CODE_BRANCH, 14);
             case BRANCH_FOLDER  -> Util.themeAwareIcon(FontAwesomeSolid.FOLDER,      14);
             case TAG            -> Util.themeAwareIcon(FontAwesomeSolid.TAG,         14);

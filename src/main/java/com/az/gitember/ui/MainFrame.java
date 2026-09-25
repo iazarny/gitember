@@ -54,6 +54,7 @@ public class MainFrame extends JFrame {
     private  CommitDetailPanel stashDetailPanel;
     private  PullRequestPanel pullRequestPanel;
     private  SubmodulePanel submodulePanel;
+    private  ReflogPanel reflogPanel;
     private  WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
     private  ActiveView activeView = ActiveView.HISTORY;
@@ -383,6 +384,7 @@ public class MainFrame extends JFrame {
         stashDetailPanel = new CommitDetailPanel(statusBar);
         pullRequestPanel = new PullRequestPanel();
         submodulePanel = new SubmodulePanel(statusBar);
+        reflogPanel = new ReflogPanel(statusBar);
         workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
         // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
         // committing is possible whenever any project has staged files or can amend HEAD.
@@ -893,6 +895,7 @@ public class MainFrame extends JFrame {
             boolean isWorkingCopy = data.type() == CellRenderer.NodeType.WORKING_COPY;
             boolean isAllHistory  = data.type() == CellRenderer.NodeType.HISTORY;
             boolean isPullRequest = data.type() == CellRenderer.NodeType.PULL_REQUEST;
+            boolean isReflog = data.type() == CellRenderer.NodeType.REFLOG;
 
             // Merge/unmerge working copy toolbar
 
@@ -920,6 +923,12 @@ public class MainFrame extends JFrame {
                 toolBar.mergePullRequestToolbar(pullRequestPanel);
             } else {
                 toolBar.unmergePullRequestToolbar();
+            }
+
+            if (isReflog) {
+                toolBar.mergeReflogToolbar(reflogPanel);
+            } else {
+                toolBar.unmergeReflogToolbar();
             }
 
             switch (data.type()) {
@@ -969,6 +978,11 @@ public class MainFrame extends JFrame {
                         contentPanel.setContent(pullRequestPanel);
                         pullRequestPanel.showPullRequest(pr);
                     }
+                }
+                case REFLOG -> {
+                    setActiveView(ActiveView.REFLOG);
+                    contentPanel.setContent(reflogPanel);
+                    reflogPanel.reload();
                 }
                 case SUBMODULES, SUBMODULE -> {
                     contentPanel.setContent(submodulePanel);

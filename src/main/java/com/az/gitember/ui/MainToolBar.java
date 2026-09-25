@@ -33,6 +33,7 @@ public class MainToolBar extends JToolBar {
     private final java.util.List<Component> mergedWorkspaceComponents = new java.util.ArrayList<>();
     private final java.util.List<Component> mergedHistoryComponents = new java.util.ArrayList<>();
     private final java.util.List<Component> mergedComponents = new java.util.ArrayList<>();
+    private final java.util.List<Component> mergedReflogComponents = new java.util.ArrayList<>();
 
     public MainToolBar() {
         setFloatable(false);
@@ -283,6 +284,43 @@ public class MainToolBar extends JToolBar {
                 remove(c);
             }
             mergedHistoryComponents.clear();
+            revalidate();
+            repaint();
+        }
+    }
+
+    public void mergeReflogToolbar(ReflogPanel panel) {
+        if (panel != null && mergedReflogComponents.isEmpty()) {
+            JSeparator sep = new JToolBar.Separator();
+            mergedReflogComponents.add(sep);
+            add(sep);
+
+            mergedReflogComponents.add(panel.getRefreshBtn());
+            add(panel.getRefreshBtn());
+
+            Component glue = Box.createHorizontalGlue();
+            mergedReflogComponents.add(glue);
+            add(glue);
+
+            JLabel filterLabel = new JLabel("Search:");
+            filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+            mergedReflogComponents.add(filterLabel);
+            add(filterLabel);
+
+            mergedReflogComponents.add(panel.getSearchField());
+            add(panel.getSearchField());
+
+            revalidate();
+            repaint();
+        }
+    }
+
+    public void unmergeReflogToolbar() {
+        if (!mergedReflogComponents.isEmpty()) {
+            for (Component c : mergedReflogComponents) {
+                remove(c);
+            }
+            mergedReflogComponents.clear();
             revalidate();
             repaint();
         }

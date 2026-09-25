@@ -324,6 +324,8 @@ public class MainTreePanel extends JPanel {
                 new TreeNodeData("Tags", NodeType.TAGS, projectSupplier));
         DefaultMutableTreeNode stashes = new DefaultMutableTreeNode(
                 new TreeNodeData("Stashes", NodeType.STASHES, projectSupplier));
+        DefaultMutableTreeNode reflog = new DefaultMutableTreeNode(
+                new TreeNodeData("Reflog", NodeType.REFLOG, projectSupplier));
 
         parent.add(workingCopy);
         parent.add(history);
@@ -331,8 +333,9 @@ public class MainTreePanel extends JPanel {
         parent.add(remoteBranches);
         parent.add(tags);
         parent.add(stashes);
+        parent.add(reflog);
 
-        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes);
+        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes, reflog);
     }
 
     private void assignSharedCategoryNodes(RepoCategoryNodes nodes) {
@@ -385,7 +388,8 @@ public class MainTreePanel extends JPanel {
             DefaultMutableTreeNode localBranches,
             DefaultMutableTreeNode remoteBranches,
             DefaultMutableTreeNode tags,
-            DefaultMutableTreeNode stashes) {
+            DefaultMutableTreeNode stashes,
+            DefaultMutableTreeNode reflog) {
     }
 
     /**
@@ -428,7 +432,7 @@ public class MainTreePanel extends JPanel {
      */
     private RepoCategoryNodes categoryNodesOf(DefaultMutableTreeNode projectNode) {
         DefaultMutableTreeNode workingCopy = null, history = null, localBranches = null,
-                remoteBranches = null, tags = null, stashes = null;
+                remoteBranches = null, tags = null, stashes = null, reflog = null;
         for (int i = 0; i < projectNode.getChildCount(); i++) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) projectNode.getChildAt(i);
             if (!(child.getUserObject() instanceof TreeNodeData data)) {
@@ -441,13 +445,14 @@ public class MainTreePanel extends JPanel {
                 case REMOTE_BRANCHES -> remoteBranches = child;
                 case TAGS -> tags = child;
                 case STASHES -> stashes = child;
+                case REFLOG -> reflog = child;
                 default -> { }
             }
         }
         if (localBranches == null || remoteBranches == null || tags == null || stashes == null) {
             return null;
         }
-        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes);
+        return new RepoCategoryNodes(workingCopy, history, localBranches, remoteBranches, tags, stashes, reflog);
     }
 
     public void refreshTree() {

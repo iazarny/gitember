@@ -1669,6 +1669,134 @@ public class GitRepoService implements AutoCloseable {
     }
 
     /**
+     * Reads reflog entries from HEAD, every local branch, and {@code refs/stash},
+     * newest first.
+     */
+    public List<ScmReflogEntry> getReflogEntries() {
+        List<ScmReflogEntry> entries = new ArrayList<>();
+        try {
+            addReflogEntries(entries, Constants.HEAD);
+            Collection<Ref> heads = repository.getRefDatabase().getRefsByPrefix(Constants.R_HEADS);
+            for (Ref ref : heads) {
+                addReflogEntries(entries, ref.getName());
+            }
+            addReflogEntries(entries, Constants.R_STASH);
+            entries.sort((a, b) -> {
+                long wa = a.getWhen() != null ? a.getWhen().getTime() : 0L;
+                long wb = b.getWhen() != null ? b.getWhen().getTime() : 0L;
+                int cmp = Long.compare(wb, wa);
+                if (cmp == 0) {
+                    String sa = a.getSelector() != null ? a.getSelector() : "";
+                    String sb = b.getSelector() != null ? b.getSelector() : "";
+                    cmp = sa.compareTo(sb);
+                }
+                return cmp;
+            });
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Cannot read reflog", e);
+        }
+        return entries;
+    }
+
+    /**
+     * Recreates a local branch pointing at {@code commitId} (deleted-branch recovery).
+     */
+    public Ref recoverDeletedBranch(String name, String commitId) throws IOException {
+        return createBranch(commitId, name);
+    }
+
+    /**
+     * Hard-resets HEAD and the working tree to {@code commitId} (undo a previous reset).
+     */
+    public Ref recoverHardReset(String commitId, ProgressMonitor progressMonitor) throws IOException {
+        ObjectId id = repository.resolve(commitId);
+        Ref result = null;
+        if (id != null) {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(id);
+                result = resetBranch(commit, ResetCommand.ResetType.HARD, progressMonitor);
+            }
+        }
+        if (result == null) {
+            throw new IOException("Cannot resolve commit " + commitId);
+        }
+        return result;
+    }
+
+    /**
+     * Recreates a local branch at a dangling / reset-away commit.
+     */
+    public Ref recoverDeletedCommit(String name, String commitId) throws IOException {
+        return createBranch(commitId, name);
+    }
+
+    /**
+     * Puts a dangling stash commit back on {@code refs/stash} (same idea as
+     * {@code git stash store}).
+     */
+    public void recoverStash(String commitId) throws IOException {
+        ObjectId id = repository.resolve(commitId);
+        if (id == null) {
+            throw new IOException("Cannot resolve stash commit " + commitId);
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            walk.parseCommit(id);
+        }
+        RefUpdate ru = repository.updateRef(Constants.R_STASH);
+        ru.setNewObjectId(id);
+        ru.setForceUpdate(true);
+        ru.setForceRefLog(true);
+        ru.setRefLogMessage("recovered stash", false);
+        RefUpdate.Result updateResult = ru.forceUpdate();
+        if (updateResult == RefUpdate.Result.LOCK_FAILURE
+                || updateResult == RefUpdate.Result.IO_FAILURE
+                || updateResult == RefUpdate.Result.REJECTED
+                || repository.resolve(Constants.R_STASH) == null) {
+            throw new IOException("Cannot restore stash: " + updateResult);
+        }
+    }
+
+    private void addReflogEntries(List<ScmReflogEntry> target, String refName) {
+        try {
+            ReflogReader reader = repository.getReflogReader(refName);
+            if (reader != null) {
+                List<ReflogEntry> list = reader.getReverseEntries();
+                String shortRef = shortReflogName(refName);
+                for (int i = 0; i < list.size(); i++) {
+                    ReflogEntry re = list.get(i);
+                    ScmReflogEntry row = new ScmReflogEntry();
+                    row.setRefName(refName);
+                    row.setSelector(shortRef + "@{" + i + "}");
+                    row.setNewId(re.getNewId() != null ? re.getNewId().getName() : "");
+                    row.setOldId(re.getOldId() != null ? re.getOldId().getName() : "");
+                    row.setComment(re.getComment() != null ? re.getComment() : "");
+                    PersonIdent who = re.getWho();
+                    if (who != null) {
+                        row.setWhoName(who.getName());
+                        row.setWhen(who.getWhen());
+                    }
+                    row.setKind(ScmReflogEntry.classify(refName, row.getComment()));
+                    target.add(row);
+                }
+            }
+        } catch (Exception e) {
+            log.log(Level.FINE, "No reflog for " + refName, e);
+        }
+    }
+
+    private static String shortReflogName(String refName) {
+        String name = refName;
+        if (Constants.HEAD.equals(refName)) {
+            name = "HEAD";
+        } else if (refName.startsWith(Constants.R_HEADS)) {
+            name = refName.substring(Constants.R_HEADS.length());
+        } else if (Constants.R_STASH.equals(refName)) {
+            name = "stash";
+        }
+        return name;
+    }
+
+    /**
      * Revert changes or reolve conflict
      *
      * @param fileName file name
