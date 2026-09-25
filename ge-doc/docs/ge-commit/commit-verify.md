@@ -39,12 +39,7 @@ When the global file is selected, **Edit…** opens `~/.ssh/allowed_signers` and
 When the repository file is selected, **Project Settings** grows an
 **Edit .git/allowed_signers…** button.
 
-:::tip Screenshot placeholder
-Add `commit-verify-settings.png` here (the Verification block: checkbox, the two allowed-signers
-radios, and the Edit / Edit revoked keys buttons).
-:::
-
-TODO  commit-verify-settings.png
+![commit-verify-settings.png](commit-verify-settings.png)
 
 GPG signatures are verified against your local OpenPGP keyring. The allowed-signers file is
 used for **SSH** signatures.
