@@ -131,6 +131,8 @@ public class HistoryPanel extends JPanel {
         JMenuItem undoItem             = new JMenuItem("Undo commit…");
         JMenuItem revertItem           = new JMenuItem("Revert commit…");
         JMenuItem resetItem            = new JMenuItem("Reset to commit…");
+        JMenuItem addNoteItem          = new JMenuItem("Add note…");
+        JMenuItem removeNoteItem       = new JMenuItem("Remove note");
         JMenuItem changeMessageItem      = new JMenuItem("Change commit message…");
         JMenuItem interactiveRebaseItem = new JMenuItem("Interactive Rebase onto here…");
 
@@ -221,6 +223,12 @@ public class HistoryPanel extends JPanel {
             }, true);
         });
 
+        addNoteItem.setToolTipText("Add or edit a Git note on this commit (does not change the SHA)");
+        addNoteItem.addActionListener(e -> editSelectedCommitNote());
+
+        removeNoteItem.setToolTipText("Remove the Git note from this commit");
+        removeNoteItem.addActionListener(e -> removeSelectedCommitNote());
+
         changeMessageItem.setToolTipText("Edit the commit message of this unpushed commit");
         changeMessageItem.addActionListener(e -> {
             PlotCommit<PlotLane> commit = selectedCommit();
@@ -294,6 +302,9 @@ public class HistoryPanel extends JPanel {
         commitMenu.add(revertItem);
         commitMenu.add(resetItem);
         commitMenu.addSeparator();
+        commitMenu.add(addNoteItem);
+        commitMenu.add(removeNoteItem);
+        commitMenu.addSeparator();
         commitMenu.add(changeMessageItem);
         commitMenu.add(interactiveRebaseItem);
 
@@ -323,6 +334,13 @@ public class HistoryPanel extends JPanel {
                     canUndo = false;
                 }
                 undoItem.setEnabled(canUndo);
+                boolean hasNote = false;
+                try {
+                    String note = Context.getGitRepoService().getCommitNote(commit.getName());
+                    hasNote = note != null && !note.isBlank();
+                } catch (Exception ignored) {}
+                addNoteItem.setText(hasNote ? "Edit note…" : "Add note…");
+                removeNoteItem.setEnabled(hasNote);
                 commitMenu.show(commitTable, ev.getX(), ev.getY());
             }
         });
@@ -633,12 +651,76 @@ public class HistoryPanel extends JPanel {
         }
     }
 
+    private void editSelectedCommitNote() {
+        PlotCommit<PlotLane> commit = selectedCommit();
+        if (commit != null) {
+            String sha = commit.getName();
+            String existing = Context.getGitRepoService().getCommitNote(sha);
+            boolean editing = existing != null && !existing.isBlank();
+            JTextArea textArea = new JTextArea(existing != null ? existing : "", 8, 50);
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            JScrollPane sp = new JScrollPane(textArea);
+            sp.setPreferredSize(new Dimension(520, 180));
+            String title = editing ? "Edit Note" : "Add Note";
+            int choice = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    sp, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (choice == JOptionPane.OK_OPTION) {
+                String text = textArea.getText();
+                if (text == null || text.isBlank()) {
+                    if (editing) {
+                        runCommitAction("Remove note", () -> {
+                            Context.getGitRepoService().removeCommitNote(sha);
+                            return "Note removed from " + sha.substring(0, 7);
+                        }, false, true);
+                    }
+                } else {
+                    runCommitAction(editing ? "Edit note" : "Add note", () -> {
+                        Context.getGitRepoService().addCommitNote(sha, text);
+                        return (editing ? "Note updated on " : "Note added to ") + sha.substring(0, 7);
+                    }, false, true);
+                }
+            }
+        }
+    }
+
+    private void removeSelectedCommitNote() {
+        PlotCommit<PlotLane> commit = selectedCommit();
+        if (commit != null) {
+            String sha = commit.getName();
+            int ok = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "Remove the note from commit " + sha.substring(0, 7) + "?",
+                    "Remove note", JOptionPane.OK_CANCEL_OPTION);
+            if (ok == JOptionPane.OK_OPTION) {
+                runCommitAction("Remove note", () -> {
+                    Context.getGitRepoService().removeCommitNote(sha);
+                    return "Note removed from " + sha.substring(0, 7);
+                }, false, true);
+            }
+        }
+    }
+
+    private void refreshSelectedCommitDetails() {
+        int row = commitTable.getSelectedRow();
+        if (row >= 0 && row < tableModel.getRowCount()) {
+            ScmRevisionInformation rev = tableModel.getRevisionAt(row);
+            detailPanel.showRevision(rev);
+        }
+    }
+
     /** Runs a git action on a background thread, showing status bar progress. */
     private void runCommitAction(String label, CommitAction action) {
-        runCommitAction(label, action, false);
+        runCommitAction(label, action, false, false);
     }
 
     private void runCommitAction(String label, CommitAction action, boolean refreshAfter) {
+        runCommitAction(label, action, refreshAfter, false);
+    }
+
+    private void runCommitAction(String label, CommitAction action, boolean refreshAfter,
+                                 boolean refreshDetails) {
         statusBar.setStatus(label + "…");
         statusBar.showProgress(true);
         new SwingWorker<String, Void>() {
@@ -649,6 +731,8 @@ public class HistoryPanel extends JPanel {
                     statusBar.setStatus(get());
                     if (refreshAfter) {
                         loadHistory(lastTreeName, lastAllHistory);
+                    } else if (refreshDetails) {
+                        refreshSelectedCommitDetails();
                     }
                 } catch (java.util.concurrent.CancellationException ex) {
                     statusBar.setStatus(label + " cancelled.");

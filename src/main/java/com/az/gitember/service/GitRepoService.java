@@ -33,6 +33,7 @@ import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revplot.PlotWalk;
+import org.eclipse.jgit.notes.Note;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
@@ -1487,6 +1488,88 @@ public class GitRepoService implements AutoCloseable {
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot delete local tag " + shortName, e);
             throw new IOException("Cannot delete tag " + shortName, e);
+        }
+    }
+
+    /**
+     * Reads the Git note for {@code commitSha} from {@code refs/notes/commits}.
+     * Returns {@code null} when the commit has no note or the notes ref is absent.
+     * Notes live outside the commit object, so adding one does not change the SHA.
+     */
+    public String getCommitNote(String commitSha) {
+        String noteText = null;
+        if (repository != null && commitSha != null && !commitSha.isBlank()) {
+            try (Git git = new Git(repository);
+                 RevWalk walk = new RevWalk(repository)) {
+                ObjectId id = repository.resolve(commitSha);
+                if (id != null) {
+                    RevCommit commit = walk.parseCommit(id);
+                    Note note = git.notesShow().setObjectId(commit).call();
+                    if (note != null && note.getData() != null) {
+                        ObjectLoader loader = repository.open(note.getData());
+                        noteText = new String(loader.getBytes(), StandardCharsets.UTF_8);
+                    }
+                }
+            } catch (Exception e) {
+                log.log(Level.FINE, "Cannot read git note for " + commitSha, e);
+            }
+        }
+        return noteText;
+    }
+
+    /**
+     * Adds or replaces the Git note on {@code commitSha} ({@code git notes add -f}).
+     * Stored under {@code refs/notes/commits} via JGit's NoteMap.
+     */
+    public void addCommitNote(String commitSha, String message) throws IOException {
+        if (repository == null) {
+            throw new IOException("No repository");
+        }
+        if (commitSha == null || commitSha.isBlank()) {
+            throw new IOException("Commit is required");
+        }
+        if (message == null) {
+            throw new IOException("Note message is required");
+        }
+        try (Git git = new Git(repository);
+             RevWalk walk = new RevWalk(repository)) {
+            ObjectId id = repository.resolve(commitSha);
+            if (id == null) {
+                throw new IOException("Cannot resolve commit " + commitSha);
+            }
+            RevCommit commit = walk.parseCommit(id);
+            git.notesAdd().setObjectId(commit).setMessage(message).call();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot add git note for " + commitSha, e);
+            throw new IOException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes the Git note from {@code commitSha} ({@code git notes remove}).
+     */
+    public void removeCommitNote(String commitSha) throws IOException {
+        if (repository == null) {
+            throw new IOException("No repository");
+        }
+        if (commitSha == null || commitSha.isBlank()) {
+            throw new IOException("Commit is required");
+        }
+        try (Git git = new Git(repository);
+             RevWalk walk = new RevWalk(repository)) {
+            ObjectId id = repository.resolve(commitSha);
+            if (id == null) {
+                throw new IOException("Cannot resolve commit " + commitSha);
+            }
+            RevCommit commit = walk.parseCommit(id);
+            git.notesRemove().setObjectId(commit).call();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot remove git note for " + commitSha, e);
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -4071,6 +4154,7 @@ public class GitRepoService implements AutoCloseable {
 
         }
         info.setAffectedItems(getScmItems(revCommit, fileName));
+        info.setNote(getCommitNote(revCommit.getName()));
         return info;
 
         /*if (revCommit == null) {

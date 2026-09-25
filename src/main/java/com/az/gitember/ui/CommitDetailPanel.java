@@ -54,6 +54,9 @@ public class CommitDetailPanel extends JPanel {
     private final JTextField refsField = createReadOnlyField();
     private final JLabel signatureCaption = new JLabel("Signature:");
     private final JButton signatureButton = new JButton();
+    private final JLabel jlabelNote = new JLabel("Notes:");
+    private final JTextField notesArea = new JTextField();
+
 
     // Avatar
     private final JLabel avatarLabel = new JLabel();
@@ -611,6 +614,7 @@ public class CommitDetailPanel extends JPanel {
         signatureCaption.setVisible(false);
         signatureButton.setVisible(false);
 
+        // signature
         lbl.gridx = 0;
         lbl.gridy = 3;
         fieldsPanel.add(signatureCaption, lbl);
@@ -620,11 +624,24 @@ public class CommitDetailPanel extends JPanel {
         fieldsPanel.add(signatureButton, fld);
         fld.gridwidth = 1;
 
-        // ── Wrapper: avatar west, fields centre ───────────────────────────
-        JPanel panel = new JPanel(new BorderLayout(8, 0));
-        panel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
-        panel.add(avatarLabel, BorderLayout.WEST);
-        panel.add(fieldsPanel, BorderLayout.CENTER);
+        // Row 4: Note
+        lbl.gridx = 0;
+        lbl.gridy = 4;
+        fieldsPanel.add(jlabelNote, lbl);
+        fld.gridx = 1;
+        fld.gridy = 4;
+        fld.gridwidth = 5;
+        fieldsPanel.add(notesArea, fld);
+        fld.gridwidth = 1;
+
+        // ── Wrapper: avatar west, fields centre, notes south when present ─
+        JPanel top = new JPanel(new BorderLayout(8, 0));
+        top.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        top.add(avatarLabel, BorderLayout.WEST);
+        top.add(fieldsPanel, BorderLayout.CENTER);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(top, BorderLayout.CENTER);
         return panel;
     }
 
@@ -653,6 +670,7 @@ public class CommitDetailPanel extends JPanel {
         refsField.setText(rev.getRef() != null
                 ? String.join(", ", rev.getRef()) : "");
         updateSignatureButton(rev);
+        updateNotes(rev);
 
         // Populate changed files table
         filesTableModel.setData(rev.getAffectedItems());
@@ -716,6 +734,20 @@ public class CommitDetailPanel extends JPanel {
         parentField.setText("");
         refsField.setText("");
         updateSignatureButton(null);
+        updateNotes(null);
+    }
+
+    private void updateNotes(ScmRevisionInformation rev) {
+        boolean hasNote = rev != null && rev.hasNote();
+        if (hasNote) {
+            notesArea.setText(rev.getNote());
+            notesArea.setCaretPosition(0);
+        } else {
+            notesArea.setText("");
+        }
+        jlabelNote.setVisible(hasNote);
+        notesArea.setVisible(hasNote);
+        revalidate();
     }
 
     private void updateSignatureButton(ScmRevisionInformation rev) {

@@ -19,6 +19,7 @@ public class ScmRevisionInformation implements Comparable {
     private int stashIndex = -1;
     private SignatureStatus signatureStatus = SignatureStatus.UNSIGNED;
     private byte[] rawGpgSignature;
+    private String note;
 
     public int getStashIndex() {
         return stashIndex;
@@ -49,6 +50,21 @@ public class ScmRevisionInformation implements Comparable {
 
     public void setRawGpgSignature(byte[] rawGpgSignature) {
         this.rawGpgSignature = rawGpgSignature;
+    }
+
+    /**
+     * Git note text from {@code refs/notes/commits}, or {@code null} when the commit has none.
+     */
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public boolean hasNote() {
+        return note != null && !note.isBlank();
     }
 
     public List<String> getParents() {

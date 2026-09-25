@@ -35,6 +35,8 @@ information about each commit.
     * Mixed Reset: Moves the HEAD to the selected commit and updates the index, but not the working directory.
     * Hard Reset: Moves the HEAD to the selected commit and updates both the index and the working directory.
   * Reset HEAD to Commit: Right-click on a commit node and select 'Reset to Commit' to move the HEAD pointer to that commit. 
+  * Add or edit a Git note: Right-click on a commit and select **Add note…** (or **Edit note…**). Notes do not change the commit SHA.
+  * Remove a Git note: Right-click on a commit that has a note and select **Remove note**.
   * Cherry-Pick a Commit: Right-click on a commit node and select 'Cherry-Pick' to apply changes from that commit to the current branch.
 
 ![History](his-item-cmd.png)
@@ -48,6 +50,7 @@ information about each commit.
    * Date: The date and time when the commit was made.
    * Message: The commit message describing the changes.
    * References: Branches or tags pointing to the commit.
+   * Notes: Extra Git note text, shown only when the commit has a note (`refs/notes/commits`).
    * The details pane also lists the files changed in the commit, along with their status (modified, added, deleted).
 
 
