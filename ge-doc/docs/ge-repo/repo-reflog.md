@@ -33,7 +33,6 @@ After `git branch -D` (or Gitember’s delete), the last tip is still in the ref
 2. Right-click **Recover deleted branch…**
 3. Confirm or edit the branch name. Gitember creates that local branch at the recovered SHA.
 
-TODO reflog-recover-branch.png
 
 ## Recover hard reset
 
