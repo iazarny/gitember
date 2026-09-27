@@ -1,8 +1,8 @@
 @echo off
 setlocal
 
-set VERSION=3.5
-set JAR=gitember-3.5-SNAPSHOT-boot.jar
+set VERSION=3.5.1
+set JAR=gitember-3.5.1-SNAPSHOT-boot.jar
 
 rem --- clean previous output ---
 if exist Gitember rmdir /s /q Gitember
@@ -26,7 +26,9 @@ jpackage ^
  --main-class org.springframework.boot.loader.launch.JarLauncher ^
  --app-version %VERSION% ^
  --vendor "Igor Azarny" ^
- --icon src\main\resources\icon\gitember.ico
+ --icon src\main\resources\icon\gitember.ico ^
+ --java-options "-XX:+UseSerialGC   -Xms16m  -Xmx512m   -XX:MinHeapFreeRatio=10   -XX:MaxHeapFreeRatio=20  -XX:TieredStopAtLevel=1 -Xss256k   -XX:ReservedCodeCacheSize=32m -XX:MaxMetaspaceSize=64m "
+
 if errorlevel 1 (
   echo jpackage failed.
   exit /b 1

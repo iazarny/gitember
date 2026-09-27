@@ -17,7 +17,7 @@ RESET='\033[0m'
 TOTAL_STEPS=4
 CURRENT_STEP=0
 
-APP_VERSION="3.5"
+APP_VERSION="3.5.1"
 BOOT_JAR="gitember-${APP_VERSION}-SNAPSHOT-boot.jar"
 DMG_NAME="Gitember-${APP_VERSION}.dmg"
 
@@ -162,7 +162,6 @@ run jpackage \
 
 ok "DMG created: ${DMG_NAME}"
 
-exit
 
 # ─────────────────────────────────────────────
 # Step 4 — Notarize & staple
