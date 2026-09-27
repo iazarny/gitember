@@ -112,6 +112,10 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         }.execute();
     }
 
+    public void dispose() {
+        setItems(List.of());
+    }
+
     public void setItems(List<ScmItem> items) {
         tableModel.setItems(items);
         applyFilter();

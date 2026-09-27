@@ -26,10 +26,9 @@ public class RepoPathChangedChangeListener implements PropertyChangeListener {
                 mainFrame.getMainMenuBar().setVisible(true);
                 mainFrame.addCurrentProjectToSettings();
                 mainFrame.refreshProjectLists();
-                // Switch from welcome to repo view
-                mainFrame.getMainCardLayout().show(mainFrame.getMainCardPanel(), MainFrame.CARD_REPO);
+                mainFrame.swithToTheProjectView();
             } else {
-                mainFrame.getMainCardLayout().show(mainFrame.getMainCardPanel(), MainFrame.CARD_WELCOME);
+                mainFrame.showWelcomeView();
             }
             mainFrame.updateTitle();
         });

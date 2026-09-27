@@ -19,6 +19,7 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.beans.PropertyChangeListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
@@ -58,6 +59,9 @@ public class HistoryPanel extends JPanel {
     /** Parameters of the most recent loadHistory call, used to refresh after mutating actions. */
     private String  lastTreeName   = null;
     private boolean lastAllHistory = true;
+
+    private final PropertyChangeListener historyRefreshListener;
+    private final PropertyChangeListener repoPathListener;
 
     public HistoryPanel(StatusBar statusBar) {
         this(statusBar, false);
@@ -374,19 +378,34 @@ public class HistoryPanel extends JPanel {
 
 
 
-        // Reload history whenever a pull (or other background operation) requests it
-        Context.addPropertyChangeListener(Context.PROP_HISTORY_REFRESH, evt ->
+        historyRefreshListener = evt ->
                 SwingUtilities.invokeLater(() -> {
                     if (lastTreeName != null) {
                         loadHistory(lastTreeName, lastAllHistory);
                     }
-                })
-        );
+                });
+        repoPathListener = evt -> resetViewState();
+        Context.addPropertyChangeListener(Context.PROP_HISTORY_REFRESH, historyRefreshListener);
+        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, repoPathListener);
+    }
 
-        // This panel is reused across repository switches; a tree/branch name remembered from
-        // the previous repo may not exist in the new one, so drop it rather than risk reloading
-        // history for a stale ref.
-        Context.addPropertyChangeListener(Context.PROP_REPOSITORY_PATH, evt -> resetViewState());
+    /**
+     * Drops Context listeners and commit data so this panel can be collected
+     * when the history view is no longer visible.
+     */
+    public void dispose() {
+        Context.removePropertyChangeListener(Context.PROP_HISTORY_REFRESH, historyRefreshListener);
+        Context.removePropertyChangeListener(Context.PROP_REPOSITORY_PATH, repoPathListener);
+        if (searchDebounce != null) {
+            searchDebounce.stop();
+        }
+        tableModel.clear();
+        allCommits = new ArrayList<>();
+        lastSearchResults = new java.util.HashMap<>();
+        lastTreeName = null;
+        if (detailPanel != null) {
+            detailPanel.showRevision(null);
+        }
     }
 
     /** Clears history-view state specific to the previously active repository. */

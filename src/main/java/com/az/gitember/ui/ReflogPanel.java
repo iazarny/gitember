@@ -89,6 +89,10 @@ public class ReflogPanel extends JPanel {
         return searchField;
     }
 
+    public void dispose() {
+        tableModel.setItems(List.of());
+    }
+
     public void reload() {
         statusBar.setStatus("Loading reflog...");
         new SwingWorker<List<ScmReflogEntry>, Void>() {

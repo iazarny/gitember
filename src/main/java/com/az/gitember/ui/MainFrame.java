@@ -57,7 +57,7 @@ public class MainFrame extends JFrame {
     private  ReflogPanel reflogPanel;
     private  WorkspaceDashboardPanel workspaceDashboardPanel; // Workspace dashboard (shown when the workspace root node is selected)
 
-    private  ActiveView activeView = ActiveView.HISTORY;
+    private  ActiveView activeView = ActiveView.NONE;
 
     public static synchronized MainFrame getInstance() {
         if (instance == null) {
@@ -120,28 +120,7 @@ public class MainFrame extends JFrame {
         contentPanel = new ContentPanel();
         statusBar = new StatusBar();
 
-        // Welcome panel
-        welcomePanel = new WelcomePanel();
-        welcomePanel.setOnProjectSelected(new ReopenRepoHandler(this));
-        welcomePanel.setOnProjectRemoved(project -> {
-            Settings settings = Context.getSettings();
-            if (settings != null) {
-                settings.removeProject(project);
-                Context.saveSettings();
-                refreshProjectLists();
-            }
-        });
-
-        welcomePanel.setOnWorkspaceEdit(this::showEditWorkspaceDialog);
-        welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
-        welcomePanel.setOnWorkspaceRemoved(workspace -> {
-            Settings settings = Context.getSettings();
-            if (settings != null) {
-                settings.getWorkspaces().remove(workspace);
-                Context.saveSettings();
-                refreshProjectLists();
-            }
-        });
+        createWelcomePanel();
 
         // Layout
         setJMenuBar(menuBar);
@@ -184,7 +163,7 @@ public class MainFrame extends JFrame {
             public void windowGainedFocus(java.awt.event.WindowEvent e) {
                 if (Context.isWorkspaceMode()) {
 
-                    if (workspaceDashboardPanel.isShowing()) { //Context.getActiveView() == Context.ActiveView.WORKSPACE
+                    if (workspaceDashboardPanel != null && workspaceDashboardPanel.isShowing()) {
                         workspaceDashboardPanel.reloadActiveTab();
                     } else {
                         new SwingWorker<Void, Void>() {
@@ -256,12 +235,6 @@ public class MainFrame extends JFrame {
         menuBar.addInitListener(e -> showInitDialog());
         menuBar.addInitWorkspaceListener(e -> showWorkspaceDialog());
 
-        // Welcome panel buttons
-        welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this).execute());
-        welcomePanel.setOnCloneRepo(this::showCloneDialog);
-        welcomePanel.setOnInitRepo(this::showInitDialog);
-        welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
-
         // Pull
         menuBar.addPullListener(e -> new PullHandler(this, null).execute());
         toolBar.addPullListener(e -> new PullHandler(this, null).execute());
@@ -299,7 +272,11 @@ public class MainFrame extends JFrame {
                 com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
                         this, trimmed,
                         trimmed.substring(0, Math.min(7, trimmed.length())),
-                        () -> historyPanel.loadHistory(null, true));
+                        () -> {
+                            if (historyPanel != null) {
+                                historyPanel.loadHistory(null, true);
+                            }
+                        });
             }
         });
 
@@ -327,7 +304,11 @@ public class MainFrame extends JFrame {
         menuBar.addIndexHistoryListener(e -> {
             com.az.gitember.dialog.IndexHistoryDialog dlg =
                     new com.az.gitember.dialog.IndexHistoryDialog(this);
-            dlg.setOnComplete(historyPanel::refreshLuceneState);
+            dlg.setOnComplete(() -> {
+                if (historyPanel != null) {
+                    historyPanel.refreshLuceneState();
+                }
+            });
             dlg.setVisible(true);
         });
         menuBar.addStatisticsListener(e -> new StatDialog(this).setVisible(true));
@@ -342,7 +323,7 @@ public class MainFrame extends JFrame {
         menuBar.addUpdateSubmodulesListener(e -> new com.az.gitember.handler.UpdateSubmodulesHandler(this).execute());
         menuBar.addRecursiveUpdateSubmodulesListener(e ->
                 new com.az.gitember.handler.UpdateSubmodulesHandler(this, true).execute());
-        menuBar.addSyncSubmodulesListener(e -> submodulePanel.syncSubmoduleUrls());
+        menuBar.addSyncSubmodulesListener(e -> ensureSubmodulePanel().syncSubmoduleUrls());
 
         // Project settings (author / committer identity + credentials)
         menuBar.addProjectSettingsListener(e ->
@@ -362,6 +343,7 @@ public class MainFrame extends JFrame {
 
     public void setActiveView(ActiveView view) {
         activeView = view;
+        releaseUnusedPanels(view);
     }
     public ActiveView getActiveView()          {
         return activeView;
@@ -377,23 +359,20 @@ public class MainFrame extends JFrame {
     }
 
     public void swithToTheProjectView() {
-        this.welcomePanel = null;
-
-        workingCopyPanel = new WorkingCopyPanel(statusBar);
-        historyPanel = new HistoryPanel(statusBar);
-        stashDetailPanel = new CommitDetailPanel(statusBar);
-        pullRequestPanel = new PullRequestPanel();
-        submodulePanel = new SubmodulePanel(statusBar);
-        reflogPanel = new ReflogPanel(statusBar);
-        workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
-        // Keep the Commit button in sync with dashboard stage/unstage actions in workspace mode:
-        // committing is possible whenever any project has staged files or can amend HEAD.
-        workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
-            toolBar.setCommitEnabled(hasStaged);
-            menuBar.setCommitEnabled(hasStaged);
-        });
-        System.gc();
-
+        Runnable switchView = () -> {
+            boolean disposedWelcome = welcomePanel != null;
+            disposeWelcomePanel();
+            mainCardLayout.show(mainCardPanel, CARD_REPO);
+            toolBar.setVisible(true);
+            if (disposedWelcome) {
+                System.gc();
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            switchView.run();
+        } else {
+            SwingUtilities.invokeLater(switchView);
+        }
     }
 
     public StatusBar getStatusBar() {
@@ -433,7 +412,158 @@ public class MainFrame extends JFrame {
     }
 
     public WorkspaceDashboardPanel getWorkspaceDashboardPanel() {
+        return ensureWorkspaceDashboardPanel();
+    }
+
+    private void createWelcomePanel() {
+        if (welcomePanel == null) {
+            welcomePanel = new WelcomePanel();
+            welcomePanel.setOnProjectSelected(new ReopenRepoHandler(this));
+            welcomePanel.setOnProjectRemoved(project -> {
+                Settings settings = Context.getSettings();
+                if (settings != null) {
+                    settings.removeProject(project);
+                    Context.saveSettings();
+                    refreshProjectLists();
+                }
+            });
+            welcomePanel.setOnWorkspaceEdit(this::showEditWorkspaceDialog);
+            welcomePanel.setOnWorkspaceSelected(new OpenRecentWorkspaceHanlder(this));
+            welcomePanel.setOnWorkspaceRemoved(workspace -> {
+                Settings settings = Context.getSettings();
+                if (settings != null) {
+                    settings.getWorkspaces().remove(workspace);
+                    Context.saveSettings();
+                    refreshProjectLists();
+                }
+            });
+            welcomePanel.setOnOpenRepo(() -> new OpenRepoHandler(this).execute());
+            welcomePanel.setOnCloneRepo(this::showCloneDialog);
+            welcomePanel.setOnInitRepo(this::showInitDialog);
+            welcomePanel.setOnInitWorkspace(this::showWorkspaceDialog);
+            if (mainCardPanel != null) {
+                mainCardPanel.add(welcomePanel, CARD_WELCOME);
+                refreshProjectLists();
+            }
+        }
+    }
+
+    private void disposeWelcomePanel() {
+        if (welcomePanel != null) {
+            mainCardPanel.remove(welcomePanel);
+            welcomePanel = null;
+            mainCardPanel.revalidate();
+        }
+    }
+
+    public void showWelcomeView() {
+        contentPanel.setContent(null);
+        setActiveView(ActiveView.NONE);
+        createWelcomePanel();
+        mainCardLayout.show(mainCardPanel, CARD_WELCOME);
+        toolBar.setVisible(false);
+    }
+
+    private WorkingCopyPanel ensureWorkingCopyPanel() {
+        if (workingCopyPanel == null) {
+            workingCopyPanel = new WorkingCopyPanel(statusBar);
+        }
+        return workingCopyPanel;
+    }
+
+    private HistoryPanel ensureHistoryPanel() {
+        if (historyPanel == null) {
+            historyPanel = new HistoryPanel(statusBar);
+        }
+        return historyPanel;
+    }
+
+    private ReflogPanel ensureReflogPanel() {
+        if (reflogPanel == null) {
+            reflogPanel = new ReflogPanel(statusBar);
+        }
+        return reflogPanel;
+    }
+
+    private CommitDetailPanel ensureStashDetailPanel() {
+        if (stashDetailPanel == null) {
+            stashDetailPanel = new CommitDetailPanel(statusBar);
+        }
+        return stashDetailPanel;
+    }
+
+    private PullRequestPanel ensurePullRequestPanel() {
+        if (pullRequestPanel == null) {
+            pullRequestPanel = new PullRequestPanel();
+        }
+        return pullRequestPanel;
+    }
+
+    private SubmodulePanel ensureSubmodulePanel() {
+        if (submodulePanel == null) {
+            submodulePanel = new SubmodulePanel(statusBar);
+        }
+        return submodulePanel;
+    }
+
+    private WorkspaceDashboardPanel ensureWorkspaceDashboardPanel() {
+        if (workspaceDashboardPanel == null) {
+            workspaceDashboardPanel = new WorkspaceDashboardPanel(statusBar);
+            workspaceDashboardPanel.setOnCommitStateChanged(hasStaged -> {
+                toolBar.setCommitEnabled(hasStaged);
+                menuBar.setCommitEnabled(hasStaged);
+            });
+        }
         return workspaceDashboardPanel;
+    }
+
+    /**
+     * Drops content panels that are not the current view so their tables,
+     * commit graphs, and listeners can be collected.
+     */
+    void releaseUnusedPanels(ActiveView keep) {
+        boolean released = false;
+        if (keep != ActiveView.WORKING_COPY && workingCopyPanel != null) {
+            toolBar.unmergeWorkingCopyToolbar();
+            workingCopyPanel.dispose();
+            workingCopyPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.HISTORY && historyPanel != null) {
+            toolBar.unmergeHistoryToolbar();
+            historyPanel.dispose();
+            historyPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.REFLOG && reflogPanel != null) {
+            toolBar.unmergeReflogToolbar();
+            reflogPanel.dispose();
+            reflogPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.WORKSPACE && workspaceDashboardPanel != null) {
+            toolBar.unmergeWorkSpaceToolbar();
+            workspaceDashboardPanel.dispose();
+            workspaceDashboardPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.STASH && stashDetailPanel != null) {
+            stashDetailPanel.showRevision(null);
+            stashDetailPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.PULL_REQUEST && pullRequestPanel != null) {
+            toolBar.unmergePullRequestToolbar();
+            pullRequestPanel = null;
+            released = true;
+        }
+        if (keep != ActiveView.SUBMODULES && submodulePanel != null) {
+            submodulePanel = null;
+            released = true;
+        }
+        if (released) {
+            System.gc();
+        }
     }
 
     public ContentPanel getContentPanel() {
@@ -800,7 +930,7 @@ public class MainFrame extends JFrame {
      * push / pull / fetch. Called by the corresponding handlers once their operation completes.
      */
     public void refreshWorkspaceView() {
-        if (isWorkspaceActive()) {
+        if (isWorkspaceActive() && workspaceDashboardPanel != null) {
             workspaceDashboardPanel.reloadActiveTab();
             updateWorkspaceRemoteActions();
         }
@@ -897,36 +1027,32 @@ public class MainFrame extends JFrame {
             boolean isPullRequest = data.type() == CellRenderer.NodeType.PULL_REQUEST;
             boolean isReflog = data.type() == CellRenderer.NodeType.REFLOG;
 
-            // Merge/unmerge working copy toolbar
-
             if (isWorkSpace) {
-                toolBar.mergeWorkSpaceToolbar(workspaceDashboardPanel);
+                toolBar.mergeWorkSpaceToolbar(ensureWorkspaceDashboardPanel());
             } else {
                 toolBar.unmergeWorkSpaceToolbar();
             }
 
             if (isWorkingCopy) {
-                toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
+                toolBar.mergeWorkingCopyToolbar(ensureWorkingCopyPanel());
             } else {
                 toolBar.unmergeWorkingCopyToolbar();
             }
 
-            // Merge/unmerge history search toolbar
             if (isAllHistory) {
-                toolBar.mergeHistoryToolbar(historyPanel);
+                toolBar.mergeHistoryToolbar(ensureHistoryPanel());
             } else {
                 toolBar.unmergeHistoryToolbar();
             }
 
-            // Merge/unmerge pull-request file filter
             if (isPullRequest) {
-                toolBar.mergePullRequestToolbar(pullRequestPanel);
+                toolBar.mergePullRequestToolbar(ensurePullRequestPanel());
             } else {
                 toolBar.unmergePullRequestToolbar();
             }
 
             if (isReflog) {
-                toolBar.mergeReflogToolbar(reflogPanel);
+                toolBar.mergeReflogToolbar(ensureReflogPanel());
             } else {
                 toolBar.unmergeReflogToolbar();
             }
@@ -934,10 +1060,11 @@ public class MainFrame extends JFrame {
             switch (data.type()) {
                 case WORKSPACE -> {
                     Context.setRepositoryPath(null);
+                    WorkspaceDashboardPanel dashboard = ensureWorkspaceDashboardPanel();
+                    contentPanel.setContent(dashboard);
+                    dashboard.refreshButtonStates();
+                    dashboard.refresh();
                     setActiveView(ActiveView.WORKSPACE);
-                    contentPanel.setContent(workspaceDashboardPanel);
-                    workspaceDashboardPanel.refreshButtonStates();
-                    workspaceDashboardPanel.refresh();
                     updateWorkspaceRemoteActions();
                     updateTitle();
                 }
@@ -949,44 +1076,53 @@ public class MainFrame extends JFrame {
                     activateProjectWorkingCopy();
                 }
                 case HISTORY -> {
+                    HistoryPanel panel = ensureHistoryPanel();
+                    contentPanel.setContent(panel);
+                    panel.loadHistory(null, true);
                     setActiveView(ActiveView.HISTORY);
-                    contentPanel.setContent(historyPanel);
-                    historyPanel.loadHistory(null, true);
                 }
                 case BRANCH -> {
-                    setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch branch) {
-                        contentPanel.setContent(historyPanel);
-                        historyPanel.loadHistory(branch.getFullName(), false);
+                        HistoryPanel panel = ensureHistoryPanel();
+                        contentPanel.setContent(panel);
+                        panel.loadHistory(branch.getFullName(), false);
+                        setActiveView(ActiveView.HISTORY);
                     }
                 }
                 case TAG -> {
-                     setActiveView( ActiveView.HISTORY);
                     if (data.data() instanceof ScmBranch tag) {
-                        contentPanel.setContent(historyPanel);
-                        historyPanel.loadHistory(tag.getFullName(), false);
+                        HistoryPanel panel = ensureHistoryPanel();
+                        contentPanel.setContent(panel);
+                        panel.loadHistory(tag.getFullName(), false);
+                        setActiveView(ActiveView.HISTORY);
                     }
                 }
                 case STASH -> {
                     if (data.data() instanceof ScmRevisionInformation stash) {
-                        contentPanel.setContent(stashDetailPanel);
+                        contentPanel.setContent(ensureStashDetailPanel());
                         loadStashDetail(stash);
+                        setActiveView(ActiveView.STASH);
                     }
                 }
                 case PULL_REQUEST -> {
                     if (data.data() instanceof PullRequest pr) {
-                        contentPanel.setContent(pullRequestPanel);
-                        pullRequestPanel.showPullRequest(pr);
+                        PullRequestPanel panel = ensurePullRequestPanel();
+                        contentPanel.setContent(panel);
+                        panel.showPullRequest(pr);
+                        setActiveView(ActiveView.PULL_REQUEST);
                     }
                 }
                 case REFLOG -> {
+                    ReflogPanel panel = ensureReflogPanel();
+                    contentPanel.setContent(panel);
+                    panel.reload();
                     setActiveView(ActiveView.REFLOG);
-                    contentPanel.setContent(reflogPanel);
-                    reflogPanel.reload();
                 }
                 case SUBMODULES, SUBMODULE -> {
-                    contentPanel.setContent(submodulePanel);
-                    submodulePanel.setSubmodules(Context.getSubmodules());
+                    SubmodulePanel panel = ensureSubmodulePanel();
+                    contentPanel.setContent(panel);
+                    panel.setSubmodules(Context.getSubmodules());
+                    setActiveView(ActiveView.SUBMODULES);
                 }
                 case WORKTREE -> { /* handled via context menu */ }
                 default -> {
@@ -997,13 +1133,12 @@ public class MainFrame extends JFrame {
     }
 
     public void activateProjectWorkingCopy() {
-        if (workingCopyPanel == null) {
-            swithToTheProjectView();
-        }
-         setActiveView( ActiveView.WORKING_COPY);
-        contentPanel.setContent(workingCopyPanel);
+        swithToTheProjectView();
+        WorkingCopyPanel panel = ensureWorkingCopyPanel();
+        contentPanel.setContent(panel);
+        setActiveView(ActiveView.WORKING_COPY);
         List<ScmItem> cachedStatus = Context.getStatusList();
-        workingCopyPanel.setItems(cachedStatus); // show cached immediately
+        panel.setItems(cachedStatus); // show cached immediately
         boolean commitEnabled = isCommitEnabled();
         toolBar.setCommitEnabled(commitEnabled);
         menuBar.setCommitEnabled(commitEnabled);
@@ -1043,10 +1178,11 @@ public class MainFrame extends JFrame {
      * History is (re-)loaded from scratch so that the commit is always found.
      */
     public void showCommitInHistory(String sha) {
+        HistoryPanel panel = ensureHistoryPanel();
+        contentPanel.setContent(panel);
+        toolBar.mergeHistoryToolbar(panel);
         setActiveView(ActiveView.HISTORY);
-        contentPanel.setContent(historyPanel);
-        toolBar.mergeHistoryToolbar(historyPanel);
-        historyPanel.loadHistoryAndSelect(sha);
+        panel.loadHistoryAndSelect(sha);
     }
 
     /**
@@ -1055,9 +1191,10 @@ public class MainFrame extends JFrame {
      * which files need resolution.
      */
     public void showWorkingCopy() {
+        WorkingCopyPanel panel = ensureWorkingCopyPanel();
+        contentPanel.setContent(panel);
+        toolBar.mergeWorkingCopyToolbar(panel);
         setActiveView(ActiveView.WORKING_COPY);
-        contentPanel.setContent(workingCopyPanel);
-        toolBar.mergeWorkingCopyToolbar(workingCopyPanel);
         Context.updateStatus(null, true);
     }
 

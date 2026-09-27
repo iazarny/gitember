@@ -170,6 +170,12 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         this.onCommitStateChanged = onCommitStateChanged;
     }
 
+    public void dispose() {
+        if (searchDebounce != null) {
+            searchDebounce.stop();
+        }
+    }
+
     public void setWorkspace(Workspace workspace) {
         this.workspace = workspace;
         titleLabel.setText(workspace == null ? "" : workspace.getName());

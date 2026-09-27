@@ -93,6 +93,10 @@ public class Context {
         pcs.addPropertyChangeListener(propertyName, listener);
     }
 
+    public static void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(propertyName, listener);
+    }
+
     /** Lets {@link Project} publish on the single global bus with itself as the event source. */
     public static void fire(Object source, String prop, Object oldValue, Object newValue) {
         pcs.firePropertyChange(new PropertyChangeEvent(source != null ? source : BUS_OWNER, prop, oldValue, newValue));

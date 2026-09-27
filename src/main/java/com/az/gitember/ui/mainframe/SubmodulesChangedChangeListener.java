@@ -2,6 +2,7 @@ package com.az.gitember.ui.mainframe;
 
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
+import com.az.gitember.ui.SubmodulePanel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,6 +20,9 @@ public class SubmodulesChangedChangeListener implements PropertyChangeListener {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        mainFrame.getSubmodulePanel().setSubmodules(Context.getSubmodules());
+        SubmodulePanel panel = mainFrame.getSubmodulePanel();
+        if (panel != null) {
+            panel.setSubmodules(Context.getSubmodules());
+        }
     }
 }

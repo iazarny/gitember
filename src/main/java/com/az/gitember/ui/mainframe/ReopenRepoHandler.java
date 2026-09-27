@@ -4,6 +4,7 @@ import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
 import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.service.Context;
+import com.az.gitember.ui.HistoryPanel;
 import com.az.gitember.ui.MainFrame;
 
 import javax.swing.*;
@@ -49,7 +50,12 @@ public class ReopenRepoHandler implements Consumer<Project>  {
                     mainFrame.getStatusBar().setStatus("Repository opened " + project.getGitDir());
                     InteractiveContinueAbortDialog.showIfRebaseInProgress(
                             mainFrame, mainFrame.getStatusBar(),
-                            () -> mainFrame.getHistoryPanel().loadHistory(null, true));
+                            () -> {
+                                HistoryPanel historyPanel = mainFrame.getHistoryPanel();
+                                if (historyPanel != null) {
+                                    historyPanel.loadHistory(null, true);
+                                }
+                            });
                     MainFrame.getInstance().getToolBar().setVisible(true);
                 } catch (Exception e) {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;

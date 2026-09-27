@@ -523,6 +523,12 @@ public class CommitDetailPanel extends JPanel {
         HistoryPanel hp = new HistoryPanel(statusBar, true);
         historyFrame.getContentPane().add(hp);
         historyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        historyFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                hp.dispose();
+            }
+        });
         historyFrame.setVisible(true);
         hp.loadFileHistory(item.getShortName());
     }
