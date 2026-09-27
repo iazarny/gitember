@@ -72,12 +72,6 @@ public class RepositoryScanService {
     List<Path> resolveRoots() {
         Path home = Paths.get(System.getProperty(SYSTEM_PROP_USER_HOME));
         Map<String, Path> byRealPath = new LinkedHashMap<>();
-        try {
-            byRealPath.put(home.toRealPath().toString(), home);
-        } catch (IOException e) {
-
-        }
-
         for (String name : SCAN_FOLDERS) {
             Path candidate = home.resolve(name);
             if (Files.isDirectory(candidate)) {

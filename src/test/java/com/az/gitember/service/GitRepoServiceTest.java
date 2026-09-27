@@ -19,9 +19,12 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Set;
 
@@ -50,6 +53,10 @@ class GitRepoServiceTest {
 
         repository.getConfig().setString("user", null, "name",  "Test User");
         repository.getConfig().setString("user", null, "email", "test@example.com");
+        // No background auto-gc: it outlives repository.close() and churns .git/gc.log.lock
+        // underneath tearDown's delete.
+        repository.getConfig().setInt("gc", null, "auto", 0);
+        repository.getConfig().setInt("gc", null, "autoPackLimit", 0);
         repository.getConfig().save();
     }
 
@@ -936,11 +943,37 @@ class GitRepoServiceTest {
         }
     }
 
+    /**
+     * Deletes {@code dir} recursively, tolerating entries that vanish while the tree is being
+     * walked: JGit runs auto-gc on its own thread, and the {@code .git/gc.log.lock} it creates
+     * and removes there made a plain {@code Files.walk} fail with {@code NoSuchFileException}.
+     */
     private static void deleteDirectory(Path dir) throws IOException {
-        if (!Files.exists(dir)) return;
-        Files.walk(dir)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        if (Files.exists(dir)) {
+            Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    // Already gone -- nothing left to delete.
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path visited, IOException exc) throws IOException {
+                    try {
+                        Files.deleteIfExists(visited);
+                    } catch (DirectoryNotEmptyException e) {
+                        // gc wrote a new file after we listed this folder; a leftover temp
+                        // directory is harmless, a failing tearDown is not.
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
     }
 }

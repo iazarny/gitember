@@ -198,7 +198,7 @@ public class WorkingCopyContextMenu {
             menu.addSeparator();
             if (canIgnore) {
 
-                JMenu ignoreMenu = new JMenu("Add  to .gitignore");
+                JMenu ignoreMenu = new JMenu("Add to .gitignore");
                 menu.add(ignoreMenu);
 
                 JMenuItem ignore = new JMenuItem(FilenameUtils.getName(item.getShortName()) );

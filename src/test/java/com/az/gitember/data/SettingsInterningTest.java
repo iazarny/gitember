@@ -90,11 +90,10 @@ class SettingsInterningTest {
         settings.internAll();
         Project canonical = settings.getProjects().first();
 
-        String tempPath = System.getProperty("java.io.tmpdir");
-
         Project found = settings.getOrCreateProject("C:\\dev\\P\\.git");
 
-        assertNotSame(canonical, found);
+        assertSame(canonical, found,
+                "differing case and a trailing .git must resolve to the interned instance");
     }
 
     @Test

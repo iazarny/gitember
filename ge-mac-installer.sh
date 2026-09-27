@@ -156,10 +156,13 @@ run jpackage \
 --icon src/main/resources/icon/gitember.icns \
 --type dmg \
 --mac-sign \
---mac-package-signing-prefix "com.az.gitember" \
---mac-signing-key-user-name "$CERT"
+--mac-package-signing-prefix "com.az.gitember." \
+--mac-signing-key-user-name "$CERT" \
+--java-options "-XX:+UseSerialGC   -Xms16m  -Xmx512m   -XX:MinHeapFreeRatio=10   -XX:MaxHeapFreeRatio=20  -XX:TieredStopAtLevel=1 -Xss256k   -XX:ReservedCodeCacheSize=32m -XX:MaxMetaspaceSize=64m "
 
 ok "DMG created: ${DMG_NAME}"
+
+exit
 
 # ─────────────────────────────────────────────
 # Step 6 — Notarize & staple

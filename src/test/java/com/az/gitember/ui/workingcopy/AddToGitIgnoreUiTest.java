@@ -41,7 +41,8 @@ class AddToGitIgnoreUiTest extends SwingUiTestBase {
 
         JPopupMenu popup = robot.findActivePopupMenu();
         JPopupMenuFixture popupFixture = new JPopupMenuFixture(robot, popup);
-        popupFixture.menuItemWithPath("Add to .gitignore").click();
+        // "Add to .gitignore" is a submenu: the file itself, its extension, its top folder.
+        popupFixture.menuItemWithPath("Add to .gitignore", "secret.env").click();
 
         Pause.pause(new Condition("secret.env to leave working copy") {
             @Override

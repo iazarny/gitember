@@ -97,20 +97,39 @@ class ProjectStateIsolationTest {
         assertTrue(projectA.isRepoServiceOpen());
     }
 
+    /**
+     * {@link GitRepoService#adapt} deliberately does not populate this cache any more (see
+     * 9b1ef795): holding a {@link ScmRevisionInformation} per commit kept every message and
+     * affected-item list in the heap, and the key was the sha alone even though the value
+     * depends on the file filter. What still has to hold is that the map belongs to the
+     * project -- two projects never see each other's entries, and closing one drops only its own.
+     */
     @Test
     void commitDetailCache_isDisjointBetweenProjects() throws Exception {
         GitRepoService svcA = projectA.getGitRepoService();
         GitRepoService svcB = projectB.getGitRepoService();
 
-        RevCommit headA = svcA.getRevCommitBySha(svcA.getHead().getSha());
-        RevCommit headB = svcB.getRevCommitBySha(svcB.getHead().getSha());
-        svcA.adapt(headA, null);
-        svcB.adapt(headB, null);
+        String shaA = svcA.getHead().getSha();
+        String shaB = svcB.getHead().getSha();
+        assertNotEquals(shaA, shaB, "the two repos must have distinct initial commits");
+
+        RevCommit headA = svcA.getRevCommitBySha(shaA);
+        RevCommit headB = svcB.getRevCommitBySha(shaB);
+        projectA.getScmRevisionInformationCache().put(shaA, svcA.adapt(headA, null));
+        projectB.getScmRevisionInformationCache().put(shaB, svcB.adapt(headB, null));
 
         assertEquals(1, projectA.getScmRevisionInformationCache().size());
         assertEquals(1, projectB.getScmRevisionInformationCache().size());
-        assertTrue(projectA.getScmRevisionInformationCache().keySet().stream()
-                .noneMatch(sha -> projectB.getScmRevisionInformationCache().containsKey(sha)));
+        assertFalse(projectA.getScmRevisionInformationCache().containsKey(shaB),
+                "project A must not hold project B's commit");
+        assertFalse(projectB.getScmRevisionInformationCache().containsKey(shaA),
+                "project B must not hold project A's commit");
+
+        projectA.closeRepoService();
+        assertTrue(projectA.getScmRevisionInformationCache().isEmpty(),
+                "closing a project clears its own cache");
+        assertEquals(1, projectB.getScmRevisionInformationCache().size(),
+                "closing one project must leave the other's cache untouched");
     }
 
     @Test

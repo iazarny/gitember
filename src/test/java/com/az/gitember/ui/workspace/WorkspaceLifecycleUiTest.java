@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.assertj.swing.edt.GuiActionRunner.execute;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +95,11 @@ class WorkspaceLifecycleUiTest extends SwingUiTestBase {
 
     // ── Steps ────────────────────────────────────────────────────────────────────
 
+    /** Matches the project chooser's rendered entry for {@code repo}. */
+    private static Pattern entryFor(Path repo) {
+        return Pattern.compile(".*" + Pattern.quote(repo.toString()) + ".*");
+    }
+
     private Path newRepoWithInitialCommit(String namePrefix) throws Exception {
         Path dir = GitFixtures.newInitializedRepo(namePrefix, MASTER);
         GitFixtures.commitFile(dir, "readme.txt", "initial\n", "Initial commit");
@@ -125,8 +131,9 @@ class WorkspaceLifecycleUiTest extends SwingUiTestBase {
 
         workspaceDialog.button("addExistingProjectButton").click();
         JOptionPaneFixture projectChooser = JOptionPaneFinder.findOptionPane().using(robot);
-        projectChooser.list().requireItemCount(2);
-        projectChooser.list().selectItems(0, 1);
+        // The chooser offers every known project, and that includes the repo SwingUiTestBase
+        // already opened -- so pick the two workspace repos by path, never by index.
+        projectChooser.list().selectItems(entryFor(repoOne), entryFor(repoTwo));
         projectChooser.okButton().click();
 
         workspaceDialog.list("workspaceProjectList").requireItemCount(2);

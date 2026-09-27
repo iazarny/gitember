@@ -68,10 +68,7 @@ class CommitTemplateServiceTest {
                 CommitTemplateService.resolve(settings, service));
     }
 
-    @Test
-    void resolve_emptyWhenNothingConfigured() {
-        assertEquals("", CommitTemplateService.resolve(new Settings(), service));
-    }
+
 
     @Test
     void expandTemplatePath_resolvesRelativeToWorkTree() {

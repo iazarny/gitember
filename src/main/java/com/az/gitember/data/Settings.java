@@ -181,7 +181,6 @@ public class Settings {
             byKey.put(key, p);
         }
         return p;
-        //return new Project(Project.normalizeHome(homeFolder), new Date());
     }
 
     /** Adds (or, if already present, bumps the open time of) a project in the flat recent list. */

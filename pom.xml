@@ -14,8 +14,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <spring.boot.version>3.3.5</spring.boot.version>
         <jgit.version>7.6.0.202603022253-r</jgit.version>
         <flatlaf.version>3.7.1</flatlaf.version>
