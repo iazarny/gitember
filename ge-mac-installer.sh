@@ -14,7 +14,7 @@ BOLD='\033[1m'
 DIM='\033[2m'
 RESET='\033[0m'
 
-TOTAL_STEPS=6
+TOTAL_STEPS=4
 CURRENT_STEP=0
 
 APP_VERSION="3.5"
@@ -63,86 +63,86 @@ print_banner
 
 step "Preparing build directories"
 
-rm -rf app2 app3
-mkdir app2 app3
+rm -rf app3
+mkdir app3
 
-run cp app/${BOOT_JAR} app2/
+run cp app/${BOOT_JAR} app3/
+
+BOOT_JAR_PATH="$(pwd)/app3/${BOOT_JAR}"
 
 ok "Directories ready"
 
 # ─────────────────────────────────────────────
-# Step 2 — Unpack boot jar
+# Step 2 — Sign the native libraries inside the dependency JARs
 # ─────────────────────────────────────────────
-
-step "Unpacking Spring Boot jar"
-
-cd app2
-run jar xf ${BOOT_JAR}
-
-ok "Boot jar unpacked"
-
-# ─────────────────────────────────────────────
-# Step 3 — Sign all native libraries in dependency JARs
-# ─────────────────────────────────────────────
+#
+# Only the entries that actually change are replaced, with `zip`, first inside the
+# dependency jar and then inside the fat jar. Exploding the fat jar and rebuilding it with
+# `jar cf` cannot be used here: `jar` drops per-entry comments, and Spring Boot keeps its
+# "unpack this nested jar at runtime" marker (UNPACK:<sha1>, set by requiresUnpack in
+# pom.xml) in exactly such a comment. Lose it and BouncyCastle stays nested in the fat jar,
+# where the JVM cannot verify its signature, so every SSH push/pull dies with
+# "JCE cannot authenticate the provider BC".
 
 step "Signing native libraries in dependency JARs"
 
-sign_natives_in_jar() {
-    local jar_file="$1"
-    local abs_jar jar_name tmp_dir
-    abs_jar="$(pwd)/$jar_file"
-    jar_name=$(basename "$jar_file")
+WORK_DIR=$(mktemp -d)
 
-    # Skip jars that contain no macOS native binaries
-    if ! jar tf "$jar_file" 2>/dev/null | grep -qE '\.(dylib|jnilib|so)$'; then
+run unzip -q -o "${BOOT_JAR_PATH}" 'BOOT-INF/lib/*.jar' -d "${WORK_DIR}"
+
+sign_natives_in_jar() {
+    local jar_path="$1"
+    local entry natives_dir native_count
+
+    entry="BOOT-INF/lib/$(basename "$jar_path")"
+
+    # Skip jars that contain no macOS native binaries.
+    if ! unzip -Z1 "$jar_path" 2>/dev/null | grep -qE '\.(dylib|jnilib|so)$'; then
         return 0
     fi
 
-    echo "  Signing natives in $jar_name"
-    tmp_dir=$(mktemp -d)
+    echo "  Signing natives in $(basename "$jar_path")"
+    natives_dir=$(mktemp -d)
 
-    (cd "$tmp_dir" && jar xf "$abs_jar")
+    # unzip warns (and reports failure) for patterns that match nothing, which is expected
+    # when a jar ships only .dylib or only .so -- the extracted count is what matters.
+    (cd "$natives_dir" && unzip -q "$jar_path" '*.dylib' '*.jnilib' '*.so' >/dev/null 2>&1 || true)
+    native_count=$(find "$natives_dir" -type f \( -name "*.dylib" -o -name "*.jnilib" -o -name "*.so" \) | wc -l | tr -d ' ')
+    [ "$native_count" -gt 0 ] || fail "no native binaries extracted from $entry"
 
     while IFS= read -r -d '' native; do
-        echo "    codesign $native"
+        echo "    codesign ${native#"$natives_dir"/}"
         codesign \
             --force \
             --options runtime \
             --timestamp \
             --sign "$CERT" \
             "$native" || fail "codesign failed: $native"
-    done < <(find "$tmp_dir" -type f \( -name "*.dylib" -o -name "*.jnilib" -o -name "*.so" \) -print0)
+    done < <(find "$natives_dir" -type f \( -name "*.dylib" -o -name "*.jnilib" -o -name "*.so" \) -print0)
 
-    (cd "$tmp_dir" && jar cf "$abs_jar" .)
-    rm -rf "$tmp_dir"
+    # Put the signed binaries back, replacing only those entries: the rest of the
+    # dependency jar (manifest, service files, everything else) stays as shipped.
+    (cd "$natives_dir" && find . -type f -print0 | xargs -0 zip -q "$jar_path") \
+        || fail "cannot update natives inside $entry"
+
+    # Nested jars must stay uncompressed for the Boot loader, hence -0.
+    (cd "$WORK_DIR" && zip -0 -q "${BOOT_JAR_PATH}" "$entry") \
+        || fail "cannot update $entry inside ${BOOT_JAR}"
+
+    rm -rf "$natives_dir"
 }
 
-for jar in BOOT-INF/lib/*.jar; do
+for jar in "${WORK_DIR}"/BOOT-INF/lib/*.jar; do
     sign_natives_in_jar "$jar"
 done
 
-ok "All native libraries signed"
+rm -rf "${WORK_DIR}"
 
-# ─────────────────────────────────────────────
-# Step 4 — Rebuild Spring Boot jar
-# ─────────────────────────────────────────────
-
-step "Rebuilding Spring Boot jar"
-
-rm ${BOOT_JAR}
-
-#run jar cfm ${BOOT_JAR} META-INF/MANIFEST.MF .
-run jar -cf0m ${BOOT_JAR} META-INF/MANIFEST.MF .
-
-cd ..
-
-run cp app2/${BOOT_JAR} app3/
-
-ok "Boot jar rebuilt with preserved manifest"
+ok "All native libraries signed, fat jar metadata preserved"
 
 
 # ─────────────────────────────────────────────
-# Step 5 — Build DMG
+# Step 3 — Build DMG
 # ─────────────────────────────────────────────
 
 step "Building DMG with jpackage"
@@ -165,7 +165,7 @@ ok "DMG created: ${DMG_NAME}"
 exit
 
 # ─────────────────────────────────────────────
-# Step 6 — Notarize & staple
+# Step 4 — Notarize & staple
 # ─────────────────────────────────────────────
 
 step "Signing, notarizing and stapling"

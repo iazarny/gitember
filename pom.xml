@@ -313,6 +313,19 @@
                             <mainClass>com.az.gitember.App</mainClass>
                             <layout>JAR</layout>
                             <classifier>boot</classifier>
+                            <!-- BouncyCastle is a signed JCE provider: JceSecurity verifies the
+                                 signature of the jar the provider is loaded from, and cannot do
+                                 that for a jar nested inside the fat jar ("has unsigned entries
+                                 - META-INF/services/java.security.Provider"), so Apache MINA sshd
+                                 fails to get provider BC and every SSH push/pull dies. Unpacking
+                                 makes the loader extract it to a temp folder and load it as a
+                                 real, still-signed jar file. -->
+                            <requiresUnpack>
+                                <dependency>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcprov-jdk18on</artifactId>
+                                </dependency>
+                            </requiresUnpack>
                         </configuration>
                     </execution>
                 </executions>
