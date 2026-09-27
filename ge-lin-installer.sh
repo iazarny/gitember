@@ -3,7 +3,10 @@
 
 jpackage --input app/  \
    --name Gitember --app-version 3.5.1 --vendor "Igor Azarny"  \
-   --main-jar gitember-3.5.1SNAPSHOT-boot.jar \
+   --main-jar gitember-3.5.1-SNAPSHOT-boot.jar \
+   --linux-shortcut \
+   --linux-menu-group "Development" \
+   --license-file LICENSE-Gnu-3.0.txt \
    --type "deb"  --icon src/main/resources/icon/gitember-512.png \
    --java-options "-XX:+UseSerialGC   -Xms16m  -Xmx512m   -XX:MinHeapFreeRatio=10   -XX:MaxHeapFreeRatio=20  -XX:TieredStopAtLevel=1 -Xss256k   -XX:ReservedCodeCacheSize=32m -XX:MaxMetaspaceSize=64m "
 
