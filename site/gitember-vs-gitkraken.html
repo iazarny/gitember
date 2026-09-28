@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Gitember vs GitKraken - Git Client Comparison</title>
+    <meta name="description" content="A detailed, factual comparison between Gitember 3 and GitKraken highlighting strengths, weaknesses, and key differences.">
+    <meta name="author" content="Igor Azarny">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Extracted Common CSS -->
+    <link href="assets/css/comparison-common.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="git-gui-comparison.html">All Comparisons</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
+    <div class="container">
+        <h1>Gitember vs GitKraken</h1>
+        <p>Comparing Gitember 3 against GitKraken Desktop based on facts, performance, and features.</p>
+    </div>
+</div>
+
+<main id="main">
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Licensing, Costs, and Resource Consumption</h2>
+            <p class="review-intro">
+                Gitember (v3.5.1) is completely free, open-source, and requires no account registration. GitKraken (v12.4.0) is a proprietary, subscription-based commercial application. While GitKraken offers a limited free Community tier, private repository usage requires Pro ($10/mo) or Advanced ($14/mo) plans.
+            </p>
+            <p class="review-intro">
+                Both tools support Windows, macOS, and Linux. Gitember features a lighter footprint, with an installer size of 89 Mb, 185 Mb installed size, and ~220 Mb memory usage. GitKraken has a 220 Mb installer, 626 Mb disk footprint, and uses ~836 Mb of memory when running.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Shared Features</h2>
+            <p class="review-intro">
+                Both Gitember and GitKraken are self-sufficient clients with extensive Git capabilities. They both support shallow clones, working tree staging, submodules, Git LFS, interactive rebasing, squashing/reordering commits, reflog history recovery, worktrees, and commit message generation. Both clients can also generate SSH keys and custom key locations.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Strengths and Weaknesses: GitKraken</h2>
+            <div class="procon-grid">
+                <article class="procon-card">
+                    <h4>GitKraken Strengths</h4>
+                    <ul>
+                        <li><strong>Rich Theme Support:</strong> Extensive set of customizable UI themes.</li>
+                        <li><strong>Advanced Key Management:</strong> Generates SSH keys and allows custom key locations.</li>
+                        <li><strong>Force Push Safety:</strong> Native support for force push with lease.</li>
+                        <li><strong>Advanced Git Operations:</strong> Supports bisect, notes, sparse checkouts, and partial clones.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>GitKraken Weaknesses</h4>
+                    <ul>
+                        <li><strong>Subscription Pricing:</strong> Paid plans ($10 - $14/month) required for private commercial work.</li>
+                        <li><strong>Mandatory Account:</strong> Requires user account registration.</li>
+                        <li><strong>High Memory Consumption:</strong> Consumes ~836 Mb memory on startup.</li>
+                        <li><strong>Text Diff Limitations:</strong> Requires external tools for text side-by-side diff views.</li>
+                        <li><strong>No Merge Options Dialog:</strong> Does not offer configurable merge options during merge operations.</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Gitember's Unique Edge</h2>
+            <p class="review-intro">
+                Gitember stands out by offering robust multi-repository operations, historical content search, and self-sufficiency without subcriptions:
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Cross-Repository Workspaces</h3>
+                    <p>
+                        Gitember Workspaces group multiple repositories into a unified dashboard with combined working trees, letting you commit, pull, and push across projects in one step.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Extended Historical Content Search</h3>
+                    <p>
+                        Gitember indexes and searches historical file contents (including deleted code, Office docs, and CAD files) across repository history. GitKraken limits search to metadata like commit messages and SHAs.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Built-in Repository Statistics</h3>
+                    <p>
+                        Gitember includes built-in analytics for commit activity, author lines changed, and branch distribution.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Self-Sufficient</span>
+                    <h3>Native Diffing & Comparison Tools</h3>
+                    <p>
+                        Gitember provides native text side-by-side diff views, built-in 3-way merge resolution, and can be used as a standalone file and folder comparison tool. GitKraken requires external tools for text side-by-side comparison.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= Footer ======= -->
+<footer id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a> ·
+                    <a href="git-gui-comparison.html">Comparison Table</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

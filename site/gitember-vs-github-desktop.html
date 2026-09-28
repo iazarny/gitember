@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Gitember vs GitHub Desktop - Git Client Comparison</title>
+    <meta name="description" content="A detailed, human comparison between Gitember 3 and GitHub Desktop based on facts, strengths, and weaknesses.">
+    <meta name="author" content="Igor Azarny">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Extracted Common CSS -->
+    <link href="assets/css/comparison-common.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="git-gui-comparison.html">All Comparisons</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
+    <div class="container">
+        <h1>Gitember vs GitHub Desktop</h1>
+        <p>A direct look at how Gitember 3 stacks up against GitHub Desktop in everyday workflows.</p>
+    </div>
+</div>
+
+<main id="main">
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Getting Started, Licensing, and Platform Availability</h2>
+            <p class="review-intro">
+                Both Gitember (version 3.5.1) and GitHub Desktop (version 3.6.4) are free, open-source Git clients that require no paid subscriptions. However, their approach to user accounts and operating system support differs significantly.
+            </p>
+            <p class="review-intro">
+                Gitember runs on Windows, macOS, and Linux, and does not require any account to use. It has an installer size of 89 Mb and takes up 185 Mb on disk, booting up in roughly 2 seconds with a memory footprint of about 220 Mb when holding one open repository. GitHub Desktop targets official support for Windows and macOS only, omitting Linux. It requires a GitHub account to unlock certain features, ships with a larger installer download (304 Mb), takes 681 Mb on disk, and consumes around 232 Mb of memory with a 1-second startup time.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Where Both Tools Offer Similar Functionality</h2>
+            <p class="review-intro">
+                For routine Git operations, both clients cover the essential basics. Gitember and GitHub Desktop perform similarly when cloning HTTPS, SSH, or private repositories, with near-identical performance on large repository clones (1 minute 12 seconds vs 1 minute 9 seconds).
+            </p>
+            <p class="review-intro">
+                Both clients handle core staging operations naturally: staging and unstaging files, discarding file changes, deleting files, and editing <code>.gitignore</code> files directly. For standard commit creation, reverting commits, cherry-picking, basic branch management (creating, renaming, deleting, and checking out local or remote branches), and basic remote operations (fetch, pull, push, push tags, and force push), both tools deliver similar core capabilities. Additionally, both tools support Git LFS, light and dark themes, keyboard shortcuts, and worktrees.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Strengths and Weaknesses: GitHub Desktop</h2>
+            <div class="procon-grid">
+                <article class="procon-card">
+                    <h4>GitHub Desktop Strengths</h4>
+                    <ul>
+                        <li><strong>Fast Startup:</strong> Boasts a snappy ~1 second startup time.</li>
+                        <li><strong>Uncommitted Changes on Branch Switch:</strong> Smoothly allows switching branches while carrying uncommitted changes.</li>
+                        <li><strong>Force Push Safety:</strong> Supports force push with lease natively.</li>
+                        <li><strong>Simple Onboarding:</strong> Easy to learn for beginners focused primarily on basic GitHub workflows.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>GitHub Desktop Weaknesses</h4>
+                    <ul>
+                        <li><strong>No Native Linux Support:</strong> Officially available only on Windows and macOS.</li>
+                        <li><strong>Requires External Tools:</strong> Lacks built-in editors, diff tools, and 3-way merge conflict resolvers, forcing reliance on 3rd party tools.</li>
+                        <li><strong>Limited History & Search:</strong> Lacks a visual commit graph, blame views, and search by SHA, author, or file.</li>
+                        <li><strong>Missing Advanced Features:</strong> No support for interactive rebase, squashing/reordering commits, empty commits, annotated or signed tags, and reflog/recovery features.</li>
+                        <li><strong>Submodule Restrictions:</strong> Cannot initialize, update, add, or remove submodules.</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Where Gitember Stands Apart</h2>
+            <p class="review-intro">
+                Gitember includes unique built-in capabilities that eliminate the need for 3rd party tools while offering advanced workspace management and historical search:
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Gitember Workspaces</h3>
+                    <p>
+                        Gitember allows you to group multiple separate Git repositories into a single Workspace. You can review combined status across repositories, perform multi-repository commits, and pull or push across projects in a single action. GitHub Desktop forces you to manage repositories strictly one by one.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Extended History Search</h3>
+                    <p>
+                        Gitember provides full search across commit messages, SHAs, authors, files, and indexed historical file contents (including deleted code, Office docs, and CAD files). GitHub Desktop lacks commit graph visualization and history search entirely.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Repository Statistics</h3>
+                    <p>
+                        Gitember includes built-in visual analytics showing commit activity over time, contributor statistics, and branch distribution without requiring external analytics tools. GitHub Desktop offers no repository statistics.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Self-Sufficient</span>
+                    <h3>No 3rd-Party Tools Needed</h3>
+                    <p>
+                        Gitember is fully self-sufficient with integrated side-by-side diffing, an internal editor, and a 3-way conflict resolver. It can even function standalone as an arbitrary file and folder comparison tool. GitHub Desktop relies on external applications for conflict resolution and diff inspection.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= Footer ======= -->
+<footer id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a> ·
+                    <a href="git-gui-comparison.html">Comparison Table</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

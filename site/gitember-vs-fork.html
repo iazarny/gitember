@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Gitember vs Fork - Git Client Comparison</title>
+    <meta name="description" content="A detailed, human comparison between Gitember 3 and Fork based strictly on facts, strengths, and weaknesses.">
+    <meta name="author" content="Igor Azarny">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Extracted Common CSS -->
+    <link href="assets/css/comparison-common.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="git-gui-comparison.html">All Comparisons</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
+    <div class="container">
+        <h1>Gitember vs Fork</h1>
+        <p>A objective look comparing Gitember 3 with the Fork Git client.</p>
+    </div>
+</div>
+
+<main id="main">
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Licensing, Platforms, and Installation</h2>
+            <p class="review-intro">
+                Gitember (v3.5.1) is free, open-source software available across Windows, macOS, and Linux. Neither client requires an account to operate. Fork (v2.66.7) is a commercial Git CLI wrapper with a $59.99 one-time license price tag, supporting Windows and macOS only.
+            </p>
+            <p class="review-intro">
+                Fork is very lightweight on disk with a 32 Mb installer and 106 Mb installed size, starting up in ~1 second with 167 Mb memory usage. Gitember has an 89 Mb installer, 185 Mb disk footprint, and uses ~220 Mb memory.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Shared Features</h2>
+            <p class="review-intro">
+                Both tools provide fast, capable Git workflows. Gitember and Fork perform similarly across cloning, file staging, unstaging, discarding, deleting, amending commits, cherry-picking, interactive rebasing, squashing/reordering commits, submodule management, worktrees, reflog viewing, branch management, and standard remote fetch/pull/push operations. Both also feature 3-way text merge conflict resolvers.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Strengths and Weaknesses: Fork</h2>
+            <div class="procon-grid">
+                <article class="procon-card">
+                    <h4>Fork Strengths</h4>
+                    <ul>
+                        <li><strong>Small Footprint:</strong> Highly compact installer (32 Mb) and fast startup (~1 second).</li>
+                        <li><strong>One-Time Purchase:</strong> Single $59.99 license without recurring subscription fees.</li>
+                        <li><strong>Native Conflict Resolver:</strong> Includes a built-in 3-way text conflict resolution tool.</li>
+                        <li><strong>Uncommitted Changes on Branch Switch:</strong> Supports switching branches while carrying uncommitted changes.</li>
+                        <li><strong>Advanced Database Support:</strong> Supports alternate object databases, bisecting, notes, and sparse checkouts.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>Fork Weaknesses</h4>
+                    <ul>
+                        <li><strong>Commercial License:</strong> Costs $59.99 per user.</li>
+                        <li><strong>No Linux Support:</strong> Windows and macOS only.</li>
+                        <li><strong>Large File Diff Bottlenecks:</strong> Crashes or fails on large diff files (~1.5Mb / 40,000 lines).</li>
+                        <li><strong>Repository Opening Issues:</strong> Hits unresolvable open errors on certain repositories.</li>
+                        <li><strong>Lacks Built-in Side-by-Side Diffing:</strong> Text side-by-side diffs require external tools.</li>
+                        <li><strong>No Detached HEAD Checkout:</strong> Cannot check out detached HEAD states.</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Where Gitember Stands Ahead</h2>
+            <p class="review-intro">
+                Gitember brings unique workspace coordination, history search depth, and full self-sufficiency:
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Multi-Repository Workspaces</h3>
+                    <p>
+                        Gitember lets you aggregate multiple repositories into a single Workspace to inspect status, commit, pull, and push across projects together. Fork manages repositories strictly individually.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Extended Historical Content Search</h3>
+                    <p>
+                        Gitember indexes and searches through historical file contents (including deleted lines, source code, Office documents, and CAD files). Fork limits history search to commit messages and SHAs.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Visual Repository Statistics</h3>
+                    <p>
+                        Gitember provides built-in charts for commit activity trends, author line metrics, and branch activity. Fork includes no repository statistics.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Self-Sufficient</span>
+                    <h3>No 3rd Party Tools Required</h3>
+                    <p>
+                        Gitember includes integrated text side-by-side diff views, an internal editor, and standalone file/folder comparison capabilities. Fork requires external tools for text side-by-side diff views.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= Footer ======= -->
+<footer id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a> ·
+                    <a href="git-gui-comparison.html">Comparison Table</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

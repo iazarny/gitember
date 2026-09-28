@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Gitember vs Sourcetree - Git Client Comparison</title>
+    <meta name="description" content="A detailed, human comparison between Gitember 3 and Sourcetree based strictly on facts, strengths, and weaknesses.">
+    <meta name="author" content="Igor Azarny">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Extracted Common CSS -->
+    <link href="assets/css/comparison-common.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="git-gui-comparison.html">All Comparisons</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
+    <div class="container">
+        <h1>Gitember vs Sourcetree</h1>
+        <p>A realistic comparison evaluating Gitember 3 against Atlassian Sourcetree.</p>
+    </div>
+</div>
+
+<main id="main">
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Architecture, Licensing, and Setup</h2>
+            <p class="review-intro">
+                Gitember (v3.5.1) is a self-sufficient, open-source Git client that operates without external account registration. Sourcetree (v4.2.19) is a free, proprietary Git CLI wrapper developed by Atlassian that requires an Atlassian account to sign in during setup.
+            </p>
+            <p class="review-intro">
+                Gitember supports Windows, macOS, and Linux. Sourcetree supports Windows and macOS, but offers no Linux client. Sourcetree features a lighter install size (67 Mb vs 89 Mb installer; 168 Mb vs 185 Mb on disk) and lower initial memory usage (140 Mb vs 220 Mb), though Gitember includes built-in tools that eliminate external dependencies entirely.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Shared Capabilities</h2>
+            <p class="review-intro">
+                Both tools provide comprehensive core version control operations. Gitember and Sourcetree perform similarly when cloning repositories, staging/unstaging files, creating and amending commits, reverting, cherry-picking, managing submodules, managing tags (annotated and signed), and performing remote push, pull, fetch, and branch management tasks. Both clients also support interactive rebase, squashing commits, reflog viewing, and recovering deleted branches or commits.
+            </p>
+        </div>
+    </section>
+
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Strengths and Weaknesses: Sourcetree</h2>
+            <div class="procon-grid">
+                <article class="procon-card">
+                    <h4>Sourcetree Strengths</h4>
+                    <ul>
+                        <li><strong>Low Resource Footprint:</strong> Uses only 140 Mb memory on startup.</li>
+                        <li><strong>Upstream Management:</strong> Explicit options for setting and changing upstream tracking branches.</li>
+                        <li><strong>Advanced Git Operations:</strong> Supports bisecting, notes, sparse checkouts, and shallow repository management.</li>
+                        <li><strong>Atlassian Integration:</strong> Strong integration options for Bitbucket and Jira workflows.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>Sourcetree Weaknesses</h4>
+                    <ul>
+                        <li><strong>Requires Atlassian Account:</strong> User login is mandatory.</li>
+                        <li><strong>No Linux Support:</strong> Restricted to macOS and Windows.</li>
+                        <li><strong>Large File Diff Bottlenecks:</strong> Crashes or fails to render large diff files (~1.5Mb / 40,000 lines).</li>
+                        <li><strong>Relies on External Tools:</strong> Lacks built-in diff/merge editors and text side-by-side comparison (images only).</li>
+                        <li><strong>No Worktree Support:</strong> Worktrees are not supported.</li>
+                        <li><strong>Poor Merge Conflict Experience:</strong> Requires manual or 3rd party tool conflict resolution without merge abort options.</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison-section" style="background: #f8f9ff;">
+        <div class="container">
+            <h2>Why Gitember Stands Out</h2>
+            <p class="review-intro">
+                Gitember replaces external utilities with native self-sufficiency and brings multi-repo workspace management:
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Multi-Repo Workspace</h3>
+                    <p>
+                        Gitember Workspaces let you monitor and operate on multiple separate Git repositories simultaneously, committing, pulling, and pushing across projects. Sourcetree handles repositories only one at a time.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Extended Historical Search</h3>
+                    <p>
+                        Gitember offers full history content search across commits, file contents, deleted lines, and document formats. Sourcetree only offers basic commit graph ordering without full content indexing.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Unique Feature</span>
+                    <h3>Built-in Statistics & Analytics</h3>
+                    <p>
+                        Track author contributions, commit activity trends, and branch growth visually directly inside Gitember. Sourcetree lacks built-in statistics.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Self-Sufficient</span>
+                    <h3>No 3rd Party Tools Needed</h3>
+                    <p>
+                        Gitember includes native side-by-side text diffing, a full 3-way merge conflict editor, and standalone file/folder comparison capabilities. Sourcetree requires configuring 3rd party tools for text side-by-side diffs and merge conflict resolution.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= Footer ======= -->
+<footer id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a> ·
+                    <a href="git-gui-comparison.html">Comparison Table</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
