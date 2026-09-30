@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.attributes.FilterCommandRegistry;
 import org.eclipse.jgit.blame.BlameResult;
@@ -19,8 +18,6 @@ import org.eclipse.jgit.dircache.DirCacheEditor;
 import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.dircache.DirCacheIterator;
 import org.eclipse.jgit.errors.ConfigInvalidException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lfs.CleanFilter;
 import org.eclipse.jgit.lfs.Lfs;
 import org.eclipse.jgit.lfs.LfsPointer;
@@ -131,6 +128,10 @@ public class GitRepoService implements AutoCloseable {
     /** Reused by {@link #ensureBodyForPainting}; guarded by {@link #paintingBodies}. */
     private RevWalk paintingWalk;
 
+    private DocGenService docGen = new DocGenService();
+
+    private List<String> commandLine;
+
     static {
         FilterCommandRegistry.register(GitRepoService.SMUDGE_NAME, SmudgeFilter.FACTORY);
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
@@ -207,10 +208,11 @@ public class GitRepoService implements AutoCloseable {
                                               final boolean withGitIgnore,
                                               final boolean withLfs,
                                               final String defaultBranch) throws Exception {
-        try (final Git git = Git.init()
+        InitCommand initCommand = Git.init();
+        initCommand
                 .setDirectory(new File(absPath))
-                .setInitialBranch(defaultBranch)
-                .call()) {
+                .setInitialBranch(defaultBranch);
+        try (final Git git = initCommand.call()) {
 
             if (withReadme) {
                 final String readmeInitialContent = String.format(
@@ -220,21 +222,28 @@ public class GitRepoService implements AutoCloseable {
                 Files.write(
                         readmePath,
                         readmeInitialContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(Const.GIT_README_NAME).call();
+                AddCommand command = git.add();
+                command.addFilepattern(Const.GIT_README_NAME);
+
+                command.call();
             }
 
             if (withGitIgnore) {
                 final Path ignorePath = Paths.get(absPath + File.separator + Const.GIT_IGNORE_NAME);
                 Files.write(ignorePath,
                         gitIgnoreContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(Const.GIT_IGNORE_NAME).call();
+                AddCommand command = git.add();
+                command.addFilepattern(Const.GIT_IGNORE_NAME);
+                command.call();
             }
 
             if (withLfs) {
                 addLFSSupport(git);
             }
 
-            git.commit().setMessage("Init").call();
+            CommitCommand command = git.commit();
+            command.setMessage("Init");
+            command.call();
             log.log(Level.INFO, "Created new repository {0}", absPath);
             return git.getRepository();
 
@@ -257,7 +266,9 @@ public class GitRepoService implements AutoCloseable {
         final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
         Files.write(attrPath,
                 gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
-        git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+        AddCommand command = git.add();
+        command.addFilepattern(Const.GIT_ATTR_NAME);
+        command.call();
         new File(lfsTmpPath).mkdirs();
     }
 
@@ -353,19 +364,24 @@ public class GitRepoService implements AutoCloseable {
      */
     public java.util.List<String> applyDiff(java.io.InputStream patchStream) throws Exception {
         try (Git git = new Git(repository)) {
-            ApplyResult result = git.apply().setPatch(patchStream).call();
+            ApplyCommand command = git.apply();
+            command.setPatch(patchStream);
+            setCommandLine(docGen.commandLine(command));
+            ApplyResult result = command.call();
             return result.getUpdatedFiles().stream()
                     .map(f -> f.getPath())
                     .collect(java.util.stream.Collectors.toList());
         }
     }
 
-    public String  createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
+    public String createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
         try (Git git = new Git(repository)) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(4098);
-            git.diff()
-                    .setOutputStream( bos )
-                    .call();
+            DiffCommand command = git.diff();
+            command
+                    .setOutputStream( bos );
+            setCommandLine(docGen.commandLine(command));
+            command.call();
             return  bos.toString();
         } catch (GitAPIException e) {
 
@@ -384,7 +400,10 @@ public class GitRepoService implements AutoCloseable {
      */
     public DirCache addFileToCommitStage(final String fileName) throws GitAPIException {
         try (Git git = new Git(repository)) {
-            return git.add().addFilepattern(fileName).call();
+            AddCommand command = git.add();
+            command.addFilepattern(fileName);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Cannot add file to stage", e);
             throw e;
@@ -399,7 +418,10 @@ public class GitRepoService implements AutoCloseable {
      */
     public Ref removeFileFromCommitStage(final String fileName) throws GitAPIException {
         try (Git git = new Git(repository)) {
-            return git.reset().addPath(fileName).call();
+            ResetCommand command = git.reset();
+            command.addPath(fileName);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Cannot unstage ", e);
             throw e;
@@ -418,8 +440,15 @@ public class GitRepoService implements AutoCloseable {
         try (Git git = new Git(repository)) {
             String workignDir = repository.getDirectory().getAbsolutePath().replace(".git", "");
             Files.move(Path.of(workignDir, fileNameOld), Path.of(workignDir, fileNameNew));
-            git.add().addFilepattern(fileNameNew).call();
-            git.rm().addFilepattern(fileNameOld).call();
+            AddCommand command = git.add();
+            command.addFilepattern(fileNameNew);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
+
+            RmCommand rmCommand = git.rm();
+            rmCommand.addFilepattern(fileNameOld);
+            addCommandLine(docGen.commandLine(command));
+            rmCommand.call();
         } catch (IOException e) {
             log.log(Level.WARNING, "Cannot rename  file", e);
             throw e;
@@ -461,7 +490,8 @@ public class GitRepoService implements AutoCloseable {
         configureSigner(signOption, signCommit, pathToKey);
         try (Git git = new Git(repository)) {
 
-            CommitCommand cmd = git.commit().setSign(signCommit).setAmend(amend);
+            CommitCommand cmd = git.commit();
+            cmd.setSign(signCommit).setAmend(amend);
 
             if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
                 cmd.setAuthor(authorName, authorEmail);
@@ -469,7 +499,9 @@ public class GitRepoService implements AutoCloseable {
             if (StringUtils.isNotBlank(committerName) && StringUtils.isNotBlank(committerEmail)) {
                 cmd.setCommitter(committerName, committerEmail);
             }
-            return cmd.setMessage(message).call();
+            cmd.setMessage(message);
+            setCommandLine(docGen.commandLine(cmd));
+            return cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit", e);
             throw e;
@@ -620,10 +652,12 @@ public class GitRepoService implements AutoCloseable {
 
     public Ref renameBranch(String oldName, String newName) throws IOException {
         try (Git git = new Git(repository)) {
-            return git.branchRename()
+            RenameBranchCommand command = git.branchRename();
+            command
                     .setOldName(oldName)
-                    .setNewName(newName)
-                    .call();
+                    .setNewName(newName);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot rename branch " + oldName + "->" + newName, e);
             throw new IOException("Cannot rename branch " + oldName + "->" + newName, e);
@@ -641,10 +675,12 @@ public class GitRepoService implements AutoCloseable {
      */
     public Ref createBranch(String parent, String name) throws IOException {
         try (Git git = new Git(repository)) {
-            return git.branchCreate()
+            CreateBranchCommand command = git.branchCreate();
+            command
                     .setStartPoint(parent)
-                    .setName(name)
-                    .call();
+                    .setName(name);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create branch " + name, e);
             throw new IOException("Cannot create branch " + name, e);
@@ -674,20 +710,24 @@ public class GitRepoService implements AutoCloseable {
     public Ref checkoutBranch(final String name, final String newName, final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             if (newName == null) { //existing
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setCreateBranch(false)
                         .setName(name)
                         .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             } else {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setCreateBranch(true)
                         .setName(newName)
                         .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
                         .setStartPoint(name)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         } catch (Exception e) {
             throw new IOException("Cannot checkout " + name + " " + newName, e);
@@ -710,11 +750,13 @@ public class GitRepoService implements AutoCloseable {
         AbstractTreeIterator newTreeParser = prepareTreeParser(repository, rihtBranchName);
         try (Git git = new Git(repository)) {
             try {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setProgressMonitor(defaultProgressMonitor)
                         .setOldTree(oldTreeParser)
-                        .setNewTree(newTreeParser)
-                        .call();
+                        .setNewTree(newTreeParser);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             } catch (GitAPIException e) {
                 throw new IOException("Cannot creat difference between " + leftBranchName + " and " + rihtBranchName, e);
             }
@@ -743,17 +785,21 @@ public class GitRepoService implements AutoCloseable {
                                  final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             if (StringUtils.isBlank(newBranchName)) {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setName(revCommit.getName())
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             } else {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setName(newBranchName)
                         .setCreateBranch(true)
                         .setStartPoint(revCommit)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             }
 
         } catch (Exception e) {
@@ -774,10 +820,12 @@ public class GitRepoService implements AutoCloseable {
      */
     public void deleteLocalBranch(final String name) throws IOException {
         try (Git git = new Git(repository)) {
-            git.branchDelete()
+            DeleteBranchCommand command = git.branchDelete();
+            command
                     .setBranchNames(name)
-                    .setForce(true)
-                    .call();
+                    .setForce(true);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (Exception e) {
             throw new IOException("Cannot delete branch " + name, e);
         }
@@ -803,24 +851,29 @@ public class GitRepoService implements AutoCloseable {
     public MergeResult mergeBranch(final String from, final String message,
                                    boolean squash, MergeCommand.FastForwardMode mode) throws Exception {
         try (Git git = new Git(repository)) {
-            return git.merge()
+            MergeCommand command = git.merge();
+
+            command
                     .include(repository.exactRef(from))
                     .setMessage(message)
                     .setSquash(squash)
-                    .setFastForward(mode)
-                    .call();
+                    .setFastForward(mode);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
     public Ref abortMerge(ProgressMonitor monitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                ResetCommand cmd = git.reset()
+                ResetCommand cmd = git.reset();
+                cmd
                         .setMode(ResetCommand.ResetType.HARD)
                         .setRef(Constants.HEAD);
                 if (monitor != null) {
                     cmd.setProgressMonitor(monitor);
                 }
+                setCommandLine(docGen.commandLine(cmd));
                 return cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot abort merge", e);
@@ -855,17 +908,22 @@ public class GitRepoService implements AutoCloseable {
     /** Runs {@code git rebase --continue} after conflicts are staged. */
     public RebaseResult rebaseContinue() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setOperation(RebaseCommand.Operation.CONTINUE)
-                    .runInteractively(PASSTHROUGH_HANDLER)
-                    .call();
+                    .runInteractively(PASSTHROUGH_HANDLER);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
     /** Runs {@code git rebase --abort} and restores the original branch state. */
     public RebaseResult rebaseAbort() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+            RebaseCommand command = git.rebase();
+            command.setOperation(RebaseCommand.Operation.ABORT);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -877,10 +935,12 @@ public class GitRepoService implements AutoCloseable {
      */
     public RebaseResult rebaseSkip() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setOperation(RebaseCommand.Operation.SKIP)
-                    .runInteractively(PASSTHROUGH_HANDLER)
-                    .call();
+                    .runInteractively(PASSTHROUGH_HANDLER);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -891,10 +951,12 @@ public class GitRepoService implements AutoCloseable {
      */
     public RebaseResult rebaseBranch(final String upstream) throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setUpstream(upstream)
-                    .setPreserveMerges(true)
-                    .call();
+                    .setPreserveMerges(true);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -914,7 +976,10 @@ public class GitRepoService implements AutoCloseable {
             ObjectId baseId = repository.resolve(baseCommitSha);
             if (headId == null || baseId == null) return Collections.emptyList();
             List<RevCommit> result = new ArrayList<>();
-            for (RevCommit c : git.log().addRange(baseId, headId).call()) {
+            LogCommand command = git.log();
+            command.addRange(baseId, headId);
+            setCommandLine(docGen.commandLine(command));
+            for (RevCommit c : command.call()) {
                 result.add(c);
             }
             return result;
@@ -931,7 +996,10 @@ public class GitRepoService implements AutoCloseable {
             ObjectId branchId = repository.resolve(branchFullName);
             if (headId == null || branchId == null) return Collections.emptyList();
             List<RevCommit> result = new ArrayList<>();
-            for (RevCommit c : git.log().addRange(headId, branchId).call()) {
+            LogCommand command = git.log();
+            command.addRange(headId, branchId);
+            setCommandLine(docGen.commandLine(command));
+            for (RevCommit c : command.call()) {
                 result.add(c);
             }
             return result;
@@ -974,7 +1042,8 @@ public class GitRepoService implements AutoCloseable {
         }
 
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setUpstream(upstream)
                     .runInteractively(new RebaseCommand.InteractiveHandler() {
 
@@ -1045,8 +1114,9 @@ public class GitRepoService implements AutoCloseable {
                             }
                             return rewordQueue.isEmpty() ? currentMessage : rewordQueue.poll();
                         }
-                    })
-                    .call();
+                    });
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -1107,7 +1177,10 @@ public class GitRepoService implements AutoCloseable {
 
             CommitInfo head = this.getHead();
 
-            List<Ref> branchLst = git.branchList().setListMode(listMode).call();
+            ListBranchCommand command = git.branchList();
+            command.setListMode(listMode);
+            setCommandLine(docGen.commandLine(command));
+            List<Ref> branchLst = command.call();
 
             List<ScmBranch> rez = branchLst
                     .stream()
@@ -1184,7 +1257,8 @@ public class GitRepoService implements AutoCloseable {
     public List<ScmRevisionInformation> getFileHistory(final String fileName, final String commitIdToStartFrom) throws Exception {
         final ArrayList<ScmRevisionInformation> rez = new ArrayList<>();
         try (Git git = new Git(repository)) {
-            final LogCommand cmd = git.log()
+            final LogCommand cmd = git.log();
+            cmd
                     .setRevFilter(RevFilter.ALL)
                     .addPath(fileName);
             if (commitIdToStartFrom != null) {
@@ -1404,7 +1478,8 @@ public class GitRepoService implements AutoCloseable {
      */
     public List<ScmBranch> getTags() {
         try (Git git = new Git(repository)) {
-            List<Ref> branchLst = git.tagList().call();
+            ListTagCommand command = git.tagList();
+            List<Ref> branchLst = command.call();
             return branchLst
                     .stream()
                     .map(r -> new ScmBranch(r.getName(), r.getName(), ScmBranch.BranchType.TAG, r.getObjectId().getName()))
@@ -1424,12 +1499,14 @@ public class GitRepoService implements AutoCloseable {
                          String signOption,  boolean signTag, String pathToKey) throws IOException {
         configureSigner(signOption, signTag, pathToKey);
         try (Git git = new Git(repository)) {
-            return git.tag()
+            TagCommand command = git.tag();
+            command
                     .setSigned(signTag)
                     .setName(tagName)
                     .setForceUpdate(true)
-                    .setAnnotated(true)
-                    .call();
+                    .setAnnotated(true);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
             throw new IOException(e.getMessage());
@@ -1456,13 +1533,15 @@ public class GitRepoService implements AutoCloseable {
             }
             try (RevWalk revWalk = new RevWalk(repository))  {
                 RevObject revObject = revWalk.parseAny(objectId);
-                return git.tag()
+                TagCommand command = git.tag();
+                command
                         .setSigned(signTag)
                         .setName(tagName)
                         .setObjectId(revObject)
                         .setForceUpdate(true)
-                        .setAnnotated(true)
-                        .call();
+                        .setAnnotated(true);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         } catch (IOException e) {
             throw e;
@@ -1484,7 +1563,10 @@ public class GitRepoService implements AutoCloseable {
         String shortName = fullTagRef.startsWith("refs/tags/")
                 ? fullTagRef.substring("refs/tags/".length()) : fullTagRef;
         try (Git git = new Git(repository)) {
-            git.tagDelete().setTags(shortName).call();
+            DeleteTagCommand command = git.tagDelete();
+            command.setTags(shortName);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot delete local tag " + shortName, e);
             throw new IOException("Cannot delete tag " + shortName, e);
@@ -1504,7 +1586,10 @@ public class GitRepoService implements AutoCloseable {
                 ObjectId id = repository.resolve(commitSha);
                 if (id != null) {
                     RevCommit commit = walk.parseCommit(id);
-                    Note note = git.notesShow().setObjectId(commit).call();
+                    ShowNoteCommand command = git.notesShow();
+                    command.setObjectId(commit);
+                    setCommandLine(docGen.commandLine(command));
+                    Note note = command.call();
                     if (note != null && note.getData() != null) {
                         ObjectLoader loader = repository.open(note.getData());
                         noteText = new String(loader.getBytes(), StandardCharsets.UTF_8);
@@ -1538,7 +1623,10 @@ public class GitRepoService implements AutoCloseable {
                 throw new IOException("Cannot resolve commit " + commitSha);
             }
             RevCommit commit = walk.parseCommit(id);
-            git.notesAdd().setObjectId(commit).setMessage(message).call();
+            AddNoteCommand command = git.notesAdd();
+            command.setObjectId(commit).setMessage(message);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
@@ -1564,7 +1652,10 @@ public class GitRepoService implements AutoCloseable {
                 throw new IOException("Cannot resolve commit " + commitSha);
             }
             RevCommit commit = walk.parseCommit(id);
-            git.notesRemove().setObjectId(commit).call();
+            RemoveNoteCommand command = git.notesRemove();
+            command.setObjectId(commit);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
@@ -1675,8 +1766,9 @@ public class GitRepoService implements AutoCloseable {
     public List<ScmRevisionInformation> getStashList() {
 
         try (Git git = new Git(repository)) {
-            List<ScmRevisionInformation> rez = git.stashList()
-                    .call()
+            StashListCommand command = git.stashList();
+            setCommandLine(docGen.commandLine(command));
+            List<ScmRevisionInformation> rez = command.call()
                     .stream()
                     .map(revCommit -> adapt(revCommit, null))
                     .collect(Collectors.toList());
@@ -1700,9 +1792,11 @@ public class GitRepoService implements AutoCloseable {
      */
     public void deleteStash(int stashRef) throws IOException {
         try (Git git = new Git(repository)) {
-            git.stashDrop()
-                    .setStashRef(stashRef)
-                    .call();
+            StashDropCommand command = git.stashDrop();
+            command
+                    .setStashRef(stashRef);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot delete stash " + stashRef, e);
             throw new IOException(e.getMessage(), e.getCause());
@@ -1717,9 +1811,11 @@ public class GitRepoService implements AutoCloseable {
      */
     public void applyStash(String stashRef) throws IOException {
         try (Git git = new Git(repository)) {
-            git.stashApply()
-                    .setStashRef(stashRef)
-                    .call();
+            StashApplyCommand command = git.stashApply();
+            command
+                    .setStashRef(stashRef);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot spply stash " + stashRef, e);
             throw new IOException(e.getMessage(), e.getCause());
@@ -1889,7 +1985,8 @@ public class GitRepoService implements AutoCloseable {
 
         try (Git git = new Git(repository)) {
             try {
-                CheckoutCommand cmd = git.checkout().addPath(fileName);
+                CheckoutCommand cmd = git.checkout();
+                cmd.addPath(fileName);
                 if (stage != null) {
                     cmd.setStage(stage);
                 }
@@ -1928,7 +2025,8 @@ public class GitRepoService implements AutoCloseable {
     public CherryPickResult cherryPick(RevCommit revCommit) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                CherryPickCommand cherryPickCommand = git.cherryPick()
+                CherryPickCommand cherryPickCommand = git.cherryPick();
+                cherryPickCommand
                         .include(revCommit)
                         .setNoCommit(true)
                         .setStrategy(MergeStrategy.RECURSIVE);
@@ -2025,7 +2123,8 @@ public class GitRepoService implements AutoCloseable {
     public Ref resetBranch(RevCommit revCommit, ResetCommand.ResetType mode, ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                ResetCommand cmd = git.reset()
+                ResetCommand cmd = git.reset();
+                cmd
                         .setRef(revCommit.getName())
                         .setProgressMonitor(defaultProgressMonitor)
                         .setMode(mode);
@@ -2040,7 +2139,8 @@ public class GitRepoService implements AutoCloseable {
     public List<Ref> revertCommit(RevCommit revCommit, ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                RevertCommand revertCommand = git.revert()
+                RevertCommand revertCommand = git.revert();
+                revertCommand
                         .setProgressMonitor(defaultProgressMonitor)
                         .include(revCommit);
                 revertCommand.call();
@@ -2146,7 +2246,8 @@ public class GitRepoService implements AutoCloseable {
             final RevCommit parent = root.getParent(0); //TODO is this correct parent ?
 
             OutputStream out = new ByteArrayOutputStream();
-            DiffCommand diff = git.diff()
+            DiffCommand diff = git.diff();
+            diff
                     .setPathFilter(StringUtils.isNotBlank(fileName) ? PathFilter.create(fileName) : TreeFilter.ALL)
                     .setOutputStream(out)
                     .setSourcePrefix("old:")
@@ -2179,7 +2280,10 @@ public class GitRepoService implements AutoCloseable {
 
     public void removeFile(final String fileName) throws Exception {
         try (Git git = new Git(repository)) {
-            git.rm().addFilepattern(fileName).call();
+            RmCommand command = git.rm();
+            command.addFilepattern(fileName);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         }
     }
 
@@ -2203,7 +2307,10 @@ public class GitRepoService implements AutoCloseable {
                 }
                 if (isTrackedPath(gitPath)) {
                     try (Git git = new Git(repository)) {
-                        git.rm().setCached(true).addFilepattern(gitPath).call();
+                        RmCommand command = git.rm();
+                        command.setCached(true).addFilepattern(gitPath);
+                        setCommandLine(docGen.commandLine(command));
+                        command.call();
                     }
                 }
             }
@@ -2275,7 +2382,10 @@ public class GitRepoService implements AutoCloseable {
     public void compressDatabase(ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                git.gc().setProgressMonitor(defaultProgressMonitor).call();
+                GarbageCollectCommand command = git.gc();
+                command.setProgressMonitor(defaultProgressMonitor);
+                setCommandLine(docGen.commandLine(command));
+                command.call();
             } catch (GitAPIException e) {
                 log.log(Level.SEVERE, "Cannot clean up db", e);
                 throw new IOException(e);
@@ -2353,7 +2463,8 @@ public class GitRepoService implements AutoCloseable {
             files.add(dirCache.getEntry(i).getPathString());
         }
         try (Git git = new Git(repository)) {
-            files.addAll(git.status().call().getUntracked());
+            StatusCommand command = git.status();
+            files.addAll(command.call().getUntracked());
         }
         return files;
     }
@@ -2448,7 +2559,10 @@ public class GitRepoService implements AutoCloseable {
         String updated = GitAttributesUtil.addLfsPattern(existing, pattern);
         Files.writeString(attrPath, updated);
         try (Git git = new Git(repository)) {
-            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+            AddCommand command = git.add();
+            command.addFilepattern(Const.GIT_ATTR_NAME);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         }
     }
 
@@ -2462,7 +2576,10 @@ public class GitRepoService implements AutoCloseable {
         String updated = GitAttributesUtil.removeLfsPattern(existing, pattern);
         Files.writeString(attrPath, updated);
         try (Git git = new Git(repository)) {
-            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+            AddCommand command = git.add();
+            command.addFilepattern(Const.GIT_ATTR_NAME);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
         }
     }
 
@@ -2926,9 +3043,11 @@ public class GitRepoService implements AutoCloseable {
                     progressMonitor.beginTask("Counting revision of " + treeName, 0);
                 }
                 ObjectId head = repository.resolve(Constants.HEAD);
-                commits = git.log()
-                        .add(head)
-                        .call();
+                LogCommand command = git.log();
+                command
+                        .add(head);
+                setCommandLine(docGen.commandLine(command));
+                commits = command.call();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -3101,7 +3220,8 @@ public class GitRepoService implements AutoCloseable {
 
         final String reporitoryUrl = params.getUrl();
 
-        final CloneCommand cmd = Git.cloneRepository()
+        final CloneCommand cmd = Git.cloneRepository();
+        cmd
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(params.getDestinationFolder()))
                 .setCloneAllBranches(true)
@@ -3228,7 +3348,8 @@ public class GitRepoService implements AutoCloseable {
                                        final ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
             if(isRepositoryHasRemoteUrl()) {
-                final PushCommand pushCommand = git.push()
+                final PushCommand pushCommand = git.push();
+                pushCommand
                         .setForce(force)
                         .setProgressMonitor(progressMonitor);
                 if (refSpec != null) {
@@ -3251,8 +3372,8 @@ public class GitRepoService implements AutoCloseable {
 
                 Iterable<PushResult> pushResults = pushCommand.call();
 
-                final FetchCommand fetchCommand = git
-                        .fetch()
+                final FetchCommand fetchCommand = git.fetch();
+                fetchCommand
                         .setCheckFetchedObjects(true)
                         .setRemoveDeletedRefs(true)
                         .setProgressMonitor(progressMonitor);
@@ -3319,10 +3440,12 @@ public class GitRepoService implements AutoCloseable {
             newTree.reset(reader, bCommit.getTree());
 
             try (Git git = new Git(repository)) {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setOldTree(oldTree)
-                        .setNewTree(newTree)
-                        .call();
+                        .setNewTree(newTree);
+                setCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         }
     }
@@ -3438,10 +3561,12 @@ public class GitRepoService implements AutoCloseable {
             sourceTree.reset(reader, sourceCommit.getTree());
 
             try (Git git = new Git(repository)) {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setOldTree(baseTree)
-                        .setNewTree(sourceTree)
-                        .call()
+                        .setNewTree(sourceTree);
+                setCommandLine(docGen.commandLine(command));
+                return command.call()
                         .stream()
                         .map(this::adaptDiffEntry)
                         .collect(java.util.stream.Collectors.toList());
@@ -3561,8 +3686,8 @@ public class GitRepoService implements AutoCloseable {
 
             ObjectId oldHead = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
-            PullCommand pullCommand = git
-                    .pull()
+            PullCommand pullCommand = git.pull();
+            pullCommand
                     .setRemoteBranchName(remoteBranch)
                     .setProgressMonitor(progressMonitor);
             configureTransportCommand(pullCommand, parameters);
@@ -3571,7 +3696,8 @@ public class GitRepoService implements AutoCloseable {
 
             // Prune stale remote-tracking refs that the pull's implicit fetch may not remove
             try {
-                FetchCommand pruneCmd = git.fetch().setRemoveDeletedRefs(true);
+                FetchCommand pruneCmd = git.fetch();
+                pruneCmd.setRemoveDeletedRefs(true);
                 configureTransportCommand(pruneCmd, parameters);
                 pruneCmd.call();
             } catch (Exception ignored) {
@@ -3705,8 +3831,8 @@ public class GitRepoService implements AutoCloseable {
 
         try (Git git = new Git(repository)) {
 
-            final FetchCommand cmd = git
-                    .fetch()
+            final FetchCommand cmd = git.fetch();
+            cmd
                     .setCheckFetchedObjects(true)
                     .setRemoveDeletedRefs(true)
                     .setProgressMonitor(progressMonitor);
@@ -4400,7 +4526,8 @@ public class GitRepoService implements AutoCloseable {
         progressMonitor.beginTask("Log", 300);
 
         try (Git git = new Git(repository)) {
-            Iterable<RevCommit> commits = git.log().call();
+            LogCommand command = git.log();
+            Iterable<RevCommit> commits = command.call();
             for (RevCommit rc : commits) {
                 String author = rc.getAuthorIdent().getName();
                 commitsMap.computeIfPresent(
@@ -4487,6 +4614,7 @@ public class GitRepoService implements AutoCloseable {
         tempFiles.clear();
     }
 
+    //TODO multiple templates
     private static String gitIgnoreContent = "HELP.md\n" +
             "target/\n" +
             "!.mvn/wrapper/maven-wrapper.jar\n" +
@@ -4577,7 +4705,8 @@ public class GitRepoService implements AutoCloseable {
      */
     public Map<String, SubmoduleStatus> getSubmoduleStatus() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.submoduleStatus().call();
+            SubmoduleStatusCommand command = git.submoduleStatus();
+            return command.call();
         }
     }
 
@@ -4587,7 +4716,8 @@ public class GitRepoService implements AutoCloseable {
      */
     public Collection<String> initSubmodules() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.submoduleInit().call();
+            SubmoduleInitCommand command = git.submoduleInit();
+            return command.call();
         }
     }
 
@@ -4596,7 +4726,10 @@ public class GitRepoService implements AutoCloseable {
      */
     public Collection<String> initSubmodule(String path) throws Exception {
         try (Git git = new Git(repository)) {
-            return git.submoduleInit().addPath(path).call();
+            SubmoduleInitCommand command = git.submoduleInit();
+            command.addPath(path);
+            setCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -4613,10 +4746,13 @@ public class GitRepoService implements AutoCloseable {
      */
     public void updateSubmodules(ProgressMonitor progressMonitor, boolean recursive) throws Exception {
         try (Git git = new Git(repository)) {
-            git.submoduleInit().call();
-            git.submoduleUpdate()
-                    .setProgressMonitor(progressMonitor)
-                    .call();
+            SubmoduleInitCommand command = git.submoduleInit();
+            command.call();
+            SubmoduleUpdateCommand submoduleUpdateCommand = git.submoduleUpdate();
+            submoduleUpdateCommand
+                    .setProgressMonitor(progressMonitor);
+            setCommandLine(docGen.commandLine(command));
+            submoduleUpdateCommand.call();
         }
         if (recursive) {
             updateNestedSubmodules(progressMonitor);
@@ -4628,11 +4764,16 @@ public class GitRepoService implements AutoCloseable {
      */
     public void updateSubmodule(String path, ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
-            git.submoduleInit().addPath(path).call();
-            git.submoduleUpdate()
+            SubmoduleInitCommand command = git.submoduleInit();
+            command.addPath(path);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
+            SubmoduleUpdateCommand submoduleUpdateCommand = git.submoduleUpdate();
+            submoduleUpdateCommand
                     .addPath(path)
-                    .setProgressMonitor(progressMonitor)
-                    .call();
+                    .setProgressMonitor(progressMonitor);
+            addCommandLine(docGen.commandLine(command));
+            submoduleUpdateCommand.call();
         }
     }
 
@@ -4642,11 +4783,14 @@ public class GitRepoService implements AutoCloseable {
      */
     public void addSubmodule(String uri, String path, ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
-            Repository subRepo = git.submoduleAdd()
+            SubmoduleAddCommand command = git.submoduleAdd();
+
+            command
                     .setURI(uri)
                     .setPath(path)
-                    .setProgressMonitor(progressMonitor)
-                    .call();
+                    .setProgressMonitor(progressMonitor);
+            setCommandLine(docGen.commandLine(command));
+            Repository subRepo = command.call();
             if (subRepo != null) {
                 subRepo.close();
             }
@@ -4670,11 +4814,16 @@ public class GitRepoService implements AutoCloseable {
                 }
             }
 
-            git.submoduleDeinit()
+            SubmoduleDeinitCommand command = git.submoduleDeinit();
+            command
                     .addPath(path)
-                    .setForce(force)
-                    .call();
-            git.rm().addFilepattern(path).call();
+                    .setForce(force);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
+            RmCommand rmCommand = git.rm();
+            rmCommand.addFilepattern(path);
+            addCommandLine(docGen.commandLine(command));
+            rmCommand.call();
 
             File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
             if (modulesFile.isFile()) {
@@ -4684,9 +4833,15 @@ public class GitRepoService implements AutoCloseable {
                 modulesConfig.save();
                 Set<String> remaining = modulesConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
                 if (remaining == null || remaining.isEmpty()) {
-                    git.rm().addFilepattern(Constants.DOT_GIT_MODULES).call();
+                    RmCommand rmModulesCommand = git.rm();
+                    rmModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                    addCommandLine(docGen.commandLine(command));
+                    rmModulesCommand.call();
                 } else {
-                    git.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+                    AddCommand addModulesCommand = git.add();
+                    addModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                    addCommandLine(docGen.commandLine(command));
+                    addModulesCommand.call();
                 }
             }
 
@@ -4706,12 +4861,19 @@ public class GitRepoService implements AutoCloseable {
     public RevCommit commitSubmoduleChange(String path, String message,
                                            String name, String email) throws Exception {
         try (Git git = new Git(repository)) {
-            git.add().addFilepattern(path).call();
+            AddCommand command = git.add();
+            command.addFilepattern(path);
+            setCommandLine(docGen.commandLine(command));
+            command.call();
             File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
             if (modulesFile.isFile()) {
-                git.add().addFilepattern(Constants.DOT_GIT_MODULES).call();
+                AddCommand addCommand = git.add();
+                addCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                addCommandLine(docGen.commandLine(command));
+                addCommand.call();
             }
-            CommitCommand cmd = git.commit()
+            CommitCommand cmd = git.commit();
+            cmd
                     .setMessage(message)
                     .setOnly(path);
             if (modulesFile.isFile()) {
@@ -4775,7 +4937,8 @@ public class GitRepoService implements AutoCloseable {
      */
     public void syncSubmodules() throws Exception {
         try (Git git = new Git(repository)) {
-            git.submoduleSync().call();
+            SubmoduleSyncCommand command = git.submoduleSync();
+            command.call();
         }
     }
 
@@ -5211,6 +5374,18 @@ public class GitRepoService implements AutoCloseable {
             throw new Exception(String.join("\n", err.isEmpty() ? out : err));
         }
         return out;
+    }
+
+    public List<String> getCommandLine() {
+        return commandLine;
+    }
+
+    public void setCommandLine(List<String> commandLine) {
+        this.commandLine = commandLine;
+    }
+
+    public void addCommandLine(List<String> commandLine) {
+        this.commandLine.addAll(commandLine);
     }
 
 }
