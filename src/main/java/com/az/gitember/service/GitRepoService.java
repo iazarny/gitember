@@ -447,7 +447,7 @@ public class GitRepoService implements AutoCloseable {
 
             RmCommand rmCommand = git.rm();
             rmCommand.addFilepattern(fileNameOld);
-            addCommandLine(docGen.commandLine(command));
+            addCommandLine(docGen.commandLine(rmCommand));
             rmCommand.call();
         } catch (IOException e) {
             log.log(Level.WARNING, "Cannot rename  file", e);
@@ -4747,11 +4747,12 @@ public class GitRepoService implements AutoCloseable {
     public void updateSubmodules(ProgressMonitor progressMonitor, boolean recursive) throws Exception {
         try (Git git = new Git(repository)) {
             SubmoduleInitCommand command = git.submoduleInit();
+            setCommandLine(docGen.commandLine(command));
             command.call();
             SubmoduleUpdateCommand submoduleUpdateCommand = git.submoduleUpdate();
             submoduleUpdateCommand
                     .setProgressMonitor(progressMonitor);
-            setCommandLine(docGen.commandLine(command));
+            addCommandLine(docGen.commandLine(submoduleUpdateCommand));
             submoduleUpdateCommand.call();
         }
         if (recursive) {
@@ -4772,7 +4773,7 @@ public class GitRepoService implements AutoCloseable {
             submoduleUpdateCommand
                     .addPath(path)
                     .setProgressMonitor(progressMonitor);
-            addCommandLine(docGen.commandLine(command));
+            addCommandLine(docGen.commandLine(submoduleUpdateCommand));
             submoduleUpdateCommand.call();
         }
     }
@@ -4822,7 +4823,7 @@ public class GitRepoService implements AutoCloseable {
             command.call();
             RmCommand rmCommand = git.rm();
             rmCommand.addFilepattern(path);
-            addCommandLine(docGen.commandLine(command));
+            addCommandLine(docGen.commandLine(rmCommand));
             rmCommand.call();
 
             File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
@@ -4835,12 +4836,12 @@ public class GitRepoService implements AutoCloseable {
                 if (remaining == null || remaining.isEmpty()) {
                     RmCommand rmModulesCommand = git.rm();
                     rmModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
-                    addCommandLine(docGen.commandLine(command));
+                    addCommandLine(docGen.commandLine(rmModulesCommand));
                     rmModulesCommand.call();
                 } else {
                     AddCommand addModulesCommand = git.add();
                     addModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
-                    addCommandLine(docGen.commandLine(command));
+                    addCommandLine(docGen.commandLine(addModulesCommand));
                     addModulesCommand.call();
                 }
             }
@@ -4869,7 +4870,7 @@ public class GitRepoService implements AutoCloseable {
             if (modulesFile.isFile()) {
                 AddCommand addCommand = git.add();
                 addCommand.addFilepattern(Constants.DOT_GIT_MODULES);
-                addCommandLine(docGen.commandLine(command));
+                addCommandLine(docGen.commandLine(addCommand));
                 addCommand.call();
             }
             CommitCommand cmd = git.commit();
