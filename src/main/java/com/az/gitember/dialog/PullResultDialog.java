@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
  */
 public class PullResultDialog extends JDialog {
 
+    //TODO move to color
     // Light-theme pastels
     private static final Color COLOR_ADDED_LIGHT   = new Color(210, 245, 210);
     private static final Color COLOR_DELETED_LIGHT = new Color(250, 210, 210);

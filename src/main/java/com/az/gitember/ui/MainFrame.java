@@ -364,6 +364,7 @@ public class MainFrame extends JFrame {
             disposeWelcomePanel();
             mainCardLayout.show(mainCardPanel, CARD_REPO);
             toolBar.setVisible(true);
+            statusBar.setInfoButtonVisible(true);
             if (disposedWelcome) {
                 System.gc();
             }

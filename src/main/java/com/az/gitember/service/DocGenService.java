@@ -88,7 +88,7 @@ public class DocGenService {
             case StashDropCommand c -> gitStashDrop(c);
             case StashApplyCommand c -> gitStashApply(c);
             case StashCreateCommand c -> gitStashCreate(c);
-            case ShowNoteCommand c -> gitNotesShow(c);
+            //case ShowNoteCommand c -> gitNotesShow(c);
             case AddNoteCommand c -> gitNotesAdd(c);
             case RemoveNoteCommand c -> gitNotesRemove(c);
             case GarbageCollectCommand gcCommand -> "git gc";
@@ -98,7 +98,7 @@ public class DocGenService {
             case SubmoduleDeinitCommand c -> gitSubmodule("deinit", c, boolField(c, "force", false));
             case SubmoduleSyncCommand c -> gitSubmodule("sync", c, false);
             case SubmoduleStatusCommand c -> gitSubmodule("status", c, false);
-            default -> gitFallback(jgitCommand);
+            default -> "";//gitFallback(jgitCommand);
         };
     }
 

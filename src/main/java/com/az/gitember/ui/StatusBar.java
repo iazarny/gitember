@@ -1,5 +1,10 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.dialog.InfoDialog;
+import com.az.gitember.service.Context;
+import com.az.gitember.ui.misc.Util;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -7,6 +12,7 @@ public class StatusBar extends JPanel {
 
     private final JLabel statusLabel;
     private final JProgressBar progressBar;
+    private final JButton infoButton;
 
     public StatusBar() {
         setLayout(new BorderLayout(5, 0));
@@ -16,6 +22,14 @@ public class StatusBar extends JPanel {
         progressBar = new JProgressBar();
         progressBar.setPreferredSize(new Dimension(300, 4));
         progressBar.setVisible(false);
+        infoButton = Util.createButton("", "Info", FontAwesomeSolid.CODE, 0, new Dimension(36,36));
+        infoButton.setVisible(false);
+        infoButton.addActionListener(e -> {
+
+
+            new InfoDialog(MainFrame.getInstance()).setVisible(true);
+
+        });
 
         // Wrapper keeps a fixed height in BorderLayout.SOUTH so the StatusBar
         // does not resize when the progress bar is shown or hidden.
@@ -35,6 +49,7 @@ public class StatusBar extends JPanel {
         progressWrapper.add(progressBar, BorderLayout.CENTER);
 
         add(statusLabel, BorderLayout.WEST);
+        add(infoButton, BorderLayout.EAST);
         add(progressWrapper, BorderLayout.SOUTH);
     }
 
@@ -64,5 +79,9 @@ public class StatusBar extends JPanel {
             progressBar.setValue(0);
             statusLabel.setText("Ready");
         });
+    }
+
+    public  void setInfoButtonVisible(boolean visible) {
+        infoButton.setVisible(visible);
     }
 }
