@@ -3370,6 +3370,8 @@ public class GitRepoService implements AutoCloseable {
                     uploadLfsObjectsDirect(parameters, refSpec);
                 }
 
+                addCommandLine(docGen.commandLine(pushCommand));
+
                 Iterable<PushResult> pushResults = pushCommand.call();
 
                 final FetchCommand fetchCommand = git.fetch();
@@ -3380,6 +3382,7 @@ public class GitRepoService implements AutoCloseable {
 
                 configureTransportCommand(fetchCommand, parameters);
 
+                addCommandLine(docGen.commandLine(fetchCommand));
                 fetchCommand.call();
 
                 StringBuilder stringBuilder = new StringBuilder();
@@ -3691,7 +3694,7 @@ public class GitRepoService implements AutoCloseable {
                     .setRemoteBranchName(remoteBranch)
                     .setProgressMonitor(progressMonitor);
             configureTransportCommand(pullCommand, parameters);
-
+            addCommandLine(docGen.commandLine(pullCommand));
             PullResult pullRez = pullCommand.call();
 
             // Prune stale remote-tracking refs that the pull's implicit fetch may not remove
@@ -3842,6 +3845,7 @@ public class GitRepoService implements AutoCloseable {
             if (remoteBranch != null) {
                 cmd.setRefSpecs(new RefSpec(remoteBranch));
             }
+            addCommandLine(docGen.commandLine(cmd));
             final FetchResult fetchResult = cmd.call();
             String rezMsg = "\nMessage " + fetchResult.getMessages();
             rezMsg += "\nTracking " + fetchResult.getTrackingRefUpdates()

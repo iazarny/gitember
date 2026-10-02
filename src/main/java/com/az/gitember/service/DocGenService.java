@@ -1,40 +1,16 @@
 package com.az.gitember.service;
 
-import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.AddNoteCommand;
-import org.eclipse.jgit.api.ApplyCommand;
-import org.eclipse.jgit.api.CheckoutCommand;
-import org.eclipse.jgit.api.CommitCommand;
-import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.DeleteBranchCommand;
-import org.eclipse.jgit.api.DeleteTagCommand;
-import org.eclipse.jgit.api.DiffCommand;
-import org.eclipse.jgit.api.GarbageCollectCommand;
-import org.eclipse.jgit.api.GitCommand;
-import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.LogCommand;
-import org.eclipse.jgit.api.MergeCommand;
-import org.eclipse.jgit.api.RebaseCommand;
-import org.eclipse.jgit.api.RemoveNoteCommand;
-import org.eclipse.jgit.api.RenameBranchCommand;
-import org.eclipse.jgit.api.ResetCommand;
-import org.eclipse.jgit.api.RmCommand;
-import org.eclipse.jgit.api.ShowNoteCommand;
-import org.eclipse.jgit.api.StashApplyCommand;
-import org.eclipse.jgit.api.StashCreateCommand;
-import org.eclipse.jgit.api.StashDropCommand;
-import org.eclipse.jgit.api.StashListCommand;
-import org.eclipse.jgit.api.SubmoduleAddCommand;
-import org.eclipse.jgit.api.SubmoduleDeinitCommand;
-import org.eclipse.jgit.api.SubmoduleInitCommand;
-import org.eclipse.jgit.api.SubmoduleStatusCommand;
-import org.eclipse.jgit.api.SubmoduleSyncCommand;
-import org.eclipse.jgit.api.SubmoduleUpdateCommand;
-import org.eclipse.jgit.api.TagCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.AnyObjectId;
+import org.eclipse.jgit.lib.BranchConfig.BranchRebaseMode;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.SubmoduleConfig.FetchRecurseSubmodulesMode;
 import org.eclipse.jgit.revwalk.RevObject;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import java.lang.reflect.Field;
@@ -68,6 +44,9 @@ public class DocGenService {
 
     private String toGit(GitCommand<?> jgitCommand) {
         return switch (jgitCommand) {
+            case PullCommand c -> gitPullCommand(c);
+            case FetchCommand c -> gitFetchCommand(c);
+            case PushCommand c -> gitPush(c);
             case AddCommand c -> gitAdd(c);
             case RmCommand c -> gitRm(c);
             case ResetCommand c -> gitReset(c);
@@ -100,6 +79,108 @@ public class DocGenService {
             case SubmoduleStatusCommand c -> gitSubmodule("status", c, false);
             default -> "";//gitFallback(jgitCommand);
         };
+    }
+
+    private String gitPullCommand(PullCommand command) {
+        List<String> tokens = git("pull");
+        BranchRebaseMode rebase = (BranchRebaseMode) rawField(command, "pullRebaseMode");
+        if (rebase == BranchRebaseMode.REBASE) {
+            tokens.add("--rebase");
+        } else if (rebase == BranchRebaseMode.MERGES) {
+            tokens.add("--rebase-merges");
+        } else if (rebase == BranchRebaseMode.INTERACTIVE) {
+            tokens.add("--rebase=interactive");
+        } else if (rebase == BranchRebaseMode.NONE) {
+            tokens.add("--no-rebase");
+        }
+        MergeCommand.FastForwardMode ff =
+                (MergeCommand.FastForwardMode) rawField(command, "fastForwardMode");
+        if (ff == MergeCommand.FastForwardMode.NO_FF) {
+            tokens.add("--no-ff");
+        } else if (ff == MergeCommand.FastForwardMode.FF_ONLY) {
+            tokens.add("--ff-only");
+        } else if (ff == MergeCommand.FastForwardMode.FF) {
+            tokens.add("--ff");
+        }
+        appendTagOpt(tokens, rawField(command, "tagOption"));
+        appendRecurseSubmodules(tokens, rawField(command, "submoduleRecurseMode"));
+        String remote = command.getRemote();
+        String branch = command.getRemoteBranchName();
+        if (remote != null && !remote.isBlank()) {
+            tokens.add(quote(remote));
+        } else if (branch != null && !branch.isBlank()) {
+            tokens.add(Constants.DEFAULT_REMOTE_NAME);
+        }
+        if (branch != null && !branch.isBlank()) {
+            tokens.add(quote(shortRef(branch)));
+        }
+        return join(tokens);
+    }
+
+    private String gitFetchCommand(FetchCommand command) {
+        List<String> tokens = git("fetch");
+        Boolean prune = (Boolean) rawField(command, "removeDeletedRefs");
+        if (Boolean.TRUE.equals(prune)) {
+            tokens.add("--prune");
+        } else if (Boolean.FALSE.equals(prune)) {
+            tokens.add("--no-prune");
+        }
+        if (command.isForceUpdate()) {
+            tokens.add("--force");
+        }
+        if (command.isDryRun()) {
+            tokens.add("--dry-run");
+        }
+        appendTagOpt(tokens, rawField(command, "tagOption"));
+        appendRecurseSubmodules(tokens, rawField(command, "submoduleRecurseMode"));
+        Integer depth = (Integer) rawField(command, "depth");
+        if (depth != null && depth > 0) {
+            tokens.add("--depth=" + depth);
+        }
+        if (boolField(command, "unshallow", false)) {
+            tokens.add("--unshallow");
+        }
+        String remote = command.getRemote();
+        if (remote != null && !remote.isBlank()) {
+            tokens.add(quote(remote));
+        }
+        appendRefSpecs(tokens, command.getRefSpecs());
+        return join(tokens);
+    }
+
+    private String gitPush(PushCommand command) {
+        List<String> tokens = git("push");
+        if (command.isForce()) {
+            tokens.add("--force");
+        }
+        if (command.isDryRun()) {
+            tokens.add("--dry-run");
+        }
+        if (command.isAtomic()) {
+            tokens.add("--atomic");
+        }
+        String remote = command.getRemote();
+        if (remote != null && !remote.isBlank()) {
+            tokens.add(quote(remote));
+        }
+        Collection<?> specs = command.getRefSpecs();
+        if (specs != null) {
+            for (Object spec : specs) {
+                if (spec instanceof RefSpec refSpec) {
+                    if (Transport.REFSPEC_PUSH_ALL.equals(refSpec)) {
+                        tokens.add("--all");
+                    } else if (Transport.REFSPEC_TAGS.equals(refSpec)) {
+                        tokens.add("--tags");
+                    } else {
+                        String text = refSpec.toString();
+                        if (text != null && !text.isBlank()) {
+                            tokens.add(quote(text));
+                        }
+                    }
+                }
+            }
+        }
+        return join(tokens);
     }
 
     private String gitAdd(AddCommand command) {
@@ -524,6 +605,39 @@ public class DocGenService {
     private void appendObjectId(List<String> tokens, Object id) {
         if (id instanceof AnyObjectId objectId) {
             tokens.add(objectId.getName());
+        }
+    }
+
+    private void appendRefSpecs(List<String> tokens, Collection<?> specs) {
+        if (specs != null) {
+            for (Object spec : specs) {
+                if (spec instanceof RefSpec refSpec) {
+                    String text = refSpec.toString();
+                    if (text != null && !text.isBlank()) {
+                        tokens.add(quote(text));
+                    }
+                } else if (spec != null) {
+                    tokens.add(quote(String.valueOf(spec)));
+                }
+            }
+        }
+    }
+
+    private void appendTagOpt(List<String> tokens, Object tagOpt) {
+        if (tagOpt == TagOpt.NO_TAGS) {
+            tokens.add("--no-tags");
+        } else if (tagOpt == TagOpt.FETCH_TAGS) {
+            tokens.add("--tags");
+        }
+    }
+
+    private void appendRecurseSubmodules(List<String> tokens, Object mode) {
+        if (mode == FetchRecurseSubmodulesMode.YES) {
+            tokens.add("--recurse-submodules");
+        } else if (mode == FetchRecurseSubmodulesMode.NO) {
+            tokens.add("--no-recurse-submodules");
+        } else if (mode == FetchRecurseSubmodulesMode.ON_DEMAND) {
+            tokens.add("--recurse-submodules=on-demand");
         }
     }
 

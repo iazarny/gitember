@@ -8,7 +8,10 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.SubmoduleConfig.FetchRecurseSubmodulesMode;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.TagOpt;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -210,6 +213,64 @@ class DocGenServiceTest {
 
         var deinit = git.submoduleDeinit().addPath("vendor/lib").setForce(true);
         assertEquals(List.of("git submodule deinit --force -- vendor/lib"), docGen.commandLine(deinit));
+    }
+
+    @Test
+    void commandLine_fetchPruneOrigin() {
+        var command = git.fetch()
+                .setCheckFetchedObjects(true)
+                .setRemoveDeletedRefs(true);
+        assertEquals(List.of("git fetch --prune origin"), docGen.commandLine(command));
+    }
+
+    @Test
+    void commandLine_fetchRefSpecAndFlags() {
+        var command = git.fetch()
+                .setRemoveDeletedRefs(true)
+                .setForceUpdate(true)
+                .setDryRun(true)
+                .setTagOpt(TagOpt.NO_TAGS)
+                .setRecurseSubmodules(FetchRecurseSubmodulesMode.YES)
+                .setRefSpecs(new RefSpec("refs/heads/master"));
+        assertEquals(
+                List.of("git fetch --prune --force --dry-run --no-tags --recurse-submodules origin refs/heads/master"),
+                docGen.commandLine(command));
+    }
+
+    @Test
+    void commandLine_pullRemoteBranch() {
+        var command = git.pull().setRemoteBranchName("refs/heads/master");
+        assertEquals(List.of("git pull origin master"), docGen.commandLine(command));
+    }
+
+    @Test
+    void commandLine_pullRebaseNoFf() {
+        var command = git.pull()
+                .setRemote("origin")
+                .setRemoteBranchName("develop")
+                .setRebase(true)
+                .setFastForward(MergeCommand.FastForwardMode.NO_FF);
+        assertEquals(List.of("git pull --rebase --no-ff origin develop"), docGen.commandLine(command));
+    }
+
+    @Test
+    void commandLine_pushForceRefSpec() {
+        var command = git.push()
+                .setForce(true)
+                .setRemote("origin")
+                .setRefSpecs(new RefSpec("refs/heads/master:refs/heads/master"));
+        assertEquals(
+                List.of("git push --force origin refs/heads/master:refs/heads/master"),
+                docGen.commandLine(command));
+    }
+
+    @Test
+    void commandLine_pushAllAndTags() {
+        var all = git.push().setPushAll();
+        assertEquals(List.of("git push --all"), docGen.commandLine(all));
+
+        var tags = git.push().setPushTags();
+        assertEquals(List.of("git push --tags"), docGen.commandLine(tags));
     }
 
     private static void deleteDirectory(Path dir) throws Exception {
