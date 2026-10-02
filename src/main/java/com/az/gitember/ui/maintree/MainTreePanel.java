@@ -15,6 +15,8 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -468,6 +470,8 @@ public class MainTreePanel extends JPanel {
     }
 
     void populateBranches(DefaultMutableTreeNode parent, List<ScmBranch> branches, NodeType type) {
+        boolean wasExpanded = isExpanded(parent);
+        List<List<String>> expandedKeys = captureExpandedDescendantKeys(parent);
         parent.removeAllChildren();
         if (branches != null) {
             for (ScmBranch branch : branches) {
@@ -502,6 +506,7 @@ public class MainTreePanel extends JPanel {
             }
         }
         treeModel.reload(parent);
+        restoreExpansion(parent, wasExpanded, expandedKeys);
     }
 
     private DefaultMutableTreeNode findOrCreateFolder(DefaultMutableTreeNode parent, String folderName) {
@@ -520,6 +525,8 @@ public class MainTreePanel extends JPanel {
     }
 
     void populateStashes(DefaultMutableTreeNode parent, List<ScmRevisionInformation> stashes) {
+        boolean wasExpanded = isExpanded(parent);
+        List<List<String>> expandedKeys = captureExpandedDescendantKeys(parent);
         parent.removeAllChildren();
         if (stashes != null) {
             for (ScmRevisionInformation stash : stashes) {
@@ -530,6 +537,78 @@ public class MainTreePanel extends JPanel {
             }
         }
         treeModel.reload(parent);
+        restoreExpansion(parent, wasExpanded, expandedKeys);
+    }
+
+    /**
+     * {@code reload(parent)} rebuilds children as new node instances, so JTree forgets whether
+     * Tags (or Local Branches, …) was expanded. Capture that before rebuild and put it back.
+     */
+    private boolean isExpanded(DefaultMutableTreeNode node) {
+        boolean expanded = false;
+        if (node != null) {
+            expanded = tree.isExpanded(new TreePath(node.getPath()));
+        }
+        return expanded;
+    }
+
+    private void restoreExpansion(DefaultMutableTreeNode parent, boolean wasExpanded,
+                                  List<List<String>> expandedKeys) {
+        if (wasExpanded) {
+            tree.expandPath(new TreePath(parent.getPath()));
+            for (List<String> keys : expandedKeys) {
+                DefaultMutableTreeNode node = resolveRelativeKeys(parent, keys);
+                if (node != null) {
+                    tree.expandPath(new TreePath(node.getPath()));
+                }
+            }
+        }
+    }
+
+    private List<List<String>> captureExpandedDescendantKeys(DefaultMutableTreeNode parent) {
+        List<List<String>> result = new ArrayList<>();
+        TreePath parentPath = new TreePath(parent.getPath());
+        Enumeration<TreePath> expanded = tree.getExpandedDescendants(parentPath);
+        if (expanded != null) {
+            int parentDepth = parentPath.getPathCount();
+            while (expanded.hasMoreElements()) {
+                TreePath path = expanded.nextElement();
+                if (path.getPathCount() > parentDepth) {
+                    List<String> keys = new ArrayList<>();
+                    Object[] components = path.getPath();
+                    for (int i = parentDepth; i < components.length; i++) {
+                        keys.add(nodeKey((DefaultMutableTreeNode) components[i]));
+                    }
+                    result.add(keys);
+                }
+            }
+        }
+        return result;
+    }
+
+    private DefaultMutableTreeNode resolveRelativeKeys(DefaultMutableTreeNode parent, List<String> keys) {
+        DefaultMutableTreeNode current = parent;
+        for (String key : keys) {
+            DefaultMutableTreeNode next = null;
+            if (current != null) {
+                for (int c = 0; c < current.getChildCount(); c++) {
+                    DefaultMutableTreeNode child = (DefaultMutableTreeNode) current.getChildAt(c);
+                    if (key.equals(nodeKey(child))) {
+                        next = child;
+                    }
+                }
+            }
+            current = next;
+        }
+        return current;
+    }
+
+    private static String nodeKey(DefaultMutableTreeNode node) {
+        String key = String.valueOf(node.getUserObject());
+        if (node.getUserObject() instanceof TreeNodeData data) {
+            key = data.type() + ":" + data.displayName();
+        }
+        return key;
     }
 
     private void expandAllNodes() {

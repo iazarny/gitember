@@ -7,6 +7,8 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.PullRequestService;
 import com.az.gitember.service.avatar.AvatarService;
+import com.az.gitember.ui.misc.Util;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -45,7 +47,7 @@ public class PullRequestPanel extends JPanel {
     private final JTextField authorField = readOnlyField();
     private final JTextField stateField  = readOnlyField();
     private final JTextField branchField = readOnlyField();
-    private final JButton    openUrlBtn  = new JButton("Open in Browser");
+    private final JButton    openUrlBtn  = Util.createButton("Open", "Open in Browser", FontAwesomeSolid.GLOBE);//new JButton("Open in Browser");
     private final JLabel     avatarLabel = new JLabel();
 
     // Files area
