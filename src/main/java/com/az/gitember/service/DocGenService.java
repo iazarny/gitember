@@ -62,8 +62,8 @@ public class DocGenService {
             case ApplyCommand applyCommand -> "git apply";
             case TagCommand c -> gitTag(c);
             case DeleteTagCommand c -> gitTagDelete(c);
-            case ListBranchCommand c -> gitBranchList(c);
-            case StashListCommand stashListCommand -> "git stash list";
+            //case ListBranchCommand c -> gitBranchList(c);
+            //case StashListCommand stashListCommand -> "git stash list";
             case StashDropCommand c -> gitStashDrop(c);
             case StashApplyCommand c -> gitStashApply(c);
             case StashCreateCommand c -> gitStashCreate(c);

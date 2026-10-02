@@ -22,7 +22,7 @@ public class StatusBar extends JPanel {
         progressBar = new JProgressBar();
         progressBar.setPreferredSize(new Dimension(300, 4));
         progressBar.setVisible(false);
-        infoButton = Util.createButton("", "Info", FontAwesomeSolid.CODE, 0, new Dimension(36,36));
+        infoButton = Util.createButton("", "Info", FontAwesomeSolid.CODE, 0, new Dimension(24,24));
         infoButton.setVisible(false);
         infoButton.addActionListener(e -> {
 

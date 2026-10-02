@@ -27,9 +27,17 @@ public class InfoDialog extends JDialog {
 
 
 
+        JButton clear = new JButton("Clear");
+        clear.addActionListener(e -> {
+            textArea.setText("");
+            Context.getGitRepoService().getCommandLine().clear();
+            dispose();
+        });
+
         JButton closeBtn = new JButton("Close");
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
+        btnPanel.add(clear);
         btnPanel.add(closeBtn);
 
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
