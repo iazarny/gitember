@@ -7,6 +7,8 @@ import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.avatar.AvatarService;
+import com.az.gitember.service.tracker.IssueKeyDetector;
+import com.az.gitember.service.tracker.IssueTrackerService;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -20,6 +22,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -46,6 +49,8 @@ public class CommitDetailPanel extends JPanel {
 
     // Header fields
     private final JTextField msgField = createReadOnlyField();
+    private final JPanel issueLinksPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+    private final JLabel issueCaption = new JLabel("Issue:");
     private final JTextField authorField = createReadOnlyField();
     private final JTextField emailField = createReadOnlyField();
     private final JTextField dateField = createReadOnlyField();
@@ -566,48 +571,59 @@ public class CommitDetailPanel extends JPanel {
         fieldsPanel.add(msgField, fld);
         fld.gridwidth = 1;
 
-        // Row 1: Author | Email | Date
+        issueLinksPanel.setOpaque(false);
+        issueCaption.setVisible(false);
         lbl.gridx = 0;
         lbl.gridy = 1;
-        fieldsPanel.add(new JLabel("Author:"), lbl);
+        fieldsPanel.add(issueCaption, lbl);
         fld.gridx = 1;
         fld.gridy = 1;
+        fld.gridwidth = 5;
+        fieldsPanel.add(issueLinksPanel, fld);
+        fld.gridwidth = 1;
+
+        // Row 2: Author | Email | Date
+        lbl.gridx = 0;
+        lbl.gridy = 2;
+        fieldsPanel.add(new JLabel("Author:"), lbl);
+        fld.gridx = 1;
+        fld.gridy = 2;
         fieldsPanel.add(authorField, fld);
 
         lbl.gridx = 2;
-        lbl.gridy = 1;
+        lbl.gridy = 2;
         fieldsPanel.add(new JLabel("Email:"), lbl);
         fld.gridx = 3;
-        fld.gridy = 1;
+        fld.gridy = 2;
         fieldsPanel.add(emailField, fld);
 
         lbl.gridx = 4;
-        lbl.gridy = 1;
+        lbl.gridy = 2;
         fieldsPanel.add(new JLabel("Date:"), lbl);
         fld.gridx = 5;
-        fld.gridy = 1;
+        fld.gridy = 2;
         fieldsPanel.add(dateField, fld);
 
-        // Row 2: SHA | Parent | Refs
+        // Row 3: SHA | Parent | Refs
         lbl.gridx = 0;
-        lbl.gridy = 2;
+        lbl.gridy = 3;
         fieldsPanel.add(new JLabel("SHA:"), lbl);
         fld.gridx = 1;
-        fld.gridy = 2;
+        fld.gridy = 3;
         fieldsPanel.add(shaField, fld);
 
         lbl.gridx = 2;
-        lbl.gridy = 2;
+        lbl.gridy = 3;
         fieldsPanel.add(new JLabel("Parent:"), lbl);
         fld.gridx = 3;
-        fld.gridy = 2;
+        fld.gridy = 3;
         fieldsPanel.add(parentField, fld);
 
         lbl.gridx = 4;
-        lbl.gridy = 2;
+        lbl.gridy = 3;
         fieldsPanel.add(new JLabel("Refs:"), lbl);
         fld.gridx = 5;
-        fld.gridy = 2;
+        fld.gridy = 3;
         fieldsPanel.add(refsField, fld);
 
         signatureButton.setBorderPainted(false);
@@ -622,20 +638,20 @@ public class CommitDetailPanel extends JPanel {
 
         // signature
         lbl.gridx = 0;
-        lbl.gridy = 3;
+        lbl.gridy = 4;
         fieldsPanel.add(signatureCaption, lbl);
         fld.gridx = 1;
-        fld.gridy = 3;
+        fld.gridy = 4;
         fld.gridwidth = 5;
         fieldsPanel.add(signatureButton, fld);
         fld.gridwidth = 1;
 
-        // Row 4: Note
+        // Row 5: Note
         lbl.gridx = 0;
-        lbl.gridy = 4;
+        lbl.gridy = 5;
         fieldsPanel.add(jlabelNote, lbl);
         fld.gridx = 1;
-        fld.gridy = 4;
+        fld.gridy = 5;
         fld.gridwidth = 5;
         fieldsPanel.add(notesArea, fld);
         fld.gridwidth = 1;
@@ -675,6 +691,7 @@ public class CommitDetailPanel extends JPanel {
                 ? String.join(", ", rev.getParents()) : "");
         refsField.setText(rev.getRef() != null
                 ? String.join(", ", rev.getRef()) : "");
+        updateIssueLinks(rev);
         updateSignatureButton(rev);
         updateNotes(rev);
 
@@ -739,8 +756,62 @@ public class CommitDetailPanel extends JPanel {
         shaField.setText("");
         parentField.setText("");
         refsField.setText("");
+        updateIssueLinks(null);
         updateSignatureButton(null);
         updateNotes(null);
+    }
+
+    private void updateIssueLinks(ScmRevisionInformation rev) {
+        issueLinksPanel.removeAll();
+        List<String> keys = new ArrayList<>();
+        if (rev != null) {
+            StringBuilder haystack = new StringBuilder();
+            if (rev.getFullMessage() != null) {
+                haystack.append(rev.getFullMessage()).append(' ');
+            }
+            if (rev.getShortMessage() != null) {
+                haystack.append(rev.getShortMessage()).append(' ');
+            }
+            if (rev.getRef() != null) {
+                haystack.append(String.join(" ", rev.getRef()));
+            }
+            keys.addAll(IssueKeyDetector.findAll(haystack.toString()));
+        }
+        for (String key : keys) {
+            JButton link = new JButton(key);
+            link.setBorderPainted(false);
+            link.setContentAreaFilled(false);
+            link.setFocusPainted(false);
+            link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            link.setForeground(UIManager.getColor("Component.linkColor") != null
+                    ? UIManager.getColor("Component.linkColor")
+                    : new Color(0x1A, 0x66, 0xCC));
+            String url = IssueTrackerService.issueUrl(key);
+            if (url != null && !url.isBlank()) {
+                link.setToolTipText(url);
+                link.addActionListener(e -> openIssueUrl(url));
+            } else {
+                link.setToolTipText(key);
+                link.setEnabled(IssueTrackerService.isConfigured());
+            }
+            issueLinksPanel.add(link);
+        }
+        boolean show = !keys.isEmpty();
+        issueCaption.setVisible(show);
+        issueLinksPanel.setVisible(show);
+        issueLinksPanel.revalidate();
+        issueLinksPanel.repaint();
+    }
+
+    private void openIssueUrl(String url) {
+        try {
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Cannot open issue URL " + url, ex);
+            JOptionPane.showMessageDialog(this,
+                    "Cannot open " + url + "\n" + ex.getMessage(),
+                    "Open issue", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private void updateNotes(ScmRevisionInformation rev) {

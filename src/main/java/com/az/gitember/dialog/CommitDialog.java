@@ -13,6 +13,8 @@ import com.az.gitember.service.detector.DetectorService;
 import com.az.gitember.service.detector.FileType;
 import com.az.gitember.service.detector.Finding;
 import com.az.gitember.service.detector.ScanContext;
+import com.az.gitember.service.tracker.IssueCommitMessage;
+import com.az.gitember.service.tracker.IssueTrackerService;
 import com.az.gitember.ui.FileViewerWindow;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.SyntaxStyleUtil;
@@ -22,6 +24,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.merge.ResolveMerger;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -53,6 +56,7 @@ public class CommitDialog extends JDialog {
     );
 
     private final CommitMessagePanel commitMessagePanel;
+    private final IssuePickerPanel issuePicker;
     /** Snapshot of the workspace's projects, in the same order as {@link #commitMessagePanel}'s per-project tabs. Non-null only in workspace-active (dashboard) mode. */
     private final List<Project> workspaceProjects;
     private final JTable filesTable;
@@ -118,6 +122,12 @@ public class CommitDialog extends JDialog {
         } else {
             workspaceProjects = null;
             commitMessagePanel = new CommitMessagePanel(null);
+        }
+
+        if (IssueTrackerService.isConfigured()) {
+            issuePicker = new IssuePickerPanel(true);
+        } else {
+            issuePicker = null;
         }
 
         // Scan status panel (shown while LLM scan is in progress)
@@ -208,6 +218,9 @@ public class CommitDialog extends JDialog {
         southOfMessage.add(findingsPanel,   BorderLayout.CENTER);
 
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
+        if (issuePicker != null) {
+            messagePanel.add(issuePicker, BorderLayout.NORTH);
+        }
         messagePanel.add(commitMessagePanel, BorderLayout.CENTER);
         messagePanel.add(southOfMessage,      BorderLayout.SOUTH);
 
@@ -616,7 +629,7 @@ public class CommitDialog extends JDialog {
             List<String> missingMessage = new ArrayList<>();
             for (int i = 0; i < workspaceProjects.size(); i++) {
                 Project project = workspaceProjects.get(i);
-                if (willCommit(project, amend) && commitMessagePanel.getEffectiveMessage(i).isEmpty()) {
+                if (willCommit(project, amend) && withIssueKey(commitMessagePanel.getEffectiveMessage(i)).isEmpty()) {
                     missingMessage.add(projectLabel(project));
                 }
             }
@@ -627,7 +640,7 @@ public class CommitDialog extends JDialog {
                         "Validation", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-        } else if (commitMessagePanel.getMessage().trim().isEmpty()) {
+        } else if (withIssueKey(commitMessagePanel.getMessage().trim()).isEmpty()) {
             JOptionPane.showMessageDialog(this, "Commit message is required",
                     "Validation", JOptionPane.WARNING_MESSAGE);
             return;
@@ -648,6 +661,8 @@ public class CommitDialog extends JDialog {
 
         try {
             //This is initial implementation. Without any distributed transactions support.
+            String lastSha = null;
+            String lastMessage = null;
             if (workspaceProjects != null) {
                 //Check is any of the repo has unresolved conflicts
                 Map<Project, List<ScmItem>> conflictedFiles = getConflictedFiles(Context.getWorkspace());
@@ -657,8 +672,11 @@ public class CommitDialog extends JDialog {
                 }
 
                 for (int i = 0; i < workspaceProjects.size(); i++) {
-                    commitSingleProject(workspaceProjects.get(i),
-                            commitMessagePanel.getEffectiveMessage(i), amend);
+                    Project project = workspaceProjects.get(i);
+                    String message = withIssueKey(commitMessagePanel.getEffectiveMessage(i));
+                    lastMessage = message;
+                    lastSha = commitSingleProject(project, message, amend);
+                    notifyTrackerAfterCommit(project, message, lastSha);
                 }
 
                 // Commit succeeded for every project; now check (without merging) whether each
@@ -684,10 +702,12 @@ public class CommitDialog extends JDialog {
                 }
             } else {
                 Project project = Context.getCurrentProject().orElse(null);
-                commitSingleProject(project, commitMessagePanel.getMessage().trim(), amend);
+                lastMessage = withIssueKey(commitMessagePanel.getMessage().trim());
+                lastSha = commitSingleProject(project, lastMessage, amend);
                 Context.updateStatus(null);
                 Context.updateBranches();
                 Context.updateWorkingBranch();
+                notifyTrackerAfterCommit(project, lastMessage, lastSha);
             }
             dispose();
         } catch (Exception e) {
@@ -708,8 +728,9 @@ public class CommitDialog extends JDialog {
     }
 
     /** Commits staged items for one project, using the configured author/committer identity. */
-    private void commitSingleProject(Project project, String message, boolean amend)
+    private String commitSingleProject(Project project, String message, boolean amend)
             throws IOException, GitAPIException {
+        String sha = null;
         if (project != null) {
             GitRepoService svc = project.getGitRepoService();
             boolean doAmend = amend && svc.canAmend();
@@ -722,8 +743,34 @@ public class CommitDialog extends JDialog {
             String authorEmail    = StringUtils.trimToNull(project.getUserCommitEmail());
             String committerName  = StringUtils.trimToNull(project.getCommitterName());
             String committerEmail = StringUtils.trimToNull(project.getCommitterEmail());
-            svc.commit(message, authorName, authorEmail, committerName, committerEmail,
+            RevCommit committed = svc.commit(message, authorName, authorEmail, committerName, committerEmail,
                     settings.getSignOption(), signCommit, pathToKey, doAmend);
+            if (committed != null) {
+                sha = committed.getName();
+            }
+        }
+        return sha;
+    }
+
+    private String withIssueKey(String message) {
+        String result = message;
+        if (issuePicker != null) {
+            result = IssueCommitMessage.applyIssueKey(
+                    message, issuePicker.getSelectedIssue(), issuePicker.isIncludeKey());
+        }
+        return result;
+    }
+
+    private void notifyTrackerAfterCommit(Project project, String message, String sha) {
+        if (issuePicker != null) {
+            String branch = "";
+            if (project != null && project.getWorkingBranch() != null) {
+                branch = project.getWorkingBranch().getShortName();
+            } else if (Context.getWorkingBranch() != null) {
+                branch = Context.getWorkingBranch().getShortName();
+            }
+            IssueTrackerService.commentOnCommitQuietly(
+                    project, issuePicker.getSelectedIssue(), sha, branch, message);
         }
     }
 

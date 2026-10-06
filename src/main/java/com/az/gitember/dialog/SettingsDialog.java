@@ -717,7 +717,6 @@ public class SettingsDialog extends JDialog {
         return uiPanel;
     }
 
-
     private void applyAndClose() {
         Settings settings = Context.getSettings();
         if (settings == null) {

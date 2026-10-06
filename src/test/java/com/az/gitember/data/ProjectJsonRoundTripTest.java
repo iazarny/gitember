@@ -25,7 +25,7 @@ class ProjectJsonRoundTripTest {
     private static final Set<String> EXPECTED_KEYS = Set.of(
             "projectHomeFolder", "openTime", "userName", "empId", "userPwd", "userKey", "keyPass",
             "accessToken", "userCommitName", "userCommitEmail", "committerName", "committerEmail",
-            "indexed", "showAllPullRequests"
+            "indexed", "showAllPullRequests", "issueTracker"
     );
 
     private static final ObjectMapper MAPPER = new ObjectMapper();

@@ -1,6 +1,7 @@
 package com.az.gitember.dialog;
 
 import com.az.gitember.data.Const;
+import com.az.gitember.data.IssueTrackerConfig;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
@@ -14,8 +15,8 @@ import java.awt.*;
 import java.nio.file.Path;
 
 /**
- * Per-project settings: author/committer identity and remote repository credentials.
- * Blank identity fields mean "use the global git config value".
+ * Per-project settings: author/committer identity, remote credentials, and issue-tracker
+ * integration. Blank identity fields mean "use the global git config value".
  */
 public class ProjectSettingsDialog extends JDialog {
 
@@ -29,12 +30,13 @@ public class ProjectSettingsDialog extends JDialog {
     private final JPasswordField pwdField;
 
     private final JCheckBox showAllPullRequestsCheck;
+    private final IssueTrackerSettingsPanel issueTrackerPanel;
 
     public ProjectSettingsDialog(Frame owner) {
         super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
-        setSize(480, 720);
+        setSize(600, 780);
         setLocationRelativeTo(owner);
-        setResizable(false);
+        setResizable(true);
 
         Project project = Context.getCurrentProject().orElse(null);
 
@@ -58,6 +60,7 @@ public class ProjectSettingsDialog extends JDialog {
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets  = new Insets(5, 5, 5, 5);
         gbc.anchor  = GridBagConstraints.WEST;
@@ -127,8 +130,17 @@ public class ProjectSettingsDialog extends JDialog {
             gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
             form.add(editAllowedSignersBtn, gbc);
             gbc.gridwidth = 1;
-            setSize(480, 780);
+            setSize(560, 780);
         }
+
+        issueTrackerPanel = new IssueTrackerSettingsPanel(
+                project != null ? project.getIssueTracker() : new IssueTrackerConfig());
+
+        JTabbedPane tabs = new JTabbedPane();
+        JScrollPane repoScroll = new JScrollPane(form);
+        repoScroll.setBorder(null);
+        tabs.addTab("Repository", repoScroll);
+        tabs.addTab("Integrations", new JScrollPane(issueTrackerPanel));
 
         JButton okBtn     = new JButton("OK");
         JButton cancelBtn = new JButton("Cancel");
@@ -141,7 +153,7 @@ public class ProjectSettingsDialog extends JDialog {
         btnPanel.add(cancelBtn);
 
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(form,     BorderLayout.CENTER);
+        getContentPane().add(tabs,     BorderLayout.CENTER);
         getContentPane().add(btnPanel, BorderLayout.SOUTH);
         Util.bindEscapeToDispose(this);
     }
@@ -173,6 +185,7 @@ public class ProjectSettingsDialog extends JDialog {
             project.setAccessToken(new String(tokenField.getPassword()).trim());
             project.setUserName   (userField.getText().trim());
             project.setUserPwd    (new String(pwdField.getPassword()));
+            project.setIssueTracker(issueTrackerPanel.getConfig());
         });
         Context.saveSettings();
         dispose();

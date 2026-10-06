@@ -2,12 +2,13 @@ package com.az.gitember.handler;
 
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
+import com.az.gitember.dialog.CreateBranchDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.service.tracker.IssueTrackerService;
 import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.mainframe.ActiveView;
-import com.sun.tools.javac.Main;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 
@@ -157,15 +158,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
             namePreset = GitemberUtil.getLastPart(baseBranchFullName);
         }
 
-        String name = (String) JOptionPane.showInputDialog(
-                parent,
-                newBranchName,
-                branchTitle,
-                JOptionPane.PLAIN_MESSAGE,
-                null,        // icon
-                null,        // selectionValues (null = free text)
-                namePreset
-        );
+        String name = promptBranchName(parent, branchTitle, newBranchName, namePreset);
 
         if (StringUtils.isNotBlank(name)) {
             new CreateBranchHandler(parent, baseBranchFullName, name.trim()).execute();
@@ -178,18 +171,41 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
      * or — in workspace-active view — from each project's own current HEAD.
      */
     public static void showAndExecuteFromCurrent(Component parent) {
-        String name = (String) JOptionPane.showInputDialog(
-                parent,
-                "New branch name:",
-                "Create Branch",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                ""
-        );
+        String title = "Create Branch";
+        String prompt = "New branch name:";
+        if (MainFrame.getInstance().getActiveView() == ActiveView.WORKSPACE) {
+            title = "Create Branch in each repository";
+        }
+        String name = promptBranchName(parent, title, prompt, "");
 
         if (StringUtils.isNotBlank(name)) {
             new CreateBranchHandler(parent, null, name.trim()).execute();
         }
+    }
+
+    private static String promptBranchName(Component parent, String title, String prompt, String namePreset) {
+        String name = null;
+        if (IssueTrackerService.isConfigured()) {
+            Window owner = parent instanceof Window w ? w : SwingUtilities.getWindowAncestor(parent);
+            CreateBranchDialog dialog = new CreateBranchDialog(owner, title, prompt, namePreset);
+            dialog.setVisible(true);
+            if (dialog.isConfirmed()) {
+                name = dialog.getBranchName();
+                if (dialog.getSelectedIssue() != null) {
+                    Context.setCurrentIssue(dialog.getSelectedIssue());
+                }
+            }
+        } else {
+            name = (String) JOptionPane.showInputDialog(
+                    parent,
+                    prompt,
+                    title,
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    namePreset != null ? namePreset : ""
+            );
+        }
+        return name;
     }
 }

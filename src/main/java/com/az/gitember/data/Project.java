@@ -71,6 +71,7 @@ public class Project implements Serializable, Comparable<Project>  {
     private String committerEmail;
     private boolean indexed;
     private boolean showAllPullRequests = false; // when true, merged/closed PRs are listed too
+    private IssueTrackerConfig issueTracker = new IssueTrackerConfig();
 
     // ── runtime state: not persisted ────────────────────────────────────────────────────────
 
@@ -208,6 +209,10 @@ public class Project implements Serializable, Comparable<Project>  {
         if (StringUtils.isBlank(empId))           empId           = other.empId;
         indexed             |= other.indexed;
         showAllPullRequests |= other.showAllPullRequests;
+        if ((issueTracker == null || !issueTracker.isReady())
+                && other.issueTracker != null && other.issueTracker.isReady()) {
+            issueTracker = other.issueTracker;
+        }
         if (openTime == null || (other.openTime != null && other.openTime.after(openTime))) {
             openTime = other.openTime;
         }
@@ -227,6 +232,17 @@ public class Project implements Serializable, Comparable<Project>  {
 
     public void setShowAllPullRequests(boolean showAllPullRequests) {
         this.showAllPullRequests = showAllPullRequests;
+    }
+
+    public IssueTrackerConfig getIssueTracker() {
+        if (issueTracker == null) {
+            issueTracker = new IssueTrackerConfig();
+        }
+        return issueTracker;
+    }
+
+    public void setIssueTracker(IssueTrackerConfig issueTracker) {
+        this.issueTracker = issueTracker != null ? issueTracker : new IssueTrackerConfig();
     }
 
     public String getUserCommitName() {

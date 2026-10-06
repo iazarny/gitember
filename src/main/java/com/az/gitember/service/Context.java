@@ -28,6 +28,8 @@ public class Context {
 
     private static Workspace workspace = null;
     private static Project   activeProject;
+    /** Session-only: the issue currently associated with this Git work. Not persisted. */
+    private static Issue currentIssue;
     private static ObjectMapper objectMapper = null;
     public static synchronized ObjectMapper getObjectMapper() {
         if (objectMapper == null) {
@@ -82,6 +84,7 @@ public class Context {
         setActiveProject(null);
         workspace = null;
         settings = null;
+        currentIssue = null;
     }
 
     /** Signals listeners to reload the working-copy status list. */
@@ -142,6 +145,14 @@ public class Context {
         return getActiveProject() == null ? null : getActiveProject().getWorkingBranch();
     }
 
+
+    public static Issue getCurrentIssue() {
+        return currentIssue;
+    }
+
+    public static void setCurrentIssue(Issue issue) {
+        currentIssue = issue;
+    }
 
     public static Settings getSettings() {
         return settings;
