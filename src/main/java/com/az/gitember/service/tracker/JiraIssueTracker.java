@@ -57,7 +57,7 @@ public class JiraIssueTracker implements IssueTracker {
     public List<Issue> search(String query) throws Exception {
         String jql = buildJql(query, config.getProjectKeys());
         String encoded = URLEncoder.encode(jql, StandardCharsets.UTF_8);
-        String body = get("/rest/api/2/search?jql=" + encoded
+        String body = get("/rest/api/3/search/jql?jql=" + encoded
                 + "&maxResults=" + SEARCH_LIMIT
                 + "&fields=summary,description,status,assignee");
         return parseSearch(body);

@@ -195,7 +195,6 @@ public class MainTreePanel extends JPanel {
                 statusLabel.setVisible(true);
             }
         }
-
     }
 
     private static String toHumanState(RepositoryState state) {

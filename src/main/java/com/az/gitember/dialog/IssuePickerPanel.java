@@ -205,6 +205,8 @@ public class IssuePickerPanel extends JPanel {
             protected void done() {
                 combo.setEnabled(true);
                 try {
+
+
                     List<Issue> issues = get();
                     Issue keep = prefer != null && prefer.isPresent() ? prefer : null;
                     model.removeAllElements();
@@ -212,9 +214,14 @@ public class IssuePickerPanel extends JPanel {
                     for (Issue issue : issues) {
                         model.addElement(issue);
                     }
-                    if (keep != null) {
+
+                    if (!issues.isEmpty()) {
+                        setSelectedIssue(issues.get(0));
+                    }
+
+                    /*if (keep != null) {
                         setSelectedIssue(keep);
-                    } else if (branchKey != null) {
+                    } else */else if (branchKey != null) {
                         issues.stream()
                                 .filter(i -> branchKey.equals(i.getKey()))
                                 .findFirst()
