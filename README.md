@@ -61,7 +61,7 @@ java -jar target/gitember-3.5.1-SNAPSHOT-boot.jar
 
 ## Changes
 
-### 3.5 · Oct 2026
+### 3.5.3 · Oct 2026
 
 Add following features:
 - Commit sign and signature validation
