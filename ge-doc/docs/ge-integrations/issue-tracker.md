@@ -53,12 +53,16 @@ Tokens are stored with the same encryption as repository passwords (OS keychain 
 3. Enter the Atlassian **Email** and an [API token](https://id.atlassian.com/manage-profile/security/api-tokens).
 4. **Test Connection** loads Jira projects.
 
+![issue-tracker-jira.png](issue-tracker-jira.png)
+
 ### Linear
 
 1. Create a [personal API key](https://linear.app/settings/account/security) in Linear
    (**Settings → Security & access**).
 2. Paste it into **API Key**. Gitember talks only to `https://api.linear.app/graphql`.
 3. **Test Connection** fills **Workspace** (`https://linear.app/your-workspace`) and loads teams.
+
+![issue-tracker.png](issue-tracker.png)
 
 ## Issue picker (commit)
 
@@ -79,6 +83,8 @@ cross-reference development activity.
 
 If the message is empty and an issue is selected, Gitember uses the issue title.
 
+![issue-tracker-commit.png](issue-tracker-commit.png)
+
 ## Branch from an issue
 
 **Branch → Create Branch** (or the tree context menu) opens a dialog with the same issue
@@ -96,6 +102,8 @@ your typing.
 
 Creating a local branch from a **remote** still presets the remote's short name and does
 not replace it when you pick an issue.
+
+![issue-tracker-show.png](issue-tracker-show.png)
 
 ## History
 
