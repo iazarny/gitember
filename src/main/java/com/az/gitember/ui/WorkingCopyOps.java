@@ -43,7 +43,7 @@ public abstract class WorkingCopyOps  extends JPanel {
         unstageAllBtn = Util.createButton("Unstage All", null, FontAwesomeSolid.MINUS);
         unstageAllBtn.setEnabled(false);
 
-        refreshBtn = Util.createButton("Refresh", null, FontAwesomeSolid.SYNC);
+        refreshBtn = Util.createButton("Refresh", "Refresh working copy", FontAwesomeSolid.SYNC);
 
         searchField = new JTextField(15);
         searchField.setPreferredSize(new Dimension(150, 25));
