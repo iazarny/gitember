@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.dialog.PushResultDialog;
@@ -21,7 +22,7 @@ public class PushTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Push tag " + tag.getShortName();
+        return I18n.t("pushTag", tag.getShortName());
     }
 
     @Override
@@ -33,7 +34,7 @@ public class PushTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Tag pushed: " + tag.getShortName());
+        statusBar.setStatus(I18n.t("tagPushed", tag.getShortName()));
         new PushResultDialog(parent, remoteUrl, result).setVisible(true);
     }
 

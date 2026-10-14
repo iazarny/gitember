@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Submodule;
 import com.az.gitember.service.Context;
@@ -24,7 +25,7 @@ public class CommitSubmoduleHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Commit submodule " + path;
+        return I18n.t("commitSubmodule", path);
     }
 
     @Override
@@ -55,8 +56,8 @@ public class CommitSubmoduleHandler extends AbstractAsyncHandler<Void> {
     private static void promptAndCommit(Component parent, Submodule submodule) {
         String message = (String) JOptionPane.showInputDialog(
                 parent,
-                "Commit message for submodule " + submodule.getPath() + ":",
-                "Commit Submodule Change",
+                I18n.t("commitMessageForSubmodule", submodule.getPath()),
+                I18n.t("commitSubmoduleChange"),
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 null,

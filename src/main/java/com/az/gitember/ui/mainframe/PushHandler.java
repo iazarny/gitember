@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.PushResultDialog;
 import com.az.gitember.handler.AbstractAsyncHandler;
@@ -37,7 +38,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Push";
+        return I18n.t("push");
     }
 
     @Override
@@ -116,8 +117,7 @@ public class PushHandler extends AbstractAsyncHandler<String> {
     protected void onSuccess(String result) {
         if (workspaceResults != null) {
             long ok = workspaceResults.stream().filter(ProjectOperationResult::isSuccess).count();
-            statusBar.setStatus("Push completed for " + ok + " of "
-                    + workspaceResults.size() + " repositories");
+            statusBar.setStatus(I18n.t("pushCompletedRepositories", ok, workspaceResults.size()));
             new PushResultDialog(parent, workspaceResults).setVisible(true);
             if (parent instanceof MainFrame mf) {
                 mf.refreshWorkspaceView();
@@ -125,18 +125,18 @@ public class PushHandler extends AbstractAsyncHandler<String> {
             }
             return;
         }
-        statusBar.setStatus("Push completed");
+        statusBar.setStatus(I18n.t("pushCompleted"));
         new PushResultDialog(parent, remoteUrl, result).setVisible(true);
     }
 
     @Override
     protected void onError(Exception e) {
         if (e instanceof org.eclipse.jgit.api.errors.InvalidRemoteException cgfException) {
-            statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+            statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), e.getMessage()));
             statusBar.clearProgress();
             JOptionPane.showMessageDialog(parent,
-                    "Need to configure remote url\n" + e.getMessage(),
-                    "Warning", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("needConfigureRemoteUrl", e.getMessage()),
+                    I18n.t("warning"), JOptionPane.WARNING_MESSAGE);
             return;
         } else  if (!credentialsPrompted && isAuthError(e)) {
             credentialsPrompted = true;

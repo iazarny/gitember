@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.HistoryPanel;
@@ -21,7 +22,7 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
 
     @Override
     protected String getOperationName() {
-        return "Rebase";
+        return I18n.t("rebase");
     }
 
     @Override
@@ -34,10 +35,10 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
     @Override
     protected void onSuccess(RebaseResult result) {
         String status = result.getStatus().toString();
-        statusBar.setStatus("Rebase: " + status);
+        statusBar.setStatus(I18n.t("rebaseBranchHandler.rebase", status));
         JOptionPane.showMessageDialog(parent,
-                "Rebase result: " + status,
-                "Rebase", JOptionPane.INFORMATION_MESSAGE);
+                I18n.t("rebaseResult", status),
+                I18n.t("rebase"), JOptionPane.INFORMATION_MESSAGE);
         InteractiveContinueAbortDialog.showIfRebaseInProgress(
                 MainFrame.getInstance(), MainFrame.getInstance().getStatusBar(),
                 () -> {
@@ -57,8 +58,8 @@ public class RebaseBranchHandler extends AbstractAsyncHandler<RebaseResult> {
                 ? Context.getWorkingBranch().getShortName() : "current";
 
         int result = JOptionPane.showConfirmDialog(parent,
-                "Rebase " + branchShortName + " onto " + workingBranchName + "?",
-                "Rebase Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                I18n.t("rebaseOnto", branchShortName, workingBranchName),
+                I18n.t("rebaseBranch"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             new RebaseBranchHandler(parent,  branchFullName).execute();
         }

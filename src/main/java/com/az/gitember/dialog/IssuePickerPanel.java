@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Issue;
 import com.az.gitember.data.IssueTrackerConfig;
 import com.az.gitember.service.Context;
@@ -41,7 +42,7 @@ public class IssuePickerPanel extends JPanel {
         boolean includeDefault = config == null || config.isIncludeIssueKeyInCommit();
 
         searchField = new JTextField();
-        searchField.putClientProperty("JTextField.placeholderText", "Search issues…");
+        searchField.putClientProperty("JTextField.placeholderText", I18n.t("searchIssues"));
         searchField.setPreferredSize(new Dimension(120, 25));
 
         model = new DefaultComboBoxModel<>();
@@ -84,7 +85,7 @@ public class IssuePickerPanel extends JPanel {
             }
         });
 
-        openBtn = new JButton("Open");
+        openBtn = new JButton(I18n.t("open"));
         openBtn.setEnabled(false);
         openBtn.addActionListener(e -> openSelected());
 
@@ -97,11 +98,11 @@ public class IssuePickerPanel extends JPanel {
             }
         });
 
-        includeKeyCheck = new JCheckBox("Include issue key", includeDefault);
+        includeKeyCheck = new JCheckBox(I18n.t("includeIssueKey"), includeDefault);
         includeKeyCheck.setVisible(showIncludeKey);
 
         JPanel row = new JPanel(new BorderLayout(6, 0));
-        row.add(new JLabel("Issue:"), BorderLayout.WEST);
+        row.add(new JLabel(I18n.t("issue")), BorderLayout.WEST);
         JPanel fields = new JPanel(new BorderLayout(6, 0));
         fields.add(searchField, BorderLayout.WEST);
         fields.add(combo, BorderLayout.CENTER);
@@ -248,8 +249,8 @@ public class IssuePickerPanel extends JPanel {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Cannot open issue URL " + url, ex);
                     JOptionPane.showMessageDialog(this,
-                            "Cannot open " + url + "\n" + ex.getMessage(),
-                            "Open issue", JOptionPane.WARNING_MESSAGE);
+                            I18n.t("issuePickerPanel.cannotOpen", url, ex.getMessage()),
+                            I18n.t("openIssue"), JOptionPane.WARNING_MESSAGE);
                 }
             }
         }

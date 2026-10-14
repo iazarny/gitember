@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmStat;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoStatService;
@@ -51,7 +52,7 @@ public class StatDialog extends JFrame {
     private SwingWorker<List<ScmStat>, String> worker;
 
     public StatDialog(Frame owner) {
-        super("Statistics");
+        super(I18n.t("statistics"));
         this.statusBar = MainFrame.getInstance().getStatusBar();
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -71,7 +72,7 @@ public class StatDialog extends JFrame {
         depthSpinner = new JSpinner(new SpinnerNumberModel(12, 1, 120, 1));
         depthSpinner.setPreferredSize(new Dimension(70, depthSpinner.getPreferredSize().height));
 
-        computeBtn = new JButton("Compute");
+        computeBtn = new JButton(I18n.t("compute"));
         computeBtn.addActionListener(e -> {
             try {
                 startCompute();
@@ -85,14 +86,14 @@ public class StatDialog extends JFrame {
         progressBar.setString("");
 
         JPanel controlBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
-        controlBar.add(new JLabel("Depth:"));
+        controlBar.add(new JLabel(I18n.t("depth")));
         controlBar.add(depthSpinner);
         controlBar.add(new JLabel("months"));
         controlBar.add(computeBtn);
 
         // ── Pie chart ────────────────────────────────────────────────────────
         pieChart = new PieChartPanel();
-        pieChart.setBorder(BorderFactory.createTitledBorder("Codebase Ownership (HEAD)"));
+        pieChart.setBorder(BorderFactory.createTitledBorder(I18n.t("codebaseOwnershipHead")));
 
         // ── Summary table ────────────────────────────────────────────────────
         tableModel = new StatTableModel();
@@ -101,7 +102,7 @@ public class StatDialog extends JFrame {
         table.setAutoCreateRowSorter(true);
         table.getTableHeader().setReorderingAllowed(false);
         JScrollPane tableScroll = new JScrollPane(table);
-        tableScroll.setBorder(BorderFactory.createTitledBorder("Summary"));
+        tableScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("summary")));
 
         // ── Split pane ───────────────────────────────────────────────────────
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pieChart, tableScroll);
@@ -110,7 +111,7 @@ public class StatDialog extends JFrame {
 
         // ── Monthly bar chart ─────────────────────────────────────────────────
         barChart = new MonthlyBarChartPanel();
-        barChart.setBorder(BorderFactory.createTitledBorder("Monthly Contributions"));
+        barChart.setBorder(BorderFactory.createTitledBorder(I18n.t("monthlyContributions")));
         barChart.setPreferredSize(new Dimension(800, 220));
 
         // ── South: bar chart above full-width progress bar ────────────────────
@@ -146,25 +147,23 @@ public class StatDialog extends JFrame {
 
     @SuppressWarnings("unchecked")
     private void startCompute() throws Exception {
-        statusBar.setStatus("Statistics: loading history ...");
+        statusBar.setStatus(I18n.t("statisticsLoadingHistory"));
         Context.updatePlotCommitList(null, true, null);
         //GetRepoStatService().computeStats(project.getProjectHomeFolder());
         if (CollectionUtils.isEmpty(Context.getPlotCommitList())) {
             JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
-                    "Not enough information to collect statistics .",
-                    "No statistics", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("notEnoughInformationCollectStatistics"),
+                    I18n.t("noStatistics"), JOptionPane.WARNING_MESSAGE);
         } else if (new GitRepoStatService().computeStats(Context.getActiveProject()).hasChanges()) {
             JEditorPane ep = new JEditorPane("text/html",
                     "<html><body>"
-                            +  "Repository "
-                            + Context.getProjectFolder()
-                            + " has modified or conflicted files. <br/>Commit / resolve / stash files first before getting statistics"
+                            + I18n.t("repoHasModifiedFiles", Context.getProjectFolder())
                             + "</body></html>");
             ep.setEditable(false);
             ep.setOpaque(false);
             JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
                     ep,
-                    "Uncommited changes", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("uncommitedChanges"), JOptionPane.WARNING_MESSAGE);
         } else {
 
 
@@ -172,7 +171,7 @@ public class StatDialog extends JFrame {
             computeBtn.setEnabled(false);
             progressBar.setValue(0);
             progressBar.setString("0 / " + depth);
-            statusBar.setStatus("Computing statistics…");
+            statusBar.setStatus(I18n.t("computingStatistics"));
             statusBar.showProgress(true);
 
             worker = new SwingWorker<>() {
@@ -184,7 +183,7 @@ public class StatDialog extends JFrame {
                             Context.getGitRepoService().getLastCommitPerMonth(depth, Context.getPlotCommitList());
 
                     if (monthly.isEmpty()) {
-                        publish("No commits found.");
+                        publish(I18n.t("noCommitsFound"));
                         return Collections.emptyList();
                     }
 
@@ -237,7 +236,7 @@ public class StatDialog extends JFrame {
                 @Override
                 protected void process(List<String> chunks) {
                     if (!chunks.isEmpty())
-                        statusBar.setStatus("Statistics: " + chunks.get(chunks.size() - 1));
+                        statusBar.setStatus(I18n.t("statDialog.statistics", chunks.get(chunks.size() - 1)));
                 }
 
                 @Override
@@ -246,16 +245,16 @@ public class StatDialog extends JFrame {
                     try {
                         List<ScmStat> stats = get();
                         applyResults(stats);
-                        progressBar.setString("Done");
-                        statusBar.setStatus("Statistics: complete.");
+                        progressBar.setString(I18n.t("done"));
+                        statusBar.setStatus(I18n.t("statisticsComplete"));
                     } catch (java.util.concurrent.CancellationException ex) {
-                        progressBar.setString("Cancelled");
-                        statusBar.setStatus("Statistics: cancelled.");
+                        progressBar.setString(I18n.t("cancelled"));
+                        statusBar.setStatus(I18n.t("statisticsCancelled"));
                     } catch (Exception ex) {
                         log.log(Level.WARNING, "Statistics computation failed", ex);
                         Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                        progressBar.setString("Error");
-                        statusBar.setStatus("Statistics error: " + cause.getMessage());
+                        progressBar.setString(I18n.t("error"));
+                        statusBar.setStatus(I18n.t("statisticsError", cause.getMessage()));
                     } finally {
                         statusBar.clearProgress();
                     }
@@ -292,7 +291,7 @@ public class StatDialog extends JFrame {
 
     private static final class StatTableModel extends AbstractTableModel {
 
-        private static final String[] COLS = {"Developer", "Commits", "Lines", "Avg Lines/Commit"};
+        private static final String[] COLS = {I18n.t("developer"), I18n.t("commits"), I18n.t("lines"), I18n.t("avgLinesCommit")};
         private List<Object[]> rows = Collections.emptyList();
 
         void setData(ScmStat stat, List<String> authors) {

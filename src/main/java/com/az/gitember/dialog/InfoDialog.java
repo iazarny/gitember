@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
 
@@ -10,7 +11,7 @@ import java.util.stream.Collectors;
 public class InfoDialog extends JDialog {
 
     public InfoDialog(JFrame parentFrame) {
-        super(SwingUtilities.getWindowAncestor(parentFrame), "Info",
+        super(SwingUtilities.getWindowAncestor(parentFrame), I18n.t("info"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(640, 320);
@@ -27,14 +28,14 @@ public class InfoDialog extends JDialog {
 
 
 
-        JButton clear = new JButton("Clear");
+        JButton clear = new JButton(I18n.t("clear"));
         clear.addActionListener(e -> {
             textArea.setText("");
             Context.getGitRepoService().getCommandLine().clear();
             dispose();
         });
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(clear);

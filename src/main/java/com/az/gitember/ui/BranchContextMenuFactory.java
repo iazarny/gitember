@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.Submodule;
@@ -57,14 +58,14 @@ public class BranchContextMenuFactory {
         }
 
         // Checkout
-        JMenuItem checkoutItem = new JMenuItem("Checkout");
+        JMenuItem checkoutItem = new JMenuItem(I18n.t("branchContextMenuFactory.checkout"));
         checkoutItem.addActionListener(e ->
                 new CheckoutBranchHandler(parent,  sourceScmBranch).execute());
         menu.add(checkoutItem);
 
         // Create branch
         boolean isRemote = ScmBranch.BranchType.REMOTE.equals(sourceScmBranch.getBranchType());
-        JMenuItem createBranchItem = new JMenuItem(isRemote ? "Create local branch ..." : "Create branch ...");
+        JMenuItem createBranchItem = new JMenuItem(isRemote ? I18n.t("branchContextMenuFactory.createLocalBranch") : I18n.t("branchContextMenuFactory.createBranch"));
         createBranchItem.addActionListener(e ->
                 CreateBranchHandler.showAndExecute(parent,  sourceScmBranch.getFullName(), isRemote));
         menu.add(createBranchItem);
@@ -78,12 +79,12 @@ public class BranchContextMenuFactory {
         if (!isCurrentBranch && !isTag) {
             String workingName = workingBranch != null ? workingBranch.getShortName() : "current";
 
-            JMenuItem mergeItem = new JMenuItem("Merge " + name + " -> " + workingName + "...");
+            JMenuItem mergeItem = new JMenuItem(I18n.t("branchContextMenuFactory.merge", name, workingName));
             mergeItem.addActionListener(e ->
                     MergeBranchHandler.showAndExecute(parent,  sourceScmBranch));
             menu.add(mergeItem);
 
-            JMenuItem rebaseItem = new JMenuItem("Rebase " + name + " -> " + workingName + "...");
+            JMenuItem rebaseItem = new JMenuItem(I18n.t("branchContextMenuFactory.rebase", name, workingName));
             rebaseItem.addActionListener(e ->
                     RebaseBranchHandler.showAndExecute(parent,  sourceScmBranch.getFullName(), name));
             menu.add(rebaseItem);
@@ -93,19 +94,19 @@ public class BranchContextMenuFactory {
         if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
             menu.addSeparator();
 
-            JMenuItem pullItem = new JMenuItem("Pull " + (disablePull ? "" : fullName));
+            JMenuItem pullItem = new JMenuItem(I18n.t("pull", (disablePull ? "" : fullName)));
             pullItem.setEnabled(!disablePull);
             pullItem.addActionListener(e ->
                     new PullHandler(parent,  sourceScmBranch).execute());
             menu.add(pullItem);
 
-            JMenu pushMenu = new JMenu("Push");
+            JMenu pushMenu = new JMenu(I18n.t("push"));
 
-            String pushLabel = name.equals(fullName) ? "Push " + name + "..." : "Push " + fullName;
+            String pushLabel = name.equals(fullName) ? I18n.t("branchContextMenuFactory.push", name) : I18n.t("branchContextMenuFactory.push2", fullName);
             JMenuItem pushItem = new JMenuItem(pushLabel);
             pushItem.addActionListener(e ->new PushHandler(parent,  sourceScmBranch).execute() );
 
-            String pushForceLabel = name.equals(fullName) ? "Force push " + name + "..." : "Force push " + fullName;
+            String pushForceLabel = name.equals(fullName) ? I18n.t("forcePush", name) : I18n.t("branchContextMenuFactory.forcePush", fullName);
             JMenuItem pushForceItem = new JMenuItem(pushForceLabel);
             pushForceItem.addActionListener(e ->new PushHandler(parent,  sourceScmBranch, true).execute() );
 
@@ -120,7 +121,7 @@ public class BranchContextMenuFactory {
         if (isTag) {
             menu.addSeparator();
 
-            JMenuItem pushTagItem = new JMenuItem("Push tag to remote...");
+            JMenuItem pushTagItem = new JMenuItem(I18n.t("pushTagToRemote"));
             pushTagItem.addActionListener(e ->
                     new PushTagHandler(parent,  sourceScmBranch).execute());
             menu.add(pushTagItem);
@@ -129,7 +130,7 @@ public class BranchContextMenuFactory {
         // Create work tree
         if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
             menu.addSeparator();
-            JMenuItem createWorkTree = new JMenuItem("Create worktree ...");
+            JMenuItem createWorkTree = new JMenuItem(I18n.t("createWorktree"));
             menu.add(createWorkTree);
 
             if (isCurrentBranch) {
@@ -157,8 +158,8 @@ public class BranchContextMenuFactory {
                                     log.log(Level.WARNING, "Add worktree failed", ex);
                                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                                     JOptionPane.showMessageDialog(parent,
-                                            "Cannot add worktree:\n" + cause.getMessage(),
-                                            "Error", JOptionPane.ERROR_MESSAGE);
+                                            I18n.t("cannotAddWorktree", cause.getMessage()),
+                                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                                 }
                             }
                         };
@@ -174,13 +175,13 @@ public class BranchContextMenuFactory {
 
         //Rename
         if (sourceScmBranch.getBranchType() == ScmBranch.BranchType.LOCAL) {
-            JMenuItem renameBranchItem = new JMenuItem(MessageFormat.format("Rename branch {0}...", name));
+            JMenuItem renameBranchItem = new JMenuItem(MessageFormat.format(I18n.t("renameBranch"), name));
             renameBranchItem.addActionListener(e ->
                     RenameBranchHandler.showAndExecute(parent, name, false));
             menu.add(renameBranchItem);
         } else {
             JMenuItem renameBranchItem = new JMenuItem(
-                    MessageFormat.format("Rename remote branch {0}...",  sourceScmBranch.getFullName() )
+                    MessageFormat.format(I18n.t("renameRemoteBranch"),  sourceScmBranch.getFullName() )
             );
             renameBranchItem.addActionListener(e ->
                     RenameBranchHandler.showAndExecute(parent, sourceScmBranch.getFullName(), true));
@@ -191,12 +192,12 @@ public class BranchContextMenuFactory {
         // Delete
         menu.addSeparator();
         if (isTag) {
-            JMenuItem deleteTagItem = new JMenuItem("Delete tag \"" + name + "\"...");
+            JMenuItem deleteTagItem = new JMenuItem(I18n.t("branchContextMenuFactory.deleteTag", name));
             deleteTagItem.addActionListener(e ->
                     DeleteTagHandler.showAndExecute(parent, statusBar, sourceScmBranch));
             menu.add(deleteTagItem);
         } else {
-            JMenuItem deleteItem = new JMenuItem("Delete " + name + "...");
+            JMenuItem deleteItem = new JMenuItem(I18n.t("branchContextMenuFactory.delete", name));
             deleteItem.addActionListener(e ->
                     DeleteBranchHandler.showAndExecute(parent, statusBar, sourceScmBranch));
             deleteItem.setEnabled(!sourceScmBranch.isHead());
@@ -211,7 +212,7 @@ public class BranchContextMenuFactory {
 
         if (totalBranches > 1) {
             menu.addSeparator();
-            JMenu diffMenu = new JMenu("Diff with");
+            JMenu diffMenu = new JMenu(I18n.t("diffWith"));
             fillDiffSubmenu(diffMenu, localBranches, sourceScmBranch.getFullName());
             fillDiffSubmenu(diffMenu, remoteBranches, sourceScmBranch.getFullName());
             menu.add(diffMenu);
@@ -226,7 +227,7 @@ public class BranchContextMenuFactory {
                 if (br.getFullName().equals(currentBranchFullName)) continue;
                 JMenuItem item = new JMenuItem(br.getFullName());
                 item.addActionListener(e -> {
-                    statusBar.setStatus("Computing diff: " + currentBranchFullName + " ↔ " + br.getFullName() + "…");
+                    statusBar.setStatus(I18n.t("computingDiff", currentBranchFullName, br.getFullName()));
                     BranchDiffWindow window = new BranchDiffWindow(parent, currentBranchFullName, br.getFullName());
                     window.setVisible(true);
                 });
@@ -242,17 +243,17 @@ public class BranchContextMenuFactory {
     public JPopupMenu createStashContextMenu(ScmRevisionInformation stash) {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem applyItem = new JMenuItem("Apply Stash");
+        JMenuItem applyItem = new JMenuItem(I18n.t("applyStash"));
         applyItem.addActionListener(e -> doApplyStash(stash));
         menu.add(applyItem);
 
-        JMenuItem editItem = new JMenuItem("Edit Message…");
+        JMenuItem editItem = new JMenuItem(I18n.t("branchContextMenuFactory.editMessage"));
         editItem.addActionListener(e -> doEditStashMessage(stash));
         menu.add(editItem);
 
         menu.addSeparator();
 
-        JMenuItem dropItem = new JMenuItem("Drop Stash");
+        JMenuItem dropItem = new JMenuItem(I18n.t("dropStash"));
         dropItem.addActionListener(e -> doDropStash(stash));
         menu.add(dropItem);
 
@@ -262,7 +263,7 @@ public class BranchContextMenuFactory {
     private void doEditStashMessage(ScmRevisionInformation stash) {
         String current = stash.getShortMessage() != null ? stash.getShortMessage() : "";
         String newMessage = (String) JOptionPane.showInputDialog(
-                parent, "Stash message:", "Edit Stash Message",
+                parent, I18n.t("stashMessage"), I18n.t("editStashMessage"),
                 JOptionPane.PLAIN_MESSAGE, null, null, current);
         if (newMessage == null || newMessage.equals(current)) return;
 
@@ -282,15 +283,15 @@ public class BranchContextMenuFactory {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Edit stash message failed", ex);
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot edit stash message:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotEditStashMessage", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
     }
 
     private void doApplyStash(ScmRevisionInformation stash) {
-        statusBar.setStatus("Applying stash...");
+        statusBar.setStatus(I18n.t("applyingStash"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override
@@ -304,14 +305,14 @@ public class BranchContextMenuFactory {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Stash applied");
+                    statusBar.setStatus(I18n.t("stashApplied"));
                     Context.updateStatus(null, true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Apply stash failed", ex);
-                    statusBar.setStatus("Apply stash failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("applyStashFailed", ex.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot apply stash:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotApplyStash", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -320,11 +321,11 @@ public class BranchContextMenuFactory {
     private void doDropStash(ScmRevisionInformation stash) {
         String label = stash.getShortMessage() != null ? stash.getShortMessage() : "stash@{" + stash.getStashIndex() + "}";
         int choice = JOptionPane.showConfirmDialog(parent,
-                "Drop stash \"" + label + "\"?\nThis cannot be undone.",
-                "Drop Stash", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                I18n.t("dropStashCannotUndone", label),
+                I18n.t("dropStash"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (choice != JOptionPane.YES_OPTION) return;
 
-        statusBar.setStatus("Dropping stash...");
+        statusBar.setStatus(I18n.t("droppingStash"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override
@@ -338,14 +339,14 @@ public class BranchContextMenuFactory {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Stash dropped");
+                    statusBar.setStatus(I18n.t("stashDropped"));
                     Context.updateStash();
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Drop stash failed", ex);
-                    statusBar.setStatus("Drop stash failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("dropStashFailed", ex.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot drop stash:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotDropStash", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -358,7 +359,7 @@ public class BranchContextMenuFactory {
     public JPopupMenu createWorktreeContextMenu(WorktreeInfo wt) {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem openItem = new JMenuItem("Open");
+        JMenuItem openItem = new JMenuItem(I18n.t("open"));
         openItem.addActionListener(e -> {
             if (worktreeOpenAction != null) worktreeOpenAction.accept(wt.getPath());
         });
@@ -367,11 +368,11 @@ public class BranchContextMenuFactory {
         if (!wt.isMain()) {
             menu.addSeparator();
 
-            JMenuItem removeItem = new JMenuItem("Remove…");
+            JMenuItem removeItem = new JMenuItem(I18n.t("branchContextMenuFactory.remove"));
             removeItem.addActionListener(e -> doRemoveWorktree(wt, false));
             menu.add(removeItem);
 
-            JMenuItem forceRemoveItem = new JMenuItem("Remove (force)…");
+            JMenuItem forceRemoveItem = new JMenuItem(I18n.t("branchContextMenuFactory.removeForce"));
             forceRemoveItem.addActionListener(e -> doRemoveWorktree(wt, true));
             menu.add(forceRemoveItem);
         }
@@ -382,15 +383,14 @@ public class BranchContextMenuFactory {
     private void doRemoveWorktree(WorktreeInfo wt, boolean force) {
         String pathLabel = wt.getPath();
         String msg = force
-                ? "Force-remove worktree at:\n" + pathLabel
-                  + "\n\nUncommitted changes will be discarded."
-                : "Remove worktree at:\n" + pathLabel + "?";
+                ? I18n.t("forceRemoveWorktreeAtUncommitted", pathLabel)
+                : I18n.t("removeWorktreeAt", pathLabel);
         int choice = JOptionPane.showConfirmDialog(parent, msg,
-                "Remove Worktree", JOptionPane.OK_CANCEL_OPTION,
+                I18n.t("removeWorktree"), JOptionPane.OK_CANCEL_OPTION,
                 force ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
         if (choice != JOptionPane.OK_OPTION) return;
 
-        statusBar.setStatus("Removing worktree…");
+        statusBar.setStatus(I18n.t("removingWorktree"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -401,15 +401,15 @@ public class BranchContextMenuFactory {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Worktree removed");
+                    statusBar.setStatus(I18n.t("worktreeRemoved"));
                     if (worktreeRefreshAction != null) worktreeRefreshAction.run();
                 } catch (Exception ex) {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, "Remove worktree failed", cause);
-                    statusBar.setStatus("Remove worktree failed: " + cause.getMessage());
+                    statusBar.setStatus(I18n.t("removeWorktreeFailed", cause.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot remove worktree:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotRemoveWorktree", cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -421,7 +421,7 @@ public class BranchContextMenuFactory {
     public JPopupMenu createTagsCategoryMenu() {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem createTagItem = new JMenuItem("Create tag ...");
+        JMenuItem createTagItem = new JMenuItem(I18n.t("branchContextMenuFactory.createTag"));
         createTagItem.addActionListener(e ->
                 CreateTagHandler.showAndExecute(parent, statusBar));
         menu.add(createTagItem);
@@ -436,19 +436,19 @@ public class BranchContextMenuFactory {
     public JPopupMenu createSubmodulesCategoryMenu() {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem addItem = new JMenuItem("Add submodule…");
+        JMenuItem addItem = new JMenuItem(I18n.t("branchContextMenuFactory.addSubmodule"));
         addItem.addActionListener(e -> AddSubmoduleHandler.showAndExecute(parent));
         menu.add(addItem);
 
-        JMenuItem initItem = new JMenuItem("Initialize submodules");
+        JMenuItem initItem = new JMenuItem(I18n.t("initializeSubmodules"));
         initItem.addActionListener(e -> new InitSubmodulesHandler(parent).execute());
         menu.add(initItem);
 
-        JMenuItem updateItem = new JMenuItem("Update submodules");
+        JMenuItem updateItem = new JMenuItem(I18n.t("branchContextMenuFactory.updateSubmodules"));
         updateItem.addActionListener(e -> new UpdateSubmodulesHandler(parent).execute());
         menu.add(updateItem);
 
-        JMenuItem recursiveItem = new JMenuItem("Recursive update");
+        JMenuItem recursiveItem = new JMenuItem(I18n.t("recursiveUpdate"));
         recursiveItem.addActionListener(e -> new UpdateSubmodulesHandler(parent, true).execute());
         menu.add(recursiveItem);
 

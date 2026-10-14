@@ -1,5 +1,6 @@
 package com.az.gitember.service.detector.impl;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.Detector;
@@ -138,7 +139,7 @@ Output valid JSON only — no explanation, no markdown fences, no trailing text.
                 int    lineNo       = toInt(item.get("lineNo"), 0);
                 String type         = str(item.get("type"),        "SECRET");
                 String confStr      = str(item.get("confidence"),  "MEDIUM");
-                String description  = str(item.get("description"), "Potential secret");
+                String description  = str(item.get("description"), I18n.t("potentialSecret"));
                 String matchedValue = str(item.get("matchedValue"), "");
 
                 Confidence confidence;

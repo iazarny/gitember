@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +36,7 @@ public class FileViewerWindow extends JFrame {
     private final SearchBar searchBar;
 
     // Blame components
-    private final JToggleButton annotateBtn = new JToggleButton("Annotate");
+    private final JToggleButton annotateBtn = new JToggleButton(I18n.t("annotate"));
     private final JButton saveBtn;
     private final JTextArea blameTextArea   = new JTextArea();
     private final JScrollPane blameScrollPane;
@@ -103,7 +104,7 @@ public class FileViewerWindow extends JFrame {
 
         // ── Blame context menu & mouse interactions ───────────────────────
         JPopupMenu blameContextMenu = new JPopupMenu();
-        JMenuItem openInHistoryItem = new JMenuItem("Open commit in History");
+        JMenuItem openInHistoryItem = new JMenuItem(I18n.t("openCommitInHistory"));
         openInHistoryItem.addActionListener(e -> {
             if (lastBlameClickSha != null && !lastBlameClickSha.isBlank()) {
                 navigateToHistoryCommit(lastBlameClickSha);
@@ -159,7 +160,7 @@ public class FileViewerWindow extends JFrame {
         saveBtn.setName("saveFileButton");
         saveBtn.addActionListener(e -> saveContent());
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.setName("closeFileButton");
         closeBtn.addActionListener(e -> {
             if (editPath != null) {
@@ -237,8 +238,8 @@ public class FileViewerWindow extends JFrame {
             } catch (Exception ex) {
                 log.log(Level.WARNING, "Cannot read " + path, ex);
                 JOptionPane.showMessageDialog(MainFrame.getInstance(),
-                        "Cannot read " + path.getFileName() + ":\n" + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                        I18n.t("cannotRead", path.getFileName(), ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 readable = false;
             }
         }
@@ -260,7 +261,7 @@ public class FileViewerWindow extends JFrame {
         this.savedContent = textArea.getText();
         textArea.setEditable(true);
         textArea.setHighlightCurrentLine(true);
-        saveBtn.setText("Save");
+        saveBtn.setText(I18n.t("save"));
 
         KeyStroke saveStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S,
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
@@ -316,7 +317,7 @@ public class FileViewerWindow extends JFrame {
         }
 
         annotateBtn.setEnabled(false);
-        annotateBtn.setText("Loading…");
+        annotateBtn.setText(I18n.t("loading"));
 
         new SwingWorker<List<String>, Void>() {
             @Override
@@ -348,11 +349,11 @@ public class FileViewerWindow extends JFrame {
                     log.log(Level.WARNING, "Blame load failed", ex);
                     annotateBtn.setSelected(false);
                     JOptionPane.showMessageDialog(FileViewerWindow.this,
-                            "Blame unavailable: " + ex.getMessage(),
-                            "Annotate", JOptionPane.WARNING_MESSAGE);
+                            I18n.t("blameUnavailable", ex.getMessage()),
+                            I18n.t("annotate"), JOptionPane.WARNING_MESSAGE);
                 } finally {
                     annotateBtn.setEnabled(true);
-                    annotateBtn.setText("Annotate");
+                    annotateBtn.setText(I18n.t("annotate"));
                 }
             }
         }.execute();
@@ -387,8 +388,8 @@ public class FileViewerWindow extends JFrame {
     private void confirmCloseIfDirty() {
         if (isDirty()) {
             int choice = JOptionPane.showConfirmDialog(this,
-                    "Save changes to " + suggestedFileName + "?",
-                    "Unsaved changes",
+                    I18n.t("saveChangesTo", suggestedFileName),
+                    I18n.t("unsavedChanges"),
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (choice == JOptionPane.YES_OPTION) {
@@ -420,15 +421,15 @@ public class FileViewerWindow extends JFrame {
                 saved = true;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this,
-                        "Cannot save file:\n" + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                        I18n.t("cannotSaveFile", ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Save as");
+            chooser.setDialogTitle(I18n.t("fileViewerWindow.saveAs"));
             chooser.setSelectedFile(new File(suggestedFileName));
             chooser.setFileFilter(new FileNameExtensionFilter(
-                    "Patch / Diff files (*.patch, *.diff)", "patch", "diff"));
+                    I18n.t("patchDiffFilesPatchDiff"), "patch", "diff"));
             chooser.setAcceptAllFileFilterUsed(true);
 
             if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -438,8 +439,8 @@ public class FileViewerWindow extends JFrame {
                     saved = true;
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(this,
-                            "Cannot save file:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotSaveFile", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }

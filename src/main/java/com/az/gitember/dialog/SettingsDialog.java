@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.CommitTemplateService;
 import com.az.gitember.service.Context;
@@ -51,6 +52,7 @@ public class SettingsDialog extends JDialog {
     private  JComboBox<String> dateFormatCombo;
     private  JComboBox<String> timeFormatCombo;
     private  JComboBox<String> themeCombo;
+    private  JComboBox<String> languageCombo;
     private  JSpinner fontSizeSpinner;
     private  JTextArea ignoreExtArea;
     private  JCheckBox leakDetectorCheck;
@@ -75,7 +77,7 @@ public class SettingsDialog extends JDialog {
     private final Settings settings;
 
     public SettingsDialog(Frame owner) {
-        super(owner, "Settings", true);
+        super(owner, I18n.t("settings"), true);
         setSize(640, 640);
         setLocationRelativeTo(owner);
         setResizable(true);
@@ -95,12 +97,12 @@ public class SettingsDialog extends JDialog {
         JTabbedPane tabbedPane = new JTabbedPane();
 
 
-        tabbedPane.addTab("Common", createCommonPanel());
-        tabbedPane.addTab("Commit", createCommitTemplatePanel());
+        tabbedPane.addTab(I18n.t("common"), createCommonPanel());
+        tabbedPane.addTab(I18n.t("commit"), createCommitTemplatePanel());
         tabbedPane.addTab("UI", createUIPanel());
-        tabbedPane.addTab("Commit Signing", createComminSignPanel());
+        tabbedPane.addTab(I18n.t("commitSigning"), createComminSignPanel());
         tabbedPane.addTab("AI", createAIPanel());
-        tabbedPane.addTab("Other", createComparePanel());
+        tabbedPane.addTab(I18n.t("other"), createComparePanel());
 
         // Form panel
         JPanel form = new JPanel(new GridBagLayout());
@@ -110,7 +112,7 @@ public class SettingsDialog extends JDialog {
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton okBtn = new JButton("OK");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         buttonPanel.add(okBtn);
         buttonPanel.add(cancelBtn);
 
@@ -137,7 +139,7 @@ public class SettingsDialog extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        comparePanel.add(new JLabel("Ignore extensions (folder compare):"), gbc);
+        comparePanel.add(new JLabel(I18n.t("ignoreExtensionsFolderCompare")), gbc);
 
         // 2. Scrollable Edit Area (stretches horizontally and vertically)
         JScrollPane ignoreScroll = new JScrollPane(ignoreExtArea);
@@ -152,7 +154,7 @@ public class SettingsDialog extends JDialog {
         comparePanel.add(ignoreScroll, gbc);
 
         // 3. Reset Button (aligned to bottom-right)
-        JButton resetBtn = new JButton("Reset to defaults");
+        JButton resetBtn = new JButton(I18n.t("resetToDefaults"));
         resetBtn.addActionListener(e -> ignoreExtArea.setText(
                 String.join(", ", Settings.DEFAULT_IGNORE_COMPARE_FILES)));
 
@@ -195,10 +197,10 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        aiPanel.add(new JLabel("Enable secret detector (AI experimental):"), gbc);
+        aiPanel.add(new JLabel(I18n.t("enableSecretDetectorAiExperimental")), gbc);
 
         leakDetectorCheck = new JCheckBox("", currentLeakDetector);
-        leakDetectorCheck.setToolTipText("Scan staged files for secrets words before each commit");
+        leakDetectorCheck.setToolTipText(I18n.t("scanStagedFilesSecretsWords"));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
@@ -209,10 +211,10 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        aiPanel.add(new JLabel("Branch compare description (AI experimental):"), gbc);
+        aiPanel.add(new JLabel(I18n.t("branchCompareDescriptionAiExperimental")), gbc);
 
         branchCompareDescCheck = new JCheckBox("", currentBranchCompareDesc);
-        branchCompareDescCheck.setToolTipText("Show AI descriptions when comparing branches");
+        branchCompareDescCheck.setToolTipText(I18n.t("showAiDescriptionsWhenComparing"));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
@@ -223,10 +225,10 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        aiPanel.add(new JLabel("AI commit message generation (AI experimental):"), gbc);
+        aiPanel.add(new JLabel(I18n.t("aiCommitMessageGenerationAi")), gbc);
 
         commitMsgGenCheck = new JCheckBox("", currentCommitMsgGen);
-        commitMsgGenCheck.setToolTipText("Generate commit message suggestions in the commit dialog");
+        commitMsgGenCheck.setToolTipText(I18n.t("generateCommitMessageSuggestionsCommit"));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
@@ -237,13 +239,12 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        aiPanel.add(new JLabel("Ollama model:"), gbc);
+        aiPanel.add(new JLabel(I18n.t("ollamaModel")), gbc);
 
         llmModelCombo = new JComboBox<>(SUGGESTED_LLM_MODELS);
         llmModelCombo.setEditable(true);
         llmModelCombo.setSelectedItem(currentLlmModel);
-        llmModelCombo.setToolTipText("Model the features above ask Ollama for. Any pulled model "
-                + "can be typed in; leave it empty to use " + Settings.DEFAULT_LLM_DETECTOR_MODEL + ".");
+        llmModelCombo.setToolTipText(I18n.t("modelFeaturesAboveAskOllama", Settings.DEFAULT_LLM_DETECTOR_MODEL));
         llmModelCombo.setPreferredSize(new Dimension(220, 25));
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -289,7 +290,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        comminSiggPanel.add(new JLabel("Sign option:"), gbc);
+        comminSiggPanel.add(new JLabel(I18n.t("signOption")), gbc);
 
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -315,10 +316,10 @@ public class SettingsDialog extends JDialog {
                         signTag.setSelected(false);
 
                     } else if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(item)) {
-                        keyOrPAth.setText("Signing key:");
+                        keyOrPAth.setText(I18n.t("signingKey"));
                         browseBtn.setVisible(false);
                     } else if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(item)) {
-                        keyOrPAth.setText("Path to pub key:");
+                        keyOrPAth.setText(I18n.t("pathToPubKey"));
                         browseBtn.setVisible(true);
                     }
                 }
@@ -333,7 +334,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        keyOrPAth = new JLabel("Sign key:");
+        keyOrPAth = new JLabel(I18n.t("signKey"));
         comminSiggPanel.add(keyOrPAth, gbc);
 
 
@@ -358,7 +359,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        singCommitLabel = new JLabel("Sign commits:");
+        singCommitLabel = new JLabel(I18n.t("signCommits"));
         comminSiggPanel.add(singCommitLabel, gbc);
 
 
@@ -374,7 +375,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        singTagLabel = new JLabel("Sign tag:");
+        singTagLabel = new JLabel(I18n.t("signTag"));
         comminSiggPanel.add(singTagLabel, gbc);
 
 
@@ -392,7 +393,7 @@ public class SettingsDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         gbc.weighty = 0;
-        JLabel verifyHeader = new JLabel("Verification");
+        JLabel verifyHeader = new JLabel(I18n.t("verification"));
         verifyHeader.setFont(verifyHeader.getFont().deriveFont(Font.BOLD));
         comminSiggPanel.add(verifyHeader, gbc);
         gbc.gridwidth = 1;
@@ -402,10 +403,10 @@ public class SettingsDialog extends JDialog {
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        verifySignaturesCheck = new JCheckBox("Verify commit signatures",
+        verifySignaturesCheck = new JCheckBox(I18n.t("verifyCommitSignatures"),
                 settings.isVerifyCommitSignatures());
         verifySignaturesCheck.setToolTipText(
-                "When on, signed commits can be checked against the allowed-signers file on demand");
+                I18n.t("whenSignedCommitsCanChecked"));
         comminSiggPanel.add(verifySignaturesCheck, gbc);
         gbc.gridwidth = 1;
 
@@ -413,7 +414,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 6;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        JLabel asLabel = new JLabel("Allowed signers:");
+        JLabel asLabel = new JLabel(I18n.t("allowedSigners"));
         asLabel.setPreferredSize(new java.awt.Dimension(150, 25));
         asLabel.setMinimumSize(new java.awt.Dimension(150, 25));
         comminSiggPanel.add(asLabel, gbc);
@@ -427,14 +428,14 @@ public class SettingsDialog extends JDialog {
         allowedGroup.add(allowedSignersGlobalRadio);
         allowedGroup.add(allowedSignersRepoRadio);
 
-        editAllowedSignersBtn = new JButton("Edit…");
-        editAllowedSignersBtn.setToolTipText("Edit ~/.ssh/allowed_signers");
+        editAllowedSignersBtn = new JButton(I18n.t("edit"));
+        editAllowedSignersBtn.setToolTipText(I18n.t("editSshAllowedSigners"));
         editAllowedSignersBtn.addActionListener(e -> FileViewerWindow.openForEdit(
-                "Edit allowed_signers", GitRepoService.globalSshPath(Const.ALLOWED_SIGNERS_NAME)));
-        editRevokedKeysBtn = new JButton("Edit revoked keys…");
-        editRevokedKeysBtn.setToolTipText("Edit ~/.ssh/revoked_keys");
+                I18n.t("editAllowedSigners"), GitRepoService.globalSshPath(Const.ALLOWED_SIGNERS_NAME)));
+        editRevokedKeysBtn = new JButton(I18n.t("editRevokedKeys"));
+        editRevokedKeysBtn.setToolTipText(I18n.t("editSshRevokedKeys"));
         editRevokedKeysBtn.addActionListener(e -> FileViewerWindow.openForEdit(
-                "Edit revoked_keys", GitRepoService.globalSshPath(Const.REVOKED_KEYS_NAME)));
+                I18n.t("settingsDialog.editRevokedKeys"), GitRepoService.globalSshPath(Const.REVOKED_KEYS_NAME)));
 
         JPanel globalRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         globalRow.add(allowedSignersGlobalRadio);
@@ -468,10 +469,10 @@ public class SettingsDialog extends JDialog {
 
         }
         if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(settings.getSignOption())) {
-            keyOrPAth.setText("Signing key:");
+            keyOrPAth.setText(I18n.t("signingKey"));
             browseBtn.setVisible(false);
         } else if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(settings.getSignOption())) {
-            keyOrPAth.setText("Path to pub key:");
+            keyOrPAth.setText(I18n.t("pathToPubKey"));
             browseBtn.setVisible(true);
         }
 
@@ -503,7 +504,7 @@ public class SettingsDialog extends JDialog {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setFileHidingEnabled(false);
-        chooser.setDialogTitle("Select Key");
+        chooser.setDialogTitle(I18n.t("selectKey"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             signKey.setText(chooser.getSelectedFile().getAbsolutePath());
         }
@@ -533,7 +534,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0; // Fixed width for labels column
-        commonPanel.add(new JLabel("User name:"), gbc);
+        commonPanel.add(new JLabel(I18n.t("userName")), gbc);
 
         // Row 0: Text Field
         gbc.gridx = 1;
@@ -547,7 +548,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0;
-        commonPanel.add(new JLabel("User email:"), gbc);
+        commonPanel.add(new JLabel(I18n.t("userEmail")), gbc);
 
         // Row 1: Text Field
         gbc.gridx = 1;
@@ -585,8 +586,7 @@ public class SettingsDialog extends JDialog {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel hint = new JLabel(
-                "<html>Pre-filled in the commit dialog when AI commit message generation is off.<br>"
-                        + "Leave empty to use git's <code>commit.template</code> if it is configured.</html>");
+                I18n.t("preFilledCommitDialogWhen"));
         hint.setForeground(UIManager.getColor("Label.disabledForeground"));
         panel.add(hint, BorderLayout.NORTH);
 
@@ -600,9 +600,9 @@ public class SettingsDialog extends JDialog {
                 Math.max(12, commitTemplateArea.getFont().getSize())));
         panel.add(new JScrollPane(commitTemplateArea), BorderLayout.CENTER);
 
-        JButton loadGitBtn = new JButton("Load from git commit.template…");
+        JButton loadGitBtn = new JButton(I18n.t("loadFromGitCommitTemplate"));
         loadGitBtn.setName("loadGitCommitTemplateButton");
-        loadGitBtn.setToolTipText("Replace the editor with the file pointed to by git commit.template");
+        loadGitBtn.setToolTipText(I18n.t("replaceEditorFilePointedBy"));
         loadGitBtn.addActionListener(e -> loadGitCommitTemplate());
         JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         south.add(loadGitBtn);
@@ -618,8 +618,8 @@ public class SettingsDialog extends JDialog {
             commitTemplateArea.setCaretPosition(0);
         } else {
             JOptionPane.showMessageDialog(this,
-                    "No git commit.template is configured, or the file could not be read.",
-                    "Commit template", JOptionPane.INFORMATION_MESSAGE);
+                    I18n.t("noGitCommitTemplateConfigured"),
+                    I18n.t("commitTemplate"), JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -638,12 +638,14 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        uiPanel.add(new JLabel("Theme:"), gbc);
+        uiPanel.add(new JLabel(I18n.t("theme")), gbc);
 
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
+        // Items stay the internal "Light"/"Dark" values; the renderer shows translated names.
         themeCombo = new JComboBox<>(new String[]{"Light", "Dark"});
+        themeCombo.setRenderer(displayRenderer(v -> I18n.t("Dark".equals(v) ? "themeDark" : "themeLight")));
         themeCombo.setSelectedItem(currentTheme);
         themeCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         uiPanel.add(themeCombo, gbc);
@@ -652,7 +654,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        uiPanel.add(new JLabel("Font size:"), gbc);
+        uiPanel.add(new JLabel(I18n.t("fontSize")), gbc);
 
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -666,7 +668,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        uiPanel.add(new JLabel("Date format:"), gbc);
+        uiPanel.add(new JLabel(I18n.t("dateFormat")), gbc);
 
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -691,7 +693,7 @@ public class SettingsDialog extends JDialog {
         gbc.gridy = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        uiPanel.add(new JLabel("Time format:"), gbc);
+        uiPanel.add(new JLabel(I18n.t("timeFormat")), gbc);
 
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -707,9 +709,32 @@ public class SettingsDialog extends JDialog {
         timeFormatCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         uiPanel.add(timeFormatCombo, gbc);
 
-
         gbc.gridx = 0;
         gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        uiPanel.add(new JLabel(I18n.t("languageLabel")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.0;
+        // "" = follow the OS language; other items are language codes with a bundle.
+        java.util.List<String> languages = new java.util.ArrayList<>();
+        languages.add(I18n.SYSTEM_LANGUAGE);
+        languages.addAll(I18n.SUPPORTED_LANGUAGES);
+        languageCombo = new JComboBox<>(languages.toArray(new String[0]));
+        languageCombo.setName("languageCombo");
+        languageCombo.setRenderer(displayRenderer(v -> StringUtils.isEmpty(v)
+                ? I18n.t("languageSystemDefault")
+                : I18n.languageName(v)));
+        String currentLanguage = StringUtils.defaultString(settings.getLanguage());
+        languageCombo.setSelectedItem(languages.contains(currentLanguage) ? currentLanguage : I18n.SYSTEM_LANGUAGE);
+        languageCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
+        languageCombo.setToolTipText(I18n.t("languageTooltip"));
+        uiPanel.add(languageCombo, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.weighty = 1.0;
         uiPanel.add(new JLabel(), gbc);
@@ -733,6 +758,10 @@ public class SettingsDialog extends JDialog {
 
         settings.setTheme("Dark".equals(selectedTheme) ? "dark" : "light");
         settings.setFontSize(selectedFontSize);
+
+        String selectedLanguage = StringUtils.defaultString((String) languageCombo.getSelectedItem());
+        boolean languageChanged = !selectedLanguage.equals(StringUtils.defaultString(settings.getLanguage()));
+        settings.setLanguage(StringUtils.isEmpty(selectedLanguage) ? null : selectedLanguage);
 
         // Parse ignore-extensions textarea (comma-separated, strip dots and whitespace)
         TreeSet<String> ignore = new TreeSet<>();
@@ -820,6 +849,25 @@ public class SettingsDialog extends JDialog {
 
 
         dispose();
+
+        if (languageChanged) {
+            // Texts are read when components are built, so a new language needs a restart.
+            JOptionPane.showMessageDialog(getOwner(),
+                    I18n.t("languageRestartRequired"),
+                    I18n.t("settings"), JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /** Combo renderer that shows {@code label(value)} instead of the raw item. */
+    private static ListCellRenderer<Object> displayRenderer(java.util.function.Function<String, String> label) {
+        return new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                return super.getListCellRendererComponent(list, label.apply((String) value),
+                        index, isSelected, cellHasFocus);
+            }
+        };
     }
 
     /**
@@ -832,11 +880,8 @@ public class SettingsDialog extends JDialog {
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
-                "This AI feature requires Ollama, which is not installed.\n\n" +
-                        "Gitember will download and install Ollama automatically.\n" +
-                        "This may take several minutes depending on your internet speed.\n\n" +
-                        "Download and install Ollama now?",
-                "Ollama Required",
+                I18n.t("aiFeatureRequiresOllamaWhich"),
+                I18n.t("ollamaRequired"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
@@ -846,8 +891,8 @@ public class SettingsDialog extends JDialog {
         }
 
         // Show a progress dialog while downloading
-        JDialog progressDialog = new JDialog(this, "Installing Ollama", true);
-        JLabel statusLabel = new JLabel("Preparing download…");
+        JDialog progressDialog = new JDialog(this, I18n.t("installingOllama"), true);
+        JLabel statusLabel = new JLabel(I18n.t("preparingDownload"));
         JProgressBar bar = new JProgressBar(0, 100);
         bar.setStringPainted(true);
         bar.setIndeterminate(true);
@@ -867,7 +912,7 @@ public class SettingsDialog extends JDialog {
 
             @Override
             protected Void doInBackground() throws Exception {
-                publish("Downloading Ollama…");
+                publish(I18n.t("downloadingOllama"));
                 OllamaManager.download(
                         bytes -> {
                             if (total > 0) {
@@ -896,27 +941,25 @@ public class SettingsDialog extends JDialog {
                 progressDialog.dispose();
                 try {
                     get();
-                    publish("Starting Ollama…");
+                    publish(I18n.t("startingOllama"));
                     OllamaManager.startServerAndWait(30_000);
                 } catch (ExecutionException ex) {
                     if (ex.getCause() instanceof OllamaManager.ChecksumMismatchException) {
                         JOptionPane.showMessageDialog(SettingsDialog.this,
-                                "Ollama checksum verification failed.\n" +
-                                        "The downloaded file may be corrupt or tampered with.\n\n" +
-                                        "All AI features have been disabled for security.",
-                                "Checksum Verification Failed", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("ollamaChecksumVerificationFailedDownloaded"),
+                                I18n.t("checksumVerificationFailed"), JOptionPane.ERROR_MESSAGE);
                         disableAllAiFeatures();
                     } else {
                         String msg = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
                         JOptionPane.showMessageDialog(SettingsDialog.this,
-                                "Ollama installation failed:\n" + msg,
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("ollamaInstallationFailed", msg),
+                                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                         checkbox.setSelected(false);
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(SettingsDialog.this,
-                            "Ollama installation failed:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("ollamaInstallationFailed", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                     checkbox.setSelected(false);
                 }
             }

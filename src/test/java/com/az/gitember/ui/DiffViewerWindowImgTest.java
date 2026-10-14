@@ -1,6 +1,8 @@
 package com.az.gitember.ui;
 
 import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.service.I18n;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
@@ -11,6 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DiffViewerWindowImgTest {
+
+    /** The assertions check English texts; don't depend on the OS language. */
+    @BeforeAll
+    static void englishMessages() {
+        I18n.init("en");
+    }
 
     @Test
     void pngAndJpegAreImages() {

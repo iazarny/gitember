@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.component.RLeftTextScrollPane;
 import com.az.gitember.component.RRightTextScrollPane;
 import com.az.gitember.data.ScmRevisionInformation;
@@ -64,7 +65,7 @@ public class DiffViewerWindowTxt extends JFrame {
     public DiffViewerWindowTxt(String fileName, List<ScmRevisionInformation> fileRevisions,
                                String oldSha, String newSha) {
         this.fileName = fileName;
-        setTitle("Diff: " + fileName);
+        setTitle(I18n.t("commitDetailPanel.diff", fileName));
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
 
         // Revision combo boxes
@@ -90,12 +91,12 @@ public class DiffViewerWindowTxt extends JFrame {
         g.insets = new Insets(0, 3, 0, 3);
 
         g.gridx = 0; g.weightx = 0;    g.fill = GridBagConstraints.NONE;
-        combosRow.add(new JLabel("Old:"), g);
+        combosRow.add(new JLabel(I18n.t("old")), g);
         g.gridx = 1; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
         combosRow.add(oldCombo, g);
         // spacer that matches the connector-panel column
         g.gridx = 2; g.weightx = 0.10; g.fill = GridBagConstraints.HORIZONTAL;
-        combosRow.add(new JLabel("New:"), g);
+        combosRow.add(new JLabel(I18n.t("new")), g);
         g.gridx = 3; g.weightx = 0.45; g.fill = GridBagConstraints.HORIZONTAL;
         combosRow.add(newCombo, g);
 
@@ -106,8 +107,8 @@ public class DiffViewerWindowTxt extends JFrame {
         toolbar.add(buildNavPanel());
 
         setupContentPane(toolbar,
-                headerPanel(" Old revision", leftScroll),
-                headerPanel(" New revision", rightScroll));
+                headerPanel(I18n.t("oldRevision"), leftScroll),
+                headerPanel(I18n.t("newRevision"), rightScroll));
 
         loadAndDiff();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -121,7 +122,7 @@ public class DiffViewerWindowTxt extends JFrame {
                                String leftLabel, String leftContent,
                                String rightLabel, String rightContent) {
         this.fileName = fileName;
-        setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
+        setTitle(I18n.t("diffViewerWindowImg.diff", fileName, leftLabel, rightLabel));
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
         oldCombo = null;
         newCombo = null;
@@ -142,15 +143,15 @@ public class DiffViewerWindowTxt extends JFrame {
     public DiffViewerWindowTxt(String fileName, String commitSha,
                                String commitContent, String diskContent) {
         this.fileName = fileName;
-        setTitle("Diff with disk: " + fileName);
+        setTitle(I18n.t("diffWithDisk", fileName));
         initCommon(SyntaxStyleUtil.getSyntaxStyle(fileName));
         oldCombo = null;
         newCombo = null;
 
         String shortSha = commitSha.length() > 8 ? commitSha.substring(0, 8) : commitSha;
         setupContentPane(buildNavPanel(),
-                headerPanel(" Commit: " + shortSha, leftScroll),
-                headerPanel(" Working directory", rightScroll));
+                headerPanel(I18n.t("diffViewerWindowImg.commit", shortSha), leftScroll),
+                headerPanel(I18n.t("workingDirectory"), rightScroll));
 
         this.oldText = commitContent;
         this.newText = diskContent;
@@ -169,7 +170,7 @@ public class DiffViewerWindowTxt extends JFrame {
      */
     public DiffViewerWindowTxt() {
         this.fileName = "";
-        setTitle("Compare");
+        setTitle(I18n.t("compare"));
         initCommon(RSyntaxTextArea.SYNTAX_STYLE_NONE);
         oldCombo = null;
         newCombo = null;
@@ -200,8 +201,8 @@ public class DiffViewerWindowTxt extends JFrame {
         setupDropOnEditor(oldPane, leftPathField);
         setupDropOnEditor(newPane, rightPathField);
 
-        JButton browseLeft  = new JButton("Browse…");
-        JButton browseRight = new JButton("Browse…");
+        JButton browseLeft  = new JButton(I18n.t("browse"));
+        JButton browseRight = new JButton(I18n.t("browse"));
         browseLeft .addActionListener(e -> browseAndLoad(leftPathField,  oldPane));
         browseRight.addActionListener(e -> browseAndLoad(rightPathField, newPane));
 
@@ -258,11 +259,11 @@ public class DiffViewerWindowTxt extends JFrame {
         });
         syncScroll(leftScroll, rightScroll);
 
-        prevBtn = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
+        prevBtn = Util.createButton(I18n.t("prev"), I18n.t("previousDifference"), FontAwesomeSolid.ARROW_UP);
         prevBtn.setEnabled(false);
         prevBtn.addActionListener(e -> navigateDiff(-1));
 
-        nextBtn = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
+        nextBtn = Util.createButton(I18n.t("next"), I18n.t("nextDifference"),  FontAwesomeSolid.ARROW_DOWN);
         nextBtn.setEnabled(false);
         nextBtn.addActionListener(e -> navigateDiff(1));
 
@@ -379,7 +380,7 @@ public class DiffViewerWindowTxt extends JFrame {
 
     private static JTextField pathField() {
         JTextField f = new JTextField();
-        f.putClientProperty("JTextField.placeholderText", "Drop a file here, or click Browse…");
+        f.putClientProperty("JTextField.placeholderText", I18n.t("dropFileHereClickBrowse"));
         f.setEditable(false);   // path is set programmatically / via DnD / browse
         return f;
     }
@@ -450,7 +451,7 @@ public class DiffViewerWindowTxt extends JFrame {
 
     private void browseAndLoad(JTextField pathField, RSyntaxTextArea editor) {
         JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Select file to compare");
+        fc.setDialogTitle(I18n.t("selectFileToCompare"));
         if (!pathField.getText().isBlank()) {
             File cur = new File(pathField.getText().trim());
             fc.setCurrentDirectory(cur.isDirectory() ? cur : cur.getParentFile());
@@ -461,8 +462,8 @@ public class DiffViewerWindowTxt extends JFrame {
 
     private void loadFileIntoEditor(File f, JTextField pathField, RSyntaxTextArea editor) {
         if (CompareFilesDialog.looksLikeBinary(f)) {
-            JOptionPane.showMessageDialog(this, f.getName() + " appears to be binary.",
-                    "Binary file", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("appearsToBeBinary", f.getName()),
+                    I18n.t("binaryFile"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         SwingWorker<String, Void> worker = new SwingWorker<>() {
@@ -484,7 +485,7 @@ public class DiffViewerWindowTxt extends JFrame {
                     loadingFile = false;
                     log.log(Level.WARNING, "Failed to load file for comparison", ex);
                     JOptionPane.showMessageDialog(DiffViewerWindowTxt.this,
-                            "Cannot read file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotReadFile", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -549,7 +550,7 @@ public class DiffViewerWindowTxt extends JFrame {
                     computeAndDisplayDiff();
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load files for diff", e);
-                    oldPane.setText("Error: " + e.getMessage());
+                    oldPane.setText(I18n.t("indexHistoryDialog.error", e.getMessage()));
                 }
             }
         };
@@ -609,7 +610,7 @@ public class DiffViewerWindowTxt extends JFrame {
         // Update navigation
         currentDiff = -1;
         updateNavState();
-        diffInfoLabel.setText(editList.size() + " difference" + (editList.size() != 1 ? "s" : ""));
+        diffInfoLabel.setText(I18n.plural("differencesCount", editList.size(), editList.size()));
 
         // Repaint center connector panel
         centerPanel.repaint();
@@ -704,11 +705,11 @@ public class DiffViewerWindowTxt extends JFrame {
         if (editList == null || editList.isEmpty()) {
             prevBtn.setEnabled(false);
             nextBtn.setEnabled(false);
-            diffInfoLabel.setText("No differences");
+            diffInfoLabel.setText(I18n.t("noDifferences"));
         } else {
             prevBtn.setEnabled(currentDiff > 0);
             nextBtn.setEnabled(currentDiff < editList.size() - 1);
-            diffInfoLabel.setText("Diff " + (currentDiff + 1) + " / " + editList.size());
+            diffInfoLabel.setText(I18n.t("diffViewerWindowTxt.diff", (currentDiff + 1), editList.size()));
         }
     }
 

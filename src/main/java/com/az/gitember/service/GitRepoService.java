@@ -279,7 +279,7 @@ public class GitRepoService implements AutoCloseable {
     private static File resolveGitDirFromFile(File dotGitFile) throws IOException {
         String content = Files.readString(dotGitFile.toPath()).trim();
         if (!content.startsWith("gitdir:")) {
-            throw new IOException("Not a valid .git file (missing 'gitdir:' line): " + dotGitFile);
+            throw new IOException(I18n.t("notValidGitFileMissing", dotGitFile));
         }
         String path = content.substring("gitdir:".length()).trim();
         File resolved = new File(path);
@@ -590,7 +590,7 @@ public class GitRepoService implements AutoCloseable {
 
         final Ref head = repository.exactRef(name);
         if (head == null) {
-            throw new IOException("Reference not found: " + name);
+            throw new IOException(I18n.t("referenceNotFound", name));
         }
 
         try (RevWalk walk = new RevWalk(repository)) {
@@ -638,7 +638,7 @@ public class GitRepoService implements AutoCloseable {
             renamed = repository.exactRef(newName);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot rename remote branch " + oldName + "->" + newName, e);
-            throw new IOException("Cannot rename remote branch " + oldName + "->" + newName, e);
+            throw new IOException(I18n.t("cannotRenameRemoteBranch", oldName, newName), e);
         }
         return renamed;
     }
@@ -660,7 +660,7 @@ public class GitRepoService implements AutoCloseable {
             return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot rename branch " + oldName + "->" + newName, e);
-            throw new IOException("Cannot rename branch " + oldName + "->" + newName, e);
+            throw new IOException(I18n.t("cannotRenameBranch", oldName, newName), e);
         }
 
     }
@@ -683,7 +683,7 @@ public class GitRepoService implements AutoCloseable {
             return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create branch " + name, e);
-            throw new IOException("Cannot create branch " + name, e);
+            throw new IOException(I18n.t("cannotCreateBranch", name), e);
         }
 
     }
@@ -730,7 +730,7 @@ public class GitRepoService implements AutoCloseable {
                 return command.call();
             }
         } catch (Exception e) {
-            throw new IOException("Cannot checkout " + name + " " + newName, e);
+            throw new IOException(I18n.t("gitRepoService.cannotCheckout", name, newName), e);
         }
 
     }
@@ -758,7 +758,7 @@ public class GitRepoService implements AutoCloseable {
                 addCommandLine(docGen.commandLine(command));
                 return command.call();
             } catch (GitAPIException e) {
-                throw new IOException("Cannot creat difference between " + leftBranchName + " and " + rihtBranchName, e);
+                throw new IOException(I18n.t("cannotCreatDifferenceBetween", leftBranchName, rihtBranchName), e);
             }
         }
     }
@@ -803,7 +803,7 @@ public class GitRepoService implements AutoCloseable {
             }
 
         } catch (Exception e) {
-            throw new IOException("Cannot checkout " + revCommit, e);
+            throw new IOException(I18n.t("gitRepoService.cannotCheckout2", revCommit), e);
         }
     }
 
@@ -827,7 +827,7 @@ public class GitRepoService implements AutoCloseable {
             addCommandLine(docGen.commandLine(command));
             command.call();
         } catch (Exception e) {
-            throw new IOException("Cannot delete branch " + name, e);
+            throw new IOException(I18n.t("cannotDeleteBranch", name), e);
         }
     }
 
@@ -837,7 +837,7 @@ public class GitRepoService implements AutoCloseable {
             update.setForceUpdate(true);
             update.delete();
         } catch (Exception e) {
-            throw new IOException("Cannot delete remote-tracking branch " + fullName, e);
+            throw new IOException(I18n.t("cannotDeleteRemoteTrackingBranch", fullName), e);
         }
     }
 
@@ -877,7 +877,7 @@ public class GitRepoService implements AutoCloseable {
                 return cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot abort merge", e);
-                throw new IOException("Cannot abort merge", e);
+                throw new IOException(I18n.t("cannotAbortMerge"), e);
             }
         }
     }
@@ -1529,7 +1529,7 @@ public class GitRepoService implements AutoCloseable {
         try (Git git = new Git(repository)) {
             ObjectId objectId = repository.resolve(commitSha);
             if (objectId == null) {
-                throw new IOException("Cannot resolve commit: " + commitSha);
+                throw new IOException(I18n.t("cannotResolveCommit", commitSha));
             }
             try (RevWalk revWalk = new RevWalk(repository))  {
                 RevObject revObject = revWalk.parseAny(objectId);
@@ -1569,7 +1569,7 @@ public class GitRepoService implements AutoCloseable {
             command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot delete local tag " + shortName, e);
-            throw new IOException("Cannot delete tag " + shortName, e);
+            throw new IOException(I18n.t("cannotDeleteTag", shortName), e);
         }
     }
 
@@ -1608,19 +1608,19 @@ public class GitRepoService implements AutoCloseable {
      */
     public void addCommitNote(String commitSha, String message) throws IOException {
         if (repository == null) {
-            throw new IOException("No repository");
+            throw new IOException(I18n.t("noRepository"));
         }
         if (commitSha == null || commitSha.isBlank()) {
-            throw new IOException("Commit is required");
+            throw new IOException(I18n.t("commitIsRequired"));
         }
         if (message == null) {
-            throw new IOException("Note message is required");
+            throw new IOException(I18n.t("noteMessageIsRequired"));
         }
         try (Git git = new Git(repository);
              RevWalk walk = new RevWalk(repository)) {
             ObjectId id = repository.resolve(commitSha);
             if (id == null) {
-                throw new IOException("Cannot resolve commit " + commitSha);
+                throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitSha));
             }
             RevCommit commit = walk.parseCommit(id);
             AddNoteCommand command = git.notesAdd();
@@ -1640,16 +1640,16 @@ public class GitRepoService implements AutoCloseable {
      */
     public void removeCommitNote(String commitSha) throws IOException {
         if (repository == null) {
-            throw new IOException("No repository");
+            throw new IOException(I18n.t("noRepository"));
         }
         if (commitSha == null || commitSha.isBlank()) {
-            throw new IOException("Commit is required");
+            throw new IOException(I18n.t("commitIsRequired"));
         }
         try (Git git = new Git(repository);
              RevWalk walk = new RevWalk(repository)) {
             ObjectId id = repository.resolve(commitSha);
             if (id == null) {
-                throw new IOException("Cannot resolve commit " + commitSha);
+                throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitSha));
             }
             RevCommit commit = walk.parseCommit(id);
             RemoveNoteCommand command = git.notesRemove();
@@ -1832,16 +1832,16 @@ public class GitRepoService implements AutoCloseable {
      */
     public void renameStash(int stashIndex, String newMessage) throws IOException {
         File logFile = new File(repository.getDirectory(), "logs/refs/stash");
-        if (!logFile.exists()) throw new IOException("No stash log found");
+        if (!logFile.exists()) throw new IOException(I18n.t("noStashLogFound"));
 
         List<String> lines = Files.readAllLines(logFile.toPath(), StandardCharsets.UTF_8);
         int lineIndex = lines.size() - 1 - stashIndex;
         if (lineIndex < 0 || lineIndex >= lines.size())
-            throw new IOException("Invalid stash index: " + stashIndex);
+            throw new IOException(I18n.t("invalidStashIndex", stashIndex));
 
         String line = lines.get(lineIndex);
         int tabIdx = line.indexOf('\t');
-        if (tabIdx < 0) throw new IOException("Malformed stash log line at index " + stashIndex);
+        if (tabIdx < 0) throw new IOException(I18n.t("malformedStashLogLineAt", stashIndex));
 
         lines.set(lineIndex, line.substring(0, tabIdx + 1) + newMessage);
         Files.write(logFile.toPath(), lines, StandardCharsets.UTF_8);
@@ -1897,7 +1897,7 @@ public class GitRepoService implements AutoCloseable {
             }
         }
         if (result == null) {
-            throw new IOException("Cannot resolve commit " + commitId);
+            throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitId));
         }
         return result;
     }
@@ -1916,7 +1916,7 @@ public class GitRepoService implements AutoCloseable {
     public void recoverStash(String commitId) throws IOException {
         ObjectId id = repository.resolve(commitId);
         if (id == null) {
-            throw new IOException("Cannot resolve stash commit " + commitId);
+            throw new IOException(I18n.t("cannotResolveStashCommit", commitId));
         }
         try (RevWalk walk = new RevWalk(repository)) {
             walk.parseCommit(id);
@@ -1931,7 +1931,7 @@ public class GitRepoService implements AutoCloseable {
                 || updateResult == RefUpdate.Result.IO_FAILURE
                 || updateResult == RefUpdate.Result.REJECTED
                 || repository.resolve(Constants.R_STASH) == null) {
-            throw new IOException("Cannot restore stash: " + updateResult);
+            throw new IOException(I18n.t("cannotRestoreStash", updateResult));
         }
     }
 
@@ -1993,7 +1993,7 @@ public class GitRepoService implements AutoCloseable {
                 cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot checkout file " + fileName, e);
-                throw new IOException("Cannot checkout " + fileName, e);
+                throw new IOException(I18n.t("gitRepoService.cannotCheckout2", fileName), e);
             }
         }
     }
@@ -2033,7 +2033,7 @@ public class GitRepoService implements AutoCloseable {
                 return cherryPickCommand.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot cherry pick   " + revCommit, e);
-                throw new IOException("Cannot cherry pick " + revCommit, e);
+                throw new IOException(I18n.t("cannotCherryPick", revCommit), e);
             }
         }
 
@@ -2107,11 +2107,11 @@ public class GitRepoService implements AutoCloseable {
                 RebaseResult result = interactiveRebase(parentSha, steps);
                 if (result == null || !result.getStatus().isSuccessful()) {
                     String status = result == null ? "unknown" : String.valueOf(result.getStatus());
-                    throw new IOException("Undo failed with rebase status: " + status);
+                    throw new IOException(I18n.t("undoFailedRebaseStatus", status));
                 }
             }
         } else {
-            throw new IOException("Cannot undo the initial commit");
+            throw new IOException(I18n.t("cannotUndoInitialCommit"));
         }
     }
 
@@ -2131,7 +2131,7 @@ public class GitRepoService implements AutoCloseable {
                 return cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot reset to" + revCommit, e);
-                throw new IOException("Cannot reset to" + revCommit, e);
+                throw new IOException(I18n.t("cannotResetTo", revCommit), e);
             }
         }
     }
@@ -2149,7 +2149,7 @@ public class GitRepoService implements AutoCloseable {
 
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot revert " + revCommit, e);
-                throw new IOException("Cannot revert " + revCommit, e);
+                throw new IOException(I18n.t("cannotRevert", revCommit), e);
             }
         }
     }
@@ -2651,7 +2651,7 @@ public class GitRepoService implements AutoCloseable {
 
             if (repoCfg.getString("lfs", null, "url") == null && !tempLfsUrl) {
                 throw new LfsException(LfsException.Kind.NO_REMOTE,
-                        "Cannot download LFS files: no HTTP(S) remote is configured");
+                        I18n.t("cannotDownloadLfsFilesNo"));
             }
 
             // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
@@ -2669,7 +2669,7 @@ public class GitRepoService implements AutoCloseable {
             } catch (LfsException e) {
                 throw e;
             } catch (Exception e) {
-                throw wrapLfsError("Download LFS files failed", e);
+                throw wrapLfsError(I18n.t("downloadLfsFilesFailed"), e);
             } finally {
                 CredentialsProvider.setDefault(prevCp);
                 if (tempLfsUrl) {
@@ -2728,7 +2728,7 @@ public class GitRepoService implements AutoCloseable {
         } catch (LfsException e) {
             throw e;
         } catch (Exception e) {
-            throw wrapLfsError("Upload LFS files failed", e);
+            throw wrapLfsError(I18n.t("uploadLfsFilesFailed"), e);
         }
     }
 
@@ -2774,11 +2774,11 @@ public class GitRepoService implements AutoCloseable {
             sb.append("  Not an LFS pointer on HEAD or in the working tree.\n");
         } else {
             sb.append("  HEAD     ").append(describeLfsSide(headPtr, false, -1)).append('\n');
-            sb.append("  Working  ").append(describeLfsSide(workPtr, workDownloaded, workSize)).append('\n');
+            sb.append(I18n.t("working")).append(describeLfsSide(workPtr, workDownloaded, workSize)).append('\n');
             if (headPtr != null && workPtr != null && headPtr.getOid().equals(workPtr.getOid())) {
-                sb.append("  Pointers match (").append(headPtr.getOid().getName()).append(")\n");
+                sb.append(I18n.t("pointersMatch")).append(headPtr.getOid().getName()).append(")\n");
             } else if (headPtr != null && workPtr != null) {
-                sb.append("  Size ").append(headPtr.getSize())
+                sb.append(I18n.t("size")).append(headPtr.getSize())
                         .append(" \u2192 ").append(workPtr.getSize()).append('\n');
             }
         }
@@ -2788,10 +2788,9 @@ public class GitRepoService implements AutoCloseable {
     private static String describeLfsSide(LfsPointer pointer, boolean downloaded, long size) {
         String text;
         if (pointer != null) {
-            text = "pointer  oid sha256:" + pointer.getOid().getName()
-                    + "  size " + pointer.getSize();
+            text = I18n.t("pointerOidSha256Size", pointer.getOid().getName(), pointer.getSize());
         } else if (downloaded) {
-            text = "downloaded content  size " + size;
+            text = I18n.t("downloadedContentSize", size);
         } else {
             text = "missing";
         }
@@ -2833,13 +2832,13 @@ public class GitRepoService implements AutoCloseable {
             JsonNode lockNode = response.path("lock");
             if (lockNode.isMissingNode() || lockNode.path("id").asText("").isEmpty()) {
                 throw new LfsException(LfsException.Kind.SERVER,
-                        "Lock response did not include a lock id for " + path);
+                        I18n.t("lockResponseDidNotInclude", path));
             }
             return parseLfsLock(lockNode);
         } catch (LfsException e) {
             throw e;
         } catch (Exception e) {
-            throw wrapLfsError("Lock LFS file failed: " + path, e);
+            throw wrapLfsError(I18n.t("lockLfsFileFailed", path), e);
         }
     }
 
@@ -2852,7 +2851,7 @@ public class GitRepoService implements AutoCloseable {
             LfsLock existing = findLfsLock(path, params);
             if (existing == null) {
                 throw new LfsException(LfsException.Kind.NOT_LOCKED,
-                        "No LFS lock found for " + path);
+                        I18n.t("noLfsLockFound", path));
             }
             String ref = currentLfsRefName();
             String body = "{\"force\":" + force + ",\"ref\":{\"name\":\""
@@ -2861,7 +2860,7 @@ public class GitRepoService implements AutoCloseable {
         } catch (LfsException e) {
             throw e;
         } catch (Exception e) {
-            throw wrapLfsError("Unlock LFS file failed: " + path, e);
+            throw wrapLfsError(I18n.t("unlockLfsFileFailed", path), e);
         }
     }
 
@@ -2878,7 +2877,7 @@ public class GitRepoService implements AutoCloseable {
         } catch (LfsException e) {
             throw e;
         } catch (Exception e) {
-            throw wrapLfsError("List LFS locks failed", e);
+            throw wrapLfsError(I18n.t("listLfsLocksFailed"), e);
         }
         return locks;
     }
@@ -2911,15 +2910,15 @@ public class GitRepoService implements AutoCloseable {
         int status = conn.getResponseCode();
         if (status == 401 || status == 403) {
             throw new LfsException(LfsException.Kind.AUTH,
-                    "LFS authentication failed (" + status + "): " + readHttpError(conn));
+                    I18n.t("lfsAuthenticationFailed", status, readHttpError(conn)));
         }
         if (status == 409) {
             throw new LfsException(LfsException.Kind.LOCKED,
-                    "File is already locked: " + readHttpError(conn));
+                    I18n.t("fileIsAlreadyLocked", readHttpError(conn)));
         }
         if (status >= 400) {
             throw new LfsException(LfsException.Kind.SERVER,
-                    "LFS lock request failed (" + status + "): " + readHttpError(conn));
+                    I18n.t("lfsLockRequestFailed", status, readHttpError(conn)));
         }
         try (InputStream in = conn.getInputStream()) {
             return new ObjectMapper().readTree(in);
@@ -2937,7 +2936,7 @@ public class GitRepoService implements AutoCloseable {
         }
         if (StringUtils.isBlank(raw)) {
             throw new LfsException(LfsException.Kind.NO_REMOTE,
-                    "Cannot talk to Git LFS: no remote URL is configured");
+                    I18n.t("cannotTalkGitLfsNo"));
         }
         String httpsUrl = sshRemoteToHttps(raw);
         if (httpsUrl == null) {
@@ -2945,7 +2944,7 @@ public class GitRepoService implements AutoCloseable {
         }
         if (httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
             throw new LfsException(LfsException.Kind.NO_REMOTE,
-                    "Git LFS requires an HTTP(S) remote; this repository uses a local path");
+                    I18n.t("gitLfsRequiresHttpS"));
         }
         String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
         return lfsBase;
@@ -3040,7 +3039,7 @@ public class GitRepoService implements AutoCloseable {
             Iterable<RevCommit> commits = Collections.emptyList();
             try {
                 if (progressMonitor != null) {
-                    progressMonitor.beginTask("Counting revision of " + treeName, 0);
+                    progressMonitor.beginTask(I18n.t("countingRevisionOf", treeName), 0);
                 }
                 ObjectId head = repository.resolve(Constants.HEAD);
                 LogCommand command = git.log();
@@ -3096,7 +3095,7 @@ public class GitRepoService implements AutoCloseable {
                 Collection<Ref> allRefs = repository.getAllRefs().values();
                 int idx = 0;
                 if (progressMonitor != null) {
-                    progressMonitor.beginTask("Collecting revision", allRefs.size());
+                    progressMonitor.beginTask(I18n.t("collectingRevision"), allRefs.size());
                 }
                 for (Ref ref : allRefs) {
                     revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
@@ -3403,7 +3402,7 @@ public class GitRepoService implements AutoCloseable {
                 });
                 return stringBuilder.toString();
             } else {
-                return "" + parameters.getDestinationFolder() + " has not remote url";
+                return I18n.t("hasNoRemoteUrl", parameters.getDestinationFolder());
             }
 
 
@@ -3799,9 +3798,9 @@ public class GitRepoService implements AutoCloseable {
                 || CollectionUtils.isNotEmpty(diffResult.getMiddle())
                 || CollectionUtils.isNotEmpty(diffResult.getRight())) {
             StringBuilder sb = new StringBuilder();
-            fillInfo(sb, "Added:", diffResult.getLeft());
-            fillInfo(sb, "Deleted:", diffResult.getMiddle());
-            fillInfo(sb, "Changed:", diffResult.getRight());
+            fillInfo(sb, I18n.t("gitRepoService.added"), diffResult.getLeft());
+            fillInfo(sb, I18n.t("gitRepoService.deleted"), diffResult.getMiddle());
+            fillInfo(sb, I18n.t("gitRepoService.changed"), diffResult.getRight());
             return Optional.of(sb.toString());
         }
         return Optional.empty();
@@ -3847,16 +3846,16 @@ public class GitRepoService implements AutoCloseable {
             }
             addCommandLine(docGen.commandLine(cmd));
             final FetchResult fetchResult = cmd.call();
-            String rezMsg = "\nMessage " + fetchResult.getMessages();
-            rezMsg += "\nTracking " + fetchResult.getTrackingRefUpdates()
+            String rezMsg = I18n.t("message", fetchResult.getMessages());
+            rezMsg += I18n.t("tracking", fetchResult.getTrackingRefUpdates()
                     .stream()
                     .map(tr -> String.format("%s local %s remote %s", tr.getResult().toString(), tr.getLocalName(), tr.getRemoteName()))
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n")));
 
-            rezMsg += "\nAdvertised " + fetchResult.getAdvertisedRefs()
+            rezMsg += I18n.t("advertised", fetchResult.getAdvertisedRefs()
                     .stream()
                     .map(r -> r.getName())
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n")));
 
             return rezMsg;
         }
@@ -3871,18 +3870,18 @@ public class GitRepoService implements AutoCloseable {
         if (mergeResult.getMergeStatus().isSuccessful()) {
 
             if (mergeResult.getNewHead() != null) {
-                stringBuilder.append("New head: ").append(mergeResult.getNewHead().getName()).append("\n");
+                stringBuilder.append(I18n.t("newHead")).append(mergeResult.getNewHead().getName()).append("\n");
             }
 
             if (mergeResult.getBase() != null) {
-                stringBuilder.append("Base: ").append(mergeResult.getBase().getName()).append("\n");
+                stringBuilder.append(I18n.t("base")).append(mergeResult.getBase().getName()).append("\n");
             }
 
             String merged = Arrays.stream(mergeResult.getMergedCommits())
                     .map(o -> ObjectId.toString(o))
                     .collect(Collectors.joining(indent)); //TODO message
 
-            stringBuilder.append("Merged:").append(indent).append(merged).append("\n");
+            stringBuilder.append(I18n.t("merged")).append(indent).append(merged).append("\n");
 
         } else {
 
@@ -3890,13 +3889,13 @@ public class GitRepoService implements AutoCloseable {
                     .map(es -> es.getKey())
                     .collect(Collectors.joining(indent));
 
-            stringBuilder.append("Conflict:").append(indent).append(mergeConflicts).append("\n");
+            stringBuilder.append(I18n.t("conflict")).append(indent).append(mergeConflicts).append("\n");
 
             if (mergeResult.getFailingPaths() != null) {
                 String failures = mergeResult.getFailingPaths().entrySet().stream()
                         .map(es -> es.getKey())
                         .collect(Collectors.joining(indent));
-                stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
+                stringBuilder.append(I18n.t("gitRepoService.failed")).append(indent).append(failures).append("\n");
             }
 
 
@@ -3937,7 +3936,7 @@ public class GitRepoService implements AutoCloseable {
                 }
             }
         } catch (Exception e) {
-            throw new IOException("Failed to collect LFS objects for upload", e);
+            throw new IOException(I18n.t("failedCollectLfsObjectsUpload"), e);
         }
 
         if (toUpload.isEmpty()) return;
@@ -3950,7 +3949,7 @@ public class GitRepoService implements AutoCloseable {
         if (httpsUrl == null || httpsUrl.isBlank()
                 || httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
             throw new LfsException(LfsException.Kind.NO_REMOTE,
-                    "Cannot upload LFS files: no HTTP(S) remote is configured");
+                    I18n.t("cannotUploadLfsFilesNo"));
         }
         String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
         String batchUrl = lfsBase + "/objects/batch";
@@ -3981,7 +3980,7 @@ public class GitRepoService implements AutoCloseable {
         int batchStatus = batchConn.getResponseCode();
         if (batchStatus != 200) {
             String err = readHttpError(batchConn);
-            throw new IOException("LFS batch-upload request failed (" + batchStatus + "): " + err);
+            throw new IOException(I18n.t("lfsBatchUploadRequestFailed", batchStatus, err));
         }
 
         // ── 2. Upload each object that the server doesn't have yet ─────────────
@@ -4016,7 +4015,7 @@ public class GitRepoService implements AutoCloseable {
                 }
                 int uploadStatus = uploadConn.getResponseCode();
                 if (uploadStatus >= 400) {
-                    throw new IOException("LFS upload failed for " + oid + ": " + uploadStatus);
+                    throw new IOException(I18n.t("lfsUploadFailedFor", oid, uploadStatus));
                 }
                 log.log(Level.INFO, "Uploaded LFS object " + oid
                         + " (" + pointer.getSize() + " bytes)");
@@ -4855,7 +4854,7 @@ public class GitRepoService implements AutoCloseable {
             deletePathRecursively(moduleGitDir.toPath());
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot remove submodule " + path, e);
-            throw new IOException("Cannot remove submodule " + path, e);
+            throw new IOException(I18n.t("cannotRemoveSubmodule", path), e);
         }
     }
 
@@ -4911,10 +4910,9 @@ public class GitRepoService implements AutoCloseable {
                         }
                     }
                     if (headId == null) {
-                        sb.append("Submodule ").append(path).append(" is uninitialized\n");
+                        sb.append(I18n.t("submoduleUninitialized", path)).append('\n');
                     } else if (indexId != null && indexId.equals(headId)) {
-                        sb.append("Submodule ").append(path).append(" is up to date at ")
-                                .append(indexId.getName()).append('\n');
+                        sb.append(I18n.t("submoduleUpToDateAt", path, indexId.getName())).append('\n');
                     } else {
                         String oldSha = indexId != null ? indexId.getName() : "0000000";
                         String newSha = headId.getName();
@@ -4932,7 +4930,7 @@ public class GitRepoService implements AutoCloseable {
             }
         }
         if (sb.length() == 0) {
-            sb.append("No submodule at ").append(path).append('\n');
+            sb.append(I18n.t("noSubmoduleAt", path)).append('\n');
         }
         return sb.toString();
     }
@@ -5130,10 +5128,10 @@ public class GitRepoService implements AutoCloseable {
             boolean verifyEnabled = settings != null && settings.isVerifyCommitSignatures();
             if (!verifyEnabled) {
                 details.setStatus(SignatureStatus.SIGNED);
-                details.setMessage("Signature verification is disabled in Settings.");
+                details.setMessage(I18n.t("signatureVerificationDisabledSettings"));
             } else if (repository == null || info.getRevisionFullName() == null) {
                 details.setStatus(SignatureStatus.UNKNOWN);
-                details.setMessage("No repository is open.");
+                details.setMessage(I18n.t("noRepositoryIsOpen"));
             } else {
                 verifyLoadedCommit(info, details);
             }
@@ -5188,7 +5186,7 @@ public class GitRepoService implements AutoCloseable {
                                          CommitSignatureDetails details) {
         if (result == null) {
             details.setStatus(SignatureStatus.UNKNOWN);
-            details.setMessage("No verifier is available for this signature format.");
+            details.setMessage(I18n.t("noVerifierAvailableSignatureFormat"));
         } else {
             if (details.getFormat() == null || details.getFormat().isBlank()) {
                 details.setFormat(result.verifierName());
@@ -5222,15 +5220,15 @@ public class GitRepoService implements AutoCloseable {
     }
 
     private static String trustLabel(SignatureVerifier.TrustLevel trustLevel) {
-        String label = "Unknown";
+        String label = I18n.t("unknown");
         if (trustLevel == SignatureVerifier.TrustLevel.NEVER) {
-            label = "Never trust";
+            label = I18n.t("neverTrust");
         } else if (trustLevel == SignatureVerifier.TrustLevel.MARGINAL) {
-            label = "Marginally trusted";
+            label = I18n.t("marginallyTrusted");
         } else if (trustLevel == SignatureVerifier.TrustLevel.FULL) {
-            label = "Fully trusted";
+            label = I18n.t("fullyTrusted");
         } else if (trustLevel == SignatureVerifier.TrustLevel.ULTIMATE) {
-            label = "Ultimately trusted";
+            label = I18n.t("ultimatelyTrusted");
         }
         return label;
     }

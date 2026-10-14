@@ -1,5 +1,6 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -381,7 +382,7 @@ public class Project implements Serializable, Comparable<Project>  {
                     try {
                         s = gitRepoService = new GitRepoService(gitDir, this);
                     } catch (IOException e) {
-                        throw new UncheckedIOException("Cannot open " + gitDir, e);
+                        throw new UncheckedIOException(I18n.t("cannotOpen", gitDir), e);
                     }
                 }
             }
@@ -394,7 +395,7 @@ public class Project implements Serializable, Comparable<Project>  {
     public void openRepoService() throws Exception {
         String gitDir = getGitDir();
         if (gitDir == null || !new File(gitDir).exists()) {
-            throw new RuntimeException("Git folder " + gitDir + " not found");
+            throw new RuntimeException(I18n.t("gitFolderNotFound", gitDir));
         }
         synchronized (serviceLock) {
             if (gitRepoService != null) {

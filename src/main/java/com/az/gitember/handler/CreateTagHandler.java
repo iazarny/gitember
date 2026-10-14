@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
@@ -26,7 +27,7 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Create tag " + tagName;
+        return I18n.t("createTag", tagName);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Tag created: " + result);
+        statusBar.setStatus(I18n.t("tagCreated", result));
     }
 
     /**
@@ -63,7 +64,7 @@ public class CreateTagHandler extends AbstractAsyncHandler<String> {
      */
     public static void showAndExecute(Component parent, StatusBar statusBar, String commitSha) {
         String name = JOptionPane.showInputDialog(parent,
-                "Tag name:", "Create Tag", JOptionPane.PLAIN_MESSAGE);
+                I18n.t("tagName"), I18n.t("createTagHandler.createTag"), JOptionPane.PLAIN_MESSAGE);
         if (name != null && !name.isBlank()) {
             new CreateTagHandler(parent,  name.trim(), commitSha).execute();
         }

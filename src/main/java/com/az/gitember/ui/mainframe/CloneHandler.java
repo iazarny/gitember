@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
@@ -18,7 +19,7 @@ public class CloneHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Clone";
+        return I18n.t("clone");
     }
 
     @Override
@@ -30,7 +31,7 @@ public class CloneHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus("Clone completed successfully");
+        statusBar.setStatus(I18n.t("cloneCompletedSuccessfully"));
         // Persist HTTP credentials so push/pull work without re-entering them
         String url = params.getUrl();
         if (url != null && (url.startsWith("https:") || url.startsWith("http:"))) {

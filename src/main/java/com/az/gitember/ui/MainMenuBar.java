@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.dialog.SettingsDialog;
@@ -94,31 +95,31 @@ public class MainMenuBar extends JMenuBar {
     public MainMenuBar() {
 
         // -- File -------------------------------------------------------------
-        JMenu fileMenu = new JMenu("File");
+        JMenu fileMenu = new JMenu(I18n.t("file"));
         fileMenu.setMnemonic(KeyEvent.VK_F);
 
-        openItem = new JMenuItem("Open Repository...", KeyEvent.VK_O);
+        openItem = new JMenuItem(I18n.t("openRepository"), KeyEvent.VK_O);
         openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
-        cloneItem = new JMenuItem("Clone Repository...", KeyEvent.VK_L);
+        cloneItem = new JMenuItem(I18n.t("mainMenuBar.cloneRepository"), KeyEvent.VK_L);
         cloneItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
-        initRepository = new JMenuItem("Init Repository...",  KeyEvent.VK_I);
+        initRepository = new JMenuItem(I18n.t("mainMenuBar.initRepository"),  KeyEvent.VK_I);
         initRepository.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
-        initWorkspaceItem  = new JMenuItem("Init Workspace...");
+        initWorkspaceItem  = new JMenuItem(I18n.t("initWorkspace"));
         initWorkspaceItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W,
                 java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
         initWorkspaceItem.setName("initWorkspaceItem");
 
-        openRecentMenu = new JMenu("Open Recent");
+        openRecentMenu = new JMenu(I18n.t("openRecent"));
         openRecentMenu.setMnemonic(KeyEvent.VK_R);
         openRecentMenu.setEnabled(false);
-        exitItem = new JMenuItem("Exit", KeyEvent.VK_X);
+        exitItem = new JMenuItem(I18n.t("exit"), KeyEvent.VK_X);
         exitItem.addActionListener(e -> System.exit(0));
 
         fileMenu.add(openItem);
@@ -154,31 +155,31 @@ public class MainMenuBar extends JMenuBar {
         fileMenu.add(exitItem);
 
         // -- Repository (repo-only) --------------------------------------------
-        repoMenu = new JMenu("Repository");
+        repoMenu = new JMenu(I18n.t("repository"));
         repoMenu.setMnemonic(KeyEvent.VK_R);
 
-        indexHistoryItem = new JMenuItem("Index History…", KeyEvent.VK_I);
+        indexHistoryItem = new JMenuItem(I18n.t("mainMenuBar.indexHistory"), KeyEvent.VK_I);
         indexHistoryItem.setToolTipText(
-                "Build a Lucene index of commit file content for full-text search");
+                I18n.t("buildLuceneIndexCommitFile"));
 
-        statisticsItem = new JMenuItem("Statistics…", KeyEvent.VK_S);
+        statisticsItem = new JMenuItem(I18n.t("mainMenuBar.statistics"), KeyEvent.VK_S);
         statisticsItem.setToolTipText(
-                "Show per-developer commit / line statistics and monthly charts");
+                I18n.t("showPerDeveloperCommitLine"));
 
-        projectSettingsItem = new JMenuItem("Project Settings…", KeyEvent.VK_P);
+        projectSettingsItem = new JMenuItem(I18n.t("mainMenuBar.projectSettings"), KeyEvent.VK_P);
 
 
         String expMessage = null;
         String expToolTip = null;
         if (GitemberUtil.isWindows()) {
-            expMessage = "Explorer";
-            expToolTip = "Open a explorer in the repository folder";
+            expMessage = I18n.t("explorer");
+            expToolTip = I18n.t("openExplorerRepositoryFolder");
         } else if (GitemberUtil.isMac()) {
-            expMessage = "Finder";
-            expToolTip = "Open a finder in the repository folder";
+            expMessage = I18n.t("finder");
+            expToolTip = I18n.t("openFinderRepositoryFolder");
         } else if (GitemberUtil.isLinux()) {
-            expMessage = "File manager";
-            expToolTip = "Open a file manage in the repository folder";
+            expMessage = I18n.t("fileManager");
+            expToolTip = I18n.t("openFileManageRepositoryFolder");
         }
 
         if (StringUtils.isNotBlank(expMessage)) {
@@ -190,21 +191,21 @@ public class MainMenuBar extends JMenuBar {
 
 
 
-        openTerminalItem = new JMenuItem("Terminal", KeyEvent.VK_T);
-        openTerminalItem.setToolTipText("Open a terminal in the repository folder");
+        openTerminalItem = new JMenuItem(I18n.t("terminal"), KeyEvent.VK_T);
+        openTerminalItem.setToolTipText(I18n.t("openTerminalRepositoryFolder"));
 
         // LFS submenu
-        lfsMenu = new JMenu("Git LFS");
+        lfsMenu = new JMenu(I18n.t("gitLfs"));
         lfsMenu.setMnemonic(KeyEvent.VK_L);
 
-        manageLfsItem = new JMenuItem("Manage LFS…", KeyEvent.VK_M);
-        manageLfsItem.setToolTipText("Enable LFS, track patterns, view LFS files, fetch objects");
+        manageLfsItem = new JMenuItem(I18n.t("manageLfs"), KeyEvent.VK_M);
+        manageLfsItem.setToolTipText(I18n.t("enableLfsTrackPatternsView"));
 
-        fetchLfsItem = new JMenuItem("Fetch LFS Objects", KeyEvent.VK_F);
-        fetchLfsItem.setToolTipText("Download LFS file content from the remote LFS server");
+        fetchLfsItem = new JMenuItem(I18n.t("fetchLfsObjects"), KeyEvent.VK_F);
+        fetchLfsItem.setToolTipText(I18n.t("downloadLfsFileContentFrom"));
 
-        uploadLfsItem = new JMenuItem("Upload LFS Objects", KeyEvent.VK_P);
-        uploadLfsItem.setToolTipText("Upload local LFS objects to the remote LFS server");
+        uploadLfsItem = new JMenuItem(I18n.t("uploadLfsObjects"), KeyEvent.VK_P);
+        uploadLfsItem.setToolTipText(I18n.t("uploadLocalLfsObjectsRemote"));
 
         lfsMenu.add(manageLfsItem);
         lfsMenu.addSeparator();
@@ -212,23 +213,23 @@ public class MainMenuBar extends JMenuBar {
         lfsMenu.add(uploadLfsItem);
 
         // Submodules submenu
-        submodulesMenu = new JMenu("Submodules");
+        submodulesMenu = new JMenu(I18n.t("submodules"));
         submodulesMenu.setMnemonic(KeyEvent.VK_U);
 
-        addSubmoduleItem = new JMenuItem("Add Submodule…", KeyEvent.VK_A);
-        addSubmoduleItem.setToolTipText("Clone a repository and register it as a submodule");
+        addSubmoduleItem = new JMenuItem(I18n.t("mainMenuBar.addSubmodule"), KeyEvent.VK_A);
+        addSubmoduleItem.setToolTipText(I18n.t("cloneRepositoryRegisterAsSubmodule"));
 
-        initSubmodulesItem = new JMenuItem("Initialize Submodules", KeyEvent.VK_I);
-        initSubmodulesItem.setToolTipText("Register submodule URLs from .gitmodules (git submodule init)");
+        initSubmodulesItem = new JMenuItem(I18n.t("mainMenuBar.initializeSubmodules"), KeyEvent.VK_I);
+        initSubmodulesItem.setToolTipText(I18n.t("registerSubmoduleUrlsFromGitmodules"));
 
-        updateSubmodulesItem = new JMenuItem("Update Submodules", KeyEvent.VK_U);
-        updateSubmodulesItem.setToolTipText("Run git submodule init + update for all submodules");
+        updateSubmodulesItem = new JMenuItem(I18n.t("updateSubmodules"), KeyEvent.VK_U);
+        updateSubmodulesItem.setToolTipText(I18n.t("runGitSubmoduleInitUpdate"));
 
-        recursiveUpdateSubmodulesItem = new JMenuItem("Recursive Update", KeyEvent.VK_R);
-        recursiveUpdateSubmodulesItem.setToolTipText("Update this repository and nested submodules");
+        recursiveUpdateSubmodulesItem = new JMenuItem(I18n.t("mainMenuBar.recursiveUpdate"), KeyEvent.VK_R);
+        recursiveUpdateSubmodulesItem.setToolTipText(I18n.t("updateRepositoryNestedSubmodules"));
 
-        syncSubmodulesItem = new JMenuItem("Sync Submodule URLs", KeyEvent.VK_Y);
-        syncSubmodulesItem.setToolTipText("Update recorded remote URLs from .gitmodules");
+        syncSubmodulesItem = new JMenuItem(I18n.t("syncSubmoduleUrls"), KeyEvent.VK_Y);
+        syncSubmodulesItem.setToolTipText(I18n.t("updateRecordedRemoteUrlsFrom"));
 
         submodulesMenu.add(addSubmoduleItem);
         submodulesMenu.add(initSubmodulesItem);
@@ -236,8 +237,8 @@ public class MainMenuBar extends JMenuBar {
         submodulesMenu.add(recursiveUpdateSubmodulesItem);
         submodulesMenu.add(syncSubmodulesItem);
 
-        compressDatabaseItem = new JMenuItem("Compress Database", KeyEvent.VK_Z);
-        compressDatabaseItem.setToolTipText("Run git gc — pack loose objects and prune unreachable data");
+        compressDatabaseItem = new JMenuItem(I18n.t("compressDatabase"), KeyEvent.VK_Z);
+        compressDatabaseItem.setToolTipText(I18n.t("runGitGcPackLoose"));
 
         repoMenu.add(indexHistoryItem);
         repoMenu.add(statisticsItem);
@@ -255,21 +256,21 @@ public class MainMenuBar extends JMenuBar {
 
 
         // -- Branch (repo-only) ------------------------------------------------
-        branchMenu = new JMenu("Branch");
+        branchMenu = new JMenu(I18n.t("worktreesDialog.branch"));
         branchMenu.setMnemonic(KeyEvent.VK_B);
 
-        pullItem             = Util.createMenuItem("Pull", null,  FontAwesomeSolid.REPLY, -45);
-        pushItem             = Util.createMenuItem("Push", null,  FontAwesomeSolid.REPLY, 135);
-        fetchItem            = Util.createMenuItem("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
-        commitItem           = Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
-        branchCreateItem     = Util.createMenuItem("Branch ...", "Create branch",
+        pullItem             = Util.createMenuItem(I18n.t("mainMenuBar.pull"), null,  FontAwesomeSolid.REPLY, -45);
+        pushItem             = Util.createMenuItem(I18n.t("push"), null,  FontAwesomeSolid.REPLY, 135);
+        fetchItem            = Util.createMenuItem(I18n.t("fetch"), I18n.t("fetchChangesFromRemoteRepository"), FontAwesomeSolid.REPLY_ALL, -45);
+        commitItem           = Util.createMenuItem(I18n.t("mainMenuBar.commit"), I18n.t("commit"), FontAwesomeSolid.CHECK, 0);
+        branchCreateItem     = Util.createMenuItem(I18n.t("mainMenuBar.branch"), I18n.t("mainMenuBar.createBranch"),
                 FontAwesomeSolid.CODE_BRANCH, 0);
-        mergeItem            = Util.createMenuItem("Merge ...", "Merge branch into working branch",
+        mergeItem            = Util.createMenuItem(I18n.t("mainMenuBar.merge"), I18n.t("mergeBranchIntoWorkingBranch"),
                 FontAwesomeSolid.CODE_BRANCH, 180);
 
-        interactiveRebaseItem = new JMenuItem("Interactive Rebase…",   KeyEvent.VK_I);
+        interactiveRebaseItem = new JMenuItem(I18n.t("mainMenuBar.interactiveRebase"),   KeyEvent.VK_I);
         interactiveRebaseItem.setToolTipText(
-                "Interactively rebase commits – right-click a commit in the history for the full workflow");
+                I18n.t("interactivelyRebaseCommitsRightClick"));
 
         branchMenu.add(branchCreateItem);
         branchMenu.add(mergeItem);
@@ -283,13 +284,13 @@ public class MainMenuBar extends JMenuBar {
         branchMenu.add(interactiveRebaseItem);
         
         // -- Workspace ---------------------------------------------------------
-        workspaceMenu = new JMenu("Workspace");
-        workspacePullItem             = Util.createMenuItem("Pull", "Pull all repositories under workspace",  FontAwesomeSolid.REPLY, -45);
-        workspacePushItem             = Util.createMenuItem("Push", "Push  all repositories under workspace",  FontAwesomeSolid.REPLY, 135);
-        workspaceFetchItem            = Util.createMenuItem("Fetch", "Fetch changes all repository", FontAwesomeSolid.REPLY_ALL, -45);
-        workspaceCommitItem           =  Util.createMenuItem("Commit ...", "Commit", FontAwesomeSolid.CHECK, 0);
-        workspaceBranchCreateItem     = Util.createMenuItem("Branch ...", "Create branches in each repository", FontAwesomeSolid.CODE_BRANCH, 0);
-        workspaceMergeItem            = Util.createMenuItem("Merge ...", "Merge branches ", FontAwesomeSolid.CODE_BRANCH, 180);
+        workspaceMenu = new JMenu(I18n.t("mainMenuBar.workspace"));
+        workspacePullItem             = Util.createMenuItem(I18n.t("mainMenuBar.pull"), I18n.t("pullAllRepositoriesUnderWorkspace"),  FontAwesomeSolid.REPLY, -45);
+        workspacePushItem             = Util.createMenuItem(I18n.t("push"), I18n.t("pushAllRepositoriesUnderWorkspace"),  FontAwesomeSolid.REPLY, 135);
+        workspaceFetchItem            = Util.createMenuItem(I18n.t("fetch"), I18n.t("fetchChangesAllRepository"), FontAwesomeSolid.REPLY_ALL, -45);
+        workspaceCommitItem           =  Util.createMenuItem(I18n.t("mainMenuBar.commit"), I18n.t("commit"), FontAwesomeSolid.CHECK, 0);
+        workspaceBranchCreateItem     = Util.createMenuItem(I18n.t("mainMenuBar.branch"), I18n.t("createBranchesEachRepository"), FontAwesomeSolid.CODE_BRANCH, 0);
+        workspaceMergeItem            = Util.createMenuItem(I18n.t("mainMenuBar.merge"), I18n.t("mergeBranches"), FontAwesomeSolid.CODE_BRANCH, 180);
 
         workspaceMenu.setName("workspaceMenu");
         workspacePullItem.setName("workspacePullItem");
@@ -313,18 +314,18 @@ public class MainMenuBar extends JMenuBar {
 
 
         // -- Working copy (repo-only) ------------------------------------------
-        workingCopyMenu = new JMenu("Working copy");
+        workingCopyMenu = new JMenu(I18n.t("workingCopy"));
         workingCopyMenu.setMnemonic(KeyEvent.VK_W);
 
-        refreshItem    =  Util.createMenuItem("Refresh", null, FontAwesomeSolid.SYNC, 0);
+        refreshItem    =  Util.createMenuItem(I18n.t("refresh"), null, FontAwesomeSolid.SYNC, 0);
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
 
         stashItem      = new JMenuItem("Stash...",       KeyEvent.VK_S);
         worktreesItem  = new JMenuItem("Worktrees...",   KeyEvent.VK_W);
-        worktreesItem.setToolTipText("Manage linked working trees (git worktree)");
-        createDiffItem = new JMenuItem("Create diff",    KeyEvent.VK_D);
+        worktreesItem.setToolTipText(I18n.t("manageLinkedWorkingTreesGit"));
+        createDiffItem = new JMenuItem(I18n.t("createDiff"),    KeyEvent.VK_D);
         createDiffItem.setEnabled(false);
-        applyDiffItem  = new JMenuItem("Apply diff...",  KeyEvent.VK_A);
+        applyDiffItem  = new JMenuItem(I18n.t("applyDiff"),  KeyEvent.VK_A);
 
         workingCopyMenu.add(refreshItem);
         workingCopyMenu.add(stashItem);
@@ -334,11 +335,11 @@ public class MainMenuBar extends JMenuBar {
         workingCopyMenu.add(applyDiffItem);
 
         // -- Tools (always available) ------------------------------------------
-        JMenu toolsMenu = new JMenu("Tools");
+        JMenu toolsMenu = new JMenu(I18n.t("tools"));
         toolsMenu.setMnemonic(KeyEvent.VK_T);
 
-        compareFilesItem   = new JMenuItem("Compare Files…",   KeyEvent.VK_F);
-        compareFoldersItem = new JMenuItem("Compare Folders…", KeyEvent.VK_D);
+        compareFilesItem   = new JMenuItem(I18n.t("mainMenuBar.compareFiles"),   KeyEvent.VK_F);
+        compareFoldersItem = new JMenuItem(I18n.t("mainMenuBar.compareFolders"), KeyEvent.VK_D);
 
         compareFilesItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
         compareFoldersItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7,
@@ -348,10 +349,10 @@ public class MainMenuBar extends JMenuBar {
         toolsMenu.add(compareFoldersItem);
 
         // -- Help -------------------------------------------------------------
-        JMenu helpMenu = new JMenu("Help");
+        JMenu helpMenu = new JMenu(I18n.t("help"));
         helpMenu.setMnemonic(KeyEvent.VK_H);
 
-        helpContentsItem = new JMenuItem("Help Contents", KeyEvent.VK_H);
+        helpContentsItem = new JMenuItem(I18n.t("helpContents"), KeyEvent.VK_H);
         helpContentsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
         helpContentsItem.addActionListener(e -> {
             try { Desktop.getDesktop().browse(new URI("http://www.gitember.org/doc/docs/ge-intro/index.html")); }
@@ -360,14 +361,10 @@ public class MainMenuBar extends JMenuBar {
         helpMenu.add(helpContentsItem);
         helpMenu.addSeparator();
 
-        aboutItem = new JMenuItem("About", KeyEvent.VK_A);
+        aboutItem = new JMenuItem(I18n.t("about"), KeyEvent.VK_A);
         aboutItem.addActionListener(e -> {
             JEditorPane ep = new JEditorPane("text/html",
-                    "<html><body style='font-family:sans-serif;font-size:12px'>" +
-                    "<b>Gitember 3.6 </b> — Git GUI Client<br><br>" +
-                    "Web site: <a href='https://gitember.org/'>https://gitember.org/</a><br>" +
-                    "Support: <a href='https://github.com/iazarny/gitember/issues'>https://github.com/iazarny/gitember/issues</a><br>" +
-                    "</body></html>");
+                    I18n.t("gitember36GitGui"));
             ep.setEditable(false);
             ep.setOpaque(false);
             ep.addHyperlinkListener(ev -> {
@@ -381,7 +378,7 @@ public class MainMenuBar extends JMenuBar {
             JOptionPane.showMessageDialog(
                     SwingUtilities.getWindowAncestor(this),
                     ep,
-                    "About Gitember",
+                    I18n.t("aboutGitember"),
                     JOptionPane.INFORMATION_MESSAGE);
         });
         helpMenu.add(aboutItem);

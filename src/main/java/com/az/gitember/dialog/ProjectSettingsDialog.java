@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.IssueTrackerConfig;
 import com.az.gitember.data.Project;
@@ -33,7 +34,7 @@ public class ProjectSettingsDialog extends JDialog {
     private final IssueTrackerSettingsPanel issueTrackerPanel;
 
     public ProjectSettingsDialog(Frame owner) {
-        super(owner, "Project Settings", java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
+        super(owner, I18n.t("projectSettings"), java.awt.Dialog.ModalityType.DOCUMENT_MODAL);
         setSize(600, 780);
         setLocationRelativeTo(owner);
         setResizable(true);
@@ -48,9 +49,9 @@ public class ProjectSettingsDialog extends JDialog {
         tokenField = new JPasswordField(25);
         userField  = new JTextField(25);
         pwdField   = new JPasswordField(25);
-        showAllPullRequestsCheck = new JCheckBox("Show all pull requests (including merged / closed)");
+        showAllPullRequestsCheck = new JCheckBox(I18n.t("showAllPullRequestsIncluding"));
         showAllPullRequestsCheck.setToolTipText(
-                "When off, only open pull/merge requests are listed; when on, merged and closed ones are shown too");
+                I18n.t("whenOffOnlyOpenPull"));
         if (project != null) {
             if (project.getAccessToken() != null) tokenField.setText(project.getAccessToken());
             if (project.getUserName()    != null) userField.setText(project.getUserName());
@@ -65,31 +66,30 @@ public class ProjectSettingsDialog extends JDialog {
         gbc.insets  = new Insets(5, 5, 5, 5);
         gbc.anchor  = GridBagConstraints.WEST;
 
-        addSeparatorLabel(form, gbc, 0, "Author  (who wrote the change)");
-        addRow(form, gbc, 1, "Name:",  authorNameField);
-        addRow(form, gbc, 2, "Email:", authorEmailField);
-        addSeparatorLabel(form, gbc, 3, "Committer  (who applied the change — leave blank to use author)");
-        addRow(form, gbc, 4, "Name:",  committerNameField);
-        addRow(form, gbc, 5, "Email:", committerEmailField);
+        addSeparatorLabel(form, gbc, 0, I18n.t("authorWhoWroteChange"));
+        addRow(form, gbc, 1, I18n.t("name"),  authorNameField);
+        addRow(form, gbc, 2, I18n.t("email"), authorEmailField);
+        addSeparatorLabel(form, gbc, 3, I18n.t("committerWhoAppliedChangeLeave"));
+        addRow(form, gbc, 4, I18n.t("name"),  committerNameField);
+        addRow(form, gbc, 5, I18n.t("email"), committerEmailField);
 
 
 
-        addSeparatorLabel(form, gbc, 6, "Repository Credentials");
+        addSeparatorLabel(form, gbc, 6, I18n.t("repositoryCredentials"));
 
         JLabel info = new JLabel(
-                "<html>Access token takes priority over username/password.<br>"
-                + "Leave token blank to use username &amp; password instead.</html>");
+                I18n.t("accessTokenTakesPriorityOver"));
         info.setForeground(UIManager.getColor("Label.disabledForeground"));
         gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(info, gbc);
         gbc.gridwidth = 1;
 
-        addRow(form, gbc, 8, "Access Token:", tokenField);
-        addRow(form, gbc, 9, "Username:",     userField);
-        addRow(form, gbc, 10, "Password:",     pwdField);
+        addRow(form, gbc, 8, I18n.t("credentialsDialog.accessToken"), tokenField);
+        addRow(form, gbc, 9, I18n.t("username"),     userField);
+        addRow(form, gbc, 10, I18n.t("password"),     pwdField);
 
-        addSeparatorLabel(form, gbc, 11, "Remote URL");
+        addSeparatorLabel(form, gbc, 11, I18n.t("remoteUrl"));
 
         String originUrl = null;
         if (Context.getGitRepoService() != null) {
@@ -98,18 +98,18 @@ public class ProjectSettingsDialog extends JDialog {
         JTextField remoteUrlField = new JTextField(ObjectUtils.getIfNull(originUrl, ""), 28);
         remoteUrlField.setEditable(false);
         remoteUrlField.setBackground(UIManager.getColor("TextField.inactiveBackground"));
-        addRow(form, gbc, 12, "Origin:", remoteUrlField);
+        addRow(form, gbc, 12, I18n.t("origin"), remoteUrlField);
 
-        addSeparatorLabel(form, gbc, 13, "Pull Requests");
+        addSeparatorLabel(form, gbc, 13, I18n.t("pullRequests"));
         gbc.gridx = 0; gbc.gridy = 14; gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(showAllPullRequestsCheck, gbc);
         gbc.gridwidth = 1;
 
-        addSeparatorLabel(form, gbc, 15, "Ignore rules");
-        JButton editGitIgnoreBtn = new JButton("Edit .gitignore...");
+        addSeparatorLabel(form, gbc, 15, I18n.t("ignoreRules"));
+        JButton editGitIgnoreBtn = new JButton(I18n.t("editGitignore"));
         editGitIgnoreBtn.setName("editGitIgnoreButton");
-        editGitIgnoreBtn.setToolTipText("Open the repository .gitignore in a separate editor window");
+        editGitIgnoreBtn.setToolTipText(I18n.t("openRepositoryGitignoreSeparateEditor"));
         editGitIgnoreBtn.setEnabled(project != null);
         editGitIgnoreBtn.addActionListener(e -> openGitIgnoreEditor());
         gbc.gridx = 0; gbc.gridy = 16; gbc.gridwidth = 2;
@@ -120,10 +120,10 @@ public class ProjectSettingsDialog extends JDialog {
         int nextRow = 17;
         Settings settings = Context.getSettings();
         if (settings != null && settings.isVerifyCommitSignatures() && settings.isRepositoryAllowedSigners()) {
-            addSeparatorLabel(form, gbc, nextRow, "Commit signatures");
+            addSeparatorLabel(form, gbc, nextRow, I18n.t("commitSignatures"));
             nextRow++;
-            JButton editAllowedSignersBtn = new JButton("Edit .git/allowed_signers...");
-            editAllowedSignersBtn.setToolTipText("Open this repository's allowed_signers file");
+            JButton editAllowedSignersBtn = new JButton(I18n.t("editGitAllowedSigners"));
+            editAllowedSignersBtn.setToolTipText(I18n.t("openRepositorySAllowedSigners"));
             editAllowedSignersBtn.setEnabled(project != null);
             editAllowedSignersBtn.addActionListener(e -> openRepoAllowedSignersEditor());
             gbc.gridx = 0; gbc.gridy = nextRow; gbc.gridwidth = 2;
@@ -139,11 +139,11 @@ public class ProjectSettingsDialog extends JDialog {
         JTabbedPane tabs = new JTabbedPane();
         JScrollPane repoScroll = new JScrollPane(form);
         repoScroll.setBorder(null);
-        tabs.addTab("Repository", repoScroll);
-        tabs.addTab("Integrations", new JScrollPane(issueTrackerPanel));
+        tabs.addTab(I18n.t("repository"), repoScroll);
+        tabs.addTab(I18n.t("integrations"), new JScrollPane(issueTrackerPanel));
 
         JButton okBtn     = new JButton("OK");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         okBtn.addActionListener(e -> applyAndClose());
         cancelBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(okBtn);
@@ -161,7 +161,7 @@ public class ProjectSettingsDialog extends JDialog {
     private void openGitIgnoreEditor() {
         String folder = Context.getProjectFolder();
         if (folder != null && !folder.isBlank()) {
-            FileViewerWindow.openForEdit("Edit .gitignore", Path.of(folder, Const.GIT_IGNORE_NAME));
+            FileViewerWindow.openForEdit(I18n.t("projectSettingsDialog.editGitignore"), Path.of(folder, Const.GIT_IGNORE_NAME));
         }
     }
 
@@ -169,7 +169,7 @@ public class ProjectSettingsDialog extends JDialog {
         if (Context.getGitRepoService() != null && Context.getGitRepoService().getRepository() != null) {
             Path path = Context.getGitRepoService().getRepository().getDirectory().toPath()
                     .resolve(Const.ALLOWED_SIGNERS_NAME);
-            FileViewerWindow.openForEdit("Edit allowed_signers", path);
+            FileViewerWindow.openForEdit(I18n.t("editAllowedSigners"), path);
         }
     }
 

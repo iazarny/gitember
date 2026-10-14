@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.InteractiveContinueAbortDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog;
 import com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction;
@@ -44,7 +45,7 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
     // ── AbstractAsyncHandler contract ─────────────────────────────────────────
 
     @Override
-    protected String getOperationName() { return "Interactive Rebase"; }
+    protected String getOperationName() { return I18n.t("interactiveRebase"); }
 
     @Override
     protected RebaseResult doInBackground() throws Exception {
@@ -56,13 +57,13 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
     @Override
     protected void onSuccess(RebaseResult result) {
         RebaseResult.Status status = result.getStatus();
-        statusBar.setStatus("Interactive rebase: " + status);
+        statusBar.setStatus(I18n.t("interactiveRebaseHandler.interactiveRebase", status));
 
         if (status.isSuccessful()) {
             if (onComplete != null) onComplete.run();
             JOptionPane.showMessageDialog(parent,
-                    "Interactive rebase completed successfully.",
-                    "Interactive Rebase", JOptionPane.INFORMATION_MESSAGE);
+                    I18n.t("interactiveRebaseCompletedSuccessfully"),
+                    I18n.t("interactiveRebase"), JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -79,8 +80,8 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
         // Other non-successful outcomes
         if (onComplete != null) onComplete.run();
         JOptionPane.showMessageDialog(parent,
-                "Interactive rebase finished with status: " + status,
-                "Interactive Rebase", JOptionPane.WARNING_MESSAGE);
+                I18n.t("interactiveRebaseFinishedStatus", status),
+                I18n.t("interactiveRebase"), JOptionPane.WARNING_MESSAGE);
     }
 
     @Override
@@ -117,7 +118,7 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
         Frame owner = parent instanceof Frame f
                 ? f : (Frame) SwingUtilities.getWindowAncestor(parent);
         StatusBar statusBar = MainFrame.getInstance().getStatusBar();
-        statusBar.setStatus("Loading commits for interactive rebase\u2026");
+        statusBar.setStatus(I18n.t("loadingCommitsForInteractiveRebase"));
         statusBar.showProgress(true);
 
         new SwingWorker<List<RevCommit>, Void>() {
@@ -135,10 +136,9 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
 
                     if (commits.isEmpty()) {
                         JOptionPane.showMessageDialog(parent,
-                                "No commits found between HEAD and " + baseDisplaySha + ".\n"
-                                + "Nothing to rebase.",
-                                "Interactive Rebase", JOptionPane.INFORMATION_MESSAGE);
-                        statusBar.setStatus("Interactive rebase: nothing to do.");
+                                I18n.t("noCommitsFoundBetweenHead", baseDisplaySha),
+                                I18n.t("interactiveRebase"), JOptionPane.INFORMATION_MESSAGE);
+                        statusBar.setStatus(I18n.t("interactiveRebaseNothingDo"));
                         return;
                     }
 
@@ -157,7 +157,7 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
                     dialog.setVisible(true);
 
                     if (!dialog.isConfirmed()) {
-                        statusBar.setStatus("Interactive rebase cancelled.");
+                        statusBar.setStatus(I18n.t("interactiveRebaseCancelled"));
                         return;
                     }
 
@@ -167,10 +167,10 @@ public class InteractiveRebaseHandler extends AbstractAsyncHandler<RebaseResult>
                     handler.execute();
 
                 } catch (Exception ex) {
-                    statusBar.setStatus("Interactive rebase failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("interactiveRebaseFailed", ex.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Could not prepare interactive rebase:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("couldNotPrepareInteractiveRebase", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();

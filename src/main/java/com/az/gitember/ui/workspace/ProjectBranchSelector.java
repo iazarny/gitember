@@ -1,5 +1,6 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import org.apache.commons.lang3.ObjectUtils;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
  */
 public class ProjectBranchSelector extends JPanel {
 
-    private static final String SKIP_LABEL = "— skip —";
+    private static final String SKIP_LABEL = I18n.t("projectBranchSelector.skip");
 
     private final Project project;
     private final ScmBranch targetBranch;
@@ -84,7 +85,7 @@ public class ProjectBranchSelector extends JPanel {
 
         JLabel targetLabel = new JLabel(targetBranch != null
                 ? "→  " + targetBranch.getShortName()
-                : "→  (no branch)");
+                : I18n.t("noBranch"));
         targetLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
 
         add(nameLabel, BorderLayout.WEST);

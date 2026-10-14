@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -54,7 +55,7 @@ public class DiffViewerWindowImg extends JFrame {
     public DiffViewerWindowImg(String fileName, List<ScmRevisionInformation> fileRevisions,
                                String oldSha, String newSha) {
         this.fileName = fileName;
-        setTitle("Diff: " + fileName);
+        setTitle(I18n.t("commitDetailPanel.diff", fileName));
         initCommon();
 
         oldCombo = new JComboBox<>();
@@ -81,7 +82,7 @@ public class DiffViewerWindowImg extends JFrame {
         g.gridx = 0;
         g.weightx = 0;
         g.fill = GridBagConstraints.NONE;
-        combosRow.add(new JLabel("Old:"), g);
+        combosRow.add(new JLabel(I18n.t("old")), g);
         g.gridx = 1;
         g.weightx = 0.45;
         g.fill = GridBagConstraints.HORIZONTAL;
@@ -89,7 +90,7 @@ public class DiffViewerWindowImg extends JFrame {
         g.gridx = 2;
         g.weightx = 0.10;
         g.fill = GridBagConstraints.HORIZONTAL;
-        combosRow.add(new JLabel("New:"), g);
+        combosRow.add(new JLabel(I18n.t("new")), g);
         g.gridx = 3;
         g.weightx = 0.45;
         g.fill = GridBagConstraints.HORIZONTAL;
@@ -101,8 +102,8 @@ public class DiffViewerWindowImg extends JFrame {
         toolbar.add(buildZoomPanel());
 
         setupContentPane(toolbar,
-                headerPanel(" Old revision", leftScroll),
-                headerPanel(" New revision", rightScroll));
+                headerPanel(I18n.t("oldRevision"), leftScroll),
+                headerPanel(I18n.t("newRevision"), rightScroll));
 
         loadFromRevisions();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -115,7 +116,7 @@ public class DiffViewerWindowImg extends JFrame {
                                String leftLabel, BufferedImage leftImage,
                                String rightLabel, BufferedImage rightImage) {
         this.fileName = fileName;
-        setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
+        setTitle(I18n.t("diffViewerWindowImg.diff", fileName, leftLabel, rightLabel));
         initCommon();
         oldCombo = null;
         newCombo = null;
@@ -135,7 +136,7 @@ public class DiffViewerWindowImg extends JFrame {
                                String leftLabel, File leftFile,
                                String rightLabel, File rightFile) {
         this.fileName = fileName;
-        setTitle("Diff: " + fileName + " (" + leftLabel + " / " + rightLabel + ")");
+        setTitle(I18n.t("diffViewerWindowImg.diff", fileName, leftLabel, rightLabel));
         initCommon();
         oldCombo = null;
         newCombo = null;
@@ -154,7 +155,7 @@ public class DiffViewerWindowImg extends JFrame {
     public DiffViewerWindowImg(String fileName, String commitSha,
                                File commitFile, File diskFile) {
         this.fileName = fileName;
-        setTitle("Diff with disk: " + fileName);
+        setTitle(I18n.t("diffWithDisk", fileName));
         initCommon();
         oldCombo = null;
         newCombo = null;
@@ -162,8 +163,8 @@ public class DiffViewerWindowImg extends JFrame {
         String shortSha = commitSha != null && commitSha.length() > 8
                 ? commitSha.substring(0, 8) : (commitSha != null ? commitSha : "");
         setupContentPane(buildZoomPanel(),
-                headerPanel(" Commit: " + shortSha, leftScroll),
-                headerPanel(" Working directory", rightScroll));
+                headerPanel(I18n.t("diffViewerWindowImg.commit", shortSha), leftScroll),
+                headerPanel(I18n.t("workingDirectory"), rightScroll));
 
         loadFromFiles(commitFile, diskFile);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -174,7 +175,7 @@ public class DiffViewerWindowImg extends JFrame {
      */
     public DiffViewerWindowImg() {
         this.fileName = "";
-        setTitle("Compare images");
+        setTitle(I18n.t("compareImages"));
         initCommon();
         oldCombo = null;
         newCombo = null;
@@ -187,8 +188,8 @@ public class DiffViewerWindowImg extends JFrame {
         setupDropOnPanel(leftPane, leftPathField);
         setupDropOnPanel(rightPane, rightPathField);
 
-        JButton browseLeft = new JButton("Browse…");
-        JButton browseRight = new JButton("Browse…");
+        JButton browseLeft = new JButton(I18n.t("browse"));
+        JButton browseRight = new JButton(I18n.t("browse"));
         browseLeft.addActionListener(e -> browseAndLoad(leftPathField, leftPane));
         browseRight.addActionListener(e -> browseAndLoad(rightPathField, rightPane));
 
@@ -220,8 +221,8 @@ public class DiffViewerWindowImg extends JFrame {
         rightPane = new FitImagePanel();
         leftPane.setName("leftImagePane");
         rightPane.setName("rightImagePane");
-        leftPane.setPlaceholder("No image");
-        rightPane.setPlaceholder("No image");
+        leftPane.setPlaceholder(I18n.t("noImage"));
+        rightPane.setPlaceholder(I18n.t("noImage"));
 
         leftScroll = wrap(leftPane);
         rightScroll = wrap(rightPane);
@@ -236,19 +237,19 @@ public class DiffViewerWindowImg extends JFrame {
         });
         syncScroll(leftScroll, rightScroll);
 
-        fitBtn = Util.createButton("Fit", "Fit both images to the pane", FontAwesomeSolid.EXPAND);
+        fitBtn = Util.createButton(I18n.t("fit"), I18n.t("fitBothImagesPane"), FontAwesomeSolid.EXPAND);
         fitBtn.setName("fitImageButton");
         fitBtn.addActionListener(e -> applyFit());
 
-        actualBtn = Util.createButton("100%", "Actual size", FontAwesomeSolid.SEARCH);
+        actualBtn = Util.createButton("100%", I18n.t("actualSize"), FontAwesomeSolid.SEARCH);
         actualBtn.setName("actualSizeButton");
         actualBtn.addActionListener(e -> applyActualSize());
 
-        zoomInBtn = Util.createButton("Zoom in", "Zoom in", FontAwesomeSolid.SEARCH_PLUS);
+        zoomInBtn = Util.createButton(I18n.t("zoomIn"), I18n.t("zoomIn"), FontAwesomeSolid.SEARCH_PLUS);
         zoomInBtn.setName("zoomInButton");
         zoomInBtn.addActionListener(e -> applyZoomBy(1.25));
 
-        zoomOutBtn = Util.createButton("Zoom out", "Zoom out", FontAwesomeSolid.SEARCH_MINUS);
+        zoomOutBtn = Util.createButton(I18n.t("zoomOut"), I18n.t("zoomOut"), FontAwesomeSolid.SEARCH_MINUS);
         zoomOutBtn.setName("zoomOutButton");
         zoomOutBtn.addActionListener(e -> applyZoomBy(1.0 / 1.25));
 
@@ -309,7 +310,7 @@ public class DiffViewerWindowImg extends JFrame {
 
     private static JTextField pathField() {
         JTextField f = new JTextField();
-        f.putClientProperty("JTextField.placeholderText", "Drop an image here, or click Browse…");
+        f.putClientProperty("JTextField.placeholderText", I18n.t("dropImageHereClickBrowse"));
         f.setEditable(false);
         return f;
     }
@@ -396,8 +397,8 @@ public class DiffViewerWindowImg extends JFrame {
 
     private void browseAndLoad(JTextField pathField, FitImagePanel pane) {
         JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Select image to compare");
-        fc.setFileFilter(new FileNameExtensionFilter("Images", IMAGE_EXTENSIONS));
+        fc.setDialogTitle(I18n.t("selectImageToCompare"));
+        fc.setFileFilter(new FileNameExtensionFilter(I18n.t("images"), IMAGE_EXTENSIONS));
         if (!pathField.getText().isBlank()) {
             File cur = new File(pathField.getText().trim());
             fc.setCurrentDirectory(cur.isDirectory() ? cur : cur.getParentFile());
@@ -419,15 +420,15 @@ public class DiffViewerWindowImg extends JFrame {
                 try {
                     BufferedImage image = get();
                     pathField.setText(f.getAbsolutePath());
-                    pane.setPlaceholder("Cannot decode image");
+                    pane.setPlaceholder(I18n.t("cannotDecodeImage"));
                     pane.setImage(image);
                     applyCurrentZoom();
                     updateInfo();
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to load image for comparison", ex);
                     JOptionPane.showMessageDialog(DiffViewerWindowImg.this,
-                            "Cannot read image: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotReadImage", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -512,8 +513,8 @@ public class DiffViewerWindowImg extends JFrame {
                         } catch (Exception ex) {
                             log.log(Level.WARNING, "Failed to load image revisions", ex);
                             JOptionPane.showMessageDialog(DiffViewerWindowImg.this,
-                                    "Cannot load images: " + ex.getMessage(),
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                                    I18n.t("cannotLoadImages", ex.getMessage()),
+                                    I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 };
@@ -540,8 +541,8 @@ public class DiffViewerWindowImg extends JFrame {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to load images", ex);
                     JOptionPane.showMessageDialog(DiffViewerWindowImg.this,
-                            "Cannot load images: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotLoadImages", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -574,14 +575,14 @@ public class DiffViewerWindowImg extends JFrame {
     static BufferedImage readImage(File file) throws Exception {
         BufferedImage image = ImageIO.read(file);
         if (image == null) {
-            throw new Exception("Unsupported or corrupt image: " + file.getName());
+            throw new Exception(I18n.t("unsupportedOrCorruptImage", file.getName()));
         }
         return image;
     }
 
     private void setImages(BufferedImage left, BufferedImage right) {
-        leftPane.setPlaceholder(left == null ? "No image" : "Cannot decode image");
-        rightPane.setPlaceholder(right == null ? "No image" : "Cannot decode image");
+        leftPane.setPlaceholder(left == null ? I18n.t("noImage") : I18n.t("cannotDecodeImage"));
+        rightPane.setPlaceholder(right == null ? I18n.t("noImage") : I18n.t("cannotDecodeImage"));
         leftPane.setImage(left);
         rightPane.setImage(right);
         applyCurrentZoom();
@@ -645,17 +646,17 @@ public class DiffViewerWindowImg extends JFrame {
     static String describeComparison(BufferedImage left, BufferedImage right) {
         String verdict;
         if (left == null && right == null) {
-            verdict = "No images";
+            verdict = I18n.t("noImages");
         } else if (left == null || right == null) {
-            verdict = "Missing on one side";
+            verdict = I18n.t("missingOnOneSide");
         } else if (left.getWidth() != right.getWidth() || left.getHeight() != right.getHeight()) {
-            verdict = "Different size";
+            verdict = I18n.t("differentSize");
         } else if (pixelsEqual(left, right)) {
-            verdict = "Identical";
+            verdict = I18n.t("identical");
         } else {
-            verdict = "Different";
+            verdict = I18n.t("different");
         }
-        return "Left: " + describe(left) + "    Right: " + describe(right) + "    " + verdict;
+        return I18n.t("leftRight", describe(left), describe(right), verdict);
     }
 
     private static String describe(BufferedImage image) {

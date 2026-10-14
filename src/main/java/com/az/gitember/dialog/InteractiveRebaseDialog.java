@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
@@ -137,7 +138,7 @@ public class InteractiveRebaseDialog extends JDialog {
      */
     public InteractiveRebaseDialog(Frame owner, String baseDisplaySha,
                                    List<RebaseStep> initialSteps) {
-        super(owner, "Interactive Rebase", Dialog.ModalityType.DOCUMENT_MODAL);
+        super(owner, I18n.t("interactiveRebase"), Dialog.ModalityType.DOCUMENT_MODAL);
         this.steps = new ArrayList<>(initialSteps);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -148,16 +149,14 @@ public class InteractiveRebaseDialog extends JDialog {
 
         // ── Warning / info header ─────────────────────────────────────────────
         JLabel warningLabel = new JLabel(
-                "<html><b>Warning:</b> Interactive rebase rewrites history. "
-                + "Only use on <b>local, unpushed</b> commits.</html>");
+                I18n.t("warningInteractiveRebaseRewritesHistory"));
         warningLabel.setForeground(new Color(160, 80, 0));
         warningLabel.setBorder(BorderFactory.createEmptyBorder(8, 12, 2, 12));
 
         String workingBranchName = Context.getWorkingBranch() == null ? "HEAD" : Context.getWorkingBranch().getShortName();
 
         JLabel baseLabel = new JLabel(
-                "<html>Rebasing <b>" + workingBranchName + "</b> commits onto <b>" + baseDisplaySha + "</b>"
-                + " Drag rows or use ↑/↓ to reorder. Double-click a message to edit</html>");
+                I18n.t("rebasingCommitsOntoDragRows", workingBranchName, baseDisplaySha));
         baseLabel.setBorder(BorderFactory.createEmptyBorder(2, 12, 8, 12));
 
         // ── Table ─────────────────────────────────────────────────────────────
@@ -198,15 +197,15 @@ public class InteractiveRebaseDialog extends JDialog {
         JPanel movePanel = new JPanel(new BorderLayout(8, 0));
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        JButton upBtn   = Util.createButton("Up", "Move selected commit up (applied earlier)", FontAwesomeSolid.ARROW_UP);
-        JButton downBtn = Util.createButton("Down", "Move selected commit down (applied later)", FontAwesomeSolid.ARROW_DOWN);
+        JButton upBtn   = Util.createButton(I18n.t("up"), I18n.t("moveSelectedCommitUpApplied"), FontAwesomeSolid.ARROW_UP);
+        JButton downBtn = Util.createButton(I18n.t("down"), I18n.t("moveSelectedCommitDownApplied"), FontAwesomeSolid.ARROW_DOWN);
         upBtn  .addActionListener(e -> moveSelectedRow(-1));
         downBtn.addActionListener(e -> moveSelectedRow(+1));
         left.add(upBtn);
         left.add(downBtn);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        right.add(new JLabel("Set: "));
+        right.add(new JLabel(I18n.t("set")));
         for (int i = 0; i < ORDERED_ACTIONS.length; i++) {
             right.add(quickActionButton(ORDERED_ACTIONS[i], SyntaxStyleUtil.getInteractiveRebaseRowColor()[i]));
         }
@@ -214,10 +213,10 @@ public class InteractiveRebaseDialog extends JDialog {
         movePanel.add(right, BorderLayout.EAST);
 
         // ── OK / Cancel ───────────────────────────────────────────────────────
-        JButton startBtn  = new JButton("Start Rebase");
-        JButton cancelBtn = new JButton("Cancel");
-        startBtn .setToolTipText("Begin the interactive rebase with the current plan");
-        cancelBtn.setToolTipText("Abort – no changes will be made");
+        JButton startBtn  = new JButton(I18n.t("startRebase"));
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
+        startBtn .setToolTipText(I18n.t("beginInteractiveRebaseCurrentPlan"));
+        cancelBtn.setToolTipText(I18n.t("abortNoChangesWillMade"));
         startBtn .addActionListener(e -> { confirmed = true; dispose(); });
         cancelBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(startBtn);
@@ -266,14 +265,14 @@ public class InteractiveRebaseDialog extends JDialog {
         SyntaxStyleUtil.applyTheme(diffArea);
         diffArea.setFont(SyntaxStyleUtil.monoFont());
 
-        JLabel filesLabel = new JLabel("Changed files");
+        JLabel filesLabel = new JLabel(I18n.t("changedFiles"));
         filesLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         JPanel filesPanel = new JPanel(new BorderLayout());
         filesPanel.setSize(400, 820);
         filesPanel.add(filesLabel, BorderLayout.NORTH);
         filesPanel.add(new JScrollPane(filesList), BorderLayout.CENTER);
 
-        JLabel diffLabel = new JLabel("File diff");
+        JLabel diffLabel = new JLabel(I18n.t("fileDiff"));
         diffLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         JPanel diffPanel = new JPanel(new BorderLayout());
         diffPanel.add(diffLabel, BorderLayout.NORTH);
@@ -324,11 +323,11 @@ public class InteractiveRebaseDialog extends JDialog {
     }
 
     private static String actionTooltip(RebaseAction a) {
-        if (a == RebaseAction.PICK)   return "Keep this commit as-is";
-        if (a == RebaseAction.REWORD) return "Keep commit but edit its message";
-        if (a == RebaseAction.SQUASH) return "Combine with previous commit (merge messages)";
-        if (a == RebaseAction.FIXUP)  return "Combine with previous commit (discard this message)";
-        if (a == RebaseAction.DROP)   return "Delete this commit entirely";
+        if (a == RebaseAction.PICK)   return I18n.t("keepCommitAs");
+        if (a == RebaseAction.REWORD) return I18n.t("keepCommitButEditIts");
+        if (a == RebaseAction.SQUASH) return I18n.t("combinePreviousCommitMergeMessages");
+        if (a == RebaseAction.FIXUP)  return I18n.t("combinePreviousCommitDiscardMessage");
+        if (a == RebaseAction.DROP)   return I18n.t("deleteThisCommitEntirely");
         return a.label();
     }
 
@@ -336,11 +335,11 @@ public class InteractiveRebaseDialog extends JDialog {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
         p.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
         String[][] entries = {
-                {"pick",   "keep commit"},
-                {"reword", "edit message"},
-                {"squash", "combine + merge msgs"},
-                {"fixup",  "combine, discard msg"},
-                {"drop",   "delete commit"}
+                {"pick",   I18n.t("keepCommit")},
+                {"reword", I18n.t("editMessage")},
+                {"squash", I18n.t("combineMergeMsgs")},
+                {"fixup",  I18n.t("combineDiscardMsg")},
+                {"drop",   I18n.t("deleteCommit")}
         };
         for (int i = 0; i < entries.length; i++) {
             JLabel chip = new JLabel("  ");
@@ -390,7 +389,7 @@ public class InteractiveRebaseDialog extends JDialog {
 
     private class RebasePlanModel extends AbstractTableModel {
 
-        private static final String[] COLUMNS = {"Action", "SHA", "Commit Message"};
+        private static final String[] COLUMNS = {I18n.t("action"), "SHA", I18n.t("interactiveRebaseDialog.commitMessage")};
 
         @Override public int getRowCount()    { return steps.size(); }
         @Override public int getColumnCount() { return 3; }
@@ -564,7 +563,7 @@ public class InteractiveRebaseDialog extends JDialog {
                     diffArea.setCaretPosition(0);
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load diff", e);
-                    diffArea.setText("(Could not load diff: " + e.getCause().getMessage() + ")");
+                    diffArea.setText(I18n.t("couldNotLoadDiff", e.getCause().getMessage()));
                 }
             }
         }.execute();
@@ -622,8 +621,8 @@ public class InteractiveRebaseDialog extends JDialog {
                         } catch (Exception e) {
                             log.log(Level.WARNING, "Failed to open diff window", e);
                             JOptionPane.showMessageDialog(InteractiveRebaseDialog.this,
-                                    "Failed to open diff: " + e.getMessage(),
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                                    I18n.t("failedToOpenDiff", e.getMessage()),
+                                    I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }.execute();

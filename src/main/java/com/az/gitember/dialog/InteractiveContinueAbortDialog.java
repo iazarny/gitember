@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.misc.Util;
@@ -65,7 +66,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
                                           String currentRevision,
                                           StatusBar statusBar,
                                           Runnable onComplete) {
-        super(owner, "Interactive Rebase In Progress", false); // non-modal
+        super(owner, I18n.t("interactiveRebaseInProgress"), false); // non-modal
         this.statusBar  = statusBar;
         this.onComplete = onComplete;
 
@@ -79,24 +80,21 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
         // ── Message ───────────────────────────────────────────────────────────
         JLabel titleLabel = new JLabel(
-                "<html><b>Interactive rebase paused.</b></html>");
+                I18n.t("interactiveRebasePaused"));
         titleLabel.setForeground(new Color(160, 80, 0));
 
         StringBuilder sb = new StringBuilder("<html>");
         if (currentRevision != null && !currentRevision.isBlank()) {
-            sb.append("Stopped at revision: <tt><b>").append(currentRevision).append("</b></tt><br><br>");
+            sb.append(I18n.t("stoppedAtRevision")).append(currentRevision).append("</b></tt><br><br>");
         }
         if (conflicts != null && !conflicts.isEmpty()) {
-            sb.append("Conflicts detected in:<br><ul>");
+            sb.append(I18n.t("conflictsDetectedIn"));
             for (String f : conflicts) {
                 sb.append("<li><tt>").append(f).append("</tt></li>");
             }
-            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.<br>"
-                    + "If the commit becomes empty after resolution, use <b>Skip</b>.");
+            sb.append(I18n.t("resolveStageFilesThenClick"));
         } else {
-            sb.append("Resolve any conflicts and <b>stage</b> the files,<br>"
-                    + "then click <b>Continue</b> — or <b>Skip</b> if the commit is empty,<br>"
-                    + "or <b>Abort</b> to cancel.");
+            sb.append(I18n.t("resolveAnyConflictsStageFiles"));
         }
         sb.append("</html>");
         JLabel bodyLabel = new JLabel(sb.toString());
@@ -108,18 +106,18 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
         // ── Buttons ───────────────────────────────────────────────────────────
         JButton continueBtn = Util.createButton(
-                "Continue",
-                "Stage resolved files, then continue the rebase",
+                I18n.t("continue"),
+                I18n.t("stageResolvedFilesThenContinue"),
                 FontAwesomeSolid.PLAY);
 
         JButton skipBtn = Util.createButton(
-                "Skip",
-                "Discard the current (empty) commit and continue with the next one",
+                I18n.t("skip"),
+                I18n.t("discardCurrentEmptyCommitContinue"),
                 FontAwesomeSolid.FORWARD);
 
         JButton abortBtn = Util.createButton(
-                "Abort",
-                "Abort the interactive rebase and restore the original branch",
+                I18n.t("abort"),
+                I18n.t("abortInteractiveRebaseRestoreOriginal"),
                 FontAwesomeSolid.BAN);
 
         continueBtn.addActionListener(e -> performOperation(Op.CONTINUE));
@@ -237,9 +235,9 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
     private void performOperation(Op op) {
         String label = switch (op) {
-            case CONTINUE -> "Rebase continue";
-            case SKIP     -> "Rebase skip";
-            case ABORT    -> "Rebase abort";
+            case CONTINUE -> I18n.t("rebaseContinue");
+            case SKIP     -> I18n.t("rebaseSkip");
+            case ABORT    -> I18n.t("rebaseAbort");
         };
         statusBar.setStatus(label + "\u2026");
         statusBar.showProgress(true);
@@ -276,7 +274,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     // When continue produces an empty commit, skip it automatically
                     // instead of showing the dialog again.
                     if (op == Op.CONTINUE && status == RebaseResult.Status.NOTHING_TO_COMMIT) {
-                        statusBar.setStatus("Empty commit \u2014 skipping automatically\u2026");
+                        statusBar.setStatus(I18n.t("emptyCommitSkippingAutomatically"));
                         performOperation(Op.SKIP);
                         return;
                     }
@@ -294,7 +292,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
                 } catch (Exception ex) {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, label + " failed", cause);
-                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    statusBar.setStatus(I18n.t("opFailedStatus", label, cause.getMessage()));
 
                     // If continue/skip threw but the rebase is still in progress
                     // (e.g. UnmergedPathsException — user clicked Continue before
@@ -305,19 +303,18 @@ public class InteractiveContinueAbortDialog extends JDialog {
                                == RepositoryState.REBASING_INTERACTIVE) {
                         enableButtons();
                         String msg = cause instanceof UnmergedPathsException
-                                ? "Some conflict markers are still present.<br>"
-                                  + "Resolve and <b>stage</b> all conflicted files, then click <b>Continue</b>."
-                                : label + " failed: " + cause.getMessage();
+                                ? I18n.t("someConflictMarkersStillPresent")
+                                : I18n.t("opFailedStatus", label, cause.getMessage());
                         JOptionPane.showMessageDialog(InteractiveContinueAbortDialog.this,
                                 "<html>" + msg + "</html>",
-                                "Rebase Operation Failed", JOptionPane.WARNING_MESSAGE);
+                                I18n.t("rebaseOperationFailed"), JOptionPane.WARNING_MESSAGE);
                         return;
                     }
 
                     disposeAndNotify();
                     JOptionPane.showMessageDialog(null,
-                            label + " failed:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("opFailedDialog", label, cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();

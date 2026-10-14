@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.ui.misc.StatusTextCellRenderer;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 
@@ -91,14 +93,14 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             }
         });
 
-        searchField.putClientProperty("JTextField.placeholderText", "Filter files...");
+        searchField.putClientProperty("JTextField.placeholderText", I18n.t("workingCopyPanel.filterFiles"));
 
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
     @Override
     public void refresh() {
-        statusBar.setStatus("Refreshing working copy...");
+        statusBar.setStatus(I18n.t("refreshingWorkingCopy"));
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
@@ -107,7 +109,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
             }
             @Override
             protected void done() {
-                statusBar.setStatus("Working copy refreshed");
+                statusBar.setStatus(I18n.t("workingCopyRefreshed"));
             }
         }.execute();
     }
@@ -157,7 +159,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                 try { get(); }
                 catch (Exception ex) {
                     log.log(Level.WARNING, "Stage/unstage failed", ex);
-                    statusBar.setStatus("Error: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("indexHistoryDialog.error", ex.getMessage()));
                 }
                 Context.updateStatus(null, true);
             }
@@ -180,7 +182,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
     protected void stageAll() {
         List<ScmItem> toStage = tableModel.getAllItems().stream().filter(i -> !i.isStaged()).toList();
         if (toStage.isEmpty()) return;
-        statusBar.setStatus("Staging all...");
+        statusBar.setStatus(I18n.t("stagingAll"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override
@@ -193,10 +195,10 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("All files staged");
+                    statusBar.setStatus(I18n.t("allFilesStaged"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Stage all failed", ex);
-                    statusBar.setStatus("Error staging: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("errorStaging", ex.getMessage()));
                 }
                 Context.updateStatus(null, true);
             }
@@ -207,7 +209,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
     protected void unstageAll() {
         List<ScmItem> toUnstage = tableModel.getAllItems().stream().filter(ScmItem::isStaged).toList();
         if (toUnstage.isEmpty()) return;
-        statusBar.setStatus("Unstaging all...");
+        statusBar.setStatus(I18n.t("unstagingAll"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override
@@ -220,10 +222,10 @@ public class WorkingCopyPanel extends WorkingCopyOps {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("All files unstaged");
+                    statusBar.setStatus(I18n.t("allFilesUnstaged"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Unstage all failed", ex);
-                    statusBar.setStatus("Error unstaging: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("errorUnstaging", ex.getMessage()));
                 }
                 Context.updateStatus(null, true);
             }
@@ -257,7 +259,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         private List<ScmItem> allItems = new ArrayList<>();
         private List<ScmItem> filteredItems = new ArrayList<>();
 
-        private static final String[] COLUMNS = {"", "", "Status", "File"};
+        private static final String[] COLUMNS = {"", "", I18n.t("status"), I18n.t("file")};
 
         void setItems(List<ScmItem> items) {
             allItems = items != null ? new ArrayList<>(items) : new ArrayList<>();
@@ -329,7 +331,7 @@ public class WorkingCopyPanel extends WorkingCopyOps {
         }
     }
 
-    private static class StatusTextRenderer extends DefaultTableCellRenderer {
+    private static class StatusTextRenderer extends StatusTextCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                         boolean isSelected, boolean hasFocus, int row, int col) {

@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.data.RemoteRepoParameters;
@@ -26,7 +27,7 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Fetch";
+        return I18n.t("fetch");
     }
 
     @Override
@@ -70,26 +71,25 @@ public class FetchHandler extends AbstractAsyncHandler<Void> {
         if (workspaceResults != null) {
             long ok = workspaceResults.stream().filter(ProjectOperationResult::isSuccess).count();
             long failed = workspaceResults.size() - ok;
-            statusBar.setStatus("Fetch completed for " + ok + " of " + workspaceResults.size()
-                    + " repositories" + (failed > 0 ? " (" + failed + " failed)" : ""));
+            statusBar.setStatus(I18n.t("fetchCompletedRepositories", ok, workspaceResults.size(), (failed > 0 ? I18n.t("failedCountSuffix", failed) : "")));
             if (parent instanceof MainFrame mf) {
                 mf.refreshWorkspaceProjectBranches(workspaceResults);
                 mf.refreshWorkspaceView();
             }
             return;
         }
-        statusBar.setStatus("Fetch completed");
+        statusBar.setStatus(I18n.t("fetchCompleted"));
     }
 
     protected void onError(Exception e) {
         if (e instanceof org.eclipse.jgit.api.errors.InvalidRemoteException cgfException) {
             String msg = e.getMessage();
             if (StringUtils.contains(msg,"Invalid remote: origin")) {
-                statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+                statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), e.getMessage()));
                 statusBar.clearProgress();
                 JOptionPane.showMessageDialog(parent,
-                        "Need to configure remote url\n" + e.getMessage(),
-                        "Warning", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("needConfigureRemoteUrl", e.getMessage()),
+                        I18n.t("warning"), JOptionPane.WARNING_MESSAGE);
             } else  {
                 super.onError(e);
             }

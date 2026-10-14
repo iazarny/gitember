@@ -1,5 +1,6 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoStatService;
@@ -68,15 +69,15 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private final Map<Project, WorkingCopyStat> statsByProject = new HashMap<>();
 
     private final List<Column> columns = List.of(
-            new Column("Repository", p -> new File(ObjectUtils.getIfNull(p.getProjectHomeFolder(), "")).getName()),
-            new Column("Branch", p -> cell(p, WorkingCopyStat::branch)),
-            new Column("Status", this::statusCell),
-            new Column("Modified", p -> cellInt(p, WorkingCopyStat::modified)),
-            new Column("Ahead", p -> cellInt(p, WorkingCopyStat::ahead)),
-            new Column("Behind", p -> cellInt(p, WorkingCopyStat::behind))
+            new Column(I18n.t("repository"), p -> new File(ObjectUtils.getIfNull(p.getProjectHomeFolder(), "")).getName()),
+            new Column(I18n.t("worktreesDialog.branch"), p -> cell(p, WorkingCopyStat::branch)),
+            new Column(I18n.t("status"), this::statusCell),
+            new Column(I18n.t("submodulePanel.modified"), p -> cellInt(p, WorkingCopyStat::modified)),
+            new Column(I18n.t("ahead"), p -> cellInt(p, WorkingCopyStat::ahead)),
+            new Column(I18n.t("behind"), p -> cellInt(p, WorkingCopyStat::behind))
     );
 
-    private final JLabel titleLabel = new JLabel("Workspace");
+    private final JLabel titleLabel = new JLabel(I18n.t("mainMenuBar.workspace"));
     private final JPanel metricsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 4));
     private final RepoTableModel tableModel = new RepoTableModel();
     private final JTable table = new JTable(tableModel);
@@ -85,7 +86,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      * Single combined working-copy tree: top-level nodes are the projects, and each project's
      * changes hang beneath it as a folders/files hierarchy.
      */
-    private final DefaultMutableTreeNode workingCopyRoot = new DefaultMutableTreeNode("Workspace");
+    private final DefaultMutableTreeNode workingCopyRoot = new DefaultMutableTreeNode(I18n.t("mainMenuBar.workspace"));
     private final DefaultTreeModel workingCopyModel = new DefaultTreeModel(workingCopyRoot);
     private final JTree workingCopyTree = new JTree(workingCopyModel);
     /**
@@ -100,7 +101,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      * the results grouped by project (mirroring the Working Copy tab's project-rooted layout).
      */
     private final WorkspaceSearchService searchService = new WorkspaceSearchService();
-    private final DefaultMutableTreeNode searchRoot = new DefaultMutableTreeNode("Search");
+    private final DefaultMutableTreeNode searchRoot = new DefaultMutableTreeNode(I18n.t("workspaceDashboardPanel.search"));
     private final DefaultTreeModel searchModel = new DefaultTreeModel(searchRoot);
     private final JTree searchTree = new JTree(searchModel);
     /**
@@ -112,9 +113,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     private boolean indexing = false;
 
-    private static final String TAB_MAIN = "Main";
-    private static final String TAB_WORKING_COPY = "Working Copy";
-    private static final String TAB_SEARCH = "Search";
+    private static final String TAB_MAIN = I18n.t("main");
+    private static final String TAB_WORKING_COPY = I18n.t("mainTreePanel.workingCopy");
+    private static final String TAB_SEARCH = I18n.t("workspaceDashboardPanel.search");
 
     private final JTabbedPane tabs = new JTabbedPane();
 
@@ -216,7 +217,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 workspace == null ? List.of() : workspace.getProjects());
         if (projects.isEmpty()) return;
 
-        statusBar.setStatus(stage ? "Staging all..." : "Unstaging all...");
+        statusBar.setStatus(stage ? I18n.t("stagingAll") : I18n.t("unstagingAll"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override
@@ -226,8 +227,8 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     for (ScmItem item : svc.getStatuses(null)) {
 
                         statusBar.setStatus(stage ?
-                                "Staging " + item.getShortName() :
-                                "Unstaging " + item.getShortName());
+                                I18n.t("staging", item.getShortName()) :
+                                I18n.t("unstaging", item.getShortName()));
 
                         boolean staged = ScmItem.isStaged(
                                 item.getAttribute() != null ? item.getAttribute().getStatus() : null);
@@ -246,10 +247,10 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus(stage ? "All files staged" : "All files unstaged");
+                    statusBar.setStatus(stage ? I18n.t("allFilesStaged") : I18n.t("allFilesUnstaged"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, (stage ? "Stage all" : "Unstage all") + " failed", ex);
-                    statusBar.setStatus("Error: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("indexHistoryDialog.error", ex.getMessage()));
                 }
                 refresh();
             }
@@ -444,9 +445,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
         WorkingCopyStat stats = statsByProject.get(project);
         if (stats == null) return LOADING;
         if (stats.error()) return PLACEHOLDER;
-        if (stats.conflicts() > 0) return stats.conflicts() + (stats.conflicts() > 1 ? " conflicts" : " conflict");
-        if (stats.modified() > 0) return "Modified";
-        return "Clean";
+        if (stats.conflicts() > 0) return I18n.plural("conflictsCount", stats.conflicts(), stats.conflicts());
+        if (stats.modified() > 0) return I18n.t("submodulePanel.modified");
+        return I18n.t("clean");
     }
 
     // ── Main tab (dashboard) ─────────────────────────────────────────────────────
@@ -558,7 +559,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             String name = new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName();
             DefaultMutableTreeNode projectNode =
                     new DefaultMutableTreeNode(name.isEmpty() ? "(unknown)" : name);
-            projectNode.add(new DefaultMutableTreeNode("Loading…"));
+            projectNode.add(new DefaultMutableTreeNode(I18n.t("loading")));
             workingCopyRoot.add(projectNode);
             loadProjectWorkingCopy(project, projectNode);
         }
@@ -597,7 +598,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 } catch (Exception ex) {
                     log.log(Level.FINE, "Cannot load working copy for " + project, ex);
                     holder = new DefaultMutableTreeNode();
-                    holder.add(new DefaultMutableTreeNode("(cannot read working copy)"));
+                    holder.add(new DefaultMutableTreeNode(I18n.t("cannotReadWorkingCopy")));
                 }
                 moveChildren(holder, projectNode);
                 workingCopyModel.reload(projectNode);
@@ -713,7 +714,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
      */
     private void populateFileTree(Project project, DefaultMutableTreeNode parent, java.util.List<ScmItem> items) {
         if (items == null || items.isEmpty()) {
-            parent.add(new DefaultMutableTreeNode("(no changes)"));
+            parent.add(new DefaultMutableTreeNode(I18n.t("noChanges")));
             return;
         }
 
@@ -831,7 +832,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
 
         selectSearchTab();
         List<Project> projects = new ArrayList<>(workspace.getProjects());
-        statusBar.setStatus("Searching…");
+        statusBar.setStatus(I18n.t("searching"));
 
         new SwingWorker<Map<Project, Set<String>>, Void>() {
             @Override
@@ -846,12 +847,12 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                     results = get();
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Workspace search failed", ex);
-                    statusBar.setStatus("Search error: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("searchError", ex.getMessage()));
                     return;
                 }
                 populateSearchResults(results);
                 int count = results.values().stream().mapToInt(Set::size).sum();
-                statusBar.setStatus(count + " file" + (count != 1 ? "s" : "") + " found");
+                statusBar.setStatus(I18n.plural("filesFound", count, count));
             }
         }.execute();
     }
@@ -863,7 +864,7 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
     private void populateSearchResults(Map<Project, Set<String>> results) {
         searchRoot.removeAllChildren();
         if (results.isEmpty()) {
-            searchRoot.add(new DefaultMutableTreeNode("No matches."));
+            searchRoot.add(new DefaultMutableTreeNode(I18n.t("workspaceDashboardPanel.noMatches")));
         } else {
             for (Map.Entry<Project, Set<String>> entry : results.entrySet()) {
                 Project project = entry.getKey();
@@ -951,16 +952,14 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
             return;
         }
         indexing = true;
-        statusBar.setStatus(initial ? "Indexing workspace…" : "Updating search index…");
+        statusBar.setStatus(initial ? I18n.t("indexingWorkspace") : I18n.t("updatingSearchIndex"));
         statusBar.showProgress(true);
 
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
                 searchService.indexAll(projects, (project, processed) ->
-                        statusBar.setStatus("Indexing "
-                                + new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName()
-                                + " (" + processed + "/" + projects.size() + ")…"));
+                        statusBar.setStatus(I18n.t("indexing", new File(ObjectUtils.getIfNull(project.getProjectHomeFolder(), "")).getName(), processed, projects.size())));
                 return null;
             }
 
@@ -970,9 +969,9 @@ public class WorkspaceDashboardPanel extends WorkingCopyOps {
                 statusBar.clearProgress();
                 if (initial) {
                     searchField.setEnabled(true);
-                    statusBar.setStatus("Workspace indexed — search enabled.");
+                    statusBar.setStatus(I18n.t("workspaceIndexedSearchEnabled"));
                 } else {
-                    statusBar.setStatus("Search index updated.");
+                    statusBar.setStatus(I18n.t("searchIndexUpdated"));
                 }
             }
         }.execute();

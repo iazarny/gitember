@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
@@ -37,13 +38,13 @@ public abstract class WorkingCopyOps  extends JPanel {
         this.statusBar = statusBar;
 
         // Toolbar
-        stageAllBtn = Util.createButton("Stage All", null, FontAwesomeSolid.PLUS);
+        stageAllBtn = Util.createButton(I18n.t("stageAll"), I18n.t("stageAllHint"), FontAwesomeSolid.PLUS);
         stageAllBtn.setEnabled(false);
 
-        unstageAllBtn = Util.createButton("Unstage All", null, FontAwesomeSolid.MINUS);
+        unstageAllBtn = Util.createButton(I18n.t("unstageAll"), I18n.t("unstageAllHint"), FontAwesomeSolid.MINUS);
         unstageAllBtn.setEnabled(false);
 
-        refreshBtn = Util.createButton("Refresh", "Refresh working copy", FontAwesomeSolid.SYNC);
+        refreshBtn = Util.createButton(I18n.t("refresh"), I18n.t("refreshWorkingCopy"), FontAwesomeSolid.SYNC);
 
         searchField = new JTextField(15);
         searchField.setPreferredSize(new Dimension(150, 25));

@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.ui.misc.Util;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class ConflictedFilesDialog extends JDialog {
 
     public ConflictedFilesDialog(Component parent, Map<Project, List<ScmItem>> conflictedFiles) {
-        super(SwingUtilities.getWindowAncestor(parent), "Unresolved Conflicts",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("unresolvedConflicts"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(600, 400);
@@ -28,14 +29,13 @@ public class ConflictedFilesDialog extends JDialog {
                 .filter(e -> !e.getValue().isEmpty())
                 .count();
 
-        JLabel titleLabel = new JLabel(fileCount + " unresolved conflict(s) in " + repoCount
-                + " repositor" + (repoCount == 1 ? "y" : "ies") + ". Resolve them before committing.");
+        JLabel titleLabel = new JLabel(I18n.plural("unresolvedConflictsTitle", repoCount, fileCount, repoCount));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
-        DefaultTableModel tableModel = new DefaultTableModel(new String[]{"Repo", "File"}, 0) {
+        DefaultTableModel tableModel = new DefaultTableModel(new String[]{I18n.t("repo"), I18n.t("file")}, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         for (Map.Entry<Project, List<ScmItem>> entry : conflictedFiles.entrySet()) {
@@ -48,9 +48,9 @@ public class ConflictedFilesDialog extends JDialog {
         table.getColumnModel().getColumn(0).setPreferredWidth(150);
         table.getColumnModel().getColumn(0).setMaxWidth(300);
         JScrollPane tableScroll = new JScrollPane(table);
-        tableScroll.setBorder(BorderFactory.createTitledBorder("Conflicted files"));
+        tableScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("conflictedFiles")));
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);

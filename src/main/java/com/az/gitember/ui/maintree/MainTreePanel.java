@@ -1,5 +1,6 @@
 package com.az.gitember.ui.maintree;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.*;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
@@ -56,7 +57,7 @@ public class MainTreePanel extends JPanel {
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(250, 0));
 
-        rootNode = new DefaultMutableTreeNode(new TreeNodeData("Repository", NodeType.ROOT, null));
+        rootNode = new DefaultMutableTreeNode(new TreeNodeData(I18n.t("repository"), NodeType.ROOT, null));
         treeModel = new DefaultTreeModel(rootNode);
         tree = new JTree(treeModel);
         tree.setCellRenderer(new CellRenderer());
@@ -201,18 +202,18 @@ public class MainTreePanel extends JPanel {
         if (state == null) return null;
         return switch (state) {
             case SAFE -> null;
-            case MERGING -> "Merge in progress";
-            case MERGING_RESOLVED -> "Merge resolved — commit to finish";
-            case REBASING -> "Rebase in progress";
-            case REBASING_INTERACTIVE -> "Interactive rebase in progress";
-            case REBASING_MERGE -> "Rebase in progress (merge)";
-            case REBASING_REBASING -> "Rebase in progress";
-            case APPLY -> "Applying patches (git am)";
-            case REVERTING -> "Revert in progress";
-            case REVERTING_RESOLVED -> "Revert resolved — commit to finish";
-            case BISECTING -> "Bisecting";
-            case CHERRY_PICKING -> "Cherry-pick in progress";
-            case CHERRY_PICKING_RESOLVED -> "Cherry-pick resolved — commit to finish";
+            case MERGING -> I18n.t("mergeInProgress");
+            case MERGING_RESOLVED -> I18n.t("mergeResolvedCommitFinish");
+            case REBASING -> I18n.t("rebaseInProgress");
+            case REBASING_INTERACTIVE -> I18n.t("mainTreePanel.interactiveRebaseInProgress");
+            case REBASING_MERGE -> I18n.t("rebaseInProgressMerge");
+            case REBASING_REBASING -> I18n.t("rebaseInProgress");
+            case APPLY -> I18n.t("applyingPatchesGitAm");
+            case REVERTING -> I18n.t("revertInProgress");
+            case REVERTING_RESOLVED -> I18n.t("revertResolvedCommitFinish");
+            case BISECTING -> I18n.t("bisecting");
+            case CHERRY_PICKING -> I18n.t("cherryPickInProgress");
+            case CHERRY_PICKING_RESOLVED -> I18n.t("cherryPickResolvedCommitFinish");
             default -> state.getDescription();
         };
     }
@@ -314,19 +315,19 @@ public class MainTreePanel extends JPanel {
     private RepoCategoryNodes addRepositoryCategories(DefaultMutableTreeNode parent,
                                                       Supplier<Optional<Project>> projectSupplier) {
         DefaultMutableTreeNode workingCopy = new DefaultMutableTreeNode(
-                new TreeNodeData("Working Copy", NodeType.WORKING_COPY, projectSupplier));
+                new TreeNodeData(I18n.t("mainTreePanel.workingCopy"), NodeType.WORKING_COPY, projectSupplier));
         DefaultMutableTreeNode history = new DefaultMutableTreeNode(
-                new TreeNodeData("History", NodeType.HISTORY, projectSupplier));
+                new TreeNodeData(I18n.t("history"), NodeType.HISTORY, projectSupplier));
         DefaultMutableTreeNode localBranches = new DefaultMutableTreeNode(
-                new TreeNodeData("Local Branches", NodeType.LOCAL_BRANCHES, projectSupplier));
+                new TreeNodeData(I18n.t("localBranches"), NodeType.LOCAL_BRANCHES, projectSupplier));
         DefaultMutableTreeNode remoteBranches = new DefaultMutableTreeNode(
-                new TreeNodeData("Remote Branches", NodeType.REMOTE_BRANCHES, projectSupplier));
+                new TreeNodeData(I18n.t("remoteBranches"), NodeType.REMOTE_BRANCHES, projectSupplier));
         DefaultMutableTreeNode tags = new DefaultMutableTreeNode(
-                new TreeNodeData("Tags", NodeType.TAGS, projectSupplier));
+                new TreeNodeData(I18n.t("tags"), NodeType.TAGS, projectSupplier));
         DefaultMutableTreeNode stashes = new DefaultMutableTreeNode(
-                new TreeNodeData("Stashes", NodeType.STASHES, projectSupplier));
+                new TreeNodeData(I18n.t("stashes"), NodeType.STASHES, projectSupplier));
         DefaultMutableTreeNode reflog = new DefaultMutableTreeNode(
-                new TreeNodeData("Reflog", NodeType.REFLOG, projectSupplier));
+                new TreeNodeData(I18n.t("reflog"), NodeType.REFLOG, projectSupplier));
 
         parent.add(workingCopy);
         parent.add(history);
@@ -671,7 +672,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = (worktreesNode == null);
         if (isNew) {
             worktreesNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Worktrees", NodeType.WORKTREES, Context.getCurrentProject()));
+                    new TreeNodeData(I18n.t("worktrees"), NodeType.WORKTREES, Context.getCurrentProject()));
         }
 
         worktreesNode.removeAllChildren();
@@ -725,7 +726,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = pullRequestsNode == null;
         if (isNew) {
             pullRequestsNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Pull Requests", NodeType.PULL_REQUESTS, Context.getCurrentProject()));
+                    new TreeNodeData(I18n.t("pullRequests"), NodeType.PULL_REQUESTS, Context.getCurrentProject()));
         }
 
         pullRequestsNode.removeAllChildren();
@@ -747,7 +748,7 @@ public class MainTreePanel extends JPanel {
         List<ScmItem> items = Context.getStatusList();
         if (items == null || items.isEmpty()) {
             workingCopyNode.setUserObject(
-                    new TreeNodeData("Working Copy", NodeType.WORKING_COPY, Context.getCurrentProject())
+                    new TreeNodeData(I18n.t("mainTreePanel.workingCopy"), NodeType.WORKING_COPY, Context.getCurrentProject())
             );
             treeModel.nodeChanged(workingCopyNode);
             return;
@@ -768,12 +769,12 @@ public class MainTreePanel extends JPanel {
         }
 
         if (modified == 0 && added == 0 && deleted == 0 && untracked == 0) {
-            workingCopyNode.setUserObject(new TreeNodeData("Working Copy", NodeType.WORKING_COPY, Context.getCurrentProject()));
+            workingCopyNode.setUserObject(new TreeNodeData(I18n.t("mainTreePanel.workingCopy"), NodeType.WORKING_COPY, Context.getCurrentProject()));
             treeModel.nodeChanged(workingCopyNode);
             return;
         }
 
-        StringBuilder label = new StringBuilder("<html>Working Copy &nbsp;");
+        StringBuilder label = new StringBuilder(I18n.t("workingCopyNbsp"));
         String sep = "/";
         boolean any = false;
 
@@ -814,7 +815,7 @@ public class MainTreePanel extends JPanel {
         boolean isNew = submodulesNode == null;
         if (isNew) {
             submodulesNode = new DefaultMutableTreeNode(
-                    new TreeNodeData("Submodules", NodeType.SUBMODULES, Context.getCurrentProject()));
+                    new TreeNodeData(I18n.t("submodules"), NodeType.SUBMODULES, Context.getCurrentProject()));
         }
 
         submodulesNode.removeAllChildren();

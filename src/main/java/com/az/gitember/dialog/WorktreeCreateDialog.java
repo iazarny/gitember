@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
@@ -15,18 +16,18 @@ public class WorktreeCreateDialog extends JDialog {
 
     private  JTextField pathField;
     private  JTextField branchField;
-    private  JCheckBox  newBranchCb = new JCheckBox("Create new branch", true);
+    private  JCheckBox  newBranchCb = new JCheckBox(I18n.t("createNewBranch"), true);
     private boolean confirmed;
     private String existingBranchName = null;
 
     public WorktreeCreateDialog(Frame parent, java.util.List<WorktreeInfo> existingWorktrees, String name) {
-        super(parent, "Add Worktree", true);
+        super(parent, I18n.t("addWorktree"), true);
         existingBranchName = name;
         init(existingWorktrees);
     }
 
     public WorktreeCreateDialog(Dialog parent, java.util.List<WorktreeInfo> existingWorktrees) {
-        super(parent, "Add Worktree", true);
+        super(parent, I18n.t("addWorktree"), true);
         init(existingWorktrees);
 
     }
@@ -56,7 +57,7 @@ public class WorktreeCreateDialog extends JDialog {
         gbc.fill    = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        form.add(new JLabel("Path:"), gbc);
+        form.add(new JLabel(I18n.t("path")), gbc);
         JPanel pathRow = new JPanel(new BorderLayout(4, 0));
         pathRow.add(pathField, BorderLayout.CENTER);
         JButton browseBtn = new JButton("…");
@@ -66,15 +67,15 @@ public class WorktreeCreateDialog extends JDialog {
         form.add(pathRow, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        form.add(new JLabel("Branch:"), gbc);
+        form.add(new JLabel(I18n.t("branch")), gbc);
         gbc.gridx = 1; gbc.weightx = 1;
         form.add(branchField, gbc);
 
         gbc.gridx = 1; gbc.gridy = 2;
         form.add(newBranchCb, gbc);
 
-        JButton addBtn    = new JButton("Add");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton addBtn    = new JButton(I18n.t("add"));
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         addBtn.addActionListener(e -> onConfirm());
         cancelBtn.addActionListener(e -> dispose());
 
@@ -132,7 +133,7 @@ public class WorktreeCreateDialog extends JDialog {
     private void browseFolder() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select Worktree Folder");
+        chooser.setDialogTitle(I18n.t("selectWorktreeFolder"));
         String current = pathField.getText().trim();
         if (StringUtils.isNotBlank(current)) {
             java.io.File f = new java.io.File(current).getParentFile();
@@ -147,13 +148,13 @@ public class WorktreeCreateDialog extends JDialog {
 
     private void onConfirm() {
         if (pathField.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Path is required.",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("pathIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (branchField.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Branch name is required.",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("branchNameIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         confirmed = true;

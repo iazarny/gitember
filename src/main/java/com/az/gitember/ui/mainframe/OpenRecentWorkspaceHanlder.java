@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
@@ -32,7 +33,7 @@ public class OpenRecentWorkspaceHanlder implements Consumer<Workspace> {
             mainFrame.getContentPanel().setContent(mainFrame.getWorkspaceDashboardPanel());
             mainFrame.setActiveView(ActiveView.WORKSPACE);
             mainFrame.setTitle("Gitember - " + workspace.getName());
-            mainFrame.getStatusBar().setStatus("Workspace opened: " + workspace.getName());
+            mainFrame.getStatusBar().setStatus(I18n.t("workspaceOpened", workspace.getName()));
 
         }
     }

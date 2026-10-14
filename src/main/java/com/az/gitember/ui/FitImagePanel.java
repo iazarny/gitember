@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -15,7 +16,7 @@ class FitImagePanel extends JPanel {
     private static final Color CHECKER_B = new Color(0xE8, 0xE8, 0xE8);
 
     private BufferedImage image;
-    private String placeholder = "No image";
+    private String placeholder = I18n.t("noImage");
     private boolean fit = true;
     private double zoom = 1.0;
 

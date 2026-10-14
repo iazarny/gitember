@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import javax.swing.*;
 import java.awt.*;
 
@@ -17,7 +18,7 @@ public class CommitMessagePanel extends JPanel {
     public CommitMessagePanel(String[] projectNames) {
         setLayout(new BorderLayout());
 
-        commonMessageArea = new CommitMessageArea("Common", 5);
+        commonMessageArea = new CommitMessageArea(I18n.t("common"), 5);
         commonMessageArea.getMessageArea().setName("commitMessageArea");
 
         if (projectNames == null) {
@@ -30,15 +31,15 @@ public class CommitMessagePanel extends JPanel {
             perProjectBox.setBorder(BorderFactory.createEmptyBorder());
             for (int i = 0; i < projectNames.length; i++) {
                 projectMessageAreas[i] = new CommitMessageArea(
-                        projectNames[i] + " (blank = use common message):", 2);
+                        I18n.t("blankUseCommonMessage", projectNames[i]), 2);
                 perProjectBox.add(projectMessageAreas[i]);
             }
 
             JTabbedPane tabbedPane = new JTabbedPane();
-            tabbedPane.addTab("Commit message", commonMessageArea);
+            tabbedPane.addTab(I18n.t("commitMessage"), commonMessageArea);
             JScrollPane projeMessages = new JScrollPane(perProjectBox);
             projeMessages.setBorder(BorderFactory.createEmptyBorder());
-            tabbedPane.addTab("Per project", projeMessages);
+            tabbedPane.addTab(I18n.t("perProject"), projeMessages);
             add(tabbedPane, BorderLayout.CENTER);
         }
     }

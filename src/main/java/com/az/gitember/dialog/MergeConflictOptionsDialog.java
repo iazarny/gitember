@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.BorderFactory;
@@ -33,7 +34,7 @@ public class MergeConflictOptionsDialog extends JDialog {
     private Option selectedOption = Option.MANUAL;
 
     public MergeConflictOptionsDialog(Component parent, List<String> conflictedFiles) {
-        super(SwingUtilities.getWindowAncestor(parent), "Merge Conflicts",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("mergeConflicts"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setSize(720, 480);
@@ -42,15 +43,14 @@ public class MergeConflictOptionsDialog extends JDialog {
         JPanel headerPanel = new JPanel(new BorderLayout(0, 4));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 12, 6, 12));
 
-        JLabel titleLabel = new JLabel(conflictedFiles.size()
-                + " conflicted file(s). Choose how to continue.");
+        JLabel titleLabel = new JLabel(I18n.t("conflictedFileSChooseHow", conflictedFiles.size()));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
         headerPanel.add(titleLabel, BorderLayout.NORTH);
 
-        JLabel hintLabel = new JLabel("Manual resolving keeps the merge in progress and opens the working copy.");
+        JLabel hintLabel = new JLabel(I18n.t("manualResolvingKeepsMergeProgress"));
         headerPanel.add(hintLabel, BorderLayout.CENTER);
 
-        DefaultTableModel model = new DefaultTableModel(new String[]{"Conflicted file"}, 0) {
+        DefaultTableModel model = new DefaultTableModel(new String[]{I18n.t("conflictedFile")}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -63,18 +63,18 @@ public class MergeConflictOptionsDialog extends JDialog {
         JTable table = new JTable(model);
         table.setFillsViewportHeight(true);
         JScrollPane tableScroll = new JScrollPane(table);
-        tableScroll.setBorder(BorderFactory.createTitledBorder("Files"));
+        tableScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("files")));
 
-        JButton manualBtn = new JButton("Resolve manually");
+        JButton manualBtn = new JButton(I18n.t("resolveManually"));
         manualBtn.addActionListener(e -> choose(Option.MANUAL));
 
-        JButton oursBtn = new JButton("Use ours for all");
+        JButton oursBtn = new JButton(I18n.t("useOursForAll"));
         oursBtn.addActionListener(e -> choose(Option.USE_OURS));
 
-        JButton theirsBtn = new JButton("Use theirs for all");
+        JButton theirsBtn = new JButton(I18n.t("useTheirsForAll"));
         theirsBtn.addActionListener(e -> choose(Option.USE_THEIRS));
 
-        JButton abortBtn = new JButton("Abort merge");
+        JButton abortBtn = new JButton(I18n.t("abortMerge"));
         abortBtn.addActionListener(e -> choose(Option.ABORT));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));

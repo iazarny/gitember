@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.ui.misc.StatusTextCellRenderer;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.PullRequest;
 import com.az.gitember.data.ScmItem;
@@ -47,7 +49,7 @@ public class PullRequestPanel extends JPanel {
     private final JTextField authorField = readOnlyField();
     private final JTextField stateField  = readOnlyField();
     private final JTextField branchField = readOnlyField();
-    private final JButton    openUrlBtn  = Util.createButton("Open", "Open in Browser", FontAwesomeSolid.GLOBE);//new JButton("Open in Browser");
+    private final JButton    openUrlBtn  = Util.createButton(I18n.t("open"), I18n.t("openInBrowser"), FontAwesomeSolid.GLOBE);//new JButton("Open in Browser");
     private final JLabel     avatarLabel = new JLabel();
 
     // Files area
@@ -65,7 +67,7 @@ public class PullRequestPanel extends JPanel {
         searchField.setPreferredSize(new Dimension(180, 25));
         searchField.setMinimumSize(new Dimension(100, 25));
         searchField.setMaximumSize(new Dimension(220, 25));
-        searchField.putClientProperty("JTextField.placeholderText", "Filter files…");
+        searchField.putClientProperty("JTextField.placeholderText", I18n.t("filterFiles"));
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e)  { applyFilter(); }
             @Override public void removeUpdate(DocumentEvent e)  { applyFilter(); }
@@ -102,7 +104,7 @@ public class PullRequestPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // Status column: narrow + centred
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        DefaultTableCellRenderer center = new StatusTextCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
         table.getColumnModel().getColumn(1).setCellRenderer(center);
         table.getColumnModel().getColumn(1).setPreferredWidth(72);
@@ -124,7 +126,7 @@ public class PullRequestPanel extends JPanel {
     // ---- panel layout ----
 
     private JPanel buildFilesPanel() {
-        JLabel heading = new JLabel("  Changed files");
+        JLabel heading = new JLabel(I18n.t("pullRequestPanel.changedFiles"));
         heading.setFont(heading.getFont().deriveFont(Font.BOLD));
         heading.setBorder(BorderFactory.createEmptyBorder(4, 4, 2, 4));
 
@@ -170,17 +172,17 @@ public class PullRequestPanel extends JPanel {
 
         // Row 0: Title (spans all columns)
         lc.gridx = 0; lc.gridy = 0;
-        fields.add(new JLabel("Title:"), lc);
+        fields.add(new JLabel(I18n.t("title")), lc);
         fc.gridx = 1; fc.gridy = 0; fc.gridwidth = 5;
         fields.add(titleField, fc);
         fc.gridwidth = 1;
 
         // Row 1: Author | State | Branches
-        lc.gridx = 0; lc.gridy = 1; fields.add(new JLabel("Author:"),   lc);
+        lc.gridx = 0; lc.gridy = 1; fields.add(new JLabel(I18n.t("author")),   lc);
         fc.gridx = 1; fc.gridy = 1; fields.add(authorField, fc);
-        lc.gridx = 2; lc.gridy = 1; fields.add(new JLabel("State:"),    lc);
+        lc.gridx = 2; lc.gridy = 1; fields.add(new JLabel(I18n.t("pullRequestPanel.state")),    lc);
         fc.gridx = 3; fc.gridy = 1; fields.add(stateField,  fc);
-        lc.gridx = 4; lc.gridy = 1; fields.add(new JLabel("Branches:"), lc);
+        lc.gridx = 4; lc.gridy = 1; fields.add(new JLabel(I18n.t("branches")), lc);
         fc.gridx = 5; fc.gridy = 1; fields.add(branchField, fc);
 
         // Row 2: Open button
@@ -228,7 +230,7 @@ public class PullRequestPanel extends JPanel {
         stateField.setText(pr.state()        != null ? pr.state()       : "");
         branchField.setText(pr.sourceBranch() + "  →  " + pr.targetBranch());
         openUrlBtn.setEnabled(pr.webUrl() != null && !pr.webUrl().isBlank());
-        statusLabel.setText("Loading…");
+        statusLabel.setText(I18n.t("loading"));
 
         // Show initials placeholder, then fetch real avatar
         avatarLabel.setIcon(placeholderIcon(pr.author() != null ? pr.author() : "", AVATAR_SIZE));
@@ -340,7 +342,7 @@ public class PullRequestPanel extends JPanel {
                     statusLabel.setText("");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to load PR files", ex);
-                    statusLabel.setText("Could not load files: " + ex.getMessage());
+                    statusLabel.setText(I18n.t("couldNotLoadFiles", ex.getMessage()));
                 }
             }
         }.execute();
@@ -357,11 +359,11 @@ public class PullRequestPanel extends JPanel {
         }
 
         badgesPanel.removeAll();
-        if (added   > 0) badgesPanel.add(makeBadge("+" + added   + "  added",   SyntaxStyleUtil.addedBg(),   SyntaxStyleUtil.rowFgAdded()));
-        if (deleted > 0) badgesPanel.add(makeBadge("-" + deleted  + "  deleted", SyntaxStyleUtil.deletedBg(), SyntaxStyleUtil.rowFgDeleted()));
-        if (changed > 0) badgesPanel.add(makeBadge("~" + changed  + "  changed", SyntaxStyleUtil.changedBg(), SyntaxStyleUtil.rowFgChanged()));
+        if (added   > 0) badgesPanel.add(makeBadge(I18n.t("badge.added", "+" + added),   SyntaxStyleUtil.addedBg(),   SyntaxStyleUtil.rowFgAdded()));
+        if (deleted > 0) badgesPanel.add(makeBadge(I18n.t("badge.deleted", "-" + deleted), SyntaxStyleUtil.deletedBg(), SyntaxStyleUtil.rowFgDeleted()));
+        if (changed > 0) badgesPanel.add(makeBadge(I18n.t("badge.changed", "~" + changed), SyntaxStyleUtil.changedBg(), SyntaxStyleUtil.rowFgChanged()));
         if (added == 0 && deleted == 0 && changed == 0) {
-            JLabel none = new JLabel("  No file changes.");
+            JLabel none = new JLabel(I18n.t("pullRequestPanel.noFileChanges"));
             none.setForeground(UIManager.getColor("Label.disabledForeground"));
             badgesPanel.add(none);
         }
@@ -457,8 +459,8 @@ public class PullRequestPanel extends JPanel {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show PR file diff", ex);
                     JOptionPane.showMessageDialog(PullRequestPanel.this,
-                            "Cannot show diff: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotShowDiff", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -473,8 +475,8 @@ public class PullRequestPanel extends JPanel {
         } catch (Exception ex) {
             log.log(Level.WARNING, "Cannot open browser", ex);
             JOptionPane.showMessageDialog(this,
-                    "Cannot open browser: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("cannotOpenBrowser", ex.getMessage()),
+                    I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -517,7 +519,7 @@ public class PullRequestPanel extends JPanel {
     // ---- table model ----
 
     private static class FilesTableModel extends AbstractTableModel {
-        private static final String[] COLS = {"File", "Status"};
+        private static final String[] COLS = {I18n.t("file"), I18n.t("status")};
         private List<ScmItem> allItems = new ArrayList<>();
         private List<ScmItem> items    = new ArrayList<>();  // filtered view
 

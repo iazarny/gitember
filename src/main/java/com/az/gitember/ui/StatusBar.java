@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.InfoDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
@@ -18,11 +19,11 @@ public class StatusBar extends JPanel {
         setLayout(new BorderLayout(5, 0));
         setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
 
-        statusLabel = new JLabel("Ready");
+        statusLabel = new JLabel(I18n.t("ready"));
         progressBar = new JProgressBar();
         progressBar.setPreferredSize(new Dimension(300, 4));
         progressBar.setVisible(false);
-        infoButton = Util.createButton("", "Info", FontAwesomeSolid.CODE, 0, new Dimension(24,24));
+        infoButton = Util.createButton("", I18n.t("info"), FontAwesomeSolid.CODE, 0, new Dimension(24,24));
         infoButton.setVisible(false);
         infoButton.addActionListener(e -> {
 
@@ -77,7 +78,7 @@ public class StatusBar extends JPanel {
         SwingUtilities.invokeLater(() -> {
             progressBar.setVisible(false);
             progressBar.setValue(0);
-            statusLabel.setText("Ready");
+            statusLabel.setText(I18n.t("ready"));
         });
     }
 

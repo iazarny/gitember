@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.LfsException;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
@@ -37,9 +38,9 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        String name = "Fetch LFS objects";
+        String name = I18n.t("lfsFetchHandler.fetchLfsObjects");
         if (path != null && !path.isBlank()) {
-            name = "Fetch LFS file " + path;
+            name = I18n.t("fetchLfsFile", path);
         }
         return name;
     }
@@ -56,9 +57,9 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     @Override
     protected void onSuccess(Void result) {
         if (path != null && !path.isBlank()) {
-            statusBar.setStatus("LFS file fetched: " + path);
+            statusBar.setStatus(I18n.t("lfsFileFetched", path));
         } else {
-            statusBar.setStatus("LFS objects fetched");
+            statusBar.setStatus(I18n.t("lfsObjectsFetched"));
         }
         Context.refreshWorkingCopy();
     }
@@ -67,9 +68,9 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     protected void onError(Exception e) {
         if (e instanceof LfsException lfs && lfs.getKind() == LfsException.Kind.NO_REMOTE) {
             statusBar.clearProgress();
-            statusBar.setStatus(getOperationName() + " failed: no HTTP remote");
+            statusBar.setStatus(I18n.t("failedNoHttpRemote", getOperationName()));
             JOptionPane.showMessageDialog(parent, lfs.getMessage(),
-                    "Git LFS", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("gitLfs"), JOptionPane.WARNING_MESSAGE);
         } else if (!credentialsPrompted && isAuthError(e)) {
             credentialsPrompted = true;
             if (promptAndSaveCredentials()) {
@@ -88,19 +89,14 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
         Project project = Context.getCurrentProject().orElse(null);
         if (project == null) {
             JOptionPane.showMessageDialog(parent,
-                    "LFS authentication failed and no project is open.\n"
-                            + "Please configure credentials via Repository → Credentials…",
-                    "LFS Authentication", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("lfsAuthenticationFailedNoProject"),
+                    I18n.t("lfsAuthentication"), JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
         int choice = JOptionPane.showConfirmDialog(parent,
-                "<html><b>LFS authentication required</b><br><br>"
-                        + "Git LFS always transfers files over <b>HTTPS</b>, even when git itself<br>"
-                        + "uses SSH. An access token (or username + password) is therefore<br>"
-                        + "needed to download LFS objects.<br><br>"
-                        + "Would you like to enter credentials now?</html>",
-                "LFS Authentication Required",
+                I18n.t("lfsAuthenticationRequiredGitLfs"),
+                I18n.t("lfsAuthenticationRequired"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 

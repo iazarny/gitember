@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.CommitSignatureDetails;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.data.SignatureStatus;
@@ -27,10 +28,10 @@ public class CommitSignatureDialog extends JDialog {
     private final JLabel trustValue = valueLabel();
     private final JLabel allowedSignersValue = valueLabel();
     private final JLabel messageLabel = new JLabel();
-    private final JButton verifyAgainBtn = new JButton("Verify Again");
+    private final JButton verifyAgainBtn = new JButton(I18n.t("verifyAgain"));
 
     public CommitSignatureDialog(Window owner, ScmRevisionInformation revision, Runnable onUpdated) {
-        super(owner, "Commit Signature", ModalityType.MODELESS);
+        super(owner, I18n.t("commitSignature"), ModalityType.MODELESS);
         this.revision = revision;
         this.onUpdated = onUpdated;
         setIconImages(Util.appIcons());
@@ -66,23 +67,23 @@ public class CommitSignatureDialog extends JDialog {
         gbc.insets = new Insets(2, 0, 2, 8);
         gbc.gridwidth = 1;
 
-        addRow(body, gbc, 2, "Format:", formatValue);
-        addRow(body, gbc, 3, "Signer:", signerValue);
+        addRow(body, gbc, 2, I18n.t("format"), formatValue);
+        addRow(body, gbc, 3, I18n.t("signer"), signerValue);
 
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         gbc.insets = new Insets(10, 0, 2, 8);
-        body.add(new JLabel("Key:"), gbc);
+        body.add(new JLabel(I18n.t("key")), gbc);
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
         body.add(keyValue, gbc);
 
         gbc.insets = new Insets(2, 0, 2, 8);
-        addRow(body, gbc, 5, "Trust:", trustValue);
-        addRow(body, gbc, 6, "Allowed signers:", allowedSignersValue);
+        addRow(body, gbc, 5, I18n.t("trust"), trustValue);
+        addRow(body, gbc, 6, I18n.t("allowedSigners"), allowedSignersValue);
 
         gbc.gridx = 0;
         gbc.gridy = 7;
@@ -116,7 +117,7 @@ public class CommitSignatureDialog extends JDialog {
 
     private void verifyAsync() {
         verifyAgainBtn.setEnabled(false);
-        statusLabel.setText("Verifying…");
+        statusLabel.setText(I18n.t("verifying"));
         statusLabel.setIcon(null);
         new SwingWorker<CommitSignatureDetails, Void>() {
             @Override
@@ -126,7 +127,7 @@ public class CommitSignatureDialog extends JDialog {
                 if (service == null) {
                     details = new CommitSignatureDetails();
                     details.setStatus(SignatureStatus.UNKNOWN);
-                    details.setMessage("No repository is open.");
+                    details.setMessage(I18n.t("noRepositoryIsOpen"));
                 } else {
                     details = service.verifyCommitSignature(revision);
                 }
@@ -200,15 +201,15 @@ public class CommitSignatureDialog extends JDialog {
     }
 
     static String statusHeadline(SignatureStatus status) {
-        String headline = "Signed";
+        String headline = I18n.t("signed");
         if (status == SignatureStatus.VERIFIED) {
-            headline = "Verified";
+            headline = I18n.t("verified");
         } else if (status == SignatureStatus.INVALID) {
-            headline = "Invalid";
+            headline = I18n.t("invalid");
         } else if (status == SignatureStatus.UNKNOWN) {
-            headline = "Unknown";
+            headline = I18n.t("unknown");
         } else if (status == SignatureStatus.SIGNED) {
-            headline = "Signed";
+            headline = I18n.t("signed");
         }
         return headline;
     }

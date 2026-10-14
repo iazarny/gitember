@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Submodule;
 import com.az.gitember.handler.AddSubmoduleHandler;
 import com.az.gitember.handler.CommitSubmoduleHandler;
@@ -41,22 +42,22 @@ public class SubmodulePanel extends JPanel {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
 
-        JButton addBtn = Util.createButton("Add…", "Clone a repository and register it as a submodule", FontAwesomeSolid.FOLDER_OPEN);
+        JButton addBtn = Util.createButton(I18n.t("worktreesDialog.add"), I18n.t("cloneRepositoryRegisterAsSubmodule"), FontAwesomeSolid.FOLDER_OPEN);
         addBtn.addActionListener(e -> AddSubmoduleHandler.showAndExecute(this));
 
-        JButton initBtn = Util.createButton("Init","Run git submodule init for all submodules", FontAwesomeSolid.STAR);
+        JButton initBtn = Util.createButton(I18n.t("init"),I18n.t("runGitSubmoduleInitAll"), FontAwesomeSolid.STAR);
         initBtn.addActionListener(e -> new InitSubmodulesHandler(this).execute());
 
         //JButton updateBtn = Util.createButton("Update All", "Run git submodule init + update for all submodules");
         //updateBtn.addActionListener(e -> new UpdateSubmodulesHandler(this).execute());
 
-        JButton recursiveBtn = Util.createButton("Update","Recursive update this repository and nested submodules");
+        JButton recursiveBtn = Util.createButton(I18n.t("update"),I18n.t("recursiveUpdateRepositoryNestedSubmodules"));
         recursiveBtn.addActionListener(e -> new UpdateSubmodulesHandler(this, true).execute());
 
-        JButton syncBtn = Util.createButton("Sync URLs","Run git submodule sync — update recorded remote URLs from .gitmodules");
+        JButton syncBtn = Util.createButton(I18n.t("syncUrls"),I18n.t("runGitSubmoduleSyncUpdate"));
         syncBtn.addActionListener(e -> syncSubmodules());
 
-        JButton refreshBtn = Util.createButton("Refresh","Re-read submodule status from disk", FontAwesomeSolid.SYNC);
+        JButton refreshBtn = Util.createButton(I18n.t("refresh"),I18n.t("reReadSubmoduleStatusFrom"), FontAwesomeSolid.SYNC);
         refreshBtn.addActionListener(e -> Context.updateSubmodules());
 
         toolbar.add(addBtn);
@@ -144,40 +145,40 @@ public class SubmodulePanel extends JPanel {
     public static JPopupMenu createSubmoduleMenu(Component parent, Submodule selected) {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem initItem = new JMenuItem("Initialize");
+        JMenuItem initItem = new JMenuItem(I18n.t("initialize"));
         initItem.addActionListener(ev -> new InitSubmodulesHandler(parent, selected.getPath()).execute());
         menu.add(initItem);
 
-        JMenuItem updateItem = new JMenuItem("Update");
+        JMenuItem updateItem = new JMenuItem(I18n.t("update"));
         updateItem.addActionListener(ev ->
                 new UpdateSubmodulesHandler(parent, false, selected.getPath()).execute());
         menu.add(updateItem);
 
-        JMenuItem recursiveItem = new JMenuItem("Recursive update");
+        JMenuItem recursiveItem = new JMenuItem(I18n.t("recursiveUpdate"));
         recursiveItem.addActionListener(ev -> new UpdateSubmodulesHandler(parent, true).execute());
         menu.add(recursiveItem);
 
         menu.addSeparator();
 
-        JMenuItem commitItem = new JMenuItem("Commit submodule change…");
+        JMenuItem commitItem = new JMenuItem(I18n.t("submodulePanel.commitSubmoduleChange"));
         commitItem.addActionListener(ev -> CommitSubmoduleHandler.showAndExecute(parent, selected));
         menu.add(commitItem);
 
-        JMenuItem diffItem = new JMenuItem("Show diff");
+        JMenuItem diffItem = new JMenuItem(I18n.t("showDiff"));
         diffItem.addActionListener(ev -> showSubmoduleDiff(parent, selected));
         menu.add(diffItem);
 
-        JMenuItem statusItem = new JMenuItem("Show status");
+        JMenuItem statusItem = new JMenuItem(I18n.t("showStatus"));
         statusItem.addActionListener(ev -> showSubmoduleStatus(parent, selected));
         menu.add(statusItem);
 
         menu.addSeparator();
 
-        JMenuItem openItem = new JMenuItem("Open");
+        JMenuItem openItem = new JMenuItem(I18n.t("open"));
         openItem.addActionListener(ev -> openSubmodule(parent, selected));
         menu.add(openItem);
 
-        JMenuItem removeItem = new JMenuItem("Remove…");
+        JMenuItem removeItem = new JMenuItem(I18n.t("branchContextMenuFactory.remove"));
         removeItem.addActionListener(ev -> RemoveSubmoduleHandler.showAndExecute(parent, selected));
         menu.add(removeItem);
 
@@ -191,25 +192,20 @@ public class SubmodulePanel extends JPanel {
             area.setEditable(false);
             area.setFont(SyntaxStyleUtil.monoFont());
             JOptionPane.showMessageDialog(parent, new JScrollPane(area),
-                    "Submodule Diff — " + selected.getPath(), JOptionPane.PLAIN_MESSAGE);
+                    I18n.t("submoduleDiff", selected.getPath()), JOptionPane.PLAIN_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(parent,
-                    "Cannot compute submodule diff:\n" + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("cannotComputeSubmoduleDiff", ex.getMessage()),
+                    I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public static void showSubmoduleStatus(Component parent, Submodule selected) {
-        String text = "Path: " + selected.getPath() + "\n"
-                + "Name: " + selected.getName() + "\n"
-                + "URL: " + selected.getUrl() + "\n"
-                + "Status: " + selected.getStatus() + "\n"
-                + "Index SHA: " + selected.getIndexSha() + "\n"
-                + "HEAD SHA: " + selected.getHeadSha();
+        String text = I18n.t("pathNameUrlStatusIndex", selected.getPath(), selected.getName(), selected.getUrl(), selected.getStatus(), selected.getIndexSha(), selected.getHeadSha());
         JTextArea area = new JTextArea(text, 8, 56);
         area.setEditable(false);
         JOptionPane.showMessageDialog(parent, new JScrollPane(area),
-                "Submodule Status — " + selected.getPath(), JOptionPane.INFORMATION_MESSAGE);
+                I18n.t("submoduleStatus", selected.getPath()), JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void openSubmodule(Component parent, Submodule selected) {
@@ -224,18 +220,18 @@ public class SubmodulePanel extends JPanel {
                         .accept(new com.az.gitember.data.Project(subDir.getAbsolutePath(), new java.util.Date()));
             } else {
                 JOptionPane.showMessageDialog(parent,
-                        "Submodule working tree is not available.\nInitialize and update it first.",
-                        "Open Submodule", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("submoduleWorkingTreeNotAvailable"),
+                        I18n.t("openSubmodule"), JOptionPane.WARNING_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(parent,
-                    "Initialize and update the submodule before opening it.",
-                    "Open Submodule", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("initializeUpdateSubmoduleBeforeOpening"),
+                    I18n.t("openSubmodule"), JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void syncSubmodules() {
-        statusBar.setStatus("Syncing submodule URLs...");
+        statusBar.setStatus(I18n.t("syncingSubmoduleUrls"));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -246,13 +242,13 @@ public class SubmodulePanel extends JPanel {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Submodule URLs synced");
+                    statusBar.setStatus(I18n.t("submoduleUrlsSynced"));
                     Context.updateSubmodules();
                 } catch (Exception ex) {
-                    statusBar.setStatus("Sync failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("syncFailed", ex.getMessage()));
                     JOptionPane.showMessageDialog(SubmodulePanel.this,
-                            "Sync failed:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("submodulePanel.syncFailed", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -262,7 +258,7 @@ public class SubmodulePanel extends JPanel {
 
     private static class SubmoduleTableModel extends AbstractTableModel {
 
-        private static final String[] COLUMNS = {"Path", "Status", "Index SHA", "HEAD SHA", "URL"};
+        private static final String[] COLUMNS = {I18n.t("worktreesDialog.path"), I18n.t("status"), I18n.t("indexSha"), I18n.t("headSha"), "URL"};
         private List<Submodule> rows = Collections.emptyList();
 
         void setSubmodules(List<Submodule> list) {
@@ -321,10 +317,10 @@ public class SubmodulePanel extends JPanel {
 
         private String statusLabel(Submodule.Status s) {
             return switch (s) {
-                case UP_TO_DATE    -> "Up to date";
-                case MODIFIED      -> "Modified";
-                case UNINITIALIZED -> "Uninitialized";
-                case MISSING       -> "Missing";
+                case UP_TO_DATE    -> I18n.t("upToDate");
+                case MODIFIED      -> I18n.t("submodulePanel.modified");
+                case UNINITIALIZED -> I18n.t("uninitialized");
+                case MISSING       -> I18n.t("missing");
             };
         }
     }

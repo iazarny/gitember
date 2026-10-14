@@ -1,6 +1,7 @@
 package com.az.gitember.ui.support;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.I18n;
 import com.az.gitember.ui.MainFrame;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.BasicRobot;
@@ -48,6 +49,8 @@ public abstract class SwingUiTestBase {
     @BeforeAll
     static void setUpOnce() {
         FailOnThreadViolationRepaintManager.install();
+        // Fixtures look components up by their English texts; don't follow the OS language.
+        I18n.init("en");
     }
 
     @BeforeEach

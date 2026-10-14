@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
@@ -32,7 +33,7 @@ public class ScanRepositoriesHandler extends AbstractAsyncHandler<List<String>> 
 
     @Override
     protected String getOperationName() {
-        return "Looking for git repositories";
+        return I18n.t("lookingForGitRepositories");
     }
 
     @Override
@@ -54,14 +55,13 @@ public class ScanRepositoriesHandler extends AbstractAsyncHandler<List<String>> 
     @Override
     protected void onSuccess(List<String> found) {
         if (found.isEmpty()) {
-            statusBar.setStatus("No git repositories found in the usual project folders");
+            statusBar.setStatus(I18n.t("noGitRepositoriesFoundUsual"));
             return;
         }
         // The projects themselves were added as they were found; persist them once, at the end.
         Context.saveSettings();
         mainFrame.refreshProjectLists();
-        statusBar.setStatus("Found " + found.size()
-                + (found.size() == 1 ? " git repository" : " git repositories"));
+        statusBar.setStatus(I18n.plural("foundGitRepositories", found.size(), found.size()));
     }
 
     /**
@@ -72,6 +72,6 @@ public class ScanRepositoriesHandler extends AbstractAsyncHandler<List<String>> 
     protected void onError(Exception e) {
         log.log(Level.WARNING, "Scan for git repositories failed", e);
         statusBar.clearProgress();
-        statusBar.setStatus("Ready");
+        statusBar.setStatus(I18n.t("ready"));
     }
 }

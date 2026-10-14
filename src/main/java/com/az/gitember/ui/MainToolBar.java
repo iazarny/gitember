@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.GitemberUtil;
@@ -38,16 +39,16 @@ public class MainToolBar extends JToolBar {
     public MainToolBar() {
         setFloatable(false);
 
-        createBranchBtn = Util.createButton("Branch", "Create branch", FontAwesomeSolid.CODE_BRANCH);
-        mergeBtn = Util.createButton("Merge", "Merge branch into working branch", FontAwesomeSolid.CODE_BRANCH, 180);
+        createBranchBtn = Util.createButton(I18n.t("worktreesDialog.branch"), I18n.t("mainMenuBar.createBranch"), FontAwesomeSolid.CODE_BRANCH);
+        mergeBtn = Util.createButton(I18n.t("workspaceMergeDialog.merge"), I18n.t("mergeBranchIntoWorkingBranch"), FontAwesomeSolid.CODE_BRANCH, 180);
 
-        openBtn = Util.createButton("Open", "Open repository", FontAwesomeSolid.FOLDER_OPEN);
-        cloneBtn = Util.createButton("Clone", "Clone repository" , FontAwesomeSolid.CLONE);
-        pullBtn = Util.createButton("Pull", "Pull",  FontAwesomeSolid.REPLY, -45);
-        pushBtn = Util.createButton("Push", "Push", FontAwesomeSolid.REPLY, 135);
+        openBtn = Util.createButton(I18n.t("open"), I18n.t("mainToolBar.openRepository"), FontAwesomeSolid.FOLDER_OPEN);
+        cloneBtn = Util.createButton(I18n.t("clone"), I18n.t("mainToolBar.cloneRepository") , FontAwesomeSolid.CLONE);
+        pullBtn = Util.createButton(I18n.t("mainMenuBar.pull"), I18n.t("mainMenuBar.pull"),  FontAwesomeSolid.REPLY, -45);
+        pushBtn = Util.createButton(I18n.t("push"), I18n.t("push"), FontAwesomeSolid.REPLY, 135);
 
-        fetchBtn = Util.createButton("Fetch", "Fetch changes from remote repository", FontAwesomeSolid.REPLY_ALL, -45);
-        commitBtn = Util.createButton("Commit", "Commit", FontAwesomeSolid.CHECK);
+        fetchBtn = Util.createButton(I18n.t("fetch"), I18n.t("fetchChangesFromRemoteRepository"), FontAwesomeSolid.REPLY_ALL, -45);
+        commitBtn = Util.createButton(I18n.t("commit"), I18n.t("commit"), FontAwesomeSolid.CHECK);
 
         projectCombo = new JComboBox<>();
         projectCombo.setVisible(false);
@@ -125,8 +126,8 @@ public class MainToolBar extends JToolBar {
         fetchBtn.setEnabled(enabled);
         if (!enabled) {
             commitBtn.setEnabled(false);
-            pushBtn.setText("Push");
-            pushBtn.setToolTipText("Push");
+            pushBtn.setText(I18n.t("push"));
+            pushBtn.setToolTipText(I18n.t("push"));
         }
     }
 
@@ -141,8 +142,8 @@ public class MainToolBar extends JToolBar {
     public void setPushEnabled(boolean enabled) {
         pushBtn.setEnabled(enabled);
         if(!enabled) {
-            pushBtn.setText("Push");
-            pushBtn.setToolTipText("Push");
+            pushBtn.setText(I18n.t("push"));
+            pushBtn.setToolTipText(I18n.t("push"));
         }
     }
 
@@ -183,7 +184,7 @@ public class MainToolBar extends JToolBar {
             add(glue);
 
 
-            JLabel searchLabel = new JLabel("Search:");
+            JLabel searchLabel = new JLabel(I18n.t("search"));
             searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
             mergedWorkspaceComponents.add(searchLabel);
             add(searchLabel);
@@ -221,7 +222,7 @@ public class MainToolBar extends JToolBar {
             mergedComponents.add(glue);
             add(glue);
 
-            JLabel filterLabel = new JLabel("Search:");
+            JLabel filterLabel = new JLabel(I18n.t("search"));
             filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
             mergedComponents.add(filterLabel);
             add(filterLabel);
@@ -243,7 +244,7 @@ public class MainToolBar extends JToolBar {
             mergedHistoryComponents.add(glue);
             add(glue);
 
-            JLabel searchLabel = new JLabel("Search:");
+            JLabel searchLabel = new JLabel(I18n.t("search"));
             searchLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
             mergedHistoryComponents.add(searchLabel);
             add(searchLabel);
@@ -302,7 +303,7 @@ public class MainToolBar extends JToolBar {
             mergedReflogComponents.add(glue);
             add(glue);
 
-            JLabel filterLabel = new JLabel("Search:");
+            JLabel filterLabel = new JLabel(I18n.t("search"));
             filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
             mergedReflogComponents.add(filterLabel);
             add(filterLabel);
@@ -337,7 +338,7 @@ public class MainToolBar extends JToolBar {
             mergedPrComponents.add(glue);
             add(glue);
 
-            JLabel filterLabel = new JLabel("Filter:");
+            JLabel filterLabel = new JLabel(I18n.t("filter"));
             filterLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
             mergedPrComponents.add(filterLabel);
             add(filterLabel);
@@ -376,28 +377,28 @@ public class MainToolBar extends JToolBar {
 
         // Pull button: shows "behind" count — N commits exist on remote that we don't have
         if (behind > 0) {
-            pullBtn.setText("<html>Pull <small>(" + behind + ")</small></html>");
-            pullBtn.setToolTipText(branch.getScmBranchPullTooltip().orElse("Pull"));
+            pullBtn.setText(I18n.t("mainToolBar.pull", behind));
+            pullBtn.setToolTipText(branch.getScmBranchPullTooltip().orElse(I18n.t("mainMenuBar.pull")));
         } else {
-            pullBtn.setText("Pull");
-            pullBtn.setToolTipText("Pull");
+            pullBtn.setText(I18n.t("mainMenuBar.pull"));
+            pullBtn.setToolTipText(I18n.t("mainMenuBar.pull"));
         }
 
         // Push button: shows "ahead" count — N local commits not yet on remote
         if (ahead > 0) {
-            pushBtn.setText("<html>Push <small>(" + ahead + ")</small></html>");
-            pushBtn.setToolTipText(branch.getScmBranchPushTooltip().orElse("Push"));
+            pushBtn.setText(I18n.t("mainToolBar.push", ahead));
+            pushBtn.setToolTipText(branch.getScmBranchPushTooltip().orElse(I18n.t("push")));
         } else {
-            pushBtn.setText("Push");
-            pushBtn.setToolTipText("Push");
+            pushBtn.setText(I18n.t("push"));
+            pushBtn.setToolTipText(I18n.t("push"));
         }
     }
 
     private void resetSyncButtons() {
-        pullBtn.setText("Pull");
-        pullBtn.setToolTipText("Pull");
-        pushBtn.setText("Push");
-        pushBtn.setToolTipText("Push");
+        pullBtn.setText(I18n.t("mainMenuBar.pull"));
+        pullBtn.setToolTipText(I18n.t("mainMenuBar.pull"));
+        pushBtn.setText(I18n.t("push"));
+        pushBtn.setToolTipText(I18n.t("push"));
     }
 
     public void addMergeListener(ActionListener l) { mergeBtn.addActionListener(l); }

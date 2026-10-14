@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -35,7 +36,7 @@ public class CloneDialog extends JDialog {
     private boolean confirmed = false;
 
     public CloneDialog(Frame parent) {
-        super(parent, "Clone Repository", true);
+        super(parent, I18n.t("cloneRepository"), true);
         setSize(500, 440);
         setLocationRelativeTo(parent);
         setResizable(false);
@@ -48,14 +49,14 @@ public class CloneDialog extends JDialog {
 
         // URL
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        formPanel.add(new JLabel("Repository URL:"), gbc);
+        formPanel.add(new JLabel(I18n.t("repositoryUrl")), gbc);
         urlField = new JTextField(30);
         gbc.gridx = 1; gbc.weightx = 1;
         formPanel.add(urlField, gbc);
 
         // Destination
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        formPanel.add(new JLabel("Destination:"), gbc);
+        formPanel.add(new JLabel(I18n.t("destination")), gbc);
         JPanel destPanel = new JPanel(new BorderLayout(5, 0));
         destField = new JTextField(25);
         destField.setText(GitemberUtil.getHomeFolder());
@@ -71,7 +72,7 @@ public class CloneDialog extends JDialog {
 
 
         // Shallow clone row
-        shallowCheck = new JCheckBox("Clone last commits only (shallow clone)");
+        shallowCheck = new JCheckBox(I18n.t("cloneLastCommitsOnlyShallow"));
         depthSpinner  = new JSpinner(new SpinnerNumberModel(100, 1, 999999, 1));
         depthSpinner.setEnabled(false);
         ((JSpinner.DefaultEditor) depthSpinner.getEditor()).getTextField().setColumns(6);
@@ -86,16 +87,16 @@ public class CloneDialog extends JDialog {
         gbc.gridwidth = 1;
 
         //submodules
-        withSubmodulesCheck  = new JCheckBox("With submodules");
+        withSubmodulesCheck  = new JCheckBox(I18n.t("withSubmodules"));
         gbc.gridy = 3;
         gbc.gridx = 0;  gbc.weightx = 0;
         formPanel.add(withSubmodulesCheck, gbc);
 
         //specific branch
-        branchLabel = new JLabel("Branch:");
+        branchLabel = new JLabel(I18n.t("branch"));
         branchField = new JTextField(20);
-        branchField.setToolTipText("Comma separated list of branches and tags refs/heads/master,refs/tags/v1.0.0");
-        branchField.putClientProperty("JTextField.placeholderText", "Example: refs/heads/master,refs/tags/v1.0.0");
+        branchField.setToolTipText(I18n.t("commaSeparatedListBranchesTags"));
+        branchField.putClientProperty("JTextField.placeholderText", I18n.t("exampleRefsHeadsMasterRefs"));
         gbc.gridy = 4;
         gbc.gridx = 0;  gbc.weightx = 0;
         formPanel.add(branchLabel, gbc);
@@ -103,8 +104,8 @@ public class CloneDialog extends JDialog {
         formPanel.add(branchField, gbc);
 
         // Auth type selector — shown for HTTPS, hidden for SSH/git@
-        pwdAuthBtn = new JRadioButton("Username & Password", true);
-        tokenAuthBtn = new JRadioButton("Access Token");
+        pwdAuthBtn = new JRadioButton(I18n.t("usernamePassword"), true);
+        tokenAuthBtn = new JRadioButton(I18n.t("accessToken"));
         ButtonGroup authGroup = new ButtonGroup();
         authGroup.add(pwdAuthBtn);
         authGroup.add(tokenAuthBtn);
@@ -120,7 +121,7 @@ public class CloneDialog extends JDialog {
 
 
         // Username row — shown when HTTPS + Password auth
-        userLbl = new JLabel("Username:");
+        userLbl = new JLabel(I18n.t("username"));
         userLbl.setVisible(false);
         gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
         formPanel.add(sizePreservingWrapper(userLbl), gbc);
@@ -130,7 +131,7 @@ public class CloneDialog extends JDialog {
         formPanel.add(sizePreservingWrapper(userField), gbc);
 
         // Password row — shown when HTTPS + Password auth
-        pwdLbl = new JLabel("Password:");
+        pwdLbl = new JLabel(I18n.t("password"));
         pwdLbl.setVisible(false);
         gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0;
         formPanel.add(sizePreservingWrapper(pwdLbl), gbc);
@@ -140,7 +141,7 @@ public class CloneDialog extends JDialog {
         formPanel.add(sizePreservingWrapper(pwdField), gbc);
 
         // Token row — shown when HTTPS + Access Token auth
-        tokenLbl = new JLabel("Token:");
+        tokenLbl = new JLabel(I18n.t("token"));
         tokenLbl.setVisible(false);
         gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
         formPanel.add(sizePreservingWrapper(tokenLbl), gbc);
@@ -165,10 +166,10 @@ public class CloneDialog extends JDialog {
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        cloneBtn = new JButton("Clone");
+        cloneBtn = new JButton(I18n.t("clone"));
         cloneBtn.setEnabled(false);
         cloneBtn.addActionListener(e -> onClone());
-        cancelBtn = new JButton("Cancel");
+        cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.addActionListener(e -> dispose());
         buttonPanel.add(cloneBtn);
         buttonPanel.add(cancelBtn);
@@ -262,7 +263,7 @@ public class CloneDialog extends JDialog {
     private void browseDestination() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select Destination Folder");
+        chooser.setDialogTitle(I18n.t("selectDestinationFolder"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             destField.setText(chooser.getSelectedFile().getAbsolutePath());
         }
@@ -270,13 +271,13 @@ public class CloneDialog extends JDialog {
 
     private void onClone() {
         if (urlField.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Repository URL is required",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("repositoryUrlIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (destField.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Destination folder is required",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("destinationFolderIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         confirmed = true;

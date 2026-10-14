@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.MergeConflictBlock;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
@@ -92,7 +93,7 @@ public class ThreeWayMergeWindow extends JFrame {
     public ThreeWayMergeWindow(String filePath) {
         this.filePath = filePath;
         String fileName = Paths.get(filePath).getFileName().toString();
-        setTitle("Merge conflict: " + fileName);
+        setTitle(I18n.t("mergeConflict", fileName));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // 1. Read the conflicted working-tree file
@@ -104,7 +105,7 @@ public class ThreeWayMergeWindow extends JFrame {
         } catch (IOException e) {
             log.log(Level.SEVERE, "Cannot read: " + filePath, e);
             JOptionPane.showMessageDialog(null,
-                    "Cannot read file:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("threeWayMergeWindow.cannotReadFile", e.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -277,15 +278,15 @@ public class ThreeWayMergeWindow extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0; gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
         gbc.gridx = 0; gbc.weightx = 0.33;
-        center.add(titledPanel("Ours",       oursScroll),   gbc);
+        center.add(titledPanel(I18n.t("ours"),       oursScroll),   gbc);
         gbc.gridx = 1; gbc.weightx = 0.0;
         center.add(leftConnector,                                  gbc);
         gbc.gridx = 2; gbc.weightx = 0.34;
-        center.add(titledPanel("Result (editable)", resultScroll), gbc);
+        center.add(titledPanel(I18n.t("resultEditable"), resultScroll), gbc);
         gbc.gridx = 3; gbc.weightx = 0.0;
         center.add(rightConnector,                                 gbc);
         gbc.gridx = 4; gbc.weightx = 0.33;
-        center.add(titledPanel("Theirs",            theirsScroll), gbc);
+        center.add(titledPanel(I18n.t("theirs"),            theirsScroll), gbc);
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(buildToolbar(), BorderLayout.NORTH);
@@ -319,14 +320,14 @@ public class ThreeWayMergeWindow extends JFrame {
     }
 
     private JPanel buildToolbar() {
-        prevBtn  = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
-        nextBtn  = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
+        prevBtn  = Util.createButton(I18n.t("prev"), I18n.t("previousDifference"), FontAwesomeSolid.ARROW_UP);
+        nextBtn  = Util.createButton(I18n.t("next"), I18n.t("nextDifference"),  FontAwesomeSolid.ARROW_DOWN);
         conflictLabel      = new JLabel("—");
-        acceptOursBtn      = Util.createButton("Ours", null,  FontAwesomeSolid.ARROW_LEFT);
-        acceptTheirsBtn    = Util.createButton("Theirs",null,  FontAwesomeSolid.ARROW_RIGHT);
-        acceptAllOursBtn   = Util.createButton("All Ours", "Accept all ours(mine) changes");
-        acceptAllTheirsBtn = Util.createButton("All Theirs","Accept all theirs changes");
-        saveBtn = Util.createButton("Resolved", "Save and mark as resolved", FontAwesomeSolid.SAVE);
+        acceptOursBtn      = Util.createButton(I18n.t("ours"), null,  FontAwesomeSolid.ARROW_LEFT);
+        acceptTheirsBtn    = Util.createButton(I18n.t("theirs"),null,  FontAwesomeSolid.ARROW_RIGHT);
+        acceptAllOursBtn   = Util.createButton(I18n.t("allOurs"), I18n.t("acceptAllOursMineChanges"));
+        acceptAllTheirsBtn = Util.createButton(I18n.t("allTheirs"),I18n.t("acceptAllTheirsChanges"));
+        saveBtn = Util.createButton(I18n.t("resolved"), I18n.t("saveMarkAsResolved"), FontAwesomeSolid.SAVE);
 
         prevBtn.addActionListener(e -> navigate(-1));
         nextBtn.addActionListener(e -> navigate(+1));
@@ -566,8 +567,8 @@ public class ThreeWayMergeWindow extends JFrame {
     private void saveAndMarkResolved() {
         if (countRemainingConflicts() > 0) {
             int choice = JOptionPane.showConfirmDialog(this,
-                    "There are still unresolved conflict markers.\nSave and mark as resolved anyway?",
-                    "Unresolved conflicts", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    I18n.t("thereStillUnresolvedConflictMarkers"),
+                    I18n.t("threeWayMergeWindow.unresolvedConflicts"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (choice != JOptionPane.YES_OPTION) return;
         }
         try {
@@ -577,13 +578,13 @@ public class ThreeWayMergeWindow extends JFrame {
             String relative = workTree.relativize(Paths.get(filePath)).toString().replace('\\', '/');
             Context.getGitRepoService().addFileToCommitStage(relative);
             Context.refreshWorkingCopy();
-            JOptionPane.showMessageDialog(this, "File saved and staged.",
-                    "Resolved", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("fileSavedAndStaged"),
+                    I18n.t("resolved"), JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } catch (Exception ex) {
             log.log(Level.SEVERE, "Cannot save: " + filePath, ex);
             JOptionPane.showMessageDialog(this,
-                    "Error saving:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("errorSaving", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -622,8 +623,8 @@ public class ThreeWayMergeWindow extends JFrame {
     private void updateConflictLabel() {
         int remaining = countRemainingConflicts();
         conflictLabel.setText(remaining == 0
-                ? "All conflicts resolved ✓"
-                : "Conflict " + (currentBlock + 1) + " of " + remaining);
+                ? I18n.t("allConflictsResolved")
+                : I18n.t("conflictOf", (currentBlock + 1), remaining));
     }
 
     private void updateButtonStates() {
@@ -664,7 +665,7 @@ public class ThreeWayMergeWindow extends JFrame {
             setMinimumSize  (new Dimension(CONNECTOR_WIDTH, 0));
             setMaximumSize  (new Dimension(CONNECTOR_WIDTH, Integer.MAX_VALUE));
             setOpaque(true);
-            setToolTipText(isLeft ? "Click → to accept Ours" : "Click ← to accept Theirs");
+            setToolTipText(isLeft ? I18n.t("clickToAcceptOurs") : I18n.t("clickToAcceptTheirs"));
 
             addMouseListener(new MouseAdapter() {
                 @Override public void mouseClicked(MouseEvent e) { handleClick(e); }

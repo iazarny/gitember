@@ -1,5 +1,6 @@
 package com.az.gitember;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.ExtensionMap;
@@ -42,7 +43,10 @@ public class App {
         SwingUtilities.invokeLater(() -> {
             try {
                 Context.readSettings();
+                // Before any UI is built: the forced UI language wins, otherwise the OS language.
+                I18n.init(Context.getSettings() != null ? Context.getSettings().getLanguage() : null);
                 setupLookAndFeel();
+                I18n.installSwingDefaults();
                 applyFontSize();
 
                 if (args.length == 2) {
@@ -85,8 +89,8 @@ public class App {
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Failed to start application", e);
                 JOptionPane.showMessageDialog(null,
-                        "Failed to start: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                        I18n.t("failedToStart", e.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         });
     }

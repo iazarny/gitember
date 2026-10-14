@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Workspace;
 import com.az.gitember.ui.welcome.ProjectCellRenderer;
@@ -53,9 +54,9 @@ public class WelcomePanel extends JPanel {
 
 
         repoContextMenu = new JPopupMenu();
-        repoOpenMenuItem = new JMenuItem("Open");
+        repoOpenMenuItem = new JMenuItem(I18n.t("open"));
         wsEditMenuItem = new JMenuItem("Edit...");
-        repoRemoveMenuItem = new JMenuItem("Remove from list");
+        repoRemoveMenuItem = new JMenuItem(I18n.t("removeFromList"));
         repoContextMenu.add(repoOpenMenuItem);
         repoContextMenu.add(wsEditMenuItem);
         repoContextMenu.addSeparator();
@@ -71,10 +72,10 @@ public class WelcomePanel extends JPanel {
         JPanel commandPanel = new JPanel();
         commandPanel.setLayout(new BoxLayout(commandPanel, BoxLayout.X_AXIS));
 
-        JButton openRepoBtn  = createWellcomeButton("Open Repository", FontAwesomeSolid.FOLDER_OPEN);
-        JButton cloneRepoBtn = createWellcomeButton("Clone repository", FontAwesomeSolid.FOLDER);
-        JButton initRepoBtn  = createWellcomeButton("Init repository", FontAwesomeSolid.FOLDER_PLUS);
-        JButton initWorkpaceBtn  = createWellcomeButton("Init workspace", FontAwesomeSolid.LAYER_GROUP);
+        JButton openRepoBtn  = createWellcomeButton(I18n.t("welcomePanel.openRepository"), FontAwesomeSolid.FOLDER_OPEN);
+        JButton cloneRepoBtn = createWellcomeButton(I18n.t("welcomePanel.cloneRepository"), FontAwesomeSolid.FOLDER);
+        JButton initRepoBtn  = createWellcomeButton(I18n.t("welcomePanel.initRepository"), FontAwesomeSolid.FOLDER_PLUS);
+        JButton initWorkpaceBtn  = createWellcomeButton(I18n.t("welcomePanel.initWorkspace"), FontAwesomeSolid.LAYER_GROUP);
 
 
         openRepoBtn.addActionListener(e -> { if (onOpenRepo != null) onOpenRepo.run(); });
@@ -190,7 +191,7 @@ public class WelcomePanel extends JPanel {
         centerPanel.add(alignWrapper);
 
         // Hint at bottom
-        JLabel hint = new JLabel("Click a project to open, or use File menu to open or clone a repository",
+        JLabel hint = new JLabel(I18n.t("clickProjectOpenUseFile"),
                 SwingConstants.CENTER);
         hint.setForeground(Color.GRAY);
         hint.setFont(hint.getFont().deriveFont(Font.ITALIC, 12f));

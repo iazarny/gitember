@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.dialog.CredentialsDialog;
 import com.az.gitember.service.Context;
@@ -34,11 +35,11 @@ public abstract class AbstractAsyncHandler<T> {
 
     protected void onError(Exception e) {
         log.log(Level.SEVERE, getOperationName() + " failed", e);
-        statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+        statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), e.getMessage()));
         statusBar.clearProgress();
         JOptionPane.showMessageDialog(parent,
-                getOperationName() + " failed:\n" + e.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
+                I18n.t("opFailedDialog", getOperationName(), e.getMessage()),
+                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
     }
 
     public void execute() {
@@ -56,7 +57,7 @@ public abstract class AbstractAsyncHandler<T> {
                 try {
                     T result = get();
                     statusBar.clearProgress();
-                    statusBar.setStatus(getOperationName() + " completed");
+                    statusBar.setStatus(I18n.t("opCompleted", getOperationName()));
                     onSuccess(result);
                 } catch (Exception e) {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
@@ -92,16 +93,14 @@ public abstract class AbstractAsyncHandler<T> {
         Project project = Context.getCurrentProject().orElse(null);
         if (project == null) {
             JOptionPane.showMessageDialog(parent,
-                    "Authentication failed and no project is open.\n"
-                            + "Please configure credentials via Repository → Credentials…",
-                    "Authentication Required", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("authenticationFailedNoProjectOpen"),
+                    I18n.t("authenticationRequired"), JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
         int choice = JOptionPane.showConfirmDialog(parent,
-                "Authentication is required to complete this operation.\n"
-                        + "Would you like to enter credentials now?",
-                "Authentication Required",
+                I18n.t("authenticationRequiredCompleteOperationWould"),
+                I18n.t("authenticationRequired"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 

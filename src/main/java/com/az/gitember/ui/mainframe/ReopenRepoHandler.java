@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
 import com.az.gitember.dialog.InteractiveContinueAbortDialog;
@@ -28,7 +29,7 @@ public class ReopenRepoHandler implements Consumer<Project>  {
     public void accept(Project project) {
         String folder = project.getProjectHomeFolder();
         project.setOpenTime(new Date());
-        mainFrame.getStatusBar().setStatus("Opening " + folder + "...");
+        mainFrame.getStatusBar().setStatus(I18n.t("opening", folder));
         mainFrame.getStatusBar().showProgress(true);
         mainFrame.swithToTheProjectView();
 
@@ -47,7 +48,7 @@ public class ReopenRepoHandler implements Consumer<Project>  {
                     mainFrame.addCurrentProjectToSettings();
                     mainFrame.refreshProjectLists();
                     mainFrame.getStatusBar().clearProgress();
-                    mainFrame.getStatusBar().setStatus("Repository opened " + project.getGitDir());
+                    mainFrame.getStatusBar().setStatus(I18n.t("reopenRepoHandler.repositoryOpened", project.getGitDir()));
                     InteractiveContinueAbortDialog.showIfRebaseInProgress(
                             mainFrame, mainFrame.getStatusBar(),
                             () -> {
@@ -61,7 +62,7 @@ public class ReopenRepoHandler implements Consumer<Project>  {
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
                     log.log(Level.WARNING, "Failed to open project", cause);
                     mainFrame.getStatusBar().clearProgress();
-                    mainFrame.getStatusBar().setStatus("Failed to open: " + cause.getMessage());
+                    mainFrame.getStatusBar().setStatus(I18n.t("failedToOpen", cause.getMessage()));
 
                     // Remove invalid project from list
                     Settings settings = Context.getSettings();
@@ -72,9 +73,8 @@ public class ReopenRepoHandler implements Consumer<Project>  {
                     }
 
                     JOptionPane.showMessageDialog(mainFrame,
-                            "Cannot open repository: " + folder
-                                    + "\nIt will be removed from the list of recent projects.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotOpenRepositoryWillRemoved", folder),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };

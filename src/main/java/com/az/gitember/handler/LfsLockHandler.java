@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.LfsException;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;
@@ -25,7 +26,7 @@ public class LfsLockHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return (lock ? "Lock " : "Unlock ") + path;
+        return (lock ? I18n.t("lfsLockHandler.lock") : I18n.t("lfsLockHandler.unlock")) + path;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class LfsLockHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus(getOperationName() + " completed");
+        statusBar.setStatus(I18n.t("opCompleted", getOperationName()));
         Context.refreshWorkingCopy();
     }
 
@@ -52,9 +53,9 @@ public class LfsLockHandler extends AbstractAsyncHandler<Void> {
                 || lfs.getKind() == LfsException.Kind.LOCKED
                 || lfs.getKind() == LfsException.Kind.NOT_LOCKED)) {
             statusBar.clearProgress();
-            statusBar.setStatus(getOperationName() + " failed");
+            statusBar.setStatus(I18n.t("opFailed", getOperationName()));
             JOptionPane.showMessageDialog(parent, lfs.getMessage(),
-                    "Git LFS", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("gitLfs"), JOptionPane.WARNING_MESSAGE);
         } else {
             super.onError(e);
         }

@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 
 import java.awt.Component;
@@ -31,11 +32,11 @@ public class UpdateSubmodulesHandler extends AbstractAsyncHandler<Void> {
     protected String getOperationName() {
         String name;
         if (path != null) {
-            name = "Update submodule " + path;
+            name = I18n.t("updateSubmodule", path);
         } else if (recursive) {
-            name = "Update submodules recursively";
+            name = I18n.t("updateSubmodulesRecursively");
         } else {
-            name = "Update Submodules";
+            name = I18n.t("updateSubmodules");
         }
         return name;
     }

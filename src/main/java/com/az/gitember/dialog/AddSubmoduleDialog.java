@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.ui.misc.Util;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,7 +17,7 @@ public class AddSubmoduleDialog extends JDialog {
     private boolean confirmed;
 
     public AddSubmoduleDialog(Frame parent) {
-        super(parent, "Add Submodule", true);
+        super(parent, I18n.t("addSubmodule"), true);
         setSize(520, 190);
         setLocationRelativeTo(parent);
         setResizable(false);
@@ -40,15 +41,15 @@ public class AddSubmoduleDialog extends JDialog {
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0;
-        form.add(new JLabel("Path:"), gbc);
+        form.add(new JLabel(I18n.t("path")), gbc);
         pathField = new JTextField(32);
         pathField.putClientProperty("JTextField.placeholderText", "libs/lib");
         gbc.gridx = 1;
         gbc.weightx = 1;
         form.add(pathField, gbc);
 
-        JButton addBtn = new JButton("Add");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton addBtn = new JButton(I18n.t("add"));
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         addBtn.addActionListener(e -> onConfirm());
         cancelBtn.addActionListener(e -> dispose());
 
@@ -78,8 +79,8 @@ public class AddSubmoduleDialog extends JDialog {
     private void onConfirm() {
         if (StringUtils.isBlank(getUrl()) || StringUtils.isBlank(getPath())) {
             JOptionPane.showMessageDialog(this,
-                    "URL and path are required.",
-                    "Add Submodule", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("urlPathRequired"),
+                    I18n.t("addSubmodule"), JOptionPane.WARNING_MESSAGE);
         } else {
             confirmed = true;
             dispose();

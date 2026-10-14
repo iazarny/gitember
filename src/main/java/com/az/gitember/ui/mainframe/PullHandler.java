@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.PullResultDialog;
 import com.az.gitember.handler.AbstractAsyncHandler;
@@ -30,7 +31,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
 
     @Override
     protected String getOperationName() {
-        return "Pull";
+        return I18n.t("mainMenuBar.pull");
     }
 
     @Override
@@ -75,7 +76,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
                     results.add(ProjectOperationResult.ok(project, params.getUrl(), res));
                 } else {
                     PullOperationResult res = new PullOperationResult(
-                            "Skip operation", "",
+                            I18n.t("skipOperation"), "",
                             Collections.emptyList(),Collections.emptyList(),Collections.emptyList(),""
                     );
                     results.add(ProjectOperationResult.ok(project, "N/A", res));
@@ -92,8 +93,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
     protected void onSuccess(PullOperationResult result) {
         if (workspaceResults != null) {
             long ok = workspaceResults.stream().filter(ProjectOperationResult::isSuccess).count();
-            statusBar.setStatus("Pull completed for " + ok + " of "
-                    + workspaceResults.size() + " repositories");
+            statusBar.setStatus(I18n.t("pullCompletedRepositories", ok, workspaceResults.size()));
             new PullResultDialog(parent, workspaceResults).setVisible(true);
             if (parent instanceof MainFrame mf) {
                 mf.refreshWorkspaceProjectBranches(workspaceResults);
@@ -102,7 +102,7 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
             return;
         }
 
-        statusBar.setStatus("Pull completed: " + result.toStatusString());
+        statusBar.setStatus(I18n.t("pullHandler.pullCompleted", result.toStatusString()));
         if (MainFrame.getInstance().isWorkspaceActive()) {
             Context.refreshWorkingCopy();
         } else {
@@ -120,11 +120,11 @@ public class PullHandler extends AbstractAsyncHandler<PullOperationResult> {
             String msg = e.getMessage();
             if (StringUtils.contains(msg,"remote.origin.url")
                 && StringUtils.contains(msg,"No value for key")) {
-                statusBar.setStatus(getOperationName() + " failed: " + e.getMessage());
+                statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), e.getMessage()));
                 statusBar.clearProgress();
                 JOptionPane.showMessageDialog(parent,
-                        "Need to configure remote url\n" + e.getMessage(),
-                        "Warning", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("needConfigureRemoteUrl", e.getMessage()),
+                        I18n.t("warning"), JOptionPane.WARNING_MESSAGE);
             } else  {
                 super.onError(e);
             }

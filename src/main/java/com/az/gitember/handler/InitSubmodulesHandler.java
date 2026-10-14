@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 
 import java.awt.*;
@@ -22,7 +23,7 @@ public class InitSubmodulesHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return path == null ? "Initialize submodules" : "Initialize submodule " + path;
+        return path == null ? I18n.t("initializeSubmodules") : I18n.t("initializeSubmodule", path);
     }
 
     @Override

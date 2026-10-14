@@ -1,5 +1,6 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.I18n;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -97,6 +98,8 @@ public class Settings {
     private List<Workspace> workspaces = new ArrayList<>();
 
     private String theme;
+    /** UI language forced in Settings (e.g. "uk"); blank or null follows the OS language. */
+    private String language;
     private int fontSize = 13;
     private Boolean enableLeakDetector = false; //EXPERIMENTAL FEATURE
     private Boolean enableBranchCompareDescription = false; //EXPERIMENTAL FEATURE
@@ -254,6 +257,14 @@ public class Settings {
     }
 
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
     public String getDateFormat() {
         return dateFormat;
     }
@@ -408,7 +419,7 @@ public class Settings {
      * then "New workspace 2", "New workspace 3", and so on.
      */
     public String createNewWorkspaceName() {
-        final String base = "New workspace";
+        final String base = I18n.t("newWorkspace");
 
         Set<String> existingNames = workspaces.stream()
                 .map(Workspace::getName)

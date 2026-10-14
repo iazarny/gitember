@@ -1,5 +1,6 @@
 package com.az.gitember.service.detector.impl;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.Detector;
 import com.az.gitember.service.detector.Finding;
@@ -37,7 +38,7 @@ public class ConnectionStringDetector implements Detector {
                             context.getFile(),
                             i + 1,
                             "CONNECTION_STRING",
-                            "Credentials inside connection string",
+                            I18n.t("credentialsInsideConnectionString"),
                             Confidence.HIGH,
                             line,
                             matcher.group(0)

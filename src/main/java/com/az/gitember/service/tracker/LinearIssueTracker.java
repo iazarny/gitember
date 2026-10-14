@@ -1,5 +1,6 @@
 package com.az.gitember.service.tracker;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Issue;
 import com.az.gitember.data.IssueStatus;
 import com.az.gitember.data.IssueTrackerConfig;
@@ -114,11 +115,11 @@ public class LinearIssueTracker implements IssueTracker {
     @Override
     public void createIssue(Issue issue) throws Exception {
         if (issue == null || issue.getTitle() == null || issue.getTitle().isBlank()) {
-            throw new IllegalArgumentException("Issue title is required");
+            throw new IllegalArgumentException(I18n.t("issueTitleIsRequired"));
         }
         List<String> teams = config.getProjectKeys();
         if (teams.isEmpty()) {
-            throw new IllegalStateException("Select at least one Linear team in Project Settings");
+            throw new IllegalStateException(I18n.t("selectAtLeastOneLinear"));
         }
         String teamId = resolveTeamId(teams.get(0));
         ObjectNode input = mapper.createObjectNode();
@@ -139,7 +140,7 @@ public class LinearIssueTracker implements IssueTracker {
     @Override
     public void addComment(String issueKey, String comment) throws Exception {
         if (issueKey == null || issueKey.isBlank() || comment == null) {
-            throw new IllegalArgumentException("Issue key and comment are required");
+            throw new IllegalArgumentException(I18n.t("issueKeyCommentRequired"));
         }
         String issueId = resolveIssueId(issueKey);
         ObjectNode vars = mapper.createObjectNode();
@@ -339,7 +340,7 @@ public class LinearIssueTracker implements IssueTracker {
         JsonNode data = graphql("query Id($id: String!) { issue(id: $id) { id } }", vars);
         String id = data.path("issue").path("id").asText("");
         if (id.isBlank()) {
-            throw new java.io.IOException("Linear issue not found: " + issueKey);
+            throw new java.io.IOException(I18n.t("linearIssueNotFound", issueKey));
         }
         return id;
     }
@@ -350,7 +351,7 @@ public class LinearIssueTracker implements IssueTracker {
         JsonNode data = graphql("query Team($id: String!) { team(id: $id) { id } }", vars);
         String id = data.path("team").path("id").asText("");
         if (id.isBlank()) {
-            throw new java.io.IOException("Linear team not found: " + teamKey);
+            throw new java.io.IOException(I18n.t("linearTeamNotFound", teamKey));
         }
         return id;
     }
@@ -388,14 +389,13 @@ public class LinearIssueTracker implements IssueTracker {
         if (status < 200 || status >= 300) {
             String snippet = body.length() > 300 ? body.substring(0, 300) : body;
             log.log(Level.WARNING, "Linear HTTP " + status + " " + snippet);
-            throw new java.io.IOException("Linear HTTP " + status
-                    + (snippet.isBlank() ? "" : ": " + snippet));
+            throw new java.io.IOException(I18n.t("linearHttp", status, (snippet.isBlank() ? "" : ": " + snippet)));
         }
         JsonNode root = mapper.readTree(body);
         JsonNode errors = root.path("errors");
         if (errors.isArray() && errors.size() > 0) {
-            String message = errors.get(0).path("message").asText("request failed");
-            throw new java.io.IOException("Linear: " + message);
+            String message = errors.get(0).path("message").asText(I18n.t("requestFailed"));
+            throw new java.io.IOException(I18n.t("linearIssueTracker.linear", message));
         }
         return root.path("data");
     }

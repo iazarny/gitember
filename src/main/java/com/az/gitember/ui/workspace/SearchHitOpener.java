@@ -1,5 +1,6 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.FileViewerWindow;
@@ -40,8 +41,8 @@ public class SearchHitOpener {
                 viewer.setVisible(true);
             } catch (Exception ex) {
                 log.log(Level.WARNING, "Cannot open file", ex);
-                JOptionPane.showMessageDialog(null, "Cannot open: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, I18n.t("workingCopyContextMenu.cannotOpen", ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         } else {
             try {

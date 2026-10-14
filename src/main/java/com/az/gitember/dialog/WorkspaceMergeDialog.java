@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmBranch;
@@ -41,7 +42,7 @@ public class WorkspaceMergeDialog extends JDialog {
      */
     public WorkspaceMergeDialog(Frame owner, ScmBranch sourceBranch,
                                 Map<Project, List<ScmBranch>> branchesByProject) {
-        super(owner, "Merge Branch in Workspace", ModalityType.APPLICATION_MODAL);
+        super(owner, I18n.t("mergeBranchInWorkspace"), ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         String preselect = sourceBranch != null ? sourceBranch.getShortName() : null;
@@ -76,7 +77,7 @@ public class WorkspaceMergeDialog extends JDialog {
         rows.add(Box.createVerticalGlue(), rc);
 
         JScrollPane rowsScroll = new JScrollPane(rows);
-        rowsScroll.setBorder(BorderFactory.createTitledBorder("Branch to merge per repository"));
+        rowsScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("branchMergePerRepository")));
         rowsScroll.getVerticalScrollBar().setUnitIncrement(16);
 
         // ── shared merge options ────────────────────────────────────────────
@@ -85,9 +86,9 @@ public class WorkspaceMergeDialog extends JDialog {
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         JScrollPane messageScroll = new JScrollPane(messageArea);
-        messageScroll.setBorder(BorderFactory.createTitledBorder("Commit message"));
+        messageScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("commitMessage")));
 
-        JCheckBox squashCheck = new JCheckBox("Squash commits", lastSquash);
+        JCheckBox squashCheck = new JCheckBox(I18n.t("squashCommits"), lastSquash);
         squashCheck.setName("mergeSquashCheck");
 
         JComboBox<MergeCommand.FastForwardMode> ffCombo =
@@ -111,7 +112,7 @@ public class WorkspaceMergeDialog extends JDialog {
         JPanel options = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         options.add(squashCheck);
         options.add(Box.createHorizontalStrut(12));
-        options.add(new JLabel("Fast-forward mode:"));
+        options.add(new JLabel(I18n.t("fastForwardMode")));
         options.add(ffCombo);
 
         JPanel south = new JPanel(new BorderLayout());
@@ -120,9 +121,9 @@ public class WorkspaceMergeDialog extends JDialog {
         south.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 
         // ── buttons ─────────────────────────────────────────────────────────
-        JButton okBtn = new JButton("Merge");
+        JButton okBtn = new JButton(I18n.t("workspaceMergeDialog.merge"));
         okBtn.setName("mergeButton");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.setName("cancelMergeButton");
         getRootPane().setDefaultButton(okBtn);
 
@@ -148,8 +149,8 @@ public class WorkspaceMergeDialog extends JDialog {
 
             if (selected.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "No repository selected — pick a branch for at least one repository.",
-                        "Merge", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("noRepositorySelectedPickBranch"),
+                        I18n.t("workspaceMergeDialog.merge"), JOptionPane.WARNING_MESSAGE);
                 return;
             }
             result = selected;
@@ -187,9 +188,9 @@ public class WorkspaceMergeDialog extends JDialog {
     private static String ffModeLabel(MergeCommand.FastForwardMode mode) {
         if (mode == null) return "";
         return switch (mode) {
-            case FF -> "Fast Forward";
-            case NO_FF -> "No Fast Forward";
-            case FF_ONLY -> "Fast Forward Only";
+            case FF -> I18n.t("fastForward");
+            case NO_FF -> I18n.t("noFastForward");
+            case FF_ONLY -> I18n.t("fastForwardOnly");
         };
     }
 }

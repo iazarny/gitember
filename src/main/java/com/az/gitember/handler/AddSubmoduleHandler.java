@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.AddSubmoduleDialog;
 import com.az.gitember.service.Context;
 
@@ -22,7 +23,7 @@ public class AddSubmoduleHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Add submodule " + path;
+        return I18n.t("addSubmoduleHandler.addSubmodule", path);
     }
 
     @Override

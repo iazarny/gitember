@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
@@ -19,7 +20,7 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Checkout " + branch.getShortName();
+        return I18n.t("checkout", branch.getShortName());
     }
 
     @Override
@@ -33,7 +34,7 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Checked out " + result);
+        statusBar.setStatus(I18n.t("checkedOut", result));
     }
 
     @Override
@@ -46,19 +47,18 @@ public class CheckoutBranchHandler extends AbstractAsyncHandler<String> {
 
         List<String> files = conflict.getConflictingPaths();
         statusBar.clearProgress();
-        statusBar.setStatus("Checkout failed: local changes would be overwritten");
+        statusBar.setStatus(I18n.t("checkoutFailedLocalChangesWould"));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("Cannot checkout '").append(branch.getShortName()).append("'.\n\n");
-        sb.append("The following file").append(files.size() == 1 ? " has" : "s have")
-          .append(" local changes that would be overwritten:\n\n");
+        sb.append(I18n.t("cannotCheckoutBranchNamed", branch.getShortName())).append("\n\n");
+        sb.append(I18n.plural("filesWouldBeOverwritten", files.size()));
         for (String f : files) {
             sb.append("  \u2022 ").append(f).append("\n");
         }
-        sb.append("\nCommit or stash your changes before switching branches.");
+        sb.append(I18n.t("commitStashYourChangesBefore"));
 
         JOptionPane.showMessageDialog(parent, sb.toString(),
-                "Cannot Checkout Branch", JOptionPane.WARNING_MESSAGE);
+                I18n.t("cannotCheckoutBranch"), JOptionPane.WARNING_MESSAGE);
     }
 
     /** Walks the cause chain to find a {@link CheckoutConflictException}. */

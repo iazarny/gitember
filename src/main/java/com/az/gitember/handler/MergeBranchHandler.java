@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
@@ -56,7 +57,7 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
     @Override
     protected String getOperationName() {
-        return "Merge";
+        return I18n.t("workspaceMergeDialog.merge");
     }
 
     @Override
@@ -105,8 +106,7 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
                     .filter(r -> r.isSuccess() && r.getResult() != null
                             && r.getResult().getMergeStatus().isSuccessful())
                     .count();
-            statusBar.setStatus("Merge completed for " + ok + " of "
-                    + workspaceResults.size() + " repositories");
+            statusBar.setStatus(I18n.t("mergeCompletedRepositories", ok, workspaceResults.size()));
             new MergeResultDialog(parent, workspaceResults).setVisible(true);
             if (parent instanceof MainFrame mf) {
                 mf.refreshWorkspaceProjectBranches(workspaceResults);
@@ -116,13 +116,13 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
         }
 
         String status = result.getMergeStatus().toString();
-        statusBar.setStatus("Merge: " + status);
+        statusBar.setStatus(I18n.t("mergeBranchHandler.merge", status));
         if (result.getMergeStatus() == MergeResult.MergeStatus.CONFLICTING) {
             showConflictOptions(result);
         } else {
             JOptionPane.showMessageDialog(parent,
-                    "Merge result: " + status,
-                    "Merge", JOptionPane.INFORMATION_MESSAGE);
+                    I18n.t("mergeBranchHandler.mergeResult", status),
+                    I18n.t("workspaceMergeDialog.merge"), JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -135,7 +135,7 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
         switch (dialog.getSelectedOption()) {
             case MANUAL -> {
-                statusBar.setStatus("Merge conflicts need manual resolution");
+                statusBar.setStatus(I18n.t("mergeConflictsNeedManualResolution"));
                 Context.navigateToWorkingCopy();
             }
             case USE_OURS -> resolveAllConflicts(conflictedFiles, CheckoutCommand.Stage.OURS);
@@ -161,14 +161,13 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
                 try {
                     get();
                     String side = stage == CheckoutCommand.Stage.OURS ? "ours" : "theirs";
-                    statusBar.setStatus("Resolved " + conflictedFiles.size()
-                            + " conflict(s) using " + side);
+                    statusBar.setStatus(I18n.t("resolvedConflictSUsing", conflictedFiles.size(), side));
                     Context.navigateToWorkingCopy();
                 } catch (Exception e) {
-                    statusBar.setStatus("Resolve conflicts failed: " + e.getMessage());
+                    statusBar.setStatus(I18n.t("resolveConflictsFailed", e.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Resolve conflicts failed:\n" + e.getMessage(),
-                            "Merge", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("mergeBranchHandler.resolveConflictsFailed", e.getMessage()),
+                            I18n.t("workspaceMergeDialog.merge"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -176,8 +175,8 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
 
     private void abortMerge() {
         int choice = JOptionPane.showConfirmDialog(parent,
-                "Abort the merge and discard all merge changes?",
-                "Abort Merge", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                I18n.t("abortMergeDiscardAllMerge"),
+                I18n.t("mergeBranchHandler.abortMerge"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (choice != JOptionPane.YES_OPTION) {
             Context.navigateToWorkingCopy();
             return;
@@ -195,13 +194,13 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
             protected void done() {
                 try {
                     get();
-                    statusBar.setStatus("Merge aborted");
+                    statusBar.setStatus(I18n.t("mergeAborted"));
                     Context.navigateToWorkingCopy();
                 } catch (Exception e) {
-                    statusBar.setStatus("Abort merge failed: " + e.getMessage());
+                    statusBar.setStatus(I18n.t("abortMergeFailed", e.getMessage()));
                     JOptionPane.showMessageDialog(parent,
-                            "Abort merge failed:\n" + e.getMessage(),
-                            "Merge", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("mergeBranchHandler.abortMergeFailed", e.getMessage()),
+                            I18n.t("workspaceMergeDialog.merge"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -250,8 +249,8 @@ public class MergeBranchHandler extends AbstractAsyncHandler<MergeResult> {
                 } catch (Exception ex) {
                     log.log(Level.SEVERE, "Cannot prepare workspace merge", ex);
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot read workspace branches:\n" + ex.getMessage(),
-                            "Merge", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotReadWorkspaceBranches", ex.getMessage()),
+                            I18n.t("workspaceMergeDialog.merge"), JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 

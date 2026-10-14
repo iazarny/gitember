@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.TrackerProject;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ public class TrackerProjectCheckList extends JPanel {
     private final String emptyHint;
 
     public TrackerProjectCheckList(String emptyHint) {
-        this.emptyHint = emptyHint != null ? emptyHint : "Test connection to load items.";
+        this.emptyHint = emptyHint != null ? emptyHint : I18n.t("testConnectionLoadItems");
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 

@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.Settings;
@@ -48,7 +49,7 @@ public class WorkspaceDialog extends JDialog {
     }
 
     public WorkspaceDialog(Frame owner, Workspace existing, Consumer<Workspace> onWorkspaceOpened) {
-        super(owner, existing != null ? "Edit workspace" : "Workspaces",
+        super(owner, existing != null ? I18n.t("editWorkspace") : I18n.t("workspaces"),
                 Dialog.ModalityType.DOCUMENT_MODAL);
 
 
@@ -88,7 +89,7 @@ public class WorkspaceDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        form.add(new JLabel("Name:"), gbc);
+        form.add(new JLabel(I18n.t("name")), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         form.add(nameField, gbc);
 
@@ -99,7 +100,7 @@ public class WorkspaceDialog extends JDialog {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBorder(BorderFactory.createEmptyBorder(0, 15, 5, 15));
 
-        JLabel title = new JLabel("Repositories");
+        JLabel title = new JLabel(I18n.t("repositories"));
         title.setFont(title.getFont().deriveFont(Font.BOLD, title.getFont().getSize() - 1f));
         title.setForeground(UIManager.getColor("Label.disabledForeground"));
 
@@ -107,18 +108,18 @@ public class WorkspaceDialog extends JDialog {
 
         Dimension size = new Dimension(180, 36);
 
-        JButton addExistingBtn = Util.createButton("Add existing…", "Add Existing Project…", FontAwesomeSolid.PLUS,0,size);
+        JButton addExistingBtn = Util.createButton(I18n.t("addExisting"), I18n.t("addExistingProject"), FontAwesomeSolid.PLUS,0,size);
                 //new JButton("Add Existing Project…");
         addExistingBtn.setName("addExistingProjectButton");
         addExistingBtn.addActionListener(e -> addExistingProject());
 
-        JButton addFromDiskBtn = Util.createButton("Add new…", "Add Repository from Disk…", FontAwesomeSolid.PLUS,0,size);
+        JButton addFromDiskBtn = Util.createButton(I18n.t("addNew"), I18n.t("addRepositoryFromDisk"), FontAwesomeSolid.PLUS,0,size);
         //new JButton("Add Repository from Disk…");
         addFromDiskBtn.setName("addRepositoryFromDiskButton");
         addFromDiskBtn.addActionListener(e -> addRepositoryFromDisk());
 
 
-        JButton removeBtn = Util.createButton("Remove", null, FontAwesomeSolid.MINUS,0,size);
+        JButton removeBtn = Util.createButton(I18n.t("remove"), null, FontAwesomeSolid.MINUS,0,size);
         //new JButton("Remove");
         removeBtn.setName("removeProjectButton");
         removeBtn.addActionListener(e -> removeSelectedProject());
@@ -140,13 +141,13 @@ public class WorkspaceDialog extends JDialog {
     private JPanel buildButtonPanel() {
         JButton confirmBtn;
         if (existingWorkspace != null) {
-            confirmBtn = new JButton("Save");
+            confirmBtn = new JButton(I18n.t("save"));
             confirmBtn.setName("saveWorkspaceButton");
         } else {
-            confirmBtn = new JButton("Open");
+            confirmBtn = new JButton(I18n.t("open"));
             confirmBtn.setName("openWorkspaceButton");
         }
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.setName("cancelWorkspaceButton");
         confirmBtn.addActionListener(e -> persistWorkspace());
         cancelBtn.addActionListener(e -> dispose());
@@ -166,7 +167,7 @@ public class WorkspaceDialog extends JDialog {
             copy = new Workspace(existing.getName(), new TreeSet<>(existing.getProjects()));
         } else {
             Settings settings = Context.getSettings();
-            String name = settings != null ? settings.createNewWorkspaceName() : "New workspace";
+            String name = settings != null ? settings.createNewWorkspaceName() : I18n.t("newWorkspace");
             copy = new Workspace(name, new TreeSet<>());
         }
         return copy;
@@ -193,8 +194,8 @@ public class WorkspaceDialog extends JDialog {
         }
         candidates.removeAll(workspace.getProjects());
         if (candidates.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No other known projects to add.",
-                    "Add Existing Project", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("noOtherKnownProjectsAdd"),
+                    I18n.t("workspaceDialog.addExistingProject"), JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -203,7 +204,7 @@ public class WorkspaceDialog extends JDialog {
         chooser.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         chooser.setCellRenderer(new ProjectCellRenderer());
         int result = JOptionPane.showConfirmDialog(this, new JScrollPane(chooser),
-                "Select project(s) to add", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                I18n.t("selectProjectSAdd"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             workspace.getProjects().addAll(chooser.getSelectedValuesList());
             loadIntoForm();
@@ -213,21 +214,21 @@ public class WorkspaceDialog extends JDialog {
     private void addRepositoryFromDisk() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select Git Repository");
+        chooser.setDialogTitle(I18n.t("selectGitRepository"));
         if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
         }
         File folder = chooser.getSelectedFile();
         if (!new File(folder, Const.GIT_FOLDER).exists()) {
             JOptionPane.showMessageDialog(this,
-                    "The selected folder is not a git repository (no " + Const.GIT_FOLDER + " folder found).",
-                    "Not a Repository", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("selectedFolderNotGitRepository", Const.GIT_FOLDER),
+                    I18n.t("notARepository"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         Project project = Context.getSettings().getOrCreateProject(folder.getAbsolutePath());
         if (!workspace.getProjects().add(project)) {
-            JOptionPane.showMessageDialog(this, "This repository is already in the workspace.",
-                    "Already Added", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("repositoryAlreadyWorkspace"),
+                    I18n.t("alreadyAdded"), JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         loadIntoForm();
@@ -252,8 +253,8 @@ public class WorkspaceDialog extends JDialog {
     private void persistWorkspace() {
         applyNameEdit();
         if (workspace.getName() == null || workspace.getName().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Workspace name cannot be empty.",
-                    "Invalid Name", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("workspaceNameCannotEmpty"),
+                    I18n.t("invalidName"), JOptionPane.WARNING_MESSAGE);
             nameField.requestFocusInWindow();
             return;
         }
@@ -261,8 +262,8 @@ public class WorkspaceDialog extends JDialog {
         if (settings != null) {
             if (isNameTaken(settings)) {
                 JOptionPane.showMessageDialog(this,
-                        "A workspace named \"" + workspace.getName() + "\" already exists.",
-                        "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("workspaceNamedAlreadyExists", workspace.getName()),
+                        I18n.t("invalidName"), JOptionPane.WARNING_MESSAGE);
                 nameField.requestFocusInWindow();
                 return;
             }

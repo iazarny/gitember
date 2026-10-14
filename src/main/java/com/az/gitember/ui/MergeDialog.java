@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.MergeDialogResult;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
@@ -31,7 +32,7 @@ public class MergeDialog extends JDialog {
     public MergeDialog(Frame owner, ScmBranch sourceBranch) {
 
 
-        super(owner, "Merge Branch", ModalityType.APPLICATION_MODAL);
+        super(owner, I18n.t("mergeBranch"), ModalityType.APPLICATION_MODAL);
 
         String workingBranchName = Context.getWorkingBranch() != null
                 ? Context.getWorkingBranch().getShortName() : "current";
@@ -48,7 +49,7 @@ public class MergeDialog extends JDialog {
         messageArea.setWrapStyleWord(true);
         JScrollPane messageScroll = new JScrollPane(messageArea);
 
-        JCheckBox squashCheck = new JCheckBox("Squash commits", lastSquash);
+        JCheckBox squashCheck = new JCheckBox(I18n.t("squashCommits"), lastSquash);
 
         JComboBox<MergeCommand.FastForwardMode> ffCombo = new JComboBox<>(new MergeCommand.FastForwardMode[]{
                 MergeCommand.FastForwardMode.FF,
@@ -125,14 +126,14 @@ public class MergeDialog extends JDialog {
 
 
         JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        rowPanel.add(new JLabel("Merging:  " ));
+        rowPanel.add(new JLabel(I18n.t("merging") ));
         rowPanel.add(selectedSourceBranch);
         rowPanel.add(new JLabel("  →  " + workingBranchName));
 
 
         content.add(rowPanel,   gbc(0, row++, 2, 0));
 
-        content.add(new JLabel("Commit message:"), gbc(0, row, 1, 0));
+        content.add(new JLabel(I18n.t("mergeDialog.commitMessage")), gbc(0, row, 1, 0));
         row++;
         GridBagConstraints scrollGbc = gbc(0, row++, 2, 1.0);
         scrollGbc.fill = GridBagConstraints.BOTH;
@@ -141,14 +142,14 @@ public class MergeDialog extends JDialog {
 
         content.add(squashCheck, gbc(0, row++, 2, 0));
 
-        content.add(new JLabel("Fast-forward mode:"), gbc(0, row, 1, 0));
+        content.add(new JLabel(I18n.t("fastForwardMode")), gbc(0, row, 1, 0));
         GridBagConstraints ffGbc = gbc(1, row++, 1, 1.0);
         ffGbc.fill = GridBagConstraints.HORIZONTAL;
         content.add(ffCombo, ffGbc);
 
         // ── Buttons ─────────────────────────────────────────────────────────
-        JButton okBtn     = new JButton("Merge");
-        JButton cancelBtn = new JButton("Cancel");
+        JButton okBtn     = new JButton(I18n.t("workspaceMergeDialog.merge"));
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         JButton previewBtn = new JButton("Preview...");
         getRootPane().setDefaultButton(okBtn);
 
@@ -211,9 +212,9 @@ public class MergeDialog extends JDialog {
     private static String ffModeLabel(MergeCommand.FastForwardMode mode) {
         if (mode == null) return "";
         switch (mode) {
-            case FF:      return "Fast Forward";
-            case NO_FF:   return "No Fast Forward";
-            case FF_ONLY: return "Fast Forward Only";
+            case FF:      return I18n.t("fastForward");
+            case NO_FF:   return I18n.t("noFastForward");
+            case FF_ONLY: return I18n.t("fastForwardOnly");
             default:      return mode.toString();
         }
     }

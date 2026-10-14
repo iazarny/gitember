@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.service.Context;
@@ -44,7 +45,7 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Rename branch " + oldBranchName + " to "  + newBranchName;
+        return I18n.t("renameBranchTo", oldBranchName, newBranchName);
     }
 
     @Override
@@ -64,11 +65,11 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
         final String messageTitle;
         final String message;
         final int messageType;
-        message = getOperationName() + " failed:\n" + e.getMessage();
+        message = I18n.t("opFailedDialog", getOperationName(), e.getMessage());
         messageType = JOptionPane.ERROR_MESSAGE;
-        messageTitle = "Error";
+        messageTitle = I18n.t("error");
         log.log(Level.SEVERE, getOperationName() + " failed", e);
-        statusBar.setStatus(getOperationName() + " failed: " + message);
+        statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), message));
         statusBar.clearProgress();
         JOptionPane.showMessageDialog(parent,  message,  messageTitle, messageType);
     }
@@ -76,7 +77,7 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Renamed  branch to " + result + " is ok ");
+        statusBar.setStatus(I18n.t("renamedBranchOk", result));
     }
 
     /**
@@ -87,8 +88,8 @@ public class RenameBranchHandler extends AbstractAsyncHandler<String> {
 
         String name = (String) JOptionPane.showInputDialog(
                 parent,
-                "New branch name:",
-                MessageFormat.format("Rename {0} ", oldName),
+                I18n.t("newBranchName"),
+                MessageFormat.format(I18n.t("rename"), oldName),
                 JOptionPane.PLAIN_MESSAGE
         );
 

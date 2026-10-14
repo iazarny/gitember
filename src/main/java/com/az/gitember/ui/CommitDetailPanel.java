@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.ui.misc.StatusTextCellRenderer;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
@@ -50,16 +52,16 @@ public class CommitDetailPanel extends JPanel {
     // Header fields
     private final JTextField msgField = createReadOnlyField();
     private final JPanel issueLinksPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-    private final JLabel issueCaption = new JLabel("Issue:");
+    private final JLabel issueCaption = new JLabel(I18n.t("issue"));
     private final JTextField authorField = createReadOnlyField();
     private final JTextField emailField = createReadOnlyField();
     private final JTextField dateField = createReadOnlyField();
     private final JTextField shaField = createReadOnlyField();
     private final JTextField parentField = createReadOnlyField();
     private final JTextField refsField = createReadOnlyField();
-    private final JLabel signatureCaption = new JLabel("Signature:");
+    private final JLabel signatureCaption = new JLabel(I18n.t("signature"));
     private final JButton signatureButton = new JButton();
-    private final JLabel jlabelNote = new JLabel("Notes:");
+    private final JLabel jlabelNote = new JLabel(I18n.t("notes"));
     private final JTextField notesArea = new JTextField();
 
 
@@ -128,7 +130,7 @@ public class CommitDetailPanel extends JPanel {
         });
 
         mainPanel.add(new JScrollPane(filesTable), BorderLayout.CENTER);
-        tabbedPane.addTab("Main", mainPanel);
+        tabbedPane.addTab(I18n.t("main"), mainPanel);
 
         // === Diff tab ===
         JPanel diffPanel = new JPanel(new BorderLayout());
@@ -143,7 +145,7 @@ public class CommitDetailPanel extends JPanel {
 
         searchBar = new SearchBar(diffArea);
 
-        JButton saveBtn = new JButton("Save as...");
+        JButton saveBtn = new JButton(I18n.t("saveAs"));
         saveBtn.addActionListener(e -> saveDiff());
         JPanel diffToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
         diffToolbar.add(saveBtn);
@@ -160,7 +162,7 @@ public class CommitDetailPanel extends JPanel {
 
         diffPanel.add(northDiff, BorderLayout.NORTH);
         diffPanel.add(new RTextScrollPane(diffArea), BorderLayout.CENTER);
-        tabbedPane.addTab("Diff", diffPanel);
+        tabbedPane.addTab(I18n.t("diff"), diffPanel);
 
         // Lazy load diff when tab selected
         tabbedPane.addChangeListener(e -> {
@@ -176,22 +178,22 @@ public class CommitDetailPanel extends JPanel {
     private void setupFilesContextMenu() {
         JPopupMenu popup = new JPopupMenu();
 
-        JMenuItem openItem = new JMenuItem("Open");
+        JMenuItem openItem = new JMenuItem(I18n.t("open"));
         openItem.addActionListener(e -> openSelectedFile());
 
-        JMenuItem showRawDiffItem = new JMenuItem("Show raw diff");
+        JMenuItem showRawDiffItem = new JMenuItem(I18n.t("showRawDiff"));
         showRawDiffItem.addActionListener(e -> showRawDiffForFile());
 
-        JMenuItem diffPrevItem = new JMenuItem("Difference with previous version");
+        JMenuItem diffPrevItem = new JMenuItem(I18n.t("differenceWithPreviousVersion"));
         diffPrevItem.addActionListener(e -> diffWithPreviousVersion());
 
-        JMenuItem diffLatestItem = new JMenuItem("Difference with latest version");
+        JMenuItem diffLatestItem = new JMenuItem(I18n.t("differenceWithLatestVersion"));
         diffLatestItem.addActionListener(e -> diffWithLatestVersion());
 
-        JMenuItem diffDiskItem = new JMenuItem("Difference with file on disk");
+        JMenuItem diffDiskItem = new JMenuItem(I18n.t("differenceFileDisk"));
         diffDiskItem.addActionListener(e -> diffWithDiskVersion());
 
-        JMenuItem fileHistoryItem = new JMenuItem("History");
+        JMenuItem fileHistoryItem = new JMenuItem(I18n.t("history"));
         fileHistoryItem.addActionListener(e -> showFileHistory());
 
         popup.add(openItem);
@@ -297,8 +299,8 @@ public class CommitDetailPanel extends JPanel {
                     } catch (Exception e) {
                         log.log(Level.WARNING, "Failed to open image", e);
                         JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                                "Failed to open file: " + e.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("failedToOpenFile", e.getMessage()),
+                                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
             };
@@ -325,8 +327,8 @@ public class CommitDetailPanel extends JPanel {
                     } catch (Exception e) {
                         log.log(Level.WARNING, "Failed to open file", e);
                         JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                                "Failed to open file: " + e.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("failedToOpenFile", e.getMessage()),
+                                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
             };
@@ -341,7 +343,7 @@ public class CommitDetailPanel extends JPanel {
             openFileFromCommit(item, parents.get(0));
         } else {
             JOptionPane.showMessageDialog(this,
-                    "No parent commit available", "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("noParentCommitAvailable"), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -362,13 +364,13 @@ public class CommitDetailPanel extends JPanel {
                 try {
                     String diff = get();
                     FileViewerWindow viewer = new FileViewerWindow(
-                            "Diff: " + item.getShortName(), diff);
+                            I18n.t("commitDetailPanel.diff", item.getShortName()), diff);
                     viewer.setVisible(true);
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load raw diff", e);
                     JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                            "Failed to load diff: " + e.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("failedToLoadDiff", e.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -400,14 +402,14 @@ public class CommitDetailPanel extends JPanel {
                         openFileFromCommit(item, fileRevs.get(0).getRevisionFullName());
                     } else {
                         JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                                "No history found for this file",
-                                "Diff", JOptionPane.INFORMATION_MESSAGE);
+                                I18n.t("noHistoryFoundFile"),
+                                I18n.t("diff"), JOptionPane.INFORMATION_MESSAGE);
                     }
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to get file history", e);
                     JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                            "Failed to load file history: " + e.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("failedLoadFileHistory", e.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -448,8 +450,8 @@ public class CommitDetailPanel extends JPanel {
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load file history", e);
                     JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                            "Failed: " + e.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("commitDetailPanel.failed", e.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -477,7 +479,7 @@ public class CommitDetailPanel extends JPanel {
                 try {
                     diskContent = Files.readString(Paths.get(diskPath));
                 } catch (Exception e) {
-                    diskContent = "(File not found on disk)";
+                    diskContent = I18n.t("fileNotFoundDisk");
                 }
                 return new String[]{commitContent, diskContent};
             }
@@ -501,8 +503,8 @@ public class CommitDetailPanel extends JPanel {
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to diff with disk", e);
                     JOptionPane.showMessageDialog(CommitDetailPanel.this,
-                            "Failed: " + e.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("commitDetailPanel.failed", e.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -522,7 +524,7 @@ public class CommitDetailPanel extends JPanel {
         int row = filesTable.getSelectedRow();
         ScmItem item = row >= 0 ? filesTableModel.getItemAt(row) : null;
         if (item == null || currentRevision == null) return;
-        JFrame historyFrame = new JFrame("History: " + item.getShortName());
+        JFrame historyFrame = new JFrame(I18n.t("commitDetailPanel.history", item.getShortName()));
         historyFrame.setSize(800, 600);
         historyFrame.setLocationRelativeTo(this);
         HistoryPanel hp = new HistoryPanel(statusBar, true);
@@ -564,7 +566,7 @@ public class CommitDetailPanel extends JPanel {
         // Row 0: Message (spans full width)
         lbl.gridx = 0;
         lbl.gridy = 0;
-        fieldsPanel.add(new JLabel("Message:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("commitDetailPanel.message")), lbl);
         fld.gridx = 1;
         fld.gridy = 0;
         fld.gridwidth = 5;
@@ -585,21 +587,21 @@ public class CommitDetailPanel extends JPanel {
         // Row 2: Author | Email | Date
         lbl.gridx = 0;
         lbl.gridy = 2;
-        fieldsPanel.add(new JLabel("Author:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("author")), lbl);
         fld.gridx = 1;
         fld.gridy = 2;
         fieldsPanel.add(authorField, fld);
 
         lbl.gridx = 2;
         lbl.gridy = 2;
-        fieldsPanel.add(new JLabel("Email:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("email")), lbl);
         fld.gridx = 3;
         fld.gridy = 2;
         fieldsPanel.add(emailField, fld);
 
         lbl.gridx = 4;
         lbl.gridy = 2;
-        fieldsPanel.add(new JLabel("Date:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("date")), lbl);
         fld.gridx = 5;
         fld.gridy = 2;
         fieldsPanel.add(dateField, fld);
@@ -614,14 +616,14 @@ public class CommitDetailPanel extends JPanel {
 
         lbl.gridx = 2;
         lbl.gridy = 3;
-        fieldsPanel.add(new JLabel("Parent:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("parent")), lbl);
         fld.gridx = 3;
         fld.gridy = 3;
         fieldsPanel.add(parentField, fld);
 
         lbl.gridx = 4;
         lbl.gridy = 3;
-        fieldsPanel.add(new JLabel("Refs:"), lbl);
+        fieldsPanel.add(new JLabel(I18n.t("refs")), lbl);
         fld.gridx = 5;
         fld.gridy = 3;
         fieldsPanel.add(refsField, fld);
@@ -631,7 +633,7 @@ public class CommitDetailPanel extends JPanel {
         signatureButton.setFocusPainted(false);
         signatureButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         signatureButton.setHorizontalAlignment(SwingConstants.LEFT);
-        signatureButton.setToolTipText("Show signature details");
+        signatureButton.setToolTipText(I18n.t("showSignatureDetails"));
         signatureButton.addActionListener(e -> openSignatureDialog());
         signatureCaption.setVisible(false);
         signatureButton.setVisible(false);
@@ -809,8 +811,8 @@ public class CommitDetailPanel extends JPanel {
         } catch (Exception ex) {
             log.log(Level.WARNING, "Cannot open issue URL " + url, ex);
             JOptionPane.showMessageDialog(this,
-                    "Cannot open " + url + "\n" + ex.getMessage(),
-                    "Open issue", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("issuePickerPanel.cannotOpen", url, ex.getMessage()),
+                    I18n.t("openIssue"), JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -856,7 +858,7 @@ public class CommitDetailPanel extends JPanel {
                             currentRevision.getRevisionFullName(), null);
                 } catch (Exception e) {
                     log.log(Level.WARNING, "Failed to load raw diff", e);
-                    return "Failed to load diff: " + e.getMessage();
+                    return I18n.t("failedToLoadDiff", e.getMessage());
                 }
             }
 
@@ -867,7 +869,7 @@ public class CommitDetailPanel extends JPanel {
                     diffArea.setCaretPosition(0);
                     applyDiffHighlights();
                 } catch (Exception e) {
-                    diffArea.setText("Error loading diff");
+                    diffArea.setText(I18n.t("errorLoadingDiff"));
                 }
             }
         };
@@ -900,7 +902,7 @@ public class CommitDetailPanel extends JPanel {
     private void saveDiff() {
         if (diffArea.getText().isBlank()) return;
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save diff");
+        chooser.setDialogTitle(I18n.t("saveDiff"));
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 java.nio.file.Files.writeString(
@@ -908,8 +910,8 @@ public class CommitDetailPanel extends JPanel {
             } catch (Exception e) {
                 log.log(Level.WARNING, "Failed to save diff", e);
                 JOptionPane.showMessageDialog(this,
-                        "Failed to save: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                        I18n.t("failedToSave", e.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -990,7 +992,7 @@ public class CommitDetailPanel extends JPanel {
     }
 
     // --- Status cell renderer with color-coded status ---
-    private static class StatusCellRenderer extends DefaultTableCellRenderer {
+    private static class StatusCellRenderer extends StatusTextCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus,
@@ -1007,7 +1009,7 @@ public class CommitDetailPanel extends JPanel {
 
     // --- Table model for changed files ---
     static class ChangedFilesTableModel extends AbstractTableModel {
-        private static final String[] COLUMNS = {"Status", "File"};
+        private static final String[] COLUMNS = {I18n.t("status"), I18n.t("file")};
         private List<ScmItem> items = new ArrayList<>();
 
         public void setData(List<ScmItem> data) {

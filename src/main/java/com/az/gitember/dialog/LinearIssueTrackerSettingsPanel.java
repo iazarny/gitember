@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.IssueTrackerConfig;
 import com.az.gitember.data.TrackerProject;
 import com.az.gitember.service.tracker.LinearIssueTracker;
@@ -25,7 +26,7 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
         gbc.insets = new Insets(6, 10, 6, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JLabel hint = new JLabel("<html>Create a personal API key in Linear → Settings → Security &amp; access.</html>");
+        JLabel hint = new JLabel(I18n.t("createPersonalApiKeyLinear"));
         hint.setForeground(UIManager.getColor("Label.disabledForeground"));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -39,7 +40,7 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        add(new JLabel("API Key:"), gbc);
+        add(new JLabel(I18n.t("apiKey")), gbc);
         String token = IssueTrackerConfig.TYPE_LINEAR.equalsIgnoreCase(cfg.getType()) ? cfg.getApiToken() : "";
         tokenField = new JPasswordField(token != null ? token : "", 28);
         gbc.gridx = 1;
@@ -53,7 +54,7 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        add(new JLabel("Workspace:"), gbc);
+        add(new JLabel(I18n.t("workspace")), gbc);
         String workspace = IssueTrackerConfig.TYPE_LINEAR.equalsIgnoreCase(cfg.getType())
                 ? (cfg.getServer() != null ? cfg.getServer() : "") : "";
         workspaceField = new JTextField(workspace, 28);
@@ -65,7 +66,7 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.NONE;
 
-        JButton testBtn = new JButton("Test Connection");
+        JButton testBtn = new JButton(I18n.t("testConnection"));
         testBtn.addActionListener(e -> testConnection());
         gbc.gridx = 1;
         gbc.gridy = 3;
@@ -76,8 +77,8 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        add(new JLabel("Teams:"), gbc);
-        teamsList = new TrackerProjectCheckList("Test connection to load teams.");
+        add(new JLabel(I18n.t("teams")), gbc);
+        teamsList = new TrackerProjectCheckList(I18n.t("testConnectionLoadTeams"));
         List<String> keys = IssueTrackerConfig.TYPE_LINEAR.equalsIgnoreCase(cfg.getType())
                 ? cfg.getProjectKeys() : List.of();
         teamsList.populate(keys, List.of());
@@ -113,8 +114,8 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
         boolean ready = cfg.isReady();
         if (!ready) {
             JOptionPane.showMessageDialog(owner != null ? owner : this,
-                    "Enter a Linear API key first.",
-                    "Linear", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("enterLinearApiKeyFirst"),
+                    I18n.t("linear"), JOptionPane.WARNING_MESSAGE);
         }
         if (ready) {
             new SwingWorker<String, Void>() {
@@ -144,13 +145,13 @@ public class LinearIssueTrackerSettingsPanel extends JPanel {
                         }
                         teamsList.populate(previously, teams);
                         JOptionPane.showMessageDialog(owner,
-                                "Connected as " + who + ".\n" + teams.size() + " team(s) loaded.",
-                                "Linear", JOptionPane.INFORMATION_MESSAGE);
+                                I18n.t("connectedAsTeamSLoaded", who, teams.size()),
+                                I18n.t("linear"), JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception ex) {
                         Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                         JOptionPane.showMessageDialog(owner,
-                                "Cannot connect:\n" + cause.getMessage(),
-                                "Linear", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("cannotConnect", cause.getMessage()),
+                                I18n.t("linear"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }.execute();

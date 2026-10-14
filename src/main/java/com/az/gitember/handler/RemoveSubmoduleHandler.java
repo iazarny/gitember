@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Submodule;
 import com.az.gitember.service.Context;
 
@@ -22,7 +23,7 @@ public class RemoveSubmoduleHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Remove submodule " + path;
+        return I18n.t("removeSubmodule", path);
     }
 
     @Override
@@ -44,11 +45,9 @@ public class RemoveSubmoduleHandler extends AbstractAsyncHandler<Void> {
     }
 
     private static void confirmAndRemove(Component parent, Submodule submodule) {
-        String message = "<html>Remove submodule <b>" + submodule.getPath() + "</b>?<br><br>"
-                + "This de-registers the module, removes it from the index,<br>"
-                + "and deletes its working tree.</html>";
-        String[] options = {"Remove", "Remove (force)", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(parent, message, "Remove Submodule",
+        String message = I18n.t("removeSubmoduleDeRegistersModule", submodule.getPath());
+        String[] options = {I18n.t("remove"), I18n.t("removeForce"), I18n.t("cancel")};
+        int choice = JOptionPane.showOptionDialog(parent, message, I18n.t("removeSubmoduleHandler.removeSubmodule"),
                 JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
         if (choice == 0 || choice == 1) {

@@ -1,5 +1,7 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.ui.misc.StatusTextCellRenderer;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.Settings;
@@ -89,14 +91,15 @@ public class CommitDialog extends JDialog {
         // Files table
         final String[] cols;
         if (Context.isWorkspaceMode()) {
-            cols = new String[]{"Repo", "Status", "File"};
+            cols = new String[]{I18n.t("repo"), I18n.t("status"), I18n.t("file")};
         } else {
-            cols = new String[]{"Status", "File"};
+            cols = new String[]{I18n.t("status"), I18n.t("file")};
         }
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         filesTable = new JTable(tableModel);
+        filesTable.getColumnModel().getColumn(cols.length - 2).setCellRenderer(new StatusTextCellRenderer());
         if (Context.isWorkspaceMode()) {
             filesTable.getColumnModel().getColumn(0).setPreferredWidth(150);
             filesTable.getColumnModel().getColumn(0).setMaxWidth(300);
@@ -131,7 +134,7 @@ public class CommitDialog extends JDialog {
         }
 
         // Scan status panel (shown while LLM scan is in progress)
-        scanStatusLabel = new JLabel("Scanning for secrets…");
+        scanStatusLabel = new JLabel(I18n.t("scanningForSecrets"));
         scanStatusLabel.setFont(scanStatusLabel.getFont().deriveFont(Font.ITALIC));
         scanProgress = new JProgressBar();
         scanProgress.setIndeterminate(true);
@@ -143,7 +146,7 @@ public class CommitDialog extends JDialog {
         scanStatusPanel.setVisible(false);
 
         // Findings table (hidden until results arrive)
-        findingsModel = new DefaultTableModel(new String[]{"File", "Line", "Type", "Confidence", "Details", ""}, 0) {
+        findingsModel = new DefaultTableModel(new String[]{I18n.t("file"), I18n.t("line"), I18n.t("type"), I18n.t("confidence"), I18n.t("details"), ""}, 0) {
             @Override public boolean isCellEditable(int row, int column) { return column == 5; }
             @Override public Class<?> getColumnClass(int col) { return col == 5 ? JButton.class : Object.class; }
         };
@@ -173,7 +176,7 @@ public class CommitDialog extends JDialog {
         JScrollPane findingsScroll = new JScrollPane(findingsTable);
         findingsScroll.setPreferredSize(new Dimension(0, 120));
 
-        JLabel findingsLabel = new JLabel("⚠ Potential secrets / sensitive data detected:");
+        JLabel findingsLabel = new JLabel(I18n.t("potentialSecretsSensitiveDataDetected"));
         findingsLabel.setName("findingsLabel");
         findingsLabel.setForeground(SyntaxStyleUtil.statusColor("DELETE"));
         findingsLabel.setFont(findingsLabel.getFont().deriveFont(Font.BOLD));
@@ -185,12 +188,12 @@ public class CommitDialog extends JDialog {
         findingsPanel.setVisible(false);
 
         // Buttons
-        amendCheckBox = new JCheckBox("Amend last commit");
+        amendCheckBox = new JCheckBox(I18n.t("amendLastCommit"));
         amendCheckBox.setName("amendCheckBox");
         amendCheckBox.setEnabled(anyCanAmend());
         amendCheckBox.addActionListener(e -> onAmendToggled());
 
-        publishedWarning = new JLabel("Last commit is already on the remote — amending rewrites history.");
+        publishedWarning = new JLabel(I18n.t("lastCommitAlreadyRemoteAmending"));
         publishedWarning.setName("amendPublishedWarning");
         publishedWarning.setForeground(SyntaxStyleUtil.statusColor("DELETE"));
         publishedWarning.setVisible(false);
@@ -200,10 +203,10 @@ public class CommitDialog extends JDialog {
         amendPanel.add(publishedWarning);
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
-        commitBtn = new JButton("Commit");
+        commitBtn = new JButton(I18n.t("commit"));
         commitBtn.setName("commitButton");
         commitBtn.addActionListener(e -> onCommit());
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.setName("cancelButton");
         cancelBtn.addActionListener(e -> dispose());
         JPanel commitCancelPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -259,7 +262,7 @@ public class CommitDialog extends JDialog {
         } else {
             titleTail = Context.getWorkingBranch().getShortName();
         }
-        return "Commit ["+titleTail+"]";
+        return I18n.t("commitDialog.commit", titleTail);
     }
 
     private void populateFiles() {
@@ -349,7 +352,7 @@ public class CommitDialog extends JDialog {
             String model = llmModel();
 
             applyAiSuggestion("…");
-            scanStatusLabel.setText("Generating commit message…");
+            scanStatusLabel.setText(I18n.t("generatingCommitMessage"));
             scanStatusPanel.setVisible(true);
 
             new SwingWorker<String, String>() {
@@ -361,7 +364,7 @@ public class CommitDialog extends JDialog {
                         log.info("AI commit msg: Ollama status = " + status);
 
                         if (status == OllamaManager.Status.STOPPED) {
-                            publish("Starting Ollama…");
+                            publish(I18n.t("startingOllama"));
                             OllamaManager.startServerAndWait(20_000);
                             status = OllamaManager.Status.RUNNING;
                         }
@@ -370,14 +373,14 @@ public class CommitDialog extends JDialog {
                         }
                         if (!OllamaManager.isModelAvailable(model)) {
                             log.info("AI commit msg: pulling model " + model);
-                            publish("Pulling model \"" + model + "\" (first run, please wait)…");
+                            publish(I18n.t("pullingModelFirstRunPlease", model));
                             Process pull = OllamaManager.startModelPull(model);
                             pull.waitFor();
                         }
                         if (!OllamaManager.isRunning() || !OllamaManager.isModelAvailable(model)) {
                             throw new IllegalStateException("Model '" + model + "' not available after pull");
                         }
-                        publish("Generating commit message…");
+                        publish(I18n.t("generatingCommitMessage"));
                         log.info("AI commit msg: diff length = " + (diff != null ? diff.length() : 0));
                         return LlmCommitMessageService.generate(diff, null, OllamaManager.BASE_URL, model);
                     } else {
@@ -536,21 +539,21 @@ public class CommitDialog extends JDialog {
                     OllamaManager.Status status = OllamaManager.getStatus();
 
                     if (status == OllamaManager.Status.STOPPED) {
-                        publish("Starting Ollama…");
+                        publish(I18n.t("startingOllama"));
                         OllamaManager.startServerAndWait(20_000);
                         status = OllamaManager.Status.RUNNING;
                     }
 
                     if (status == OllamaManager.Status.RUNNING) {
                         if (!OllamaManager.isModelAvailable(model)) {
-                            publish("Pulling model \"" + model + "\" (first run, please wait)...");
+                            publish(I18n.t("commitDialog.pullingModelFirstRunPlease", model));
                             Process pull = OllamaManager.startModelPull(model);
                             try (java.io.BufferedReader br = new java.io.BufferedReader(
                                     new java.io.InputStreamReader(pull.getInputStream()))) {
                                 String line;
                                 while ((line = br.readLine()) != null) {
                                     String trimmed = line.trim();
-                                    if (!trimmed.isEmpty()) publish("Pulling: " + trimmed);
+                                    if (!trimmed.isEmpty()) publish(I18n.t("pulling", trimmed));
                                 }
                             }
                             pull.waitFor();
@@ -562,7 +565,7 @@ public class CommitDialog extends JDialog {
                 }
 
                 // ---- Scan files ----
-                publish(llmReady ? "LLM secret scan in progress…" : "Scanning for secrets…");
+                publish(llmReady ? I18n.t("llmSecretScanProgress") : I18n.t("scanningForSecrets"));
 
                 DetectorService service = llmReady
                         ? new DetectorService(OllamaManager.BASE_URL, model)
@@ -607,7 +610,7 @@ public class CommitDialog extends JDialog {
                                     f.getType(),
                                     f.getConfidence() != null ? f.getConfidence().name() : "",
                                     f.getMessage(),
-                                    "Open"
+                                    I18n.t("open")
                             });
                         }
                         findingsPanel.setVisible(true);
@@ -635,14 +638,13 @@ public class CommitDialog extends JDialog {
             }
             if (!missingMessage.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "Commit message is required for: " + String.join(", ", missingMessage)
-                                + "\n(set a per-project message, or a common message as fallback)",
-                        "Validation", JOptionPane.WARNING_MESSAGE);
+                        I18n.t("commitMessageRequiredSetPer", String.join(", ", missingMessage)),
+                        I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
                 return;
             }
         } else if (withIssueKey(commitMessagePanel.getMessage().trim()).isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Commit message is required",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("commitMessageIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -695,10 +697,8 @@ public class CommitDialog extends JDialog {
                 }
                 if (!unmergeable.isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                            "Commit succeeded for all projects in the workspace.\n"
-                                    + "However, merging with the upstream branch may fail for: "
-                                    + String.join(", ", unmergeable),
-                            "Merge Warning", JOptionPane.WARNING_MESSAGE);
+                            I18n.t("commitSucceededAllProjectsWorkspace", String.join(", ", unmergeable)),
+                            I18n.t("mergeWarning"), JOptionPane.WARNING_MESSAGE);
                 }
             } else {
                 Project project = Context.getCurrentProject().orElse(null);
@@ -713,8 +713,8 @@ public class CommitDialog extends JDialog {
         } catch (Exception e) {
             log.warning("Commit failed: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
-                    "Commit failed: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("commitFailed", e.getMessage()),
+                    I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -789,7 +789,7 @@ public class CommitDialog extends JDialog {
                 Project project = Context.getCurrentProject().orElse(null);
                 commitMessagePanel.setMessage(headMessage(project));
             }
-            commitBtn.setText("Amend");
+            commitBtn.setText(I18n.t("amend"));
             updatePublishedWarning();
         } else {
             if (savedCommonMessage != null) {
@@ -800,7 +800,7 @@ public class CommitDialog extends JDialog {
                     commitMessagePanel.setProjectMessage(i, savedProjectMessages[i]);
                 }
             }
-            commitBtn.setText("Commit");
+            commitBtn.setText(I18n.t("commit"));
             publishedWarning.setVisible(false);
         }
     }
@@ -857,11 +857,10 @@ public class CommitDialog extends JDialog {
         if (!proceed) {
             String where = workspaceProjects != null
                     ? String.join(", ", published)
-                    : "this repository";
+                    : I18n.t("thisRepository");
             int choice = JOptionPane.showConfirmDialog(this,
-                    "The last commit is already on the remote for: " + where + ".\n"
-                            + "Amending rewrites history and you will need to force-push.\nContinue?",
-                    "Amend published commit",
+                    I18n.t("commitDialog.lastCommitAlreadyRemoteAmending", where),
+                    I18n.t("amendPublishedCommit"),
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             proceed = choice == JOptionPane.YES_OPTION;
@@ -944,7 +943,7 @@ public class CommitDialog extends JDialog {
             SwingUtilities.invokeLater(() -> viewer.scrollToAndHighlight(f.getLineNo()));
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
-                    "Cannot open file:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("cannotOpenFile", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -953,7 +952,7 @@ public class CommitDialog extends JDialog {
     // -------------------------------------------------------------------------
 
     private static class OpenButtonRenderer implements TableCellRenderer {
-        private final JButton btn = new JButton("Open");
+        private final JButton btn = new JButton(I18n.t("open"));
         { btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 11f)); }
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
@@ -963,7 +962,7 @@ public class CommitDialog extends JDialog {
     }
 
     private class OpenButtonEditor extends AbstractCellEditor implements TableCellEditor {
-        private final JButton btn = new JButton("Open");
+        private final JButton btn = new JButton(I18n.t("open"));
         private int clickedRow = -1;
 
         OpenButtonEditor(JTable table) {

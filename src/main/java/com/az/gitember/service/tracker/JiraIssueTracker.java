@@ -1,5 +1,6 @@
 package com.az.gitember.service.tracker;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Issue;
 import com.az.gitember.data.IssueStatus;
 import com.az.gitember.data.IssueTrackerConfig;
@@ -80,11 +81,11 @@ public class JiraIssueTracker implements IssueTracker {
     @Override
     public void createIssue(Issue issue) throws Exception {
         if (issue == null || issue.getTitle() == null || issue.getTitle().isBlank()) {
-            throw new IllegalArgumentException("Issue title is required");
+            throw new IllegalArgumentException(I18n.t("issueTitleIsRequired"));
         }
         List<String> projects = config.getProjectKeys();
         if (projects.isEmpty()) {
-            throw new IllegalStateException("Select at least one Jira project in Settings");
+            throw new IllegalStateException(I18n.t("selectAtLeastOneJira"));
         }
         ObjectNode fields = mapper.createObjectNode();
         ObjectNode project = mapper.createObjectNode();
@@ -105,7 +106,7 @@ public class JiraIssueTracker implements IssueTracker {
     @Override
     public void addComment(String issueKey, String comment) throws Exception {
         if (issueKey == null || issueKey.isBlank() || comment == null) {
-            throw new IllegalArgumentException("Issue key and comment are required");
+            throw new IllegalArgumentException(I18n.t("issueKeyCommentRequired"));
         }
         ObjectNode payload = mapper.createObjectNode();
         payload.put("body", comment);
@@ -318,8 +319,8 @@ public class JiraIssueTracker implements IssueTracker {
             String snippet = response.body() != null && response.body().length() > 300
                     ? response.body().substring(0, 300) : response.body();
             log.log(Level.WARNING, "Jira HTTP " + status + " " + request.uri() + " " + snippet);
-            throw new java.io.IOException("Jira HTTP " + status + (snippet != null && !snippet.isBlank()
-                    ? ": " + snippet : ""));
+            throw new java.io.IOException(I18n.t("jiraHttp", status, (snippet != null && !snippet.isBlank()
+                    ? ": " + snippet : "")));
         }
         return response.body() != null ? response.body() : "";
     }

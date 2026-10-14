@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmReflogEntry;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
@@ -35,14 +36,14 @@ public class ReflogPanel extends JPanel {
         this.statusBar = statusBar;
         setLayout(new BorderLayout());
 
-        refreshBtn = Util.createButton("Refresh", "Reload reflog", FontAwesomeSolid.SYNC);
+        refreshBtn = Util.createButton(I18n.t("refresh"), I18n.t("reloadReflog"), FontAwesomeSolid.SYNC);
         refreshBtn.addActionListener(e -> reload());
 
         searchField = new JTextField(15);
         searchField.setPreferredSize(new Dimension(150, 25));
         searchField.setMinimumSize(new Dimension(100, 25));
         searchField.setMaximumSize(new Dimension(150, 25));
-        searchField.putClientProperty("JTextField.placeholderText", "Filter reflog...");
+        searchField.putClientProperty("JTextField.placeholderText", I18n.t("filterReflog"));
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
             @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
@@ -94,7 +95,7 @@ public class ReflogPanel extends JPanel {
     }
 
     public void reload() {
-        statusBar.setStatus("Loading reflog...");
+        statusBar.setStatus(I18n.t("loadingReflog"));
         new SwingWorker<List<ScmReflogEntry>, Void>() {
             @Override
             protected List<ScmReflogEntry> doInBackground() {
@@ -106,10 +107,10 @@ public class ReflogPanel extends JPanel {
                 try {
                     tableModel.setItems(get());
                     applyFilter();
-                    statusBar.setStatus("Reflog: " + tableModel.getRowCount() + " entries");
+                    statusBar.setStatus(I18n.t("reflogEntries", tableModel.getRowCount()));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Cannot load reflog", ex);
-                    statusBar.setStatus("Cannot load reflog: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("cannotLoadReflog", ex.getMessage()));
                 }
             }
         }.execute();
@@ -131,30 +132,30 @@ public class ReflogPanel extends JPanel {
         }
 
         JPopupMenu menu = new JPopupMenu();
-        JMenuItem recoverBranch = new JMenuItem("Recover deleted branch...");
+        JMenuItem recoverBranch = new JMenuItem(I18n.t("recoverDeletedBranch"));
         recoverBranch.addActionListener(ev -> recoverDeletedBranch(entry));
         menu.add(recoverBranch);
 
-        JMenuItem recoverReset = new JMenuItem("Recover hard reset...");
+        JMenuItem recoverReset = new JMenuItem(I18n.t("recoverHardReset"));
         recoverReset.addActionListener(ev -> recoverHardReset(entry));
         menu.add(recoverReset);
 
-        JMenuItem recoverCommit = new JMenuItem("Recover deleted commit...");
+        JMenuItem recoverCommit = new JMenuItem(I18n.t("recoverDeletedCommit"));
         recoverCommit.addActionListener(ev -> recoverDeletedCommit(entry));
         menu.add(recoverCommit);
 
-        JMenuItem recoverStash = new JMenuItem("Recover stash...");
+        JMenuItem recoverStash = new JMenuItem(I18n.t("recoverStash"));
         recoverStash.addActionListener(ev -> recoverStash(entry));
         menu.add(recoverStash);
 
         menu.addSeparator();
-        JMenuItem copySha = new JMenuItem("Copy commit SHA");
+        JMenuItem copySha = new JMenuItem(I18n.t("copyCommitSha"));
         copySha.addActionListener(ev -> {
             String sha = entry.recoveryCommitId();
             if (sha != null && !sha.isBlank()) {
                 Toolkit.getDefaultToolkit().getSystemClipboard()
                         .setContents(new java.awt.datatransfer.StringSelection(sha), null);
-                statusBar.setStatus("Copied " + entry.getShortNewId());
+                statusBar.setStatus(I18n.t("copied", entry.getShortNewId()));
             }
         });
         menu.add(copySha);
@@ -164,13 +165,13 @@ public class ReflogPanel extends JPanel {
     private void recoverDeletedBranch(ScmReflogEntry entry) {
         String suggested = entry.suggestedBranchName();
         String name = JOptionPane.showInputDialog(this,
-                "Recreate local branch at " + shortOrEmpty(entry.recoveryCommitId()) + ":",
+                I18n.t("recreateLocalBranchAt", shortOrEmpty(entry.recoveryCommitId())),
                 suggested);
         if (name != null && !name.isBlank()) {
-            runRecover("Recover deleted branch", () -> {
+            runRecover(I18n.t("reflogPanel.recoverDeletedBranch"), () -> {
                 Context.getGitRepoService().recoverDeletedBranch(name.trim(), entry.recoveryCommitId());
                 Context.updateBranches();
-                return "Recovered branch '" + name.trim() + "'";
+                return I18n.t("recoveredBranch", name.trim());
             });
         }
     }
@@ -178,17 +179,16 @@ public class ReflogPanel extends JPanel {
     private void recoverHardReset(ScmReflogEntry entry) {
         String sha = entry.recoveryCommitId();
         int ok = JOptionPane.showConfirmDialog(this,
-                "Hard-reset HEAD and the working tree to " + shortOrEmpty(sha) + "?\n"
-                        + "Uncommitted changes will be lost.",
-                "Recover hard reset",
+                I18n.t("hardResetHeadWorkingTree", shortOrEmpty(sha)),
+                I18n.t("reflogPanel.recoverHardReset"),
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         if (ok == JOptionPane.OK_OPTION) {
-            runRecover("Recover hard reset", () -> {
+            runRecover(I18n.t("reflogPanel.recoverHardReset"), () -> {
                 Context.getGitRepoService().recoverHardReset(sha, null);
                 Context.updateWorkingBranch();
                 Context.updateStatus(null, true);
-                return "Reset to " + shortOrEmpty(sha);
+                return I18n.t("reflogPanel.resetTo", shortOrEmpty(sha));
             });
         }
     }
@@ -197,13 +197,13 @@ public class ReflogPanel extends JPanel {
         String sha = entry.getNewId();
         String suggested = "recovered-" + (sha != null && sha.length() >= 7 ? sha.substring(0, 7) : "commit");
         String name = JOptionPane.showInputDialog(this,
-                "Create a branch pointing at commit " + shortOrEmpty(sha) + ":",
+                I18n.t("createBranchPointingAtCommit", shortOrEmpty(sha)),
                 suggested);
         if (name != null && !name.isBlank()) {
-            runRecover("Recover deleted commit", () -> {
+            runRecover(I18n.t("reflogPanel.recoverDeletedCommit"), () -> {
                 Context.getGitRepoService().recoverDeletedCommit(name.trim(), sha);
                 Context.updateBranches();
-                return "Created branch '" + name.trim() + "' at " + shortOrEmpty(sha);
+                return I18n.t("createdBranchAt", name.trim(), shortOrEmpty(sha));
             });
         }
     }
@@ -211,14 +211,14 @@ public class ReflogPanel extends JPanel {
     private void recoverStash(ScmReflogEntry entry) {
         String sha = entry.getNewId();
         int ok = JOptionPane.showConfirmDialog(this,
-                "Restore this commit onto the stash list?\n" + shortOrEmpty(sha),
-                "Recover stash",
+                I18n.t("restoreCommitOntoStashList", shortOrEmpty(sha)),
+                I18n.t("reflogPanel.recoverStash"),
                 JOptionPane.OK_CANCEL_OPTION);
         if (ok == JOptionPane.OK_OPTION) {
-            runRecover("Recover stash", () -> {
+            runRecover(I18n.t("reflogPanel.recoverStash"), () -> {
                 Context.getGitRepoService().recoverStash(sha);
                 Context.updateStash();
-                return "Stash restored at " + shortOrEmpty(sha);
+                return I18n.t("stashRestoredAt", shortOrEmpty(sha));
             });
         }
     }
@@ -241,10 +241,10 @@ public class ReflogPanel extends JPanel {
                     reload();
                 } catch (Exception ex) {
                     log.log(Level.WARNING, title + " failed", ex);
-                    statusBar.setStatus(title + " failed");
+                    statusBar.setStatus(I18n.t("opFailed", title));
                     JOptionPane.showMessageDialog(ReflogPanel.this,
-                            title + " failed:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("opFailedDialog", title, ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -264,7 +264,7 @@ public class ReflogPanel extends JPanel {
     }
 
     private static class ReflogTableModel extends AbstractTableModel {
-        private static final String[] COLS = {"Selector", "Action", "Commit", "When", "Message"};
+        private static final String[] COLS = {I18n.t("selector"), I18n.t("action"), I18n.t("commit"), I18n.t("when"), I18n.t("reflogPanel.message")};
         private final List<ScmReflogEntry> all = new ArrayList<>();
         private final List<ScmReflogEntry> shown = new ArrayList<>();
         private String filter = "";

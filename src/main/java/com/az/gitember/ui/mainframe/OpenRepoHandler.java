@@ -1,5 +1,6 @@
 package com.az.gitember.ui.mainframe;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.handler.AbstractAsyncHandler;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.MainFrame;
@@ -17,14 +18,14 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Open Repository";
+        return I18n.t("welcomePanel.openRepository");
     }
 
     @Override
     public void execute() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select Git Repository");
+        chooser.setDialogTitle(I18n.t("selectGitRepository"));
 
         // Start from last known location
         if (StringUtils.isEmpty(Context.getProjectFolder())) {
@@ -34,7 +35,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
         int result = chooser.showOpenDialog(parent);
         if (result == JFileChooser.APPROVE_OPTION) {
             String path = chooser.getSelectedFile().getAbsolutePath();
-            statusBar.setStatus("Opening " + path + "...");
+            statusBar.setStatus(I18n.t("opening", path));
             statusBar.showProgress(true);
             MainFrame.getInstance().swithToTheProjectView();
 
@@ -51,7 +52,7 @@ public class OpenRepoHandler extends AbstractAsyncHandler<Void> {
                     try {
                         get();
                         statusBar.clearProgress();
-                        statusBar.setStatus("Repository opened");
+                        statusBar.setStatus(I18n.t("repositoryOpened"));
                     } catch (Exception e) {
                         onError(e.getCause() instanceof Exception ? (Exception) e.getCause() : e);
                     }

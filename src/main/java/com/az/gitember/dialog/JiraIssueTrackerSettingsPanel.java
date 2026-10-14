@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.IssueTrackerConfig;
 import com.az.gitember.data.TrackerProject;
 import com.az.gitember.service.tracker.JiraIssueTracker;
@@ -33,7 +34,7 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        add(new JLabel("Server:"), gbc);
+        add(new JLabel(I18n.t("server")), gbc);
         serverField = new JTextField(jiraType && cfg.getServer() != null ? cfg.getServer() : "", 28);
         serverField.putClientProperty("JTextField.placeholderText", "https://company.atlassian.net");
         gbc.gridx = 1;
@@ -47,10 +48,10 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 1;
-        add(new JLabel("Authentication:"), gbc);
-        tokenRadio = new JRadioButton("API Token",
+        add(new JLabel(I18n.t("authentication")), gbc);
+        tokenRadio = new JRadioButton(I18n.t("apiToken"),
                 jiraType && !IssueTrackerConfig.AUTH_OAUTH.equals(cfg.getAuthType()));
-        oauthRadio = new JRadioButton("OAuth (coming soon)");
+        oauthRadio = new JRadioButton(I18n.t("oauthComingSoon"));
         oauthRadio.setEnabled(false);
         ButtonGroup authGroup = new ButtonGroup();
         authGroup.add(tokenRadio);
@@ -65,7 +66,7 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        add(new JLabel("Email:"), gbc);
+        add(new JLabel(I18n.t("email")), gbc);
         emailField = new JTextField(jiraType && cfg.getEmail() != null ? cfg.getEmail() : "", 28);
         gbc.gridx = 1;
         gbc.gridwidth = 2;
@@ -76,7 +77,7 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 3;
-        add(new JLabel("API Token:"), gbc);
+        add(new JLabel(I18n.t("jiraIssueTrackerSettingsPanel.apiToken")), gbc);
         tokenField = new JPasswordField(jiraType && cfg.getApiToken() != null ? cfg.getApiToken() : "", 28);
         gbc.gridx = 1;
         gbc.gridwidth = 2;
@@ -85,7 +86,7 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.NONE;
 
-        JButton testBtn = new JButton("Test Connection");
+        JButton testBtn = new JButton(I18n.t("testConnection"));
         testBtn.addActionListener(e -> testConnection());
         gbc.gridx = 1;
         gbc.gridy = 4;
@@ -96,8 +97,8 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        add(new JLabel("Projects:"), gbc);
-        projectsList = new TrackerProjectCheckList("Test connection to load projects.");
+        add(new JLabel(I18n.t("projects")), gbc);
+        projectsList = new TrackerProjectCheckList(I18n.t("testConnectionLoadProjects"));
         projectsList.populate(jiraType ? cfg.getProjectKeys() : List.of(), List.of());
         JScrollPane projectScroll = new JScrollPane(projectsList);
         projectScroll.setPreferredSize(new Dimension(280, 90));
@@ -131,8 +132,8 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
         boolean ready = cfg.isReady();
         if (!ready) {
             JOptionPane.showMessageDialog(owner != null ? owner : this,
-                    "Enter server, email, and API token first.",
-                    "Jira", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("enterServerEmailApiToken"),
+                    I18n.t("jira"), JOptionPane.WARNING_MESSAGE);
         }
         if (ready) {
             new SwingWorker<String, Void>() {
@@ -156,13 +157,13 @@ public class JiraIssueTrackerSettingsPanel extends JPanel {
                         }
                         projectsList.populate(previously, projects);
                         JOptionPane.showMessageDialog(owner,
-                                "Connected as " + who + ".\n" + projects.size() + " project(s) loaded.",
-                                "Jira", JOptionPane.INFORMATION_MESSAGE);
+                                I18n.t("connectedAsProjectSLoaded", who, projects.size()),
+                                I18n.t("jira"), JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception ex) {
                         Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                         JOptionPane.showMessageDialog(owner,
-                                "Cannot connect:\n" + cause.getMessage(),
-                                "Jira", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("cannotConnect", cause.getMessage()),
+                                I18n.t("jira"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }.execute();

@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.WorktreeInfo;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
@@ -22,10 +23,10 @@ public class WorktreesDialog extends JDialog {
 
     private final WorktreeTableModel model = new WorktreeTableModel();
     private final JTable table;
-    private final JButton addBtn    = new JButton("Add…");
-    private final JButton removeBtn = new JButton("Remove");
-    private final JButton openBtn   = new JButton("Open");
-    private final JButton pruneBtn  = new JButton("Prune");
+    private final JButton addBtn    = new JButton(I18n.t("worktreesDialog.add"));
+    private final JButton removeBtn = new JButton(I18n.t("remove"));
+    private final JButton openBtn   = new JButton(I18n.t("open"));
+    private final JButton pruneBtn  = new JButton(I18n.t("prune"));
     private final JLabel  statusLbl = new JLabel(" ");
 
     /** Set to the worktree the user wants to open; {@code null} if none chosen. */
@@ -35,7 +36,7 @@ public class WorktreesDialog extends JDialog {
     private List<WorktreeInfo> currentWorktrees = new ArrayList<>();
 
     public WorktreesDialog(Frame parent) {
-        super(parent, "Worktrees", true);
+        super(parent, I18n.t("worktrees"), true);
         setSize(700, 350);
         setLocationRelativeTo(parent);
         setMinimumSize(new Dimension(500, 250));
@@ -68,7 +69,7 @@ public class WorktreesDialog extends JDialog {
         south.add(btnPanel, BorderLayout.NORTH);
         south.add(statusPanel, BorderLayout.SOUTH);
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel closePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 4));
         closePanel.add(closeBtn);
@@ -89,7 +90,7 @@ public class WorktreesDialog extends JDialog {
     }
 
     private void loadWorktrees() {
-        statusLbl.setText("Loading…");
+        statusLbl.setText(I18n.t("loading"));
         SwingWorker<List<WorktreeInfo>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<WorktreeInfo> doInBackground() throws Exception {
@@ -103,7 +104,7 @@ public class WorktreesDialog extends JDialog {
                     statusLbl.setText(model.getRowCount() + " worktree(s)");
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to list worktrees", ex);
-                    statusLbl.setText("Error: " + ex.getMessage());
+                    statusLbl.setText(I18n.t("indexHistoryDialog.error", ex.getMessage()));
                 }
                 updateButtons();
             }
@@ -119,7 +120,7 @@ public class WorktreesDialog extends JDialog {
             String branchName = dlg.getBranch();
             boolean newBranch = dlg.isNewBranch();
 
-            statusLbl.setText("Adding worktree…");
+            statusLbl.setText(I18n.t("addingWorktree"));
             setButtonsEnabled(false);
 
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -137,10 +138,10 @@ public class WorktreesDialog extends JDialog {
                     } catch (Exception ex) {
                         log.log(Level.WARNING, "Add worktree failed", ex);
                         Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                        statusLbl.setText("Error: " + cause.getMessage());
+                        statusLbl.setText(I18n.t("indexHistoryDialog.error", cause.getMessage()));
                         JOptionPane.showMessageDialog(WorktreesDialog.this,
-                                "Cannot add worktree:\n" + cause.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                                I18n.t("cannotAddWorktree", cause.getMessage()),
+                                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
             };
@@ -153,21 +154,21 @@ public class WorktreesDialog extends JDialog {
         if (wt == null) return;
         if (wt.isMain()) {
             JOptionPane.showMessageDialog(this,
-                    "The main worktree cannot be removed.",
-                    "Remove Worktree", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("mainWorktreeCannotRemoved"),
+                    I18n.t("removeWorktree"), JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int choice = JOptionPane.showConfirmDialog(this,
-                "Remove worktree at:\n" + wt.getPath() + "\n\nForce remove if there are local changes?",
-                "Remove Worktree",
+                I18n.t("removeWorktreeAtForceRemove", wt.getPath()),
+                I18n.t("removeWorktree"),
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
         if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) return;
         boolean force = (choice == JOptionPane.YES_OPTION);
 
-        statusLbl.setText("Removing worktree…");
+        statusLbl.setText(I18n.t("removingWorktree"));
         setButtonsEnabled(false);
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -185,10 +186,10 @@ public class WorktreesDialog extends JDialog {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Remove worktree failed", ex);
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    statusLbl.setText("Error: " + cause.getMessage());
+                    statusLbl.setText(I18n.t("indexHistoryDialog.error", cause.getMessage()));
                     JOptionPane.showMessageDialog(WorktreesDialog.this,
-                            "Cannot remove worktree:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotRemoveWorktree", cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -203,7 +204,7 @@ public class WorktreesDialog extends JDialog {
     }
 
     private void onPrune() {
-        statusLbl.setText("Pruning…");
+        statusLbl.setText(I18n.t("pruning"));
         setButtonsEnabled(false);
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
@@ -220,7 +221,7 @@ public class WorktreesDialog extends JDialog {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Prune worktrees failed", ex);
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                    statusLbl.setText("Error: " + cause.getMessage());
+                    statusLbl.setText(I18n.t("indexHistoryDialog.error", cause.getMessage()));
                 }
             }
         };
@@ -257,7 +258,7 @@ public class WorktreesDialog extends JDialog {
 
     private static class WorktreeTableModel extends AbstractTableModel {
 
-        private static final String[] COLUMNS = { "Path", "Branch", "HEAD", "Status" };
+        private static final String[] COLUMNS = { I18n.t("worktreesDialog.path"), I18n.t("worktreesDialog.branch"), "HEAD", I18n.t("status") };
 
         private List<WorktreeInfo> data = new ArrayList<>();
 

@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.LfsException;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.service.Context;
@@ -20,7 +21,7 @@ public class LfsUploadHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected String getOperationName() {
-        return "Upload LFS objects";
+        return I18n.t("lfsUploadHandler.uploadLfsObjects");
     }
 
     @Override
@@ -32,16 +33,16 @@ public class LfsUploadHandler extends AbstractAsyncHandler<Void> {
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus("LFS objects uploaded");
+        statusBar.setStatus(I18n.t("lfsObjectsUploaded"));
     }
 
     @Override
     protected void onError(Exception e) {
         if (e instanceof LfsException lfs && lfs.getKind() == LfsException.Kind.NO_REMOTE) {
             statusBar.clearProgress();
-            statusBar.setStatus(getOperationName() + " failed: no HTTP remote");
+            statusBar.setStatus(I18n.t("failedNoHttpRemote", getOperationName()));
             JOptionPane.showMessageDialog(parent, lfs.getMessage(),
-                    "Git LFS", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("gitLfs"), JOptionPane.WARNING_MESSAGE);
         } else if (!credentialsPrompted && isAuthError(e)) {
             credentialsPrompted = true;
             if (promptAndSaveCredentials()) {

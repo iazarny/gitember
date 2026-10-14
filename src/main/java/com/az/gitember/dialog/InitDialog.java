@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.InitRepoParameters;
 
 import com.az.gitember.ui.misc.Util;
@@ -17,7 +18,7 @@ public class InitDialog extends JDialog {
     private boolean confirmed = false;
 
     public InitDialog(Frame parent) {
-        super(parent, "Init Repository", true);
+        super(parent, I18n.t("initRepository"), true);
         setSize(480, 280);
         setLocationRelativeTo(parent);
         setResizable(false);
@@ -30,7 +31,7 @@ public class InitDialog extends JDialog {
 
         // Folder row
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        formPanel.add(new JLabel("Folder:"), gbc);
+        formPanel.add(new JLabel(I18n.t("folder")), gbc);
         JPanel folderPanel = new JPanel(new BorderLayout(5, 0));
         folderField = new JTextField(25);
         JButton browseBtn = new JButton("...");
@@ -42,7 +43,7 @@ public class InitDialog extends JDialog {
 
         //Default branch
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Default branch:"), gbc);
+        formPanel.add(new JLabel(I18n.t("defaultBranch")), gbc);
 
         gbc.gridx = 1; gbc.gridy = 1;
         defaultBranchCombo = new JComboBox<>(
@@ -51,15 +52,15 @@ public class InitDialog extends JDialog {
         formPanel.add(defaultBranchCombo, gbc);
 
         // Checkboxes
-        readmeCheck = new JCheckBox("Create README.md");
+        readmeCheck = new JCheckBox(I18n.t("createReadmeMd"));
         gbc.gridx = 1; gbc.gridy = 2;
         formPanel.add(readmeCheck, gbc);
 
-        gitignoreCheck = new JCheckBox("Create .gitignore");
+        gitignoreCheck = new JCheckBox(I18n.t("createGitignore"));
         gbc.gridy = 3;
         formPanel.add(gitignoreCheck, gbc);
 
-        lfsCheck = new JCheckBox("Enable Git LFS");
+        lfsCheck = new JCheckBox(I18n.t("enableGitLfs"));
         gbc.gridy = 4;
         formPanel.add(lfsCheck, gbc);
 
@@ -71,9 +72,9 @@ public class InitDialog extends JDialog {
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton initBtn = new JButton("Init");
+        JButton initBtn = new JButton(I18n.t("init"));
         initBtn.addActionListener(e -> onInit());
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.addActionListener(e -> dispose());
         buttonPanel.add(initBtn);
         buttonPanel.add(cancelBtn);
@@ -89,7 +90,7 @@ public class InitDialog extends JDialog {
     private void browseFolder() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select Folder");
+        chooser.setDialogTitle(I18n.t("selectFolder"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             folderField.setText(chooser.getSelectedFile().getAbsolutePath());
         }
@@ -97,8 +98,8 @@ public class InitDialog extends JDialog {
 
     private void onInit() {
         if (folderField.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Folder is required",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, I18n.t("folderIsRequired"),
+                    I18n.t("validation"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         confirmed = true;

@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.*;
 import com.az.gitember.dialog.*;
 import com.az.gitember.handler.*;
@@ -264,9 +265,8 @@ public class MainFrame extends JFrame {
         // Interactive Rebase (from menu: prompts for a base commit SHA)
         menuBar.addInteractiveRebaseListener(e -> {
             String sha = JOptionPane.showInputDialog(this,
-                    "Enter the SHA of the base commit\n"
-                    + "(all commits from HEAD down to, but not including, this commit will be rebased):",
-                    "Interactive Rebase", JOptionPane.PLAIN_MESSAGE);
+                    I18n.t("enterShaBaseCommitAll"),
+                    I18n.t("interactiveRebase"), JOptionPane.PLAIN_MESSAGE);
             if (sha != null && !sha.isBlank()) {
                 String trimmed = sha.trim();
                 com.az.gitember.handler.InteractiveRebaseHandler.showAndExecute(
@@ -655,7 +655,7 @@ public class MainFrame extends JFrame {
 
             @Override
             protected void done() {
-                statusBar.setStatus("Refreshed");
+                statusBar.setStatus(I18n.t("refreshed"));
             }
         };
         worker.execute();
@@ -665,11 +665,11 @@ public class MainFrame extends JFrame {
         // adapt() is called for every stash entry when the stash list is built,
         // so affected items are already populated at this point.
         stashDetailPanel.showRevision(stash);
-        statusBar.setStatus("Stash: " + (stash.getShortMessage() != null ? stash.getShortMessage() : ""));
+        statusBar.setStatus(I18n.t("stash", (stash.getShortMessage() != null ? stash.getShortMessage() : "")));
     }
 
     private void showStashDialog() {
-        String message = JOptionPane.showInputDialog(this, "Stash message:", "Stash", JOptionPane.PLAIN_MESSAGE);
+        String message = JOptionPane.showInputDialog(this, I18n.t("stashMessage"), I18n.t("mainFrame.stash"), JOptionPane.PLAIN_MESSAGE);
         if (message == null) return; // cancelled
 
         statusBar.setStatus("Stashing...");
@@ -688,13 +688,13 @@ public class MainFrame extends JFrame {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Stash created");
+                    statusBar.setStatus(I18n.t("stashCreated"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Stash failed", ex);
-                    statusBar.setStatus("Stash failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("stashFailed", ex.getMessage()));
                     JOptionPane.showMessageDialog(MainFrame.this,
-                            "Cannot stash: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotStash", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -716,7 +716,7 @@ public class MainFrame extends JFrame {
     }
 
     private void openWorktree(String path) {
-        statusBar.setStatus("Opening worktree: " + path + "…");
+        statusBar.setStatus(I18n.t("openingWorktree", path));
         statusBar.showProgress(true);
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override protected Void doInBackground() throws Exception {
@@ -729,14 +729,14 @@ public class MainFrame extends JFrame {
                     get();
                     addCurrentProjectToSettings();
                     refreshProjectLists();
-                    statusBar.setStatus("Worktree opened: " + path);
+                    statusBar.setStatus(I18n.t("worktreeOpened", path));
                 } catch (Exception ex) {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, "Failed to open worktree", cause);
-                    statusBar.setStatus("Failed to open worktree: " + cause.getMessage());
+                    statusBar.setStatus(I18n.t("failedToOpenWorktree", cause.getMessage()));
                     JOptionPane.showMessageDialog(MainFrame.this,
-                            "Cannot open worktree:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotOpenWorktree", cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -744,7 +744,7 @@ public class MainFrame extends JFrame {
     }
 
     private void createDiff() {
-        statusBar.setStatus("Creating diff...");
+        statusBar.setStatus(I18n.t("creatingDiff"));
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
@@ -756,15 +756,15 @@ public class MainFrame extends JFrame {
                 try {
                     String diff = get();
                     if (diff == null || diff.isBlank()) {
-                        statusBar.setStatus("No differences found");
+                        statusBar.setStatus(I18n.t("noDifferencesFound"));
                         return;
                     }
-                    statusBar.setStatus("Diff created");
-                    FileViewerWindow viewer = new FileViewerWindow("Working Copy Diff", diff, "diff.patch");
+                    statusBar.setStatus(I18n.t("diffCreated"));
+                    FileViewerWindow viewer = new FileViewerWindow(I18n.t("workingCopyDiff"), diff, "diff.patch");
                     viewer.setVisible(true);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Create diff failed", ex);
-                    statusBar.setStatus("Create diff failed");
+                    statusBar.setStatus(I18n.t("createDiffFailed"));
                 }
             }
         };
@@ -773,15 +773,15 @@ public class MainFrame extends JFrame {
 
     private void applyDiff() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Select patch file to apply");
+        chooser.setDialogTitle(I18n.t("selectPatchFileApply"));
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "Patch / Diff files (*.patch, *.diff)", "patch", "diff"));
+                I18n.t("patchDiffFilesPatchDiff"), "patch", "diff"));
         chooser.setAcceptAllFileFilterUsed(true);
 
         if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
         File patchFile = chooser.getSelectedFile();
-        statusBar.setStatus("Applying patch: " + patchFile.getName() + "...");
+        statusBar.setStatus(I18n.t("applyingPatch", patchFile.getName()));
         statusBar.showProgress(true);
 
         SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
@@ -798,28 +798,28 @@ public class MainFrame extends JFrame {
                 try {
                     List<String> applied = get();
                     Context.updateStatus(null, true);
-                    statusBar.setStatus("Patch applied: " + applied.size() + " file(s) modified");
+                    statusBar.setStatus(I18n.t("patchAppliedFileSModified", applied.size()));
 
                     // Build result message
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Patch applied successfully.\n\n");
+                    sb.append(I18n.t("patchAppliedSuccessfully"));
                     if (applied.isEmpty()) {
-                        sb.append("No files were modified.");
+                        sb.append(I18n.t("noFilesWereModified"));
                     } else {
-                        sb.append("Modified files (").append(applied.size()).append("):\n");
+                        sb.append(I18n.t("modifiedFiles")).append(applied.size()).append("):\n");
                         for (String path : applied) {
                             sb.append("  ").append(path).append("\n");
                         }
                     }
                     JOptionPane.showMessageDialog(MainFrame.this,
-                            sb.toString(), "Apply Patch", JOptionPane.INFORMATION_MESSAGE);
+                            sb.toString(), I18n.t("applyPatch"), JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, "Apply diff failed", cause);
-                    statusBar.setStatus("Apply diff failed: " + cause.getMessage());
+                    statusBar.setStatus(I18n.t("applyDiffFailed", cause.getMessage()));
                     JOptionPane.showMessageDialog(MainFrame.this,
-                            "Cannot apply patch:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotApplyPatch", cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -1205,7 +1205,7 @@ public class MainFrame extends JFrame {
     private void openExplorerInRepo() {
         String path = Context.getProjectFolder();
         if (path == null || path.isEmpty()) {
-            statusBar.setStatus("No repository open.");
+            statusBar.setStatus(I18n.t("noRepositoryOpen"));
             return;
         }
         File dir = new File(path);
@@ -1217,20 +1217,20 @@ public class MainFrame extends JFrame {
             } else {
                 new ProcessBuilder("xdg-open", dir.getAbsolutePath()).start();
             }
-            statusBar.setStatus("File manager opened in " + path);
+            statusBar.setStatus(I18n.t("fileManagerOpenedIn", path));
         } catch (Exception ex) {
             log.log(Level.WARNING, "Cannot open file manager", ex);
-            statusBar.setStatus("Cannot open file manager: " + ex.getMessage());
+            statusBar.setStatus(I18n.t("cannotOpenFileManager", ex.getMessage()));
             JOptionPane.showMessageDialog(this,
-                    "Could not open a file manager:\n" + ex.getMessage(),
-                    "Open File Manager", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("couldNotOpenFileManager", ex.getMessage()),
+                    I18n.t("openFileManager"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void openTerminalInRepo() {
         String path = Context.getProjectFolder();
         if (path == null || path.isEmpty()) {
-            statusBar.setStatus("No repository open.");
+            statusBar.setStatus(I18n.t("noRepositoryOpen"));
             return;
         }
         File dir = new File(path);
@@ -1243,13 +1243,13 @@ public class MainFrame extends JFrame {
             } else {
                 openTerminalLinux(dir);
             }
-            statusBar.setStatus("Terminal opened in " + path);
+            statusBar.setStatus(I18n.t("terminalOpenedIn", path));
         } catch (Exception ex) {
             log.log(Level.WARNING, "Cannot open terminal", ex);
-            statusBar.setStatus("Cannot open terminal: " + ex.getMessage());
+            statusBar.setStatus(I18n.t("cannotOpenTerminal", ex.getMessage()));
             JOptionPane.showMessageDialog(this,
-                    "Could not open a terminal:\n" + ex.getMessage(),
-                    "Open Terminal", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("couldNotOpenTerminal", ex.getMessage()),
+                    I18n.t("openTerminal"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1280,6 +1280,6 @@ public class MainFrame extends JFrame {
             }
         }
         throw new java.io.IOException(
-                "No terminal emulator found. Install x-terminal-emulator, gnome-terminal, konsole, or xterm.");
+                I18n.t("noTerminalEmulatorFoundInstall"));
     }
 }

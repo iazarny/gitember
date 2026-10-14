@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Issue;
 import com.az.gitember.service.tracker.IssueBranchNamer;
 import com.az.gitember.service.tracker.IssueTrackerService;
@@ -48,15 +49,15 @@ public class CreateBranchDialog extends JDialog {
         String pattern = IssueTrackerService.config() != null
                 ? IssueTrackerService.config().getBranchNamePattern()
                 : "";
-        JLabel hint = new JLabel("Pattern: " + pattern);
+        JLabel hint = new JLabel(I18n.t("pattern", pattern));
         hint.setForeground(UIManager.getColor("Label.disabledForeground"));
         hint.setFont(hint.getFont().deriveFont(Font.PLAIN, hint.getFont().getSize() - 1f));
         nameRow.add(hint, BorderLayout.SOUTH);
         form.add(nameRow, BorderLayout.CENTER);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton ok = new JButton("Create");
-        JButton cancel = new JButton("Cancel");
+        JButton ok = new JButton(I18n.t("create"));
+        JButton cancel = new JButton(I18n.t("cancel"));
         ok.addActionListener(e -> {
             confirmed = nameField.getText() != null && !nameField.getText().isBlank();
             dispose();

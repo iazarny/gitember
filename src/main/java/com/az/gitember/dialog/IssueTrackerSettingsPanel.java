@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.IssueTrackerConfig;
 
 import javax.swing.*;
@@ -35,8 +36,7 @@ public class IssueTrackerSettingsPanel extends JPanel {
         gbc.insets = new Insets(4, 8, 4, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JLabel privacy = new JLabel("<html>Credentials stay on this machine (OS keychain / encrypted settings).<br>"
-                + "Requests go only to the tracker you configure.</html>");
+        JLabel privacy = new JLabel(I18n.t("credentialsStayMachineOsKeychain"));
         privacy.setForeground(UIManager.getColor("Label.disabledForeground"));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -50,7 +50,7 @@ public class IssueTrackerSettingsPanel extends JPanel {
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        north.add(new JLabel("Tracker:"), gbc);
+        north.add(new JLabel(I18n.t("tracker")), gbc);
         trackerCombo = new JComboBox<>(new String[]{LABEL_JIRA, LABEL_LINEAR});
         trackerCombo.setSelectedItem(typeToLabel(cfg.getType()));
         gbc.gridx = 1;
@@ -58,7 +58,7 @@ public class IssueTrackerSettingsPanel extends JPanel {
         gbc.weightx = 1;
         north.add(trackerCombo, gbc);
 
-        enabledCheck = new JCheckBox("Enable", cfg.isEnabled());
+        enabledCheck = new JCheckBox(I18n.t("enable"), cfg.isEnabled());
         gbc.gridx = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
@@ -80,9 +80,9 @@ public class IssueTrackerSettingsPanel extends JPanel {
 
         sg.gridx = 0;
         sg.gridy = 0;
-        south.add(new JLabel("Branch naming:"), sg);
+        south.add(new JLabel(I18n.t("branchNaming")), sg);
         branchPatternField = new JTextField(cfg.getBranchNamePattern(), 22);
-        branchPatternField.setToolTipText("Placeholders: {type} {key} {slug}");
+        branchPatternField.setToolTipText(I18n.t("placeholdersTypeKeySlug"));
         sg.gridx = 1;
         sg.gridwidth = 2;
         sg.fill = GridBagConstraints.HORIZONTAL;
@@ -94,19 +94,19 @@ public class IssueTrackerSettingsPanel extends JPanel {
 
         sg.gridx = 0;
         sg.gridy = 1;
-        south.add(new JLabel("Branch type:"), sg);
+        south.add(new JLabel(I18n.t("branchType")), sg);
         branchTypeField = new JTextField(cfg.getBranchType(), 12);
         sg.gridx = 1;
         south.add(branchTypeField, sg);
 
-        includeIssueKeyCheck = new JCheckBox("Include issue key in commit message",
+        includeIssueKeyCheck = new JCheckBox(I18n.t("includeIssueKeyCommitMessage"),
                 cfg.isIncludeIssueKeyInCommit());
         sg.gridx = 1;
         sg.gridy = 2;
         sg.gridwidth = 2;
         south.add(includeIssueKeyCheck, sg);
 
-        commentOnCommitCheck = new JCheckBox("Add an issue comment when committing",
+        commentOnCommitCheck = new JCheckBox(I18n.t("addIssueCommentWhenCommitting"),
                 cfg.isCommentOnCommit());
         sg.gridy = 3;
         south.add(commentOnCommitCheck, sg);

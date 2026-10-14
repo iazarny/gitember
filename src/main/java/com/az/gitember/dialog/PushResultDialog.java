@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.ui.misc.Util;
 
@@ -14,19 +15,19 @@ import java.util.List;
 public class PushResultDialog extends JDialog {
 
     public PushResultDialog(Component parent, String remoteUrl, String messages) {
-        super(SwingUtilities.getWindowAncestor(parent), "Push Result",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("pushResult"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(600, 320);
         setLocationRelativeTo(parent);
 
         // ---- header ----
-        JLabel titleLabel = new JLabel("Push completed successfully");
+        JLabel titleLabel = new JLabel(I18n.t("pushCompletedSuccessfully"));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
 
         // ---- remote URL row ----
         JPanel remoteRow = new JPanel(new BorderLayout(6, 0));
-        remoteRow.add(new JLabel("Remote:"), BorderLayout.WEST);
+        remoteRow.add(new JLabel(I18n.t("remote")), BorderLayout.WEST);
         JTextField urlField = new JTextField(remoteUrl != null ? remoteUrl : "—");
         urlField.setEditable(false);
         urlField.setOpaque(false);
@@ -45,15 +46,15 @@ public class PushResultDialog extends JDialog {
 
         // ---- messages area ----
         String text = (messages != null ? messages : "").trim();
-        String displayText = text.isEmpty() ? "(no server messages)" : text;
+        String displayText = text.isEmpty() ? I18n.t("noServerMessages") : text;
 
         JTextPane msgArea = PullResultDialog.createMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
-        scroll.setBorder(BorderFactory.createTitledBorder("Details"));
+        scroll.setBorder(BorderFactory.createTitledBorder(I18n.t("details")));
 
         // ---- buttons ----
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);
@@ -74,7 +75,7 @@ public class PushResultDialog extends JDialog {
      * the server messages (or the error, for repositories that failed).
      */
     public PushResultDialog(Component parent, List<ProjectOperationResult<String>> results) {
-        super(SwingUtilities.getWindowAncestor(parent), "Push Result",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("pushResult"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(640, 460);
@@ -82,8 +83,7 @@ public class PushResultDialog extends JDialog {
 
         long ok = results.stream().filter(ProjectOperationResult::isSuccess).count();
 
-        JLabel titleLabel = new JLabel("Push completed for " + ok + " of "
-                + results.size() + " repositories");
+        JLabel titleLabel = new JLabel(I18n.t("pushCompletedRepositories", ok, results.size()));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
 
         JPanel headerPanel = new JPanel(new BorderLayout());
@@ -91,15 +91,15 @@ public class PushResultDialog extends JDialog {
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         String displayText = results.isEmpty()
-                ? "No repositories with unpushed changes."
+                ? I18n.t("noRepositoriesUnpushedChanges")
                 : buildWorkspaceReport(results);
 
         JTextPane msgArea = PullResultDialog.createMessagePane(displayText);
 
         JScrollPane scroll = new JScrollPane(msgArea);
-        scroll.setBorder(BorderFactory.createTitledBorder("Details"));
+        scroll.setBorder(BorderFactory.createTitledBorder(I18n.t("details")));
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);
@@ -123,10 +123,10 @@ public class PushResultDialog extends JDialog {
             }
             if (r.isSuccess()) {
                 String msg = r.getResult() != null ? r.getResult().trim() : "";
-                sb.append(msg.isEmpty() ? "(no server messages)" : msg);
+                sb.append(msg.isEmpty() ? I18n.t("noServerMessages") : msg);
             } else {
                 Exception e = r.getError();
-                sb.append("FAILED: ").append(e != null ? e.getMessage() : "unknown error");
+                sb.append("FAILED: ").append(e != null ? e.getMessage() : I18n.t("unknownError"));
             }
             sb.append("\n\n");
         }

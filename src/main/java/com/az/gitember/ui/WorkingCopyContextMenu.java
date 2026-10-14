@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Const;
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.service.ExtensionInfo;
@@ -102,11 +103,11 @@ public class WorkingCopyContextMenu {
 
         // Group 1: Stage / Unstage
         if (ScmItem.isStaged(status)) {
-            JMenuItem unstage = new JMenuItem("Unstage");
+            JMenuItem unstage = new JMenuItem(I18n.t("unstage"));
             unstage.addActionListener(e -> doUnstage(item));
             menu.add(unstage);
         } else {
-            JMenuItem stage = new JMenuItem("Stage");
+            JMenuItem stage = new JMenuItem(I18n.t("stage"));
             stage.addActionListener(e -> doStage(item));
             menu.add(stage);
         }
@@ -117,7 +118,7 @@ public class WorkingCopyContextMenu {
         if (hasDiff || hasRevert || isConflict) {
             menu.addSeparator();
             if (hasDiff) {
-                JMenuItem diff = new JMenuItem("Diff with repository");
+                JMenuItem diff = new JMenuItem(I18n.t("diffWithRepository"));
                 diff.addActionListener(e -> showDiffWithRepo(item));
                 menu.add(diff);
             }
@@ -127,24 +128,24 @@ public class WorkingCopyContextMenu {
                 menu.add(revert);
             }
             if (isConflict) {
-                JMenu resolveMenu = new JMenu("Resolve conflict");
+                JMenu resolveMenu = new JMenu(I18n.t("resolveConflict"));
 
-                JMenuItem markResolved = new JMenuItem("Mark resolved");
+                JMenuItem markResolved = new JMenuItem(I18n.t("markResolved"));
                 markResolved.addActionListener(e -> resolveConflict(item, null));
                 resolveMenu.add(markResolved);
 
-                JMenuItem useOurs = new JMenuItem("Using mine (OURS)");
+                JMenuItem useOurs = new JMenuItem(I18n.t("usingMineOurs"));
                 useOurs.addActionListener(e -> resolveConflict(item,
                         org.eclipse.jgit.api.CheckoutCommand.Stage.OURS));
                 resolveMenu.add(useOurs);
 
-                JMenuItem useTheirs = new JMenuItem("Using theirs (THEIRS)");
+                JMenuItem useTheirs = new JMenuItem(I18n.t("usingTheirsTheirs"));
                 useTheirs.addActionListener(e -> resolveConflict(item,
                         org.eclipse.jgit.api.CheckoutCommand.Stage.THEIRS));
                 resolveMenu.add(useTheirs);
 
                 resolveMenu.addSeparator();
-                JMenuItem mergeTool = new JMenuItem("Open in Merge Tool...");
+                JMenuItem mergeTool = new JMenuItem(I18n.t("openInMergeTool"));
                 mergeTool.addActionListener(e -> openMergeTool(item));
                 resolveMenu.add(mergeTool);
 
@@ -158,12 +159,12 @@ public class WorkingCopyContextMenu {
         if (hasHistory || hasOpen) {
             menu.addSeparator();
             if (hasHistory) {
-                JMenuItem history = new JMenuItem("History");
+                JMenuItem history = new JMenuItem(I18n.t("history"));
                 history.addActionListener(e -> showHistory(item));
                 menu.add(history);
             }
             if (hasOpen) {
-                JMenuItem open = new JMenuItem("Open");
+                JMenuItem open = new JMenuItem(I18n.t("open"));
                 open.addActionListener(e -> openFile(item));
                 menu.add(open);
             }
@@ -174,18 +175,18 @@ public class WorkingCopyContextMenu {
             boolean isLfsPointer = item.getAttribute() != null
                     && ScmItem.Status.LFS_POINTER.equals(item.getAttribute().getSubstatus());
             if (isLfsPointer) {
-                JMenuItem fetchItem = new JMenuItem("Fetch LFS file");
+                JMenuItem fetchItem = new JMenuItem(I18n.t("workingCopyContextMenu.fetchLfsFile"));
                 fetchItem.addActionListener(e ->
                         new com.az.gitember.handler.LfsFetchHandler(parent, item.getShortName())
                                 .execute());
                 menu.add(fetchItem);
             }
-            JMenuItem lockItem = new JMenuItem("Lock LFS file");
+            JMenuItem lockItem = new JMenuItem(I18n.t("lockLfsFile"));
             lockItem.addActionListener(e ->
                     new com.az.gitember.handler.LfsLockHandler(parent, item.getShortName(), true, false)
                             .execute());
             menu.add(lockItem);
-            JMenuItem unlockItem = new JMenuItem("Unlock LFS file");
+            JMenuItem unlockItem = new JMenuItem(I18n.t("unlockLfsFile"));
             unlockItem.addActionListener(e ->
                     new com.az.gitember.handler.LfsLockHandler(parent, item.getShortName(), false, false)
                             .execute());
@@ -198,7 +199,7 @@ public class WorkingCopyContextMenu {
             menu.addSeparator();
             if (canIgnore) {
 
-                JMenu ignoreMenu = new JMenu("Add to .gitignore");
+                JMenu ignoreMenu = new JMenu(I18n.t("addToGitignore"));
                 menu.add(ignoreMenu);
 
                 JMenuItem ignore = new JMenuItem(FilenameUtils.getName(item.getShortName()) );
@@ -208,21 +209,21 @@ public class WorkingCopyContextMenu {
                 String ext = FilenameUtils.getExtension(item.getShortName());;
                 if (StringUtils.isNotBlank(ext)) {
                     final String asterixExt = "*." + ext;
-                    JMenuItem ignoreExt = new JMenuItem("Extention " + asterixExt );
+                    JMenuItem ignoreExt = new JMenuItem(I18n.t("extention", asterixExt) );
                     ignoreExt.addActionListener(e -> addToGitIgnorePaths(List.of(asterixExt)));
                     ignoreMenu.add(ignoreExt);
                 }
 
                 Path path = Paths.get(item.getShortName());
                 String firstFolder = path.getName(0).toString() + File.separator;
-                JMenuItem ignoreFolder = new JMenuItem("Folder " + firstFolder );
+                JMenuItem ignoreFolder = new JMenuItem(I18n.t("workingCopyContextMenu.folder", firstFolder) );
                 ignoreFolder.addActionListener(e -> addToGitIgnorePaths(List.of(firstFolder)));
                 ignoreMenu.add(ignoreFolder);
 
 
             }
             if (!isMissed && !isRemoved) {
-                JMenuItem delete = new JMenuItem("Physical delete...");
+                JMenuItem delete = new JMenuItem(I18n.t("physicalDelete"));
                 delete.addActionListener(e -> physicalDelete(item));
                 menu.add(delete);
             }
@@ -244,25 +245,25 @@ public class WorkingCopyContextMenu {
 
         if (hasUnstaged) {
             long count = items.stream().filter(i -> !i.isStaged()).count();
-            JMenuItem stage = new JMenuItem("Stage selected (" + count + ")");
+            JMenuItem stage = new JMenuItem(I18n.t("stageSelected", count));
             stage.addActionListener(e -> doStageMultiple(
                     items.stream().filter(i -> !i.isStaged()).toList()));
             menu.add(stage);
         }
         if (hasStaged) {
             long count = items.stream().filter(i -> i.isStaged()).count();
-            JMenuItem unstage = new JMenuItem("Unstage selected (" + count + ")");
+            JMenuItem unstage = new JMenuItem(I18n.t("unstageSelected", count));
             unstage.addActionListener(e -> doUnstageMultiple(
                     items.stream().filter(i -> i.isStaged()).toList()));
             menu.add(unstage);
         }
         if (hasRevertable) {
             menu.addSeparator();
-            JMenuItem revert = new JMenuItem("Revert selected...");
+            JMenuItem revert = new JMenuItem(I18n.t("revertSelected"));
             revert.addActionListener(e -> {
                 int c = JOptionPane.showConfirmDialog(parent,
-                        "Revert " + items.size() + " selected files?",
-                        "Revert", JOptionPane.YES_NO_OPTION);
+                        I18n.t("revertSelectedFiles", items.size()),
+                        I18n.t("revert"), JOptionPane.YES_NO_OPTION);
                 if (c == JOptionPane.YES_OPTION) {
                     doRevertMultiple(items.stream().filter(i -> {
                         String s = i.getAttribute().getStatus();
@@ -275,16 +276,16 @@ public class WorkingCopyContextMenu {
         if (!ignorable.isEmpty() || hasDeletable) {
             menu.addSeparator();
             if (!ignorable.isEmpty()) {
-                JMenuItem ignore = new JMenuItem("Add selected to .gitignore (" + ignorable.size() + ")");
+                JMenuItem ignore = new JMenuItem(I18n.t("addSelectedToGitignore", ignorable.size()));
                 ignore.addActionListener(e -> addToGitIgnore(ignorable));
                 menu.add(ignore);
             }
             if (hasDeletable) {
-                JMenuItem delete = new JMenuItem("Physical delete selected...");
+                JMenuItem delete = new JMenuItem(I18n.t("physicalDeleteSelected"));
                 delete.addActionListener(e -> {
                     int c = JOptionPane.showConfirmDialog(parent,
-                            "Physically delete " + items.size() + " selected files?",
-                            "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                            I18n.t("physicallyDeleteSelectedFiles", items.size()),
+                            I18n.t("workingCopyContextMenu.delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                     if (c == JOptionPane.YES_OPTION) {
                         for (ScmItem item : items) {
                             String s = item.getAttribute().getStatus();
@@ -308,7 +309,7 @@ public class WorkingCopyContextMenu {
                 serviceRunner.run(svc -> svc.stageItem(item));
                 return null;
             }
-            @Override protected void done() { handleDone("Staged: " + item.getShortName()); }
+            @Override protected void done() { handleDone(I18n.t("staged", item.getShortName())); }
         }.execute();
     }
 
@@ -318,12 +319,12 @@ public class WorkingCopyContextMenu {
                 serviceRunner.run(svc -> svc.unstageItem(item));
                 return null;
             }
-            @Override protected void done() { handleDone("Unstaged: " + item.getShortName()); }
+            @Override protected void done() { handleDone(I18n.t("unstaged", item.getShortName())); }
         }.execute();
     }
 
     private void doStageMultiple(List<ScmItem> items) {
-        statusBar.setStatus("Staging " + items.size() + " files...");
+        statusBar.setStatus(I18n.t("stagingFiles", items.size()));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -332,13 +333,13 @@ public class WorkingCopyContextMenu {
             }
             @Override protected void done() {
                 statusBar.clearProgress();
-                handleDone("Staged " + items.size() + " files");
+                handleDone(I18n.t("stagedFiles", items.size()));
             }
         }.execute();
     }
 
     private void doUnstageMultiple(List<ScmItem> items) {
-        statusBar.setStatus("Unstaging " + items.size() + " files...");
+        statusBar.setStatus(I18n.t("unstagingFiles", items.size()));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -347,15 +348,15 @@ public class WorkingCopyContextMenu {
             }
             @Override protected void done() {
                 statusBar.clearProgress();
-                handleDone("Unstaged " + items.size() + " files");
+                handleDone(I18n.t("unstagedFiles", items.size()));
             }
         }.execute();
     }
 
     private void revertItem(ScmItem item) {
         int c = JOptionPane.showConfirmDialog(parent,
-                "Revert '" + item.getShortName() + "' to last committed version?\nAll local changes will be lost.",
-                "Revert", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                I18n.t("revertLastCommittedVersionAll", item.getShortName()),
+                I18n.t("revert"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (c != JOptionPane.YES_OPTION) return;
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -365,10 +366,10 @@ public class WorkingCopyContextMenu {
             @Override protected void done() {
                 try {
                     get();
-                    statusBar.setStatus("Reverted: " + item.getShortName());
+                    statusBar.setStatus(I18n.t("workingCopyContextMenu.reverted", item.getShortName()));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Revert failed", ex);
-                    statusBar.setStatus("Revert failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("revertFailed", ex.getMessage()));
                 }
                 onComplete.run();
             }
@@ -376,7 +377,7 @@ public class WorkingCopyContextMenu {
     }
 
     private void doRevertMultiple(List<ScmItem> items) {
-        statusBar.setStatus("Reverting " + items.size() + " files...");
+        statusBar.setStatus(I18n.t("revertingFiles", items.size()));
         statusBar.showProgress(true);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
@@ -389,10 +390,10 @@ public class WorkingCopyContextMenu {
                 statusBar.clearProgress();
                 try {
                     get();
-                    statusBar.setStatus("Reverted " + items.size() + " files");
+                    statusBar.setStatus(I18n.t("revertedFiles", items.size()));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Revert failed", ex);
-                    statusBar.setStatus("Revert failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("revertFailed", ex.getMessage()));
                 }
                 onComplete.run();
             }
@@ -411,10 +412,10 @@ public class WorkingCopyContextMenu {
             @Override protected void done() {
                 try {
                     get();
-                    statusBar.setStatus("Conflict resolved: " + item.getShortName());
+                    statusBar.setStatus(I18n.t("conflictResolved", item.getShortName()));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Resolve failed", ex);
-                    statusBar.setStatus("Resolve failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("resolveFailed", ex.getMessage()));
                 }
                 onComplete.run();
             }
@@ -480,14 +481,14 @@ public class WorkingCopyContextMenu {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to show diff", ex);
                     JOptionPane.showMessageDialog(parent,
-                            "Cannot show diff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotShowDiff", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
     }
 
     private void showHistory(ScmItem item) {
-        JFrame frame = new JFrame("History: " + item.getShortName());
+        JFrame frame = new JFrame(I18n.t("commitDetailPanel.history", item.getShortName()));
         frame.setSize(1000, 600);
         frame.setLocationRelativeTo(parent);
         HistoryPanel hp = new HistoryPanel(statusBar);
@@ -516,8 +517,8 @@ public class WorkingCopyContextMenu {
                 viewer.setVisible(true);
             } catch (Exception ex) {
                 log.log(Level.WARNING, "Cannot open file", ex);
-                JOptionPane.showMessageDialog(parent, "Cannot open: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parent, I18n.t("workingCopyContextMenu.cannotOpen", ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         } else {
             try {
@@ -544,7 +545,7 @@ public class WorkingCopyContextMenu {
     private void addToGitIgnorePaths(List<String> paths) {
         if (paths == null || paths.isEmpty()) return;
 
-        statusBar.setStatus("Adding " + paths.size() + " file(s) to .gitignore...");
+        statusBar.setStatus(I18n.t("addingFileSGitignore", paths.size()));
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
@@ -560,10 +561,10 @@ public class WorkingCopyContextMenu {
             protected void done() {
                 try {
                     get();
-                    statusBar.setStatus("Added to .gitignore");
+                    statusBar.setStatus(I18n.t("addedToGitignore"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Add to .gitignore failed", ex);
-                    statusBar.setStatus("Add to .gitignore failed: " + ex.getMessage());
+                    statusBar.setStatus(I18n.t("addToGitignoreFailed", ex.getMessage()));
                 }
                 onComplete.run();
             }
@@ -572,8 +573,8 @@ public class WorkingCopyContextMenu {
 
     public void physicalDelete(ScmItem item) {
         int c = JOptionPane.showConfirmDialog(parent,
-                "Physically delete '" + item.getShortName() + "'?\nThis cannot be undone.",
-                "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                I18n.t("physicallyDeleteCannotUndone", item.getShortName()),
+                I18n.t("workingCopyContextMenu.delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (c != JOptionPane.YES_OPTION) return;
         deleteFileFromDisk(item.getShortName());
         onComplete.run();
@@ -592,7 +593,7 @@ public class WorkingCopyContextMenu {
             statusBar.setStatus(message);
         } catch (Exception ex) {
             log.log(Level.WARNING, "Operation failed", ex);
-            statusBar.setStatus("Error: " + ex.getMessage());
+            statusBar.setStatus(I18n.t("indexHistoryDialog.error", ex.getMessage()));
         }
         onComplete.run();
     }

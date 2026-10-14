@@ -1,5 +1,7 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.ui.misc.StatusTextCellRenderer;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.data.PullOperationResult;
 import com.az.gitember.ui.misc.Util;
@@ -46,7 +48,7 @@ public class PullResultDialog extends JDialog {
     }
 
     public PullResultDialog(Component parent, PullOperationResult result) {
-        super(SwingUtilities.getWindowAncestor(parent), "Pull Result",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("pullResult"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(580, 500);
@@ -64,24 +66,24 @@ public class PullResultDialog extends JDialog {
         JPanel headerPanel = new JPanel(new BorderLayout(6, 4));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 4, 10));
 
-        JLabel titleLabel = new JLabel("Pull completed — " + result.getStatus());
+        JLabel titleLabel = new JLabel(I18n.t("pullCompleted", result.getStatus()));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
         headerPanel.add(titleLabel, BorderLayout.NORTH);
 
         if (result.hasChanges()) {
             JPanel badges = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-            badges.add(makeBadge("+" + result.getAddedFiles().size()    + "  added",   colorAdded,   fgAdded));
-            badges.add(makeBadge("-" + result.getDeletedFiles().size()  + "  deleted", colorDeleted, fgDeleted));
-            badges.add(makeBadge("~" + result.getChangedFiles().size()  + "  changed", colorChanged, fgChanged));
+            badges.add(makeBadge(I18n.t("badge.added", "+" + result.getAddedFiles().size()),   colorAdded,   fgAdded));
+            badges.add(makeBadge(I18n.t("badge.deleted", "-" + result.getDeletedFiles().size()), colorDeleted, fgDeleted));
+            badges.add(makeBadge(I18n.t("badge.changed", "~" + result.getChangedFiles().size()), colorChanged, fgChanged));
             headerPanel.add(badges, BorderLayout.CENTER);
         } else {
-            JLabel noChanges = new JLabel("No file changes.");
+            JLabel noChanges = new JLabel(I18n.t("noFileChanges"));
             noChanges.setForeground(UIManager.getColor("Label.disabledForeground"));
             headerPanel.add(noChanges, BorderLayout.CENTER);
         }
 
         // ---- file-change table ----
-        DefaultTableModel model = new DefaultTableModel(new String[]{"File", "Status"}, 0) {
+        DefaultTableModel model = new DefaultTableModel(new String[]{I18n.t("file"), I18n.t("status")}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         addRows(model, result.getAddedFiles(),   "Added");
@@ -109,7 +111,7 @@ public class PullResultDialog extends JDialog {
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 1));
 
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        DefaultTableCellRenderer center = new StatusTextCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
         table.getColumnModel().getColumn(1).setCellRenderer(center);
         table.getColumnModel().getColumn(1).setPreferredWidth(72);
@@ -119,12 +121,12 @@ public class PullResultDialog extends JDialog {
 
         // ---- server messages ----
         String msgs = result.getServerMessages();
-        String displayMsgs = msgs.isEmpty() ? "(no server messages)" : msgs;
+        String displayMsgs = msgs.isEmpty() ? I18n.t("noServerMessages") : msgs;
 
         JTextPane msgArea = createMessagePane(displayMsgs);
 
         JScrollPane msgScroll = new JScrollPane(msgArea);
-        msgScroll.setBorder(BorderFactory.createTitledBorder("Server messages"));
+        msgScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("serverMessages")));
         msgScroll.setPreferredSize(new Dimension(0, 100));
 
         // ---- centre split: table + server messages ----
@@ -133,7 +135,7 @@ public class PullResultDialog extends JDialog {
         splitPane.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
 
         // ---- buttons ----
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);
@@ -155,7 +157,7 @@ public class PullResultDialog extends JDialog {
      * area below listing per-repository details.
      */
     public PullResultDialog(Component parent, List<ProjectOperationResult<PullOperationResult>> results) {
-        super(SwingUtilities.getWindowAncestor(parent), "Pull Result",
+        super(SwingUtilities.getWindowAncestor(parent), I18n.t("pullResult"),
                 ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(640, 500);
@@ -165,14 +167,13 @@ public class PullResultDialog extends JDialog {
 
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));
-        JLabel titleLabel = new JLabel("Pull completed for " + ok + " of "
-                + results.size() + " repositories");
+        JLabel titleLabel = new JLabel(I18n.t("pullCompletedRepositories", ok, results.size()));
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         // ---- per-repository summary table ----
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"Repository", "Status", "Added", "Deleted", "Changed"}, 0) {
+                new String[]{I18n.t("repository"), I18n.t("status"), I18n.t("added"), I18n.t("deleted"), I18n.t("changed")}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         for (ProjectOperationResult<PullOperationResult> r : results) {
@@ -186,7 +187,7 @@ public class PullResultDialog extends JDialog {
                         res != null ? res.getChangedFiles().size() : 0
                 });
             } else {
-                model.addRow(new Object[]{r.getProjectName(), "Failed", "—", "—", "—"});
+                model.addRow(new Object[]{r.getProjectName(), I18n.t("failed"), "—", "—", "—"});
             }
         }
         JTable table = new JTable(model);
@@ -201,18 +202,18 @@ public class PullResultDialog extends JDialog {
 
         // ---- per-repository server messages / errors ----
         String displayMsgs = results.isEmpty()
-                ? "No repositories with a remote."
+                ? I18n.t("noRepositoriesRemote")
                 : buildWorkspaceReport(results);
         JTextPane msgArea = createMessagePane(displayMsgs);
         JScrollPane msgScroll = new JScrollPane(msgArea);
-        msgScroll.setBorder(BorderFactory.createTitledBorder("Details"));
+        msgScroll.setBorder(BorderFactory.createTitledBorder(I18n.t("details")));
         msgScroll.setPreferredSize(new Dimension(0, 120));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScroll, msgScroll);
         splitPane.setResizeWeight(0.6);
         splitPane.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(I18n.t("close"));
         closeBtn.addActionListener(e -> dispose());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         btnPanel.add(closeBtn);
@@ -243,7 +244,7 @@ public class PullResultDialog extends JDialog {
                 }
             } else {
                 Exception e = r.getError();
-                sb.append("FAILED: ").append(e != null ? e.getMessage() : "unknown error");
+                sb.append("FAILED: ").append(e != null ? e.getMessage() : I18n.t("unknownError"));
             }
             sb.append("\n\n");
         }

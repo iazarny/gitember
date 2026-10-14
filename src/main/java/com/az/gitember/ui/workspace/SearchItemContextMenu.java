@@ -1,5 +1,6 @@
 package com.az.gitember.ui.workspace;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.SearchService;
 import com.az.gitember.ui.HistoryPanel;
@@ -22,9 +23,9 @@ public class SearchItemContextMenu  extends JPopupMenu {
     private final  JTree searchTree;
     private final  Component parent;
 
-    private final JMenuItem openItem = new JMenuItem("Open");
-    private final JMenuItem deleteItem = new JMenuItem("Delete ...");
-    private final JMenuItem historyItem = new JMenuItem("Show history");
+    private final JMenuItem openItem = new JMenuItem(I18n.t("open"));
+    private final JMenuItem deleteItem = new JMenuItem(I18n.t("searchItemContextMenu.delete"));
+    private final JMenuItem historyItem = new JMenuItem(I18n.t("showHistory"));
 
     private DefaultMutableTreeNode selectedNode;
 
@@ -41,7 +42,7 @@ public class SearchItemContextMenu  extends JPopupMenu {
                     if (selectedNode.getUserObject() instanceof SearchHit hit) {
                         try {
                             Context.initRepoOnly(hit.getProject());
-                            JFrame frame = new JFrame("History: " + hit.getLeafName());
+                            JFrame frame = new JFrame(I18n.t("commitDetailPanel.history", hit.getLeafName()));
                             frame.setSize(1000, 600);
                             frame.setLocationRelativeTo(parent);
                             HistoryPanel hp = new HistoryPanel(MainFrame.getInstance().getStatusBar());
@@ -70,8 +71,8 @@ public class SearchItemContextMenu  extends JPopupMenu {
                         String fileName = hit.getProject().getProjectHomeFolder() + File.separator + hit.getPath();
 
                         int c = JOptionPane.showConfirmDialog(parent,
-                                "Physically delete '" + hit.getLeafName() + "'?\nThis cannot be undone.",
-                                "Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                                I18n.t("physicallyDeleteCannotUndone", hit.getLeafName()),
+                                I18n.t("workingCopyContextMenu.delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                         if (c == JOptionPane.YES_OPTION)  {
                                 try (SearchService searchService = SearchService.forProject(hit.getProject())) {
                                     searchService.deleteFileDoc(hit.getPath());

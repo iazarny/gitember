@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.ProjectOperationResult;
 import com.az.gitember.dialog.CreateBranchDialog;
@@ -43,7 +44,7 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected String getOperationName() {
-        return "Create branch " + newBranchName;
+        return I18n.t("createBranch", newBranchName);
     }
 
     @Override
@@ -82,16 +83,16 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
         final String message;
         final int messageType;
         if (e.getCause() instanceof CheckoutConflictException cce) {
-            message = "Branch is created. But not possible to checkout it.\n" + e.getCause().getMessage();
+            message = I18n.t("branchCreatedButNotPossible", e.getCause().getMessage());
             messageType = JOptionPane.WARNING_MESSAGE;
-            messageTitle = "Warning";
+            messageTitle = I18n.t("warning");
         } else {
-            message = getOperationName() + " failed:\n" + e.getMessage();
+            message = I18n.t("opFailedDialog", getOperationName(), e.getMessage());
             messageType = JOptionPane.ERROR_MESSAGE;
-            messageTitle = "Error";
+            messageTitle = I18n.t("error");
         }
         log.log(Level.SEVERE, getOperationName() + " failed", e);
-        statusBar.setStatus(getOperationName() + " failed: " + message);
+        statusBar.setStatus(I18n.t("opFailedStatus", getOperationName(), message));
         statusBar.clearProgress();
         JOptionPane.showMessageDialog(parent,  message,  messageTitle, messageType);
     }
@@ -122,15 +123,14 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
         if (workspaceResults != null) {
             long ok = workspaceResults.stream().filter(ProjectOperationResult::isSuccess).count();
             long failed = workspaceResults.size() - ok;
-            statusBar.setStatus("Created and checked out branch " + result + " in " + ok + " of "
-                    + workspaceResults.size() + " repositories" + (failed > 0 ? " (" + failed + " failed)" : ""));
+            statusBar.setStatus(I18n.t("createdCheckedOutBranchRepositories", result, ok, workspaceResults.size(), (failed > 0 ? I18n.t("failedCountSuffix", failed) : "")));
             if (parent instanceof MainFrame mf) {
                 mf.refreshWorkspaceProjectBranches(workspaceResults);
                 mf.refreshWorkspaceView();
             }
             return;
         }
-        statusBar.setStatus("Created and checked out branch " + result);
+        statusBar.setStatus(I18n.t("createdCheckedOutBranch", result));
     }
 
     /**
@@ -138,18 +138,18 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
      * context menu, where {@code baseBranchFullName} is the right-clicked branch.
      */
     public static void showAndExecute(Component parent, String baseBranchFullName, boolean isRemote) {
-        String newBranchName = "New branch name:";
-        String branchTitle = "Create Branch";
+        String newBranchName = I18n.t("newBranchName");
+        String branchTitle = I18n.t("createBranchHandler.createBranch");
 
         if (isRemote) {
-            newBranchName = "New local branch name:";
-            branchTitle = "Create local branch";
+            newBranchName = I18n.t("newLocalBranchName");
+            branchTitle = I18n.t("createLocalBranch");
         }
 
         if (MainFrame.getInstance().getActiveView() == ActiveView.WORKSPACE) {
-            branchTitle = "Create Branch in each repository";
+            branchTitle = I18n.t("createBranchEachRepository");
             if (isRemote) {
-                newBranchName = "New local branch name in each repo:";
+                newBranchName = I18n.t("newLocalBranchNameEach");
             }
         }
 
@@ -171,10 +171,10 @@ public class CreateBranchHandler extends AbstractAsyncHandler<String> {
      * or — in workspace-active view — from each project's own current HEAD.
      */
     public static void showAndExecuteFromCurrent(Component parent) {
-        String title = "Create Branch";
-        String prompt = "New branch name:";
+        String title = I18n.t("createBranchHandler.createBranch");
+        String prompt = I18n.t("newBranchName");
         if (MainFrame.getInstance().getActiveView() == ActiveView.WORKSPACE) {
-            title = "Create Branch in each repository";
+            title = I18n.t("createBranchEachRepository");
         }
         String name = promptBranchName(parent, title, prompt, "");
 
