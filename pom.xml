@@ -6,7 +6,7 @@
 
     <groupId>com.az</groupId>
     <artifactId>gitember</artifactId>
-    <version>3.5.3-SNAPSHOT</version>
+    <version>3.5.6-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Gitember Swing</name>
@@ -17,8 +17,8 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <spring.boot.version>3.3.5</spring.boot.version>
-        <jgit.version>7.6.0.202603022253-r</jgit.version>
-        <!--jgit.version>7.8.0.202609011348-r</jgit.version-->
+        <!--jgit.version>7.6.0.202603022253-r</jgit.version-->
+        <jgit.version>7.8.0.202609011348-r</jgit.version>
         <flatlaf.version>3.7.1</flatlaf.version>
         <ikonli.version>12.4.0</ikonli.version>
         <jackson.version>2.18.9</jackson.version>

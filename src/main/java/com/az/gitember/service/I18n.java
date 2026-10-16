@@ -38,7 +38,7 @@ public final class I18n {
     public static final String SYSTEM_LANGUAGE = "";
 
     /** Languages that have a bundle, in the order the Settings combo lists them. */
-    public static final List<String> SUPPORTED_LANGUAGES = List.of("en", "uk");
+    public static final List<String> SUPPORTED_LANGUAGES = List.of("en", "es", "uk");
 
     private static final String UKRAINIAN = "uk";
     private static final Set<String> UKRAINIAN_FALLBACK = Set.of("ru", "be");

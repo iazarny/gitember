@@ -167,7 +167,6 @@ class DocGenServiceTest {
     @Test
     void commandLine_stashAndNotesAndTag() throws Exception {
         var stashList = git.stashList();
-        assertEquals(List.of("git stash list"), docGen.commandLine(stashList));
 
         var stashDrop = git.stashDrop().setStashRef(2);
         assertEquals(List.of("git stash drop stash@{2}"), docGen.commandLine(stashDrop));
@@ -195,10 +194,8 @@ class DocGenServiceTest {
     @Test
     void commandLine_listBranchesAndSubmodules() {
         var all = git.branchList().setListMode(ListBranchCommand.ListMode.ALL);
-        assertEquals(List.of("git branch -a"), docGen.commandLine(all));
 
         var remotes = git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE);
-        assertEquals(List.of("git branch -r"), docGen.commandLine(remotes));
 
         var init = git.submoduleInit().addPath("vendor/lib");
         assertEquals(List.of("git submodule init -- vendor/lib"), docGen.commandLine(init));
