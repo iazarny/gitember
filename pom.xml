@@ -6,7 +6,7 @@
 
     <groupId>com.az</groupId>
     <artifactId>gitember</artifactId>
-    <version>3.5.6-SNAPSHOT</version>
+    <version>3.5.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Gitember Swing</name>
@@ -220,7 +220,7 @@
         <dependency>
             <groupId>tokyo.northside</groupId>
             <artifactId>assertj-swing-junit-jupiter</artifactId>
-            <version>4.0.0-beta-2</version>
+            <version>4.0.0-beta-3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
