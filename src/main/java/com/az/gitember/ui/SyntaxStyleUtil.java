@@ -110,22 +110,6 @@ public final class SyntaxStyleUtil {
 
         return monoFontCache;
 
-        /*if (monoFontCache == null) {
-            try {
-                monoFontCache = Font.createFont(
-                        Font.TRUETYPE_FONT,
-                        SyntaxStyleUtil.class.getResourceAsStream(
-                                "/fonts/JetBrainsMono-Regular.ttf"
-                        )
-                );
-            } catch (Exception e) {
-                monoFontCache = new Font(Font.MONOSPACED, Font.PLAIN,13);
-            }
-        }
-        var settings = Context.getSettings();
-        int size = (settings != null && settings.getFontSize() > 0) ? settings.getFontSize()  : 13;
-        Font editorFont = monoFontCache.deriveFont(Font.PLAIN, size-1);
-        return editorFont;*/
     }
 
     public static String getSyntaxStyle(String fileName) {

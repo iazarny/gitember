@@ -133,6 +133,7 @@ public class App {
             if (Context.getSettings() != null && "dark".equalsIgnoreCase(Context.getSettings().getTheme())) {
                 darkMode = true;
             }
+            UIManager.put("Component.focusWidth", 0);
             if (darkMode) {
                 FlatMacDarkLaf.setup();
             } else {
