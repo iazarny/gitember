@@ -10,6 +10,8 @@ import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
 import org.eclipse.jgit.util.FS;
@@ -132,9 +134,9 @@ public class App {
                 darkMode = true;
             }
             if (darkMode) {
-                FlatDarkLaf.setup();
+                FlatMacDarkLaf.setup();
             } else {
-                FlatLightLaf.setup();
+                FlatMacLightLaf.setup();
             }
         } catch (Exception e) {
             log.log(Level.WARNING, "Failed to set FlatLaf, using system default", e);

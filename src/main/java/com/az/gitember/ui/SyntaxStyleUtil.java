@@ -146,59 +146,74 @@ public final class SyntaxStyleUtil {
 
     // Highlight colors — two palettes selected at paint time based on active theme
 
+    // Colors matching original gitember
+    public static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
+    public static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
+    public static final Color LFS_COLOR = new Color(0, 233, 255);        // blue - LFS files
+
+    private final static Color BASE_GREEN = new Color(28, 189, 28);
+    private final static Color BASE_RED = new Color(214, 17, 66);
+    private final static Color BASE_BLUE = new Color(6, 91, 209);
+
+
+
     public static Color addedBg() {
         return isDarkTheme() ?
-                new Color(25, 166, 25) :
-                new Color(187, 236, 187);
+                new Color(BASE_GREEN.getRed(), BASE_GREEN.getGreen(), BASE_GREEN.getBlue(), 100) :
+                new Color(BASE_GREEN.getRed(), BASE_GREEN.getGreen(), BASE_GREEN.getBlue(), 100) ;
     }
     public static Color deletedBg() {
         return isDarkTheme() ?
-                new Color(152, 40, 19) :
-                new Color(246, 129, 129,200);
+                new Color(BASE_RED.getRed(), BASE_RED.getGreen(), BASE_RED.getBlue(), 100) :
+                new Color(BASE_RED.getRed(), BASE_RED.getGreen(), BASE_RED.getBlue(), 100);
     }
     public static Color changedBg() {
         return isDarkTheme() ?
-                new Color(18, 62, 156) :
-                new Color(130, 221, 236);
+                new Color(BASE_BLUE.getRed(), BASE_BLUE.getGreen(), BASE_BLUE.getBlue(), 100) :
+                new Color(BASE_BLUE.getRed(), BASE_BLUE.getGreen(), BASE_BLUE.getBlue(), 100) ;
     }
 
     public static Color addedBgDO() {
         return isDarkTheme() ?
-                new Color(192, 236, 192) :
-                new Color(187, 236, 187);
+                new Color(BASE_GREEN.getRed(), BASE_GREEN.getGreen(), BASE_GREEN.getBlue(), 255) :
+                new Color(BASE_GREEN.getRed(), BASE_GREEN.getGreen(), BASE_GREEN.getBlue(), 100) ;
     }
     public static Color deletedBgDO() {
         return isDarkTheme() ?
-                new Color(251, 151, 171) :
-                new Color(235, 40, 40,200);
+                new Color(BASE_RED.getRed(), BASE_RED.getGreen(), BASE_RED.getBlue(), 255) :
+                new Color(BASE_RED.getRed(), BASE_RED.getGreen(), BASE_RED.getBlue(), 100);
     }
+
     public static Color changedBgDO() {
-        return isDarkTheme() ?
-                new Color(156, 187, 255) :
-                new Color(130, 221, 236);
+            return isDarkTheme() ?
+                    new Color(BASE_BLUE.getRed(), BASE_BLUE.getGreen(), BASE_BLUE.getBlue(), 255) :
+                    new Color(BASE_BLUE.getRed(), BASE_BLUE.getGreen(), BASE_BLUE.getBlue(), 100) ;
     }
-
-
 
 
     public static Color fgAddedExt()   { return isDarkTheme() ?
-            new Color(180, 240, 180) :
-            new Color(32, 168, 32); }
+            BASE_GREEN.brighter().brighter() :
+            BASE_GREEN.darker().darker(); }
     public static Color fgDeletedExt() { return isDarkTheme() ?
-            new Color(240, 160, 160) :
-            new Color(156, 27, 27); }
+            BASE_RED.brighter() :
+            BASE_RED.darker(); }
     public static Color fgChangedExt() { return isDarkTheme() ?
-            new Color(160, 195, 255) :
-            new Color(30, 74, 154); }
+            BASE_BLUE.brighter().brighter() :
+            BASE_BLUE.darker().darker() ;
+    }
     public static Color fgUntrackedExt()   { return isDarkTheme() ?
-            new Color(204, 204, 204) :
-            new Color(67, 67, 67); }
+            UNTRACKED_COLOR.brighter() :
+            UNTRACKED_COLOR.darker();
+    }
 
 
 
-    public static Color rowFgAdded()   { return isDarkTheme() ? new Color(180, 240, 180) : Color.BLACK; }
-    public static Color rowFgDeleted() { return isDarkTheme() ? new Color(240, 160, 160) : Color.BLACK; }
-    public static Color rowFgChanged() { return isDarkTheme() ? new Color(160, 195, 255) : Color.BLACK; }
+    public static Color rowFgAdded()   { return isDarkTheme() ? BASE_GREEN.brighter().brighter().brighter() :
+            BASE_GREEN.darker().darker().darker(); }
+    public static Color rowFgDeleted() { return isDarkTheme() ? BASE_RED.brighter().brighter().brighter():
+            BASE_RED.darker().darker().darker(); }
+    public static Color rowFgChanged() { return isDarkTheme() ? BASE_BLUE.brighter().brighter().brighter() :
+            BASE_BLUE.darker().darker().darker(); }
 
     /**
      * Returns a theme-aware foreground colour for a SCM file-status label
@@ -213,31 +228,41 @@ public final class SyntaxStyleUtil {
         if (status == null) return null;
         boolean dark = isDarkTheme();
         return switch (status) {
-            case "ADDED",    "ADD"             -> dark ? new Color( 80, 220,  80) : new Color(  0, 140,  0);
-            case "MODIFIED", "MODIFY"          -> dark ? new Color( 80, 160, 255) : new Color(  0,  90, 200);
-            case "REMOVED",  "DELETE"          -> dark ? new Color(255,  90,  90) : new Color(190,  0,   0);
+            case "ADDED",    "ADD"             -> addedBg();
+            case "MODIFIED", "MODIFY"          -> changedBg();
+            case "REMOVED",  "DELETE"          -> deletedBg();
             case "RENAMED",  "RENAME", "COPY"  -> dark ? new Color(220, 170,  60) : new Color(140,  80,  0);
             default                            -> null;
         };
     }
 
-    // Colors matching original gitember
-    public static final Color STAGED_COLOR = new Color(16, 234, 16);     // green - staged
-    public static final Color UNSTAGED_COLOR = new Color(234, 16, 16);   // red - unstaged
-    public static final Color CONFLICT_COLOR = new Color(211, 48, 255);  // purple
-    public static final Color UNTRACKED_COLOR = new Color(128, 128, 128); // gray
-    public static final Color LFS_COLOR = new Color(0, 233, 255);        // blue - LFS files
+
 
     public static Color scmItemColor(String status) {
-        if (ScmItem.isStaged(status)) return SyntaxStyleUtil.STAGED_COLOR;
-        if (status.startsWith("Conflict")) return SyntaxStyleUtil.CONFLICT_COLOR;
-        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status))
-            return SyntaxStyleUtil.UNTRACKED_COLOR;
+
+        boolean dark = isDarkTheme();
+
+        if (ScmItem.isStaged(status)) {
+            return dark ? BASE_GREEN.brighter() :
+                    BASE_GREEN; //SyntaxStyleUtil.STAGED_COLOR;
+        }
+        if (status.startsWith("Conflict")) {
+             return dark ? SyntaxStyleUtil.CONFLICT_COLOR
+                     : SyntaxStyleUtil.CONFLICT_COLOR
+                    ;
+        }
+        if (ScmItem.Status.UNTRACKED.equals(status) || ScmItem.Status.UNTRACKED_FOLDER.equals(status)) {
+            return dark ?  SyntaxStyleUtil.UNTRACKED_COLOR.brighter():
+                    SyntaxStyleUtil.UNTRACKED_COLOR;
+        }
+
         if (ScmItem.Status.LFS.equals(status)
                 || (status != null && status.startsWith("LFS:"))) {
             return SyntaxStyleUtil.LFS_COLOR;
         }
-        return SyntaxStyleUtil.UNSTAGED_COLOR;
+
+        return dark ? BASE_RED.brighter().brighter() :
+                BASE_RED;
     }
 
     /**

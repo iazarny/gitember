@@ -12,6 +12,8 @@ import com.az.gitember.ui.misc.Util;
 import com.az.gitember.data.Const;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
@@ -802,9 +804,9 @@ public class SettingsDialog extends JDialog {
         if (themeChanged) {
             try {
                 if ("Dark".equals(selectedTheme)) {
-                    FlatDarkLaf.setup();
+                    FlatMacDarkLaf.setup();
                 } else {
-                    FlatLightLaf.setup();
+                    FlatMacLightLaf.setup();
                 }
             } catch (Exception ignored) {
             }

@@ -766,7 +766,7 @@ public class DiffViewerWindowTxt extends JFrame {
                 path.curveTo(cx2, rightBottom, cx1, leftBottom, 0, leftBottom);
                 path.closePath();
 
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 240));
+                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
                 g2.fill(path);
 
                 /*

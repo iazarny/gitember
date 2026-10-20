@@ -176,7 +176,9 @@ class DiffOverviewPanel extends JPanel {
                 if (c == null) continue;
                 int begin = isLeft ? edit.getBeginA() : edit.getBeginB();
                 int end   = isLeft ? edit.getEndA()   : edit.getEndB();
-                for (int i = begin; i < end && i < n; i++) lineColor[i] = c;
+                for (int i = begin; i < end && i < n; i++) {
+                    lineColor[i] = c;
+                }
             }
         }
 
