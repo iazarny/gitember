@@ -8,12 +8,9 @@ import com.az.gitember.service.GitRepoService;
 import com.az.gitember.service.GitemberUtil;
 import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.FileViewerWindow;
+import com.az.gitember.ui.misc.LafTheme;
 import com.az.gitember.ui.misc.Util;
 import com.az.gitember.data.Const;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.errors.ConfigInvalidException;
@@ -53,7 +50,7 @@ public class SettingsDialog extends JDialog {
 
     private  JComboBox<String> dateFormatCombo;
     private  JComboBox<String> timeFormatCombo;
-    private  JComboBox<String> themeCombo;
+    private  JComboBox<LafTheme> themeCombo;
     private  JComboBox<String> languageCombo;
     private  JSpinner fontSizeSpinner;
     private  JTextArea ignoreExtArea;
@@ -628,7 +625,7 @@ public class SettingsDialog extends JDialog {
 
     private JPanel createUIPanel() {
 
-        String currentTheme = settings != null && "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light";
+        LafTheme currentTheme = LafTheme.fromId(settings != null ? settings.getTheme() : null);
         int currentFontSize = settings != null ? settings.getFontSize() : 13;
         if (currentFontSize <= 0) currentFontSize = 13;
 
@@ -645,9 +642,8 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1.0;
-        // Items stay the internal "Light"/"Dark" values; the renderer shows translated names.
-        themeCombo = new JComboBox<>(new String[]{"Light", "Dark"});
-        themeCombo.setRenderer(displayRenderer(v -> I18n.t("Dark".equals(v) ? "themeDark" : "themeLight")));
+        themeCombo = new JComboBox<>(LafTheme.values());
+        themeCombo.setRenderer(displayRenderer(LafTheme::getDisplayName));
         themeCombo.setSelectedItem(currentTheme);
         themeCombo.setPreferredSize(new java.awt.Dimension(DEFAULT_SIZE, 25));
         uiPanel.add(themeCombo, gbc);
@@ -751,14 +747,13 @@ public class SettingsDialog extends JDialog {
             return;
         }
 
-        String selectedTheme = (String) themeCombo.getSelectedItem();
+        LafTheme selectedTheme = (LafTheme) themeCombo.getSelectedItem();
         int selectedFontSize = (int) fontSizeSpinner.getValue();
 
-        boolean themeChanged = !selectedTheme.equalsIgnoreCase(
-                "dark".equalsIgnoreCase(settings.getTheme()) ? "Dark" : "Light");
+        boolean themeChanged = selectedTheme != LafTheme.fromId(settings.getTheme());
         boolean fontChanged = selectedFontSize != settings.getFontSize();
 
-        settings.setTheme("Dark".equals(selectedTheme) ? "dark" : "light");
+        settings.setTheme(selectedTheme.getId());
         settings.setFontSize(selectedFontSize);
 
         String selectedLanguage = StringUtils.defaultString((String) languageCombo.getSelectedItem());
@@ -803,11 +798,7 @@ public class SettingsDialog extends JDialog {
 
         if (themeChanged) {
             try {
-                if ("Dark".equals(selectedTheme)) {
-                    FlatMacDarkLaf.setup();
-                } else {
-                    FlatMacLightLaf.setup();
-                }
+                selectedTheme.setup();
             } catch (Exception ignored) {
             }
         }
@@ -861,15 +852,10 @@ public class SettingsDialog extends JDialog {
     }
 
     /** Combo renderer that shows {@code label(value)} instead of the raw item. */
-    private static ListCellRenderer<Object> displayRenderer(java.util.function.Function<String, String> label) {
-        return new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, label.apply((String) value),
-                        index, isSelected, cellHasFocus);
-            }
-        };
+    private static <T> ListCellRenderer<T> displayRenderer(java.util.function.Function<T, String> label) {
+        DefaultListCellRenderer delegate = new DefaultListCellRenderer();
+        return (list, value, index, isSelected, cellHasFocus) ->
+                delegate.getListCellRendererComponent(list, label.apply(value), index, isSelected, cellHasFocus);
     }
 
     /**

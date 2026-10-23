@@ -8,10 +8,7 @@ import com.az.gitember.ui.DiffViewerWindowImg;
 import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.az.gitember.ui.misc.LafTheme;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
 import org.eclipse.jgit.util.FS;
@@ -129,16 +126,9 @@ public class App {
 
     private static void setupLookAndFeel() {
         try {
-            boolean darkMode = false;
-            if (Context.getSettings() != null && "dark".equalsIgnoreCase(Context.getSettings().getTheme())) {
-                darkMode = true;
-            }
+            String themeId = Context.getSettings() != null ? Context.getSettings().getTheme() : null;
             UIManager.put("Component.focusWidth", 0);
-            if (darkMode) {
-                FlatMacDarkLaf.setup();
-            } else {
-                FlatMacLightLaf.setup();
-            }
+            LafTheme.fromId(themeId).setup();
         } catch (Exception e) {
             log.log(Level.WARNING, "Failed to set FlatLaf, using system default", e);
             try {
