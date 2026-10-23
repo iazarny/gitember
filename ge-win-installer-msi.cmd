@@ -1,12 +1,15 @@
 
+set APP_VERSION=3.5.1
+set BOOT_JAR=gitember-%APP_VERSION%-SNAPSHOT-boot.jar
+
 jpackage ^
  --type app-image ^
  --input app ^
  --name Gitember ^
  --win-menu-group Gitember ^
  --install-dir gitember  ^
- --main-jar gitember-3.5.1-SNAPSHOT-boot.jar ^
- --app-version 3.5.1 ^
+ --main-jar %BOOT_JAR% ^
+ --app-version %APP_VERSION% ^
  --vendor "Igor Azarny" ^
  --icon src\main\resources\icon\gitember.ico ^
  --win-menu ^
