@@ -10,7 +10,7 @@
 
 set -e
 
-APP_VERSION="3.6"
+APP_VERSION="3.6.0"
 APP_JAR="gitember-${APP_VERSION}-SNAPSHOT.jar"
 AOT_CACHE="gitember.aot"
 
