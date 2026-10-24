@@ -48,7 +48,7 @@ public class App {
                 I18n.installSwingDefaults();
                 applyFontSize();
 
-                if (args.length == 2) {
+                if (args.length == 2 && !AotTraining.isRequested(args)) {
                     File left  = new File(args[0]);
                     File right = new File(args[1]);
                     if (left.exists() && right.exists()) {
@@ -84,7 +84,14 @@ public class App {
 
                 MainFrame frame = MainFrame.getInstance();
                 frame.init();
-                frame.setVisible(true);
+                if (!AotTraining.isHidden()) {
+                    frame.setVisible(true);
+                }
+                if (AotTraining.isRequested(args)) {
+                    AotTraining.start(frame, args);
+                } else {
+                    AotTraining.scheduleBackgroundTraining();
+                }
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Failed to start application", e);
                 JOptionPane.showMessageDialog(null,

@@ -296,9 +296,33 @@
                     <archive>
                         <manifest>
                             <mainClass>com.az.gitember.App</mainClass>
+                            <!-- Thin jar + target/lib is the layout the installers ship: the JVM
+                                 AOT cache only covers classes from the built-in class loaders,
+                                 so classes nested in the boot jar would never be cached. -->
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <useUniqueVersions>false</useUniqueVersions>
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-runtime-libs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

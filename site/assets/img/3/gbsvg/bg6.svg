@@ -96,74 +96,74 @@
          ═══════════════════════════════════════════════════════════ -->
 
     <!-- Row 1 -->
-    <use  href="#sym-gitee" x="0" y="0" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="40" y="0" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="80" y="0" width="40" height="40"/>
-    <use  href="#sym-gitea" x="120" y="0" width="40" height="40"/>
-    <use  href="#sym-github" x="160" y="0" width="40" height="40"/>
-    <use  href="#sym-refresh" x="200" y="0" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="240" y="0" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="280" y="0" width="40" height="40"/>
+    <use  href="#sym-gitee"      x="-5" y="0" width="40" height="40"/>
+    <use  href="#sym-gitlab"     x="39" y="0" width="40" height="40"/>
+    <use  href="#sym-bitbucket"  x="82" y="0" width="40" height="40"/>
+    <use  href="#sym-gitea"      x="128" y="0" width="40" height="40"/>
+    <use  href="#sym-github"     x="170" y="0" width="40" height="40"/>
+    <use  href="#sym-refresh"    x="210" y="0" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="252" y="0" width="40" height="40"/>
+    <use  href="#sym-gitorig"    x="290" y="0" width="40" height="40"/>
 
     <!-- Row 2 -->
-    <use  href="#sym-gitlab" x="0" y="40" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="40" y="40" width="40" height="40"/>
-    <use  href="#sym-gitea" x="80" y="40" width="40" height="40"/>
-    <use  href="#sym-github" x="120" y="40" width="40" height="40"/>
-    <use  href="#sym-refresh" x="160" y="40" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="200" y="40" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="240" y="40" width="40" height="40"/>
-    <use  href="#sym-gitee" x="280" y="40" width="40" height="40"/>
+    <use  href="#sym-gitlab"     x="-5" y="40" width="40" height="40"/>
+    <use  href="#sym-bitbucket"  x="39" y="40" width="40" height="40"/>
+    <use  href="#sym-gitea"      x="82" y="40" width="40" height="40"/>
+    <use  href="#sym-github"     x="128" y="40" width="40" height="40"/>
+    <use  href="#sym-refresh"    x="170" y="40" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="210" y="40" width="40" height="40"/>
+    <use  href="#sym-gitorig"    x="252" y="40" width="40" height="40"/>
+    <use  href="#sym-gitee"      x="290" y="40" width="40" height="40"/>
 
     <!-- Row 3 -->
-    <use  href="#sym-bitbucket" x="0" y="80" width="40" height="40"/>
-    <use  href="#sym-gitea" x="40" y="80" width="40" height="40"/>
-    <use  href="#sym-github" x="80" y="80" width="40" height="40"/>
-    <use  href="#sym-refresh" x="120" y="80" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="160" y="80" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="200" y="80" width="40" height="40"/>
-    <use  href="#sym-gitee" x="240" y="80" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="280" y="80" width="40" height="40"/>
+    <use  href="#sym-bitbucket" x="-5" y="80" width="40" height="40"/>
+    <use  href="#sym-gitea" x="39" y="80" width="40" height="40"/>
+    <use  href="#sym-github" x="82" y="80" width="40" height="40"/>
+    <use  href="#sym-refresh" x="128" y="80" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="170" y="80" width="40" height="40"/>
+    <use  href="#sym-gitorig" x="210" y="80" width="40" height="40"/>
+    <use  href="#sym-gitee" x="252" y="80" width="40" height="40"/>
+    <use  href="#sym-gitlab" x="290" y="80" width="40" height="40"/>
 
     <!-- Row 4 -->
-    <use  href="#sym-gitea" x="0" y="120" width="40" height="40"/>
-    <use  href="#sym-github" x="40" y="120" width="40" height="40"/>
-    <use  href="#sym-refresh" x="80" y="120" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="120" y="120" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="160" y="120" width="40" height="40"/>
-    <use  href="#sym-gitee" x="200" y="120" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="240" y="120" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="280" y="120" width="40" height="40"/>
+    <use  href="#sym-gitea" x="-5" y="120" width="40" height="40"/>
+    <use  href="#sym-github" x="39" y="120" width="40" height="40"/>
+    <use  href="#sym-refresh" x="82" y="120" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="128" y="120" width="40" height="40"/>
+    <use  href="#sym-gitorig" x="170" y="120" width="40" height="40"/>
+    <use  href="#sym-gitee" x="210" y="120" width="40" height="40"/>
+    <use  href="#sym-gitlab" x="252" y="120" width="40" height="40"/>
+    <use  href="#sym-bitbucket" x="290" y="120" width="40" height="40"/>
 
     <!-- Row 5 -->
-    <use  href="#sym-github" x="0" y="160" width="40" height="40"/>
-    <use  href="#sym-refresh" x="40" y="160" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="80" y="160" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="120" y="160" width="40" height="40"/>
-    <use  href="#sym-gitee" x="160" y="160" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="200" y="160" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="240" y="160" width="40" height="40"/>
-    <use  href="#sym-gitea" x="280" y="160" width="40" height="40"/>
+    <use  href="#sym-github" x="-5" y="160" width="40" height="40"/>
+    <use  href="#sym-refresh" x="39" y="160" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="82" y="160" width="40" height="40"/>
+    <use  href="#sym-gitorig" x="128" y="160" width="40" height="40"/>
+    <use  href="#sym-gitee" x="170" y="160" width="40" height="40"/>
+    <use  href="#sym-gitlab" x="210" y="160" width="40" height="40"/>
+    <use  href="#sym-bitbucket" x="252" y="160" width="40" height="40"/>
+    <use  href="#sym-gitea" x="290" y="160" width="40" height="40"/>
 
 
     <!-- Row 6 -->
-    <use  href="#sym-refresh" x="0" y="200" width="40" height="40"/>
-    <use  href="#sym-git-branch" x="40" y="200" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="80" y="200" width="40" height="40"/>
-    <use  href="#sym-gitee" x="120" y="200" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="160" y="200" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="200" y="200" width="40" height="40"/>
-    <use  href="#sym-gitea" x="240" y="200" width="40" height="40"/>
-    <use  href="#sym-github" x="280" y="200" width="40" height="40"/>
+    <use  href="#sym-refresh" x="-5" y="200" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="39" y="200" width="40" height="40"/>
+    <use  href="#sym-gitorig" x="82" y="200" width="40" height="40"/>
+    <use  href="#sym-gitee" x="128" y="200" width="40" height="40"/>
+    <use  href="#sym-gitlab" x="170" y="200" width="40" height="40"/>
+    <use  href="#sym-bitbucket" x="210" y="200" width="40" height="40"/>
+    <use  href="#sym-gitea" x="252" y="200" width="40" height="40"/>
+    <use  href="#sym-github" x="290" y="200" width="40" height="40"/>
 
     <!-- Row 7 -->
-    <use  href="#sym-git-branch" x="0" y="240" width="40" height="40"/>
-    <use  href="#sym-gitorig" x="40" y="240" width="40" height="40"/>
-    <use  href="#sym-gitee" x="80" y="240" width="40" height="40"/>
-    <use  href="#sym-gitlab" x="120" y="240" width="40" height="40"/>
-    <use  href="#sym-bitbucket" x="160" y="240" width="40" height="40"/>
-    <use  href="#sym-gitea" x="200" y="240" width="40" height="40"/>
-    <use  href="#sym-github" x="240" y="240" width="40" height="40"/>
-    <use  href="#sym-refresh" x="280" y="240" width="40" height="40"/>
+    <use  href="#sym-git-branch" x="-5" y="240" width="40" height="40"/>
+    <use  href="#sym-gitorig" x="39" y="240" width="40" height="40"/>
+    <use  href="#sym-gitee" x="82" y="240" width="40" height="40"/>
+    <use  href="#sym-gitlab" x="128" y="240" width="40" height="40"/>
+    <use  href="#sym-bitbucket" x="170" y="240" width="40" height="40"/>
+    <use  href="#sym-gitea" x="210" y="240" width="40" height="40"/>
+    <use  href="#sym-github" x="252" y="240" width="40" height="40"/>
+    <use  href="#sym-refresh" x="290" y="240" width="40" height="40"/>
 
 </svg>

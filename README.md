@@ -61,6 +61,15 @@ java -jar target/gitember-3.5.1-SNAPSHOT-boot.jar
 
 ## Changes
 
+
+### 3.6 · Nov 2026
+
+Add following features:
+- Spanish AND Ukrainian translations were added
+- Integration with ticketing systems (Jira, Linear)
+- Show Git commands, which are similar to the actions performed in the GUI 
+- Add AOT JEP 544 support for Java 27
+
 ### 3.5.3 · Oct 2026
 
 Add following features:
