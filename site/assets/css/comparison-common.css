@@ -1,0 +1,240 @@
+/* ==========================================================================
+   Shared Comparison Styles for Gitember & Comparison Pages
+   ========================================================================== */
+
+.comparison-hero {
+    background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
+    padding: 120px 0 60px;
+    color: #fff;
+    text-align: left;
+}
+
+.comparison-hero h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.comparison-hero p {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    max-width: 640px;
+    margin: 0;
+}
+
+.comparison-section {
+    padding: 60px 0 20px;
+}
+
+.comparison-section h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #37517e;
+    margin-bottom: 24px;
+}
+
+.comparison-section h2 i {
+    color: #4154f1;
+    margin-right: 10px;
+}
+
+/* Scrollable wrapper for wide tables on small screens */
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cmp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    min-width: 700px;
+}
+
+.cmp-table thead th {
+    background: #377e71;
+    color: #fff;
+    font-weight: 600;
+    padding: 12px 14px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.cmp-table thead th:first-child {
+    text-align: left;
+    width: 220px;
+}
+
+.cmp-table thead th.col-gitember {
+    background: #41f1c2;
+}
+
+.cmp-table tbody tr:nth-child(even) {
+    background: #f8f9ff;
+}
+
+.cmp-table tbody tr:hover {
+    background: #eef0ff;
+}
+
+.cmp-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.cmp-table td:first-child {
+    text-align: left;
+    font-weight: 500;
+    color: #444;
+}
+
+.cmp-table td.col-gitember {
+    background: rgba(65, 84, 241, 0.06);
+    font-weight: 600;
+}
+
+.footnote {
+    font-size: 0.82rem;
+    color: #777;
+    margin-top: 12px;
+}
+
+/* Content layout cards & review sections */
+.review-intro {
+    max-width: 980px;
+    margin: 0 auto;
+    font-size: 1.02rem;
+    line-height: 1.75;
+    color: #4b5563;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+}
+
+.feature-card {
+    border: 1px solid #e7eaf3;
+    border-radius: 14px;
+    padding: 28px;
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(37, 50, 84, .06);
+}
+
+.feature-card.feature-card-main {
+    border-color: rgba(65, 84, 241, .28);
+    box-shadow: 0 10px 30px rgba(65, 84, 241, .10);
+}
+
+.feature-card h3 {
+    color: #37517e;
+    font-size: 1.22rem;
+    margin: 0 0 12px;
+    font-weight: 700;
+}
+
+.feature-card p {
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.feature-card ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+    color: #555;
+    line-height: 1.7;
+}
+
+.feature-badge {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(65, 84, 241, .09);
+    color: #4154f1;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.review-section {
+    background: #f8f9ff;
+    padding: 70px 0 35px;
+}
+
+.review-section h2 {
+    margin-bottom: 18px;
+}
+
+.review-section h3 {
+    color: #37517e;
+    margin-top: 34px;
+    margin-bottom: 14px;
+    font-size: 1.35rem;
+}
+
+.review-copy {
+    max-width: 980px;
+    margin: 0 auto;
+    color: #4b5563;
+    line-height: 1.75;
+}
+
+.procon-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 18px;
+}
+
+.procon-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e7eaf3;
+}
+
+.procon-card h4 {
+    color: #37517e;
+    margin: 0 0 12px;
+}
+
+.procon-card ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #555;
+    line-height: 1.7;
+}
+
+.review-note {
+    margin-top: 22px;
+    padding: 15px 18px;
+    border-left: 4px solid #4154f1;
+    background: #fff;
+    color: #555;
+    line-height: 1.65;
+}
+
+.toc-section { padding: 36px 0 10px; }
+.toc-card { background:#f8f9ff; border:1px solid #e8ebf5; border-radius:12px; padding:24px 28px; box-shadow:0 4px 18px rgba(0,0,0,.04); }
+.toc-card h2 { margin-bottom:16px; }
+.toc-list { columns: 2; column-gap: 48px; margin:0; padding-left:22px; }
+.toc-list li { margin:7px 0; break-inside:avoid; }
+.toc-list a { color:#37517e; text-decoration:none; }
+.toc-list a:hover { text-decoration:underline; }
+
+@media (max-width: 900px) {
+    .feature-grid, .procon-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .toc-list { columns:1; }
+}

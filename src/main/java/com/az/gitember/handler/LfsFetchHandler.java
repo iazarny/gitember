@@ -1,5 +1,7 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.data.LfsException;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.dialog.CredentialsDialog;
@@ -11,6 +13,7 @@ import java.awt.*;
 
 /**
  * Fetches (downloads) LFS objects for the current HEAD from the remote LFS server.
+ * When constructed with a path, only that working-copy file is fetched.
  *
  * <p>If the first attempt fails with an authentication error the handler prompts
  * for credentials (access token or username/password), saves them to the project,
@@ -21,39 +24,63 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
     /** Prevents an infinite prompt loop if the user supplies wrong credentials. */
     private boolean credentialsPrompted = false;
 
-    public LfsFetchHandler(Component parent, StatusBar statusBar) {
-        super(parent, statusBar);
+    /** Repo-relative path to fetch, or {@code null} for every LFS pointer on HEAD. */
+    private final String path;
+
+    public LfsFetchHandler(Component parent) {
+        this(parent, null);
+    }
+
+    public LfsFetchHandler(Component parent, String path) {
+        super(parent);
+        this.path = path;
     }
 
     @Override
     protected String getOperationName() {
-        return "Fetch LFS objects";
+        String name = I18n.t("lfsFetchHandler.fetchLfsObjects");
+        if (path != null && !path.isBlank()) {
+            name = I18n.t("fetchLfsFile", path);
+        }
+        return name;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
         RemoteRepoParameters params = RemoteRepoParameters.forCurrentRepo();
-        Context.getGitRepoService().fetchLfsObjects(params);
-        Context.updateAll();
+        Context.getGitRepoService().fetchLfsObjects(params, path);
+        Context.updateStatus(null, true);
         Context.updateWorkingBranch();
         return null;
     }
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus("LFS objects fetched");
+        if (path != null && !path.isBlank()) {
+            statusBar.setStatus(I18n.t("lfsFileFetched", path));
+        } else {
+            statusBar.setStatus(I18n.t("lfsObjectsFetched"));
+        }
+        Context.refreshWorkingCopy();
     }
 
     @Override
     protected void onError(Exception e) {
-        if (!credentialsPrompted && isAuthError(e)) {
+        if (e instanceof LfsException lfs && lfs.getKind() == LfsException.Kind.NO_REMOTE) {
+            statusBar.clearProgress();
+            statusBar.setStatus(I18n.t("failedNoHttpRemote", getOperationName()));
+            JOptionPane.showMessageDialog(parent, lfs.getMessage(),
+                    I18n.t("gitLfs"), JOptionPane.WARNING_MESSAGE);
+        } else if (!credentialsPrompted && isAuthError(e)) {
             credentialsPrompted = true;
             if (promptAndSaveCredentials()) {
                 execute(); // retry with the new credentials
-                return;
+            } else {
+                super.onError(e);
             }
+        } else {
+            super.onError(e);
         }
-        super.onError(e);
     }
 
     /** LFS-specific credential prompt explaining why HTTPS credentials are needed. */
@@ -62,19 +89,14 @@ public class LfsFetchHandler extends AbstractAsyncHandler<Void> {
         Project project = Context.getCurrentProject().orElse(null);
         if (project == null) {
             JOptionPane.showMessageDialog(parent,
-                    "LFS authentication failed and no project is open.\n"
-                            + "Please configure credentials via Repository → Credentials…",
-                    "LFS Authentication", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("lfsAuthenticationFailedNoProject"),
+                    I18n.t("lfsAuthentication"), JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
         int choice = JOptionPane.showConfirmDialog(parent,
-                "<html><b>LFS authentication required</b><br><br>"
-                        + "Git LFS always transfers files over <b>HTTPS</b>, even when git itself<br>"
-                        + "uses SSH. An access token (or username + password) is therefore<br>"
-                        + "needed to download LFS objects.<br><br>"
-                        + "Would you like to enter credentials now?</html>",
-                "LFS Authentication Required",
+                I18n.t("lfsAuthenticationRequiredGitLfs"),
+                I18n.t("lfsAuthenticationRequired"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 

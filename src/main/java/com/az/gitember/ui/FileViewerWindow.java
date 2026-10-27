@@ -1,7 +1,9 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.misc.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -15,12 +17,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Simple window to display text file content from a git commit.
+ * Window to display (and optionally edit) text file content.
  * Supports optional git-blame annotation via the "Annotate" toggle button.
  */
 public class FileViewerWindow extends JFrame {
@@ -33,7 +36,8 @@ public class FileViewerWindow extends JFrame {
     private final SearchBar searchBar;
 
     // Blame components
-    private final JToggleButton annotateBtn = new JToggleButton("Annotate");
+    private final JToggleButton annotateBtn = new JToggleButton(I18n.t("annotate"));
+    private final JButton saveBtn;
     private final JTextArea blameTextArea   = new JTextArea();
     private final JScrollPane blameScrollPane;
     private final JPanel centerPanel        = new JPanel(new BorderLayout());
@@ -42,15 +46,22 @@ public class FileViewerWindow extends JFrame {
     private String  blameFilePath   = null;
     private boolean blameLoaded     = false;
     private String  lastBlameClickSha = null;
+    private java.nio.file.Path editPath = null;
+    private String savedContent = null;
 
     public FileViewerWindow(String title, String content) {
         this(title, content, title);
     }
 
     public FileViewerWindow(String title, String content, String fileName) {
+        this(title, content, fileName, null);
+    }
+
+    public FileViewerWindow(String title, String content, String fileName, String searchTerm) {
+        setName("fileViewerWindow");
         setTitle(title);
         setSize(900, 600);
-        setLocationRelativeTo(Context.getMainFrame());
+        setLocationRelativeTo(MainFrame.getInstance());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setIconImages(Util.appIcons());
 
@@ -58,6 +69,7 @@ public class FileViewerWindow extends JFrame {
 
         // ── Main text area ────────────────────────────────────────────────
         textArea = new RSyntaxTextArea(content);
+        textArea.setName("fileContentArea");
         textArea.setEditable(false);
         textArea.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(fileName));
         textArea.setCodeFoldingEnabled(false);
@@ -92,7 +104,7 @@ public class FileViewerWindow extends JFrame {
 
         // ── Blame context menu & mouse interactions ───────────────────────
         JPopupMenu blameContextMenu = new JPopupMenu();
-        JMenuItem openInHistoryItem = new JMenuItem("Open commit in History");
+        JMenuItem openInHistoryItem = new JMenuItem(I18n.t("openCommitInHistory"));
         openInHistoryItem.addActionListener(e -> {
             if (lastBlameClickSha != null && !lastBlameClickSha.isBlank()) {
                 navigateToHistoryCommit(lastBlameClickSha);
@@ -134,12 +146,29 @@ public class FileViewerWindow extends JFrame {
         // ── Search bar ────────────────────────────────────────────────────
         searchBar = new SearchBar(textArea);
 
+        if (StringUtils.isNotBlank(searchTerm)) {
+            SwingUtilities.invokeLater(() -> {
+                searchBar.activate();
+                searchBar.getSearchField().setText(searchTerm);
+                searchBar.findNext(true);
+            });
+        }
+
+
         // ── Buttons ───────────────────────────────────────────────────────
-        JButton saveBtn  = new JButton("Save...");
+        saveBtn = new JButton("Save...");
+        saveBtn.setName("saveFileButton");
         saveBtn.addActionListener(e -> saveContent());
 
-        JButton closeBtn = new JButton("Close");
-        closeBtn.addActionListener(e -> dispose());
+        JButton closeBtn = new JButton(I18n.t("close"));
+        closeBtn.setName("closeFileButton");
+        closeBtn.addActionListener(e -> {
+            if (editPath != null) {
+                confirmCloseIfDirty();
+            } else {
+                dispose();
+            }
+        });
 
         annotateBtn.setVisible(false);   // shown only when enableBlame() is called
         annotateBtn.addActionListener(e -> toggleAnnotation());
@@ -198,6 +227,64 @@ public class FileViewerWindow extends JFrame {
     }
 
     /**
+     * Opens a non-modal editor for {@code path}. Missing files start empty and are created on save.
+     */
+    public static void openForEdit(String title, Path path) {
+        String content = "";
+        boolean readable = true;
+        if (Files.exists(path)) {
+            try {
+                content = Files.readString(path);
+            } catch (Exception ex) {
+                log.log(Level.WARNING, "Cannot read " + path, ex);
+                JOptionPane.showMessageDialog(MainFrame.getInstance(),
+                        I18n.t("cannotRead", path.getFileName(), ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                readable = false;
+            }
+        }
+        if (readable) {
+            FileViewerWindow viewer = new FileViewerWindow(title, content, path.getFileName().toString());
+            viewer.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+            viewer.enableFileEdit(path);
+            viewer.setVisible(true);
+        }
+    }
+
+    /**
+     * Turns this viewer into an in-place editor for {@code filePath}. Save writes back to
+     * that path (creating the file if needed) and refreshes the working-copy status.
+     * Call before {@code setVisible(true)}.
+     */
+    public void enableFileEdit(Path filePath) {
+        this.editPath = filePath;
+        this.savedContent = textArea.getText();
+        textArea.setEditable(true);
+        textArea.setHighlightCurrentLine(true);
+        saveBtn.setText(I18n.t("save"));
+
+        KeyStroke saveStroke = KeyStroke.getKeyStroke(KeyEvent.VK_S,
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        getRootPane().registerKeyboardAction(
+                e -> saveContent(), saveStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                confirmCloseIfDirty();
+            }
+        });
+
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                confirmCloseIfDirty();
+            }
+        });
+    }
+
+    /**
      * Scrolls to {@code lineNo} (1-based) and highlights that line in amber.
      * Call after {@code setVisible(true)} or from {@code SwingUtilities.invokeLater}.
      */
@@ -230,7 +317,7 @@ public class FileViewerWindow extends JFrame {
         }
 
         annotateBtn.setEnabled(false);
-        annotateBtn.setText("Loading…");
+        annotateBtn.setText(I18n.t("loading"));
 
         new SwingWorker<List<String>, Void>() {
             @Override
@@ -262,11 +349,11 @@ public class FileViewerWindow extends JFrame {
                     log.log(Level.WARNING, "Blame load failed", ex);
                     annotateBtn.setSelected(false);
                     JOptionPane.showMessageDialog(FileViewerWindow.this,
-                            "Blame unavailable: " + ex.getMessage(),
-                            "Annotate", JOptionPane.WARNING_MESSAGE);
+                            I18n.t("blameUnavailable", ex.getMessage()),
+                            I18n.t("annotate"), JOptionPane.WARNING_MESSAGE);
                 } finally {
                     annotateBtn.setEnabled(true);
-                    annotateBtn.setText("Annotate");
+                    annotateBtn.setText(I18n.t("annotate"));
                 }
             }
         }.execute();
@@ -291,30 +378,72 @@ public class FileViewerWindow extends JFrame {
 
     /** Brings the main window to front and navigates the history view to the given short SHA. */
     private void navigateToHistoryCommit(String sha) {
-        javax.swing.JFrame mf = Context.getMainFrame();
+        javax.swing.JFrame mf = MainFrame.getInstance();
         if (mf instanceof MainFrame mainFrame) {
             mainFrame.toFront();
             mainFrame.showCommitInHistory(sha);
         }
     }
 
-    private void saveContent() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save as");
-        chooser.setSelectedFile(new File(suggestedFileName));
-        chooser.setFileFilter(new FileNameExtensionFilter(
-                "Patch / Diff files (*.patch, *.diff)", "patch", "diff"));
-        chooser.setAcceptAllFileFilterUsed(true);
-
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-
-        try {
-            Files.writeString(chooser.getSelectedFile().toPath(),
-                    textArea.getText(), StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Cannot save file:\n" + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+    private void confirmCloseIfDirty() {
+        if (isDirty()) {
+            int choice = JOptionPane.showConfirmDialog(this,
+                    I18n.t("saveChangesTo", suggestedFileName),
+                    I18n.t("unsavedChanges"),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (choice == JOptionPane.YES_OPTION) {
+                if (saveContent()) {
+                    dispose();
+                }
+            } else if (choice == JOptionPane.NO_OPTION) {
+                dispose();
+            }
+        } else {
+            dispose();
         }
+    }
+
+    private boolean isDirty() {
+        return editPath != null && savedContent != null && !textArea.getText().equals(savedContent);
+    }
+
+    private boolean saveContent() {
+        boolean saved = false;
+        if (editPath != null) {
+            try {
+                if (editPath.getParent() != null) {
+                    Files.createDirectories(editPath.getParent());
+                }
+                Files.writeString(editPath, textArea.getText(), StandardCharsets.UTF_8);
+                savedContent = textArea.getText();
+                Context.updateStatus(null, true);
+                saved = true;
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this,
+                        I18n.t("cannotSaveFile", ex.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle(I18n.t("fileViewerWindow.saveAs"));
+            chooser.setSelectedFile(new File(suggestedFileName));
+            chooser.setFileFilter(new FileNameExtensionFilter(
+                    I18n.t("patchDiffFilesPatchDiff"), "patch", "diff"));
+            chooser.setAcceptAllFileFilterUsed(true);
+
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    Files.writeString(chooser.getSelectedFile().toPath(),
+                            textArea.getText(), StandardCharsets.UTF_8);
+                    saved = true;
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            I18n.t("cannotSaveFile", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+        return saved;
     }
 }

@@ -1,0 +1,8 @@
+{
+  "label": "Integrations",
+  "position": 90,
+  "link": {
+    "type": "generated-index",
+    "description": "Connect Gitember to issue trackers so Git work stays linked to tickets."
+  }
+}

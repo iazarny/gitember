@@ -1,0 +1,47 @@
+package com.az.gitember.ui.mainframe;
+
+import com.az.gitember.service.I18n;
+import com.az.gitember.data.RemoteRepoParameters;
+import com.az.gitember.handler.AbstractAsyncHandler;
+import com.az.gitember.service.Context;
+import com.az.gitember.ui.MainFrame;
+import com.az.gitember.ui.StatusBar;
+import java.awt.*;
+
+public class CloneHandler extends AbstractAsyncHandler<Void> {
+
+    private final RemoteRepoParameters params;
+
+    public CloneHandler(Component parent, RemoteRepoParameters params) {
+        super(parent);
+        this.params = params;
+    }
+
+    @Override
+    protected String getOperationName() {
+        return I18n.t("clone");
+    }
+
+    @Override
+    protected Void doInBackground() throws Exception {
+        Context.getGitRepoService().cloneRepository(params, progressMonitor);
+        Context.init(params.getDestinationFolder());
+        return null;
+    }
+
+    @Override
+    protected void onSuccess(Void result) {
+        statusBar.setStatus(I18n.t("cloneCompletedSuccessfully"));
+        // Persist HTTP credentials so push/pull work without re-entering them
+        String url = params.getUrl();
+        if (url != null && (url.startsWith("https:") || url.startsWith("http:"))) {
+            Context.getCurrentProject().ifPresent(project -> {
+                project.setUserName(params.getUserName());
+                project.setUserPwd(params.getUserPwd());
+                project.setAccessToken(params.getAccessToken());
+                Context.saveSettings();
+            });
+        }
+        MainFrame.getInstance().getToolBar().setVisible(true);
+    }
+}

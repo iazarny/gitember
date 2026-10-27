@@ -26,6 +26,22 @@ public class Util {
         return createButton(text, tooltip, ikon, 0);
     }
 
+    public static JMenuItem createMenuItem(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
+        JMenuItem btn = new JMenuItem();
+        if (ikon != null) {
+            Icon icon         = themeAwareIcon(ikon, 16, false, false);
+            btn.setIcon(rotation == 0 ? icon : new RotatedIcon(icon, rotation));
+            Icon disabledIcon = themeAwareIcon(ikon, 16, true,false);
+            btn.setDisabledIcon(rotation == 0 ? disabledIcon : new RotatedIcon(disabledIcon, rotation));
+        }
+        btn.setText( text  );
+        if (tooltip != null) {
+            btn.setToolTipText(tooltip);
+        }
+        btn.setFocusable(false);
+        return btn;
+    }
+
     public static JButton createButton(String text, String tooltip, org.kordamp.ikonli.Ikon ikon, int rotation) {
         Dimension size = new Dimension(110, 36);
         return createButton(text, tooltip, ikon, rotation, size);
@@ -47,6 +63,9 @@ public class Util {
         if (ikon != null) {
             Icon icon = themeAwareIcon(ikon, 16);
             btn.setIcon(rotation == 0 ? icon : new RotatedIcon(icon, rotation));
+
+            Icon disabledIcon = themeAwareIcon(ikon, 16, true, true);
+            btn.setDisabledIcon(rotation == 0 ? disabledIcon : new RotatedIcon(disabledIcon, rotation));
         }
 
         btn.setText("<html>" + text + "</html>");
@@ -103,12 +122,22 @@ public class Util {
      * foreground at paint time, so it automatically adapts to light/dark themes.
      */
     public static Icon themeAwareIcon(Ikon ikon, int size) {
+        return themeAwareIcon(ikon, size, false, true);
+    }
+
+    private static Icon themeAwareIcon(Ikon ikon, int size, boolean disabled, boolean button) {
         FontIcon fi = FontIcon.of(ikon, size);
         return new Icon() {
             @Override
             public void paintIcon(Component c, Graphics g, int x, int y) {
-                Color fg = c != null ? c.getForeground()
-                        : UIManager.getColor("Button.foreground");
+                //TODO i . case if OS and gitember theme are not sync
+                // wrong color is selected for menu item
+                final Color fg;
+                if (button) {
+                    fg = UIManager.getColor(disabled  ? "Button.disabledText" : "Button.foreground");
+                } else {
+                    fg = UIManager.getColor(disabled  ? "MenuItem.disabledForeground" : "MenuItem.foreground");
+                }
                 fi.setIconColor(fg != null ? fg : Color.BLACK);
                 fi.paintIcon(c, g, x, y);
             }

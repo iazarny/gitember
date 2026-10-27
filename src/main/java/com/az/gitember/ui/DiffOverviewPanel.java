@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 
@@ -43,7 +44,7 @@ class DiffOverviewPanel extends JPanel {
         setPreferredSize(new Dimension(PREF_WIDTH, 0));
         setMinimumSize  (new Dimension(PREF_WIDTH, 0));
         setMaximumSize  (new Dimension(PREF_WIDTH, Integer.MAX_VALUE));
-        setToolTipText("Diff overview — click or drag to navigate");
+        setToolTipText(I18n.t("diffOverviewClickDragNavigate"));
 
         // Invalidate cache when the panel is resized
         addComponentListener(new ComponentAdapter() {
@@ -175,7 +176,9 @@ class DiffOverviewPanel extends JPanel {
                 if (c == null) continue;
                 int begin = isLeft ? edit.getBeginA() : edit.getBeginB();
                 int end   = isLeft ? edit.getEndA()   : edit.getEndB();
-                for (int i = begin; i < end && i < n; i++) lineColor[i] = c;
+                for (int i = begin; i < end && i < n; i++) {
+                    lineColor[i] = c;
+                }
             }
         }
 

@@ -11,6 +11,8 @@ public interface Const {
     String GIT_ATTR_NAME = ".gitattributes";
     String GIT_IGNORE_NAME = ".gitignore";
     String GIT_README_NAME = "README.md";
+    String ALLOWED_SIGNERS_NAME = "allowed_signers";
+    String REVOKED_KEYS_NAME = "revoked_keys";
 
     int SEARCH_LIMIT_CHAR = 2;
 
@@ -41,7 +43,7 @@ public interface Const {
         String WORKING_COPY = "workingcopy";
     }
 
-    String APP_NAME = "Gitember 2.5.8";
+    String APP_NAME = "Gitember 3.4.0";
 
     String ICON = "/icon/gitember.png";
 

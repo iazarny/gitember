@@ -2,6 +2,7 @@ package com.az.gitember.data;
 
 public class InitRepoParameters {
 
+    private String defaultBranch = "main";
     private String destinationFolder = "";
     private boolean initWithReame = false;
     private boolean initWithIgnore = false;
@@ -37,5 +38,13 @@ public class InitRepoParameters {
 
     public void setInitWithLfs(boolean initWithLfs) {
         this.initWithLfs = initWithLfs;
+    }
+
+    public String getDefaultBranch() {
+        return defaultBranch;
+    }
+
+    public void setDefaultBranch(String defaultBranch) {
+        this.defaultBranch = defaultBranch;
     }
 }

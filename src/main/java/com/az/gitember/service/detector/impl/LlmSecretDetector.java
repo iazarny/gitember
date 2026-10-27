@@ -1,5 +1,7 @@
 package com.az.gitember.service.detector.impl;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.service.Context;
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.Detector;
 import com.az.gitember.service.detector.Finding;
@@ -35,8 +37,6 @@ public class LlmSecretDetector implements Detector {
     /** Maximum lines fed to the model per file (~6 k tokens at ~20 chars/line).
      *  Only HIGH and CRITICAL confidence findings are surfaced; LOW/MEDIUM are discarded. */
     private static final int MAX_LINES = 300;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final OllamaChatModel model;
 
@@ -131,7 +131,7 @@ Output valid JSON only — no explanation, no markdown fences, no trailing text.
         if (json == null || json.isBlank() || json.equals("[]")) return Collections.emptyList();
 
         try {
-            List<Map<String, Object>> items = MAPPER.readValue(json, new TypeReference<>() {});
+            List<Map<String, Object>> items = Context.getObjectMapper().readValue(json, new TypeReference<>() {});
             List<String> lines = context.getLines();
             List<Finding> findings = new ArrayList<>(items.size());
 
@@ -139,7 +139,7 @@ Output valid JSON only — no explanation, no markdown fences, no trailing text.
                 int    lineNo       = toInt(item.get("lineNo"), 0);
                 String type         = str(item.get("type"),        "SECRET");
                 String confStr      = str(item.get("confidence"),  "MEDIUM");
-                String description  = str(item.get("description"), "Potential secret");
+                String description  = str(item.get("description"), I18n.t("potentialSecret"));
                 String matchedValue = str(item.get("matchedValue"), "");
 
                 Confidence confidence;

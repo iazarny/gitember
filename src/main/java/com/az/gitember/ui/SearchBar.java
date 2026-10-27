@@ -1,5 +1,6 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.ui.misc.Util;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.SearchContext;
@@ -51,16 +52,16 @@ class SearchBar extends JPanel {
 
 
 
-        add(new JLabel("Find:"));
+        add(new JLabel(I18n.t("find")));
 
         searchField = new JTextField(22);
         add(searchField);
 
-        JButton prevBtn = Util.createButton("", "Previous match", FontAwesomeSolid.ANGLE_UP, 0, new Dimension(32, 32));
+        JButton prevBtn = Util.createButton("", I18n.t("previousMatch"), FontAwesomeSolid.ANGLE_UP, 0, new Dimension(32, 32));
         prevBtn.addActionListener(e -> findNext(false));
-        JButton nextBtn = Util.createButton("", "Next match", FontAwesomeSolid.ANGLE_DOWN, 0, new Dimension(32, 32));
+        JButton nextBtn = Util.createButton("", I18n.t("nextMatch"), FontAwesomeSolid.ANGLE_DOWN, 0, new Dimension(32, 32));
         nextBtn.addActionListener(e -> findNext(true));
-        JButton closeBtn = Util.createButton("", "Close search [Esc]", FontAwesomeSolid.WINDOW_CLOSE, 0, new Dimension(32, 32));
+        JButton closeBtn = Util.createButton("", I18n.t("closeSearchEsc"), FontAwesomeSolid.WINDOW_CLOSE, 0, new Dimension(32, 32));
         closeBtn.addActionListener(e -> close());
 
         add(prevBtn);
@@ -103,6 +104,26 @@ class SearchBar extends JPanel {
         if (activeArea != null) activeArea.requestFocusInWindow();
     }
 
+    public JTextField getSearchField() {
+        return searchField;
+    }
+
+    public void findNext(boolean forward) {
+        String text = searchField.getText();
+        if (text.isEmpty()) return;
+        RSyntaxTextArea target = activeArea != null ? activeArea
+                : (textAreas.length > 0 ? textAreas[0] : null);
+        if (target == null) return;
+
+        SearchContext ctx = buildContext(forward);
+        SearchResult result = SearchEngine.find(target, ctx);
+        if (!result.wasFound()) {
+            // Wrap around
+            target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
+            SearchEngine.find(target, ctx);
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private SearchContext buildContext(boolean forward) {
@@ -124,29 +145,15 @@ class SearchBar extends JPanel {
             statusLabel.setText("");
             statusLabel.setForeground(UIManager.getColor("Label.foreground"));
         } else if (total == 0) {
-            statusLabel.setText("No matches");
+            statusLabel.setText(I18n.t("noMatches"));
             statusLabel.setForeground(new Color(0xCC3333));
         } else {
-            statusLabel.setText(total + " match" + (total != 1 ? "es" : ""));
+            statusLabel.setText(I18n.plural("matchesCount", total, total));
             statusLabel.setForeground(UIManager.getColor("Label.foreground"));
         }
     }
 
-    private void findNext(boolean forward) {
-        String text = searchField.getText();
-        if (text.isEmpty()) return;
-        RSyntaxTextArea target = activeArea != null ? activeArea
-                : (textAreas.length > 0 ? textAreas[0] : null);
-        if (target == null) return;
 
-        SearchContext ctx = buildContext(forward);
-        SearchResult result = SearchEngine.find(target, ctx);
-        if (!result.wasFound()) {
-            // Wrap around
-            target.setCaretPosition(forward ? 0 : target.getDocument().getLength());
-            SearchEngine.find(target, ctx);
-        }
-    }
 
     private void clearHighlights() {
         SearchContext ctx = new SearchContext("");
@@ -155,4 +162,6 @@ class SearchBar extends JPanel {
         }
         statusLabel.setText("");
     }
+
+
 }

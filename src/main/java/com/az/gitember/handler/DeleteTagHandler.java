@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
@@ -12,15 +13,15 @@ public class DeleteTagHandler extends AbstractAsyncHandler<String> {
     private final ScmBranch tag;
     private final boolean deleteRemote;
 
-    public DeleteTagHandler(Component parent, StatusBar statusBar, ScmBranch tag, boolean deleteRemote) {
-        super(parent, statusBar);
+    public DeleteTagHandler(Component parent,  ScmBranch tag, boolean deleteRemote) {
+        super(parent);
         this.tag = tag;
         this.deleteRemote = deleteRemote;
     }
 
     @Override
     protected String getOperationName() {
-        return "Delete tag " + tag.getShortName();
+        return I18n.t("deleteTag", tag.getShortName());
     }
 
     @Override
@@ -36,8 +37,8 @@ public class DeleteTagHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        String where = deleteRemote ? " locally and from remote" : " locally";
-        statusBar.setStatus("Tag \"" + result + "\" deleted" + where);
+        String where = deleteRemote ? I18n.t("locallyAndFromRemote") : I18n.t("locally");
+        statusBar.setStatus(I18n.t("tagDeleted", result, where));
     }
 
     /**
@@ -49,19 +50,19 @@ public class DeleteTagHandler extends AbstractAsyncHandler<String> {
         String shortName = fullName.startsWith("refs/tags/")
                 ? fullName.substring("refs/tags/".length()) : tag.getShortName();
 
-        String[] options = {"Local only", "Local + Remote", "Cancel"};
+        String[] options = {I18n.t("localOnly"), I18n.t("localRemote"), I18n.t("cancel")};
         int choice = JOptionPane.showOptionDialog(
                 parent,
-                "Delete tag \"" + shortName + "\"?",
-                "Delete Tag",
+                I18n.t("deleteTagHandler.deleteTag", shortName),
+                I18n.t("deleteTagHandler.deleteTag2"),
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
 
         if (choice == 0) {
-            new DeleteTagHandler(parent, statusBar, tag, false).execute();
+            new DeleteTagHandler(parent,  tag, false).execute();
         } else if (choice == 1) {
-            new DeleteTagHandler(parent, statusBar, tag, true).execute();
+            new DeleteTagHandler(parent,  tag, true).execute();
         }
     }
 }

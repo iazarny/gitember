@@ -52,7 +52,7 @@ class GitRepoServiceRebaseTest {
     void setUp() throws Exception {
         repoDir    = Files.createTempDirectory("gitember-rebase-test-");
         repository = Git.init().setDirectory(repoDir.toFile()).call().getRepository();
-        service    = new GitRepoService(repository);
+        service    = GitRepoService.of(repoDir.toString());
 
         // Identity required for commits
         repository.getConfig().setString("user", null, "name",  "Test User");

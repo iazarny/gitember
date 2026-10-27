@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJ96E38Z9K"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-SJ96E38Z9K');
+    </script>
+
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Gitember 3 - 免费的 Git 图形客户端，支持 Windows、macOS 和 Linux</title>
+    <meta name="description"
+          content="Gitember 3 是一款免费、开源的 Git 图形界面客户端，支持 Windows、macOS 和 Linux。提供可视化提交历史、并排差异对比、三方合并、文件夹比较、全文搜索、Git LFS 和 Pull Request 审查。">
+    <meta name="keywords"
+          content="Git 客户端, Git 图形界面, Git GUI, 文件差异对比工具, 文件夹比较工具, Windows Git 客户端, Mac Git 客户端, Linux Git 客户端, 并排对比, Git LFS, Pull Request, 免费 Git 客户端, 开源 Git 客户端, gitember, GitHub, GitLab, Bitbucket, Gitea, GitHub Desktop 替代, Sourcetree 替代, GitKraken 替代">
+    <meta name="author" content="Igor Azarny">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook / Telegram -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://gitember.org/zh/index.html" />
+    <meta property="og:title" content="Gitember - 免费开源的跨平台 Git 客户端" />
+    <meta property="og:description" content="桌面 Git 浏览器：内置基于 Lucene 的全文代码搜索、交互式历史图、三方合并、工作区管理、任意文件夹比较以及本地 AI 功能。" />
+    <meta property="og:image" content="https://gitember.org/assets/gitember-og-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Gitember" />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://gitember.org/zh/index.html" />
+    <meta property="twitter:title" content="Gitember - 开源跨平台 Git 客户端" />
+    <meta property="twitter:description" content="桌面 Git 浏览器：内置基于 Lucene 的全文代码搜索、交互式历史图、拉取、推送、提交、交互式变基、统计以及 AI 功能。" />
+    <meta property="twitter:image" content="https://gitember.org/assets/gitember-og-preview.png" />
+
+    <!-- Favicons -->
+    <link href="../assets/img/favicon.png" rel="icon">
+    <link href="../assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i"
+          rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="../assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets/css/style.css" rel="stylesheet">
+
+    <!-- Montserrat and Open Sans have no Chinese glyphs: fall back to the platform CJK fonts -->
+    <style>
+        body, h1, h2, h3, h4, h5, h6, .hero-text, #navbar a, .section-title, .btn-get-started {
+            font-family: "Open Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+            "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, .section-title, #navbar a, .btn-get-started {
+            font-family: "Montserrat", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+            "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+        }
+        /* Chinese has no italics: emphasis is marked with dots under the characters */
+        em {
+            font-style: normal;
+            text-emphasis: filled dot;
+            text-emphasis-position: under right;
+        }
+    </style>
+
+    <link rel="canonical" href="https://gitember.org/zh/index.html">
+    <link rel="alternate" hreflang="en" href="https://gitember.org/">
+    <link rel="alternate" hreflang="zh-Hans" href="https://gitember.org/zh/index.html">
+    <link rel="alternate" hreflang="x-default" href="https://gitember.org/">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Gitember",
+            "url": "https://gitember.org/zh/index.html",
+            "inLanguage": "zh-CN",
+            "image": "https://gitember.org/assets/img/logo.png",
+            "screenshot": "https://gitember.org/assets/img/3/mac7.png",
+            "description": "Gitember 是一款免费、开源的跨平台 Git 仓库浏览器，提供基于 Lucene 索引的高级全文代码搜索、可视化提交图历史、丰富的仓库查看功能以及 AI 集成。",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Windows, macOS, Linux",
+            "license": "https://opensource.org/licenses/GPL-3.0",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Organization",
+                "name": "Gitember Open Source Project",
+                "url": "https://gitember.org"
+            },
+            "softwareVersion": "3.6.0",
+            "sameAs": [
+                "https://github.com/iazarny/gitember"
+            ],
+            "featureList": [
+                "跨平台支持（Windows、macOS、Linux）",
+                "基于 Apache Lucene 的 Git 仓库内置全文搜索",
+                "可视化提交历史图与分支管理",
+                "额外的文件与文件夹比较工具",
+                "AI 功能：生成提交信息、分支描述、密钥泄露检测",
+                "基于 JGit，Git 操作快速、轻量"
+            ]
+        }
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "inLanguage": "zh-CN",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Gitember 免费吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "是的。Gitember 基于 GNU GPL 3.0 许可证免费开源，没有订阅、没有付费版本，也不需要账号。下载 Windows、macOS 或 Linux 版本，无需注册即可使用全部功能。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 能在 Windows 上运行吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "可以。Gitember 提供 Windows MSI 和 ZIP 安装包，以及 Microsoft Store 版本，支持 Windows 8 及更高版本。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 能在 macOS 上运行吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "可以。Gitember 提供经过签名和公证的 Apple Silicon DMG，可在新款 Mac 上直接安装，无需绕过 Gatekeeper。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 支持 GitHub 吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "支持。Gitember 支持 GitHub、GitLab、Bitbucket 和 Gitea。可以通过 HTTPS 或 SSH 克隆，并使用个人访问令牌在应用内审查 Pull Request 或 Merge Request。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 支持 Git LFS 吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "支持。Gitember 内置 Git 大文件存储（LFS）支持：启用 LFS、跟踪文件模式、获取 LFS 对象，并在工作副本中查看 LFS 文件状态。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 有 Git 差异查看器吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "有。Gitember 内置 Git 差异查看器，支持统一、上下文和并排三种模式，为 40 多种语言提供语法高亮，并附带专门的文件夹比较工具。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 支持三方合并吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "支持。Gitember 内置可视化三方合并编辑器，无需在冲突标记中翻找，即可选择、组合或编辑冲突块。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 可以替代 GitHub Desktop 吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "可以。Gitember 是免费的 GitHub Desktop 替代品，不仅支持 GitHub，还支持 GitLab、Bitbucket 和 Gitea，并提供可视化历史图、并排差异、三方合并、Git LFS、多仓库工作区以及 Pull Request 审查。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 可以替代 Sourcetree 吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "可以。Gitember 是免费的 Sourcetree 替代品：在可视化 Git 界面中完成克隆、提交、分支、合并、变基和储藏，提供交互式变基、储藏管理和内置差异查看器，且无需 Atlassian 账号。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Gitember 可以替代 GitKraken 吗？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "可以。Gitember 是免费开源的 GitKraken 替代品。可视化提交图、差异对比、合并工具和 Git 托管平台集成全部包含在内，无需 Pro 订阅。可选的 AI 功能通过 Ollama 在本地运行。"
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "有什么好用的免费 Git 图形客户端？",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Gitember 是一款适用于 Windows、macOS 和 Linux 的免费 Git 图形客户端。它覆盖日常 Git 工作，并提供并排差异、三方合并、文件夹比较、Git LFS、全文搜索和 Pull Request 审查，无需账号，也没有付费计划。"
+                    }
+                }
+            ]
+        }
+    </script>
+</head>
+
+<body>
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
+    <div class="container d-flex justify-content-between align-items-center">
+
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
+
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link scrollto active" href="#hero">首页</a></li>
+                <li><a class="nav-link scrollto" href="#whats-new">新功能</a></li>
+                <li><a class="nav-link scrollto" href="#features">功能</a></li>
+                <li><a class="nav-link scrollto" href="#faq">常见问题</a></li>
+                <li><a class="nav-link scrollto" href="#download">下载</a></li>
+                <li><a class="nav-link" href="../doc/docs/ge-intro">文档（英文）</a></li>
+                <li><a class="nav-link" href="../index.html" hreflang="en" lang="en">English</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- ======= Hero Section ======= -->
+<section id="hero" style="position:relative;">
+
+    <a href="#ai" class="scrollto" style="position:absolute; top:32px; right:16px; z-index:10;">
+        <img src="../assets/img/3/aiseal.png" alt="AI 功能"
+             style="position:absolute; top:32px; right:16px; width:80px; height:auto; z-index:10;">
+    </a>
+
+    <div class="hero-text" data-aos="zoom-out">
+        <h2>按<em>你的</em>方式工作的 Git 图形客户端</h2>
+        <p>Gitember 将 Git 的全部能力带入简洁、直观的界面</p>
+        <a href="#download" class="btn-get-started scrollto">免费下载 V 3.6 · 2026 年 11 月</a>
+        <p style="opacity:0.7; font-size:0.9rem;">免费开源 &nbsp;·&nbsp; Windows · MacOS · Linux &nbsp;&nbsp;</p>
+        <p style="opacity:0.7; font-size:0.9rem;">无需账号，无需注册</p>
+    </div>
+
+
+    <div class="product-screens">
+        <div class="product-screen-1" data-aos="fade-up" data-aos-delay="400">
+            <img src="../assets/img/3/win1.png" width="800" alt="Gitember Git 图形客户端主窗口截图">
+        </div>
+        <div class="product-screen-2" data-aos="fade-up" data-aos-delay="200">
+            <img src="../assets/img/3/mac7.png" width="800" alt="Gitember 文件差异查看器截图"
+                 style="transform: translateX(-150px);">
+        </div>
+        <div class="product-screen-3" data-aos="fade-up">
+            <img src="../assets/img/3/win2.png" width="800" alt="Gitember 文件夹比较工具截图"
+                 style="transform: translateX(-300px);">
+        </div>
+    </div>
+</section>
+
+<main id="main">
+
+    <!-- ======= Audience Section ======= -->
+    <section style="padding: 70px 0; background:#fafafa;">
+        <div class="container" data-aos="fade-up">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">为每一位 Git 用户打造</h2>
+                <span class="section-divider"></span>
+                <p class="mt-3" style="color:#666; max-width:600px; margin:0 auto;">无论你是刚刚安装 Git，还是在管理多团队协作的大型仓库，Gitember 都能提供你所需要的一切。</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="0">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-person-raised-hand"></i></div>
+                        <h4>初学者</h4>
+                        <p>不必再死记晦涩的命令行参数。Gitember 将复杂的 Git 操作变成简单的点击操作——提交、推送、拉取、分支，全部在一个窗口中完成。</p>
+                    </div>
+                </div>
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-code-slash"></i></div>
+                        <h4>开发者</h4>
+                        <p>可视化仓库历史，审查 Pull Request，在带语法高亮的差异视图中浏览改动，并在整个提交历史中进行高级全文搜索。</p>
+                    </div>
+                </div>
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-briefcase"></i></div>
+                        <h4>团队与专业人士</h4>
+                        <p>通过统计报告跟踪项目进展，管理 Git LFS 资源，比较完整的目录树，并审查来自 GitHub、GitLab、Bitbucket、Azure DevOps 或 Gitea 的 PR——一个工具全部搞定。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= What's New Section ======= -->
+    <section id="whats-new" style="padding: 70px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">3.6 版本新功能</h2>
+                <span class="section-divider"></span>
+            </div>
+            <div class="row g-4">
+
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-translate"></i></div>
+                        <h4>西班牙语和乌克兰语</h4>
+                        <p>Gitember 新增西班牙语和乌克兰语界面。界面语言默认跟随操作系统，也可以在设置中选择。</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-ticket-detailed"></i></div>
+                        <h4>Jira 和 Linear</h4>
+                        <p>与工单系统集成：无需离开 Git 客户端，即可将工作关联到 Jira 和 Linear 中的任务。</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-terminal"></i></div>
+                        <h4>Git 命令</h4>
+                        <p>查看与你在图形界面中执行的每个操作相对应的 Git 命令行——更快地学习 Git，或在脚本中复用这些命令。</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="audience-card">
+                        <div class="ac-icon"><i class="bi bi-lightning-charge"></i></div>
+                        <h4>更快启动</h4>
+                        <p>在 Java 27 运行时上支持预先（AOT）缓存（JEP 544）：Gitember 启动所需的类会被提前加载和链接。</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="features" style="background:#fff;"></section>
+
+    <!-- ======= Workspace ======= -->
+    <section id="workspace" style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">核心功能</h2>
+                <span class="section-divider"></span>
+                <p class="mt-3" style="color:#666; max-width:600px; margin:0 auto;">
+                    满足日常所需，而且远不止于此
+                </p>
+            </div>
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="ws-slideshow" id="wsSlideshow">
+                        <img class="ws-slide is-active" src="../assets/img/3/ws0.png"
+                             alt="Gitember 欢迎界面：列出各个工作区及其成员仓库">
+                        <img class="ws-slide" src="../assets/img/3/ws1.png" loading="lazy"
+                             alt="工作区仪表板：显示每个仓库的分支、状态、修改数以及领先和落后的提交数">
+                        <img class="ws-slide" src="../assets/img/3/ws2.png" loading="lazy"
+                             alt="合并工作副本：所有仓库的已更改文件显示在同一棵树中">
+                        <img class="ws-slide" src="../assets/img/3/ws3.png" loading="lazy"
+                             alt="提交对话框：来自多个仓库的已暂存文件使用同一条提交信息">
+                        <img class="ws-slide" src="../assets/img/3/ws4.png" loading="lazy"
+                             alt="跨仓库搜索结果，按仓库分组">
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-2">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-layers"></i></div>
+                        <h2 class="mb-0">多个仓库，一个工作集</h2>
+                    </div>
+                    <p><strong>工作区</strong>将多个相互独立的仓库组合在一起，例如：</p>
+                    <ul>
+                        <li>一个后端和一个前端</li>
+                        <li>一组微服务</li>
+                        <li>一个 SPI 及其各个实现</li>
+                    </ul>
+                    <p>这样你就可以通过一次操作，对所有仓库执行拉取、推送、提交、分支和合并，而不必逐个打开每个仓库。这既不是子模块，也不是单体仓库（monorepo）：每个仓库都保留自己的历史、远程和分支。</p>
+                    <ul>
+                        <li><strong>工作区仪表板</strong>——整个工作集一目了然：汇总表格、合并工作副本以及跨仓库搜索
+                        </li>
+                        <li><strong>合并工作副本</strong>——所有仓库的已更改文件显示在同一棵树中，暂存复选框和右键菜单与单个仓库完全相同
+                        </li>
+                        <li><strong>跨仓库搜索</strong>——同时搜索所有工作副本的<em>内容</em>，结果按仓库分组
+                        </li>
+                        <li><strong>一次提交，一条信息</strong>——从任意多个仓库中暂存文件并一起提交，每个文件旁都会显示所属仓库
+                        </li>
+                    </ul>
+
+                    <p><a href="../doc/docs/ge-workspace/workspace">阅读工作区文档（英文）</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ai" style="background:#fff;">
+        <div class="container">
+            <div class="feature-detail" data-aos="fade-up">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="feature-icon-lg"><i class="bi bi-stars"></i></div>
+                            <h2 class="mb-0">AI 功能</h2>
+                        </div>
+                        <p>Gitember 的实验性 AI 功能使用在本地运行的 AI 模型来增强安全性和代码审查，不会把你的源代码或数据发送到云端。AI 可以在提交前检测潜在的密钥泄露，并用通俗的语言总结分支之间的差异。</p>
+                        <ul>
+                            <li><strong>本地 AI</strong>——所有推理都通过 Ollama 在你的电脑上运行</li>
+                            <li><strong>密钥泄露检测</strong>——提交前扫描已暂存的文件，查找密码、API 密钥、令牌、凭据、私钥及其他敏感数据
+                            </li>
+                            <li><strong>AI 分支描述</strong>——总结分支差异、关键技术改动和潜在影响，让代码审查和发布说明更轻松
+                            </li>
+                            <li><strong>AI 提交信息</strong>——根据改动自动生成提交信息</li>
+                        </ul>
+
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="../assets/img/3/ai.png" style="width:100%; max-width:600px; height:auto;"
+                             alt="Gitember AI 功能截图">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="repo-history" style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <img src="../assets/img/3/repo-view.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="仓库历史视图">
+                </div>
+                <div class="col-lg-6 order-lg-2">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-clock-history"></i></div>
+                        <h2 class="mb-0">完整的仓库与文件历史</h2>
+                    </div>
+                    <p>在结构化的时间线中浏览完整的提交历史。点击任意提交即可查看完整差异、受影响的文件、作者信息和元数据。可按分支、作者、日期范围或关键字筛选，快速找到所需内容。</p>
+                    <ul>
+                        <li>带有分支线和合并线的可视化提交图</li>
+                        <li>文件级历史——追踪某个文件在整个项目生命周期中的每一次改动</li>
+                        <li>一键比较任意两个提交</li>
+                        <li>两次点击即可将任意文件恢复到任意历史版本</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= File Diff Deep-dive ======= -->
+    <section id="diff-tool" style="background:#fff;">
+        <div class="container">
+            <div class="feature-detail" data-aos="fade-up">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="feature-icon-lg"><i class="bi bi-file-earmark-diff"></i></div>
+                            <h2 class="mb-0">开发者喜爱的文件差异查看器</h2>
+                        </div>
+                        <p>Gitember 内置的差异引擎远不止简单的行高亮。无论是审查同事的 Pull Request，还是排查回归问题，你都能清楚地看到改了什么、为什么改。</p>
+                        <ul>
+                            <li><strong>统一差异</strong>——行内视图，用颜色区分新增和删除
+                            </li>
+                            <li><strong>上下文差异</strong>——显示周围的代码行，无需滚动即可了解全貌
+                            </li>
+                            <li><strong>并排差异</strong>——双栏视图，轻松逐行比较
+                            </li>
+                            <li>为 Java、Python、JavaScript、TypeScript、Kotlin、Go、Rust、C/C++、SQL、YAML、Markdown
+                                等 40 多种语言提供语法高亮
+                            </li>
+                            <li>浅色和深色主题，跟随系统偏好自动切换</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="../assets/img/3/file-compare.png" style="width:100%; max-width:600px; height:auto;"
+                             alt="Gitember 文件差异查看器截图">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <img src="../assets/img/3/3waymerge.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="三方合并视图">
+                </div>
+                <div class="col-lg-6 order-lg-2">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-sign-merge-right"></i></div>
+                        <h2 class="mb-0">冲突解决：三方合并</h2>
+                    </div>
+                    <p>借助直观的三方合并界面，你不仅能看到“改了什么”，还能理解“为什么改”。</p>
+                    <ul>
+                        <li>自信地解决冲突。精确地选择、组合或编辑改动，不必在晦涩的冲突标记中翻找。
+                        </li>
+                        <li>无论是变基、合并分支还是审查改动，Gitember 都能让你保持专注、高效。
+                        </li>
+                        <li>清晰取代混乱。简洁、无干扰的界面以真正易懂的方式突出显示差异。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= Folder Comparison Deep-dive ======= -->
+    <section id="folder-compare" class="features-row section-bg" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5" style="padding: 60px 0;">
+
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-intersect"></i></div>
+                        <h2 class="mb-0">文件夹比较工具——纵览全局</h2>
+                    </div>
+                    <p>需要将备份副本、构建输出或功能分支的文件结构与工作目录进行比较？Gitember 的文件夹比较工具会扫描两个目录，并以同步、按颜色区分的树形视图呈现。</p>
+                    <ul>
+                        <li><span style="color:#28a745; font-weight:600;">绿色</span>——仅存在于右侧文件夹的文件（新增）
+                        </li>
+                        <li><span style="color:#dc3545; font-weight:600;">红色</span>——仅存在于左侧文件夹的文件（删除）
+                        </li>
+                        <li><span style="color:#4154f1; font-weight:600;">蓝色</span>——两侧都存在但内容不同的文件
+                        </li>
+                        <li>可配置的忽略列表——自动跳过编译产物（.class、.jar、.dll、.pyc…）
+                        </li>
+                        <li>双击任意已更改的文件，即可打开完整的并排差异查看器</li>
+                        <li>使用“下一个 / 上一个”按钮在差异之间跳转</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6">
+                    <img src="../assets/img/3/folder-compare.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="Gitember 文件夹比较工具截图">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= Pull Request Panel ======= -->
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <img src="../assets/img/3/pull-request.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="Pull Request 视图">
+
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-git"></i></div>
+                        <h2 class="mb-0">审查 Pull Request——无需浏览器</h2>
+                    </div>
+                    <p>将 Gitember 连接到你的 GitHub、GitLab、Bitbucket 或自托管的 Gitea 实例，无需离开应用即可审查打开的 Pull Request。查看 PR 标题、作者、状态以及完整的已更改文件列表——按颜色区分，随时可以对比差异。</p>
+                    <ul>
+                        <li>支持 GitHub、GitLab、Bitbucket Cloud 和 Gitea</li>
+                        <li>同时支持 HTTPS 和 SSH 远程地址</li>
+                        <li>已更改的文件按新增 / 修改 / 删除分类并以颜色区分</li>
+                        <li>双击任意文件，即可查看基础分支与源分支之间的完整并排差异</li>
+                        <li>一键“在浏览器中打开”，直接跳转到 PR 页面</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= Advanced Search Deep-dive ======= -->
+    <section style="padding: 60px 0; background:#fafafa;" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5">
+
+                <div class="col-lg-6 order-lg-1">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-search"></i></div>
+                        <h2 class="mb-0">搜索一切，找到一切</h2>
+                    </div>
+                    <p>Gitember 的索引引擎远不止在文本文件中查找字符串。它能从多种文件格式中提取并索引内容，只需一次查询，即可搜索整个仓库历史。</p>
+                    <ul>
+                        <li>搜索提交信息、标签、分支名称和文件路径</li>
+                        <li>在源代码、Markdown 和配置文件中进行全文搜索</li>
+                        <li>索引图片（PNG、JPEG、SVG）、PDF、Office 文档（Word、Excel、PowerPoint）、OpenDocument 文件以及 CAD 格式（DXF、STL）中的内容
+                        </li>
+                        <li>按分支、作者或日期范围筛选结果</li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-6 order-lg-2">
+                    <img src="../assets/img/3/search.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="搜索视图">
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= Statistics ======= -->
+    <section style="padding: 60px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <img src="../assets/img/3/mac10.png" style="width:100%; max-width:600px; height:auto;"
+                         alt="提交历史与统计">
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="feature-icon-lg"><i class="bi bi-bar-chart-line"></i></div>
+                        <h2 class="mb-0">仓库统计一目了然</h2>
+                    </div>
+                    <p>
+                        Gitember 清晰地展示仓库随时间演变的情况。内置分析功能将提交历史转化为有意义的统计数据，帮助你了解开发活跃度、贡献者动态和项目增长，无需导出数据或运行外部工具。
+                    </p>
+                    <ul>
+                        <li>展示仓库随时间增长的提交活动图表</li>
+                        <li>按作者统计提交数的贡献者统计</li>
+                        <li>分支活动概览，识别活跃和不活跃的分支</li>
+                        <li>按日、周、月的提交分布</li>
+                        <li>快速了解仓库大小、提交数、分支数和标签数</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= Feature Cards Section ======= -->
+    <section id="featurescards">
+        <div class="container" data-aos="fade-up">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="section-header">
+                        <h2 class="section-title">一个 Git 客户端，满足所有需求</h2>
+                        <span class="section-divider"></span>
+                    </div>
+                </div>
+
+
+
+                <div class="col-lg-12 ">
+                    <div class="row">
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-git"></i></div>
+                                <h4 class="title mb-0">完整的 Git 支持</h4>
+                            </div>
+                            <p class="description">克隆、初始化、提交、推送、拉取、获取、分支、合并、变基、储藏、标签——所有常用 Git 命令都可通过简洁的可视化界面完成。支持 SSH 和 HTTPS 远程仓库。</p>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="50">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-file-diff"></i></div>
+                                <h4 class="title mb-0">强大的文件差异查看器</h4>
+                            </div>
+                            <p class="description">统一、上下文和并排三种差异模式，为 40 多种语言提供完整语法高亮。在任意提交或工作副本文件中，逐行即时查看改动。</p>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="100">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-folder2-open"></i></div>
+                                <h4 class="title mb-0">文件夹比较工具</h4>
+                            </div>
+                            <p class="description">在同步的树形视图中并排比较两个完整的目录树。即使项目结构庞大，也能立即发现新增、删除或修改的文件。</p>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="150">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-binoculars"></i></div>
+                                <h4 class="title mb-0">高级搜索</h4>
+                            </div>
+                            <p class="description">搜索提交信息、标签、分支名称和文件内容——包括文本文件、图片、Office 文档、PDF 和 CAD 图纸，全部建立索引，即时可搜。</p>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="200">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-bar-chart-line"></i></div>
+                                <h4 class="title mb-0">统计与洞察</h4>
+                            </div>
+                            <p class="description">通过可视化统计快速了解项目健康状况：提交频率、每位作者的改动行数、分支活动等。非常适合迭代回顾和代码审计。</p>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 box" data-aos="fade-up" data-aos-delay="250">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="icon"><i class="bi bi-hdd-stack"></i></div>
+                                <h4 class="title mb-0">支持 Git LFS</h4>
+                            </div>
+                            <p class="description">借助内置的 Git 大文件存储支持，管理图片、视频、3D 模型、数据集等大型二进制资源。跟踪文件模式、获取对象，并直接在界面中查看 LFS 文件状态。</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- ======= Stat Strip ======= -->
+    <div class="stat-strip" data-aos="fade-up">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">40+</div>
+                    <div class="stat-label">种支持语法高亮的语言</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">种差异视图模式</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">个托管平台（GitHub、GitLab、Bitbucket、Gitea）</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">免费</div>
+                    <div class="stat-label">开源，永远免费</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======= Why Section ======= -->
+    <section id="why" style="padding: 70px 0; background:#fafafa;" data-aos="fade-up">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">为什么选择 Gitember？</h2>
+                <span class="section-divider"></span>
+
+            </div>
+            <div class="row g-4 justify-content-center">
+
+                <div class="col-lg-8 col-md-8" data-aos="fade-up" data-aos-delay="240">
+                    <div class="audience-card">
+                        <p>Gitember 是一款免费开源的 Git 图形客户端，专为希望使用可视化 Git 工作流、又不想面对大型 IDE 复杂性的开发者设计。它将仓库历史、Git 操作、差异与合并工具、文件夹比较、统计、全文搜索和 Pull Request 审查整合在一个跨平台桌面应用中。</p>
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= FAQ Section ======= -->
+    <section id="faq" style="padding: 70px 0; background:#fff;" data-aos="fade-up">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">常见问题</h2>
+                <span class="section-divider"></span>
+                <p class="mt-3" style="color:#666; max-width:640px; margin:0 auto;">
+                    适用于 Windows、macOS 和 Linux 的免费 Git 图形客户端——GitHub Desktop、Sourcetree 和 GitKraken 的替代品，支持 Git LFS、差异对比和三方合并。
+                </p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    <ul class="faq-list">
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-free">
+                                Gitember 免费吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-free" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    是的。Gitember 免费开源（GNU GPL 3.0）。没有订阅，没有付费的“Pro”版本，也不需要账号。下载 Windows、macOS 或 Linux 版本，无需注册即可使用全部功能——历史、差异、合并、LFS、搜索和 Pull Request。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-windows">
+                                Gitember 能在 Windows 上运行吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-windows" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 提供 Windows MSI 和 ZIP 安装包，以及 Microsoft Store 版本，支持 Windows 8 及更高版本。MSI 是常规安装程序；ZIP 是便携版本。原生安装包已内置 Java，无需事先安装 JDK。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-macos">
+                                Gitember 能在 macOS 上运行吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-macos" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 提供经过签名和公证的 Apple Silicon DMG。像安装其他 Mac 应用一样：打开 DMG，将 Gitember 拖入“应用程序”文件夹。由于已签名并经过公证，Gatekeeper 无需额外步骤即可放行。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-linux">
+                                Gitember 能在 Linux 上运行吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-linux" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 提供 Linux DEB 安装包和可直接运行的 fat JAR。在 Debian 和 Ubuntu 上，DEB 是最简单的方式；JAR 则可以在任何安装了较新 JRE 的系统上运行。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-github">
+                                Gitember 支持 GitHub 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-github" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    支持。Gitember 支持 GitHub、GitLab、Bitbucket 和 Gitea。通过 HTTPS 或 SSH 克隆，然后使用个人访问令牌在应用内浏览和审查 Pull Request 或 Merge Request。你不会被绑定在 GitHub 上——同一个客户端也适用于 GitLab、Bitbucket 和自托管的 Gitea。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-lfs">
+                                Gitember 支持 Git LFS 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-lfs" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    支持。Gitember 内置 Git 大文件存储（LFS）支持。可以为仓库启用 LFS、跟踪二进制文件模式、获取 LFS 对象，并在工作副本中查看 LFS 文件状态——适用于图片、视频、3D 资源和数据集。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-diff">
+                                Gitember 有 Git 差异查看器吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-diff" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    有。Gitember 内置 Git 差异查看器，支持统一、上下文和并排三种模式，并为 40 多种语言提供语法高亮。可以比较工作副本改动、提交和分支。另有独立的文件夹比较工具，可比较两个目录树，包括不是 Git 仓库的文件夹。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-merge">
+                                Gitember 支持三方合并吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-merge" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    支持。Gitember 内置可视化三方合并编辑器，用于解决合并和变基冲突。你可以在同一处看到本地（ours）、对方（theirs）和合并结果，然后选择、组合或编辑冲突块，无需在冲突标记中翻找。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-github-desktop">
+                                Gitember 可以替代 GitHub Desktop 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-github-desktop" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。对于想要一款不局限于 GitHub 的可视化 Git 客户端的开发者，Gitember 是免费的 GitHub Desktop 替代品。它支持 GitHub、GitLab、Bitbucket 和 Gitea，并提供提交图、并排差异、三方合并、Git LFS、多仓库工作区、Lucene 全文搜索以及应用内
+                                    Pull Request 审查。如果你正在寻找 GitHub Desktop 的替代品，可以从<a href="#download">免费下载</a>或
+                                    <a href="../git-gui-comparison.html">Git 图形客户端对比（英文）</a>开始。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-sourcetree">
+                                Gitember 可以替代 Sourcetree 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-sourcetree" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 是免费的 Sourcetree 替代品：在可视化 Git 界面中完成克隆、提交、分支、合并、变基、储藏和打标签。内置交互式变基、储藏、差异查看器和三方合并。与 Sourcetree 不同，Gitember 不需要 Atlassian 账号。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-gitkraken">
+                                Gitember 可以替代 GitKraken 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-gitkraken" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 是免费开源的 GitKraken 替代品。无需 Pro 订阅，即可获得可视化提交图、差异对比、合并工具和 Git 托管平台集成。可选的 AI 功能（提交信息、分支摘要、密钥泄露检测）通过 Ollama 在本地运行——使用这些功能时，你的源代码不会离开本机。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-free-gui">
+                                有什么好用的免费 Git 图形客户端？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-free-gui" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    Gitember 是一款适用于 Windows、macOS 和 Linux 的免费 Git 图形客户端。它覆盖日常 Git 工作，还提供并排差异、三方合并、文件夹比较、Git LFS、全文搜索和
+                                    Pull Request 审查。无需账号，也没有付费计划。可以在
+                                    <a href="../git-gui-comparison.html">Git 图形客户端对比（英文）</a>中查看它与
+                                    GitHub Desktop、Sourcetree、GitKraken 等工具的比较。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-account">
+                                使用 Gitember 需要账号吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-account" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    不需要。Gitember 可以离线使用本地仓库，不需要 Gitember 账号。GitHub、GitLab、Bitbucket 或 Gitea 令牌是可选的，只有在审查 Pull Request
+                                    或访问需要认证的远程仓库时才需要。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-workspace">
+                                Gitember 能同时管理多个 Git 仓库吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-workspace" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。工作区将多个独立的仓库（例如一个后端和一个前端，或若干微服务）组合在一起，让你通过一次操作对所有仓库执行拉取、推送、提交、分支和合并。每个仓库都保留自己的历史和远程——这既不是子模块，也不是单体仓库。<a href="../doc/docs/ge-workspace/workspace">工作区文档（英文）</a>
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-pr">
+                                可以在 Gitember 中审查 Pull Request 吗？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-pr" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    可以。Gitember 可以列出并打开来自 GitHub、GitLab、Bitbucket 和 Gitea 的
+                                    Pull Request 或 Merge Request。在项目设置中保存访问令牌，即可在不切换到浏览器的情况下审查请求的差异。
+                                </p>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a data-bs-toggle="collapse" class="collapsed question" data-bs-target="#faq-source">
+                                Gitember 的源代码在哪里？
+                                <i class="bi bi-chevron-down icon-show"></i>
+                                <i class="bi bi-chevron-up icon-close"></i>
+                            </a>
+                            <div id="faq-source" class="collapse" data-bs-parent=".faq-list">
+                                <p>
+                                    Gitember 在
+                                    <a href="https://github.com/iazarny/gitember">GitHub</a> 上开源。文档位于
+                                    <a href="../doc/docs/ge-intro">gitember.org/doc</a>（英文）。如有问题，请联系 <a href="mailto:iazarny@yahoo.com">Igor Azarny</a>。
+                                </p>
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= CTA Banner ======= -->
+    <div class="cta-banner" data-aos="fade-up">
+        <div class="container">
+            <h2>告别与命令行的苦战</h2>
+            <p>免费下载 Gitember 3——一款完整的 Git 客户端，集成 GitHub、GitLab、Bitbucket 和 Gitea，<br>
+                提供强大的差异工具和轻量、可靠的 Swing 界面。</p>
+        </div>
+    </div>
+
+    <!-- ======= Download Section ======= -->
+    <section id="download">
+        <div class="container" data-aos="fade-up">
+            <div class="row">
+                <div class="container-fluid" data-aos="fade-up" style="margin-top: 50px; margin-bottom: 30px;">
+                    <div class="section-header">
+                        <h2 class="section-title">下载 Gitember</h2>
+                        <span class="section-divider"></span>
+                        <div>
+                            <div class="row g-0">
+                                <div class="col-lg-2 col-md-2">
+                                </div>
+                                <div class="col-lg-8 col-md-8">
+                                    <ul style="list-style-type: none;">
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0.msi"><span
+                                                    style="font-size: 24px;"><i class="bi bi-windows"></i> Windows MSI x86-64</span></a>
+                                        </li>
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0.zip"><span
+                                                    style="font-size: 24px;"><i class="bi bi-windows"></i> Windows ZIP x86-64</span></a>
+                                        </li>
+                                        <li>
+                                            <a href="https://apps.microsoft.com/detail/9NXNMLLGBGD4"><span
+                                                    style="font-size: 24px;"><i class="bi bi-windows"></i> Microsoft Store </span></a>
+                                            <span style="display:inline-block; background:#28a745; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">推荐</span>
+                                        </li>
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0.dmg"><span
+                                                    style="font-size: 24px;"><i class="bi bi-apple"></i> Apple DMG arm64 (M1/Silicon)</span></a>
+                                            <span style="display:inline-block; background:#6c757d; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:4px;">已签名</span>
+                                            <span style="display:inline-block; background:#0d6efd; color:#fff; font-size:0.7rem; font-weight:600; padding:2px 7px; border-radius:4px; vertical-align:middle; margin-left:2px;">已公证</span>
+                                        </li>
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0-amd64.deb"><span
+                                                    style="font-size: 24px;"><i class="bi bi-postcard-fill"></i> Linux DEB x86-64</span></a>
+                                        </li>
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0-arm64.deb"><span
+                                                    style="font-size: 24px;"><i class="bi bi-postcard-fill"></i> Linux DEB arm64</span></a>
+                                        </li>
+                                        <li>
+                                            <a href="https://gitember.org/Gitember-3.6.0.jar">
+                                <span style="font-size: 24px;">
+                                    ♨ Fat jar
+                                </span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="https://github.com/iazarny/gitember"><span
+                                                    style="font-size: 24px;"><i
+                                                    class="bi bi-github"></i> 源代码 </span></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="section-divider"></span>
+                        <p class="mt-3" style="color:#aaa; text-align:center;">免费开源。无需账号或注册，可离线使用。</p>
+                        <p class="mt-3" style="text-align:center;"><a href="../git-gui-comparison.html">Gitember
+                            与其他 Git 图形工具的详细对比（英文）</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center" style="margin-bottom: 60px;">
+                <div class="col-lg-6 col-md-8 text-center">
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 20px; margin-top: 10px;">
+                        <p style="color:#aaa; font-size:0.85rem; margin:0;">
+                            <i class="bi bi-info-circle"></i>&nbsp;
+                            版本 3.6 · 2026 年 11 月<br>
+                            有问题？请发邮件给 <a href="mailto:iazarny@yahoo.com" style="color:#aaa;">Igor Azarny</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= Footer ======= -->
+<footer id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; 版权所有 <strong>Igor Azarny</strong>。保留所有权利
+                </div>
+                <div class="credits">
+                    设计：<a href="https://bootstrapmade.com/">BootstrapMade</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="#hero" class="scrollto">首页</a>
+                    &nbsp;·&nbsp;
+                    <a href="#features" class="scrollto">功能</a>
+                    &nbsp;·&nbsp;
+                    <a href="#faq" class="scrollto">常见问题</a>
+                    &nbsp;·&nbsp;
+                    <a href="#download" class="scrollto">下载</a>
+                    &nbsp;·&nbsp;
+                    <a href="../index.html" hreflang="en" lang="en">English</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-chevron-up"></i></a>
+
+<!-- Vendor JS Files -->
+<script src="../assets/vendor/aos/aos.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/vendor/glightbox/js/glightbox.min.js"></script>
+<script src="../assets/vendor/php-email-form/validate.js"></script>
+
+<!-- Template Main JS File -->
+<script src="../assets/js/main.js"></script>
+
+<!-- Workspace section: cross-fade ws0..ws4 every 3 seconds -->
+<script>
+    (function () {
+        const slides = document.querySelectorAll('#wsSlideshow .ws-slide');
+        if (slides.length < 2) {
+            return;
+        }
+        let current = 0;
+        setInterval(function () {
+            if (document.hidden) {
+                return;
+            }
+            slides[current].classList.remove('is-active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('is-active');
+        }, 3000);
+    })();
+</script>
+
+</body>
+</html>

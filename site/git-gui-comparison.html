@@ -2,892 +2,2837 @@
 <html lang="en">
 
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJ96E38Z9K"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-SJ96E38Z9K');
-  </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJ96E38Z9K"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        function gtag() {
+            dataLayer.push(arguments);
+        }
 
-  <title>Git GUI Client Comparison 2026 — Gitember vs GitHub Desktop, Sourcetree, GitKraken &amp; More</title>
-  <meta name="description" content="Detailed feature comparison of the most popular Git GUI clients in 2026: Gitember 3 vs GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
-  <meta name="keywords" content="git gui comparison, best git client 2026, gitember vs sourcetree, gitember vs gitkraken, git gui client review, free git client comparison">
-  <meta name="author" content="Igor Azarny">
-  <meta name="robots" content="index, follow">
+        gtag('js', new Date());
+        gtag('config', 'G-SJ96E38Z9K');
+    </script>
 
-  <!-- Open Graph / Social -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Git GUI Client Comparison 2026 — Gitember vs the Rest">
-  <meta property="og:description" content="Detailed feature-by-feature comparison of the top Git GUI clients. See how Gitember stacks up against GitHub Desktop, Sourcetree, GitKraken, Fork, Tower, SmartGit, and Git Extensions.">
-  <meta property="og:image" content="assets/img/3/mac7.png">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <title>Git GUI Client Comparison 2026 - Gitember vs GitHub Desktop, Sourcetree, GitKraken &amp; More</title>
+    <meta name="description"
+          content="Detailed feature comparison of the most popular Git GUI clients in 2026: Gitember 3 vs GitHub Desktop, Sourcetree, GitKraken, and Fork.">
+    <meta name="keywords"
+          content="git gui comparison, best git client 2026, gitember vs sourcetree, gitember vs gitkraken, git gui client review, free git client comparison">
+    <meta name="author" content="Igor Azarny">
+    <meta name="robots" content="index, follow">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i" rel="stylesheet">
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Git GUI Client Comparison 2026 - Gitember vs the Rest">
+    <meta property="og:description"
+          content="Detailed feature-by-feature comparison of the top Git GUI clients. See how Gitember stacks up against GitHub Desktop, Sourcetree, GitKraken, and Fork.">
+    <meta property="og:image" content="assets/img/3/mac7.png">
 
-  <!-- Vendor CSS Files -->
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Template Main CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700|Open+Sans:300,300i,400,400i,700,700i"
+          rel="stylesheet">
 
-  <style>
-    .comparison-hero {
-      background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
-      padding: 120px 0 60px;
-      color: #fff;
-      text-align: center;
-    }
-    .comparison-hero h1 {
-      font-size: 2.6rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .comparison-hero p {
-      font-size: 1.1rem;
-      opacity: 0.85;
-      max-width: 640px;
-      margin: 0 auto;
-    }
-    .comparison-section {
-      padding: 60px 0 20px;
-    }
-    .comparison-section h2 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #37517e;
-      margin-bottom: 24px;
-    }
-    .comparison-section h2 i {
-      color: #4154f1;
-      margin-right: 10px;
-    }
-    /* Scrollable wrapper for wide tables on small screens */
-    .table-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .cmp-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-      min-width: 700px;
-    }
-    .cmp-table thead th {
-      background: #377e71;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 14px;
-      text-align: center;
-      white-space: nowrap;
-    }
-    .cmp-table thead th:first-child {
-      text-align: left;
-      width: 220px;
-    }
-    .cmp-table thead th.col-gitember {
-      background: #41f1c2;
-    }
-    .cmp-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .cmp-table tbody tr:hover {
-      background: #eef0ff;
-    }
-    .cmp-table td {
-      padding: 10px 14px;
-      text-align: center;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: middle;
-    }
-    .cmp-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-      color: #444;
-    }
-    .cmp-table td.col-gitember {
-      background: rgba(65,84,241,0.06);
-      font-weight: 600;
-    }
-    .emoji-yes  { font-size: 1.1rem; }
-    .emoji-no   { font-size: 1.1rem; opacity: 0.55; }
-    .emoji-warn { font-size: 1.1rem; }
-    .footnote {
-      font-size: 0.82rem;
-      color: #777;
-      margin-top: 12px;
-    }
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
 
-    /* Wins table */
-    .wins-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-    }
-    .wins-table thead th {
-      background: #4154f1;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 16px;
-      text-align: left;
-    }
-    .wins-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .wins-table tbody tr:hover {
-      background: #eef0ff;
-    }
-    .wins-table td {
-      padding: 11px 16px;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: top;
-    }
-    .wins-table td:first-child {
-      font-weight: 600;
-      color: #37517e;
-      white-space: nowrap;
-    }
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
 
-    /* Edge table */
-    .edge-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-    }
-    .edge-table thead th {
-      background: #37517e;
-      color: #fff;
-      font-weight: 600;
-      padding: 12px 16px;
-      text-align: left;
-    }
-    .edge-table tbody tr:nth-child(even) {
-      background: #f8f9ff;
-    }
-    .edge-table tbody tr:hover {
-      background: #f0f2f8;
-    }
-    .edge-table td {
-      padding: 11px 16px;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: top;
-    }
-    .edge-table td:first-child {
-      font-weight: 600;
-      color: #555;
-    }
-    .edge-table td:nth-child(2) {
-      color: #4154f1;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-  </style>
+    <style>
+        .comparison-hero {
+            background: linear-gradient(135deg, #377e73 0%, #41f1eb 100%);
+            padding: 120px 0 60px;
+            color: #fff;
+            text-align: left;
+        }
+
+        .comparison-hero h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .comparison-hero p {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .comparison-section {
+            padding: 60px 0 20px;
+        }
+
+        .comparison-section h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #37517e;
+            margin-bottom: 24px;
+        }
+
+        .comparison-section h2 i {
+            color: #4154f1;
+            margin-right: 10px;
+        }
+
+        /* Scrollable wrapper for wide tables on small screens */
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cmp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            min-width: 700px;
+        }
+
+        .cmp-table thead th {
+            background: #377e71;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .cmp-table thead th:first-child {
+            text-align: left;
+            width: 220px;
+        }
+
+        .cmp-table thead th.col-gitember {
+            background: #41f1c2;
+        }
+
+        .cmp-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .cmp-table tbody tr:hover {
+            background: #eef0ff;
+        }
+
+        .cmp-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .cmp-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .cmp-table td.col-gitember {
+            background: rgba(65, 84, 241, 0.06);
+            font-weight: 600;
+        }
+
+        .emoji-yes {
+            font-size: 1.1rem;
+        }
+
+        .emoji-no {
+            font-size: 1.1rem;
+            opacity: 0.55;
+        }
+
+        .emoji-warn {
+            font-size: 1.1rem;
+        }
+
+        .footnote {
+            font-size: 0.82rem;
+            color: #777;
+            margin-top: 12px;
+        }
+
+        /* Wins table */
+        .wins-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        .wins-table thead th {
+            background: #4154f1;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .wins-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .wins-table tbody tr:hover {
+            background: #eef0ff;
+        }
+
+        .wins-table td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .wins-table td:first-child {
+            font-weight: 600;
+            color: #37517e;
+            white-space: nowrap;
+        }
+
+        /* Edge table */
+        .edge-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        .edge-table thead th {
+            background: #37517e;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .edge-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .edge-table tbody tr:hover {
+            background: #f0f2f8;
+        }
+
+        .edge-table td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .edge-table td:first-child {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .edge-table td:nth-child(2) {
+            color: #4154f1;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ======= Review / differentiator additions ======= */
+        .review-intro {
+            max-width: 980px;
+            margin: 0 auto;
+            font-size: 1.02rem;
+            line-height: 1.75;
+            color: #4b5563;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .feature-card {
+            border: 1px solid #e7eaf3;
+            border-radius: 14px;
+            padding: 28px;
+            background: #fff;
+            box-shadow: 0 6px 24px rgba(37, 50, 84, .06);
+        }
+
+        .feature-card.feature-card-main {
+            border-color: rgba(65, 84, 241, .28);
+            box-shadow: 0 10px 30px rgba(65, 84, 241, .10);
+        }
+
+        .feature-card h3 {
+            color: #37517e;
+            font-size: 1.22rem;
+            margin: 0 0 12px;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .feature-card ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(65, 84, 241, .09);
+            color: #4154f1;
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .review-section {
+            background: #f8f9ff;
+            padding: 70px 0 35px;
+        }
+
+        .review-section h2 {
+            margin-bottom: 18px;
+        }
+
+        .review-section h3 {
+            color: #37517e;
+            margin-top: 34px;
+            margin-bottom: 14px;
+            font-size: 1.35rem;
+        }
+
+        .review-copy {
+            max-width: 980px;
+            margin: 0 auto;
+            color: #4b5563;
+            line-height: 1.75;
+        }
+
+        .rank-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .rank-card {
+            background: #fff;
+            border: 1px solid #e7eaf3;
+            border-radius: 12px;
+            padding: 20px 22px;
+        }
+
+        .rank-card.top-rank {
+            border-color: rgba(65, 84, 241, .35);
+            box-shadow: 0 8px 26px rgba(65, 84, 241, .08);
+        }
+
+        .rank-number {
+            float: left;
+            width: 38px;
+            height: 38px;
+            line-height: 38px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 13px;
+            background: #eef0ff;
+            color: #4154f1;
+            font-weight: 800;
+        }
+
+        .rank-card h4 {
+            margin: 2px 0 4px;
+            color: #37517e;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .rank-score {
+            color: #4154f1;
+            font-weight: 700;
+            font-size: .88rem;
+        }
+
+        .rank-card p {
+            clear: both;
+            margin: 13px 0 0;
+            color: #555;
+            line-height: 1.62;
+        }
+
+        .procon-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 18px;
+        }
+
+        .procon-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e7eaf3;
+        }
+
+        .procon-card h4 {
+            color: #37517e;
+            margin: 0 0 12px;
+        }
+
+        .procon-card ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .cost-card {
+            background: #fff;
+            border: 1px solid #e7eaf3;
+            border-radius: 10px;
+            padding: 17px;
+        }
+
+        .cost-card strong {
+            display: block;
+            color: #37517e;
+            margin-bottom: 5px;
+        }
+
+        .cost-card span {
+            color: #555;
+            font-size: .9rem;
+            line-height: 1.5;
+        }
+
+        .review-note {
+            margin-top: 22px;
+            padding: 15px 18px;
+            border-left: 4px solid #4154f1;
+            background: #fff;
+            color: #555;
+            line-height: 1.65;
+        }
+
+        .source-list {
+            margin-top: 20px;
+            font-size: .88rem;
+            color: #666;
+        }
+
+        .source-list a {
+            margin-right: 14px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .feature-grid, .rank-grid, .procon-grid {
+                grid-template-columns: 1fr;
+            }
+            .cost-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 576px) {
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .toc-section { padding: 36px 0 10px; }
+        .toc-card { background:#f8f9ff; border:1px solid #e8ebf5; border-radius:12px; padding:24px 28px; box-shadow:0 4px 18px rgba(0,0,0,.04); }
+        .toc-card h2 { margin-bottom:16px; }
+        .toc-list { columns: 2; column-gap: 48px; margin:0; padding-left:22px; }
+        .toc-list li { margin:7px 0; break-inside:avoid; }
+        .toc-list a { color:#37517e; text-decoration:none; }
+        .toc-list a:hover { text-decoration:underline; }
+        @media (max-width: 768px) { .toc-list { columns:1; } }
+    </style>
 
 </head>
 
 <body>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="fixed-top d-flex align-items-center header-transparent">
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center header-transparent">
     <div class="container d-flex justify-content-between align-items-center">
 
-      <div id="logo">
-        <h1><a href="index.html">Gitember</a></h1>
-      </div>
+        <div id="logo">
+            <h1><a href="index.html">Gitember</a></h1>
+        </div>
 
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a class="nav-link" href="index.html#hero">Home</a></li>
-          <li><a class="nav-link" href="index.html#features">Features</a></li>
-          <li><a class="nav-link" href="index.html#download">Download</a></li>
-          <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
-        </ul>
-        <i class="bi bi-list mobile-nav-toggle"></i>
-      </nav>
+        <nav id="navbar" class="navbar">
+            <ul>
+                <li><a class="nav-link" href="index.html#hero">Home</a></li>
+                <li><a class="nav-link" href="index.html#features">Features</a></li>
+                <li><a class="nav-link" href="index.html#download">Download</a></li>
+                <li><a class="nav-link" href="doc/docs/ge-intro">Docs</a></li>
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav>
     </div>
-  </header>
+</header>
 
-  <!-- ======= Hero ======= -->
-  <div class="comparison-hero">
+<!-- ======= Hero ======= -->
+<div class="comparison-hero">
     <div class="container">
-      <h1>Git GUI Client Comparison</h1>
-      <p>Gitember 3 vs GitHub Desktop · Sourcetree · GitKraken · Fork · Tower · SmartGit · Git Extensions — March 2026</p>
+        <h1>Git GUI Client Comparison</h1>
+        <p>Gitember · GitHub Desktop · Sourcetree · GitKraken · Fork <br>
+            Sep 2026</p>
     </div>
-  </div>
+</div>
 
-  <main id="main">
+<main id="main">
+
+    <!-- ======= Comparison Overview ======= -->
+    <section class="comparison-section pb-0" data-aos="fade-up">
+        <div class="container">
+            <h2><i class="bi bi-info-circle"></i> Overview</h2>
+            <p class="review-intro">
+                Choosing the right Git client can significantly impact developer productivity, codebase visibility, and workflow efficiency.
+                This comprehensive 2026 comparison evaluates five  Git GUI clients—<strong>Gitember 3</strong>, <strong>GitHub Desktop</strong>,
+                <strong>Sourcetree</strong>, <strong>GitKraken</strong>, and <strong>Fork</strong> - across every critical stage of version control.
+                From core staging and branch management to advanced merge resolution, submodules, and historical content search,
+                explore how these tools compare in capabilities, performance, and licensing to find the ideal fit for your development environment.
+
+            </p>
+        </div>
+    </section>
+
+    <!-- ======= Table of Contents ======= -->
+    <section class="toc-section" data-aos="fade-up">
+        <div class="container">
+            <div class="toc-card">
+                <h2><i class="bi bi-list-ul"></i> Table of Contents</h2>
+                <ol class="toc-list">
+                    <li><a href="#quick-summary">Quick Summary</a></li>
+                    <li><a href="#installation-and-configuration">Installation and configuration</a></li>
+                    <li><a href="#local-repository-creation-cloning">Local Repository Creation & Cloning</a></li>
+                    <li><a href="#remote-repository">Remote Repository</a></li>
+                    <li><a href="#working-tree-staging">Working Tree & Staging</a></li>
+                    <li><a href="#diff-viewer">Diff viewer</a></li>
+                    <li><a href="#commits">Commits</a></li>
+                    <li><a href="#commit-manipulation">Commit manipulation</a></li>
+                    <li><a href="#branch-management">Branch Management</a></li>
+                    <li><a href="#merge-operations">Merge Operations</a></li>
+                    <li><a href="#rebase">Rebase</a></li>
+                    <li><a href="#history-exploration">History Exploration</a></li>
+                    <li><a href="#remote-operations">Remote Operations</a></li>
+                    <li><a href="#tags-releases">Tags & Releases</a></li>
+                    <li><a href="#submodules">Submodules</a></li>
+                    <li><a href="#git-lfs">Git LFS</a></li>
+                    <li><a href="#worktree">Worktree</a></li>
+                    <li><a href="#advanced-git-features">Advanced Git Features</a></li>
+                    <li><a href="#automation-integrations">Automation & Integrations</a></li>
+                    <li><a href="#what-makes-gitember-different">What makes Gitember different</a></li>
+                    <li><a href="#human-review">Human review: which Git GUI should you actually use?</a></li>
+                </ol>
+            </div>
+        </div>
+    </section>
+
+
 
     <!-- ======= Quick Summary ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-table"></i>Quick Summary</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-gitember">Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>Tower</th>
-                <th>SmartGit</th>
-                <th>Git Extensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Price</td>
-                <td class="col-gitember">Free</td>
-                <td>Free</td>
-                <td>Free</td>
-                <td>Freemium ¹</td>
-                <td>$49.99 one-time</td>
-                <td>$69/year</td>
-                <td>Freemium ²</td>
-                <td>Free</td>
-              </tr>
-              <tr>
-                <td>Open source</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Account required</td>
-                <td class="col-gitember"><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-warn">⚠️</span> GitHub acct</td>
-                <td><span class="emoji-warn">⚠️</span> Atlassian acct</td>
-                <td><span class="emoji-no">✅</span> Required</td>
-                <td><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-yes">❌</span></td>
-                <td><span class="emoji-yes">❌</span></td>
-              </tr>
-              <tr>
-                <td>Windows</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>macOS</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> Limited</td>
-              </tr>
-              <tr>
-                <td>Linux</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>UI framework</td>
-                <td class="col-gitember">Swing (light)</td>
-                <td>Electron (heavy)</td>
-                <td>Native/Custom</td>
-                <td>Electron (heavy)</td>
-                <td>Native (fast)</td>
-                <td>Native (fast)</td>
-                <td>Swing</td>
-                <td>WinForms</td>
-              </tr>
-              <tr>
-                <td>Startup speed</td>
-                <td class="col-gitember">Fast</td>
-                <td>Slow</td>
-                <td>Medium</td>
-                <td>Slow</td>
-                <td>Very fast</td>
-                <td>Fast</td>
-                <td>Medium</td>
-                <td>Medium</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2 id="quick-summary"><i class="bi bi-table"></i><a href="https://gitember.org/doc/docs/ge-intro">1 Quick Summary</a></h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember<br>Self-Sufficient</th>
+                        <th>GitHub Desktop<br>Self-Sufficient</th>
+                        <th>Sourcetree<br>Git CLI Wrapper</th>
+                        <th>GitKraken<br>Self-Sufficient</th>
+                        <th>Fork<br>Git CLI Wrapper</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Version</td>
+                        <td>3.5.1</td>
+                        <td>3.6.4</td>
+                        <td>4.2.19</td>
+                        <td>12.4.0</td>
+                        <td>2.66.7</td>
+                    </tr>
+                    <tr>
+                        <td>Price</td>
+                        <td>🟢 Free</td>
+                        <td>🟢 Free</td>
+                        <td>🟢 Free</td>
+                        <td>🟡 Community - Free<br>Pro - $10 per month<br>Advanced - $14 per month</td>
+                        <td>🟡 $59.99 one-time</td>
+                    </tr>
+
+                    <tr>
+                        <td>Open source</td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
+                    </tr>
+                    <tr>
+                        <td>Account required</td>
+                        <td style="vertical-align: top">🟢 No</span></td>
+                        <td style="vertical-align: top">🟡</span> GitHub acct ⁰ <br><a
+                                href="https://docs.github.com/en/get-started/learning-about-github/githubs-plans">Plans</a>
+                        </td>
+                        <td style="vertical-align: top">🟡</span> Atlassian acct ⁰ <br><a
+                                href="https://www.atlassian.com/software/sourcetree/enterprise">Enterprise plan</a></td>
+                        <td style="vertical-align: top">🟡</span> Required ⁰ <br><a href="https://gitkraken.com/pricing">Gitkraken
+                            pricing</a></td>
+                        <td style="vertical-align: top">🟢 No</span></td>
+                    </tr>
+                    <tr>
+                        <td>Windows</td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                    </tr>
+                    <tr>
+                        <td>macOS</td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                        <td>🟢</span></td>
+                    </tr>
+                    <tr>
+                        <td>Linux</td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
+                        <td>🔴</span></td>
+                        <td>🟢</span></td>
+                        <td>🔴</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="footnote">
+                    ⁰ Some features available with account
+
+                </p>
+                <!-- ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ -->
+            </div>
         </div>
-        <p class="footnote">
-          ¹ GitKraken: free for public repos only; private repos require a paid plan ($4.95+/month).<br>
-          ² SmartGit: free for non-commercial use; commercial licence from $79/user.
-        </p>
-      </div>
     </section>
 
-    <!-- ======= Diff & Comparison Features ======= -->
-    <section class="comparison-section section-bg" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-file-earmark-diff"></i>Diff &amp; Comparison Features</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-gitember">Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>Tower</th>
-                <th>SmartGit</th>
-                <th>Git Extensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Unified diff</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Side-by-side diff</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Context diff</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Syntax highlighting</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span> 40+ langs</td>
-                <td><span class="emoji-yes">✅</span> basic</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Folder comparison</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span> built-in</td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Arbitrary file compare</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> external tool</td>
-              </tr>
-              <tr>
-                <td>Git blame / annotation</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> paid</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
-    <!-- ======= Hosting Platform Integration ======= -->
+    <!--  class="col-gitember"  ======= Installation and configuration ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-cloud-check"></i>Hosting Platform Integration</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-gitember">Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>Tower</th>
-                <th>SmartGit</th>
-                <th>Git Extensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>GitHub PRs</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>GitLab MRs</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Bitbucket PRs</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Gitea</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Azure DevOps</td>
-                <td class="col-gitember"><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Self-hosted instances</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-warn">⚠️</span> Bitbucket only</td>
-                <td><span class="emoji-warn">⚠️</span> paid</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>In-app PR diff review</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2 id="installation-and-configuration"><i class="bi bi-floppy"></i>2 Installation and configuration</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Installer size ¹</td>
+                        <td>89 Mb</td>
+                        <td>304 Mb</td>
+                        <td>67 Mb</td>
+                        <td>220 Mb</td>
+                        <td>32 Mb</td>
+                    </tr>
+                    <tr>
+                        <td>Installed size</td>
+                        <td>185 Mb</td>
+                        <td>681 Mb</td>
+                        <td>168 Mb</td>
+                        <td>626 Mb</td>
+                        <td>106 Mb</td>
+                    </tr>
+                    <tr>
+                        <td>Installation experience</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟡 Not a regular installer.<br>Unzip and run application</td>
+                        <td style="vertical-align: top">🟡 Not a regular installer.<br>Unzip the run application<br>Move
+                            to the /Application
+                            manually
+                        </td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>First startup</td>
+                        <td>🟢 Scan and add repos</td>
+                        <td>🟢 Scan and add repos</td>
+                        <td>🟡 Look confusing.<br>Need to clone or Open local repo</td>
+                        <td>🟡 Open release note</td>
+                        <td>🟡 Empty workplace<br>Need to open/init/clone repo</td>
+                    </tr>
+                    <tr>
+                        <td>First startup</td>
+                        <td><img src="compare/2/gitemberfirst.png" width="160"/></td>
+                        <td><img src="compare/2/gitdestopstart.png" width="160"/></td>
+                        <td><img src="compare/2/sourcetreefirts.png" width="160"/></td>
+                        <td><img src="compare/2/gitkrakenfirts.png" width="160"/></td>
+                        <td><img src="compare/2/forkfirsttime.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Git detection<br>version selection</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Existing and build in</td>
+                        <td>🟢 Not needed</td>
+                        <td>🟢 Existing</td>
+                    </tr>
+                    <tr>
+                        <td>SSH configuration</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>.ssh only<br>Global</td>
+                        <td>🟢 Can chose key location<br>Can generate key</td>
+                        <td>.ssh only<br>Global</td>
+                    </tr>
+                    <tr>
+                        <td>HTTPS authentication</td>
+                        <td>Per repository</td>
+                        <td>Per repository</td>
+                        <td>Per account</td>
+                        <td>Per repository</td>
+                        <td>Per repository</td>
+                    </tr>
+                    <tr>
+                        <td>GPG signing</td>
+                        <td>🟢 PGP/GPG or SSH commit and tag signing</td>
+                        <td>🟡 To get GitHub Desktop to sign your commits with PGP/GPG, you must configure your global
+                            Git settings to sign commits by default. GitHub Desktop does not have a native toggle menu
+                            for GPG signing; instead, it honors your global .gitconfig settings and relies on an
+                            external GPG agent to handle your secret key passphrase.
+                        </td>
+                        <td>🟢 You can set up GPG commit signing in SourceTree by configuring your local repository
+                            settings and enabling your GPG key
+                        </td>
+                        <td>🟢 You can enable PGP/GPG commit signing in GitKraken Desktop.</td>
+                        <td>🟡 The Fork Git client does not have a native, built-in button or settings panel for PGP/GPG
+                            commit signing, but it will successfully sign commits if you configure global Git signing on
+                            your system
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Git user.name / user.email</td>
+                        <td>🟢 plus overwrite per project</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>External editor</td>
+                        <td>🟢 Not needed<br>Build in</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>External diff tool</td>
+                        <td>🟢 Not needed<br>Build in</td>
+                        <td></td>
+                        <td></td>
+                        <td>Need to configure</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>External merge tool</td>
+                        <td>🟢 Not needed<br>Build in</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Light/dark theme</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢 set of different themes</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>UI customization</td>
+                        <td>Theme, Font size, Date / Time formats</td>
+                        <td>Theme, Font size, Date / Time formats, Number format</td>
+                        <td>Theme, Font and Colors for diff viewver only</td>
+                        <td>Theme, Font size, Date / Time formats</td>
+                        <td>Theme</td>
+                    </tr>
+                    <tr>
+                        <td>Keyboard shortcuts</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Startup time ~</td>
+                        <td>2s</td>
+                        <td>1s</td>
+                        <td>1s</td>
+                        <td>3s</td>
+                        <td>1s</td>
+                    </tr>
+                    <tr>
+                        <td>Memory usage ²</td>
+                        <td style="vertical-align: top">220 Mb<br><img src="compare/1/memory.png"
+                                                                       width="160"/></td>
+                        <td style="vertical-align: top">232 Mb</td>
+                        <td style="vertical-align: top">140 Mb</td>
+                        <td style="vertical-align: top">836 Mb</td>
+                        <td style="vertical-align: top">167 Mb</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="footnote">
+                    ¹ Mac Silicon<br>
+                    ² With one open repository
+                </p>
+            </div>
         </div>
-      </div>
+
     </section>
 
-    <!-- ======= Search & History ======= -->
-    <section class="comparison-section section-bg" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-clock-history"></i>Search &amp; History</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-gitember">Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>Tower</th>
-                <th>SmartGit</th>
-                <th>Git Extensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Search commit messages</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Full-text search in file contents</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Search Office / PDF / images</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>File-level history</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Visual commit graph</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Restore file to historical version</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
-    <!-- ======= Advanced Features ======= -->
+    <!--  class="col-gitember"  ======= Repository Creation & Cloning ======= -->
     <section class="comparison-section" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-gear"></i>Advanced Features</h2>
-        <div class="table-scroll">
-          <table class="cmp-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-gitember">Gitember 3</th>
-                <th>GitHub Desktop</th>
-                <th>Sourcetree</th>
-                <th>GitKraken</th>
-                <th>Fork</th>
-                <th>Tower</th>
-                <th>SmartGit</th>
-                <th>Git Extensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Git LFS support</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span></td>
-              </tr>
-              <tr>
-                <td>Repository statistics</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-warn">⚠️</span> paid</td>
-                <td><span class="emoji-warn">⚠️</span> basic</td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-no">❌</span></td>
-              </tr>
-              <tr>
-                <td>Stash management</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Cherry-pick</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Interactive rebase</td>
-                <td class="col-gitember"><span class="emoji-no">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> paid</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Submodule support</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-no">❌</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>SSH Ed25519 keys</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-              <tr>
-                <td>Works fully offline</td>
-                <td class="col-gitember"><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-warn">⚠️</span> login needed</td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-                <td><span class="emoji-yes">✅</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="container">
+            <h2 id="local-repository-creation-cloning"><i class="bi bi-floppy"></i>3 Local Repository Creation & Cloning</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Create new repository</td>
+                        <td>🟡 Minimalistic</td>
+                        <td>🟡 Project name / folder selection confusing</td>
+                        <td>🟡 Minimalistic</td>
+                        <td>🟢</td>
+                        <td>🟡 Minimalistic. Just select folder</td>
+                    </tr>
+                    <tr>
+                        <td>Initialize existing directory</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟡 Init but not open</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Add README</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Add .gitignore</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Initial commit</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Change default branch</td>
+                        <td>🟢</td>
+                        <td>🟡 Via global settings</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>LFS</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Open existing repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🐞Cannot open some repos ²
+                            <br><img src="compare/3/forkopenerror.png" width="160"/></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="footnote">
+                    ³ Really hard to close this error message, it appears constantly.
+                </p>
+            </div>
         </div>
-      </div>
     </section>
 
-    <!-- ======= Where Gitember Wins ======= -->
-    <section class="comparison-section section-bg" data-aos="fade-up">
-      <div class="container">
-        <h2><i class="bi bi-trophy"></i>Where Gitember Wins</h2>
-        <table class="wins-table">
-          <thead>
-            <tr>
-              <th>Unique advantage</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Gitea integration</td>
-              <td>The only client in this comparison with built-in Gitea PR support — essential for self-hosted teams</td>
-            </tr>
-            <tr>
-              <td>Folder comparison</td>
-              <td>Built-in directory tree diff; every other tool except SmartGit requires an external app</td>
-            </tr>
-            <tr>
-              <td>Full-text history search</td>
-                <td>Indexes and searches inside source code:
+    <!--  class="col-gitember"  ======= Repository Creation & Cloning ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="remote-repository"><i class="bi bi-floppy"></i>4 Remote Repository</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Clone HTTPS repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Clone SSH repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Clone private repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Clone large repository
+                            <br>https://github.com/virejdasani/Commited.git over 3 millions (git cli ref 55s)
+                        </td>
+                        <td>1m 12s</td>
+                        <td>1m 9s</td>
+                        <td>1m 4s</td>
+                        <td>1m 11s</td>
+                        <td>1m 21s</td>
+                    </tr>
+                    <tr>
+                        <td>Shallow and specific branch clone</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/4/geclone.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/desctopclone.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/stclone.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/4/gkclone.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/4/forkclone.png" width="160"/></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= Working Tree & Staging ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="working-tree-staging"><i class="bi bi-floppy"></i>5 Working Tree & Staging</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Detect modified files</td>
+                        <td>🟢</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🟡<br>Need to click on //WIP to track files</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Detect untracked files</td>
+                        <td>🟢</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🟡<br>Need to click on //WIP to track files</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Detect external stage/unstage file</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🔴</td>
+                        <td>🟡<br>When get focus</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Stage/Unstage file</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Discard file changes</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Rename file</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Delete file</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Ignore file</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Edit .gitignore</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= Diff viewer ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="diff-viewer"><i class="bi bi-floppy"></i>6 Diff viewer</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Unified diff</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Side-by-side diff</td>
+                        <td>🟢</td>
+                        <td>🟡 Images only</td>
+                        <td>🟡 Images only</td>
+                        <td>🟡 Images only<br>Requires external tool for text</td>
+                        <td>🟡 Hard to understand meaning of proposed "side to side"<br>Requires external tool for text</td>
+                    </tr>
+                    <tr>
+                        <td>Syntax highlighting</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟡 For some popular filetypes does not present</td>
+                    </tr>
+                    <tr>
+                        <td>Image diff</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Large-file performance<br>1.5Mb ~40 000 lines</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/6/stbigfile.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/6/forkbigfile.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>File history</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Compare branches</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Compare arbitrary files</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Compare arbitrary directories</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= Commits ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="commits"><i class="bi bi-floppy"></i>7 Commits</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Create commit</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢 With set of options</td>
+                        <td>🟢 With set of options</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Amend commit</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Empty commit</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Change author</td>
+                        <td>🟡 Repository setting</td>
+                        <td>🟡 Repository setting</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Change committer</td>
+                        <td>🟢 Repository setting</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+
+                    <tr>
+                        <td>Verify signature</td>
+                        <td>🟢</td>
+                        <td>🟡 Via git</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Commit template</td>
+                        <td>🟢 Copy from git and create own</td>
+                        <td>🔴</td>
+                        <td>🟢 Via git</td>
+                        <td>🟢 Via git</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Commit message generation</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!--  class="col-gitember"  ======= Commit manipulation ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="commit-manipulation"><i class="bi bi-floppy"></i>8 Commit manipulation</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Undo last commit</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/8/stundo.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢 Via soft reset</td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/8/forkundo.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Soft reset</td>
+                        <td>🟢</td>
+                        <td>🟡 Indirect (via "Undo")</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Mixed reset</td>
+                        <td>🟢</td>
+                        <td>🟡 Indirect (via "Undo")</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Hard reset</td>
+                        <td>🟢</td>
+                        <td>🟡 Indirect (via "Undo")</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Revert commit</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Cherry-pick commit</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= Branch Management ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="branch-management"><i class="bi bi-floppy"></i>9 Branch Management</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Create branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Create branch from selected commit</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢/td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Create branch from remote branch</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Rename branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Delete local branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Delete remote branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Checkout branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Checkout detached HEAD</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Switch branch with uncommitted changes</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Branch comparison</td>
+                        <td>🟢</td>
+                        <td>🟡 Raw diff</td>
+                        <td>🟡 Raw diff</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Track upstream branch</td>
+                        <td>🟡 Set upstream for a new<br> or current branch on push</td>
+                        <td>🟡 Set upstream for a new<br> or current branch on push</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Set upstream</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Change upstream</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>View ahead/behind count</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Stale branch detection</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Prune remote branches</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= Merge Operations ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="merge-operations"><i class="bi bi-floppy"></i>10 Merge Operations</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Merge options</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/gt_menrge_options.png" width="160"/></td>
+                        <td style="vertical-align: top">🟡<br><img src="compare/10/ghd_merge_options.png" width="160"/></td>
+                        <td style="vertical-align: top">🟡<br><img src="compare/10/st_merge_option.png"  width="160"/></td>
+                        <td style="vertical-align: top">🟡<br>Surprise, no options provided</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/f_merge_options.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Merge conflict handling</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/gt_merge_conflict.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/ghd_merge_conflict.png"  width="160"/></td>
+                        <td style="vertical-align: top">🟡<br><img src="compare/10/st_merge_conflict.png"  width="160"/><br>Manual conflict  resolving after merge</td>
+                        <td style="vertical-align: top">🟡<br><img src="compare/10/gk_merge_conflict.png"  width="160"/><br>Manual conflict  resolving after merge</td>
+                        <td style="vertical-align: top">🟡<br><img src="compare/10/f_merge_conflict.png"  width="160"/><br>Manual conflict  resolving after merge</td>
+                    </tr>
+                    <tr>
+                        <td>Abort merge</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+
+                    <tr>
+                        <td style="vertical-align: top">Resolve text conflicts<br>"Our"/"Their" is not taken into account</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/gt_3waymerge.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴<br>3rd party tool or manual</td>
+                        <td style="vertical-align: top">🔴<br>3rd party tool or manual</td>
+                        <td style="vertical-align: top">🔴<br>3rd party tool or manual</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/10/f_conflict_resolving.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top">Resolve binary conflicts<br>As "Our"/"Their" </td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Merge preview</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!--  class="col-gitember"  ======= Rebase ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="rebase"><i class="bi bi-floppy"></i>11 Rebase</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Rebase branch</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gt_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/ghd_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/st_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gk_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/f_rebase.png" width="160"/></td>
+                    </tr>
+
+                    <tr>
+                        <td>Interactive rebase</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gt_interactive_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/st_interactive_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gk_interactive_rebase.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/f_interactive_rebase.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Reorder commits</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Reword commit</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Squash commits</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Fixup commits</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Drop commit</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Rebase conflict resolution</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gt_rebase_in_progres.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/ghd_rebase_in_progres.png" width="160"/></td>
+                        <td style="vertical-align: top">🔴<br>As bad as merge conflict resolutions</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/gk_rebaseconflict.png" width="160"/></td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/11/f_rebase_conflicts.png" width="160"/></td>
+                    </tr>
+                    <tr>
+                        <td>Abort rebase</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Continue rebase</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!--  class="col-gitember"  ======= History Exploration ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="history-exploration"><i class="bi bi-floppy"></i>12 History Exploration</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Commit graph</td>
+                        <td style="vertical-align: top">🟢<br>Entire and per branch</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Author filtering</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Branch filtering</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Date filtering</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟡 ⁵</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Search by message</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Search by SHA</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Search by file</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    <tr>
+                        <td>Search by author ⁴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>File history</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Blame view</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                    </tr>
+
+                    <tr>
+                        <td>Folder history</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="footnote">
+                    ⁴ Gitember has unique feature - Search across the complete repository history, not just standard commit attributes.
+                    Find code, configuration, documentation, and other content across different file types (source code, CAD, office, etc),
+                    including deleted or modified code. See <a href="https://gitember.org/doc/docs/ge-seach/ext-search">Extended search</a> for more details<br>
+                    ⁵ Not filtering , but commit graph ordering
+
+                </p>
+            </div>
+        </div>
+    </section>
+
+
+    <!--  class="col-gitember"  ======= Remote Operations ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="remote-operations"><i class="bi bi-floppy"></i> 13 Remote Operations</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    <tr>
+                        <td>Rename remote branch</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🔴<br><img src="compare/13/ghd_remote_rename.png"  width="160"/></td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                        <td style="vertical-align: top">🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Delete remote branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Fetch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pull</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Push</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Push new branch</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Push tags</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Force push</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Force push with lease</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Push selected ref</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Fetch specific branch</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    <tr>
+                        <td>Fetch prune</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+
+
+    <!--  class="col-gitember"  ======= Stash Management ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="tags-releases"><i class="bi bi-floppy"></i>14 Tags & Releases</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Annotated tag</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Signed tag</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Edit tag message</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Delete local tag</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Delete remote tag</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Push tag</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Push all tags</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Checkout tag</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="submodules"><i class="bi bi-floppy"></i><a href="https://gitember.org/doc/docs/ge-repo/repo-submodules">15 Submodules</a></h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Clone with submodules</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Initialize submodule</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Update submodule</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Add submodule</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Remove submodule</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Commit submodule change</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Recursive update</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Submodule diff</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Submodule status</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!--  class="col-gitember"  ======= Git LFS ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="git-lfs"><i class="bi bi-floppy"></i>16 Git LFS</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Detect LFS repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Clone LFS repository</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Download LFS files</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Upload LFS files</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Lock file</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Unlock file</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>LFS diff handling</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>LFS error handling</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!--  class="col-gitember"  ======= 17 Worktree ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="worktree"><i class="bi bi-floppy"></i>17 Worktree</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td style="vertical-align: top">Create worktree</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/17/gt_create_wt.png" width="160"/></td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top">Open worktree</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/17/gt_open_wt.png" width="160"/></td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Remove worktree</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Switch worktree</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Worktree list</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Branch-worktree association</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top">Worktree conflicts</td>
+                        <td style="vertical-align: top">🟢<br><img src="compare/17/gt_conflict_wt.png" width="160"/></td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!--  class="col-gitember"  ======= Advanced Git Features ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="advanced-git-features"><i class="bi bi-floppy"></i>Advanced Git Features</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Reflog view</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Recover deleted branch</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Recover hard reset</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Recover deleted commit</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Recover stash</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Bisect support</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Notes support</td>
+                        <td>🟢</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Sparse checkout</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Partial clone</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Shallow repository management</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                        <td>🟢</td>
+                    </tr>
+                    <tr>
+                        <td>Alternate object databases</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🔴</td>
+                        <td>🟢</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!--  class="col-gitember"  ======= Automation & Integrations ======= -->
+    <!--section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="automation-integrations"><i class="bi bi-floppy"></i>Automation & Integrations</h2>
+            <div class="table-scroll">
+                <table class="cmp-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Gitember 3</th>
+                        <th>GitHub Desktop</th>
+                        <th>Sourcetree</th>
+                        <th>GitKraken</th>
+                        <th>Fork</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Git hooks support</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Pre-commit hook handling</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Post-commit hook handling</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GitFlow support</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GitHub integration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GitLab integration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Bitbucket integration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Azure DevOps integration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Jira integration</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Issue linking</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Pull request creation</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Pull request checkout</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Pull request review</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section-->
+
+
+
+    <!-- ======= Gitember Differentiators ======= -->
+    <section class="comparison-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="what-makes-gitember-different"><i class="bi bi-stars"></i>What makes Gitember different</h2>
+            <p class="review-intro">
+                Most Git GUIs are excellent at the same core job: stage files, create commits, visualize branches,
+                merge, rebase, and push. Gitember is trying to solve a slightly different problem as well:
+                <strong>how do you work when a project is spread across many repositories, or when the change you need
+                    to find is buried somewhere in Git history?</strong>
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Gitember Workspace</span>
+                    <h3>One project view for many repositories</h3>
+                    <p>
+                        A Gitember Workspace groups several existing Git repositories into one working context.
+                        Instead of opening five microservices one by one, the Workspace Dashboard gives you a
+                        repository-by-repository status view and a combined Working Copy.
+                    </p>
                     <ul>
-                        <li>Regular text</li>
-                        <li>HTML, XML and derived formats</li>
-                        <li>Microsoft Office, OpenDocument, iWorks, WordPerfect document formats</li>
-                        <li>PDF, Epub, RTF </li>
-                        <li>Compression and packaging </li>
-                        <li>Help ,Audio,Image,Video </li>
-                        <li>Mail,CAD,Font,Scientific formats </li>
-                        <li>Executable programs and libraries </li>
-                        <li>Crypto </li>
-                        <li>Database </li>
+                        <li>See branch, clean/modified/conflict status, ahead and behind for every repository.</li>
+                        <li>Review changed files from all repositories in one combined tree.</li>
+                        <li>Pull, push, fetch, create branches and commit across the workspace.</li>
+                        <li>Workspace commits can use one common message or a different message per project.</li>
+                        <li>One repository failing does not stop the remaining repositories from being processed.</li>
                     </ul>
-                </td>
-            </tr>
-            <tr>
-              <td>Context diff mode</td>
-              <td>Third diff view mode alongside unified and side-by-side — unique in this category</td>
-            </tr>
-            <tr>
-              <td>Completely free for all use</td>
-              <td>No freemium limits, no private-repo paywalls, no subscription</td>
-            </tr>
-            <tr>
-              <td>No account required</td>
-              <td>Works out of the box without signing in anywhere</td>
-            </tr>
-            <tr>
-              <td>Lightweight Swing UI</td>
-              <td>No Electron overhead; faster startup and lower RAM than GitKraken or GitHub Desktop</td>
-            </tr>
-            <tr>
-              <td>Linux + Windows + macOS</td>
-              <td>Cross-platform unlike GitHub Desktop (no Linux) or Sourcetree (no Linux)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                    <p>
+                        This is especially useful for microservice systems, frontend/backend projects and repositories
+                        that are versioned separately but released as one product.
+                    </p>
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Gitember Extended Search</span>
+                    <h3>Search the content of Git history, not only commit metadata</h3>
+                    <p>
+                        Conventional Git history search answers questions such as “who changed it?”, “when was it
+                        committed?” or “what did the commit message say?”. Gitember goes further by indexing historical
+                        file content and allowing the search to find the actual text inside historical files.
+                    </p>
+                    <ul>
+                        <li>Search commit metadata, filenames and SHA values.</li>
+                        <li>Search inside the contents of historical files, including deleted or modified content.</li>
+                        <li>Use an index to search through a selected number of historical commits.</li>
+                        <li>Search across many document types rather than limiting the feature to source-code text.</li>
+                        <li>Results identify the matching commits and highlight the files containing the term.</li>
+                    </ul>
+                    <p>
+                        The important distinction is not “another commit search box”. It is the ability to ask:
+                        <em>“When did this text, configuration value, document phrase or other content exist in the
+                            repository history?”</em>
+                    </p>
+                </article>
+            </div>
+
+            <div class="feature-grid">
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Statistics</span>
+                    <h3>Statistics</h3>
+                    <p>
+                        Gitember provides clear insights into how your repository evolves over time.
+                        Built-in analytics transform commit history into meaningful statistics, helping
+                        you understand development activity, contributor dynamics, and project growth
+                        without exporting data or running external tools.
+                    </p>
+                    <ul>
+                        <li>Commit activity charts showing repository growth over time</li>
+                        <li>Contributor statistics highlighting commits per author</li>
+                        <li>Branch activity overview to identify active and inactive branches</li>
+                        <li>Daily, weekly, and monthly commit distribution</li>
+                        <li>Quick overview of repository size, commits, branches, and tags</li>
+                    </ul>
+
+                </article>
+
+                <article class="feature-card feature-card-main">
+                    <span class="feature-badge">Tool</span>
+                    <h3>Self-sufficient workflow</h3>
+                    <p>
+                        Unlike Git GUI clients that rely on external applications for advanced merge
+                        or diff operations, Gitember provides its own integrated comparison and 3-way merge capabilities.
+                        It is possible to use Gitember as file or folder comparison tool, similar to WinMerge.
+                    </p>
+
+
+                </article>
+
+
+            </div>
+
+            <div class="review-note">
+                <strong>A fair comparison:</strong> Workspace itself is no longer unique among commercial Git GUIs.
+                GitKraken also provides Local Workspaces for grouping repositories and running Git operations across
+                multiple repositories. The stronger Gitember differentiator is the <strong>combination</strong> of a
+                repository dashboard, cross-repository working-copy search and workspace-wide commit workflow, plus
+                Extended Search over indexed historical file content. I did not find an equivalent “search arbitrary
+                historical document content across many file formats” workflow in the mainstream clients reviewed here.
+            </div>
+        </div>
     </section>
 
-    <!-- ======= Where Competitors Have an Edge ======= -->
-    <section class="comparison-section" data-aos="fade-up" style="padding-bottom: 80px;">
-      <div class="container">
-        <h2><i class="bi bi-bar-chart-line"></i>Where Competitors Have an Edge</h2>
-        <table class="edge-table">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Leader</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Native speed on macOS</td>
-              <td>Fork, Tower</td>
-              <td>Native Swift/Obj-C apps are faster than JVM on macOS</td>
-            </tr>
-            <tr>
-              <td>UI polish</td>
-              <td>Tower, Fork</td>
-              <td>Commercial apps have larger design budgets</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="footnote mt-4">
-          Sources: official product pages and documentation as of March 2026. Features may change. "Freemium" entries reflect the free tier limitations.
-        </p>
-      </div>
+    <!-- ======= Human Review ======= -->
+    <section class="review-section" data-aos="fade-up">
+        <div class="container">
+            <h2 id="human-review"><i class="bi bi-person-lines-fill"></i>Human review: which Git GUI should you actually use?</h2>
+            <p class="review-copy">
+                There is no honest “one winner” for every developer. GitHub Desktop is deliberately simple.
+                Sourcetree is free and surprisingly capable. Fork is hard to beat if you want to pay once.
+                GitKraken is the most complete commercial ecosystem, especially if you also want AI, hosting integrations
+                and team workflows. Gitember is different: it puts unusual emphasis on repository-scale navigation,
+                multi-repository workspaces and historical content investigation, while still covering the everyday Git workflow.
+            </p>
+
+            <h3>My ranking for 2026</h3>
+            <div class="rank-grid">
+                <article class="rank-card top-rank">
+                    <span class="rank-number">1</span>
+                    <h4>Gitember <span class="rank-score">9.2/10</span></h4>
+                    <p>
+                        <strong>Best for:</strong> developers who work with multiple related repositories and need
+                        unusually strong local history investigation. The free price, cross-repository Workspace,
+                        Workspace Search and Extended Search create a very compelling package. Build-in diff an merge tools.
+                        The main weakness is
+                        that some deep Git operations are still missing compared with the most mature power-user clients.
+                    </p>
+                </article>
+
+                <article class="rank-card">
+                    <span class="rank-number">2</span>
+                    <h4>GitKraken <span class="rank-score">9.0/10</span></h4>
+                    <p>
+                        <strong>Best for:</strong> the polished all-round experience. Excellent visual history,
+                        conflict handling, local and cloud workspaces, hosting integrations and a rapidly expanding
+                        AI/agent layer. The trade-off is price and account/subscription dependency for professional
+                        private-repository use.
+                    </p>
+                </article>
+
+                <article class="rank-card">
+                    <span class="rank-number">3</span>
+                    <h4>Fork <span class="rank-score">8.7/10</span></h4>
+                    <p>
+                        <strong>Best for:</strong> individual developers who want speed, a clean UI and a
+                        one-time purchase. Fork gives you a lot of serious Git functionality without another monthly
+                        bill. Its biggest limitations are platform coverage and fewer integrated collaboration extras.
+                    </p>
+                </article>
+
+                <article class="rank-card">
+                    <span class="rank-number">4</span>
+                    <h4>Sourcetree <span class="rank-score">7.9/10</span></h4>
+                    <p>
+                        <strong>Best for:</strong> developers who want a feature-rich free GUI, especially in an
+                        Atlassian/Bitbucket environment. It exposes more Git concepts than GitHub Desktop, but the
+                        interface feels older and less focused than the strongest modern clients.
+                    </p>
+                </article>
+
+                <article class="rank-card">
+                    <span class="rank-number">5</span>
+                    <h4>GitHub Desktop <span class="rank-score">7.7/10</span></h4>
+                    <p>
+                        <strong>Best for:</strong> GitHub users who want a very low-friction GUI. It is free,
+                        open source and easy to learn. The simplicity is also its limitation: advanced Git recovery,
+                        history investigation and power-user workflows require the CLI or another tool.
+                    </p>
+                </article>
+            </div>
+
+            <h3>Pros and cons - in plain English</h3>
+            <div class="procon-grid">
+                <article class="procon-card">
+                    <h4>Gitember</h4>
+                    <ul>
+                        <li><strong>Pros:</strong> free; Workspace for multi-repository projects; cross-repository working-copy search; Extended Search over historical file content; broad local Git workflow; AI commit assistance; strong recovery and investigation features.</li>
+                        <li><strong>Cons:</strong> not every advanced Git operation is exposed yet; some areas such as force-with-lease, bisect and partial/sparse workflows still favor competitors.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>GitKraken</h4>
+                    <ul>
+                        <li><strong>Pros:</strong> excellent graph and conflict UX; local workspaces; hosting and issue integrations; worktrees; AI and agent features; Windows/macOS/Linux.</li>
+                        <li><strong>Cons:</strong> professional private-repository use is paid; the product is increasingly a broader DevEx platform, which can be more than a developer needs for plain Git.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>Fork</h4>
+                    <ul>
+                        <li><strong>Pros:</strong> fast native application; excellent everyday Git workflow; interactive rebase and worktrees; simple one-time commercial purchase; no recurring subscription.</li>
+                        <li><strong>Cons:</strong> Mac/Windows only; fewer collaboration/integration features; not designed as a multi-repository project dashboard.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>Sourcetree</h4>
+                    <ul>
+                        <li><strong>Pros:</strong> free; broad Git and Mercurial coverage; GitFlow; useful branch/history visualization; good Atlassian fit.</li>
+                        <li><strong>Cons:</strong> Windows/macOS only; heavier and less modern-feeling UX; account/Atlassian ecosystem requirements can be inconvenient.</li>
+                    </ul>
+                </article>
+
+                <article class="procon-card">
+                    <h4>GitHub Desktop</h4>
+                    <ul>
+                        <li><strong>Pros:</strong> free, open source, easy to learn, excellent GitHub authentication and PR workflow.</li>
+                        <li><strong>Cons:</strong> official Windows/macOS only; deliberately limited advanced Git surface; weak fit for complex repository investigation.</li>
+                    </ul>
+                </article>
+            </div>
+
+            <h3>Cost of ownership matters more than the sticker price</h3>
+            <p class="review-copy">
+                A $0 client is not automatically cheaper if it makes you switch to the terminal for every unusual
+                task. Conversely, a subscription client can be excellent value if it saves real time every week.
+                For a developer keeping the same tool for several years, the difference between a one-time license
+                and a subscription becomes very noticeable.
+            </p>
+
+            <div class="cost-grid">
+                <div class="cost-card">
+                    <strong>Gitember</strong>
+                    <span>Free in the comparison. No recurring desktop license cost.</span>
+                </div>
+                <div class="cost-card">
+                    <strong>GitHub Desktop</strong>
+                    <span>Free and open source. Excellent price, but advanced workflows may require the CLI or another tool.</span>
+                </div>
+                <div class="cost-card">
+                    <strong>Sourcetree</strong>
+                    <span>Free. Strong feature/value ratio, especially for Atlassian users.</span>
+                </div>
+                <div class="cost-card">
+                    <strong>GitKraken</strong>
+                    <span>Community free for local/public-repo use; Pro $10/month and Advanced $14/month on current 2026 pricing, billed annually. That is roughly $120/$168 per year before tax at list price.</span>
+                </div>
+                <div class="cost-card">
+                    <strong>Fork</strong>
+                    <span>$59.99 one-time for personal and commercial use, for one user on up to three machines.</span>
+                </div>
+            </div>
+
+            <div class="review-note">
+                <strong>Long-term value:</strong> Fork reaches roughly the price of one year of GitKraken Pro after a
+                single payment and then has no recurring desktop fee. GitKraken costs more over time but bundles a much
+                broader collaboration/AI/DevEx platform. Gitember's strongest value argument is simpler:
+                <strong>the features that differentiate it are available without a subscription wall.</strong>
+            </div>
+
+            <h3>Bottom line</h3>
+            <p class="review-copy">
+                If I were choosing today, I would start with Gitember when the work involves several repositories,
+                long-lived codebases or the need to answer “where did this content exist in history?”. I would choose
+                GitKraken when team collaboration, hosting integrations and AI are more important than keeping the
+                tool minimal. I would choose Fork for a fast one-time purchase, Sourcetree when free
+                Atlassian-oriented tooling is the priority, and GitHub Desktop when simplicity is the priority.
+                There is still no universal winner - but there are very clear winners for different jobs.
+            </p>
+
+            <div class="source-list">
+                <strong>Gitember vs ... pages:</strong>
+                <a href="gitember-vs-gitkraken.html"  rel="noopener">Gitember vs GitKraken</a>
+                <a href="gitember-vs-fork.html"  rel="noopener">Gitember vs Fork </a>
+                <a href="gitember-vs-github-desktop.html"  rel="noopener">Gitember vs GitHub</a>
+                <a href="gitember-vs-sourcetree.html"  rel="noopener">Gitember vs Sourcetree</a>
+            </div>
+
+            <div class="source-list">
+                <strong>2026 research references:</strong>
+                <a href="https://gitember.org/" target="_blank" rel="noopener">Gitember</a>
+                <a href="https://gitkraken.com/pricing" target="_blank" rel="noopener">GitKraken pricing &amp; features</a>
+                <a href="https://www.git-fork.com/buy" target="_blank" rel="noopener">Fork pricing</a>
+                <a href="https://docs.github.com/en/desktop/overview/about-github-desktop" target="_blank" rel="noopener">GitHub Desktop</a>
+                <a href="https://www.atlassian.com/software/sourcetree" target="_blank" rel="noopener">Sourcetree</a>
+            </div>
+        </div>
     </section>
 
-  </main>
+</main>
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer">
+<!-- ======= Footer ======= -->
+<footer id="footer">
     <div class="container">
-      <div class="row">
-        <div class="col-lg-6 text-lg-start text-center">
-          <div class="copyright">
-            &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
-          </div>
-          <div class="credits">
-            Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-          </div>
+        <div class="row">
+            <div class="col-lg-6 text-lg-start text-center">
+                <div class="copyright">
+                    &copy; Copyright <strong>Igor Azarny</strong>. All Rights Reserved
+                </div>
+                <div class="credits">
+                    Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+                    <a href="index.html#hero">Home</a>
+                    &nbsp;·&nbsp;
+                    <a href="index.html#features">Features</a>
+                    &nbsp;·&nbsp;
+                    <a href="index.html#download">Download</a>
+                </nav>
+            </div>
         </div>
-        <div class="col-lg-6">
-          <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
-            <a href="index.html#hero">Home</a>
-            &nbsp;·&nbsp;
-            <a href="index.html#features">Features</a>
-            &nbsp;·&nbsp;
-            <a href="index.html#download">Download</a>
-          </nav>
-        </div>
-      </div>
     </div>
-  </footer>
+</footer>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-chevron-up"></i></a>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-chevron-up"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
+<!-- Vendor JS Files -->
+<script src="assets/vendor/aos/aos.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+<script src="assets/vendor/php-email-form/validate.js"></script>
 
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
+<!-- Template Main JS File -->
+<script src="assets/js/main.js"></script>
 
 </body>
 </html>

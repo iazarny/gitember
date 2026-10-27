@@ -1,5 +1,6 @@
 package com.az.gitember.service.detector.impl;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.Detector;
 import com.az.gitember.service.detector.Finding;
@@ -77,7 +78,7 @@ public class EntropyDetector implements Detector {
                 context.getFile(),
                 lineNo,
                 "HIGH_ENTROPY",
-                "High entropy string detected",
+                I18n.t("highEntropyStringDetected"),
                 Confidence.MEDIUM,
                 line,
                 mask(value)

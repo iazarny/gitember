@@ -60,8 +60,7 @@ public final class OllamaManager {
 
     public static class ChecksumMismatchException extends IOException {
         public ChecksumMismatchException(String archiveName, String expected, String actual) {
-            super("Checksum mismatch for " + archiveName
-                    + ": expected " + expected + ", got " + actual);
+            super(I18n.t("checksumMismatchExpectedGot", archiveName, expected, actual));
         }
     }
 
@@ -124,14 +123,14 @@ public final class OllamaManager {
         candidates.add(System.getProperty("user.home") + "/.local/bin/ollama");
 
         // macOS Ollama.app locations
-        if (Context.isMac()) {
+        if (GitemberUtil.isMac()) {
             candidates.add("/Applications/Ollama.app/Contents/Resources/ollama");
             candidates.add(System.getProperty("user.home")
                     + "/Applications/Ollama.app/Contents/Resources/ollama");
         }
 
         // Windows
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             candidates.add(System.getenv("LOCALAPPDATA") + "\\Programs\\Ollama\\ollama.exe");
             candidates.add(System.getProperty("user.home") + "\\AppData\\Local\\Programs\\Ollama\\ollama.exe");
         }
@@ -146,7 +145,7 @@ public final class OllamaManager {
         // 3. PATH
         String pathEnv = System.getenv("PATH");
         if (pathEnv != null) {
-            String binaryName = Context.isWindows() ? "ollama.exe" : "ollama";
+            String binaryName = GitemberUtil.isWindows() ? "ollama.exe" : "ollama";
             for (String dir : pathEnv.split(File.pathSeparator)) {
                 Path p = Paths.get(dir, binaryName);
                 if (Files.isExecutable(p)) return Optional.of(p);
@@ -228,7 +227,7 @@ public final class OllamaManager {
      */
     public static Process startServer() throws IOException {
         Path bin = findBinary()
-                .orElseThrow(() -> new IOException("Ollama binary not found"));
+                .orElseThrow(() -> new IOException(I18n.t("ollamaBinaryNotFound")));
         log.info("Starting Ollama: " + bin);
         ProcessBuilder pb = new ProcessBuilder(bin.toString(), "serve");
         pb.environment().put("OLLAMA_HOST", "127.0.0.1:" + PORT);
@@ -253,7 +252,7 @@ public final class OllamaManager {
             Thread.sleep(500);
         }
         proc.destroyForcibly();
-        throw new IOException("Ollama did not start within " + (timeoutMs / 1000) + " s");
+        throw new IOException(I18n.t("ollamaDidNotStartWithin", (timeoutMs / 1000)));
     }
 
     // =========================================================================
@@ -294,7 +293,7 @@ public final class OllamaManager {
      */
     public static Process startModelPull(String modelName) throws IOException {
         Path bin = findBinary()
-                .orElseThrow(() -> new IOException("Ollama binary not found"));
+                .orElseThrow(() -> new IOException(I18n.t("ollamaBinaryNotFound")));
         ProcessBuilder pb = new ProcessBuilder(bin.toString(), "pull", modelName);
         pb.redirectErrorStream(true);
         return pb.start();
@@ -324,12 +323,12 @@ public final class OllamaManager {
                     .GET().build();
             HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() != 200) {
-                throw new IOException("Could not fetch checksum file (HTTP " + resp.statusCode() + ")");
+                throw new IOException(I18n.t("couldNotFetchChecksumFile", resp.statusCode()));
             }
             checksumPage = resp.body();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Checksum download interrupted", e);
+            throw new IOException(I18n.t("checksumDownloadInterrupted"), e);
         }
 
         String expected = null;
@@ -342,7 +341,7 @@ public final class OllamaManager {
             }
         }
         if (expected == null) {
-            throw new IOException("No checksum entry found for " + archiveName + " in sha256sum.txt");
+            throw new IOException(I18n.t("noChecksumEntryFoundSha256sum", archiveName));
         }
 
         String actual;
@@ -358,7 +357,7 @@ public final class OllamaManager {
 
             actual = HexFormat.of().formatHex(digest.digest());
         } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IOException("SHA-256 not available", e);
+            throw new IOException(I18n.t("sha256NotAvailable"), e);
         }
 
         if (!expected.equals(actual)) {
@@ -373,8 +372,8 @@ public final class OllamaManager {
 
     /** Returns the local path where the ready-to-run binary should live. */
     public static Path localBinaryPath() {
-        String name = Context.isWindows() ? "ollama.exe" : "ollama";
-        if (Context.isMac()) {
+        String name = GitemberUtil.isWindows() ? "ollama.exe" : "ollama";
+        if (GitemberUtil.isMac()) {
             // After extracting Ollama.app zip, the CLI binary is here:
             return OLLAMA_HOME.resolve("Ollama.app")
                     .resolve("Contents").resolve("Resources").resolve("ollama");
@@ -383,10 +382,10 @@ public final class OllamaManager {
     }
 
     private static String resolveDownloadUrl() {
-        if (Context.isMac()) {
+        if (GitemberUtil.isMac()) {
             return GH_RELEASE + "Ollama-darwin.zip";
         }
-        if (Context.isWindows()) {
+        if (GitemberUtil.isWindows()) {
             return GH_RELEASE + "ollama-windows-amd64.zip";
         }
         String arch = System.getProperty("os.arch", "").toLowerCase();
@@ -397,8 +396,8 @@ public final class OllamaManager {
     }
 
     private static String archiveFileName() {
-        if (Context.isMac())     return "Ollama-darwin.zip";
-        if (Context.isWindows()) return "ollama-windows-amd64.zip";
+        if (GitemberUtil.isMac())     return "Ollama-darwin.zip";
+        if (GitemberUtil.isWindows()) return "ollama-windows-amd64.zip";
         String arch = System.getProperty("os.arch", "").toLowerCase();
         return (arch.contains("aarch64") || arch.contains("arm64"))
                 ? "ollama-linux-arm64" : "ollama-linux-amd64";
@@ -422,7 +421,7 @@ public final class OllamaManager {
                 return conn;
             }
         }
-        throw new IOException("Too many redirects");
+        throw new IOException(I18n.t("tooManyRedirects"));
     }
 
     /** Extracts a ZIP archive into {@code destDir}. */
@@ -432,7 +431,7 @@ public final class OllamaManager {
             while ((entry = zis.getNextEntry()) != null) {
                 Path target = destDir.resolve(entry.getName()).normalize();
                 if (!target.startsWith(destDir))
-                    throw new IOException("Zip slip detected: " + entry.getName());
+                    throw new IOException(I18n.t("zipSlipDetected", entry.getName()));
                 if (entry.isDirectory()) {
                     Files.createDirectories(target);
                 } else {

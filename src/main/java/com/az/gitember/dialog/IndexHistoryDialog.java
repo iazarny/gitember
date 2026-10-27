@@ -1,6 +1,9 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.data.ScmBranch;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotLane;
 
@@ -40,19 +43,28 @@ public class IndexHistoryDialog extends JDialog {
 
     @SuppressWarnings("unchecked")
     public IndexHistoryDialog(Frame owner) {
-        super(owner, "Index History", true);
+        super(owner, I18n.t("indexHistory"), true);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override public void windowClosing(java.awt.event.WindowEvent e) {
-                if (worker != null && !worker.isDone()) worker.cancel(true);
+                if (worker != null && !worker.isDone()) {
+                    worker.cancel(true);
+                }
                 dispose();
             }
         });
         setResizable(false);
 
         // ── Input row ────────────────────────────────────────────────────────
-        int totalCommits = Context.getPlotCommitList() != null
-                ? Context.getPlotCommitList().size() : 0;
+
+
+        int totalCommits = 0;
+        {
+            GitRepoService svc = Context.getGitRepoService();
+            ScmBranch branch = Context.getWorkingBranch();
+            totalCommits = svc.getCommitsCountByTree(
+                    branch.getFullName(), null);
+        }
 
         maxCommitsSpinner = new JSpinner(new SpinnerNumberModel(
                 Math.min(1000, Math.max(totalCommits, 1)),
@@ -60,12 +72,12 @@ public class IndexHistoryDialog extends JDialog {
         maxCommitsSpinner.setPreferredSize(new Dimension(100,
                 maxCommitsSpinner.getPreferredSize().height));
 
-        indexAllCheck = new JCheckBox("Index all (" + totalCommits + " commits)");
+        indexAllCheck = new JCheckBox(I18n.t("indexAllCommits", totalCommits));
         indexAllCheck.addActionListener(e ->
                 maxCommitsSpinner.setEnabled(!indexAllCheck.isSelected()));
 
         JPanel inputRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        inputRow.add(new JLabel("Max commits:"));
+        inputRow.add(new JLabel(I18n.t("maxCommits")));
         inputRow.add(maxCommitsSpinner);
         inputRow.add(indexAllCheck);
 
@@ -82,8 +94,8 @@ public class IndexHistoryDialog extends JDialog {
         progressPanel.add(statusLabel,  BorderLayout.CENTER);
 
         // ── Buttons ──────────────────────────────────────────────────────────
-        startBtn = new JButton("Start Indexing");
-        closeBtn  = new JButton("Close");
+        startBtn = new JButton(I18n.t("startIndexing"));
+        closeBtn  = new JButton(I18n.t("close"));
         closeBtn.setEnabled(true);
 
         startBtn.addActionListener(e -> startIndexing());
@@ -104,7 +116,7 @@ public class IndexHistoryDialog extends JDialog {
         content.add(btnRow,       BorderLayout.SOUTH);
 
         if (totalCommits == 0) {
-            statusLabel.setText("Load the commit history first (open Working Copy or History).");
+            statusLabel.setText(I18n.t("loadCommitHistoryFirstOpen"));
             startBtn.setEnabled(false);
         }
 
@@ -117,34 +129,39 @@ public class IndexHistoryDialog extends JDialog {
 
     @SuppressWarnings("unchecked")
     private void startIndexing() {
-        List<PlotCommit<PlotLane>> commits = new ArrayList<>();
-        if (Context.getPlotCommitList() != null) {
-            for (var pc : Context.getPlotCommitList()) {
-                commits.add((PlotCommit<PlotLane>) pc);
-            }
-        }
-
-        if (commits.isEmpty()) {
-            statusLabel.setText("No commits to index.");
-            return;
-        }
 
         int maxCommits = indexAllCheck.isSelected()
                 ? 0
                 : (int) maxCommitsSpinner.getValue();
 
+        List<PlotCommit<PlotLane>> commits = new ArrayList<>();
+
+        {
+            GitRepoService svc = Context.getGitRepoService();
+            ScmBranch branch = Context.getWorkingBranch();
+            commits.addAll(
+                    svc.getCommitsByTree(branch.getFullName(), true, maxCommits, null)
+            ) ;
+
+            if (commits.isEmpty()) {
+                statusLabel.setText(I18n.t("noCommitsToIndex"));
+                return;
+            }
+        }
+
         startBtn.setEnabled(false);
         progressBar.setValue(0);
-        statusLabel.setText("Starting…");
+        statusLabel.setText(I18n.t("starting"));
 
         worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
+
                 Context.getGitRepoService().indexHistory(
                         (List) commits,
                         maxCommits,
                         (done, total) -> {
-                            publish("Indexed commit " + done + " of " + total + "…");
+                            publish(I18n.t("indexedCommitOf", done, total));
                             SwingUtilities.invokeLater(() -> {
                                 progressBar.setMaximum(total);
                                 progressBar.setValue(done);
@@ -163,16 +180,16 @@ public class IndexHistoryDialog extends JDialog {
             protected void done() {
                 try {
                     get();
-                    statusLabel.setText("Indexing complete. You can now search file content.");
-                    progressBar.setString("Done");
+                    statusLabel.setText(I18n.t("indexingCompleteYouCanNow"));
+                    progressBar.setString(I18n.t("done"));
                     if (onComplete != null) onComplete.run();
                 } catch (java.util.concurrent.CancellationException ex) {
-                    statusLabel.setText("Indexing cancelled.");
-                    progressBar.setString("Cancelled");
+                    statusLabel.setText(I18n.t("indexingCancelled"));
+                    progressBar.setString(I18n.t("cancelled"));
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Indexing failed", ex);
-                    statusLabel.setText("Error: " + ex.getCause().getMessage());
-                    progressBar.setString("Error");
+                    statusLabel.setText(I18n.t("indexHistoryDialog.error", ex.getCause().getMessage()));
+                    progressBar.setString(I18n.t("error"));
                 }
                 startBtn.setEnabled(true);
             }

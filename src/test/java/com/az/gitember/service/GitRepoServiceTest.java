@@ -2,21 +2,29 @@ package com.az.gitember.service;
 
 import com.az.gitember.data.ScmItem;
 import com.az.gitember.data.ScmRevisionInformation;
+import com.az.gitember.data.Settings;
+import com.az.gitember.data.SignatureStatus;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Set;
 
@@ -45,12 +53,17 @@ class GitRepoServiceTest {
 
         repository.getConfig().setString("user", null, "name",  "Test User");
         repository.getConfig().setString("user", null, "email", "test@example.com");
+        // No background auto-gc: it outlives repository.close() and churns .git/gc.log.lock
+        // underneath tearDown's delete.
+        repository.getConfig().setInt("gc", null, "auto", 0);
+        repository.getConfig().setInt("gc", null, "autoPackLimit", 0);
         repository.getConfig().save();
     }
 
     @AfterEach
     void tearDown() throws Exception {
         repository.close();
+        Context.setSettings(null);
         deleteDirectory(repoDir);
     }
 
@@ -117,10 +130,57 @@ class GitRepoServiceTest {
 
         RevCommit commit = service.commit(
                 "committer test", "Alice", "alice@example.com",
-                "Bob", "bob@example.com");
+                "Bob", "bob@example.com", "", false, "");
 
         assertEquals("Alice", commit.getAuthorIdent().getName());
         assertEquals("Bob", commit.getCommitterIdent().getName());
+    }
+
+    @Test
+    void canAmend_falseOnUnbornHead_trueAfterFirstCommit() throws Exception {
+        assertFalse(service.canAmend(), "Unborn HEAD cannot be amended");
+
+        makeInitialCommit();
+
+        assertTrue(service.canAmend(), "A SAFE repo with HEAD can be amended");
+        assertEquals("initial commit", service.getHeadCommitFullMessage().stripTrailing());
+        assertFalse(service.isHeadPublished(), "No upstream means HEAD is not published");
+    }
+
+    @Test
+    void commit_amend_replacesHeadKeepsParentAndAddsStagedFile() throws Exception {
+        RevCommit initial = makeInitialCommit();
+
+        writeFile("extra.txt", "more\n");
+        service.addFileToCommitStage("extra.txt");
+
+        RevCommit amended = service.commit(
+                "amended message", "Test User", "test@example.com",
+                null, null, "", false, "", true);
+
+        assertEquals("amended message", amended.getShortMessage());
+        assertEquals(initial.getParentCount(), amended.getParentCount());
+        if (initial.getParentCount() > 0) {
+            assertEquals(initial.getParent(0).getId(), amended.getParent(0).getId());
+        }
+        assertNotEquals(initial.getId(), repository.resolve("HEAD"),
+                "Amend must move HEAD to a new commit");
+        assertEquals("amended message", service.getHeadCommitFullMessage().stripTrailing());
+        assertTrue(service.getAllFiles().contains("extra.txt"));
+        assertTrue(service.getAllFiles().contains("init.txt"));
+    }
+
+    @Test
+    void commit_amendMessageOnly_doesNotAddUnstagedFiles() throws Exception {
+        makeInitialCommit();
+        writeFile("unstaged.txt", "leave me out\n");
+
+        RevCommit amended = service.commit(
+                "just the message", "Test User", "test@example.com",
+                null, null, "", false, "", true);
+
+        assertEquals("just the message", amended.getShortMessage());
+        assertFalse(service.getAllFiles().contains("unstaged.txt"));
     }
 
     // ── getAllFiles ───────────────────────────────────────────────────────────
@@ -183,6 +243,56 @@ class GitRepoServiceTest {
 
         assertNull(repository.exactRef("refs/heads/to-delete"),
                 "Deleted branch ref must not exist");
+    }
+
+    @Test
+    void renameRemoteBranch_pushesNewNameAndDeletesOldRemoteBranch() throws Exception {
+        makeInitialCommit();
+        service.createBranch("master", "old-remote-branch");
+
+        Path remoteDir = Files.createTempDirectory("gitember-bare-");
+        Repository remoteRepo = Git.init()
+                .setBare(true)
+                .setDirectory(remoteDir.toFile())
+                .call()
+                .getRepository();
+        try {
+            try (Git git = new Git(repository)) {
+                git.remoteAdd()
+                        .setName(Constants.DEFAULT_REMOTE_NAME)
+                        .setUri(new URIish(remoteDir.toUri().toString()))
+                        .call();
+                git.push()
+                        .setRemote(Constants.DEFAULT_REMOTE_NAME)
+                        .setRefSpecs(new RefSpec(
+                                "refs/heads/old-remote-branch:refs/heads/old-remote-branch"))
+                        .call();
+                git.fetch()
+                        .setRemote(Constants.DEFAULT_REMOTE_NAME)
+                        .call();
+            }
+
+            String oldName = "refs/remotes/origin/old-remote-branch";
+            String newName = "refs/remotes/origin/renamed-remote-branch";
+            assertNotNull(repository.exactRef(oldName),
+                    "Remote-tracking ref for the old name must exist before rename");
+
+            Ref renamed = service.renameRemoteBranch(oldName, newName);
+
+            assertNotNull(renamed, "Rename must return the new remote-tracking ref");
+            assertEquals(newName, renamed.getName());
+            assertNotNull(repository.exactRef(newName),
+                    "Local remote-tracking ref must use the new name");
+            assertNull(repository.exactRef(oldName),
+                    "Local remote-tracking ref for the old name must be pruned");
+            assertNotNull(remoteRepo.exactRef("refs/heads/renamed-remote-branch"),
+                    "Remote must have the branch under the new name");
+            assertNull(remoteRepo.exactRef("refs/heads/old-remote-branch"),
+                    "Remote must no longer have the old branch name");
+        } finally {
+            remoteRepo.close();
+            deleteDirectory(remoteDir);
+        }
     }
 
     // ── Merge ─────────────────────────────────────────────────────────────────
@@ -495,6 +605,43 @@ class GitRepoServiceTest {
                 "Hard reset must remove files not present in target commit");
     }
 
+    @Test
+    void undoUnpushedCommit_head_keepsFileInWorkingCopyAndMovesHead() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        writeFile("undone.txt", "keep me\n");
+        service.addFileToCommitStage("undone.txt");
+        RevCommit undone = service.commit("add undone", "U", "u@u.com");
+
+        service.undoUnpushedCommit(undone);
+
+        assertEquals(parent.getId(), repository.resolve("HEAD"));
+        assertTrue(Files.exists(repoDir.resolve("undone.txt")),
+                "Mixed undo must leave the commit's files in the working copy");
+        assertTrue(service.hasWorkingCopyChanges());
+    }
+
+    @Test
+    void hasWorkingCopyChanges_falseOnCleanTree_trueAfterEdit() throws Exception {
+        makeInitialCommit();
+        assertFalse(service.hasWorkingCopyChanges());
+
+        writeFile("dirty.txt", "edit\n");
+
+        assertTrue(service.hasWorkingCopyChanges());
+    }
+
+    @Test
+    void isHeadCommit_trueOnlyForCurrentHead() throws Exception {
+        RevCommit first = makeInitialCommit();
+        writeFile("second.txt", "two\n");
+        service.addFileToCommitStage("second.txt");
+        RevCommit second = service.commit("second", "U", "u@u.com");
+
+        assertTrue(service.isHeadCommit(second.getName()));
+        assertFalse(service.isHeadCommit(first.getName()));
+        assertTrue(service.isCommitOnHeadBranch(first.getName()));
+    }
+
     // ── Revert ────────────────────────────────────────────────────────────────
 
     @Test
@@ -518,7 +665,7 @@ class GitRepoServiceTest {
     void createTag_validName_tagAppearsInTagList() throws Exception {
         makeInitialCommit();
 
-        service.createTag("v1.0");
+        service.createTag("v1.0", "", false, "");
 
         List<com.az.gitember.data.ScmBranch> tags = service.getTags();
         assertTrue(tags.stream().anyMatch(t -> t.getShortName().equals("refs/tags/v1.0")
@@ -529,7 +676,7 @@ class GitRepoServiceTest {
     @Test
     void deleteLocalTag_existingTag_tagNoLongerInTagList() throws Exception {
         makeInitialCommit();
-        service.createTag("v2.0");
+        service.createTag("v2.0", "", false, "");
 
         service.deleteLocalTag("refs/tags/v2.0");
 
@@ -580,7 +727,7 @@ class GitRepoServiceTest {
         makeInitialCommit();
         writeFile("untracked.txt", "untracked\n");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("untracked.txt")
@@ -593,7 +740,7 @@ class GitRepoServiceTest {
         writeFile("staged.txt", "staged\n");
         service.addFileToCommitStage("staged.txt");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("staged.txt")
@@ -608,7 +755,7 @@ class GitRepoServiceTest {
         service.commit("add mod", "U", "u@u.com");
         writeFile("mod.txt", "changed\n");
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.stream().anyMatch(
                 s -> s.getShortName().equals("mod.txt")
@@ -619,9 +766,147 @@ class GitRepoServiceTest {
     void getStatuses_cleanWorkingTree_returnsEmptyList() throws Exception {
         makeInitialCommit();
 
-        List<ScmItem> statuses = service.getStatuses(null, false);
+        List<ScmItem> statuses = service.getStatuses(null);
 
         assertTrue(statuses.isEmpty(), "Clean working tree must yield no status entries");
+    }
+
+    // ── .gitignore ────────────────────────────────────────────────────────────
+
+    @Test
+    void addToGitIgnore_untrackedFile_appendsPatternAndDropsFromStatus() throws Exception {
+        makeInitialCommit();
+        writeFile("secret.env", "TOKEN=x\n");
+
+        service.addToGitIgnore("secret.env");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/secret.env"), "Root .gitignore must list the file");
+        assertTrue(Files.exists(repoDir.resolve("secret.env")), "Working-tree file must remain");
+        assertTrue(service.getStatuses(null).stream().noneMatch(
+                s -> s.getShortName().equals("secret.env")),
+                "Ignored untracked file must disappear from status");
+    }
+
+    @Test
+    void addToGitIgnore_trackedFile_untracksWithoutDeleting() throws Exception {
+        makeInitialCommit();
+        writeFile("tracked.secret", "keep\n");
+        service.addFileToCommitStage("tracked.secret");
+        service.commit("add secret", "U", "u@u.com");
+
+        service.addToGitIgnore("tracked.secret");
+
+        assertTrue(Files.exists(repoDir.resolve("tracked.secret")),
+                "Working-tree file must remain after git rm --cached");
+        assertTrue(repository.readDirCache().findEntry("tracked.secret") < 0,
+                "File must be removed from the index");
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/tracked.secret"));
+    }
+
+    @Test
+    void addToGitIgnore_existingIgnore_doesNotDuplicatePattern() throws Exception {
+        makeInitialCommit();
+        Files.writeString(repoDir.resolve(".gitignore"), "/noise.log\n");
+        writeFile("noise.log", "log\n");
+
+        service.addToGitIgnore("noise.log");
+        service.addToGitIgnore("noise.log");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        int first = gitignore.indexOf("/noise.log");
+        int last = gitignore.lastIndexOf("/noise.log");
+        assertEquals(first, last, "Pattern must appear only once");
+    }
+
+    @Test
+    void addToGitIgnore_directory_appendsTrailingSlash() throws Exception {
+        makeInitialCommit();
+        Path dir = repoDir.resolve("build-out");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("artifact.bin"), "bin\n");
+
+        service.addToGitIgnore("build-out");
+
+        String gitignore = Files.readString(repoDir.resolve(".gitignore"));
+        assertTrue(gitignore.contains("/build-out/"),
+                "Directory pattern must end with a slash, got:\n" + gitignore);
+        assertTrue(service.getStatuses(null).stream().noneMatch(
+                s -> s.getShortName().startsWith("build-out")),
+                "Ignored directory contents must disappear from status");
+    }
+
+    @Test
+    void adapt_unsignedCommit_hasUnsignedStatusAndNoSignatureBytes() throws Exception {
+        RevCommit unsigned = makeInitialCommit();
+
+        ScmRevisionInformation info = service.adapt(unsigned, null);
+
+        assertEquals(SignatureStatus.UNSIGNED, info.getSignatureStatus());
+        assertFalse(info.isSigned());
+        assertNull(info.getRawGpgSignature());
+    }
+
+    @Test
+    void adapt_commitWithGpgSigHeader_isSignedWithoutVerifying() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        RevCommit signed = insertCommitWithDummySshSignature(parent);
+
+        ScmRevisionInformation info = service.adapt(signed, null);
+
+        assertEquals(SignatureStatus.SIGNED, info.getSignatureStatus());
+        assertTrue(info.isSigned());
+        assertNotNull(info.getRawGpgSignature());
+        assertTrue(new String(info.getRawGpgSignature(), StandardCharsets.US_ASCII)
+                .contains("BEGIN SSH SIGNATURE"));
+    }
+
+    @Test
+    void resolveAllowedSignersFile_followsSettingsChoice() {
+        Settings settings = new Settings();
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.GLOBAL_SSH.getOption());
+        Context.setSettings(settings);
+
+        assertEquals(
+                Path.of(System.getProperty("user.home"), ".ssh", "allowed_signers"),
+                service.resolveAllowedSignersFile());
+
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.REPOSITORY.getOption());
+        assertEquals(
+                repository.getDirectory().toPath().resolve("allowed_signers"),
+                service.resolveAllowedSignersFile());
+    }
+
+    @Test
+    void verifyCommitSignature_disabled_staysSigned() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        ScmRevisionInformation info = service.adapt(insertCommitWithDummySshSignature(parent), null);
+        Settings settings = new Settings();
+        settings.setVerifyCommitSignatures(false);
+        Context.setSettings(settings);
+
+        var details = service.verifyCommitSignature(info);
+
+        assertEquals(SignatureStatus.SIGNED, details.getStatus());
+        assertEquals(SignatureStatus.SIGNED, info.getSignatureStatus());
+        assertTrue(details.getMessage().contains("disabled"));
+    }
+
+    @Test
+    void verifyCommitSignature_enabledDummySsh_doesNotThrow() throws Exception {
+        RevCommit parent = makeInitialCommit();
+        ScmRevisionInformation info = service.adapt(insertCommitWithDummySshSignature(parent), null);
+        Settings settings = new Settings();
+        settings.setVerifyCommitSignatures(true);
+        settings.setAllowedSignersFile(Settings.AllowedSignersFile.REPOSITORY.getOption());
+        Context.setSettings(settings);
+
+        var details = service.verifyCommitSignature(info);
+
+        assertNotEquals(SignatureStatus.UNSIGNED, details.getStatus());
+        assertNotEquals(SignatureStatus.UNSIGNED, info.getSignatureStatus());
+        assertEquals(".git/allowed_signers", details.getAllowedSignersPath());
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -637,11 +922,58 @@ class GitRepoServiceTest {
         Files.writeString(repoDir.resolve(name), content);
     }
 
+    private RevCommit insertCommitWithDummySshSignature(RevCommit parent) throws Exception {
+        String raw = "tree " + parent.getTree().getName() + "\n"
+                + "parent " + parent.getName() + "\n"
+                + "author Test User <test@example.com> 1111111111 +0000\n"
+                + "committer Test User <test@example.com> 1111111111 +0000\n"
+                + "gpgsig -----BEGIN SSH SIGNATURE-----\n"
+                + " U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgAAAAAAAAAAAAAAAAAAAAAAAA\n"
+                + " AAAAAAAAAAAAAAAAAAA=\n"
+                + " -----END SSH SIGNATURE-----\n"
+                + "\n"
+                + "signed commit\n";
+        ObjectId id;
+        try (ObjectInserter inserter = repository.newObjectInserter()) {
+            id = inserter.insert(Constants.OBJ_COMMIT, raw.getBytes(StandardCharsets.UTF_8));
+            inserter.flush();
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            return walk.parseCommit(id);
+        }
+    }
+
+    /**
+     * Deletes {@code dir} recursively, tolerating entries that vanish while the tree is being
+     * walked: JGit runs auto-gc on its own thread, and the {@code .git/gc.log.lock} it creates
+     * and removes there made a plain {@code Files.walk} fail with {@code NoSuchFileException}.
+     */
     private static void deleteDirectory(Path dir) throws IOException {
-        if (!Files.exists(dir)) return;
-        Files.walk(dir)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        if (Files.exists(dir)) {
+            Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    // Already gone -- nothing left to delete.
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path visited, IOException exc) throws IOException {
+                    try {
+                        Files.deleteIfExists(visited);
+                    } catch (DirectoryNotEmptyException e) {
+                        // gc wrote a new file after we listed this folder; a leftover temp
+                        // directory is harmless, a failing tearDown is not.
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
     }
 }

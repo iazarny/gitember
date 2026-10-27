@@ -1,0 +1,84 @@
+package com.az.gitember.ui.mainframe;
+
+import com.az.gitember.service.I18n;
+import com.az.gitember.data.Project;
+import com.az.gitember.data.Settings;
+import com.az.gitember.dialog.InteractiveContinueAbortDialog;
+import com.az.gitember.service.Context;
+import com.az.gitember.ui.HistoryPanel;
+import com.az.gitember.ui.MainFrame;
+
+import javax.swing.*;
+import java.util.Date;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class ReopenRepoHandler implements Consumer<Project>  {
+
+    private static final Logger log = Logger.getLogger(ReopenRepoHandler.class.getName());
+
+    private final MainFrame mainFrame;
+
+    public ReopenRepoHandler(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
+
+
+    @Override
+    public void accept(Project project) {
+        String folder = project.getProjectHomeFolder();
+        project.setOpenTime(new Date());
+        mainFrame.getStatusBar().setStatus(I18n.t("opening", folder));
+        mainFrame.getStatusBar().showProgress(true);
+        mainFrame.swithToTheProjectView();
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Context.setWorkspace(null);
+                Context.init(folder);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    mainFrame.addCurrentProjectToSettings();
+                    mainFrame.refreshProjectLists();
+                    mainFrame.getStatusBar().clearProgress();
+                    mainFrame.getStatusBar().setStatus(I18n.t("reopenRepoHandler.repositoryOpened", project.getGitDir()));
+                    InteractiveContinueAbortDialog.showIfRebaseInProgress(
+                            mainFrame, mainFrame.getStatusBar(),
+                            () -> {
+                                HistoryPanel historyPanel = mainFrame.getHistoryPanel();
+                                if (historyPanel != null) {
+                                    historyPanel.loadHistory(null, true);
+                                }
+                            });
+                    MainFrame.getInstance().getToolBar().setVisible(true);
+                } catch (Exception e) {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    log.log(Level.WARNING, "Failed to open project", cause);
+                    mainFrame.getStatusBar().clearProgress();
+                    mainFrame.getStatusBar().setStatus(I18n.t("failedToOpen", cause.getMessage()));
+
+                    // Remove invalid project from list
+                    Settings settings = Context.getSettings();
+                    if (settings != null) {
+                        settings.removeProject(project);
+                        Context.saveSettings();
+                        mainFrame.refreshProjectLists();
+                    }
+
+                    JOptionPane.showMessageDialog(mainFrame,
+                            I18n.t("cannotOpenRepositoryWillRemoved", folder),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+}
