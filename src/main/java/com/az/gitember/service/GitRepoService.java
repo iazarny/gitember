@@ -25,16 +25,20 @@ import org.eclipse.jgit.lfs.SmudgeFilter;
 import org.eclipse.jgit.lfs.lib.LfsPointerFilter;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.merge.MergeStrategy;
+import org.eclipse.jgit.merge.ResolveMerger;
 import org.eclipse.jgit.revplot.PlotCommit;
 import org.eclipse.jgit.revplot.PlotCommitList;
 import org.eclipse.jgit.revplot.PlotLane;
 import org.eclipse.jgit.revplot.PlotWalk;
+import org.eclipse.jgit.notes.Note;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.eclipse.jgit.storage.file.FileBasedConfig;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
@@ -74,7 +78,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class GitRepoService {
+
+//TODO move LFS part into separate service
+public class GitRepoService implements AutoCloseable {
 
     public static final String SMUDGE_NAME = org.eclipse.jgit.lib.Constants.BUILTIN_FILTER_PREFIX
             + org.eclipse.jgit.lfs.lib.Constants.ATTR_FILTER_DRIVER_PREFIX
@@ -100,6 +106,32 @@ public class GitRepoService {
 
     private final BranchLiveTimeAdapter branchLiveTimeAdapter = new BranchLiveTimeAdapter();
 
+    /**
+     * The {@link Project} this service was opened for, or {@code null} for a transient/anonymous
+     * service (e.g. {@link #of(String)}, the test-only {@link #GitRepoService(Repository)}, or
+     * the no-repository {@link #GitRepoService()}). Backs {@link #revCache()} and
+     * {@link #projectFolder()} so a service opened for a non-active project reads and caches
+     * against its OWN repo rather than silently falling back to whichever repo happens to be
+     * active in {@link Context}.
+     */
+    private final Project owner;
+
+    /** Per-instance commit-detail cache, used only when {@link #owner} is {@code null}. */
+    private final Map<String, ScmRevisionInformation> localRevCache = new ConcurrentHashMap<>();
+
+    /** How many painted commits may hold their raw body -- see {@link #ensureBodyForPainting}. */
+    private static final int PAINTING_BODY_LIMIT = 512;
+
+    /** Commits whose body was re-attached for painting, oldest first. Guards the walk below. */
+    private final Deque<RevCommit> paintingBodies = new ArrayDeque<>();
+
+    /** Reused by {@link #ensureBodyForPainting}; guarded by {@link #paintingBodies}. */
+    private RevWalk paintingWalk;
+
+    private DocGenService docGen = new DocGenService();
+
+    private List<String> commandLine = new ArrayList<>();
+
     static {
         FilterCommandRegistry.register(GitRepoService.SMUDGE_NAME, SmudgeFilter.FACTORY);
         FilterCommandRegistry.register(GitRepoService.CLEAN_NAME, CleanFilter.FACTORY);
@@ -107,98 +139,13 @@ public class GitRepoService {
 
 
     /**
-     * Create new git repository.
-     *
-     * @param absPath path to repository.
+     * Opens a transient (uncached, unowned) service for {@code projectHome}. Prefer
+     * {@code project.getGitRepoService()} when a {@link Project} is available -- that returns
+     * the project's own cached, owned instance instead of opening a new one on every call.
      */
-    public static Repository createRepository(final String absPath,
-                                              final boolean withReadme,
-                                              final boolean withGitIgnore,
-                                              final boolean withLfs) throws Exception {
-        try (final Git git = Git.init()
-                .setDirectory(new File(absPath))
-                .call()) {
-
-            if (withReadme) {
-                final String readmeInitialContent = String.format(
-                        "# Project %s \n\n Created at %s \n folder %s",
-                        (new File(absPath)).getName(), GitemberUtil.formatDate(new Date()), absPath);
-                final Path readmePath = Paths.get(absPath + File.separator + Const.GIT_README_NAME);
-                Files.write(
-                        readmePath,
-                        readmeInitialContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(Const.GIT_README_NAME).call();
-            }
-
-            if (withGitIgnore) {
-                final Path ignorePath = Paths.get(absPath + File.separator + Const.GIT_IGNORE_NAME);
-                Files.write(ignorePath,
-                        gitIgnoreContent.getBytes(), StandardOpenOption.CREATE);
-                git.add().addFilepattern(Const.GIT_IGNORE_NAME).call();
-            }
-
-            if (withLfs) {
-                addLFSSupport(git);
-            }
-
-            git.commit().setMessage("Init").call();
-            log.log(Level.INFO, "Created new repository {0}", absPath);
-            return git.getRepository();
-
-        }
-
-    }
-
-    public static void addLFSSupport(Repository repository) throws IOException, GitAPIException {
-        try (Git git = new Git(repository)) {
-            addLFSSupport(git);
-        }
-    }
-
-    public static void addLFSSupport(Git git) throws IOException, GitAPIException {
-        StoredConfig config = git.getRepository().getConfig();
-        config.setString("filter", "lfs", "clean", CLEAN_NAME);
-        config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
-        config.save();
-
-        final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
-        final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
-        final String lfsTmpPath = gitFolder + File.separator + "lfs" + File.separator + "tmp";
-
-        final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
-        Files.write(attrPath,
-                gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
-        git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
-        new File(lfsTmpPath).mkdirs();
-    }
-
-    public void unlink(final String fileName) {
-        try (Git git = new Git(repository)) {
-            final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
-            final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
-            final Path attrPath = Paths.get(absPath, fileName);
-            Files.delete(attrPath);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "Cannot unlink ", e);
-        }
-
-    }
-
-
-    public static void createRepository(final String absPath) throws Exception {
-        createRepository(absPath, false, false);
-    }
-
-    /**
-     * Create new git repository.
-     *
-     * @param absPath path to repository.
-     */
-    public static void createRepository(final String absPath,
-                                        final boolean withReadme,
-                                        final boolean withGitIgnore) throws Exception {
-        createRepository(absPath, withReadme, withGitIgnore, false);
-
+    public static GitRepoService of(final String projectHome) throws IOException {
+        String gitFolder = Project.normalizeHome(projectHome) + File.separator + Const.GIT_FOLDER;
+        return  new GitRepoService(gitFolder);
     }
 
 
@@ -209,6 +156,20 @@ public class GitRepoService {
      * @throws IOException in case of error
      */
     public GitRepoService(final String gitFolder) throws IOException {
+        this(gitFolder, null);
+    }
+
+    /**
+     * Construct a service bound to {@code owner}, so per-repo state ({@link #getSearchService()},
+     * the commit-detail cache, LFS path resolution) is read from and written to {@code owner}
+     * rather than the ambient {@link Context}.
+     *
+     * @param gitFolder folder with git repository, for example "~/project/.git"
+     * @param owner     the {@link Project} this service belongs to, or {@code null}
+     * @throws IOException in case of error
+     */
+    public GitRepoService(final String gitFolder, final Project owner) throws IOException {
+        this.owner = owner;
         File gitDirFile = new File(gitFolder);
         if (gitDirFile.isFile()) {
             // Linked worktree: .git is a FILE containing "gitdir: <path>" pointer.
@@ -238,13 +199,87 @@ public class GitRepoService {
     }
 
     /**
+     * Create new git repository.
+     *
+     * @param absPath path to repository.
+     */
+    public static Repository createRepository(final String absPath,
+                                              final boolean withReadme,
+                                              final boolean withGitIgnore,
+                                              final boolean withLfs,
+                                              final String defaultBranch) throws Exception {
+        InitCommand initCommand = Git.init();
+        initCommand
+                .setDirectory(new File(absPath))
+                .setInitialBranch(defaultBranch);
+        try (final Git git = initCommand.call()) {
+
+            if (withReadme) {
+                final String readmeInitialContent = String.format(
+                        "# Project %s \n\n Created at %s \n folder %s",
+                        (new File(absPath)).getName(), GitemberUtil.formatDate(new Date()), absPath);
+                final Path readmePath = Paths.get(absPath + File.separator + Const.GIT_README_NAME);
+                Files.write(
+                        readmePath,
+                        readmeInitialContent.getBytes(), StandardOpenOption.CREATE);
+                AddCommand command = git.add();
+                command.addFilepattern(Const.GIT_README_NAME);
+
+                command.call();
+            }
+
+            if (withGitIgnore) {
+                final Path ignorePath = Paths.get(absPath + File.separator + Const.GIT_IGNORE_NAME);
+                Files.write(ignorePath,
+                        gitIgnoreContent.getBytes(), StandardOpenOption.CREATE);
+                AddCommand command = git.add();
+                command.addFilepattern(Const.GIT_IGNORE_NAME);
+                command.call();
+            }
+
+            if (withLfs) {
+                addLFSSupport(git);
+            }
+
+            CommitCommand command = git.commit();
+            command.setMessage("Init");
+            command.call();
+            log.log(Level.INFO, "Created new repository {0}", absPath);
+            return git.getRepository();
+
+        }
+
+    }
+
+
+
+    public static void addLFSSupport(Git git) throws IOException, GitAPIException {
+        StoredConfig config = git.getRepository().getConfig();
+        config.setString("filter", "lfs", "clean", CLEAN_NAME);
+        config.setString("filter", "lfs", "smudge", SMUDGE_NAME);
+        config.save();
+
+        final String gitFolder = git.getRepository().getDirectory().getAbsolutePath();
+        final String absPath = gitFolder.replace(Const.GIT_FOLDER, "");
+        final String lfsTmpPath = gitFolder + File.separator + "lfs" + File.separator + "tmp";
+
+        final Path attrPath = Paths.get(absPath + File.separator + Const.GIT_ATTR_NAME);
+        Files.write(attrPath,
+                gitAttributesContent.getBytes(), StandardOpenOption.CREATE);
+        AddCommand command = git.add();
+        command.addFilepattern(Const.GIT_ATTR_NAME);
+        command.call();
+        new File(lfsTmpPath).mkdirs();
+    }
+
+    /**
      * Reads a .git file (as found in a linked worktree) and returns the worktree-specific
      * git directory it points to via the "gitdir: <path>" line.
      */
     private static File resolveGitDirFromFile(File dotGitFile) throws IOException {
         String content = Files.readString(dotGitFile.toPath()).trim();
         if (!content.startsWith("gitdir:")) {
-            throw new IOException("Not a valid .git file (missing 'gitdir:' line): " + dotGitFile);
+            throw new IOException(I18n.t("notValidGitFileMissing", dotGitFile));
         }
         String path = content.substring("gitdir:".length()).trim();
         File resolved = new File(path);
@@ -276,19 +311,44 @@ public class GitRepoService {
     public GitRepoService(final Repository repo) {
         this.repository = repo;
         this.worktreeGitDir = null;
+        this.owner = null;
     }
 
     public GitRepoService() {
         super();
         repository = null;
         this.worktreeGitDir = null;
+        this.owner = null;
+    }
+
+    /** The {@link Project} this service belongs to, or {@code null} for a transient/anonymous service. */
+    public Project getOwner() {
+        return owner;
     }
 
     public void shutdown() {
+        if (service != null) {
+            service.close();
+            service = null;
+        }
+        synchronized (paintingBodies) {
+            paintingBodies.forEach(RevCommit::disposeBody);
+            paintingBodies.clear();
+            if (paintingWalk != null) {
+                paintingWalk.close();
+                paintingWalk = null;
+            }
+        }
         if (repository != null) {
             repository.close();
         }
         cleanUpTempFiles();
+    }
+
+    /** Allows use in try-with-resources; delegates to {@link #shutdown()}. */
+    @Override
+    public void close() {
+        shutdown();
     }
 
     public String  createDiff() {
@@ -304,19 +364,24 @@ public class GitRepoService {
      */
     public java.util.List<String> applyDiff(java.io.InputStream patchStream) throws Exception {
         try (Git git = new Git(repository)) {
-            ApplyResult result = git.apply().setPatch(patchStream).call();
+            ApplyCommand command = git.apply();
+            command.setPatch(patchStream);
+            addCommandLine(docGen.commandLine(command));
+            ApplyResult result = command.call();
             return result.getUpdatedFiles().stream()
                     .map(f -> f.getPath())
                     .collect(java.util.stream.Collectors.toList());
         }
     }
 
-    public String  createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
+    public String createDiff(AbstractTreeIterator oldTreeParser, AbstractTreeIterator newTreeParser) {
         try (Git git = new Git(repository)) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(4098);
-            git.diff()
-                    .setOutputStream( bos )
-                    .call();
+            DiffCommand command = git.diff();
+            command
+                    .setOutputStream( bos );
+            addCommandLine(docGen.commandLine(command));
+            command.call();
             return  bos.toString();
         } catch (GitAPIException e) {
 
@@ -335,7 +400,10 @@ public class GitRepoService {
      */
     public DirCache addFileToCommitStage(final String fileName) throws GitAPIException {
         try (Git git = new Git(repository)) {
-            return git.add().addFilepattern(fileName).call();
+            AddCommand command = git.add();
+            command.addFilepattern(fileName);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Cannot add file to stage", e);
             throw e;
@@ -350,7 +418,10 @@ public class GitRepoService {
      */
     public Ref removeFileFromCommitStage(final String fileName) throws GitAPIException {
         try (Git git = new Git(repository)) {
-            return git.reset().addPath(fileName).call();
+            ResetCommand command = git.reset();
+            command.addPath(fileName);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (GitAPIException e) {
             log.log(Level.WARNING, "Cannot unstage ", e);
             throw e;
@@ -369,8 +440,15 @@ public class GitRepoService {
         try (Git git = new Git(repository)) {
             String workignDir = repository.getDirectory().getAbsolutePath().replace(".git", "");
             Files.move(Path.of(workignDir, fileNameOld), Path.of(workignDir, fileNameNew));
-            git.add().addFilepattern(fileNameNew).call();
-            git.rm().addFilepattern(fileNameOld).call();
+            AddCommand command = git.add();
+            command.addFilepattern(fileNameNew);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+
+            RmCommand rmCommand = git.rm();
+            rmCommand.addFilepattern(fileNameOld);
+            addCommandLine(docGen.commandLine(rmCommand));
+            rmCommand.call();
         } catch (IOException e) {
             log.log(Level.WARNING, "Cannot rename  file", e);
             throw e;
@@ -384,26 +462,110 @@ public class GitRepoService {
      * @return result.
      * @throws GitAPIException in case of error
      */
-    public RevCommit commit(final String message, final String name, final String email) throws GitAPIException {
-        return commit(message, name, email, null, null);
+    public RevCommit commit(final String message, final String name, final String email) throws GitAPIException, IOException {
+        return commit(message, name, email, "", false, "");
+    }
+
+    public RevCommit commit(final String message, final String name, final String email,
+                            String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
+        return commit(message, name, email, null, null, signOption, signCommit, pathToKey);
     }
 
     public RevCommit commit(final String message,
                             final String authorName, final String authorEmail,
-                            final String committerName, final String committerEmail) throws GitAPIException {
+                            final String committerName, final String committerEmail,
+                            String signOption,  boolean signCommit, String pathToKey) throws GitAPIException, IOException {
+        return commit(message, authorName, authorEmail, committerName, committerEmail,
+                signOption, signCommit, pathToKey, false);
+    }
+
+    /*
+    git cat-file -p  851c98c8bf29c7649030f79dd451b692d788944e show raw headers
+     */
+    public RevCommit commit(final String message,
+                            final String authorName, final String authorEmail,
+                            final String committerName, final String committerEmail,
+                            String signOption, boolean signCommit, String pathToKey,
+                            boolean amend) throws GitAPIException, IOException {
+        configureSigner(signOption, signCommit, pathToKey);
         try (Git git = new Git(repository)) {
+
             CommitCommand cmd = git.commit();
+            cmd.setSign(signCommit).setAmend(amend);
+
             if (StringUtils.isNotBlank(authorName) && StringUtils.isNotBlank(authorEmail)) {
                 cmd.setAuthor(authorName, authorEmail);
             }
             if (StringUtils.isNotBlank(committerName) && StringUtils.isNotBlank(committerEmail)) {
                 cmd.setCommitter(committerName, committerEmail);
             }
-            return cmd.setMessage(message).call();
+            cmd.setMessage(message);
+            addCommandLine(docGen.commandLine(cmd));
+            return cmd.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot commit", e);
             throw e;
         }
+    }
+
+    /**
+     * Amend is allowed only in a normal (SAFE) repository with an existing HEAD commit.
+     */
+    public boolean canAmend() {
+        boolean allowed = false;
+        if (repository != null) {
+            try {
+                if (repository.getRepositoryState() == RepositoryState.SAFE) {
+                    allowed = repository.resolve(Constants.HEAD) != null;
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine amend eligibility", ex);
+            }
+        }
+        return allowed;
+    }
+
+    /** Full message of HEAD, or empty when HEAD is unborn / unreadable. */
+    public String getHeadCommitFullMessage() {
+        String message = "";
+        if (repository != null) {
+            try {
+                ObjectId head = repository.resolve(Constants.HEAD);
+                if (head != null) {
+                    try (RevWalk walk = new RevWalk(repository)) {
+                        String full = walk.parseCommit(head).getFullMessage();
+                        if (full != null) {
+                            message = full;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot read HEAD commit message", ex);
+            }
+        }
+        return message;
+    }
+
+    /**
+     * {@code true} when the current branch tracks a remote and HEAD is not ahead of it
+     * (the last commit is already on the remote).
+     */
+    public boolean isHeadPublished() {
+        boolean published = false;
+        if (repository != null) {
+            try {
+                String branch = repository.getBranch();
+                if (StringUtils.isNotBlank(branch)) {
+                    BranchTrackingStatus status = BranchTrackingStatus.of(repository, branch);
+                    if (status != null && status.getAheadCount() == 0) {
+                        published = true;
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine whether HEAD is published", ex);
+            }
+        }
+        return published;
     }
 
 
@@ -428,7 +590,7 @@ public class GitRepoService {
 
         final Ref head = repository.exactRef(name);
         if (head == null) {
-            throw new IOException("Reference not found: " + name);
+            throw new IOException(I18n.t("referenceNotFound", name));
         }
 
         try (RevWalk walk = new RevWalk(repository)) {
@@ -453,6 +615,57 @@ public class GitRepoService {
     }
 
     /**
+     * Rename a remote branch by pushing the existing remote-tracking ref under the
+     * new heads name, then deleting the old remote branch.
+     *
+     * @param oldName remote-tracking ref, e.g. {@code refs/remotes/origin/oldName}
+     * @param newName remote-tracking ref, e.g. {@code refs/remotes/origin/newName}
+     * @return the updated remote-tracking ref at {@code newName}
+     * @throws IOException in case of error
+     */
+    public Ref renameRemoteBranch(String oldName, String newName) throws IOException {
+        Ref renamed = null;
+        try {
+            RemoteRepoParameters params = RemoteRepoParameters.forProject(
+                    Context.getCurrentProject().orElse(null), this);
+            String oldHeads = remoteTrackingToHeads(oldName);
+            String newHeads = remoteTrackingToHeads(newName);
+
+            remoteRepositoryPush(params, new RefSpec(oldName + ":" + newHeads), false, null);
+            remoteRepositoryPush(params,
+                    new RefSpec().setSource(null).setDestination(oldHeads), false, null);
+
+            renamed = repository.exactRef(newName);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot rename remote branch " + oldName + "->" + newName, e);
+            throw new IOException(I18n.t("cannotRenameRemoteBranch", oldName, newName), e);
+        }
+        return renamed;
+    }
+
+    /**
+     * Maps {@code refs/remotes/&lt;remote&gt;/branch} to {@code refs/heads/branch}.
+     */
+    private static String remoteTrackingToHeads(String remoteTrackingRef) {
+        return remoteTrackingRef.replaceFirst("^refs/remotes/[^/]+/", Constants.R_HEADS);
+    }
+
+    public Ref renameBranch(String oldName, String newName) throws IOException {
+        try (Git git = new Git(repository)) {
+            RenameBranchCommand command = git.branchRename();
+            command
+                    .setOldName(oldName)
+                    .setNewName(newName);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot rename branch " + oldName + "->" + newName, e);
+            throw new IOException(I18n.t("cannotRenameBranch", oldName, newName), e);
+        }
+
+    }
+
+    /**
      * Create new branch.
      *
      * @param parent from
@@ -462,13 +675,15 @@ public class GitRepoService {
      */
     public Ref createBranch(String parent, String name) throws IOException {
         try (Git git = new Git(repository)) {
-            return git.branchCreate()
+            CreateBranchCommand command = git.branchCreate();
+            command
                     .setStartPoint(parent)
-                    .setName(name)
-                    .call();
+                    .setName(name);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create branch " + name, e);
-            throw new IOException("Cannot checkout", e);
+            throw new IOException(I18n.t("cannotCreateBranch", name), e);
         }
 
     }
@@ -495,23 +710,27 @@ public class GitRepoService {
     public Ref checkoutBranch(final String name, final String newName, final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             if (newName == null) { //existing
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setCreateBranch(false)
                         .setName(name)
                         .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             } else {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setCreateBranch(true)
                         .setName(newName)
                         .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
                         .setStartPoint(name)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         } catch (Exception e) {
-            throw new IOException("Cannot checkout " + name + " " + newName, e);
+            throw new IOException(I18n.t("gitRepoService.cannotCheckout", name, newName), e);
         }
 
     }
@@ -531,13 +750,15 @@ public class GitRepoService {
         AbstractTreeIterator newTreeParser = prepareTreeParser(repository, rihtBranchName);
         try (Git git = new Git(repository)) {
             try {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setProgressMonitor(defaultProgressMonitor)
                         .setOldTree(oldTreeParser)
-                        .setNewTree(newTreeParser)
-                        .call();
+                        .setNewTree(newTreeParser);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             } catch (GitAPIException e) {
-                throw new IOException("Cannot creat difference between " + leftBranchName + " and " + rihtBranchName, e);
+                throw new IOException(I18n.t("cannotCreatDifferenceBetween", leftBranchName, rihtBranchName), e);
             }
         }
     }
@@ -564,21 +785,25 @@ public class GitRepoService {
                                  final ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             if (StringUtils.isBlank(newBranchName)) {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setName(revCommit.getName())
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             } else {
-                return git.checkout()
+                CheckoutCommand command = git.checkout();
+                command
                         .setName(newBranchName)
                         .setCreateBranch(true)
                         .setStartPoint(revCommit)
-                        .setProgressMonitor(defaultProgressMonitor)
-                        .call();
+                        .setProgressMonitor(defaultProgressMonitor);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             }
 
         } catch (Exception e) {
-            throw new IOException("Cannot checkout " + revCommit, e);
+            throw new IOException(I18n.t("gitRepoService.cannotCheckout2", revCommit), e);
         }
     }
 
@@ -595,12 +820,14 @@ public class GitRepoService {
      */
     public void deleteLocalBranch(final String name) throws IOException {
         try (Git git = new Git(repository)) {
-            git.branchDelete()
+            DeleteBranchCommand command = git.branchDelete();
+            command
                     .setBranchNames(name)
-                    .setForce(true)
-                    .call();
+                    .setForce(true);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (Exception e) {
-            throw new IOException("Cannot delete branch " + name, e);
+            throw new IOException(I18n.t("cannotDeleteBranch", name), e);
         }
     }
 
@@ -610,7 +837,7 @@ public class GitRepoService {
             update.setForceUpdate(true);
             update.delete();
         } catch (Exception e) {
-            throw new IOException("Cannot delete remote-tracking branch " + fullName, e);
+            throw new IOException(I18n.t("cannotDeleteRemoteTrackingBranch", fullName), e);
         }
     }
 
@@ -624,12 +851,34 @@ public class GitRepoService {
     public MergeResult mergeBranch(final String from, final String message,
                                    boolean squash, MergeCommand.FastForwardMode mode) throws Exception {
         try (Git git = new Git(repository)) {
-            return git.merge()
+            MergeCommand command = git.merge();
+
+            command
                     .include(repository.exactRef(from))
                     .setMessage(message)
                     .setSquash(squash)
-                    .setFastForward(mode)
-                    .call();
+                    .setFastForward(mode);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
+        }
+    }
+
+    public Ref abortMerge(ProgressMonitor monitor) throws IOException {
+        try (Git git = new Git(repository)) {
+            try {
+                ResetCommand cmd = git.reset();
+                cmd
+                        .setMode(ResetCommand.ResetType.HARD)
+                        .setRef(Constants.HEAD);
+                if (monitor != null) {
+                    cmd.setProgressMonitor(monitor);
+                }
+                addCommandLine(docGen.commandLine(cmd));
+                return cmd.call();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Cannot abort merge", e);
+                throw new IOException(I18n.t("cannotAbortMerge"), e);
+            }
         }
     }
 
@@ -659,17 +908,22 @@ public class GitRepoService {
     /** Runs {@code git rebase --continue} after conflicts are staged. */
     public RebaseResult rebaseContinue() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setOperation(RebaseCommand.Operation.CONTINUE)
-                    .runInteractively(PASSTHROUGH_HANDLER)
-                    .call();
+                    .runInteractively(PASSTHROUGH_HANDLER);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
     /** Runs {@code git rebase --abort} and restores the original branch state. */
     public RebaseResult rebaseAbort() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+            RebaseCommand command = git.rebase();
+            command.setOperation(RebaseCommand.Operation.ABORT);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -681,10 +935,12 @@ public class GitRepoService {
      */
     public RebaseResult rebaseSkip() throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setOperation(RebaseCommand.Operation.SKIP)
-                    .runInteractively(PASSTHROUGH_HANDLER)
-                    .call();
+                    .runInteractively(PASSTHROUGH_HANDLER);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -695,10 +951,12 @@ public class GitRepoService {
      */
     public RebaseResult rebaseBranch(final String upstream) throws Exception {
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setUpstream(upstream)
-                    .setPreserveMerges(true)
-                    .call();
+                    .setPreserveMerges(true);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -718,7 +976,10 @@ public class GitRepoService {
             ObjectId baseId = repository.resolve(baseCommitSha);
             if (headId == null || baseId == null) return Collections.emptyList();
             List<RevCommit> result = new ArrayList<>();
-            for (RevCommit c : git.log().addRange(baseId, headId).call()) {
+            LogCommand command = git.log();
+            command.addRange(baseId, headId);
+            addCommandLine(docGen.commandLine(command));
+            for (RevCommit c : command.call()) {
                 result.add(c);
             }
             return result;
@@ -735,7 +996,10 @@ public class GitRepoService {
             ObjectId branchId = repository.resolve(branchFullName);
             if (headId == null || branchId == null) return Collections.emptyList();
             List<RevCommit> result = new ArrayList<>();
-            for (RevCommit c : git.log().addRange(headId, branchId).call()) {
+            LogCommand command = git.log();
+            command.addRange(headId, branchId);
+            addCommandLine(docGen.commandLine(command));
+            for (RevCommit c : command.call()) {
                 result.add(c);
             }
             return result;
@@ -778,7 +1042,8 @@ public class GitRepoService {
         }
 
         try (Git git = new Git(repository)) {
-            return git.rebase()
+            RebaseCommand command = git.rebase();
+            command
                     .setUpstream(upstream)
                     .runInteractively(new RebaseCommand.InteractiveHandler() {
 
@@ -849,8 +1114,9 @@ public class GitRepoService {
                             }
                             return rewordQueue.isEmpty() ? currentMessage : rewordQueue.poll();
                         }
-                    })
-                    .call();
+                    });
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         }
     }
 
@@ -869,6 +1135,16 @@ public class GitRepoService {
             case FIXUP  -> org.eclipse.jgit.lib.RebaseTodoLine.Action.FIXUP;
             case DROP   -> org.eclipse.jgit.lib.RebaseTodoLine.Action.PICK; // fallback, never reached
         };
+    }
+
+    public ScmBranch getCurrentScmBranch() {
+        try {
+            String branch = getEffectiveBranch();
+            String sha = getHead().getSha();
+            return new ScmBranch(branch, branch, ScmBranch.BranchType.LOCAL, sha);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -901,7 +1177,10 @@ public class GitRepoService {
 
             CommitInfo head = this.getHead();
 
-            List<Ref> branchLst = git.branchList().setListMode(listMode).call();
+            ListBranchCommand command = git.branchList();
+            command.setListMode(listMode);
+            addCommandLine(docGen.commandLine(command));
+            List<Ref> branchLst = command.call();
 
             List<ScmBranch> rez = branchLst
                     .stream()
@@ -978,7 +1257,8 @@ public class GitRepoService {
     public List<ScmRevisionInformation> getFileHistory(final String fileName, final String commitIdToStartFrom) throws Exception {
         final ArrayList<ScmRevisionInformation> rez = new ArrayList<>();
         try (Git git = new Git(repository)) {
-            final LogCommand cmd = git.log()
+            final LogCommand cmd = git.log();
+            cmd
                     .setRevFilter(RevFilter.ALL)
                     .addPath(fileName);
             if (commitIdToStartFrom != null) {
@@ -1017,14 +1297,18 @@ public class GitRepoService {
             commits.forEach(
                     plotCommit -> {
 
-                        final List<ScmItem> affectedItems = adapt(plotCommit).getAffectedItems();
+                        // adapt() re-reads the body of this one commit, so the message and the
+                        // author are taken from the information it built rather than from the
+                        // (body-less) commit itself.
+                        final ScmRevisionInformation info = adapt(plotCommit);
+                        final List<ScmItem> affectedItems = info.getAffectedItems();
 
                         if (
-                                plotCommit.getShortMessage().toLowerCase().contains(searchString)
-                                        || plotCommit.getFullMessage().toLowerCase().contains(searchString)
+                                contains(info.getShortMessage(), searchString)
+                                        || contains(info.getFullMessage(), searchString)
                                         || plotCommit.getName().toLowerCase().contains(searchString)
-                                        || prersonIndentContains(plotCommit.getCommitterIdent(), searchString)
-                                        || prersonIndentContains(plotCommit.getAuthorIdent(), searchString)
+                                        || contains(info.getAuthorEmail(), searchString)
+                                        || prersonIndentContains(committerOf(plotCommit), searchString)
                                         || affectedItems.stream().anyMatch(scmItem -> scmItem.getShortName().toLowerCase().contains(searchString))
                         ) {
 
@@ -1058,8 +1342,8 @@ public class GitRepoService {
                     log.log(Level.WARNING, "Will try to drop index and disable search using lucine");
 
                     getSearchService().dropIndex();
-                    if (Context.getCurrentProject().isPresent()) {
-                        Context.getCurrentProject().get().setIndexed(false);
+                    if (owner != null) {
+                        owner.setIndexed(false);
                         Context.saveSettings();
                     }
                 }
@@ -1084,10 +1368,35 @@ public class GitRepoService {
 
     public synchronized SearchService getSearchService() {
         if (service == null) {
-            service = new SearchService(Context.getProjectFolder());
+            service = new SearchService(projectFolder());
         }
         return service;
     }
+
+    /**
+     * Work-tree path WITH a trailing separator — byte-compatible with the legacy
+     * {@code Context.getProjectFolder()} expression that {@code SearchService} has always
+     * md5-hashed to locate its Lucene index directory; changing it would silently orphan
+     * every existing history index.
+     */
+    private String projectFolder() {
+        if (owner != null) {
+            return owner.getProjectFolder();
+        }
+        try {
+            File wt = repository != null ? repository.getWorkTree() : null;
+            return wt != null ? wt.getAbsolutePath() + File.separator : "";
+        } catch (RuntimeException e) {
+            // NoWorkTreeException on a bare repository
+            return "";
+        }
+    }
+
+    /** Per-project when {@link #owner} is set, per-instance otherwise -- never a single
+     *  process-wide map shared by every repo. */
+    /*private Map<String, ScmRevisionInformation> revCache() {
+        return owner != null ? owner.getScmRevisionInformationCache() : localRevCache;
+    }*/
 
     /**
      * Builds a Lucene index over the most recent {@code maxCommits} commits
@@ -1105,7 +1414,7 @@ public class GitRepoService {
         SearchService svc = getSearchService();
         svc.dropIndex();       // wipe any previous index
         // Re-create after drop
-        service = new SearchService(Context.getProjectFolder());
+        service = new SearchService(projectFolder());
         svc = service;
 
         int total = (maxCommits > 0) ? Math.min(maxCommits, commits.size()) : commits.size();
@@ -1134,9 +1443,24 @@ public class GitRepoService {
         svc.commitIndex();
 
         // Persist the indexed flag
-        Context.getCurrentProject().ifPresent(p -> p.setIndexed(true));
-        Context.saveSettings();
+        if (owner != null) {
+            owner.setIndexed(true);
+            Context.saveSettings();
+        }
         log.info("Lucene indexing complete: " + total + " commits, " + filesIndexed + " file versions");
+    }
+
+    private static boolean contains(final String value, final String lowerCaseTerm) {
+        return value != null && value.toLowerCase().contains(lowerCaseTerm);
+    }
+
+    /** The committer of {@code commit}, or {@code null} when its body cannot be read. */
+    private PersonIdent committerOf(final RevCommit commit) {
+        RevCommit withBody = bodyOf(commit);
+        if (withBody == null || withBody.getRawBuffer() == null) {
+            return null;
+        }
+        return withBody.getCommitterIdent();
     }
 
     private boolean prersonIndentContains(PersonIdent prersonIndent, String searchString) {
@@ -1154,7 +1478,8 @@ public class GitRepoService {
      */
     public List<ScmBranch> getTags() {
         try (Git git = new Git(repository)) {
-            List<Ref> branchLst = git.tagList().call();
+            ListTagCommand command = git.tagList();
+            List<Ref> branchLst = command.call();
             return branchLst
                     .stream()
                     .map(r -> new ScmBranch(r.getName(), r.getName(), ScmBranch.BranchType.TAG, r.getObjectId().getName()))
@@ -1170,19 +1495,26 @@ public class GitRepoService {
      *
      * @param tagName tag name
      */
-    public Ref createTag(String tagName) throws IOException {
-
+    public Ref createTag(String tagName,
+                         String signOption,  boolean signTag, String pathToKey) throws IOException {
+        configureSigner(signOption, signTag, pathToKey);
         try (Git git = new Git(repository)) {
-            return git.tag()
+            TagCommand command = git.tag();
+            command
+                    .setSigned(signTag)
                     .setName(tagName)
                     .setForceUpdate(true)
-                    .setAnnotated(true)
-                    .call();
+                    .setAnnotated(true);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot create tag " + tagName, e);
             throw new IOException(e.getMessage());
         }
     }
+
+
+
 
     /**
      * Create new tag at a specific commit.
@@ -1190,20 +1522,26 @@ public class GitRepoService {
      * @param tagName   tag name
      * @param commitSha full or abbreviated commit SHA
      */
-    public Ref createTag(String tagName, String commitSha) throws IOException {
+    public Ref createTag(String tagName, String commitSha,
+                            String signOption,  boolean signTag, String pathToKey
+    ) throws IOException {
+        configureSigner(signOption, signTag, pathToKey);
         try (Git git = new Git(repository)) {
             ObjectId objectId = repository.resolve(commitSha);
             if (objectId == null) {
-                throw new IOException("Cannot resolve commit: " + commitSha);
+                throw new IOException(I18n.t("cannotResolveCommit", commitSha));
             }
             try (RevWalk revWalk = new RevWalk(repository))  {
                 RevObject revObject = revWalk.parseAny(objectId);
-                return git.tag()
+                TagCommand command = git.tag();
+                command
+                        .setSigned(signTag)
                         .setName(tagName)
                         .setObjectId(revObject)
                         .setForceUpdate(true)
-                        .setAnnotated(true)
-                        .call();
+                        .setAnnotated(true);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         } catch (IOException e) {
             throw e;
@@ -1212,6 +1550,8 @@ public class GitRepoService {
             throw new IOException(e.getMessage());
         }
     }
+
+
 
     /**
      * Delete a local tag.
@@ -1223,10 +1563,104 @@ public class GitRepoService {
         String shortName = fullTagRef.startsWith("refs/tags/")
                 ? fullTagRef.substring("refs/tags/".length()) : fullTagRef;
         try (Git git = new Git(repository)) {
-            git.tagDelete().setTags(shortName).call();
+            DeleteTagCommand command = git.tagDelete();
+            command.setTags(shortName);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot delete local tag " + shortName, e);
-            throw new IOException("Cannot delete tag " + shortName, e);
+            throw new IOException(I18n.t("cannotDeleteTag", shortName), e);
+        }
+    }
+
+    /**
+     * Reads the Git note for {@code commitSha} from {@code refs/notes/commits}.
+     * Returns {@code null} when the commit has no note or the notes ref is absent.
+     * Notes live outside the commit object, so adding one does not change the SHA.
+     */
+    public String getCommitNote(String commitSha) {
+        String noteText = null;
+        if (repository != null && commitSha != null && !commitSha.isBlank()) {
+            try (Git git = new Git(repository);
+                 RevWalk walk = new RevWalk(repository)) {
+                ObjectId id = repository.resolve(commitSha);
+                if (id != null) {
+                    RevCommit commit = walk.parseCommit(id);
+                    ShowNoteCommand command = git.notesShow();
+                    command.setObjectId(commit);
+                    addCommandLine(docGen.commandLine(command));
+                    Note note = command.call();
+                    if (note != null && note.getData() != null) {
+                        ObjectLoader loader = repository.open(note.getData());
+                        noteText = new String(loader.getBytes(), StandardCharsets.UTF_8);
+                    }
+                }
+            } catch (Exception e) {
+                log.log(Level.FINE, "Cannot read git note for " + commitSha, e);
+            }
+        }
+        return noteText;
+    }
+
+    /**
+     * Adds or replaces the Git note on {@code commitSha} ({@code git notes add -f}).
+     * Stored under {@code refs/notes/commits} via JGit's NoteMap.
+     */
+    public void addCommitNote(String commitSha, String message) throws IOException {
+        if (repository == null) {
+            throw new IOException(I18n.t("noRepository"));
+        }
+        if (commitSha == null || commitSha.isBlank()) {
+            throw new IOException(I18n.t("commitIsRequired"));
+        }
+        if (message == null) {
+            throw new IOException(I18n.t("noteMessageIsRequired"));
+        }
+        try (Git git = new Git(repository);
+             RevWalk walk = new RevWalk(repository)) {
+            ObjectId id = repository.resolve(commitSha);
+            if (id == null) {
+                throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitSha));
+            }
+            RevCommit commit = walk.parseCommit(id);
+            AddNoteCommand command = git.notesAdd();
+            command.setObjectId(commit).setMessage(message);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot add git note for " + commitSha, e);
+            throw new IOException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes the Git note from {@code commitSha} ({@code git notes remove}).
+     */
+    public void removeCommitNote(String commitSha) throws IOException {
+        if (repository == null) {
+            throw new IOException(I18n.t("noRepository"));
+        }
+        if (commitSha == null || commitSha.isBlank()) {
+            throw new IOException(I18n.t("commitIsRequired"));
+        }
+        try (Git git = new Git(repository);
+             RevWalk walk = new RevWalk(repository)) {
+            ObjectId id = repository.resolve(commitSha);
+            if (id == null) {
+                throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitSha));
+            }
+            RevCommit commit = walk.parseCommit(id);
+            RemoveNoteCommand command = git.notesRemove();
+            command.setObjectId(commit);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot remove git note for " + commitSha, e);
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -1242,7 +1676,7 @@ public class GitRepoService {
         com.az.gitember.data.RemoteRepoParameters params =
                 com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
         RefSpec refSpec = new RefSpec(fullTagRef + ":" + fullTagRef);
-        return remoteRepositoryPush(params, refSpec, progressMonitor);
+        return remoteRepositoryPush(params, refSpec, false, progressMonitor);
     }
 
     /**
@@ -1256,7 +1690,7 @@ public class GitRepoService {
         com.az.gitember.data.RemoteRepoParameters params =
                 com.az.gitember.data.RemoteRepoParameters.forCurrentRepo();
         RefSpec refSpec = new RefSpec().setSource(null).setDestination(fullTagRef);
-        return remoteRepositoryPush(params, refSpec, null);
+        return remoteRepositoryPush(params, refSpec,  false, null);
     }
 
     public CommitInfo getHead() throws Exception {
@@ -1332,8 +1766,9 @@ public class GitRepoService {
     public List<ScmRevisionInformation> getStashList() {
 
         try (Git git = new Git(repository)) {
-            List<ScmRevisionInformation> rez = git.stashList()
-                    .call()
+            StashListCommand command = git.stashList();
+            addCommandLine(docGen.commandLine(command));
+            List<ScmRevisionInformation> rez = command.call()
                     .stream()
                     .map(revCommit -> adapt(revCommit, null))
                     .collect(Collectors.toList());
@@ -1357,9 +1792,11 @@ public class GitRepoService {
      */
     public void deleteStash(int stashRef) throws IOException {
         try (Git git = new Git(repository)) {
-            git.stashDrop()
-                    .setStashRef(stashRef)
-                    .call();
+            StashDropCommand command = git.stashDrop();
+            command
+                    .setStashRef(stashRef);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot delete stash " + stashRef, e);
             throw new IOException(e.getMessage(), e.getCause());
@@ -1374,9 +1811,11 @@ public class GitRepoService {
      */
     public void applyStash(String stashRef) throws IOException {
         try (Git git = new Git(repository)) {
-            git.stashApply()
-                    .setStashRef(stashRef)
-                    .call();
+            StashApplyCommand command = git.stashApply();
+            command
+                    .setStashRef(stashRef);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         } catch (GitAPIException e) {
             log.log(Level.SEVERE, "Cannot spply stash " + stashRef, e);
             throw new IOException(e.getMessage(), e.getCause());
@@ -1393,19 +1832,147 @@ public class GitRepoService {
      */
     public void renameStash(int stashIndex, String newMessage) throws IOException {
         File logFile = new File(repository.getDirectory(), "logs/refs/stash");
-        if (!logFile.exists()) throw new IOException("No stash log found");
+        if (!logFile.exists()) throw new IOException(I18n.t("noStashLogFound"));
 
         List<String> lines = Files.readAllLines(logFile.toPath(), StandardCharsets.UTF_8);
         int lineIndex = lines.size() - 1 - stashIndex;
         if (lineIndex < 0 || lineIndex >= lines.size())
-            throw new IOException("Invalid stash index: " + stashIndex);
+            throw new IOException(I18n.t("invalidStashIndex", stashIndex));
 
         String line = lines.get(lineIndex);
         int tabIdx = line.indexOf('\t');
-        if (tabIdx < 0) throw new IOException("Malformed stash log line at index " + stashIndex);
+        if (tabIdx < 0) throw new IOException(I18n.t("malformedStashLogLineAt", stashIndex));
 
         lines.set(lineIndex, line.substring(0, tabIdx + 1) + newMessage);
         Files.write(logFile.toPath(), lines, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Reads reflog entries from HEAD, every local branch, and {@code refs/stash},
+     * newest first.
+     */
+    public List<ScmReflogEntry> getReflogEntries() {
+        List<ScmReflogEntry> entries = new ArrayList<>();
+        try {
+            addReflogEntries(entries, Constants.HEAD);
+            Collection<Ref> heads = repository.getRefDatabase().getRefsByPrefix(Constants.R_HEADS);
+            for (Ref ref : heads) {
+                addReflogEntries(entries, ref.getName());
+            }
+            addReflogEntries(entries, Constants.R_STASH);
+            entries.sort((a, b) -> {
+                long wa = a.getWhen() != null ? a.getWhen().getTime() : 0L;
+                long wb = b.getWhen() != null ? b.getWhen().getTime() : 0L;
+                int cmp = Long.compare(wb, wa);
+                if (cmp == 0) {
+                    String sa = a.getSelector() != null ? a.getSelector() : "";
+                    String sb = b.getSelector() != null ? b.getSelector() : "";
+                    cmp = sa.compareTo(sb);
+                }
+                return cmp;
+            });
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Cannot read reflog", e);
+        }
+        return entries;
+    }
+
+    /**
+     * Recreates a local branch pointing at {@code commitId} (deleted-branch recovery).
+     */
+    public Ref recoverDeletedBranch(String name, String commitId) throws IOException {
+        return createBranch(commitId, name);
+    }
+
+    /**
+     * Hard-resets HEAD and the working tree to {@code commitId} (undo a previous reset).
+     */
+    public Ref recoverHardReset(String commitId, ProgressMonitor progressMonitor) throws IOException {
+        ObjectId id = repository.resolve(commitId);
+        Ref result = null;
+        if (id != null) {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(id);
+                result = resetBranch(commit, ResetCommand.ResetType.HARD, progressMonitor);
+            }
+        }
+        if (result == null) {
+            throw new IOException(I18n.t("gitRepoService.cannotResolveCommit", commitId));
+        }
+        return result;
+    }
+
+    /**
+     * Recreates a local branch at a dangling / reset-away commit.
+     */
+    public Ref recoverDeletedCommit(String name, String commitId) throws IOException {
+        return createBranch(commitId, name);
+    }
+
+    /**
+     * Puts a dangling stash commit back on {@code refs/stash} (same idea as
+     * {@code git stash store}).
+     */
+    public void recoverStash(String commitId) throws IOException {
+        ObjectId id = repository.resolve(commitId);
+        if (id == null) {
+            throw new IOException(I18n.t("cannotResolveStashCommit", commitId));
+        }
+        try (RevWalk walk = new RevWalk(repository)) {
+            walk.parseCommit(id);
+        }
+        RefUpdate ru = repository.updateRef(Constants.R_STASH);
+        ru.setNewObjectId(id);
+        ru.setForceUpdate(true);
+        ru.setForceRefLog(true);
+        ru.setRefLogMessage("recovered stash", false);
+        RefUpdate.Result updateResult = ru.forceUpdate();
+        if (updateResult == RefUpdate.Result.LOCK_FAILURE
+                || updateResult == RefUpdate.Result.IO_FAILURE
+                || updateResult == RefUpdate.Result.REJECTED
+                || repository.resolve(Constants.R_STASH) == null) {
+            throw new IOException(I18n.t("cannotRestoreStash", updateResult));
+        }
+    }
+
+    private void addReflogEntries(List<ScmReflogEntry> target, String refName) {
+        try {
+            ReflogReader reader = repository.getReflogReader(refName);
+            if (reader != null) {
+                List<ReflogEntry> list = reader.getReverseEntries();
+                String shortRef = shortReflogName(refName);
+                for (int i = 0; i < list.size(); i++) {
+                    ReflogEntry re = list.get(i);
+                    ScmReflogEntry row = new ScmReflogEntry();
+                    row.setRefName(refName);
+                    row.setSelector(shortRef + "@{" + i + "}");
+                    row.setNewId(re.getNewId() != null ? re.getNewId().getName() : "");
+                    row.setOldId(re.getOldId() != null ? re.getOldId().getName() : "");
+                    row.setComment(re.getComment() != null ? re.getComment() : "");
+                    PersonIdent who = re.getWho();
+                    if (who != null) {
+                        row.setWhoName(who.getName());
+                        row.setWhen(who.getWhen());
+                    }
+                    row.setKind(ScmReflogEntry.classify(refName, row.getComment()));
+                    target.add(row);
+                }
+            }
+        } catch (Exception e) {
+            log.log(Level.FINE, "No reflog for " + refName, e);
+        }
+    }
+
+    private static String shortReflogName(String refName) {
+        String name = refName;
+        if (Constants.HEAD.equals(refName)) {
+            name = "HEAD";
+        } else if (refName.startsWith(Constants.R_HEADS)) {
+            name = refName.substring(Constants.R_HEADS.length());
+        } else if (Constants.R_STASH.equals(refName)) {
+            name = "stash";
+        }
+        return name;
     }
 
     /**
@@ -1418,14 +1985,15 @@ public class GitRepoService {
 
         try (Git git = new Git(repository)) {
             try {
-                CheckoutCommand cmd = git.checkout().addPath(fileName);
+                CheckoutCommand cmd = git.checkout();
+                cmd.addPath(fileName);
                 if (stage != null) {
                     cmd.setStage(stage);
                 }
                 cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot checkout file " + fileName, e);
-                throw new IOException("Cannot checkout " + fileName, e);
+                throw new IOException(I18n.t("gitRepoService.cannotCheckout2", fileName), e);
             }
         }
     }
@@ -1457,17 +2025,94 @@ public class GitRepoService {
     public CherryPickResult cherryPick(RevCommit revCommit) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                CherryPickCommand cherryPickCommand = git.cherryPick()
+                CherryPickCommand cherryPickCommand = git.cherryPick();
+                cherryPickCommand
                         .include(revCommit)
                         .setNoCommit(true)
                         .setStrategy(MergeStrategy.RECURSIVE);
                 return cherryPickCommand.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot cherry pick   " + revCommit, e);
-                throw new IOException("Cannot cherry pick " + revCommit, e);
+                throw new IOException(I18n.t("cannotCherryPick", revCommit), e);
             }
         }
 
+    }
+
+    /**
+     * {@code true} when the working copy or index has any change (staged, unstaged or untracked).
+     */
+    public boolean hasWorkingCopyChanges() {
+        return !getStatuses(null).isEmpty();
+    }
+
+    /**
+     * {@code true} when {@code sha} is HEAD of the current branch.
+     */
+    public boolean isHeadCommit(String sha) {
+        boolean head = false;
+        if (repository != null && sha != null) {
+            try {
+                ObjectId headId = repository.resolve(Constants.HEAD);
+                ObjectId commitId = repository.resolve(sha);
+                head = headId != null && commitId != null && headId.equals(commitId);
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot compare commit with HEAD", ex);
+            }
+        }
+        return head;
+    }
+
+    /**
+     * {@code true} when {@code sha} is reachable from HEAD (on the current branch, including HEAD).
+     */
+    public boolean isCommitOnHeadBranch(String sha) {
+        boolean onBranch = false;
+        if (repository != null && sha != null) {
+            try {
+                ObjectId headId = repository.resolve(Constants.HEAD);
+                ObjectId commitId = repository.resolve(sha);
+                if (headId != null && commitId != null) {
+                    try (RevWalk walk = new RevWalk(repository)) {
+                        onBranch = walk.isMergedInto(walk.parseCommit(commitId), walk.parseCommit(headId));
+                    }
+                }
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Cannot determine whether commit is on HEAD branch", ex);
+            }
+        }
+        return onBranch;
+    }
+
+    /**
+     * Local undo of an unpushed commit on the current branch. HEAD is reset mixed to its parent
+     * (changes stay in the working copy). An older unpushed commit is dropped with a rebase.
+     */
+    public void undoUnpushedCommit(RevCommit commit) throws Exception {
+        if (commit != null && commit.getParentCount() > 0) {
+            if (isHeadCommit(commit.getName())) {
+                resetBranch(commit.getParent(0), ResetCommand.ResetType.MIXED, null);
+            } else {
+                String parentSha = commit.getParent(0).getName();
+                List<RevCommit> range = getCommitsInRange(parentSha);
+                List<com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep> steps = new ArrayList<>();
+                for (RevCommit c : range) {
+                    boolean drop = c.getName().equals(commit.getName());
+                    steps.add(new com.az.gitember.dialog.InteractiveRebaseDialog.RebaseStep(
+                            drop ? com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.DROP
+                                    : com.az.gitember.dialog.InteractiveRebaseDialog.RebaseAction.PICK,
+                            c.getName(),
+                            c.getShortMessage()));
+                }
+                RebaseResult result = interactiveRebase(parentSha, steps);
+                if (result == null || !result.getStatus().isSuccessful()) {
+                    String status = result == null ? "unknown" : String.valueOf(result.getStatus());
+                    throw new IOException(I18n.t("undoFailedRebaseStatus", status));
+                }
+            }
+        } else {
+            throw new IOException(I18n.t("cannotUndoInitialCommit"));
+        }
     }
 
     /**
@@ -1478,14 +2123,15 @@ public class GitRepoService {
     public Ref resetBranch(RevCommit revCommit, ResetCommand.ResetType mode, ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                ResetCommand cmd = git.reset()
+                ResetCommand cmd = git.reset();
+                cmd
                         .setRef(revCommit.getName())
                         .setProgressMonitor(defaultProgressMonitor)
                         .setMode(mode);
                 return cmd.call();
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot reset to" + revCommit, e);
-                throw new IOException("Cannot reset to" + revCommit, e);
+                throw new IOException(I18n.t("cannotResetTo", revCommit), e);
             }
         }
     }
@@ -1493,7 +2139,8 @@ public class GitRepoService {
     public List<Ref> revertCommit(RevCommit revCommit, ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                RevertCommand revertCommand = git.revert()
+                RevertCommand revertCommand = git.revert();
+                revertCommand
                         .setProgressMonitor(defaultProgressMonitor)
                         .include(revCommit);
                 revertCommand.call();
@@ -1502,23 +2149,9 @@ public class GitRepoService {
 
             } catch (Exception e) {
                 log.log(Level.WARNING, "Cannot revert " + revCommit, e);
-                throw new IOException("Cannot revert " + revCommit, e);
+                throw new IOException(I18n.t("cannotRevert", revCommit), e);
             }
         }
-    }
-
-
-    public String createEmptyFile(String fileName) {
-        final String fileNameExtension = FilenameUtils.getExtension(fileName);
-        final File temp;
-        try {
-            temp = File.createTempFile(
-                    Const.TEMP_FILE_PREFIX,
-                    fileNameExtension.isEmpty() ? fileNameExtension : "." + fileNameExtension);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return temp.getAbsolutePath();
     }
 
 
@@ -1527,23 +2160,27 @@ public class GitRepoService {
     }
 
     boolean isLfsRepo(Repository repo) {
-
-        String gitAttrFile = repo.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER,Const.GIT_ATTR_NAME).replaceAll("/$", "");
-        if (Files.exists(Paths.get(gitAttrFile))) {
-            try {
-                String content = Files.readString(Paths.get(gitAttrFile));
-                if (content.indexOf("lfs") > 0)  {
-                    return true;
+        boolean lfs = false;
+        if (repo != null && repo.getDirectory() != null) {
+            Path attrPath = Paths.get(repo.getDirectory().getAbsolutePath()
+                    .replace(Const.GIT_FOLDER, Const.GIT_ATTR_NAME)
+                    .replaceAll("/$", ""));
+            if (Files.exists(attrPath)) {
+                try {
+                    String content = Files.readString(attrPath);
+                    if (content.toLowerCase(Locale.ROOT).contains("filter=lfs")
+                            || content.toLowerCase(Locale.ROOT).contains("lfs")) {
+                        lfs = true;
+                    }
+                } catch (IOException e) {
+                    log.log(Level.FINE, "Cannot read .gitattributes while detecting LFS", e);
                 }
-            } catch (IOException e) {
-                //System.out.println(e);
+            }
+            if (!lfs) {
+                lfs = Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
             }
         }
-        return Files.exists(Paths.get(repo.getDirectory().getAbsolutePath(), Const.GIT_LFS_FOLDER));
-    }
-
-    public boolean isFileExists(String fileName) {
-        return Files.exists(Paths.get(repository.getDirectory().getAbsolutePath().replace(Const.GIT_FOLDER, ""), fileName));
+        return lfs;
     }
 
 
@@ -1609,7 +2246,8 @@ public class GitRepoService {
             final RevCommit parent = root.getParent(0); //TODO is this correct parent ?
 
             OutputStream out = new ByteArrayOutputStream();
-            DiffCommand diff = git.diff()
+            DiffCommand diff = git.diff();
+            diff
                     .setPathFilter(StringUtils.isNotBlank(fileName) ? PathFilter.create(fileName) : TreeFilter.ALL)
                     .setOutputStream(out)
                     .setSourcePrefix("old:")
@@ -1642,8 +2280,99 @@ public class GitRepoService {
 
     public void removeFile(final String fileName) throws Exception {
         try (Git git = new Git(repository)) {
-            git.rm().addFilepattern(fileName).call();
+            RmCommand command = git.rm();
+            command.addFilepattern(fileName);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         }
+    }
+
+    /**
+     * Appends {@code fileName} to the repository-root {@code .gitignore} so Git stops listing
+     * it. If the path is already in the index it is removed with {@code git rm --cached},
+     * leaving the working-tree file in place. Calling this for {@code .gitignore} itself is a
+     * no-op.
+     *
+     * @param fileName repo-relative path as reported by status (forward slashes)
+     */
+    public void addToGitIgnore(final String fileName) throws Exception {
+        if (StringUtils.isNotBlank(fileName)) {
+            String gitPath = fileName.replace('\\', '/');
+            if (!isRootGitIgnore(gitPath)) {
+                String pattern = toGitIgnorePattern(gitPath);
+                Path ignorePath = repository.getWorkTree().toPath().resolve(Const.GIT_IGNORE_NAME);
+                if (!gitIgnoreContains(ignorePath, pattern)) {
+                    appendGitIgnorePattern(ignorePath, pattern);
+                    log.log(Level.INFO, "Added {0} to {1}", new Object[]{pattern, Const.GIT_IGNORE_NAME});
+                }
+                if (isTrackedPath(gitPath)) {
+                    try (Git git = new Git(repository)) {
+                        RmCommand command = git.rm();
+                        command.setCached(true).addFilepattern(gitPath);
+                        addCommandLine(docGen.commandLine(command));
+                        command.call();
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isRootGitIgnore(String gitPath) {
+        return Const.GIT_IGNORE_NAME.equals(gitPath);
+    }
+
+    private String toGitIgnorePattern(String gitPath) {
+        String pattern = gitPath;
+        Path workPath = repository.getWorkTree().toPath().resolve(gitPath);
+        if (Files.isDirectory(workPath) && !pattern.endsWith("/")) {
+            pattern = pattern + "/";
+        }
+        if (!pattern.startsWith("/")) {
+            pattern = "/" + pattern;
+        }
+        return pattern;
+    }
+
+    private boolean gitIgnoreContains(Path ignorePath, String pattern) throws IOException {
+        boolean contains = false;
+        if (Files.exists(ignorePath)) {
+            String unanchored = pattern.startsWith("/") ? pattern.substring(1) : pattern;
+            for (String line : Files.readAllLines(ignorePath)) {
+                String trimmed = line.trim();
+                if (trimmed.equals(pattern) || trimmed.equals(unanchored)) {
+                    contains = true;
+                }
+            }
+        }
+        return contains;
+    }
+
+    private void appendGitIgnorePattern(Path ignorePath, String pattern) throws IOException {
+        String prefix = "";
+        if (Files.exists(ignorePath)) {
+            String existing = Files.readString(ignorePath);
+            if (!existing.isEmpty() && !existing.endsWith("\n")) {
+                prefix = "\n";
+            }
+        }
+        Files.writeString(ignorePath, prefix + pattern + "\n",
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    private boolean isTrackedPath(String gitPath) throws IOException {
+        boolean tracked = false;
+        DirCache index = repository.readDirCache();
+        if (index.findEntry(gitPath) >= 0) {
+            tracked = true;
+        } else {
+            String prefix = gitPath.endsWith("/") ? gitPath : gitPath + "/";
+            for (int i = 0; i < index.getEntryCount() && !tracked; i++) {
+                if (index.getEntry(i).getPathString().startsWith(prefix)) {
+                    tracked = true;
+                }
+            }
+        }
+        return tracked;
     }
 
 
@@ -1653,7 +2382,10 @@ public class GitRepoService {
     public void compressDatabase(ProgressMonitor defaultProgressMonitor) throws IOException {
         try (Git git = new Git(repository)) {
             try {
-                git.gc().setProgressMonitor(defaultProgressMonitor).call();
+                GarbageCollectCommand command = git.gc();
+                command.setProgressMonitor(defaultProgressMonitor);
+                addCommandLine(docGen.commandLine(command));
+                command.call();
             } catch (GitAPIException e) {
                 log.log(Level.SEVERE, "Cannot clean up db", e);
                 throw new IOException(e);
@@ -1666,7 +2398,7 @@ public class GitRepoService {
      *
      * @return list of ScmItem
      */
-    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor, boolean collectLastChanges) {
+    public List<ScmItem> getStatuses(ProgressMonitor progressMonitor) {
         final List<ScmItem> scmItems = new ArrayList<>();
         try {
             // Determine which HEAD commit to compare the index against.
@@ -1708,13 +2440,9 @@ public class GitRepoService {
                 mergeLfs(scmItems, getLfsFiles(headRevStr));
             }
 
-            if (collectLastChanges) {
-                try (Git git = new Git(repository)) {
-                    enrichWithLastChangesDetail(git, scmItems);
-                }
-            }
-
         } catch (Exception e) {
+            System.out.println(e.getMessage() + " " + repository.getDirectory());
+            e.printStackTrace();
             log.log(Level.SEVERE, "Cannot get statuses", e);
         }
 
@@ -1722,26 +2450,23 @@ public class GitRepoService {
         return scmItems;
     }
 
-    List<ScmItem> enrichWithLastChangesDetail(final Git git, final List<ScmItem> toEnrich) throws Exception {
-        for (ScmItem item : toEnrich) {
-            final LogCommand cmd = git.log()
-                    .setRevFilter(RevFilter.ALL)
-                    .setMaxCount(1)
-                    .addPath(item.getShortName());
-            final Iterable<RevCommit> lastCommitIter = cmd.call();
-            while (lastCommitIter.iterator().hasNext()) {
-                final RevCommit revCommit = lastCommitIter.iterator().next();
-                if (revCommit != null) {
-                    item.setChangeDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
-                    item.setChangeAuthor(revCommit.getAuthorIdent().getName() + " <" + revCommit.getAuthorIdent().getEmailAddress() + ">");
-                    item.setChangeName  (revCommit.getShortMessage());
-                    break;
-                }
-            }
-
+    /**
+     * Returns every file the working copy is aware of — the tracked files (from the git index)
+     * plus untracked, non-ignored files (from status) — as repo-relative, forward-slash paths.
+     * Ignored files (build output, {@code .git}, …) are excluded. Used to feed the workspace
+     * working-copy content index.
+     */
+    public java.util.Set<String> getWorkingTreeFiles() throws Exception {
+        java.util.Set<String> files = new java.util.TreeSet<>();
+        org.eclipse.jgit.dircache.DirCache dirCache = repository.readDirCache();
+        for (int i = 0; i < dirCache.getEntryCount(); i++) {
+            files.add(dirCache.getEntry(i).getPathString());
         }
-        return toEnrich;
-
+        try (Git git = new Git(repository)) {
+            StatusCommand command = git.status();
+            files.addAll(command.call().getUntracked());
+        }
+        return files;
     }
 
 
@@ -1749,7 +2474,17 @@ public class GitRepoService {
         for (ScmItem scmItem : status) {
             for (ScmItem scmItemLfs : lfs) {
                 if (scmItem.getShortName().equals(scmItemLfs.getShortName())) {
-                    scmItem.getAttribute().setSubstatus(scmItemLfs.getAttribute().getSubstatus());
+                    String lfsSub = scmItemLfs.getAttribute().getSubstatus();
+                    scmItem.getAttribute().setSubstatus(lfsSub);
+                    // JGit IndexDiff often reports pointer stubs as Modified because
+                    // the LFS clean filter rewrites the working-tree pointer. That is
+                    // not a real content change — show LFS:lfs_pointer instead.
+                    String currentStatus = scmItem.getAttribute().getStatus();
+                    if (ScmItem.Status.LFS_POINTER.equals(lfsSub)
+                            && currentStatus != null
+                            && !currentStatus.startsWith("Conflict")) {
+                        scmItem.getAttribute().setStatus(ScmItem.Status.LFS);
+                    }
                     lfs.remove(scmItemLfs);
                     break;
                 }
@@ -1777,7 +2512,7 @@ public class GitRepoService {
                         treeWalk.enterSubtree();
                     } else {
                         final String path = treeWalk.getPathString();
-                        final Path filePath = Paths.get(Context.getProjectFolder(), path);
+                        final Path filePath = Paths.get(projectFolder(), path);
                         final long sizeOnDisk = Files.size(filePath);
                         final String subStatus = (sizeOnDisk > LfsPointer.SIZE_THRESHOLD) ? ScmItem.Status.LFS_FILE : ScmItem.Status.LFS_POINTER;
                         final ScmItem scmItem = new ScmItem(
@@ -1824,7 +2559,10 @@ public class GitRepoService {
         String updated = GitAttributesUtil.addLfsPattern(existing, pattern);
         Files.writeString(attrPath, updated);
         try (Git git = new Git(repository)) {
-            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+            AddCommand command = git.add();
+            command.addFilepattern(Const.GIT_ATTR_NAME);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         }
     }
 
@@ -1838,7 +2576,10 @@ public class GitRepoService {
         String updated = GitAttributesUtil.removeLfsPattern(existing, pattern);
         Files.writeString(attrPath, updated);
         try (Git git = new Git(repository)) {
-            git.add().addFilepattern(Const.GIT_ATTR_NAME).call();
+            AddCommand command = git.add();
+            command.addFilepattern(Const.GIT_ATTR_NAME);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
         }
     }
 
@@ -1850,107 +2591,406 @@ public class GitRepoService {
      * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
      */
     public void fetchLfsObjects(RemoteRepoParameters params) throws IOException {
+        fetchLfsObjects(params, null);
+    }
+
+    /**
+     * Downloads LFS objects referenced by HEAD. When {@code path} is not blank,
+     * only that working-tree path is fetched; otherwise every LFS pointer on HEAD
+     * is fetched.
+     *
+     * @param params credentials used for the LFS HTTPS transfer (token / user+pwd)
+     * @param path   repo-relative path to fetch, or {@code null} for every LFS file
+     */
+    public void fetchLfsObjects(RemoteRepoParameters params, String path) throws IOException {
         Ref head = repository.exactRef(Constants.HEAD);
-        if (head == null || head.getObjectId() == null) return;
-        Lfs lfs = new Lfs(repository);
+        Lfs lfs = null;
         List<LfsPointer> pointers = new ArrayList<>();
         List<String> paths = new ArrayList<>();
-        try (RevWalk walk = new RevWalk(repository)) {
-            RevCommit commit = walk.parseCommit(head.getObjectId());
-            RevTree tree = commit.getTree();
-            try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                LfsPointerFilter filter = new LfsPointerFilter();
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-                treeWalk.setFilter(filter);
-                while (treeWalk.next()) {
-                    LfsPointer pointer = filter.getPointer();
-                    if (pointer != null) {
-                        pointers.add(pointer);
-                        paths.add(treeWalk.getPathString());
+        if (head != null && head.getObjectId() != null) {
+            lfs = new Lfs(repository);
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(head.getObjectId());
+                RevTree tree = commit.getTree();
+                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                    LfsPointerFilter filter = new LfsPointerFilter();
+                    treeWalk.addTree(tree);
+                    treeWalk.setRecursive(true);
+                    treeWalk.setFilter(filter);
+                    while (treeWalk.next()) {
+                        LfsPointer pointer = filter.getPointer();
+                        if (pointer != null) {
+                            String treePath = treeWalk.getPathString();
+                            if (StringUtils.isBlank(path) || path.equals(treePath)) {
+                                pointers.add(pointer);
+                                paths.add(treePath);
+                            }
+                        }
                     }
                 }
             }
         }
-        if (pointers.isEmpty()) return;
 
-        // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
-        // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
-        // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
-        StoredConfig repoCfg = repository.getConfig();
-        boolean tempLfsUrl = false;
-        if (repoCfg.getString("lfs", null, "url") == null) {
-            String httpsUrl = sshRemoteToHttps(params.getUrl());
-            if (httpsUrl != null) {
-                // LfsConnectionFactory appends /objects/batch to lfs.url, so the
-                // base URL must end with /info/lfs (GitHub LFS endpoint convention).
-                String lfsUrl = httpsUrl.endsWith("/info/lfs")
-                        ? httpsUrl : httpsUrl + "/info/lfs";
-                repoCfg.setString("lfs", null, "url", lfsUrl);
-                tempLfsUrl = true;
-            }
-        }
-
-        // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
-        CredentialsProvider prevCp = CredentialsProvider.getDefault();
-        try {
-            if (StringUtils.isNotBlank(params.getAccessToken())) {
-                CredentialsProvider.setDefault(
-                        new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
-            } else if (StringUtils.isNotBlank(params.getUserName())) {
-                CredentialsProvider.setDefault(
-                        new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
-            }
-            SmudgeFilter.downloadLfsResource(lfs, repository,
-                    pointers.toArray(new LfsPointer[0]));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IOException(e);
-        } finally {
-            CredentialsProvider.setDefault(prevCp);
-            if (tempLfsUrl) {
-                repoCfg.unset("lfs", null, "url");
-            }
-        }
-
-        // Write the real content from the LFS store directly into the working tree,
-        // then refresh the index stat entries so that git status quick-check (mtime/size
-        // comparison) treats these files as clean — matching what "git lfs checkout" does.
-        List<String> updated = new ArrayList<>();
-        for (int i = 0; i < paths.size(); i++) {
-            Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
-            if (Files.exists(lfsObjPath)) {
-                Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
-                Files.createDirectories(workingPath.getParent());
-                Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                updated.add(paths.get(i));
-            }
-        }
-
-        if (!updated.isEmpty()) {
-            DirCache dc = repository.lockDirCache();
-            try {
-                DirCacheEditor editor = dc.editor();
-                for (String p : updated) {
-                    editor.add(new DirCacheEditor.PathEdit(p) {
-                        @Override
-                        public void apply(DirCacheEntry ent) {
-                            File f = new File(repository.getWorkTree(), p);
-                            if (f.exists()) {
-                                ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
-                                ent.setLength((int) f.length());
-                                // ObjectId (pointer hash) is intentionally left unchanged.
-                            }
-                        }
-                    });
+        if (!pointers.isEmpty()) {
+            // LfsConnectionFactory.getLfsUrl() checks lfs.url first; if absent it tries
+            // SSH discovery (git-lfs-authenticate via JSch) which fails on SSH remotes.
+            // Inject the HTTPS URL into the in-memory config so discovery is bypassed.
+            StoredConfig repoCfg = repository.getConfig();
+            boolean tempLfsUrl = false;
+            if (repoCfg.getString("lfs", null, "url") == null) {
+                String httpsUrl = sshRemoteToHttps(params.getUrl());
+                if (httpsUrl != null) {
+                    // LfsConnectionFactory appends /objects/batch to lfs.url, so the
+                    // base URL must end with /info/lfs (GitHub LFS endpoint convention).
+                    String lfsUrl = httpsUrl.endsWith("/info/lfs")
+                            ? httpsUrl : httpsUrl + "/info/lfs";
+                    repoCfg.setString("lfs", null, "url", lfsUrl);
+                    tempLfsUrl = true;
                 }
-                editor.commit();
-                dc.unlock();
+            }
+
+            if (repoCfg.getString("lfs", null, "url") == null && !tempLfsUrl) {
+                throw new LfsException(LfsException.Kind.NO_REMOTE,
+                        I18n.t("cannotDownloadLfsFilesNo"));
+            }
+
+            // SmudgeFilter uses CredentialsProvider.getDefault() for the LFS HTTPS call.
+            CredentialsProvider prevCp = CredentialsProvider.getDefault();
+            try {
+                if (StringUtils.isNotBlank(params.getAccessToken())) {
+                    CredentialsProvider.setDefault(
+                            new UsernamePasswordCredentialsProvider("oauth2", params.getAccessToken()));
+                } else if (StringUtils.isNotBlank(params.getUserName())) {
+                    CredentialsProvider.setDefault(
+                            new UsernamePasswordCredentialsProvider(params.getUserName(), params.getUserPwd()));
+                }
+                SmudgeFilter.downloadLfsResource(lfs, repository,
+                        pointers.toArray(new LfsPointer[0]));
+            } catch (LfsException e) {
+                throw e;
             } catch (Exception e) {
-                log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
-                dc.unlock();
+                throw wrapLfsError(I18n.t("downloadLfsFilesFailed"), e);
+            } finally {
+                CredentialsProvider.setDefault(prevCp);
+                if (tempLfsUrl) {
+                    repoCfg.unset("lfs", null, "url");
+                }
+            }
+
+            // Write the real content from the LFS store directly into the working tree,
+            // then refresh the index stat entries so that git status quick-check (mtime/size
+            // comparison) treats these files as clean — matching what "git lfs checkout" does.
+            List<String> updated = new ArrayList<>();
+            for (int i = 0; i < paths.size(); i++) {
+                Path lfsObjPath = lfs.getMediaFile(pointers.get(i).getOid());
+                if (Files.exists(lfsObjPath)) {
+                    Path workingPath = repository.getWorkTree().toPath().resolve(paths.get(i));
+                    Files.createDirectories(workingPath.getParent());
+                    Files.copy(lfsObjPath, workingPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    updated.add(paths.get(i));
+                }
+            }
+
+            if (!updated.isEmpty()) {
+                DirCache dc = repository.lockDirCache();
+                try {
+                    DirCacheEditor editor = dc.editor();
+                    for (String p : updated) {
+                        editor.add(new DirCacheEditor.PathEdit(p) {
+                            @Override
+                            public void apply(DirCacheEntry ent) {
+                                File f = new File(repository.getWorkTree(), p);
+                                if (f.exists()) {
+                                    ent.setLastModified(java.time.Instant.ofEpochMilli(f.lastModified()));
+                                    ent.setLength((int) f.length());
+                                    // ObjectId (pointer hash) is intentionally left unchanged.
+                                }
+                            }
+                        });
+                    }
+                    editor.commit();
+                    dc.unlock();
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Could not refresh index stat after LFS checkout", e);
+                    dc.unlock();
+                }
             }
         }
+    }
+
+    /**
+     * Uploads LFS objects for the current branch via the Git LFS Batch API.
+     */
+    public void uploadLfsObjects(RemoteRepoParameters params) throws IOException {
+        resolveLfsApiBase(params);
+        try {
+            uploadLfsObjectsDirect(params, null);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError(I18n.t("uploadLfsFilesFailed"), e);
+        }
+    }
+
+    /**
+     * Git-style summary of an LFS path: HEAD pointer versus the working-tree
+     * pointer (or downloaded content).
+     */
+    public String getLfsDiff(String path) throws IOException {
+        LfsPointer headPtr = readLfsPointerFromRevision(Constants.HEAD, path);
+        Path workPath = repository.getWorkTree().toPath().resolve(path);
+        LfsPointer workPtr = null;
+        boolean downloaded = false;
+        long workSize = -1;
+        if (Files.exists(workPath)) {
+            workSize = Files.size(workPath);
+            try (InputStream in = Files.newInputStream(workPath)) {
+                workPtr = LfsPointer.parseLfsPointer(in);
+            }
+            if (workPtr == null && workSize > LfsPointer.SIZE_THRESHOLD) {
+                downloaded = true;
+            }
+        }
+        return formatLfsDiff(path, headPtr, workPtr, downloaded, workSize);
+    }
+
+    /**
+     * Parses a Git LFS pointer file. Returns {@code null} when {@code text} is not a pointer.
+     */
+    public static LfsPointer parseLfsPointerText(String text) throws IOException {
+        LfsPointer pointer = null;
+        if (text != null) {
+            pointer = LfsPointer.parseLfsPointer(
+                    new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
+        }
+        return pointer;
+    }
+
+    static String formatLfsDiff(String path, LfsPointer headPtr, LfsPointer workPtr,
+                                boolean workDownloaded, long workSize) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("LFS: ").append(path).append('\n');
+        if (headPtr == null && workPtr == null && !workDownloaded) {
+            sb.append("  Not an LFS pointer on HEAD or in the working tree.\n");
+        } else {
+            sb.append("  HEAD     ").append(describeLfsSide(headPtr, false, -1)).append('\n');
+            sb.append(I18n.t("working")).append(describeLfsSide(workPtr, workDownloaded, workSize)).append('\n');
+            if (headPtr != null && workPtr != null && headPtr.getOid().equals(workPtr.getOid())) {
+                sb.append(I18n.t("pointersMatch")).append(headPtr.getOid().getName()).append(")\n");
+            } else if (headPtr != null && workPtr != null) {
+                sb.append(I18n.t("size")).append(headPtr.getSize())
+                        .append(" \u2192 ").append(workPtr.getSize()).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String describeLfsSide(LfsPointer pointer, boolean downloaded, long size) {
+        String text;
+        if (pointer != null) {
+            text = I18n.t("pointerOidSha256Size", pointer.getOid().getName(), pointer.getSize());
+        } else if (downloaded) {
+            text = I18n.t("downloadedContentSize", size);
+        } else {
+            text = "missing";
+        }
+        return text;
+    }
+
+    private LfsPointer readLfsPointerFromRevision(String revision, String path) throws IOException {
+        LfsPointer pointer = null;
+        ObjectId commitId = repository.resolve(revision);
+        if (commitId != null) {
+            try (RevWalk revWalk = new RevWalk(repository);
+                 TreeWalk treeWalk = new TreeWalk(repository)) {
+                RevCommit commit = revWalk.parseCommit(commitId);
+                treeWalk.addTree(commit.getTree());
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(path));
+                if (treeWalk.next()) {
+                    ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+                    if (loader.getSize() <= 8192) {
+                        try (InputStream in = loader.openStream()) {
+                            pointer = LfsPointer.parseLfsPointer(in);
+                        }
+                    }
+                }
+            }
+        }
+        return pointer;
+    }
+
+    /**
+     * Creates a lock on {@code path} via the Git LFS locking API.
+     */
+    public LfsLock lockLfsFile(String path, RemoteRepoParameters params) throws IOException {
+        try {
+            String ref = currentLfsRefName();
+            String body = "{\"path\":\"" + jsonEscape(path) + "\",\"ref\":{\"name\":\""
+                    + jsonEscape(ref) + "\"}}";
+            JsonNode response = lfsLockRequest("POST", "/locks", body, params);
+            JsonNode lockNode = response.path("lock");
+            if (lockNode.isMissingNode() || lockNode.path("id").asText("").isEmpty()) {
+                throw new LfsException(LfsException.Kind.SERVER,
+                        I18n.t("lockResponseDidNotInclude", path));
+            }
+            return parseLfsLock(lockNode);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError(I18n.t("lockLfsFileFailed", path), e);
+        }
+    }
+
+    /**
+     * Releases the lock on {@code path}. When {@code force} is true the lock is
+     * broken even if another user owns it.
+     */
+    public void unlockLfsFile(String path, boolean force, RemoteRepoParameters params) throws IOException {
+        try {
+            LfsLock existing = findLfsLock(path, params);
+            if (existing == null) {
+                throw new LfsException(LfsException.Kind.NOT_LOCKED,
+                        I18n.t("noLfsLockFound", path));
+            }
+            String ref = currentLfsRefName();
+            String body = "{\"force\":" + force + ",\"ref\":{\"name\":\""
+                    + jsonEscape(ref) + "\"}}";
+            lfsLockRequest("POST", "/locks/" + existing.getId() + "/unlock", body, params);
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError(I18n.t("unlockLfsFileFailed", path), e);
+        }
+    }
+
+    /**
+     * Lists locks from the remote LFS locking API.
+     */
+    public List<LfsLock> listLfsLocks(RemoteRepoParameters params) throws IOException {
+        List<LfsLock> locks = new ArrayList<>();
+        try {
+            JsonNode response = lfsLockRequest("GET", "/locks", null, params);
+            for (JsonNode node : response.path("locks")) {
+                locks.add(parseLfsLock(node));
+            }
+        } catch (LfsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw wrapLfsError(I18n.t("listLfsLocksFailed"), e);
+        }
+        return locks;
+    }
+
+    private LfsLock findLfsLock(String path, RemoteRepoParameters params) throws IOException {
+        LfsLock found = null;
+        for (LfsLock lock : listLfsLocks(params)) {
+            if (path.equals(lock.getPath())) {
+                found = lock;
+            }
+        }
+        return found;
+    }
+
+    private JsonNode lfsLockRequest(String method, String relativePath, String jsonBody,
+                                    RemoteRepoParameters params) throws IOException {
+        String base = resolveLfsApiBase(params);
+        String authHeader = buildLfsAuthHeader(params);
+        HttpURLConnection conn = openLfsHttp(base + relativePath, method, authHeader);
+        conn.setRequestProperty("Accept", "application/vnd.git-lfs+json");
+        if (jsonBody != null) {
+            byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
+            conn.setRequestProperty("Content-Type", "application/vnd.git-lfs+json");
+            conn.setFixedLengthStreamingMode(bytes.length);
+            conn.setDoOutput(true);
+            try (OutputStream out = conn.getOutputStream()) {
+                out.write(bytes);
+            }
+        }
+        int status = conn.getResponseCode();
+        if (status == 401 || status == 403) {
+            throw new LfsException(LfsException.Kind.AUTH,
+                    I18n.t("lfsAuthenticationFailed", status, readHttpError(conn)));
+        }
+        if (status == 409) {
+            throw new LfsException(LfsException.Kind.LOCKED,
+                    I18n.t("fileIsAlreadyLocked", readHttpError(conn)));
+        }
+        if (status >= 400) {
+            throw new LfsException(LfsException.Kind.SERVER,
+                    I18n.t("lfsLockRequestFailed", status, readHttpError(conn)));
+        }
+        try (InputStream in = conn.getInputStream()) {
+            return new ObjectMapper().readTree(in);
+        }
+    }
+
+    private String resolveLfsApiBase(RemoteRepoParameters params) throws LfsException {
+        String configured = repository.getConfig().getString("lfs", null, "url");
+        String raw = configured;
+        if (StringUtils.isBlank(raw) && params != null) {
+            raw = params.getUrl();
+        }
+        if (StringUtils.isBlank(raw)) {
+            raw = getOriginUrl();
+        }
+        if (StringUtils.isBlank(raw)) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    I18n.t("cannotTalkGitLfsNo"));
+        }
+        String httpsUrl = sshRemoteToHttps(raw);
+        if (httpsUrl == null) {
+            httpsUrl = raw;
+        }
+        if (httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    I18n.t("gitLfsRequiresHttpS"));
+        }
+        String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
+        return lfsBase;
+    }
+
+    private String currentLfsRefName() throws IOException {
+        String ref = Constants.R_HEADS + "master";
+        String branch = getEffectiveBranch();
+        if (StringUtils.isNotBlank(branch)) {
+            ref = Constants.R_HEADS + branch;
+        }
+        return ref;
+    }
+
+    private static LfsLock parseLfsLock(JsonNode node) {
+        String owner = node.path("owner").path("name").asText("");
+        if (owner.isEmpty()) {
+            owner = node.path("owner").path("id").asText("");
+        }
+        return new LfsLock(
+                node.path("id").asText(""),
+                node.path("path").asText(""),
+                owner,
+                node.path("locked_at").asText(""));
+    }
+
+    private static String jsonEscape(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static LfsException wrapLfsError(String message, Exception e) {
+        LfsException wrapped;
+        if (e instanceof LfsException lfs) {
+            wrapped = lfs;
+        } else {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase(Locale.ROOT) : "";
+            LfsException.Kind kind = LfsException.Kind.OTHER;
+            if (msg.contains("401") || msg.contains("403")
+                    || msg.contains("unauthorized") || msg.contains("authentication")) {
+                kind = LfsException.Kind.AUTH;
+            } else if (msg.contains("lock")) {
+                kind = LfsException.Kind.LOCKED;
+            }
+            wrapped = new LfsException(kind, message + ": " + e.getMessage(), e);
+        }
+        return wrapped;
     }
 
     /**
@@ -1993,18 +3033,44 @@ public class GitRepoService {
     }
 
 
-    public List<ScmRevisionInformation> getItemsToIndex(final String treeName, final int qty, final ProgressMonitor progressMonitor) {
-        PlotCommitList<PlotLane> commit = getCommitsByTree(treeName, true, qty, progressMonitor);
-        List<ScmRevisionInformation> rez = commit.stream().map(this::adapt).collect(Collectors.toList());
-        rez.forEach(sri -> {
-            sri.getAffectedItems().removeIf(scmItem -> ScmItem.Status.REMOVED.equalsIgnoreCase(scmItem.getAttribute().getStatus()));
-        });
-        return rez;
+    public int getCommitsCountByTree(final String treeName, final ProgressMonitor progressMonitor) {
+        try (Git git = new Git(repository)) {
+            int count = 0;
+            Iterable<RevCommit> commits = Collections.emptyList();
+            try {
+                if (progressMonitor != null) {
+                    progressMonitor.beginTask(I18n.t("countingRevisionOf", treeName), 0);
+                }
+                ObjectId head = repository.resolve(Constants.HEAD);
+                LogCommand command = git.log();
+                command
+                        .add(head);
+                addCommandLine(docGen.commandLine(command));
+                commits = command.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            for (RevCommit ignored : commits) {
+                count++;
+            }
+            if (progressMonitor != null) {
+                progressMonitor.endTask();
+            }
+            return count;
+        }
+
     }
 
+
     /**
-     * Get revisions to visualize. Fr more detail look at
-     * https://stackoverflow.com/questions/12691633/jgit-get-all-commits-plotcommitlist-that-affected-a-file-path
+     * Get revisions to visualize.
+     *
+     * <p>The returned commits carry no raw body -- {@link ScmPlotWalk} keeps only the short
+     * message and author name the history table paints, which is what makes a full history of a
+     * large repository affordable to hold open. Read the messages and idents of these commits
+     * through {@link ScmPlotCommit#shortMessageOf(RevCommit)} /
+     * {@link ScmPlotCommit#authorNameOf(RevCommit)}, or get everything from
+     * {@link #adapt(RevCommit, String)}, which re-reads the body of the one commit asked about.
      *
      * @param treeName tree name
      * @param all      to visualize with merges
@@ -2014,7 +3080,8 @@ public class GitRepoService {
 
 
         final PlotCommitList<PlotLane> plotCommitList = new PlotCommitList<>();
-        try (PlotWalk revWalk = new PlotWalk(repository)) {
+
+        try (PlotWalk revWalk = new ScmPlotWalk(repository)) {
 
             if (treeName != null) {
                 final ObjectId rootId = repository.resolve(treeName);
@@ -2028,7 +3095,7 @@ public class GitRepoService {
                 Collection<Ref> allRefs = repository.getAllRefs().values();
                 int idx = 0;
                 if (progressMonitor != null) {
-                    progressMonitor.beginTask("Collecting revision", allRefs.size());
+                    progressMonitor.beginTask(I18n.t("collectingRevision"), allRefs.size());
                 }
                 for (Ref ref : allRefs) {
                     revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
@@ -2059,35 +3126,6 @@ public class GitRepoService {
         return plotCommitList;
     }
 
-
-    public List<AverageLiveTime> getMergedBranches(final StatWPParameters params) {
-
-        final String treeNameTarget = params.getBranchName();
-        final List<BranchLiveTime> brandLiveTimes = new ArrayList<>();
-        final Set<RevCommit> tails = new HashSet<>();
-        final PlotCommitList<PlotLane> treeNameHistory = getCommitsByTree(treeNameTarget, false, -1, null);
-        final Set<RevCommit> treeOnlyCommits = getRevCommits(treeNameHistory);
-
-        RevCommit plotLane = treeNameHistory.get(0);
-
-        while (plotLane.getParentCount() > 0) {
-            if (plotLane.getParentCount() > 1) {
-                // merge point
-                for (int i = 0; i < plotLane.getParentCount(); i++) {
-                    if (!treeOnlyCommits.contains(plotLane.getParent(i))) {
-                        // parent not from main tree but from branch
-                        RevCommit forkPoint = findParrent(plotLane.getParent(i), treeOnlyCommits);
-                        if (forkPoint != null && !tails.contains(forkPoint)) {
-                            tails.add(forkPoint);
-                            brandLiveTimes.add(new BranchLiveTime(plotLane, forkPoint));
-                        }
-                    }
-                }
-            }
-            plotLane = plotLane.getParent(0);
-        }
-        return calculateAverageperMonth(brandLiveTimes, params);
-    }
 
     public List<AverageLiveTime> calculateAverageperMonth(final List<BranchLiveTime> brandLiveTimes, final StatWPParameters params) {
         if (params.isWorkingHours()) {
@@ -2181,15 +3219,27 @@ public class GitRepoService {
 
         final String reporitoryUrl = params.getUrl();
 
-        final CloneCommand cmd = Git.cloneRepository()
+        final CloneCommand cmd = Git.cloneRepository();
+        cmd
                 .setURI(reporitoryUrl)
                 .setDirectory(new File(params.getDestinationFolder()))
                 .setCloneAllBranches(true)
-                .setCloneSubmodules(true)
+                .setCloneSubmodules(params.withSubmodules())
                 //.setNoCheckout(true)   // 🔥 important
                 .setProgressMonitor(progressMonitor);
+
+        if (StringUtils.isNotEmpty(params.getBranch())) {
+            List<String> branches = Arrays.asList(params.getBranch().split(","));
+            cmd
+                    .setBranchesToClone(branches)
+                    .setBranch(branches.getFirst())
+                    .setCloneAllBranches(false);
+        }
+
         if (params.getDepth() > 0) {
-            cmd.setDepth(params.getDepth());
+            cmd
+                    .setDepth(params.getDepth())
+                    .setCloneAllBranches(false);
         }
         configureTransportCommand(cmd, params);
 
@@ -2293,58 +3343,69 @@ public class GitRepoService {
      */
     public String remoteRepositoryPush(final RemoteRepoParameters parameters,
                                        final RefSpec refSpec,
+                                       final boolean force,
                                        final ProgressMonitor progressMonitor) throws Exception {
         try (Git git = new Git(repository)) {
-
-            final PushCommand pushCommand = git.push()
-                    .setProgressMonitor(progressMonitor);
-            if (refSpec != null) {
-                pushCommand.setRefSpecs(refSpec);
-            }
-
-            configureTransportCommand(pushCommand, parameters);
-
-            final String projectRemoteUrl = git.getRepository()
-                    .getConfig()
-                    .getString("remote", "origin", "url");
-            log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
-
-            // Upload LFS objects via the batch API before the git push.
-            // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
-            // for its internal HTTP requests, so we implement the batch protocol directly.
-            if (isLfsRepo()) {
-                uploadLfsObjectsDirect(parameters, refSpec);
-            }
-
-            Iterable<PushResult> pushResults = pushCommand.call();
-
-            final FetchCommand fetchCommand = git
-                    .fetch()
-                    .setCheckFetchedObjects(true)
-                    .setRemoveDeletedRefs(true)
-                    .setProgressMonitor(progressMonitor);
-
-            configureTransportCommand(fetchCommand, parameters);
-
-            fetchCommand.call();
-
-            StringBuilder stringBuilder = new StringBuilder();
-            pushResults.forEach(pushResult -> {
-                pushResult.getRemoteUpdates().forEach(update -> {
-                    stringBuilder.append(update.getRemoteName())
-                            .append(": ")
-                            .append(update.getStatus())
-                            .append("\n");
-                });
-                String msgs = pushResult.getMessages();
-                if (msgs != null && !msgs.isBlank()) {
-                    stringBuilder.append(msgs);
+            if(isRepositoryHasRemoteUrl()) {
+                final PushCommand pushCommand = git.push();
+                pushCommand
+                        .setForce(force)
+                        .setProgressMonitor(progressMonitor);
+                if (refSpec != null) {
+                    pushCommand.setRefSpecs(refSpec);
                 }
-                log.log(Level.INFO,
-                        "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
-                                + " updates: " + pushResult.getRemoteUpdates());
-            });
-            return stringBuilder.toString();
+
+                configureTransportCommand(pushCommand, parameters);
+
+                final String projectRemoteUrl = git.getRepository()
+                        .getConfig()
+                        .getString("remote", "origin", "url");
+                log.log(Level.INFO, "Pushing to " + projectRemoteUrl + " ref: " + refSpec);
+
+                // Upload LFS objects via the batch API before the git push.
+                // LfsPrePushHook in JGit 6.x does not honour CredentialsProvider.getDefault()
+                // for its internal HTTP requests, so we implement the batch protocol directly.
+                if (isLfsRepo()) {
+                    uploadLfsObjectsDirect(parameters, refSpec);
+                }
+
+                addCommandLine(docGen.commandLine(pushCommand));
+
+                Iterable<PushResult> pushResults = pushCommand.call();
+
+                final FetchCommand fetchCommand = git.fetch();
+                fetchCommand
+                        .setCheckFetchedObjects(true)
+                        .setRemoveDeletedRefs(true)
+                        .setProgressMonitor(progressMonitor);
+
+                configureTransportCommand(fetchCommand, parameters);
+
+                addCommandLine(docGen.commandLine(fetchCommand));
+                fetchCommand.call();
+
+                StringBuilder stringBuilder = new StringBuilder();
+                pushResults.forEach(pushResult -> {
+                    pushResult.getRemoteUpdates().forEach(update -> {
+                        stringBuilder.append(update.getRemoteName())
+                                .append(": ")
+                                .append(update.getStatus())
+                                .append("\n");
+                    });
+                    String msgs = pushResult.getMessages();
+                    if (msgs != null && !msgs.isBlank()) {
+                        stringBuilder.append(msgs);
+                    }
+                    log.log(Level.INFO,
+                            "Pushed " + pushResult.getMessages() + " " + pushResult.getURI()
+                                    + " updates: " + pushResult.getRemoteUpdates());
+                });
+                return stringBuilder.toString();
+            } else {
+                return I18n.t("hasNoRemoteUrl", parameters.getDestinationFolder());
+            }
+
+
         } catch (Exception e) {
             //} catch (CheckoutConflictException conflictException) {
             //.TransportException: https://github.com/iazarny/jmicroscope.git: Authentication is required but no CredentialsProvider has been registered
@@ -2381,10 +3442,12 @@ public class GitRepoService {
             newTree.reset(reader, bCommit.getTree());
 
             try (Git git = new Git(repository)) {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setOldTree(oldTree)
-                        .setNewTree(newTree)
-                        .call();
+                        .setNewTree(newTree);
+                addCommandLine(docGen.commandLine(command));
+                return command.call();
             }
         }
     }
@@ -2500,10 +3563,12 @@ public class GitRepoService {
             sourceTree.reset(reader, sourceCommit.getTree());
 
             try (Git git = new Git(repository)) {
-                return git.diff()
+                DiffCommand command = git.diff();
+                command
                         .setOldTree(baseTree)
-                        .setNewTree(sourceTree)
-                        .call()
+                        .setNewTree(sourceTree);
+                addCommandLine(docGen.commandLine(command));
+                return command.call()
                         .stream()
                         .map(this::adaptDiffEntry)
                         .collect(java.util.stream.Collectors.toList());
@@ -2623,17 +3688,18 @@ public class GitRepoService {
 
             ObjectId oldHead = remoteBranch != null ? repository.resolve(remoteBranch) : repository.resolve("HEAD");
 
-            PullCommand pullCommand = git
-                    .pull()
+            PullCommand pullCommand = git.pull();
+            pullCommand
                     .setRemoteBranchName(remoteBranch)
                     .setProgressMonitor(progressMonitor);
             configureTransportCommand(pullCommand, parameters);
-
+            addCommandLine(docGen.commandLine(pullCommand));
             PullResult pullRez = pullCommand.call();
 
             // Prune stale remote-tracking refs that the pull's implicit fetch may not remove
             try {
-                FetchCommand pruneCmd = git.fetch().setRemoveDeletedRefs(true);
+                FetchCommand pruneCmd = git.fetch();
+                pruneCmd.setRemoveDeletedRefs(true);
                 configureTransportCommand(pruneCmd, parameters);
                 pruneCmd.call();
             } catch (Exception ignored) {
@@ -2732,9 +3798,9 @@ public class GitRepoService {
                 || CollectionUtils.isNotEmpty(diffResult.getMiddle())
                 || CollectionUtils.isNotEmpty(diffResult.getRight())) {
             StringBuilder sb = new StringBuilder();
-            fillInfo(sb, "Added:", diffResult.getLeft());
-            fillInfo(sb, "Deleted:", diffResult.getMiddle());
-            fillInfo(sb, "Changed:", diffResult.getRight());
+            fillInfo(sb, I18n.t("gitRepoService.added"), diffResult.getLeft());
+            fillInfo(sb, I18n.t("gitRepoService.deleted"), diffResult.getMiddle());
+            fillInfo(sb, I18n.t("gitRepoService.changed"), diffResult.getRight());
             return Optional.of(sb.toString());
         }
         return Optional.empty();
@@ -2767,8 +3833,8 @@ public class GitRepoService {
 
         try (Git git = new Git(repository)) {
 
-            final FetchCommand cmd = git
-                    .fetch()
+            final FetchCommand cmd = git.fetch();
+            cmd
                     .setCheckFetchedObjects(true)
                     .setRemoveDeletedRefs(true)
                     .setProgressMonitor(progressMonitor);
@@ -2778,17 +3844,18 @@ public class GitRepoService {
             if (remoteBranch != null) {
                 cmd.setRefSpecs(new RefSpec(remoteBranch));
             }
+            addCommandLine(docGen.commandLine(cmd));
             final FetchResult fetchResult = cmd.call();
-            String rezMsg = "\nMessage " + fetchResult.getMessages();
-            rezMsg += "\nTracking " + fetchResult.getTrackingRefUpdates()
+            String rezMsg = I18n.t("message", fetchResult.getMessages());
+            rezMsg += I18n.t("tracking", fetchResult.getTrackingRefUpdates()
                     .stream()
                     .map(tr -> String.format("%s local %s remote %s", tr.getResult().toString(), tr.getLocalName(), tr.getRemoteName()))
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n")));
 
-            rezMsg += "\nAdvertised " + fetchResult.getAdvertisedRefs()
+            rezMsg += I18n.t("advertised", fetchResult.getAdvertisedRefs()
                     .stream()
                     .map(r -> r.getName())
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n")));
 
             return rezMsg;
         }
@@ -2803,18 +3870,18 @@ public class GitRepoService {
         if (mergeResult.getMergeStatus().isSuccessful()) {
 
             if (mergeResult.getNewHead() != null) {
-                stringBuilder.append("New head: ").append(mergeResult.getNewHead().getName()).append("\n");
+                stringBuilder.append(I18n.t("newHead")).append(mergeResult.getNewHead().getName()).append("\n");
             }
 
             if (mergeResult.getBase() != null) {
-                stringBuilder.append("Base: ").append(mergeResult.getBase().getName()).append("\n");
+                stringBuilder.append(I18n.t("base")).append(mergeResult.getBase().getName()).append("\n");
             }
 
             String merged = Arrays.stream(mergeResult.getMergedCommits())
                     .map(o -> ObjectId.toString(o))
                     .collect(Collectors.joining(indent)); //TODO message
 
-            stringBuilder.append("Merged:").append(indent).append(merged).append("\n");
+            stringBuilder.append(I18n.t("merged")).append(indent).append(merged).append("\n");
 
         } else {
 
@@ -2822,13 +3889,13 @@ public class GitRepoService {
                     .map(es -> es.getKey())
                     .collect(Collectors.joining(indent));
 
-            stringBuilder.append("Conflict:").append(indent).append(mergeConflicts).append("\n");
+            stringBuilder.append(I18n.t("conflict")).append(indent).append(mergeConflicts).append("\n");
 
             if (mergeResult.getFailingPaths() != null) {
                 String failures = mergeResult.getFailingPaths().entrySet().stream()
                         .map(es -> es.getKey())
                         .collect(Collectors.joining(indent));
-                stringBuilder.append("Failed:").append(indent).append(failures).append("\n");
+                stringBuilder.append(I18n.t("gitRepoService.failed")).append(indent).append(failures).append("\n");
             }
 
 
@@ -2869,14 +3936,21 @@ public class GitRepoService {
                 }
             }
         } catch (Exception e) {
-            throw new IOException("Failed to collect LFS objects for upload", e);
+            throw new IOException(I18n.t("failedCollectLfsObjectsUpload"), e);
         }
 
         if (toUpload.isEmpty()) return;
 
         // LFS batch endpoint
-        String httpsUrl = sshRemoteToHttps(params.getUrl());
-        if (httpsUrl == null) httpsUrl = params.getUrl();
+        String httpsUrl = sshRemoteToHttps(params != null ? params.getUrl() : getOriginUrl());
+        if (httpsUrl == null && params != null) {
+            httpsUrl = params.getUrl();
+        }
+        if (httpsUrl == null || httpsUrl.isBlank()
+                || httpsUrl.startsWith("file:") || httpsUrl.startsWith("/")) {
+            throw new LfsException(LfsException.Kind.NO_REMOTE,
+                    I18n.t("cannotUploadLfsFilesNo"));
+        }
         String lfsBase = httpsUrl.endsWith("/info/lfs") ? httpsUrl : httpsUrl + "/info/lfs";
         String batchUrl = lfsBase + "/objects/batch";
 
@@ -2906,7 +3980,7 @@ public class GitRepoService {
         int batchStatus = batchConn.getResponseCode();
         if (batchStatus != 200) {
             String err = readHttpError(batchConn);
-            throw new IOException("LFS batch-upload request failed (" + batchStatus + "): " + err);
+            throw new IOException(I18n.t("lfsBatchUploadRequestFailed", batchStatus, err));
         }
 
         // ── 2. Upload each object that the server doesn't have yet ─────────────
@@ -2941,7 +4015,7 @@ public class GitRepoService {
                 }
                 int uploadStatus = uploadConn.getResponseCode();
                 if (uploadStatus >= 400) {
-                    throw new IOException("LFS upload failed for " + oid + ": " + uploadStatus);
+                    throw new IOException(I18n.t("lfsUploadFailedFor", oid, uploadStatus));
                 }
                 log.log(Level.INFO, "Uploaded LFS object " + oid
                         + " (" + pointer.getSize() + " bytes)");
@@ -3094,6 +4168,70 @@ public class GitRepoService {
     }
 
     /**
+     * A view of {@code commit} with its raw body loaded: {@code commit} itself when the body is
+     * still attached, otherwise a freshly read copy of the same commit.
+     *
+     * <p>Commits produced by {@link #getCommitsByTree} have had their body released (see
+     * {@link ScmPlotWalk}), so whoever needs the full message or the author/committer idents has
+     * to read that one commit again. The copy is short-lived on purpose -- it must not be stored
+     * anywhere, or the bodies are back in the heap.
+     */
+    private RevCommit bodyOf(final RevCommit commit) {
+        if (commit == null || commit.getRawBuffer() != null) {
+            return commit;
+        }
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            return revWalk.parseCommit(commit.getId());
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Cannot read body of commit " + commit.getName(), e);
+            return commit;
+        }
+    }
+
+    /**
+     * Re-attaches the raw body of {@code commit} so it can be painted.
+     *
+     * <p>JGit's own {@code AbstractPlotRenderer.paintCommit} ends by calling
+     * {@code RevCommit.getShortMessage()}, and that method is {@code final}, so a commit from
+     * {@link ScmPlotWalk} cannot serve it from the summary it kept -- the body has to be there.
+     * Only the last {@value #PAINTING_BODY_LIMIT} commits painted keep theirs: far more than any
+     * viewport needs, and bounded, so scrolling a long history does not put the whole history's
+     * bodies back into the heap.
+     */
+    public void ensureBodyForPainting(final RevCommit commit) {
+        if (commit == null || commit.getRawBuffer() != null || repository == null) {
+            return;
+        }
+        synchronized (paintingBodies) {
+            try {
+                if (paintingWalk == null) {
+                    paintingWalk = new RevWalk(repository);
+                }
+                paintingWalk.parseBody(commit);
+            } catch (IOException | RuntimeException e) {
+                log.log(Level.FINE, "Cannot read body of commit " + commit.getName(), e);
+                return;
+            }
+            paintingBodies.addLast(commit);
+            while (paintingBodies.size() > PAINTING_BODY_LIMIT) {
+                paintingBodies.pollFirst().disposeBody();
+            }
+        }
+    }
+
+    /**
+     * The full commit message of {@code commit}, read again from the object database when the
+     * commit came from {@link #getCommitsByTree} and no longer carries its body.
+     */
+    public String getFullMessage(final RevCommit commit) {
+        RevCommit withBody = bodyOf(commit);
+        if (withBody == null || withBody.getRawBuffer() == null) {
+            return null;
+        }
+        return withBody.getFullMessage();
+    }
+
+    /**
      * Adapt given rev commit to <code>ScmRevisionInformation</code>
      *
      * @param revCommit given <code>RevCommit</code>
@@ -3106,7 +4244,54 @@ public class GitRepoService {
             return null;
         }
 
-        return Context.scmRevisionInformationCache.computeIfAbsent(revCommit.getId().toString(), s -> {
+        final ScmRevisionInformation info = new ScmRevisionInformation();
+        info.setRevisionFullName(revCommit.getName());
+        info.setDate(GitemberUtil.intToDate(revCommit.getCommitTime()));
+
+        final RevCommit withBody = bodyOf(revCommit);
+        if (withBody.getRawBuffer() != null) {
+            info.setShortMessage(withBody.getShortMessage());
+            info.setFullMessage(withBody.getFullMessage());
+            PersonIdent authorIdent = withBody.getAuthorIdent();
+            if (authorIdent != null) {
+                info.setAuthorName(authorIdent.getName());
+                info.setAuthorEmail(authorIdent.getEmailAddress());
+            }
+            byte[] signature = withBody.getRawGpgSignature();
+            info.setRawGpgSignature(signature == null ? null : signature.clone());
+            info.setSignatureStatus(signature == null ? SignatureStatus.UNSIGNED : SignatureStatus.SIGNED);
+        } else {
+            // Body unreadable (missing object) -- fall back to what the walk captured.
+            info.setShortMessage(ScmPlotCommit.shortMessageOf(revCommit));
+            info.setAuthorName(ScmPlotCommit.authorNameOf(revCommit));
+            info.setSignatureStatus(ScmPlotCommit.signedOf(revCommit)
+                    ? SignatureStatus.SIGNED : SignatureStatus.UNSIGNED);
+        }
+
+        info.setParents(
+                Arrays.stream(revCommit.getParents()).map(AnyObjectId::getName).collect(Collectors.toList())
+        );
+        if (revCommit instanceof PlotCommit) {
+            ArrayList<String> refs = new ArrayList<>();
+            for (int i = 0; i < ((PlotCommit) revCommit).getRefCount(); i++) {
+                Ref ref = ((PlotCommit) revCommit).getRef(i);
+                if (ref != null && ref.getName() != null) {
+                    refs.add(ref.getName());
+                }
+            }
+            info.setRef(refs);
+
+        }
+        info.setAffectedItems(getScmItems(revCommit, fileName));
+        info.setNote(getCommitNote(revCommit.getName()));
+        return info;
+
+        /*if (revCommit == null) {
+            log.log(Level.WARNING, "Null RevCommit provided to adapt method");
+            return null;
+        }
+
+        return revCache().computeIfAbsent(revCommit.getId().toString(), s -> {
             final ScmRevisionInformation info = new ScmRevisionInformation();
             info.setShortMessage(revCommit.getShortMessage());
             info.setFullMessage(revCommit.getFullMessage());
@@ -3136,6 +4321,8 @@ public class GitRepoService {
             info.setAffectedItems(getScmItems(revCommit, fileName));
             return info;
         });
+
+         */
     }
 
     public RevCommit getRevCommitBySha(String sha) {
@@ -3342,7 +4529,8 @@ public class GitRepoService {
         progressMonitor.beginTask("Log", 300);
 
         try (Git git = new Git(repository)) {
-            Iterable<RevCommit> commits = git.log().call();
+            LogCommand command = git.log();
+            Iterable<RevCommit> commits = command.call();
             for (RevCommit rc : commits) {
                 String author = rc.getAuthorIdent().getName();
                 commitsMap.computeIfPresent(
@@ -3429,6 +4617,7 @@ public class GitRepoService {
         tempFiles.clear();
     }
 
+    //TODO multiple templates
     private static String gitIgnoreContent = "HELP.md\n" +
             "target/\n" +
             "!.mvn/wrapper/maven-wrapper.jar\n" +
@@ -3515,15 +4704,235 @@ public class GitRepoService {
     }
 
     /**
+     * Native {@code git submodule status} map keyed by submodule path.
+     */
+    public Map<String, SubmoduleStatus> getSubmoduleStatus() throws Exception {
+        try (Git git = new Git(repository)) {
+            SubmoduleStatusCommand command = git.submoduleStatus();
+            return command.call();
+        }
+    }
+
+    /**
+     * Registers submodule URLs from {@code .gitmodules} into {@code .git/config}
+     * ({@code git submodule init}).
+     */
+    public Collection<String> initSubmodules() throws Exception {
+        try (Git git = new Git(repository)) {
+            SubmoduleInitCommand command = git.submoduleInit();
+            return command.call();
+        }
+    }
+
+    /**
+     * Initializes a single submodule path ({@code git submodule init -- <path>}).
+     */
+    public Collection<String> initSubmodule(String path) throws Exception {
+        try (Git git = new Git(repository)) {
+            SubmoduleInitCommand command = git.submoduleInit();
+            command.addPath(path);
+            addCommandLine(docGen.commandLine(command));
+            return command.call();
+        }
+    }
+
+    /**
      * Runs {@code git submodule init} followed by {@code git submodule update} for all submodules.
      */
     public void updateSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        updateSubmodules(progressMonitor, false);
+    }
+
+    /**
+     * Initializes and updates all submodules. When {@code recursive} is true, each
+     * checked-out submodule is updated the same way (nested {@code .gitmodules}).
+     */
+    public void updateSubmodules(ProgressMonitor progressMonitor, boolean recursive) throws Exception {
         try (Git git = new Git(repository)) {
-            git.submoduleInit().call();
-            git.submoduleUpdate()
-                    .setProgressMonitor(progressMonitor)
-                    .call();
+            SubmoduleInitCommand command = git.submoduleInit();
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+            SubmoduleUpdateCommand submoduleUpdateCommand = git.submoduleUpdate();
+            submoduleUpdateCommand
+                    .setProgressMonitor(progressMonitor);
+            addCommandLine(docGen.commandLine(submoduleUpdateCommand));
+            submoduleUpdateCommand.call();
         }
+        if (recursive) {
+            updateNestedSubmodules(progressMonitor);
+        }
+    }
+
+    /**
+     * Initializes and updates one submodule path ({@code git submodule update --init -- <path>}).
+     */
+    public void updateSubmodule(String path, ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            SubmoduleInitCommand command = git.submoduleInit();
+            command.addPath(path);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+            SubmoduleUpdateCommand submoduleUpdateCommand = git.submoduleUpdate();
+            submoduleUpdateCommand
+                    .addPath(path)
+                    .setProgressMonitor(progressMonitor);
+            addCommandLine(docGen.commandLine(submoduleUpdateCommand));
+            submoduleUpdateCommand.call();
+        }
+    }
+
+    /**
+     * Clones {@code uri} into {@code path} and registers it in {@code .gitmodules}
+     * and the index ({@code git submodule add <uri> <path>}).
+     */
+    public void addSubmodule(String uri, String path, ProgressMonitor progressMonitor) throws Exception {
+        try (Git git = new Git(repository)) {
+            SubmoduleAddCommand command = git.submoduleAdd();
+
+            command
+                    .setURI(uri)
+                    .setPath(path)
+                    .setProgressMonitor(progressMonitor);
+            addCommandLine(docGen.commandLine(command));
+            Repository subRepo = command.call();
+            if (subRepo != null) {
+                subRepo.close();
+            }
+        }
+    }
+
+    /**
+     * De-registers a submodule, removes it from the index and working tree, and
+     * deletes {@code .git/modules/<path>} ({@code git submodule deinit} + {@code git rm}).
+     *
+     * @param force when true, discard local modifications inside the submodule
+     */
+    public void removeSubmodule(String path, boolean force) throws Exception {
+        try (Git git = new Git(repository)) {
+            String moduleName = path;
+            try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+                while (walk.next()) {
+                    if (path.equals(walk.getPath()) && walk.getModuleName() != null) {
+                        moduleName = walk.getModuleName();
+                    }
+                }
+            }
+
+            SubmoduleDeinitCommand command = git.submoduleDeinit();
+            command
+                    .addPath(path)
+                    .setForce(force);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+            RmCommand rmCommand = git.rm();
+            rmCommand.addFilepattern(path);
+            addCommandLine(docGen.commandLine(rmCommand));
+            rmCommand.call();
+
+            File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
+            if (modulesFile.isFile()) {
+                FileBasedConfig modulesConfig = new FileBasedConfig(modulesFile, repository.getFS());
+                modulesConfig.load();
+                modulesConfig.unsetSection(ConfigConstants.CONFIG_SUBMODULE_SECTION, moduleName);
+                modulesConfig.save();
+                Set<String> remaining = modulesConfig.getSubsections(ConfigConstants.CONFIG_SUBMODULE_SECTION);
+                if (remaining == null || remaining.isEmpty()) {
+                    RmCommand rmModulesCommand = git.rm();
+                    rmModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                    addCommandLine(docGen.commandLine(rmModulesCommand));
+                    rmModulesCommand.call();
+                } else {
+                    AddCommand addModulesCommand = git.add();
+                    addModulesCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                    addCommandLine(docGen.commandLine(addModulesCommand));
+                    addModulesCommand.call();
+                }
+            }
+
+            File moduleGitDir = new File(
+                    new File(repository.getCommonDirectory(), Constants.MODULES), path);
+            deletePathRecursively(moduleGitDir.toPath());
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Cannot remove submodule " + path, e);
+            throw new IOException(I18n.t("cannotRemoveSubmodule", path), e);
+        }
+    }
+
+    /**
+     * Stages the gitlink (and {@code .gitmodules} if present) and commits only those
+     * paths — used after a submodule pointer change or {@code submodule add}.
+     */
+    public RevCommit commitSubmoduleChange(String path, String message,
+                                           String name, String email) throws Exception {
+        try (Git git = new Git(repository)) {
+            AddCommand command = git.add();
+            command.addFilepattern(path);
+            addCommandLine(docGen.commandLine(command));
+            command.call();
+            File modulesFile = new File(repository.getWorkTree(), Constants.DOT_GIT_MODULES);
+            if (modulesFile.isFile()) {
+                AddCommand addCommand = git.add();
+                addCommand.addFilepattern(Constants.DOT_GIT_MODULES);
+                addCommandLine(docGen.commandLine(addCommand));
+                addCommand.call();
+            }
+            CommitCommand cmd = git.commit();
+            cmd
+                    .setMessage(message)
+                    .setOnly(path);
+            if (modulesFile.isFile()) {
+                cmd.setOnly(Constants.DOT_GIT_MODULES);
+            }
+            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(email)) {
+                cmd.setAuthor(name, email);
+                cmd.setCommitter(name, email);
+            }
+            return cmd.call();
+        }
+    }
+
+    /**
+     * Git-style gitlink diff for one submodule (index SHA vs the submodule HEAD).
+     */
+    public String getSubmoduleDiff(String path) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                if (path.equals(walk.getPath())) {
+                    ObjectId indexId = walk.getObjectId();
+                    ObjectId headId = null;
+                    Repository subRepo = walk.getRepository();
+                    if (subRepo != null) {
+                        try {
+                            headId = subRepo.resolve(Constants.HEAD);
+                        } finally {
+                            subRepo.close();
+                        }
+                    }
+                    if (headId == null) {
+                        sb.append(I18n.t("submoduleUninitialized", path)).append('\n');
+                    } else if (indexId != null && indexId.equals(headId)) {
+                        sb.append(I18n.t("submoduleUpToDateAt", path, indexId.getName())).append('\n');
+                    } else {
+                        String oldSha = indexId != null ? indexId.getName() : "0000000";
+                        String newSha = headId.getName();
+                        sb.append("diff --git a/").append(path).append(" b/").append(path).append('\n');
+                        sb.append("index ").append(oldSha, 0, Math.min(7, oldSha.length()))
+                                .append("..").append(newSha, 0, Math.min(7, newSha.length()))
+                                .append(" 160000\n");
+                        sb.append("--- a/").append(path).append('\n');
+                        sb.append("+++ b/").append(path).append('\n');
+                        sb.append("@@ -1 +1 @@\n");
+                        sb.append("-Subproject commit ").append(oldSha).append('\n');
+                        sb.append("+Subproject commit ").append(newSha).append('\n');
+                    }
+                }
+            }
+        }
+        if (sb.length() == 0) {
+            sb.append(I18n.t("noSubmoduleAt", path)).append('\n');
+        }
+        return sb.toString();
     }
 
     /**
@@ -3531,7 +4940,37 @@ public class GitRepoService {
      */
     public void syncSubmodules() throws Exception {
         try (Git git = new Git(repository)) {
-            git.submoduleSync().call();
+            SubmoduleSyncCommand command = git.submoduleSync();
+            command.call();
+        }
+    }
+
+    private void updateNestedSubmodules(ProgressMonitor progressMonitor) throws Exception {
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repository)) {
+            while (walk.next()) {
+                Repository subRepo = walk.getRepository();
+                if (subRepo != null) {
+                    try {
+                        new GitRepoService(subRepo).updateSubmodules(progressMonitor, true);
+                    } finally {
+                        subRepo.close();
+                    }
+                }
+            }
+        }
+    }
+
+    private static void deletePathRecursively(Path dir) throws IOException {
+        if (dir != null && Files.exists(dir)) {
+            try (var stream = Files.walk(dir)) {
+                stream.sorted(Comparator.reverseOrder())
+                        .forEach(p -> {
+                            try {
+                                Files.deleteIfExists(p);
+                            } catch (IOException ignored) {
+                            }
+                        });
+            }
         }
     }
 
@@ -3560,6 +4999,274 @@ public class GitRepoService {
             return !walk.isMergedInto(commit, remote);
         }
     }
+
+    /**
+     * Dry-run check: does the current branch merge cleanly into its upstream/remote-tracking
+     * branch? Runs an in-core {@link ResolveMerger} (inCore=true) so the working tree, index,
+     * and repository state are left untouched — nothing is written or checked out.
+     * <p>
+     * Returns {@code true} if the branch has no upstream configured, is already up to date
+     * with it, or would merge without conflicts; {@code false} if the merge would conflict.
+     */
+    public boolean canMergeWithUpstream() throws IOException {
+        String branchName = getEffectiveBranch();
+        BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(repository, branchName);
+        if (trackingStatus == null) {
+            return true; // no upstream configured, nothing to check
+        }
+        ObjectId headId = repository.resolve(Constants.HEAD);
+        ObjectId upstreamId = repository.resolve(trackingStatus.getRemoteTrackingBranch());
+        if (headId == null || upstreamId == null || headId.equals(upstreamId)) {
+            return true;
+        }
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            RevCommit headCommit = revWalk.parseCommit(headId);
+            RevCommit upstreamCommit = revWalk.parseCommit(upstreamId);
+            ResolveMerger merger = (ResolveMerger) MergeStrategy.RECURSIVE.newMerger(repository, true);
+            return merger.merge(headCommit, upstreamCommit);
+        }
+    }
+
+    // ── Sign part  ──────────────────────────────────────────────────
+
+    private void configureSigner(String signOption,  boolean sign, String pathOrKeyId) throws IOException {
+        if (sign && !Settings.SignOption.NONE.getOption().equalsIgnoreCase(signOption)) {
+
+
+            StoredConfig config = repository.getConfig();
+
+            if (config.getString("gpg", null, "format") == null
+                    || config.getString("gpg", null, "signingkey") == null
+                    || StringUtils.compare(
+                    config.getString("gpg", null, "signingkey"),
+                    pathOrKeyId
+            ) !=0 ) {
+                final String formatValue;
+                final String signingkeyValue = pathOrKeyId;
+                if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(signOption)) {
+                    formatValue = "ssh";
+                } else { //if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(signOption)) {
+                    formatValue = "openpgp";
+                }
+                config.setString("gpg", null, "format", formatValue); // Default for Git
+                config.setString("user", null, "signingkey", signingkeyValue); // e.g. A7512BA8
+                config.save();
+            }
+
+            /*if (Settings.SignOption.SSH.getOption().equalsIgnoreCase(signOption)) {
+                StoredConfig config = repository.getConfig();
+                if (config.getString("gpg", null, "format") == null
+                  || config.getString("gpg", null, "signingkey") == null
+                  || StringUtils.compare(
+                        config.getString("gpg", null, "signingkey"),
+                        pathOrKeyId
+                  ) !=0 ) {
+                    config.setString("gpg", null, "format", "ssh");
+                    config.setString("user", null, "signingkey", pathOrKeyId);
+                    config.save();
+                }
+            } else if (Settings.SignOption.PGP.getOption().equalsIgnoreCase(signOption)) {
+
+                StoredConfig config = repository.getConfig();
+
+                if (config.getString("gpg", null, "format") == null
+                        || config.getString("gpg", null, "signingkey") == null
+                        || StringUtils.compare(
+                        config.getString("gpg", null, "signingkey"),
+                        pathOrKeyId
+                ) !=0 ) {
+                    config.setString("gpg", null, "format", "openpgp"); // Default for Git
+                    config.setString("user", null, "signingkey", "LONG_PGP_KEY_ID_HERE"); // e.g. A7512BA8
+                    config.save();
+                }
+
+            }*/
+
+        }
+
+    }
+
+    /**
+     * Absolute path of the allowed-signers file selected in Settings
+     * ({@code ~/.ssh/allowed_signers} or {@code .git/allowed_signers}).
+     */
+    public Path resolveAllowedSignersFile() {
+        Path path = globalSshPath(Const.ALLOWED_SIGNERS_NAME);
+        Settings settings = Context.getSettings();
+        if (settings != null && settings.isRepositoryAllowedSigners() && repository != null) {
+            path = repository.getDirectory().toPath().resolve(Const.ALLOWED_SIGNERS_NAME);
+        }
+        return path;
+    }
+
+    /** {@code ~/.ssh/revoked_keys}, used together with the global allowed-signers file. */
+    public Path resolveRevokedKeysFile() {
+        return globalSshPath(Const.REVOKED_KEYS_NAME);
+    }
+
+    public static Path globalSshPath(String fileName) {
+        return Path.of(System.getProperty("user.home"), ".ssh", fileName);
+    }
+
+    /**
+     * Verifies the signature on {@code info} with JGit {@link SignatureVerifiers}. Does not run
+     * during history load — call from the signature dialog when the user asks.
+     */
+    public CommitSignatureDetails verifyCommitSignature(ScmRevisionInformation info) {
+        CommitSignatureDetails details = new CommitSignatureDetails();
+        Settings settings = Context.getSettings();
+        if (settings != null) {
+            details.setAllowedSignersPath(settings.getAllowedSignersDisplayPath());
+        } else {
+            details.setAllowedSignersPath(Settings.AllowedSignersFile.GLOBAL_SSH.getOption());
+        }
+
+        if (info == null || !info.isSigned()) {
+            details.setStatus(SignatureStatus.UNSIGNED);
+        } else {
+            fillFormatFromRawSignature(info.getRawGpgSignature(), details);
+            boolean verifyEnabled = settings != null && settings.isVerifyCommitSignatures();
+            if (!verifyEnabled) {
+                details.setStatus(SignatureStatus.SIGNED);
+                details.setMessage(I18n.t("signatureVerificationDisabledSettings"));
+            } else if (repository == null || info.getRevisionFullName() == null) {
+                details.setStatus(SignatureStatus.UNKNOWN);
+                details.setMessage(I18n.t("noRepositoryIsOpen"));
+            } else {
+                verifyLoadedCommit(info, details);
+            }
+        }
+        if (info != null) {
+            info.setSignatureStatus(details.getStatus());
+        }
+        return details;
+    }
+
+    private void fillFormatFromRawSignature(byte[] rawSignature, CommitSignatureDetails details) {
+        if (rawSignature != null) {
+            GpgConfig.GpgFormat format = SignatureVerifiers.getFormat(rawSignature);
+            details.setFormat(formatLabel(format));
+        }
+    }
+
+    private void verifyLoadedCommit(ScmRevisionInformation info, CommitSignatureDetails details) {
+        try (RevWalk walk = new RevWalk(repository)) {
+            RevCommit commit = walk.parseCommit(ObjectId.fromString(info.getRevisionFullName()));
+            byte[] rawSignature = commit.getRawGpgSignature();
+            if (rawSignature != null) {
+                info.setRawGpgSignature(rawSignature.clone());
+                fillFormatFromRawSignature(rawSignature, details);
+            }
+            Config overlay = new Config(repository.getConfig());
+            Path allowedSigners = resolveAllowedSignersFile();
+            overlay.setString("gpg", "ssh", "allowedSignersFile",
+                    allowedSigners.toAbsolutePath().toString());
+            Path revokedKeys = resolveRevokedKeysFile();
+            if (Files.exists(revokedKeys)) {
+                overlay.setString("gpg", "ssh", "revocationFile",
+                        revokedKeys.toAbsolutePath().toString());
+            }
+            GpgConfig gpgConfig = new GpgConfig(overlay);
+            SignatureVerifier.SignatureVerification result =
+                    SignatureVerifiers.verify(repository, gpgConfig, commit);
+            applyVerificationResult(result, details);
+        } catch (Exception ex) {
+            log.log(Level.FINE, "Commit signature verification failed for "
+                    + info.getRevisionFullName(), ex);
+            if (details.getFormat() != null && !"Unknown".equals(details.getFormat())) {
+                details.setStatus(SignatureStatus.INVALID);
+            } else {
+                details.setStatus(SignatureStatus.UNKNOWN);
+            }
+            details.setMessage(ex.getMessage());
+        }
+    }
+
+    private void applyVerificationResult(SignatureVerifier.SignatureVerification result,
+                                         CommitSignatureDetails details) {
+        if (result == null) {
+            details.setStatus(SignatureStatus.UNKNOWN);
+            details.setMessage(I18n.t("noVerifierAvailableSignatureFormat"));
+        } else {
+            if (details.getFormat() == null || details.getFormat().isBlank()) {
+                details.setFormat(result.verifierName());
+            }
+            String signer = result.signer();
+            if (signer == null || signer.isBlank()) {
+                signer = result.keyUser();
+            }
+            details.setSigner(signer);
+            details.setKeyFingerprint(result.keyFingerprint());
+            details.setTrust(trustLabel(result.trustLevel()));
+            details.setMessage(result.message());
+            if (result.verified()) {
+                details.setStatus(SignatureStatus.VERIFIED);
+            } else {
+                details.setStatus(SignatureStatus.INVALID);
+            }
+        }
+    }
+
+    private static String formatLabel(GpgConfig.GpgFormat format) {
+        String label = "Unknown";
+        if (format == GpgConfig.GpgFormat.SSH) {
+            label = "SSH";
+        } else if (format == GpgConfig.GpgFormat.OPENPGP) {
+            label = "GPG";
+        } else if (format == GpgConfig.GpgFormat.X509) {
+            label = "X.509";
+        }
+        return label;
+    }
+
+    private static String trustLabel(SignatureVerifier.TrustLevel trustLevel) {
+        String label = I18n.t("unknown");
+        if (trustLevel == SignatureVerifier.TrustLevel.NEVER) {
+            label = I18n.t("neverTrust");
+        } else if (trustLevel == SignatureVerifier.TrustLevel.MARGINAL) {
+            label = I18n.t("marginallyTrusted");
+        } else if (trustLevel == SignatureVerifier.TrustLevel.FULL) {
+            label = I18n.t("fullyTrusted");
+        } else if (trustLevel == SignatureVerifier.TrustLevel.ULTIMATE) {
+            label = I18n.t("ultimatelyTrusted");
+        }
+        return label;
+    }
+
+    // ── Utility part  ──────────────────────────────────────────────────
+
+    public boolean hasStaged() {
+        List<ScmItem> items = getStatuses(null);
+        return items.stream().anyMatch(ScmItem::isStaged);
+    }
+
+    public boolean hasUntaged() {
+        List<ScmItem> items = getStatuses(null);
+        return items.stream().anyMatch(i -> !i.isStaged());
+    }
+
+    public void stageItem(ScmItem item) throws Exception {
+        String status = item.getAttribute().getStatus();
+        String fileName = item.getShortName();
+
+        if (ScmItem.Status.RENAMED.equals(status)) {
+            String oldName = item.getAttribute().getOldName();
+            if (oldName != null) {
+                renameFile(oldName, fileName);
+            }
+        } else if (ScmItem.Status.MISSED.equals(status)) {
+            removeFile(fileName);
+        } else {
+            // MODIFIED, UNTRACKED, UNTRACKED_FOLDER, CONFLICT
+            addFileToCommitStage(fileName);
+        }
+    }
+
+    public void unstageItem(ScmItem item) throws Exception {
+        String fileName = item.getShortName();
+        removeFileFromCommitStage(fileName);
+    }
+
 
     // ── Git Worktree support ──────────────────────────────────────────────────
 
@@ -3671,6 +5378,15 @@ public class GitRepoService {
         }
         return out;
     }
+
+    public List<String> getCommandLine() {
+        return commandLine;
+    }
+
+    public void addCommandLine(List<String> commandLine) {
+        this.commandLine.addAll(commandLine);
+    }
+
 
 }
 

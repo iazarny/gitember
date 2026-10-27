@@ -18,6 +18,7 @@ To create a new branch in Gitember, follow these steps:
  * Select parent branch 
  * Right click (Win) or Ctrl click (Mac) on the selected branch and choose "Create Branch" from the context menu. Provide name in the dialog and press Ok
  * The same you can do for remote branches or any commit in the history view.
+ * If an issue tracker is configured for this repository (**Repository → Project Settings → Integrations**), the dialog includes an issue picker. Selecting a ticket fills a name such as `feature/PAY-123-fix-payment-timeout`. See [Issue tracker](../ge-integrations/issue-tracker.md).
 
 |Local or Remote  | History                              |
 |-----------------|--------------------------------------|

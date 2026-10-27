@@ -1,5 +1,6 @@
 package com.az.gitember.service.avatar;
 
+import com.az.gitember.service.Context;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -25,7 +26,6 @@ import java.util.logging.Logger;
 public class GitLabAvatarClient implements AvatarClient {
 
     private static final Logger log = Logger.getLogger(GitLabAvatarClient.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Override
     public boolean supports(String remoteUrl) {
@@ -68,7 +68,7 @@ public class GitLabAvatarClient implements AvatarClient {
             String url = base + "/api/v4/users?search=" + query;
             String body = AvatarHttpHelper.getJson(url, headers);
             if (body == null) return null;
-            JsonNode arr = MAPPER.readTree(body);
+            JsonNode arr = Context.getObjectMapper().readTree(body);
             if (!arr.isArray() || arr.isEmpty()) return null;
             String avatarUrl = arr.get(0).path("avatar_url").asText(null);
             return (avatarUrl == null || avatarUrl.isBlank()) ? null : avatarUrl;

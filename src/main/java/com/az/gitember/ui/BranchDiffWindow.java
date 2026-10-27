@@ -1,6 +1,9 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.data.Settings;
 import com.az.gitember.service.Context;
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.service.LlmDiffDescriptionService;
 import com.az.gitember.service.OllamaManager;
 import com.az.gitember.ui.misc.Util;
@@ -15,6 +18,7 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -71,9 +75,9 @@ public class BranchDiffWindow extends JFrame {
     private final JLabel leftHeader  = new JLabel(" ");
     private final JLabel rightHeader = new JLabel(" ");
     private final JLabel statsLbl    = new JLabel(" ");
-    private final JButton prevBtn    = Util.createButton("Prev", "Previous difference", FontAwesomeSolid.ARROW_UP);
-    private final JButton nextBtn    = Util.createButton("Next", "Next difference",  FontAwesomeSolid.ARROW_DOWN);
-    private final JButton aiDescBtn  = Util.createButton("Describe", "Describe difference with AI ...");
+    private final JButton prevBtn    = Util.createButton(I18n.t("prev"), I18n.t("previousDifference"), FontAwesomeSolid.ARROW_UP);
+    private final JButton nextBtn    = Util.createButton(I18n.t("next"), I18n.t("nextDifference"),  FontAwesomeSolid.ARROW_DOWN);
+    private final JButton aiDescBtn  = Util.createButton(I18n.t("describe"), I18n.t("describeDifferenceWithAi"));
 
     // AI description panel (shown / hidden on demand)
     private JPanel     aiPanel;
@@ -92,8 +96,10 @@ public class BranchDiffWindow extends JFrame {
         this.branchALabel = shortName(branchARef);
         this.branchBLabel = shortName(branchBRef);
 
-        setTitle("Branch Diff: " + branchALabel + " ↔ " + branchBLabel);
-        setSize(1100, 650);
+        setTitle(I18n.t("branchDiff", branchALabel, branchBLabel));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        setSize(screenSize.width - 60, screenSize.height - 80);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -117,7 +123,7 @@ public class BranchDiffWindow extends JFrame {
         boolean aiEnabled = Boolean.TRUE.equals(
                 Context.getSettings() != null && Context.getSettings().getEnableBranchCompareDescription());
         aiDescBtn.setVisible(aiEnabled);
-        aiDescBtn.setToolTipText("Ask the local Ollama LLM to describe the changes between these revisions");
+        aiDescBtn.setToolTipText(I18n.t("askLocalOllamaLlmDescribe"));
         aiDescBtn.addActionListener(e -> requestAiDescription());
 
         getContentPane().setLayout(new BorderLayout());
@@ -208,7 +214,7 @@ public class BranchDiffWindow extends JFrame {
         aiScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0,
                 UIManager.getColor("Separator.foreground")));
 
-        JLabel aiHeader = new JLabel(" AI Change Description");
+        JLabel aiHeader = new JLabel(I18n.t("aiChangeDescription"));
         aiHeader.setFont(aiHeader.getFont().deriveFont(Font.BOLD, 12f));
         aiHeader.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 1, 0,
@@ -296,7 +302,7 @@ public class BranchDiffWindow extends JFrame {
     // ── Loading ───────────────────────────────────────────────────────────────
 
     private void loadDiff() {
-        statsLbl.setText("Computing diff…");
+        statsLbl.setText(I18n.t("branchDiffWindow.computingDiff"));
         new SwingWorker<List<DiffEntry>, Void>() {
             @Override protected List<DiffEntry> doInBackground() throws Exception {
                 return Context.getGitRepoService().getBranchDiff(branchARef, branchBRef);
@@ -311,10 +317,10 @@ public class BranchDiffWindow extends JFrame {
                     updateStats();
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Branch diff failed", ex);
-                    statsLbl.setText("Error: " + ex.getMessage());
+                    statsLbl.setText(I18n.t("indexHistoryDialog.error", ex.getMessage()));
                     JOptionPane.showMessageDialog(BranchDiffWindow.this,
-                            "Cannot compute branch diff:\n" + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotComputeBranchDiff", ex.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -428,10 +434,7 @@ public class BranchDiffWindow extends JFrame {
         long different = allEntries.stream().filter(e -> e.status() == EntryStatus.DIFFERENT).count();
         long leftOnly  = allEntries.stream().filter(e -> e.status() == EntryStatus.LEFT_ONLY).count();
         long rightOnly = allEntries.stream().filter(e -> e.status() == EntryStatus.RIGHT_ONLY).count();
-        statsLbl.setText(total + " files  |  "
-                + different + " modified  |  "
-                + leftOnly  + " deleted  |  "
-                + rightOnly + " added");
+        statsLbl.setText(I18n.t("branchDiffStats", total, different, leftOnly, rightOnly));
     }
 
     // ── AI description ────────────────────────────────────────────────────────
@@ -439,20 +442,19 @@ public class BranchDiffWindow extends JFrame {
     private void requestAiDescription() {
         if (!OllamaManager.isRunning()) {
             JOptionPane.showMessageDialog(this,
-                    "Ollama is not running.\n\n" +
-                    "Start Ollama first, or enable it in Settings → AI Features.",
-                    "Ollama Not Available", JOptionPane.WARNING_MESSAGE);
+                    I18n.t("ollamaNotRunningStartOllama"),
+                    I18n.t("ollamaNotAvailable"), JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         aiDescBtn.setEnabled(false);
-        aiTextArea.setText("Generating description…  (this may take a minute)");
+        aiTextArea.setText(I18n.t("generatingDescriptionMayTakeMinute"));
         aiPanel.setVisible(true);
         mainSplit.setDividerLocation(0.65);
 
         String ollamaUrl  = OllamaManager.BASE_URL;
         String modelName  = Context.getSettings() != null
-                ? Context.getSettings().getLlmDetectorModel() : "qwen2.5-coder";
+                ? Context.getSettings().getLlmDetectorModel() : Settings.DEFAULT_LLM_DETECTOR_MODEL;
 
         new SwingWorker<String, Void>() {
             @Override
@@ -471,7 +473,7 @@ public class BranchDiffWindow extends JFrame {
                     aiTextArea.setCaretPosition(0);
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "AI description failed", ex);
-                    aiTextArea.setText("Failed to generate description:\n" + ex.getMessage());
+                    aiTextArea.setText(I18n.t("failedToGenerateDescription", ex.getMessage()));
                 }
             }
         }.execute();
@@ -496,31 +498,64 @@ public class BranchDiffWindow extends JFrame {
     }
 
     private void openDiff(BranchEntry entry) {
-        if (entry == null) return;
-        DiffEntry d = entry.diffEntry();
-        String leftPath  = DiffEntry.DEV_NULL.equals(d.getOldPath()) ? d.getNewPath() : d.getOldPath();
-        String rightPath = DiffEntry.DEV_NULL.equals(d.getNewPath()) ? d.getOldPath() : d.getNewPath();
+        if (entry != null) {
+            DiffEntry d = entry.diffEntry();
+            String leftPath  = DiffEntry.DEV_NULL.equals(d.getOldPath()) ? d.getNewPath() : d.getOldPath();
+            String rightPath = DiffEntry.DEV_NULL.equals(d.getNewPath()) ? d.getOldPath() : d.getNewPath();
 
-        new SwingWorker<String[], Void>() {
-            @Override protected String[] doInBackground() throws Exception {
-                return new String[]{
-                    Context.getGitRepoService().getFileContentAtRef(branchARef, leftPath),
-                    Context.getGitRepoService().getFileContentAtRef(branchBRef, rightPath)
-                };
+            if (ExtensionMap.isImage(entry.path())) {
+                new SwingWorker<File[], Void>() {
+                    @Override
+                    protected File[] doInBackground() throws Exception {
+                        File leftFile = null;
+                        File rightFile = null;
+                        try {
+                            leftFile = new File(Context.getGitRepoService().saveFile(branchARef, leftPath));
+                        } catch (Exception ignored) {
+                        }
+                        try {
+                            rightFile = new File(Context.getGitRepoService().saveFile(branchBRef, rightPath));
+                        } catch (Exception ignored) {
+                        }
+                        return new File[]{leftFile, rightFile};
+                    }
+                    @Override
+                    protected void done() {
+                        try {
+                            File[] files = get();
+                            new DiffViewerWindowImg(entry.path(),
+                                    branchALabel, files[0],
+                                    branchBLabel, files[1]).setVisible(true);
+                        } catch (Exception ex) {
+                            log.log(Level.WARNING, "Failed to open image diff", ex);
+                            JOptionPane.showMessageDialog(BranchDiffWindow.this,
+                                    I18n.t("cannotOpenDiff", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
+            } else {
+                new SwingWorker<String[], Void>() {
+                    @Override protected String[] doInBackground() throws Exception {
+                        return new String[]{
+                            Context.getGitRepoService().getFileContentAtRef(branchARef, leftPath),
+                            Context.getGitRepoService().getFileContentAtRef(branchBRef, rightPath)
+                        };
+                    }
+                    @Override protected void done() {
+                        try {
+                            String[] contents = get();
+                            new DiffViewerWindowTxt(entry.path(),
+                                    branchALabel, contents[0],
+                                    branchBLabel, contents[1]).setVisible(true);
+                        } catch (Exception ex) {
+                            log.log(Level.WARNING, "Failed to open diff", ex);
+                            JOptionPane.showMessageDialog(BranchDiffWindow.this,
+                                    I18n.t("cannotOpenDiff", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }.execute();
             }
-            @Override protected void done() {
-                try {
-                    String[] contents = get();
-                    new DiffViewerWindow(entry.path(),
-                            branchALabel, contents[0],
-                            branchBLabel, contents[1]).setVisible(true);
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to open diff", ex);
-                    JOptionPane.showMessageDialog(BranchDiffWindow.this,
-                            "Cannot open diff:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }.execute();
+        }
     }
 
     private void openSingleFile(BranchEntry entry, boolean useLeft) {
@@ -542,7 +577,7 @@ public class BranchDiffWindow extends JFrame {
                 } catch (Exception ex) {
                     log.log(Level.WARNING, "Failed to open file", ex);
                     JOptionPane.showMessageDialog(BranchDiffWindow.this,
-                            "Cannot open file:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotOpenFile", ex.getMessage()), I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
@@ -552,9 +587,9 @@ public class BranchDiffWindow extends JFrame {
 
     private void setupContextMenu(JTree tree) {
         JPopupMenu menu     = new JPopupMenu();
-        JMenuItem diffItem  = new JMenuItem("Open diff");
-        JMenuItem leftItem  = new JMenuItem("Open left file  (" + branchALabel + ")");
-        JMenuItem rightItem = new JMenuItem("Open right file  (" + branchBLabel + ")");
+        JMenuItem diffItem  = new JMenuItem(I18n.t("openDiff"));
+        JMenuItem leftItem  = new JMenuItem(I18n.t("openLeftFile", branchALabel));
+        JMenuItem rightItem = new JMenuItem(I18n.t("openRightFile", branchBLabel));
 
         diffItem .addActionListener(e -> { BranchEntry en = entryFromTree(tree); if (en != null) openDiff(en); });
         leftItem .addActionListener(e -> { BranchEntry en = entryFromTree(tree); if (en != null) openSingleFile(en, true); });
@@ -590,9 +625,9 @@ public class BranchDiffWindow extends JFrame {
     private static JPanel buildLegend() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
         p.setBorder(BorderFactory.createEmptyBorder(2, 6, 4, 6));
-        p.add(chip(SyntaxStyleUtil.changedBg(),  "Modified  " + EntryStatus.DIFFERENT.label));
-        p.add(chip(SyntaxStyleUtil.deletedBg(),  "Deleted (left only)  " + EntryStatus.LEFT_ONLY.label));
-        p.add(chip(SyntaxStyleUtil.addedBg(),    "Added (right only)  " + EntryStatus.RIGHT_ONLY.label));
+        p.add(chip(SyntaxStyleUtil.changedBg(),  I18n.t("modified", EntryStatus.DIFFERENT.label)));
+        p.add(chip(SyntaxStyleUtil.deletedBg(),  I18n.t("deletedLeftOnly", EntryStatus.LEFT_ONLY.label)));
+        p.add(chip(SyntaxStyleUtil.addedBg(),    I18n.t("addedRightOnly", EntryStatus.RIGHT_ONLY.label)));
         return p;
     }
 

@@ -1,8 +1,10 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.InitRepoParameters;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitRepoService;
+import com.az.gitember.ui.MainFrame;
 import com.az.gitember.ui.StatusBar;
 
 import java.awt.*;
@@ -11,14 +13,14 @@ public class InitHandler extends AbstractAsyncHandler<Void> {
 
     private final InitRepoParameters params;
 
-    public InitHandler(Component parent, StatusBar statusBar, InitRepoParameters params) {
-        super(parent, statusBar);
+    public InitHandler(Component parent,  InitRepoParameters params) {
+        super(parent);
         this.params = params;
     }
 
     @Override
     protected String getOperationName() {
-        return "Init";
+        return I18n.t("init");
     }
 
     @Override
@@ -27,14 +29,17 @@ public class InitHandler extends AbstractAsyncHandler<Void> {
                 params.getDestinationFolder(),
                 params.isInitWithReame(),
                 params.isInitWithIgnore(),
-                params.isInitWithLfs()
+                params.isInitWithLfs(),
+                params.getDefaultBranch()
         );
         Context.init(params.getDestinationFolder());
+        MainFrame.getInstance().swithToTheProjectView();
         return null;
     }
 
     @Override
     protected void onSuccess(Void result) {
-        statusBar.setStatus("Repository initialized successfully");
+        statusBar.setStatus(I18n.t("repositoryInitializedSuccessfully"));
+        MainFrame.getInstance().getToolBar().setVisible(true);
     }
 }

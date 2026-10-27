@@ -1,5 +1,6 @@
 package com.az.gitember.service.detector.impl;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.detector.Confidence;
 import com.az.gitember.service.detector.Detector;
 import com.az.gitember.service.detector.Finding;
@@ -60,7 +61,7 @@ public class KeyBasedDetector implements Detector {
                     context.getFile(),
                     i + 1,
                     "HARDCODED_SECRET",
-                    "Hardcoded secret assigned",
+                    I18n.t("hardcodedSecretAssigned"),
                     Confidence.HIGH,
                     line,
                     value

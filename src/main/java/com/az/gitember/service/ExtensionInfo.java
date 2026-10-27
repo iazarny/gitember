@@ -4,12 +4,18 @@ public class ExtensionInfo {
 
     private final String mimeType;
     private final String fileExtension;
-    private final boolean text;
+    private final ExtType extType;
 
-    public ExtensionInfo(String mimeType, String fileExtension, boolean text) {
+    public static enum ExtType{
+        TEXT,
+        IMAGE,
+        UNKNOWN
+    }
+
+    public ExtensionInfo(String mimeType, String fileExtension, ExtType extType) {
         this.mimeType = mimeType;
         this.fileExtension = fileExtension;
-        this.text = text;
+        this.extType = extType;
     }
 
     public String getMimeType() {
@@ -20,8 +26,7 @@ public class ExtensionInfo {
         return fileExtension;
     }
 
-    public boolean isText() {
-        return text;
+    public ExtType getExtType() {
+        return extType;
     }
-
 }

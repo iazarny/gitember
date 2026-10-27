@@ -1,12 +1,14 @@
 package com.az.gitember;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.dialog.SettingsDialog;
 import com.az.gitember.service.Context;
-import com.az.gitember.ui.DiffViewerWindow;
+import com.az.gitember.service.ExtensionMap;
+import com.az.gitember.ui.DiffViewerWindowImg;
+import com.az.gitember.ui.DiffViewerWindowTxt;
 import com.az.gitember.ui.FolderCompareWindow;
 import com.az.gitember.ui.MainFrame;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
+import com.az.gitember.ui.misc.LafTheme;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder;
 import org.eclipse.jgit.util.FS;
@@ -14,7 +16,6 @@ import org.eclipse.jgit.util.FS;
 import javax.swing.*;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,10 +42,13 @@ public class App {
         SwingUtilities.invokeLater(() -> {
             try {
                 Context.readSettings();
+                // Before any UI is built: the forced UI language wins, otherwise the OS language.
+                I18n.init(Context.getSettings() != null ? Context.getSettings().getLanguage() : null);
                 setupLookAndFeel();
+                I18n.installSwingDefaults();
                 applyFontSize();
 
-                if (args.length == 2) {
+                if (args.length == 2 && !AotTraining.isRequested(args)) {
                     File left  = new File(args[0]);
                     File right = new File(args[1]);
                     if (left.exists() && right.exists()) {
@@ -55,9 +59,19 @@ public class App {
                             w.compare(left.getAbsolutePath(), right.getAbsolutePath());
                             return;
                         } else if (left.isFile() && right.isFile()) {
+                            if (ExtensionMap.isImage(left.getName())
+                                    && ExtensionMap.isImage(right.getName())) {
+                                DiffViewerWindowImg w = new DiffViewerWindowImg(
+                                        left.getName(),
+                                        left.getAbsolutePath(), left,
+                                        right.getAbsolutePath(), right);
+                                w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                                w.setVisible(true);
+                                return;
+                            }
                             String leftContent  = Files.readString(left.toPath());
                             String rightContent = Files.readString(right.toPath());
-                            DiffViewerWindow w = new DiffViewerWindow(
+                            DiffViewerWindowTxt w = new DiffViewerWindowTxt(
                                     left.getName(),
                                     left.getAbsolutePath(),  leftContent,
                                     right.getAbsolutePath(), rightContent);
@@ -68,13 +82,21 @@ public class App {
                     }
                 }
 
-                MainFrame frame = new MainFrame();
-                frame.setVisible(true);
+                MainFrame frame = MainFrame.getInstance();
+                frame.init();
+                if (!AotTraining.isHidden()) {
+                    frame.setVisible(true);
+                }
+                if (AotTraining.isRequested(args)) {
+                    AotTraining.start(frame, args);
+                } else {
+                    AotTraining.scheduleBackgroundTraining();
+                }
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Failed to start application", e);
                 JOptionPane.showMessageDialog(null,
-                        "Failed to start: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                        I18n.t("failedToStart", e.getMessage()),
+                        I18n.t("error"), JOptionPane.ERROR_MESSAGE);
             }
         });
     }
@@ -111,15 +133,9 @@ public class App {
 
     private static void setupLookAndFeel() {
         try {
-            boolean darkMode = false;
-            if (Context.getSettings() != null && "dark".equalsIgnoreCase(Context.getSettings().getTheme())) {
-                darkMode = true;
-            }
-            if (darkMode) {
-                FlatDarkLaf.setup();
-            } else {
-                FlatLightLaf.setup();
-            }
+            String themeId = Context.getSettings() != null ? Context.getSettings().getTheme() : null;
+            UIManager.put("Component.focusWidth", 0);
+            LafTheme.fromId(themeId).setup();
         } catch (Exception e) {
             log.log(Level.WARNING, "Failed to set FlatLaf, using system default", e);
             try {

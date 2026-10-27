@@ -16,7 +16,7 @@ public final class LlmCommitMessageService {
     private static final Logger log = Logger.getLogger(LlmCommitMessageService.class.getName());
 
     /** Characters of diff fed to the model (≈ 6 k tokens at avg 4 chars/token). */
-    public static final int MAX_DIFF_CHARS = 8_000;
+    public static final int MAX_DIFF_CHARS = 32_000;
 
     private LlmCommitMessageService() {}
 

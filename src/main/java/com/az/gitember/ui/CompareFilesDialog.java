@@ -1,5 +1,7 @@
 package com.az.gitember.ui;
 
+import com.az.gitember.service.I18n;
+import com.az.gitember.service.ExtensionMap;
 import com.az.gitember.ui.misc.Util;
 
 import javax.swing.*;
@@ -16,7 +18,7 @@ import java.util.logging.Logger;
 /**
  * Modal dialog for comparing any two files from the file system.
  * Each path field accepts drag-and-drop of a single file.
- * On OK a {@link DiffViewerWindow} is opened with the two files' contents.
+ * On OK a {@link DiffViewerWindowTxt} or {@link DiffViewerWindowImg} is opened.
  */
 public class CompareFilesDialog extends JDialog {
 
@@ -24,10 +26,10 @@ public class CompareFilesDialog extends JDialog {
 
     private final JTextField leftField  = new JTextField();
     private final JTextField rightField = new JTextField();
-    private final JButton    okBtn      = new JButton("Compare");
+    private final JButton    okBtn      = new JButton(I18n.t("compare"));
 
     public CompareFilesDialog(Frame owner) {
-        super(owner, "Compare Files", true);
+        super(owner, I18n.t("compareFiles"), true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
@@ -39,22 +41,22 @@ public class CompareFilesDialog extends JDialog {
 
         // Left row
         lc.gridy = 0; fc.gridy = 0; bc.gridy = 0;
-        content.add(new JLabel("Left file:"), lc);
+        content.add(new JLabel(I18n.t("leftFile")), lc);
         content.add(leftField,                fc);
-        JButton browseLeft = new JButton("Browse…");
+        JButton browseLeft = new JButton(I18n.t("browse"));
         browseLeft.addActionListener(e -> browse(leftField, false));
         content.add(browseLeft, bc);
 
         // Right row
         lc.gridy = 1; fc.gridy = 1; bc.gridy = 1;
-        content.add(new JLabel("Right file:"), lc);
+        content.add(new JLabel(I18n.t("rightFile")), lc);
         content.add(rightField,                fc);
-        JButton browseRight = new JButton("Browse…");
+        JButton browseRight = new JButton(I18n.t("browse"));
         browseRight.addActionListener(e -> browse(rightField, false));
         content.add(browseRight, bc);
 
         // Swap button (centered, between the two rows)
-        JButton swapBtn = new JButton("⇅ Swap");
+        JButton swapBtn = new JButton(I18n.t("swap"));
         swapBtn.addActionListener(e -> {
             String tmp = leftField.getText();
             leftField.setText(rightField.getText());
@@ -68,7 +70,7 @@ public class CompareFilesDialog extends JDialog {
         // Button row
         okBtn.setEnabled(false);
         okBtn.addActionListener(e -> openDiff());
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.addActionListener(e -> dispose());
         getRootPane().setDefaultButton(okBtn);
 
@@ -96,7 +98,7 @@ public class CompareFilesDialog extends JDialog {
 
     private void browse(JTextField target, boolean dirsOnly) {
         JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Select file");
+        fc.setDialogTitle(I18n.t("selectFile"));
         fc.setFileSelectionMode(dirsOnly ? JFileChooser.DIRECTORIES_ONLY : JFileChooser.FILES_ONLY);
         if (!target.getText().isBlank()) {
             File cur = new File(target.getText().trim());
@@ -117,42 +119,53 @@ public class CompareFilesDialog extends JDialog {
     private void openDiff() {
         File left  = new File(leftField.getText().trim());
         File right = new File(rightField.getText().trim());
+        boolean leftImage = ExtensionMap.isImage(left.getName());
+        boolean rightImage = ExtensionMap.isImage(right.getName());
 
-        if (looksLikeBinary(left) || looksLikeBinary(right)) {
+        if (leftImage && rightImage) {
+            new DiffViewerWindowImg(
+                    left.getName(),
+                    left.getAbsolutePath(), left,
+                    right.getAbsolutePath(), right).setVisible(true);
+            dispose();
+        } else if (leftImage || rightImage) {
             JOptionPane.showMessageDialog(this,
-                    "One or both files appear to be binary and cannot be compared as text.",
-                    "Binary file", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
-            @Override
-            protected String[] doInBackground() throws Exception {
-                String l = Files.readString(left.toPath());
-                String r = Files.readString(right.toPath());
-                return new String[]{l, r};
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    String[] texts = get();
-                    String name = left.getName();
-                    DiffViewerWindow w = new DiffViewerWindow(
-                            name,
-                            left.getAbsolutePath(),  texts[0],
-                            right.getAbsolutePath(), texts[1]);
-                    w.setVisible(true);
-                    dispose();
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Failed to read files for comparison", ex);
-                    JOptionPane.showMessageDialog(CompareFilesDialog.this,
-                            "Cannot read file: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                    I18n.t("bothFilesMustImagesCompare"),
+                    I18n.t("mixedFileTypes"), JOptionPane.WARNING_MESSAGE);
+        } else if (looksLikeBinary(left) || looksLikeBinary(right)) {
+            JOptionPane.showMessageDialog(this,
+                    I18n.t("oneBothFilesAppearBinary"),
+                    I18n.t("binaryFile"), JOptionPane.WARNING_MESSAGE);
+        } else {
+            SwingWorker<String[], Void> worker = new SwingWorker<>() {
+                @Override
+                protected String[] doInBackground() throws Exception {
+                    String l = Files.readString(left.toPath());
+                    String r = Files.readString(right.toPath());
+                    return new String[]{l, r};
                 }
-            }
-        };
-        worker.execute();
+
+                @Override
+                protected void done() {
+                    try {
+                        String[] texts = get();
+                        String name = left.getName();
+                        DiffViewerWindowTxt w = new DiffViewerWindowTxt(
+                                name,
+                                left.getAbsolutePath(),  texts[0],
+                                right.getAbsolutePath(), texts[1]);
+                        w.setVisible(true);
+                        dispose();
+                    } catch (Exception ex) {
+                        log.log(Level.WARNING, "Failed to read files for comparison", ex);
+                        JOptionPane.showMessageDialog(CompareFilesDialog.this,
+                                I18n.t("cannotReadFile", ex.getMessage()),
+                                I18n.t("error"), JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

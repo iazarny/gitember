@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 
 import com.az.gitember.ui.misc.Util;
@@ -20,7 +21,7 @@ public class CredentialsDialog extends JDialog {
     private boolean confirmed = false;
 
     public CredentialsDialog(Frame parent, Project project) {
-        super(parent, "Repository Credentials", true);
+        super(parent, I18n.t("repositoryCredentials"), true);
         setSize(460, 260);
         setLocationRelativeTo(parent);
         setResizable(false);
@@ -33,8 +34,7 @@ public class CredentialsDialog extends JDialog {
 
         // Info label
         JLabel info = new JLabel(
-                "<html>Access token takes priority over username/password.<br>"
-                + "Leave token blank to use username &amp; password instead.</html>");
+                I18n.t("accessTokenTakesPriorityOver"));
         info.setForeground(UIManager.getColor("Label.disabledForeground"));
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.weightx = 1;
         form.add(info, gbc);
@@ -42,7 +42,7 @@ public class CredentialsDialog extends JDialog {
 
         // Access token
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        form.add(new JLabel("Access Token:"), gbc);
+        form.add(new JLabel(I18n.t("credentialsDialog.accessToken")), gbc);
         tokenField = new JPasswordField(25);
         if (project.getAccessToken() != null) {
             tokenField.setText(project.getAccessToken());
@@ -57,7 +57,7 @@ public class CredentialsDialog extends JDialog {
 
         // Username
         gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
-        form.add(new JLabel("Username:"), gbc);
+        form.add(new JLabel(I18n.t("username")), gbc);
         userField = new JTextField(25);
         if (project.getUserName() != null) {
             userField.setText(project.getUserName());
@@ -67,7 +67,7 @@ public class CredentialsDialog extends JDialog {
 
         // Password
         gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
-        form.add(new JLabel("Password:"), gbc);
+        form.add(new JLabel(I18n.t("password")), gbc);
         pwdField = new JPasswordField(25);
         if (project.getUserPwd() != null) {
             pwdField.setText(project.getUserPwd());
@@ -77,9 +77,9 @@ public class CredentialsDialog extends JDialog {
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton okBtn = new JButton("Save");
+        JButton okBtn = new JButton(I18n.t("save"));
         okBtn.addActionListener(e -> { confirmed = true; dispose(); });
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(I18n.t("cancel"));
         cancelBtn.addActionListener(e -> dispose());
         buttonPanel.add(okBtn);
         buttonPanel.add(cancelBtn);

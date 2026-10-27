@@ -1,5 +1,6 @@
 package com.az.gitember.handler;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.data.Project;
 import com.az.gitember.data.RemoteRepoParameters;
 import com.az.gitember.data.ScmBranch;
@@ -17,14 +18,14 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
     private final ScmBranch branch;
 
-    public DeleteBranchHandler(Component parent, StatusBar statusBar, ScmBranch branch) {
-        super(parent, statusBar);
+    public DeleteBranchHandler(Component parent, ScmBranch branch) {
+        super(parent);
         this.branch = branch;
     }
 
     @Override
     protected String getOperationName() {
-        return "Delete " + branch.getShortName();
+        return I18n.t("delete", branch.getShortName());
     }
 
     @Override
@@ -38,7 +39,7 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
                 String remoteRef = branch.getFullName()
                         .replaceFirst("^refs/remotes/[^/]+/", "refs/heads/");
                 RefSpec refSpec = new RefSpec().setSource(null).setDestination(remoteRef);
-                Context.getGitRepoService().remoteRepositoryPush(params, refSpec, null);
+                Context.getGitRepoService().remoteRepositoryPush(params, refSpec, false, null);
             }
             // Remove the local remote-tracking ref
             Context.getGitRepoService().deleteRemoteTrackingBranch(branch.getFullName());
@@ -53,7 +54,7 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
     @Override
     protected void onSuccess(String result) {
-        statusBar.setStatus("Deleted " + result);
+        statusBar.setStatus(I18n.t("deleteBranchHandler.deleted", result));
     }
 
     /**
@@ -71,11 +72,8 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
                         .orElse(null);
                 if (conflict != null) {
                     JOptionPane.showMessageDialog(parent,
-                            "<html>Cannot delete branch <b>" + branch.getShortName() + "</b>.<br><br>"
-                            + "It is currently checked out in a linked worktree at:<br>"
-                            + "<tt>" + conflict.getPath() + "</tt><br><br>"
-                            + "Remove or switch the worktree first.</html>",
-                            "Branch In Use", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("cannotDeleteBranchCurrentlyChecked", branch.getShortName(), conflict.getPath()),
+                            I18n.t("branchInUse"), JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             } catch (Exception ignored) {
@@ -85,17 +83,14 @@ public class DeleteBranchHandler extends AbstractAsyncHandler<String> {
 
         String message;
         if (branch.getRemoteMergeName() != null && branch.getAheadCount() > 0) {
-            message = "<html>Delete branch <b>" + branch.getShortName() + "</b>?<br><br>"
-                    + "<b style='color:orange'>\u26a0 " + branch.getAheadCount()
-                    + " unpushed commit(s)</b> will be lost<br>"
-                    + "(not yet pushed to <tt>" + branch.getRemoteMergeName() + "</tt>).</html>";
+            message = I18n.t("deleteBranchUnpushedCommits", branch.getShortName(), branch.getAheadCount(), branch.getRemoteMergeName());
         } else {
-            message = "Delete branch \"" + branch.getShortName() + "\"?";
+            message = I18n.t("deleteBranch", branch.getShortName());
         }
         int result = JOptionPane.showConfirmDialog(parent, message,
-                "Delete Branch", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+                I18n.t("deleteBranchHandler.deleteBranch"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            new DeleteBranchHandler(parent, statusBar, branch).execute();
+            new DeleteBranchHandler(parent, branch).execute();
         }
     }
 }

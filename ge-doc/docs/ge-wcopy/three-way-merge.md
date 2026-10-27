@@ -47,9 +47,9 @@ When all conflicts are resolved, click **Resolved** to save the file and mark it
 as resolved in Git.  The file is removed from the conflicted state in the
 Working Copy tab and is ready to be staged and committed.
 
-## Tips
-
+:::tip
 * You can accept changes block-by-block, mixing Ours and Theirs as needed.
 * The Result pane is a full editor — you can type or paste any content.
 * Use **All Ours** or **All Theirs** toolbar buttons to accept all blocks at once
   when one side is entirely correct.
+:::

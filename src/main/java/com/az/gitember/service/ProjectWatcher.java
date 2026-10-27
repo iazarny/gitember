@@ -101,7 +101,7 @@ public class ProjectWatcher implements Runnable {
         }
     }
 
-    private void shutDown() {
+    public void shutDown() {
         watchKeys.forEach((k,v) -> {
             k.cancel();
         });
@@ -114,7 +114,7 @@ public class ProjectWatcher implements Runnable {
 
 
     private boolean isCandidateEligibleToRegister(String candidate) {
-
+// TODO read .gitignore
         return !(
                 candidate.endsWith(".git")
                         ||candidate.endsWith(".github")
@@ -130,6 +130,9 @@ public class ProjectWatcher implements Runnable {
                         ||candidate.endsWith("pkg")
                         ||candidate.endsWith("vendor/bundle")
                         ||candidate.endsWith("bundle")
+                        ||candidate.endsWith("venv")
+                        ||candidate.endsWith("node_modules")
+                        ||candidate.endsWith(".idea")
         );
 
     }

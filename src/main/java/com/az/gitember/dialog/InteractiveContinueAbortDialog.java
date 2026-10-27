@@ -1,5 +1,6 @@
 package com.az.gitember.dialog;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.service.Context;
 import com.az.gitember.ui.StatusBar;
 import com.az.gitember.ui.misc.Util;
@@ -65,35 +66,35 @@ public class InteractiveContinueAbortDialog extends JDialog {
                                           String currentRevision,
                                           StatusBar statusBar,
                                           Runnable onComplete) {
-        super(owner, "Interactive Rebase In Progress", false); // non-modal
+        super(owner, I18n.t("interactiveRebaseInProgress"), false); // non-modal
         this.statusBar  = statusBar;
         this.onComplete = onComplete;
 
         setAlwaysOnTop(true);
+        // Do not steal keyboard focus when shown or raised — otherwise a working-copy
+        // context menu is cancelled the instant this dialog is brought to front.
+        setAutoRequestFocus(false);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // prevent accidental dismiss
         setResizable(false);
         setIconImages(Util.appIcons());
 
         // ── Message ───────────────────────────────────────────────────────────
         JLabel titleLabel = new JLabel(
-                "<html><b>Interactive rebase paused.</b></html>");
+                I18n.t("interactiveRebasePaused"));
         titleLabel.setForeground(new Color(160, 80, 0));
 
         StringBuilder sb = new StringBuilder("<html>");
         if (currentRevision != null && !currentRevision.isBlank()) {
-            sb.append("Stopped at revision: <tt><b>").append(currentRevision).append("</b></tt><br><br>");
+            sb.append(I18n.t("stoppedAtRevision")).append(currentRevision).append("</b></tt><br><br>");
         }
         if (conflicts != null && !conflicts.isEmpty()) {
-            sb.append("Conflicts detected in:<br><ul>");
+            sb.append(I18n.t("conflictsDetectedIn"));
             for (String f : conflicts) {
                 sb.append("<li><tt>").append(f).append("</tt></li>");
             }
-            sb.append("</ul>Resolve, <b>stage</b> the files, then click <b>Continue</b>.<br>"
-                    + "If the commit becomes empty after resolution, use <b>Skip</b>.");
+            sb.append(I18n.t("resolveStageFilesThenClick"));
         } else {
-            sb.append("Resolve any conflicts and <b>stage</b> the files,<br>"
-                    + "then click <b>Continue</b> — or <b>Skip</b> if the commit is empty,<br>"
-                    + "or <b>Abort</b> to cancel.");
+            sb.append(I18n.t("resolveAnyConflictsStageFiles"));
         }
         sb.append("</html>");
         JLabel bodyLabel = new JLabel(sb.toString());
@@ -105,18 +106,18 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
         // ── Buttons ───────────────────────────────────────────────────────────
         JButton continueBtn = Util.createButton(
-                "Continue",
-                "Stage resolved files, then continue the rebase",
+                I18n.t("continue"),
+                I18n.t("stageResolvedFilesThenContinue"),
                 FontAwesomeSolid.PLAY);
 
         JButton skipBtn = Util.createButton(
-                "Skip",
-                "Discard the current (empty) commit and continue with the next one",
+                I18n.t("skip"),
+                I18n.t("discardCurrentEmptyCommitContinue"),
                 FontAwesomeSolid.FORWARD);
 
         JButton abortBtn = Util.createButton(
-                "Abort",
-                "Abort the interactive rebase and restore the original branch",
+                I18n.t("abort"),
+                I18n.t("abortInteractiveRebaseRestoreOriginal"),
                 FontAwesomeSolid.BAN);
 
         continueBtn.addActionListener(e -> performOperation(Op.CONTINUE));
@@ -148,36 +149,95 @@ public class InteractiveContinueAbortDialog extends JDialog {
 
         // On macOS + FlatLaf window decorations, setAlwaysOnTop() alone is not
         // enough — clicking the main window can bury this dialog behind it.
-        // Re-assert our position whenever the owner regains focus.
+        // Re-assert z-order when the owner is focused, but never while a popup
+        // menu is open (toFront would dismiss the menu immediately).
+        // Drop always-on-top *before* the popup is shown: Toolkit AWT listeners
+        // run before component mouse listeners, so JPopupMenu's mouse-grab is
+        // not immediately ungrabbed by this window (menu would flash and close).
+        MenuSelectionManager menuManager = MenuSelectionManager.defaultManager();
+        javax.swing.event.ChangeListener popupGuard = e -> syncAlwaysOnTopWithMenus();
+        menuManager.addChangeListener(popupGuard);
+
+        java.awt.event.AWTEventListener popupTriggerGuard = event -> {
+            if (event instanceof java.awt.event.MouseEvent me
+                    && me.isPopupTrigger()
+                    && isDisplayable()
+                    && isVisible()) {
+                setAlwaysOnTop(false);
+                SwingUtilities.invokeLater(() -> restoreAlwaysOnTopIfIdle());
+            }
+        };
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                popupTriggerGuard, AWTEvent.MOUSE_EVENT_MASK);
+
+        java.awt.event.WindowFocusListener bringToFront = null;
         if (owner != null) {
-            java.awt.event.WindowFocusListener bringToFront =
-                    new java.awt.event.WindowFocusListener() {
+            bringToFront = new java.awt.event.WindowFocusListener() {
                 @Override
                 public void windowGainedFocus(java.awt.event.WindowEvent e) {
-                    if (isDisplayable() && isVisible()) {
-                        toFront();
-                    }
+                    SwingUtilities.invokeLater(() -> raiseIfSafe());
                 }
                 @Override public void windowLostFocus(java.awt.event.WindowEvent e) {}
             };
             owner.addWindowFocusListener(bringToFront);
-            // Remove the listener when this dialog is gone so we don't leak it
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosed(java.awt.event.WindowEvent e) {
-                    owner.removeWindowFocusListener(bringToFront);
-                }
-            });
         }
+        final java.awt.event.WindowFocusListener ownerFocusListener = bringToFront;
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                menuManager.removeChangeListener(popupGuard);
+                Toolkit.getDefaultToolkit().removeAWTEventListener(popupTriggerGuard);
+                if (owner != null && ownerFocusListener != null) {
+                    owner.removeWindowFocusListener(ownerFocusListener);
+                }
+            }
+        });
+    }
+
+    /**
+     * Raises this palette without cancelling an open Swing popup menu.
+     * {@link #toFront()} is deferred to after the current mouse event so a
+     * right-click can finish showing the menu first.
+     */
+    private void raiseIfSafe() {
+        if (isDisplayable() && isVisible() && !isPopupMenuShowing()) {
+            toFront();
+        }
+    }
+
+    /**
+     * An always-on-top window races AWT mouse-grab used by {@link JPopupMenu}
+     * (the grab ungrabs immediately → the menu flashes and closes). Drop
+     * always-on-top for the duration of any Swing menu selection.
+     */
+    private void syncAlwaysOnTopWithMenus() {
+        if (isDisplayable() && isVisible()) {
+            setAlwaysOnTop(!isPopupMenuShowing());
+        }
+    }
+
+    private void restoreAlwaysOnTopIfIdle() {
+        if (isDisplayable() && isVisible() && !isPopupMenuShowing()) {
+            setAlwaysOnTop(true);
+        }
+    }
+
+    private static boolean isPopupMenuShowing() {
+        boolean showing = false;
+        MenuElement[] path = MenuSelectionManager.defaultManager().getSelectedPath();
+        if (path != null && path.length > 0) {
+            showing = true;
+        }
+        return showing;
     }
 
     // ── Private operations ────────────────────────────────────────────────────
 
     private void performOperation(Op op) {
         String label = switch (op) {
-            case CONTINUE -> "Rebase continue";
-            case SKIP     -> "Rebase skip";
-            case ABORT    -> "Rebase abort";
+            case CONTINUE -> I18n.t("rebaseContinue");
+            case SKIP     -> I18n.t("rebaseSkip");
+            case ABORT    -> I18n.t("rebaseAbort");
         };
         statusBar.setStatus(label + "\u2026");
         statusBar.showProgress(true);
@@ -214,7 +274,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
                     // When continue produces an empty commit, skip it automatically
                     // instead of showing the dialog again.
                     if (op == Op.CONTINUE && status == RebaseResult.Status.NOTHING_TO_COMMIT) {
-                        statusBar.setStatus("Empty commit \u2014 skipping automatically\u2026");
+                        statusBar.setStatus(I18n.t("emptyCommitSkippingAutomatically"));
                         performOperation(Op.SKIP);
                         return;
                     }
@@ -232,7 +292,7 @@ public class InteractiveContinueAbortDialog extends JDialog {
                 } catch (Exception ex) {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     log.log(Level.WARNING, label + " failed", cause);
-                    statusBar.setStatus(label + " failed: " + cause.getMessage());
+                    statusBar.setStatus(I18n.t("opFailedStatus", label, cause.getMessage()));
 
                     // If continue/skip threw but the rebase is still in progress
                     // (e.g. UnmergedPathsException — user clicked Continue before
@@ -243,19 +303,18 @@ public class InteractiveContinueAbortDialog extends JDialog {
                                == RepositoryState.REBASING_INTERACTIVE) {
                         enableButtons();
                         String msg = cause instanceof UnmergedPathsException
-                                ? "Some conflict markers are still present.<br>"
-                                  + "Resolve and <b>stage</b> all conflicted files, then click <b>Continue</b>."
-                                : label + " failed: " + cause.getMessage();
+                                ? I18n.t("someConflictMarkersStillPresent")
+                                : I18n.t("opFailedStatus", label, cause.getMessage());
                         JOptionPane.showMessageDialog(InteractiveContinueAbortDialog.this,
                                 "<html>" + msg + "</html>",
-                                "Rebase Operation Failed", JOptionPane.WARNING_MESSAGE);
+                                I18n.t("rebaseOperationFailed"), JOptionPane.WARNING_MESSAGE);
                         return;
                     }
 
                     disposeAndNotify();
                     JOptionPane.showMessageDialog(null,
-                            label + " failed:\n" + cause.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            I18n.t("opFailedDialog", label, cause.getMessage()),
+                            I18n.t("error"), JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();

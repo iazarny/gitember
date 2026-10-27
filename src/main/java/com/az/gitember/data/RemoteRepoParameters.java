@@ -1,6 +1,7 @@
 package com.az.gitember.data;
 
 import com.az.gitember.service.Context;
+import com.az.gitember.service.GitRepoService;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
@@ -21,6 +22,8 @@ public class RemoteRepoParameters {
     private String keyPassPhrase = "";
     /** Shallow clone depth: 0 means full clone; positive N = last N commits only. */
     private int depth = 0;
+    private String branch;
+    private boolean withSubmodules;
 
     public String getUrl() {
         return url;
@@ -70,6 +73,26 @@ public class RemoteRepoParameters {
         this.accessToken = accessToken;
     }
 
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public boolean withSubmodules() {
+        return withSubmodules;
+    }
+
+    public boolean isWithSubmodules() {
+        return withSubmodules;
+    }
+
+    public void setWithSubmodules(boolean withSubmodules) {
+        this.withSubmodules = withSubmodules;
+    }
+
     /**
      * Creates parameters for the current repository.
      * Loads credentials from the stored project; if none are configured,
@@ -90,6 +113,35 @@ public class RemoteRepoParameters {
             params.accessToken  = StringUtils.defaultString(p.getAccessToken());
             params.keyPassPhrase = StringUtils.defaultString(p.getKeyPass());
         });
+
+        // If the project had no credentials, try to extract them from the URL
+        if (StringUtils.isBlank(params.accessToken) && StringUtils.isBlank(params.userName)) {
+            params.extractCredentialsFromUrl(params.url);
+        }
+
+        return params;
+    }
+
+    /**
+     * Creates parameters for an arbitrary project, reading the remote URL from the
+     * project's <em>own</em> repository (via {@code svc}) rather than from the currently
+     * open repository. Used by workspace-wide push / pull / fetch, where each project in
+     * the workspace has its own remote and credentials.
+     *
+     * @param project project whose stored credentials should be used
+     * @param svc     a service bound to that project's repository
+     * @return populated parameters (URL may be blank if the project has no remote)
+     */
+    public static RemoteRepoParameters forProject(Project project, GitRepoService svc) {
+        RemoteRepoParameters params = new RemoteRepoParameters();
+        params.url = StringUtils.defaultString(svc.getRepositoryRemoteUrl());
+
+        if (project != null) {
+            params.userName      = StringUtils.defaultString(project.getUserName());
+            params.userPwd       = StringUtils.defaultString(project.getUserPwd());
+            params.accessToken   = StringUtils.defaultString(project.getAccessToken());
+            params.keyPassPhrase = StringUtils.defaultString(project.getKeyPass());
+        }
 
         // If the project had no credentials, try to extract them from the URL
         if (StringUtils.isBlank(params.accessToken) && StringUtils.isBlank(params.userName)) {

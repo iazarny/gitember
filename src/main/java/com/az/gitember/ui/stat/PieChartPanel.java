@@ -1,5 +1,6 @@
 package com.az.gitember.ui.stat;
 
+import com.az.gitember.service.I18n;
 import com.az.gitember.ui.SyntaxStyleUtil;
 
 import javax.swing.*;
@@ -150,7 +151,7 @@ public class PieChartPanel extends JPanel {
     private void paintEmpty(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setColor(getForeground());
-        String msg = "No data";
+        String msg = I18n.t("noData");
         FontMetrics fm = g2.getFontMetrics();
         g2.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, (getHeight() + fm.getAscent()) / 2);
         g2.dispose();

@@ -1,5 +1,6 @@
 package com.az.gitember.data;
 
+import com.az.gitember.service.ExtensionInfo;
 import com.az.gitember.service.ExtensionMap;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
@@ -20,7 +21,7 @@ public class ScmItemDocument  {
         this.name = item.getShortName();
         this.revision = item.getCommitName();
 
-        if (ExtensionMap.isTextExtension(item.getShortName())) {
+        if (ExtensionInfo.ExtType.TEXT == ExtensionMap.getExtensionType(item.getShortName())) {
             body = getContent(item);
         } else {
             body = getContentMedatada(item);
