@@ -6,6 +6,7 @@ import com.az.gitember.component.RRightTextScrollPane;
 import com.az.gitember.data.ScmRevisionInformation;
 import com.az.gitember.service.Context;
 import com.az.gitember.service.GitemberUtil;
+import com.az.gitember.service.SemanticFormat;
 import com.az.gitember.ui.misc.Util;
 import org.eclipse.jgit.diff.*;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -57,7 +58,16 @@ public class DiffViewerWindowTxt extends JFrame {
     private boolean editableMode = false;
     private boolean loadingFile  = false;
     private Timer   debounce;
+    private String  leftFileName;
+    private String  rightFileName;
 
+    // Lines vs. semantic comparison (only for formats supported by SemanticFormat)
+    private SemanticFormat semanticFormat;
+    private boolean semanticMode = false;
+    private JToggleButton linesBtn;
+    private JToggleButton semanticBtn;
+    private JPanel compareModePanel;
+    private JLabel semanticWarnLabel;
 
 
     // ---- Constructors ----
@@ -269,17 +279,85 @@ public class DiffViewerWindowTxt extends JFrame {
 
         diffInfoLabel = new JLabel("");
 
+        linesBtn    = new JToggleButton(I18n.t("lines"), true);
+        semanticBtn = new JToggleButton(I18n.t("semantic"));
+        linesBtn.setToolTipText(I18n.t("compareLinesTooltip"));
+        semanticBtn.setToolTipText(I18n.t("compareSemanticTooltip"));
+        ButtonGroup modeGroup = new ButtonGroup();
+        modeGroup.add(linesBtn);
+        modeGroup.add(semanticBtn);
+        linesBtn   .addActionListener(e -> setSemanticMode(false));
+        semanticBtn.addActionListener(e -> setSemanticMode(true));
+        compareModePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        compareModePanel.add(linesBtn);
+        compareModePanel.add(semanticBtn);
+
+        semanticWarnLabel = new JLabel();
+        Color warnColor = UIManager.getColor("Actions.Red");
+        semanticWarnLabel.setForeground(warnColor != null ? warnColor : Color.RED);
+        semanticWarnLabel.setVisible(false);
+
+        semanticFormat = SemanticFormat.detect(fileName);
+        compareModePanel.setVisible(semanticFormat != null);
+
         searchBar = new SearchBar(oldPane, newPane);
     }
 
     /** Centered navigation row: Prev / Next / diff-info label. */
     private JPanel buildNavPanel() {
         JPanel nav = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 4));
+        nav.add(compareModePanel);
+        nav.add(Box.createHorizontalStrut(10));
         nav.add(prevBtn);
         nav.add(nextBtn);
         nav.add(Box.createHorizontalStrut(10));
         nav.add(diffInfoLabel);
+        nav.add(semanticWarnLabel);
         return nav;
+    }
+
+    /** Switches between line-by-line
+     * and semantic comparison
+     * and recomputes the diff. */
+    private void setSemanticMode(boolean semantic) {
+        if (semantic == semanticMode) return;
+        if (editableMode) {
+            if (semantic) {
+                // Panes will show the canonical form; keep the user's text as the source
+                if (debounce != null) debounce.stop();
+                oldText = oldPane.getText();
+                newText = newPane.getText();
+            } else {
+                setPaneTextQuietly(oldPane, oldText);
+                setPaneTextQuietly(newPane, newText);
+            }
+            oldPane.setEditable(!semantic);
+            newPane.setEditable(!semantic);
+        }
+        semanticMode = semantic;
+        computeAndDisplayDiff();
+    }
+
+    /** Re-detects the semantic format from the files loaded into the editable panes. */
+    private void updateEditableSemanticFormat() {
+        SemanticFormat left  = SemanticFormat.detect(leftFileName);
+        SemanticFormat right = SemanticFormat.detect(rightFileName);
+        semanticFormat = left != null ? left : right;
+        compareModePanel.setVisible(semanticFormat != null);
+        if (semanticFormat == null && semanticMode) {
+            linesBtn.setSelected(true);
+            setSemanticMode(false);
+        }
+    }
+
+    private void setPaneTextQuietly(RSyntaxTextArea pane, String text) {
+        loadingFile = true;
+        try {
+            pane.setText(text);
+            pane.setCaretPosition(0);
+        } finally {
+            loadingFile = false;
+        }
     }
 
     /** Wraps a scroll pane in a titled panel. */
@@ -474,12 +552,17 @@ public class DiffViewerWindowTxt extends JFrame {
                 try {
                     String content = normalizeLF(get());
                     pathField.setText(f.getAbsolutePath());
-                    loadingFile = true;
                     editor.setSyntaxEditingStyle(SyntaxStyleUtil.getSyntaxStyle(f.getName()));
-                    editor.setText(content);
-                    editor.setCaretPosition(0);
-                    loadingFile = false;
+                    if (editor == oldPane) {
+                        leftFileName = f.getName();
+                        oldText = content;
+                    } else {
+                        rightFileName = f.getName();
+                        newText = content;
+                    }
+                    if (!semanticMode) setPaneTextQuietly(editor, content);
                     if (debounce != null) debounce.stop();
+                    updateEditableSemanticFormat();
                     computeAndDisplayDiff();
                 } catch (Exception ex) {
                     loadingFile = false;
@@ -567,15 +650,18 @@ public class DiffViewerWindowTxt extends JFrame {
         }
     }
 
-    /** Normalise Windows (CRLF) and legacy Mac (CR) line endings to LF. */
+    /**
+     * Normalize Windows (CRLF) and legacy Mac
+     * (CR) line endings to LF.
+     * */
     private static String normalizeLF(String text) {
         if (text == null) return null;
         return text.replace("\r\n", "\n").replace("\r", "\n");
     }
 
     private void computeAndDisplayDiff() {
-        if (editableMode) {
-            // In editable mode the panes ARE the source of truth
+        if (editableMode && !semanticMode) {
+            // In editable mode the panes ARE the source of truth (semantic mode shows a derived view)
             oldText = oldPane.getText();
             newText = newPane.getText();
         }
@@ -585,22 +671,40 @@ public class DiffViewerWindowTxt extends JFrame {
         oldText = normalizeLF(oldText);
         newText = normalizeLF(newText);
 
+        // Text actually shown and diffed: raw text, or its canonical form in semantic mode
+        String oldShown = oldText;
+        String newShown = newText;
+        semanticWarnLabel.setVisible(false);
+        if (semanticMode && semanticFormat != null) {
+            String failedKey = "semanticParseFailedOld";
+            try {
+                String oldCanonical = semanticFormat.canonicalize(oldText);
+                failedKey = "semanticParseFailedNew";
+                String newCanonical = semanticFormat.canonicalize(newText);
+                oldShown = oldCanonical;
+                newShown = newCanonical;
+            } catch (Exception ex) {
+                log.log(Level.FINE, "Semantic comparison failed, falling back to lines", ex);
+                semanticWarnLabel.setText(I18n.t(failedKey));
+                semanticWarnLabel.setToolTipText(ex.getMessage());
+                semanticWarnLabel.setVisible(true);
+            }
+        }
+
         // Compute diff using JGit HISTOGRAM algorithm
-        RawText oldRaw = new RawText(oldText.getBytes(StandardCharsets.UTF_8));
-        RawText newRaw = new RawText(newText.getBytes(StandardCharsets.UTF_8));
+        RawText oldRaw = new RawText(oldShown.getBytes(StandardCharsets.UTF_8));
+        RawText newRaw = new RawText(newShown.getBytes(StandardCharsets.UTF_8));
         DiffAlgorithm algorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.HISTOGRAM);
         editList = algorithm.diff(RawTextComparator.WS_IGNORE_ALL, oldRaw, newRaw);
 
         // Feed the overview minimap
-        overviewPanel.setData(editList, oldText.split("\n", -1), newText.split("\n", -1));
+        overviewPanel.setData(editList, oldShown.split("\n", -1), newShown.split("\n", -1));
         SwingUtilities.invokeLater(this::updateOverviewViewport);
 
-        if (!editableMode) {
-            // Non-editable: push the loaded text into the panes
-            oldPane.setText(oldText);
-            oldPane.setCaretPosition(0);
-            newPane.setText(newText);
-            newPane.setCaretPosition(0);
+        if (!editableMode || semanticMode) {
+            // Panes are a view: push the text to display into them
+            setPaneTextQuietly(oldPane, oldShown);
+            setPaneTextQuietly(newPane, newShown);
         }
 
         // Apply diff line highlights

@@ -1,0 +1,12 @@
+{
+    "publish_date": "2000-10-01",
+    "id": "bk101",
+
+    "author": {
+        "firstName": "Gambardella",
+        "lastName": "Matthew"
+    },
+    "genre": "Computer",
+    "price": 44.95,
+    "title": "XML Developer's Guide"
+}

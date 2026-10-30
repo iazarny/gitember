@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book id="bk101">
+    <title>XML Developer's Guide</title>
+    <author>
+        <lastname>Gambardella</lastname>
+        <firstname>Matthew</firstname>
+    </author>
+    <genre>Computer</genre>
+    <publish_date>2000-10-01</publish_date>
+    <price>44.95</price>
+
+</book>
