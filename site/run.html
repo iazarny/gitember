@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run Gitember in the Browser</title>
+    <meta name="description" content="Run Gitember, the free Git GUI client, directly in your browser with CheerpJ." />
+    <script src="https://cjrtnc.leaningtech.com/5.0/loader.js"></script>
+    <style>
+        html, body { margin: 0; height: 100%; background: #1e1f22; color: #ddd; font-family: sans-serif; }
+        #status { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+<div id="status">Loading Gitember&hellip;</div>
+<script type="module">
+    const JAR_URL = "https://gitember.org/Gitember-3.6.0-cheerpj.jar";
+    const status = document.getElementById("status");
+    try {
+        await cheerpjInit({ version: 21 });
+        let jar;
+        if (location.origin === new URL(JAR_URL).origin) {
+            // Same server: CheerpJ maps /app/ to the web server root and
+            // loads the JAR lazily with HTTP Range requests.
+            jar = "/app" + new URL(JAR_URL).pathname;
+        } else {
+            // Different server: /app/ can't reach it, so download the JAR
+            // and put it in CheerpJ's in-memory /str/ filesystem.
+            status.textContent = "Downloading Gitember…";
+            const resp = await fetch(JAR_URL);
+            if (!resp.ok) throw new Error("HTTP " + resp.status + " fetching " + JAR_URL);
+            jar = "/str/Gitember-3.6.0-cheerpj.jar";
+            cheerpOSAddStringFile(jar, new Uint8Array(await resp.arrayBuffer()));
+        }
+        cheerpjCreateDisplay(-1, -1); // fill the whole window
+        status.remove();
+        const exitCode = await cheerpjRunJar(jar);
+        console.log("Gitember exited with code", exitCode);
+    } catch (e) {
+        status.textContent = "Failed to start Gitember: " + e;
+        console.error(e);
+    }
+</script>
+</body>
+</html>

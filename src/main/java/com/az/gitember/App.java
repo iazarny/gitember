@@ -43,10 +43,11 @@ public class App {
             try {
                 Context.readSettings();
                 // Before any UI is built: the forced UI language wins, otherwise the OS language.
-                I18n.init(Context.getSettings() != null ? Context.getSettings().getLanguage() : null);
-                setupLookAndFeel();
+                I18n.init(null);
+                //I18n.init(Context.getSettings() != null ? Context.getSettings().getLanguage() : null);
+                /*setupLookAndFeel();
                 I18n.installSwingDefaults();
-                applyFontSize();
+                applyFontSize();*/
 
                 if (args.length == 2 && !AotTraining.isRequested(args)) {
                     File left  = new File(args[0]);
