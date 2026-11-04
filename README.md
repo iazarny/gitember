@@ -21,14 +21,14 @@ A free, open-source Git GUI client for Linux, Windows, and macOS. Fast, lightwei
 * **Git LFS support** — manage large binary assets with built-in LFS tooling
 * **Truly free** — open source, no account required, works offline
 
-## Downloads — Version 3.5.1 Oct 2026
+## Downloads — Version 3.6.0 Nov 2026
 
 | Platform         | Link                                                                                                                                                                                                               |
 |------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Windows (x64)    | MSI [Gitember-3.6.0.msi](https://gitember.org/Gitember-3.6.0.msi) <br/>Microsoft store https://apps.microsoft.com/detail/9NXNMLLGBGD4 <br/> Portable [Gitember-3.5.1.zip](https://gitember.org/Gitember-3.5.1.zip) |
 | macOS (M1)       | [Gitember-3.6.0.dmg](https://gitember.org/Gitember-3.6.0.dmg)                                                                                                                                                      | 
 | Linux  (x64)     | [Gitember-3.6.0.deb](https://gitember.org/Gitember-3.6.0.deb)                                                                                                                                                      | 
-| Fat jar. java 21 | [Gitember-3.6.0.jar](https://gitember.org/Gitember-3.6.0.jar)                                                                                                                                                      | 
+| Fat jar. java 27 | [Gitember-3.6.0.jar](https://gitember.org/Gitember-3.6.0.jar)                                                                                                                                                      | 
 
 
 More info and documentation: https://gitember.org
@@ -56,7 +56,7 @@ mvn test -Dtest=GitRepoServiceTest
 
 # Produce the runnable fat jar
 mvn package -DskipTests
-java -jar target/gitember-3.5.1-SNAPSHOT-boot.jar
+java -jar target/gitember-3.6.0-SNAPSHOT-boot.jar
 ```
 
 ## Changes
